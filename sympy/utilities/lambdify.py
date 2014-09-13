@@ -55,7 +55,6 @@ MPMATH_TRANSLATIONS = {
     "oo": "inf",
     #"uppergamma":"upper_gamma",
     "LambertW": "lambertw",
-    "Matrix": "matrix",
     "MutableDenseMatrix": "matrix",
     "ImmutableMatrix": "matrix",
     "conjugate": "conj",
@@ -81,9 +80,8 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Matrix": "array",
-    "MutableDenseMatrix": "array",
-    "ImmutableMatrix": "array",
+    "MutableDenseMatrix": "matrix",
+    "ImmutableMatrix": "matrix",
     "Max": "amax",
     "Min": "amin",
     "oo": "inf",
@@ -155,7 +153,7 @@ def _import(module, reload="False"):
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True, default_array=False):
+        dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -177,20 +175,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
 
-    Deprecation Warnings
-    ====================
-
-    In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
-    by default. As of release 0.7.6 ``numpy.array`` is being transitioned to
-    the default. In release 0.7.7 this transition will be complete. For now,
-    to use the new default behavior you must pass in ``default_array=True``. If
-    you plan on using ``lambdify`` often in your code it may be to your benefit
-    to apply ``functools.partial``:
-
-        >>> from sympy import lambdify
-        >>> from functools import partial
-        >>> lambdify = partial(lambdify, default_array=True)
-
     For functions involving large array calculations, numexpr can provide a
     significant speedup over numpy.  Please note that the available functions
     for numexpr are more limited than numpy but can be expanded with
@@ -198,6 +182,24 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     numexpr may be the only option in modules. The official list of numexpr
     functions can be found at:
     https://github.com/pydata/numexpr#supported-functions
+
+    Deprecation Warnings
+    ====================
+
+    In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
+    by default. As of release 0.7.6 ``numpy.array`` is being transitioned to
+    the default. In release 0.7.7 this transition will be complete. For now, to
+    use the new default behavior you must pass in ``[{'ImmutableMatrix':
+    numpy.array}, 'numpy']`` to the ``modules`` kwarg.
+
+    >>> from sympy import lambdify, Matrix
+    >>> from sympy.abc import x, y
+    >>> import numpy
+    >>> mat2array = [{'ImmutableMatrix': numpy.array}, 'numpy']
+    >>> f = lambdify((x, y), Matrix([x, y]), modules=mat2array)
+    >>> f(1, 2)
+    array([[1],
+           [2]])
 
     Usage
     =====
@@ -306,25 +308,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
-        # If the new defaults should be used (part of the deprecation cycle)
-        if not default_array:
-            # Ensures that the translation dict is set back
-            # to matrix if lambdify was already called
-            NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
-                "MutableDenseMatrix": "matrix",
-                "ImmutableMatrix": "matrix"})
-            SymPyDeprecationWarning("Replacing sympy.Matrix with numpy.matrix "
-                                    "by default is deprecated in favor of "
-                                    "numpy.array. For now, to use the new "
-                                    "behavior and remove the warning set "
-                                    "the kwarg default_array=True. The old "
-                                    "behavior can still be used by passing "
-                                    "in a custom dictionary to the modules "
-                                    "kwarg.", issue=7853).warn()
-        else:
-            NUMPY_TRANSLATIONS.update({"Matrix": "array",
-                "MutableDenseMatrix": "array",
-                "ImmutableMatrix": "array"})
         #Attempt to import numpy
         try:
             _import("numpy")
@@ -351,6 +334,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
+    _issue_7853_dep_check(namespaces, namespace, expr)
 
     if hasattr(expr, "atoms"):
         #Try if you can extract symbols from the expression.
@@ -372,6 +356,29 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         namespace.update({flat: flatten})
     return eval(lstr, namespace)
 
+def _issue_7853_dep_check(namespaces, namespace, expr):
+    """Used for checking things passed into modules kwarg for deprecation
+    issue #7853. This function and the call to it in lambdify should be
+    deleted once the cycle has ended."""
+
+    # If some module changed `ImmutableMatrix` to be something else
+    mat = namespace.get('ImmutableMatrix', False)
+    if not mat or 'numpy' not in namespaces or ('%s.%s' % (mat.__module__,
+            mat.__name__) == 'numpy.matrixlib.defmatrix.matrix'):
+        return
+    dicts = [m for m in namespaces if isinstance(m, dict)]
+    test = lambda expr: hasattr(expr, 'is_Matrix') and expr.is_Matrix
+    if test(expr) and not [d for d in dicts if 'ImmutableMatrix' in d]:
+        SymPyDeprecationWarning(
+                "Currently, `sympy.Matrix` is replaced with `numpy.matrix` if "
+                "the NumPy package is utilized in lambdify. In future versions "
+                "of SymPy (> 0.7.6), we will default to replacing "
+                "`sympy.Matrix` with `numpy.array`. To use the future "
+                "behavior now, supply the kwarg "
+                "`modules=[{'ImmutableMatrix': numpy.array}, 'numpy']`. "
+                "The old behavior can be retained in future versions by "
+                "supplying `modules=[{'ImmutableMatrix': numpy.matrix}, "
+                "'numpy']`.", issue=7853).warn()
 
 def _get_namespace(m):
     """
@@ -594,7 +601,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
-    >>> lam_f = lambdify(x, f(x), default_array=True)
+    >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
     5
     """
