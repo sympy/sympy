@@ -203,7 +203,7 @@ def test_containers():
 
 def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
-    assert mcode(expr) == ("(x < 1).*(x) + (~(x < 1)).*(x.^2)")
+    assert mcode(expr) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))"
     assert mcode(expr, assign_to="c") == (
             "if (x < 1)\n"
             "  c = x;\n"
@@ -212,9 +212,9 @@ def test_octave_piecewise():
             "end")
     expr = Piecewise((x**2, x < 1), (x**3, x < 2), (x**4, x < 3), (x**5, True))
     assert mcode(expr) == (
-            "(x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
+            "((x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
             "(x < 2).*(x.^3) + (~(x < 2)).*( ...\n"
-            "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5)))")
+            "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5))))")
     assert mcode(expr, assign_to='c') == (
             "if (x < 1)\n"
             "  c = x.^2;\n"
@@ -230,11 +230,13 @@ def test_octave_piecewise():
     raises(ValueError, lambda: mcode(expr))
 
 
-@XFAIL
 def test_octave_piecewise_times_const():
     # FIXME: self.parenthesize something! but where?
-    expr = Piecewise((x, x < 1), (x**2, True))
-    assert mcode(2*expr) == ("2*((x < 1).*(x) + (~(x < 1)).*(x^2))")
+    pw = Piecewise((x, x < 1), (x**2, True))
+    assert mcode(2*pw) == "2*((x < 1).*(x) + (~(x < 1)).*(x.^2))"
+    assert mcode(pw/x) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))./x"
+    assert mcode(pw/(x*y)) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))./(x.*y)"
+    assert mcode(pw/3) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))/3"
 
 
 def test_octave_matrix_assign_to():

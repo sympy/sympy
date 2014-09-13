@@ -321,8 +321,10 @@ class OctaveCodePrinter(CodePrinter):
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
             elast = "%s" % self._print(expr.args[-1].expr)
-            return " ...\n".join(ecpairs) + elast + ")"*len(ecpairs)
-            # FIXME: need brackets for 2*pw, see XFAIL test
+            pw = " ...\n".join(ecpairs) + elast + ")"*len(ecpairs)
+            # Note: current need these outer brackets for 2*pw.  Would be
+            # nicer to teach parenthesize() to do this for us when needed!
+            return "(" + pw + ")"
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
