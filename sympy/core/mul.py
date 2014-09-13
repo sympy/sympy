@@ -1002,7 +1002,6 @@ class Mul(Expr, AssocOp):
     def _eval_is_real(self):
         real = True
         zero = one_neither = False
-
         for t in self.args:
             if not t.is_complex:
                 return t.is_complex
@@ -1039,7 +1038,6 @@ class Mul(Expr, AssocOp):
     def _eval_is_hermitian(self):
         real = True
         one_nc = zero = one_neither = False
-
         for t in self.args:
             if not t.is_commutative:
                 if one_nc:
@@ -1087,21 +1085,36 @@ class Mul(Expr, AssocOp):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.
 
-        This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative or nonpositive is encountered.
+        This algorithm works by keeping track of the sign which changes
+        when a negative, nonpositive or imaginary is encountered.
         Whether a nonpositive or nonnegative is seen is also tracked since
         the presence of these makes it impossible to return True, but
         possible to return False if the end result is nonpositive. e.g.
 
             pos * neg * nonpositive -> pos or zero -> None is returned
             pos * neg * nonnegative -> neg or zero -> False is returned
-        """
 
-        sign = 1
-        saw_NON = False
+        If a non-complex factor is observed, False is returned; if a
+        factor is not known to be complex then None is returned. The presence
+        of a non-real that is also not imaginary is also tracked: if, except
+        for such factors, the sign is real then False is returned otherwise
+        None is returned.
+        """
+        # MOTE:
+        # Not all cases have been considered. For example, when a non-real
+        # and non-imaginary factor is present then False can be returned if
+        # the sign computed is real.  TODO: consider cases where attributes
+        # are False: imaginary, positive, negative, nonpositive, nonnegative
+        # while being complex. And consider boundedness (which may require
+        # defining NaN's positive and negative values as False instead of None.
+
+        sign = S.One
+        saw_NONR = saw_NON = False
         for t in self.args:
-            if t.is_positive:
-                continue
+            if t.is_complex is False:
+                return t.is_complex
+            elif t.is_positive:
+                pass
             elif t.is_negative:
                 sign = -sign
             elif t.is_zero:
@@ -1111,47 +1124,34 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_nonnegative:
                 saw_NON = True
+            elif t.is_imaginary:
+                if t.is_Symbol:
+                    return
+                sign *= C.sign(t)  # if t is unevaluated Mul -> handle at end
+            elif (S.ImaginaryUnit*t).is_real:
+                sign *= C.sign(t)  # if t is unevaluated Mul -> handle at end
+            elif not t.is_real:
+                saw_NONR = True
             else:
                 return
-        if sign == 1 and saw_NON is False:
-            return True
-        if sign < 0:
-            return False
+
+        if saw_NON is False and saw_NONR is False:
+            return sign.is_positive
+
+        if saw_NONR:
+            if sign.is_imaginary:
+                return False
+            return
+
+        if saw_NON:
+            if sign.is_nonpositive:
+                return False
+            elif sign.is_imaginary:
+                return False
+            return
 
     def _eval_is_negative(self):
-        """Return True if self is negative, False if not, and None if it
-        cannot be determined.
-
-        This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative or nonpositive is encountered.
-        Whether a nonpositive or nonnegative is seen is also tracked since
-        the presence of these makes it impossible to return True, but
-        possible to return False if the end result is nonnegative. e.g.
-
-            pos * neg * nonpositive -> pos or zero -> False is returned
-            pos * neg * nonnegative -> neg or zero -> None is returned
-        """
-
-        sign = 1
-        saw_NON = False
-        for t in self.args:
-            if t.is_positive:
-                continue
-            elif t.is_negative:
-                sign = -sign
-            elif t.is_zero:
-                return False
-            elif t.is_nonpositive:
-                sign = -sign
-                saw_NON = True
-            elif t.is_nonnegative:
-                saw_NON = True
-            else:
-                return
-        if sign == -1 and saw_NON is False:
-            return True
-        if sign > 0:
-            return False
+        return (-self).is_positive
 
     def _eval_is_odd(self):
         is_integer = self.is_integer

@@ -140,6 +140,7 @@ def test_sign():
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
+    assert sign(im(sqrt(1 - sqrt(3)))) == 1
 
     x = Symbol('x')
     assert sign(x).is_bounded is True
@@ -214,6 +215,14 @@ def test_sign():
     assert sign(nz).is_zero is False
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
+
+    assert sign(Symbol('x', nonnegative=True)).is_nonnegative
+    assert sign(Symbol('x', nonnegative=True)).is_nonpositive is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonnegative is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonpositive
+    assert sign(Symbol('x', real=True)).is_nonnegative is None
+    assert sign(Symbol('x', real=True)).is_nonpositive is None
+    assert sign(Symbol('x', real=True, zero=False)).is_nonpositive is None
 
     x, y = Symbol('x', real=True), Symbol('y')
     assert sign(x).rewrite(Piecewise) == \
@@ -311,8 +320,9 @@ def test_Abs():
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 
-    x = Symbol('x', imaginary=True)
-    assert Abs(x).diff(x) == -sign(x)
+    i = Symbol('i', imaginary=True)
+    assert Abs(i).diff(i) == -sign(i)
+    assert sqrt(i**2).as_real_imag() == (0, Abs(i))
 
     eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
     # if there is a fast way to know when you can and when you cannot prove an

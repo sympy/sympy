@@ -498,19 +498,39 @@ def test_Add_is_even_odd():
 
 
 def test_Mul_is_negative_positive():
-    x = Symbol('x', real=True)
-    y = Symbol('y', real=False, complex=True)
     z = Symbol('z', zero=True)
 
     e = 2*z
     assert e.is_Mul and e.is_positive is False and e.is_negative is False
 
-    neg = Symbol('neg', negative=True)
-    pos = Symbol('pos', positive=True)
-    nneg = Symbol('nneg', nonnegative=True)
-    npos = Symbol('npos', nonpositive=True)
+    nc = Dummy(complex=False)
+    r = Dummy(real=True)
+    nr = Dummy(real=False, complex=True)
+    neg = Dummy(negative=True)
+    pos = Dummy(positive=True)
+    nneg = Dummy(nonnegative=True)
+    npos = Dummy(nonpositive=True)
+    i, j = Dummy(imaginary=True), Dummy(imaginary=True)
 
     assert neg.is_negative is True
+    assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
+    assert (i*j).is_positive is None  # ditto
+    assert (I*sqrt(1 - sqrt(3))).is_negative
+    assert (-nc).is_negative is False
+
+    assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
+        is False
+    assert Mul(I, Mul(I, pos, evaluate=False), evaluate=False).is_negative
+    assert Mul(I, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(I, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is None
+    assert Mul(I, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(I, Mul(I, i, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, pos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
+
     assert (-neg).is_negative is False
     assert (2*neg).is_negative is True
 
@@ -524,7 +544,7 @@ def test_Mul_is_negative_positive():
     assert (pos*neg).is_negative is True
     assert (2*pos*neg).is_negative is True
     assert (-pos*neg).is_negative is False
-    assert (pos*neg*y).is_negative is False     # y.is_real=F;  !real -> !neg
+    assert (pos*neg*nr).is_negative is False  # nr.is_real=F;  !real -> !neg
 
     assert nneg.is_negative is False
     assert (-nneg).is_negative is None
@@ -553,8 +573,8 @@ def test_Mul_is_negative_positive():
 
     assert (neg*npos*pos*nneg).is_negative is False
 
-    assert (x*neg).is_negative is None
-    assert (nneg*npos*pos*x*neg).is_negative is None
+    assert (r*neg).is_negative is None
+    assert (nneg*npos*pos*r*neg).is_negative is None
 
     assert neg.is_positive is False
     assert (-neg).is_positive is True
@@ -567,7 +587,7 @@ def test_Mul_is_negative_positive():
     assert (pos*neg).is_positive is False
     assert (2*pos*neg).is_positive is False
     assert (-pos*neg).is_positive is True
-    assert (-pos*neg*y).is_positive is False    # y.is_real=F;  !real -> !neg
+    assert (-pos*neg*nr).is_positive is False  # nr.is_real=F;  !real -> !neg
 
     assert nneg.is_positive is None
     assert (-nneg).is_positive is False
@@ -596,8 +616,8 @@ def test_Mul_is_negative_positive():
 
     assert (neg*npos*pos*nneg).is_positive is None
 
-    assert (x*neg).is_positive is None
-    assert (nneg*npos*pos*x*neg).is_positive is None
+    assert (r*neg).is_positive is None
+    assert (nneg*npos*pos*r*neg).is_positive is None
 
 
 def test_Mul_is_negative_positive_2():
@@ -1110,7 +1130,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**2).is_nonnegative is True
     assert (k**(-2)).is_nonnegative is True
 
-    assert (k**x).is_nonnegative is None    # NOTE (0**x).is_real = U
+    assert (k**x).is_nonnegative is None  # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
