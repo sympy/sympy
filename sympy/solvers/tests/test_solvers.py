@@ -4,7 +4,7 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -516,7 +516,7 @@ def test_solve_inequalities():
 
     # issue 6627, 3448
     assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
-    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
+    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == And(Lt(-oo, x), Lt(x, -1))
 
 def test_issue_4793():
     assert solve(1/x) == []

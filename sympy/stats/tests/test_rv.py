@@ -26,7 +26,7 @@ def test_where():
     XX = given(X, And(X**2 <= 1, X >= 0))
     assert XX.pspace.domain.set == Interval(0, 1)
     assert XX.pspace.domain.as_boolean() == \
-        And(0 <= X.symbol, X.symbol**2 <= 1)
+        And(0 <= X.symbol, X.symbol**2 <= 1, -oo < X.symbol, X.symbol < oo)
 
     with raises(TypeError):
         XX = given(X, X + 3)
@@ -160,10 +160,11 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x, z = symbols('x, z', real=True)
+    x, z = symbols('x, z', real=True, bounded=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
+
 
 def test_Density():
     X = Die('X', 6)
