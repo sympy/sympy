@@ -12,8 +12,7 @@ by nature, so "compare" is logically the lowest part of the algorithm, yet in
 some sense it's the most complex part, because it needs to calculate a limit
 to return the result.
 
-Nevertheless the rest of the algorithm depends on compare that it works
-correctly.
+Nevertheless, the rest of the algorithm depends on compare working correctly.
 """
 
 x = Symbol('x', real=True)
