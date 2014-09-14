@@ -29,7 +29,7 @@ DAMAGE.
 
 --------------------------------------------------------------------------------
 
-The file sympy/integrals/rubi/TrigIntegrationRules.py is a Python code
+The file sympy/integrals/rubi/SineIntegrationRules.py is a Python code
 generated from the publicly available rule-based integrator (Rubi) system
 available at http://www.apmaths.uwo.ca/~arich/. This generated file (rubi.py)
 is under the following license:
