@@ -6,7 +6,7 @@
 # license (see the LICENSE file for more details).
 
 from sympy import Integer, sin, cos
-from rubi_definitions import eq, gt, lt, ge, le, integer, subst, Int
+from .rubi_definitions import eq, gt, lt, ge, le, integer, subst, Int
 
 def intsin5(a,b,c,n,x):
   if eq(n,0) or eq(b,0) or eq(c,0):
