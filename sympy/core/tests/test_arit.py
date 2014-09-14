@@ -447,11 +447,16 @@ def test_Mul_is_rational():
     x = Symbol('x')
     n = Symbol('n', integer=True)
     m = Symbol('m', integer=True)
+    z = Symbol('z', zero=True)
+    i = Symbol('i', imaginary=True)
+    bi = Symbol('i', imaginary=True, bounded=True)
 
     assert (n/m).is_rational is True
     assert (x/pi).is_rational is None
     assert (x/n).is_rational is None
     assert (n/pi).is_rational is False
+    assert (z*i).is_rational is None
+    assert (z*bi).is_zero is True
 
 
 def test_Add_is_rational():
@@ -1707,18 +1712,27 @@ def test_mul_zero_detection():
 
     # real is unknonwn
     def test(z, b, e):
-        if z.is_zero and b.is_bounded:
-            assert e.is_real and e.is_zero
+        if z.is_zero:
+            if b.is_bounded:
+                assert e.is_real and e.is_zero
+            else:
+                assert e.is_real is None
+                assert e.is_zero is False
         else:
-            assert e.is_real == e.is_zero == None
+            if b.is_bounded:
+                assert e.is_real is None
+                assert e.is_zero is None
+            else:
+                assert e.is_real is None
+                assert e.is_zero is False
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
-        z = Dummy(nonzero=iz)
-        b = Dummy(bounded=ib)
+    for iz, ib in cartes(*[[True, False]]*2):
+        z = Dummy(zero=True) if iz else Dummy(nonzero=True, bounded=True)
+        b = Dummy(bounded=ib) if ib else Dummy(unbounded=True)
         e = Mul(z, b, evaluate=False)
         test(z, b, e)
-        z = Dummy(nonzero=iz)
-        b = Dummy(bounded=ib)
+        z = Dummy(zero=True) if iz else Dummy(nonzero=True, bounded=True)
+        b = Dummy(bounded=ib) if ib else Dummy(unbounded=True)
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
