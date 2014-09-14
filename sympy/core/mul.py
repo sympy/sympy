@@ -960,10 +960,15 @@ class Mul(Expr, AssocOp):
         a.is_bounded for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
-    _eval_is_rational = lambda self: _fuzzy_group(
-        (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
+
+    def _eval_is_rational(self):
+        r = _fuzzy_group((a.is_rational for a in self.args), quick_exit=True)
+        if r:
+            return r
+        elif r is False:
+            return self._eval_is_zero()
 
     def _eval_is_zero(self):
         zero = unbound = False
