@@ -5,7 +5,7 @@ from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 
 
 class AssignmentError(Exception):
@@ -123,7 +123,8 @@ class CodePrinter(StrPrinter):
         if assign_to:
             expr = Assignment(assign_to, expr)
         else:
-            expr = _sympify(expr)
+            # _sympify is not enough b/c it errors on iterables
+            expr = sympify(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
