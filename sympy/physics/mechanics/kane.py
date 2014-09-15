@@ -30,6 +30,13 @@ class KanesMethod(object):
     Attributes
     ==========
 
+    q, u : Matrix
+        Matrices of the generalized coordinates and speeds
+    bodylist : iterable
+        Iterable of Point and RigidBody objects in the system.
+    forcelist : iterable
+        Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
+        describing the forces on the system.
     auxiliary : Matrix
         If applicable, the set of auxiliary Kane's
         equations used to solve for non-contributing
@@ -42,8 +49,6 @@ class KanesMethod(object):
         The "mass matrix" for the u's and q's
     forcing_full : Matrix
         The "forcing vector" for the u's and q's
-    q, u : Matrix
-        Matrices of the generalized coordinates and speeds
 
     Examples
     ========
@@ -125,8 +130,8 @@ class KanesMethod(object):
         self._fr = None
         self._frstar = None
 
-        self.forcelist = None
-        self.bodylist = None
+        self._forcelist = None
+        self._bodylist = None
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
@@ -147,7 +152,7 @@ class KanesMethod(object):
             raise TypeError('Dependent coordinates must be an iterable.')
         q_ind = Matrix(q_ind)
         self._qdep = q_dep
-        self.q = Matrix([q_ind, q_dep])
+        self._q = Matrix([q_ind, q_dep])
         self._qdot = self.q.diff(dynamicsymbols._t)
 
         # Initialize generalized speeds
@@ -158,7 +163,7 @@ class KanesMethod(object):
             raise TypeError('Dependent speeds must be an iterable.')
         u_ind = Matrix(u_ind)
         self._udep = u_dep
-        self.u = Matrix([u_ind, u_dep])
+        self._u = Matrix([u_ind, u_dep])
         self._udot = self.u.diff(dynamicsymbols._t)
         self._uaux = none_handler(u_aux)
 
@@ -279,7 +284,7 @@ class KanesMethod(object):
             FRtilde += self._Ars.T * FRold
             FR = FRtilde
 
-        self.forcelist = fl
+        self._forcelist = fl
         self._fr = FR
         return FR
 
@@ -374,7 +379,7 @@ class KanesMethod(object):
             MMd = MM[p:o, :]
             MM = MMi + (self._Ars.T * MMd)
 
-        self.bodylist = bl
+        self._bodylist = bl
         self._frstar = fr_star
         self._k_d = MM
         self._f_d = -msubs(self._fr + self._frstar, udot_zero)
@@ -789,3 +794,19 @@ class KanesMethod(object):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self.u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
+
+    @property
+    def q(self):
+        return self._q
+
+    @property
+    def u(self):
+        return self._u
+
+    @property
+    def bodylist(self):
+        return self._bodylist
+
+    @property
+    def forcelist(self):
+        return self._forcelist

@@ -31,6 +31,11 @@ class LagrangesMethod(object):
     Attributes
     ==========
 
+    q, u : Matrix
+        Matrices of the generalized coordinates and speeds
+    forcelist : iterable
+        Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
+        describing the forces on the system.
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix
@@ -41,8 +46,6 @@ class LagrangesMethod(object):
     forcing_full : Matrix
         The forcing vector for the qdot's, qdoubledot's and
         lagrange multipliers (lam)
-    q : Matrix
-        Matrix of the generalized coordinates
 
     Examples
     ========
@@ -136,7 +139,7 @@ class LagrangesMethod(object):
         forcelist = forcelist if forcelist else []
         if not iterable(forcelist):
             raise TypeError('Force pairs must be supplied in an iterable.')
-        self.forcelist = forcelist
+        self._forcelist = forcelist
         if frame and not isinstance(frame, ReferenceFrame):
             raise TypeError('frame must be a valid ReferenceFrame')
         self.inertial = frame
@@ -151,7 +154,7 @@ class LagrangesMethod(object):
         # Creating the qs, qdots and qdoubledots
         if not iterable(qs):
             raise TypeError('Generalized coordinates must be an iterable')
-        self.q = Matrix(qs)
+        self._q = Matrix(qs)
         self._qdots = self.q.diff(dynamicsymbols._t)
         self._qdoubledots = self._qdots.diff(dynamicsymbols._t)
 
@@ -451,3 +454,15 @@ class LagrangesMethod(object):
             self._rhs = (self.mass_matrix_full.inv(inv_method,
                          try_block_diag=True) * self.forcing_full)
         return self._rhs
+
+    @property
+    def q(self):
+        return self._q
+
+    @property
+    def u(self):
+        return self._qdots
+
+    @property
+    def forcelist(self):
+        return self._forcelist
