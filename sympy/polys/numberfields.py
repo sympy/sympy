@@ -552,7 +552,7 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_add(x, dom, *ex.args)
     elif ex.is_Mul:
         f = Factors(ex).factors
-        r = sift(f.items(), lambda itx: itx[0].is_rational and itx[1].is_rational)
+        r = sift(f.items(), lambda itx: itx[0].is_Rational and itx[1].is_Rational)
         if r[True] and dom == QQ:
             ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
             r1 = r[True]
