@@ -339,6 +339,39 @@ class Pow(Expr):
             if self.exp.is_even:
                 return False
 
+    def _eval_is_zero(self):
+        if self.base.is_zero:
+            if self.exp.is_positive:
+                return True
+            elif self.exp.is_nonpositive:
+                return False
+            elif self.exp.is_complex:
+                return None
+        elif self.base.is_nonzero:
+            if (abs(self.base) - 1).is_negative:
+                if (self.exp is S.NegativeInfinity):
+                    return False
+                elif self.exp is S.Infinity:
+                    return True
+                else:
+                    return False
+            elif self.base is S.One:
+                return False
+            elif self.base is S.NegativeOne:
+                if self.base.is_unbounded:
+                    return True
+                else:
+                    return False
+            elif (abs(self.base) - 1).is_positive:
+                if self.exp is S.NegativeInfinity:
+                    return True
+                else:
+                    return False
+            elif self.exp is S.NegativeInfinity:
+                return True
+            else:
+                return False
+
     def _eval_is_integer(self):
         b, e = self.args
         c1 = b.is_integer
