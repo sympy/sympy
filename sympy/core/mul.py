@@ -1033,8 +1033,35 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
-            return (S.ImaginaryUnit*self).is_real
+        real = True
+        zero = one_neither = False
+
+        for t in self.args:
+            if t.is_imaginary:
+                real = not real
+            elif t.is_real:
+                if not zero:
+                    z = t.is_zero
+                    if not z and zero is False:
+                        zero = z
+                    elif z:
+                        if all(a.is_bounded for a in self.args):
+                            return False
+                        return
+            elif t.is_real is False:
+                if one_neither:
+                    return  # complex terms might cancel
+                one_neither = True
+            else:
+                return
+
+        if zero is False:
+            if one_neither:  # N = a+I*b or I*b
+                if real:
+                    return  # r*N is like N: could be either
+                return False  # neither I*N values is imaginary
+            if not real:
+                return True
 
     def _eval_is_hermitian(self):
         real = True
@@ -1067,8 +1094,34 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        if self.is_nonzero:
-            return (S.ImaginaryUnit*self).is_hermitian
+        real = True
+        one_nc = zero = one_neither = False
+
+        for t in self.args:
+            if not t.is_commutative:
+                if one_nc:
+                    return
+                one_nc = True
+
+            if t.is_antihermitian:
+                real = not real
+            elif t.is_hermitian:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
+                        return False
+            elif t.is_hermitian is False:
+                if one_neither:
+                    return
+                one_neither = True
+            else:
+                return
+
+        if zero is False:
+            if one_neither:
+                return False
+            if not real:
+                return True
 
     def _eval_is_irrational(self):
         for t in self.args:

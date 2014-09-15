@@ -1212,8 +1212,8 @@ def test_Mul_hermitian_antihermitian():
     assert e2.is_antihermitian is None
     assert e3.is_antihermitian is None
     assert e4.is_antihermitian is None
-    assert e5.is_antihermitian is None
-    assert e6.is_antihermitian is None
+    assert e5.is_antihermitian is False
+    assert e6.is_antihermitian is False
 
 
 def test_Add_is_comparable():
