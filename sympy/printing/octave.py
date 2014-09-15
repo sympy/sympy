@@ -364,16 +364,149 @@ class OctaveCodePrinter(CodePrinter):
 def octave_code(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of Octave/Matlab code
 
+    Parameters
+    ==========
+
+    expr : Expr
+        A sympy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned.  Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type.  This can be helpful for
+        expressions that generate multi-line statements.
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+        [FIXME: is this used?  remove?]
+    user_functions : dict, optional
+        A dictionary where keys are ``FunctionClass`` instances and values are
+        their string representations.  Alternatively, the dictionary value can
+        be a list of tuples i.e. [(argument_test, cfunction_string)].  See
+        below for examples.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols.  If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text).  [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
+        [FIXME: these are untested]
+
     Examples
     ========
 
-    FIXME, DUDE WRITE SOME DOCS ;-)
-    >>> from sympy import octave_code as mcode, symbols, sin
+    >>> from sympy import octave_code, symbols, sin
     >>> x = symbols('x')
-    >>> mcode(sin(x).series(x).removeO())
-    '(1/120)*x^5 - 1/6*x^3 + x'
+    >>> octave_code(sin(x).series(x).removeO())
+    'x.^5/120 - x.^3/6 + x'
+
+    >>> from sympy import Rational, ceiling, Abs
+    >>> x, y, tau = symbols("x, y, tau")
+    >>> octave_code((2*tau)**Rational(7, 2))
+    '8*sqrt(2)*tau.^(7/2)'
+
+    Note that element-wise (Hadamard) operations are used by default between
+    symbols.  This is because its very common in Octave to write "vectorized"
+    code.  It is harmless if the values are scalars.
+
+    >>> octave_code(sin(pi*x*y), assign_to="s")
+    's = sin(pi*x.*y);'
+
+    If you need a matrix product "*" or matrix power "^", you can specify the
+    symbol as a ``MatrixSymbol``.
+
+    >>> from sympy import Symbol, MatrixSymbol
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> A = MatrixSymbol('A', n, n)
+    >>> octave_code(3*pi*A**3)
+    '(3*pi)*A^3
+
+    Unfortunately, there is currently there is no easy way to specify scalar
+    symbols (other than 1x1 Matrix), so sometimes the code might have some
+    minor cosmetic issues.  For example, here presumably x and y are scalars
+    and a human being might write "(x^2*y)*A^3":
+
+    >>> octave_code(x**2*y*A**3)
+    '(x.^2.*y)*A^3
+
+    Matrices are supported.  They can be assigned to a string using
+    ``assign_to`` or to a ``MatrixSymbol``.  The latter must have the same
+    dimensions.
+    [FIXME: currently can also be assigned to a ``Symbol``.]
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([[x**2, sin(x)], [x*y, ceiling(x)]])
+    >>> print(octave_code(mat, assign_to='A'))
+    A = [x.^2  sin(x); ...
+    x.*y ceil(x)];
+
+    Contrast this with:
+
+    >>> A = MatrixSymbol('A', 2, 2)
+    >>> print(octave_code(mat, A))
+    A(1, 1) = x.^2;
+    A(2, 1) = x.*y;
+    A(1, 2) = sin(x);
+    A(2, 2) = ceil(x);
+
+    ``Piecewise`` expressions can be dealt with in two ways using either
+    conditionals or logical masking.  Currently, if an ``assign_to`` variable
+    is provided then an ``if`` statement is created, otherwise logical masking
+    is used.  A future version might offer a more customizable choice [FIXME].
+    Note that if the ``Piecewise`` lacks a default term, represented by
+    ``(expr, True)`` then an error will be thrown.  This is to prevent
+    generating an expression that may not evaluate to anything.
+
+    >>> from sympy import Piecewise
+    >>> pw = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(octave_code(pw, assign_to=tau))
+    if (x > 0)
+      tau = x + 1;
+    else
+      tau = x;
+    end
+    >>> octave_code(pw)
+    '((x > 0).*(x + 1) + (~(x > 0)).*(x))'
+
+    Note that any expression that can be generated normally can also exist
+    inside a Matrix:
+
+    >>> mat = Matrix([[x**2, pw, sin(x)]])
+    >>> octave_code(mat, assign_to='A')
+    'A = [x.^2 ((x > 0).*(x + 1) + (~(x > 0)).*(x)) sin(x)];'
+    >>> A = MatrixSymbol('A', 1, 3)
+    >>> print(octave_code(pw, assign_to=A))
+    A(1, 1) = x.^2;
+    if (x > 0)
+      A(1, 2) = x + 1;
+    else
+      A(1, 2) = x;
+    end
+    A(1, 3) = sin(x);
+
+    Custom printing can be defined for certain types by passing a dictionary of
+    "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
+    dictionary value can be a list of tuples i.e., [(argument_test,
+    cfunction_string)].  This can be used to call a custom Octave function.
+
+    >>> f = Function('f')
+    >>> g = Function('g')
+    >>> custom_functions = {
+    ...   "f": "existing_octave_fcn",
+    ...   "g": [(lambda x: x.is_Matrix, "my_mat_fcn"),
+    ...         (lambda x: not x.is_Matrix, "my_fcn")]
+    ... }
+    >>> mat = Matrix([[1, x]])
+    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
+    'existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])'
+
+    [FIXME: test loops with ``Indexed`` types and add here, see ``ccode``]
     """
     return OctaveCodePrinter(settings).doprint(expr, assign_to)
+
 
 def print_octave_code(expr, **settings):
     """Prints the Octave/Matlab representation of the given expression.
