@@ -192,7 +192,24 @@ def test_m_output_arg_mixed_unordered():
     assert source == expected
 
 
-def test_piecewise_m():
+def test_m_piecewise_():
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    name_expr = ("pwtest", pw)
+    result, = codegen(name_expr, "Octave", "pwtest", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function out1 = pwtest(x)\n"
+        "  out1 = ((x < -1).*(0) + (~(x < -1)).*( ...\n"
+        "  (x <= 1).*(x.^2) + (~(x <= 1)).*( ...\n"
+        "  (x > 1).*(-x + 2) + (~(x > 1)).*(1))));\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+@XFAIL
+def test_m_piecewise_not_inline():
+    # FIXME: some sort of force non-inline to get this, or remove this
     pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
     name_expr = ("pwtest", pw)
     result, = codegen(name_expr, "Octave", "pwtest", header=False, empty=False)
@@ -240,10 +257,12 @@ def test_m_filename_match_first_fcn():
                         "Octave", "bar", header=False, empty=False))
 
 
+# FIXME: use Assignment directly to test string name?  easy way for user to name cpdegen outputs without MatrixSymbol?
+
+
 def test_m_matrix_named():
-    # FIXME: myout1 should be MatrixSymbol?  Well maybe we want this to work too.
     e2 = Matrix([[x, 2*y, pi*z]])
-    name_expr = ("test", Equality(S('myout1'), e2, evaluate=False))
+    name_expr = ("test", Equality(MatrixSymbol('myout1', 1, 3), e2))
     result = codegen(name_expr, "Octave", "test", header=False, empty=False)
     assert result[0][0] == "test.m"
     source = result[0][1]
@@ -255,9 +274,7 @@ def test_m_matrix_named():
     assert source == expected
 
 
-@XFAIL
 def test_m_matrix_named_matsym():
-    # does component-by-component
     myout1 = MatrixSymbol('myout1', 1, 3)
     e2 = Matrix([[x, 2*y, pi*z]])
     name_expr = ("test", Equality(myout1, e2, evaluate=False))
@@ -272,24 +289,21 @@ def test_m_matrix_named_matsym():
     assert source == expected
 
 
-@XFAIL
 def test_m_matrix_output_autoname():
-    #FIXME: codegen gives weird name and works componentwise
+    # See "matrix_can_be_single_symbol" hack
     expr = Matrix([[x, x+y, 3]])
     name_expr = ("test", expr)
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
     source = result[1]
     expected = (
-        "function out1 = test(x, y, z)\n"
+        "function out1 = test(x, y)\n"
         "  out1 = [x x + y 3];\n"
         "end\n"
     )
     assert source == expected
 
 
-@XFAIL
-def test_m_matrix_named_ordered_BROKEN():
-    #FIXME: codegen wants to do component-wise stuff here, we must stop it
+def test_m_matrix_output_autoname_2():
     e1 = (x + y)
     e2 = Matrix([[2*x, 2*y, 2*z]])
     e3 = Matrix([[x], [y], [z]])
@@ -303,8 +317,28 @@ def test_m_matrix_named_ordered_BROKEN():
         "  out1 = x + y;\n"
         "  out2 = [2*x 2*y 2*z];\n"
         "  out3 = [x; y; z];\n"
-        "  out4 = [x y; ...\n"
-        "z 16];\n"
+        "  out4 = [x  y; ...\n"
+        "  z 16];\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_m_results_named_ordered():
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(C, (x + y)*z)
+    expr2 = Equality(A, Matrix([[1, 2, x]]))
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False,
+                     argument_sequence=(x, z, y, C, A, B))
+    source = result[1]
+    expected = (
+        "function [C, A, B] = test(x, z, y)\n"
+        "  C = z.*(x + y);\n"
+        "  A = [1 2 x];\n"
+        "  B = 2*x;\n"
         "end\n"
     )
     assert source == expected

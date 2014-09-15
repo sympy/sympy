@@ -73,8 +73,7 @@ class Assignment(C.Relational):
             elif lhs.shape != rhs.shape:
                 raise ValueError("Dimensions of lhs and rhs don't align.")
         elif rhs_is_mat and not lhs_is_mat:
-            print("FIXME: temporarily disabled assign-matrix-to-scale error")
-            #raise ValueError("Cannot assign a matrix to a scalar.")
+            raise ValueError("Cannot assign a matrix to a scalar.")
         return C.Relational.__new__(cls, lhs, rhs, **assumptions)
 
 
@@ -115,7 +114,10 @@ class CodePrinter(StrPrinter):
         """
 
         if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
+            if expr.is_Matrix:
+                assign_to = C.MatrixSymbol(assign_to, *expr.shape)
+            else:
+                assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))

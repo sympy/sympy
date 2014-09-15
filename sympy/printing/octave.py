@@ -231,6 +231,23 @@ class OctaveCodePrinter(CodePrinter):
         # CodePrinter implementation is nicer for longer programs.
         return "%.18g" % float(expr)
 
+
+    def _print_Assignment(self, expr):
+        # Copied from codeprinter, but remove special MatrixSymbol treatment
+        lhs = expr.lhs
+        rhs = expr.rhs
+        # We special case assignments that take multiple lines
+        if self._settings["contract"] and (lhs.has(C.IndexedBase) or
+                rhs.has(C.IndexedBase)):
+            # Here we check if there is looping to be done, and if so
+            # print the required loops.
+            return self._doprint_loops(rhs, lhs)
+        else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
+            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+
     def _print_Infinity(self, expr):
         return 'inf'
 
@@ -400,12 +417,11 @@ def octave_code(expr, assign_to=None, **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
-        [FIXME: these are untested]
 
     Examples
     ========
 
-    >>> from sympy import octave_code, symbols, sin
+    >>> from sympy import octave_code, symbols, sin, pi
     >>> x = symbols('x')
     >>> octave_code(sin(x).series(x).removeO())
     'x.^5/120 - x.^3/6 + x'
@@ -429,7 +445,7 @@ def octave_code(expr, assign_to=None, **settings):
     >>> n = Symbol('n', integer=True, positive=True)
     >>> A = MatrixSymbol('A', n, n)
     >>> octave_code(3*pi*A**3)
-    '(3*pi)*A^3
+    '(3*pi)*A^3'
 
     Unfortunately, there is currently there is no easy way to specify scalar
     symbols (other than 1x1 Matrix), so sometimes the code might have some
@@ -437,7 +453,7 @@ def octave_code(expr, assign_to=None, **settings):
     and a human being might write "(x^2*y)*A^3":
 
     >>> octave_code(x**2*y*A**3)
-    '(x.^2.*y)*A^3
+    '(x.^2.*y)*A^3'
 
     Matrices are supported.  They can be assigned to a string using
     ``assign_to`` or to a ``MatrixSymbol``.  The latter must have the same
@@ -453,7 +469,7 @@ def octave_code(expr, assign_to=None, **settings):
     Contrast this with:
 
     >>> A = MatrixSymbol('A', 2, 2)
-    >>> print(octave_code(mat, A))
+    >>> print(octave_code(mat, assign_to=A))
     A(1, 1) = x.^2;
     A(2, 1) = x.*y;
     A(1, 2) = sin(x);
@@ -485,7 +501,7 @@ def octave_code(expr, assign_to=None, **settings):
     >>> octave_code(mat, assign_to='A')
     'A = [x.^2 ((x > 0).*(x + 1) + (~(x > 0)).*(x)) sin(x)];'
     >>> A = MatrixSymbol('A', 1, 3)
-    >>> print(octave_code(pw, assign_to=A))
+    >>> print(octave_code(mat, assign_to=A))
     A(1, 1) = x.^2;
     if (x > 0)
       A(1, 2) = x + 1;
@@ -499,6 +515,7 @@ def octave_code(expr, assign_to=None, **settings):
     dictionary value can be a list of tuples i.e., [(argument_test,
     cfunction_string)].  This can be used to call a custom Octave function.
 
+    >>> from sympy import Function
     >>> f = Function('f')
     >>> g = Function('g')
     >>> custom_functions = {
@@ -510,7 +527,19 @@ def octave_code(expr, assign_to=None, **settings):
     >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
     'existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])'
 
-    [FIXME: test loops with ``Indexed`` types and add here, see ``ccode``]
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+    >>> from sympy import Eq, IndexedBase, Idx, ccode
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> octave_code(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy(i) = (y(i + 1) - y(i))./(t(i + 1) - t(i));'
     """
     return OctaveCodePrinter(settings).doprint(expr, assign_to)
 

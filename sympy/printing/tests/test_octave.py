@@ -205,26 +205,34 @@ def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
     assert mcode(expr) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))"
     assert mcode(expr, assign_to="c") == (
-            "if (x < 1)\n"
-            "  c = x;\n"
-            "else\n"
-            "  c = x.^2;\n"
-            "end")
+        "c = ((x < 1).*(x) + (~(x < 1)).*(x.^2));")
+    # FIXME:
+    #assert mcode(expr, assign_to="c", prefer_inline=False) == (
+    #        "if (x < 1)\n"
+    #        "  c = x;\n"
+    #        "else\n"
+    #        "  c = x.^2;\n"
+    #        "end")
     expr = Piecewise((x**2, x < 1), (x**3, x < 2), (x**4, x < 3), (x**5, True))
     assert mcode(expr) == (
             "((x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
             "(x < 2).*(x.^3) + (~(x < 2)).*( ...\n"
             "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5))))")
-    assert mcode(expr, assign_to='c') == (
-            "if (x < 1)\n"
-            "  c = x.^2;\n"
-            "elseif (x < 2)\n"
-            "  c = x.^3;\n"
-            "elseif (x < 3)\n"
-            "  c = x.^4;\n"
-            "else\n"
-            "  c = x.^5;\n"
-            "end")
+    assert mcode(expr, assign_to="c") == (
+            "c = ((x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
+            "(x < 2).*(x.^3) + (~(x < 2)).*( ...\n"
+            "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5))));")
+    # FIXME:
+    #assert mcode(expr, assign_to="c", prefer_inline=False) == (
+            # "if (x < 1)\n"
+            # "  c = x.^2;\n"
+            # "elseif (x < 2)\n"
+            # "  c = x.^3;\n"
+            # "elseif (x < 3)\n"
+            # "  c = x.^4;\n"
+            # "else\n"
+            # "  c = x.^5;\n"
+            # "end")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: mcode(expr))
@@ -246,14 +254,24 @@ def test_octave_matrix_assign_to():
     assert mcode(A, assign_to='A') == "A = [1 2; ...\n3 4];"
 
 
-@XFAIL
 def test_octave_matrix_assign_to_more():
     # assigning to Symbol or MatrixSymbol requires lhs/rhs match
-    # FIXME: do we want this?  currently this is allowed
+    A = Matrix([[1, 2, 3]])
     B = MatrixSymbol('B', 1, 3)
-    #print(mcode(A, assign_to=B))
+    C = MatrixSymbol('C', 2, 3)
     assert mcode(A, assign_to=B) == "B = [1 2 3];"
     raises(ValueError, lambda: mcode(A, assign_to=x))
+    raises(ValueError, lambda: mcode(A, assign_to=C))
+
+
+def test_octave_matrix_1x1():
+    A = Matrix([[3]])
+    B = MatrixSymbol('B', 1, 1)
+    C = MatrixSymbol('C', 1, 2)
+    assert mcode(A, assign_to=B) == "B = 3;"
+    # FIXME?
+    #assert mcode(A, assign_to=x) == "x = 3;"
+    raises(ValueError, lambda: mcode(A, assign_to=C))
 
 
 def test_octave_matrix_elements():
