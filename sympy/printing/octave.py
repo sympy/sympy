@@ -74,7 +74,7 @@ class OctaveCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
-        'contract': False
+        'contract': True
     }
     # FIXME: contract is for expressing tensors as loops (if True), or
     # just assignment (if False).  Needs tests for tensors, borrow
@@ -286,6 +286,13 @@ class OctaveCodePrinter(CodePrinter):
     def _print_MatrixElement(self, expr):
         return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
 
+    def _print_Indexed(self, expr):
+        inds = [ self._print(i) for i in expr.indices ]
+        return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
+
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
 
@@ -338,7 +345,7 @@ class OctaveCodePrinter(CodePrinter):
             return ''.join(code_lines)
 
         tab = "  "
-        inc_token = ('if ', 'function ', 'else', 'elseif ')
+        inc_token = ('function ', 'if ', 'elseif ', 'else', 'for')
         dec_token = ('end')
 
         # pre-strip left-space from the code
