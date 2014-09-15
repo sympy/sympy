@@ -200,20 +200,38 @@ class im(Function):
 
 class sign(Function):
     """
-    Returns the sign of an expression, that is:
+    Returns the complex sign of an expression:
 
-    * 1 if expression is positive
-    * 0 if expression is equal to zero
-    * -1 if expression is negative
+    If the expresssion is real the sign will be:
+
+        * 1 if expression is positive
+        * 0 if expression is equal to zero
+        * -1 if expression is negative
+
+    If the expresssion is imaginary the sign will be:
+
+        * I if im(expression) is positive
+        * -I if im(expression) is negative
+
+    Otherwise an unevaluated expression will be returned. When evaluated, the
+    result (in general) will be ``cos(arg(expr)) + I*sin(arg(expr))``.
 
     Examples
     ========
 
     >>> from sympy.functions import sign
+    >>> from sympy.core.numbers import I
+
     >>> sign(-1)
     -1
     >>> sign(0)
     0
+    >>> sign(-3*I)
+    -I
+    >>> sign(1 + I)
+    sign(1 + I)
+    >>> _.evalf()
+    0.707106781186548 + 0.707106781186548*I
 
     See Also
     ========
