@@ -134,7 +134,15 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        from sympy.core.assumptions import _minimal_assumptions as m
+        t, f = m(expr)
+        if t or f:
+            attr = ['%s=1'%k for k in t]
+            attr.extend(['%s=0'%k for k in f])
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                self._print(expr.name), ', '.join(attr))
+        else:
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))

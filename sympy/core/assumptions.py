@@ -249,3 +249,45 @@ class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
             pname = as_property(fact)
             if not hasattr(cls, pname):
                 setattr(cls, pname, make_property(fact))
+
+
+def _minimal_assumptions(s):
+    """Return a list containing the fewest True or False assumptions necessary
+    to reproduce the assumptions of symbol ``s``.
+
+    Examples
+    ========
+
+    >>> from sympy.core.assumptions import _minimal_assumptions as f
+    >>> from sympy import Symbol, srepr
+    >>> f(Symbol('x', odd=True, nonpositive=True))
+    (['negative', 'odd'], [])
+
+    Notice that the assumptions may not be the same as those used to
+    create they symbol, but they will be lexically "least" and still
+    produce the same assumptions when used to create a new symbol.
+    """
+    from sympy.utilities.iterables import subsets
+    from sympy.core.symbol import Dummy, Symbol
+    assert isinstance(s, Symbol)
+    d = s.assumptions0
+    t = sorted([k for k in d if d[k]])
+    sub = subsets(t)
+    for s in sub:
+        if Dummy(**dict([(k, 1) for k in s])).assumptions0 == d:
+            return sorted(s), []
+    # try negatives
+    f = sorted([k for k in d if d[k] is False])
+    sub = subsets(f)
+    for s in sub:
+        if Dummy(**dict([(k, 0) for k in s])).assumptions0 == d:
+            return [], sorted(s)
+    # try both
+    a = t + f
+    sub = subsets(a)
+    for s in sub:
+        if not (any(i in t for i in s) and any(i in f for i in s)):
+            continue
+        if Dummy(**dict([(k, 0 if k in f else 1)
+                for k in s])).assumptions0 == d:
+            return [i for i in s if i in t], [i for i in s if i in f]
