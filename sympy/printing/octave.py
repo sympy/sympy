@@ -170,9 +170,9 @@ class OctaveCodePrinter(CodePrinter):
             # here we probably are assuming the constants will come first
             r = a_str[0]
             #for (ai, ai_str) in zip(a, a_str)[1:]:
-            #    if ai.is_constant()
+            #    if ai.is_number
             for i in range(1, len(a)):
-                if a[i-1].is_constant():
+                if a[i-1].is_number:
                     mulsym = '*'
                 else:
                     mulsym = '.*'
@@ -182,13 +182,13 @@ class OctaveCodePrinter(CodePrinter):
         if len(b) == 0:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
-            if b[0].is_constant():
+            if b[0].is_number:
                 divsym = '/'
             else:
                 divsym = './'
             return sign + multjoin(a, a_str) + divsym + b_str[0]
         else:
-            if all([bi.is_constant() for bi in b]):
+            if all([bi.is_number for bi in b]):
                 divsym = '/'
             else:
                 divsym = './'
@@ -202,7 +202,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Pow(self, expr):
-        if all([x.is_constant() for x in expr.args]):
+        if all([x.is_number for x in expr.args]):
             sym = '^'
         else:
             sym = '.^'
@@ -282,6 +282,9 @@ class OctaveCodePrinter(CodePrinter):
         _print_ImmutableMatrix = \
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
+
+    def _print_MatrixElement(self, expr):
+        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
