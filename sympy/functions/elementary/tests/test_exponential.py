@@ -382,6 +382,9 @@ def test_polar():
     # Compare exp(1.0*pi*I).
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
 
+    assert exp_polar(0).is_rational is True  # issue 8008
+
+
 def test_log_product():
     from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)

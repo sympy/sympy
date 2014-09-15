@@ -89,7 +89,9 @@ class ExpBase(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.exp is S.Zero:
+                return True
+            elif s.exp.is_rational:
                 return False
         else:
             return s.is_rational
