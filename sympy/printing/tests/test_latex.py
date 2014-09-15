@@ -98,6 +98,8 @@ def test_latex_basic():
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x, y)) == r"x \Rightarrow y"
     assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
+    assert latex(Implies(Or(x,y), z)) == r"\left(x \vee y\right) \Rightarrow z"
+    assert latex(Implies(z, Or(x,y))) == r"z \Rightarrow \left(x \vee y\right)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
