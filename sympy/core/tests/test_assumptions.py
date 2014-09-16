@@ -21,6 +21,7 @@ def test_zero():
     assert z.is_integer is True
     assert z.is_rational is True
     assert z.is_algebraic is True
+    assert z.is_transcendental is False
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -46,6 +47,7 @@ def test_one():
     assert z.is_integer is True
     assert z.is_rational is True
     assert z.is_algebraic is True
+    assert z.is_transcendental is False
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -75,6 +77,7 @@ def test_negativeone():
     assert z.is_integer is True
     assert z.is_rational is True
     assert z.is_algebraic is True
+    assert z.is_transcendental is False
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -101,6 +104,7 @@ def test_infinity():
     assert oo.is_integer is None
     assert oo.is_rational is None
     assert oo.is_algebraic is None
+    assert oo.is_transcendental is None
     assert oo.is_real is True
     assert oo.is_complex is True
     assert oo.is_noninteger is None
@@ -127,6 +131,7 @@ def test_neg_infinity():
     assert mm.is_integer is None
     assert mm.is_rational is None
     assert mm.is_algebraic is None
+    assert mm.is_transcendental is None
     assert mm.is_real is True
     assert mm.is_complex is True
     assert mm.is_noninteger is None
@@ -153,6 +158,7 @@ def test_nan():
     assert nan.is_integer is None
     assert nan.is_rational is None
     assert nan.is_algebraic is None
+    assert nan.is_transcendental is None
     assert nan.is_real is None
     assert nan.is_complex is None
     assert nan.is_noninteger is None
@@ -178,6 +184,7 @@ def test_pos_rational():
     assert r.is_integer is False
     assert r.is_rational is True
     assert r.is_algebraic is True
+    assert r.is_transcendental is False
     assert r.is_real is True
     assert r.is_complex is True
     assert r.is_noninteger is True
@@ -241,6 +248,7 @@ def test_pi():
     assert z.is_integer is False
     assert z.is_rational is False
     assert z.is_algebraic is False
+    assert z.is_transcendental is True
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is True
@@ -265,6 +273,7 @@ def test_E():
     assert z.is_integer is False
     assert z.is_rational is False
     assert z.is_algebraic is False
+    assert z.is_transcendental is True
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is True
@@ -289,6 +298,7 @@ def test_I():
     assert z.is_integer is False
     assert z.is_rational is False
     assert z.is_algebraic is True
+    assert z.is_transcendental is False
     assert z.is_real is False
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -550,6 +560,13 @@ def test_other_symbol():
 
     with raises(AttributeError):
         x.is_real = False
+
+    x = Symbol('x', algebraic=True)
+    assert x.is_transcendental is False
+    x = Symbol('x', transcendental=True)
+    assert x.is_algebraic is False
+    assert x.is_rational is False
+    assert x.is_integer is False
 
 
 def test_issue_3825():
