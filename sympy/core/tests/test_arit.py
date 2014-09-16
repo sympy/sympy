@@ -453,6 +453,13 @@ def test_Mul_is_rational():
     assert (x/n).is_rational is None
     assert (n/pi).is_rational is False
 
+    # issue 8008
+    z = Symbol('z', zero=True)
+    i = Symbol('i', imaginary=True)
+    assert (z*i).is_rational is None
+    bi = Symbol('i', imaginary=True, bounded=True)
+    assert (z*bi).is_zero is True
+
 
 def test_Add_is_rational():
     x = Symbol('x')
