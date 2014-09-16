@@ -1,5 +1,13 @@
 """
-Octave/Matlab code printer
+Octave (and Matlab) code printer
+
+The `OctaveCodePrinter` converts SymPy expressions into Octave expressions.
+It uses a subset of the Octave language for Matlab compatibility.
+
+A complete code generator, which uses `octave_code` extensively, can be found
+in `sympy.utilities.codegen`.  The `codegen` module can be used to generate
+complete source code files.
+
 """
 
 from __future__ import print_function, division
@@ -360,7 +368,9 @@ class OctaveCodePrinter(CodePrinter):
 
 
 def octave_code(expr, assign_to=None, **settings):
-    r"""Converts an expr to a string of Octave/Matlab code
+    r"""Converts `expr` to a string of Octave (or Matlab) code.
+
+    The string uses a subset of the Octave language for Matlab compatibility.
 
     Parameters
     ==========
@@ -519,7 +529,7 @@ def octave_code(expr, assign_to=None, **settings):
 
 
 def print_octave_code(expr, **settings):
-    """Prints the Octave/Matlab representation of the given expression.
+    """Prints the Octave (or Matlab) representation of the given expression.
 
        See `octave_code` for the meaning of the optional arguments.
     """
