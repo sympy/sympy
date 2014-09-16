@@ -1335,15 +1335,9 @@ class totient(Function):
 
 class divisor_sigma(Function):
     """
-    Calculate the divisor function sigma_k(n) for positive integer n
+    Calculate the divisor function `\sigma_k(n)` for positive integer n
 
-    divisor_sigma(n, k) is equal to sum([x**k for x in divisors(n)])
-
-    for k = 0, 1:
-    divisor_sigma(n, 0) is equal to divisor_count(n)
-    divisor_sigma(n, 1) is equal to sum(divisors(n))
-
-    Default for k is 1.
+    ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
 
     If n's prime factorization is:
 
@@ -1355,6 +1349,17 @@ class divisor_sigma(Function):
     .. math ::
         \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
         + p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
+        ``divisor_sigma(n, 1)`` is equal to ``sum(divisors(n))``
+
+        Default for k is 1.
 
     References
     ==========
@@ -1380,13 +1385,8 @@ class divisor_sigma(Function):
     divisor_count, totient, divisors, factorint
     """
 
-    i = Dummy('i', integer=True)
-    p = Dummy('p', integer=True)
-    e = Dummy('e', integer=True)
-
     @classmethod
     def eval(cls, n, k=1):
-        from sympy.concrete.summations import summation
         n = sympify(n)
         k = sympify(k)
         if n.is_prime:
@@ -1395,6 +1395,5 @@ class divisor_sigma(Function):
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                s = summation(cls.p**(k*cls.i), (cls.i, 0, cls.e))
-                return Mul(*[s.subs([(cls.p, p), (cls.e, e)])
-                           for p, e in factorint(n).items() if p > 1])
+                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
+                           else e + 1 for p, e in factorint(n).items()])
