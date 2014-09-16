@@ -37,18 +37,10 @@ def test_Function():
 def test_Pow():
     assert mcode(x**3) == "x.^3"
     assert mcode(x**(y**3)) == "x.^(y.^3)"
-    # FIXME:
-    #g = implemented_function('g', Lambda(x, 2*x))
-    #print(mcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)))
-    #assert mcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-    #    "(3.5*2*x).^(-x + y.^x)/(x.^2 + y)"
     assert mcode(x**Rational(2, 3)) == 'x.^(2/3)'
-    # FIXME:
-    #assert mcode(x**-1) == '1./x'
-    #assert mcode(x**-1.0) == 'x.^-1.0'
-    assert mcode(x**S.Half) == 'sqrt(x)'
-    assert mcode(sqrt(x)) == "sqrt(x)"
-    assert mcode(x**-S.Half) == '1/sqrt(x)'
+    g = implemented_function('g', Lambda(x, 2*x))
+    assert mcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
+        "(3.5*2*x).^(-x + y.^x)./(x.^2 + y)"
 
 
 def test_basic_ops():
@@ -58,10 +50,18 @@ def test_basic_ops():
     assert mcode(-x) == "-x"
 
 
-@XFAIL
-def test_override_1_over_x():
-    # FIXME
-    assert mcode(1/x) == "1./x"
+def test_1_over_x_and_sqrt():
+    # 1.0 and 0.5 would do something different in regular StrPrinter,
+    # but these are exact in IEEE floating point so no different here.
+    assert mcode(1/x) == '1./x'
+    assert mcode(x**-1) == mcode(x**-1.0) == '1./x'
+    assert mcode(1/sqrt(x)) == '1./sqrt(x)'
+    assert mcode(x**-S.Half) == mcode(x**-0.5) == '1./sqrt(x)'
+    assert mcode(sqrt(x)) == 'sqrt(x)'
+    assert mcode(x**S.Half) == mcode(x**0.5) == 'sqrt(x)'
+    assert mcode(1/pi) == '1/pi'
+    assert mcode(pi**-1) == mcode(pi**-1.0) == '1/pi'
+    assert mcode(pi**-0.5) == '1/sqrt(pi)'
 
 
 def test_mix_number_mult_symbols():

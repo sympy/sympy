@@ -180,14 +180,30 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Pow(self, expr):
-        if all([x.is_number for x in expr.args]):
-            sym = '^'
-        else:
-            sym = '.^'
-        return super(OctaveCodePrinter, self)._print_Pow(expr, powsymbol=sym)
+        powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
+
+        PREC = precedence(expr)
+
+        if expr.exp == S.Half:
+            return "sqrt(%s)" % self._print(expr.base)
+
+        if expr.is_commutative:
+            if expr.exp == -S.Half:
+                sym = '/' if expr.base.is_number else './'
+                return "1" + sym + "sqrt(%s)" % self._print(expr.base)
+            if expr.exp == -S.One:
+                sym = '/' if expr.base.is_number else './'
+                return "1" + sym + "%s" % self.parenthesize(expr.base, PREC)
+
+        return '%s%s%s' % (self.parenthesize(expr.base, PREC), powsymbol,
+                           self.parenthesize(expr.exp, PREC))
+
 
     def _print_MatPow(self, expr):
-        return super(OctaveCodePrinter, self)._print_MatPow(expr, powsymbol='^')
+        PREC = precedence(expr)
+        return '%s^%s' % (self.parenthesize(expr.base, PREC),
+                          self.parenthesize(expr.exp, PREC))
+
 
     def _print_Pi(self, expr):
         return 'pi'
