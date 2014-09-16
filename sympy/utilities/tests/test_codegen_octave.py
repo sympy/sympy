@@ -317,7 +317,7 @@ def test_m_matrix_output_autoname_2():
         "  out1 = x + y;\n"
         "  out2 = [2*x 2*y 2*z];\n"
         "  out3 = [x; y; z];\n"
-        "  out4 = [x  y; ...\n"
+        "  out4 = [x  y;\n"
         "  z 16];\n"
         "end\n"
     )
