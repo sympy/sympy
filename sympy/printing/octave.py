@@ -68,25 +68,32 @@ class OctaveCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
 
+
     def _rate_index_position(self, p):
         return p*5
+
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
+
     def _get_comment(self, text):
         return "% {0}".format(text)
+
 
     def _declare_number_const(self, name, value):
         return "{0} = {1};".format(name, value)
 
+
     def _format_code(self, lines):
         return self.indent_code(lines)
+
 
     def _traverse_matrix_indices(self, mat):
         # Octave uses Fortran order (column-major)
         rows, cols = mat.shape
         return ((i, j) for j in range(cols) for i in range(rows))
+
 
     def _get_loop_opening_ending(self, indices):
         open_lines = []
@@ -150,31 +157,21 @@ class OctaveCodePrinter(CodePrinter):
         def multjoin(a, a_str):
             # here we probably are assuming the constants will come first
             r = a_str[0]
-            #for (ai, ai_str) in zip(a, a_str)[1:]:
-            #    if ai.is_number
             for i in range(1, len(a)):
-                if a[i-1].is_number:
-                    mulsym = '*'
-                else:
-                    mulsym = '.*'
+                mulsym = '*' if a[i-1].is_number else '.*'
                 r = r + mulsym + a_str[i]
             return r
 
         if len(b) == 0:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
-            if b[0].is_number:
-                divsym = '/'
-            else:
-                divsym = './'
+            divsym = '/' if b[0].is_number else './'
             return sign + multjoin(a, a_str) + divsym + b_str[0]
         else:
-            if all([bi.is_number for bi in b]):
-                divsym = '/'
-            else:
-                divsym = './'
+            divsym = '/' if all([bi.is_number for bi in b]) else './'
             return (sign + multjoin(a, a_str) +
                     divsym + "(%s)" % multjoin(b, b_str))
+
 
     # FIXME: need tests that use HadamardProduct: user needs this to
     # mix matrix symbols and .* products?
@@ -195,16 +192,20 @@ class OctaveCodePrinter(CodePrinter):
     def _print_Pi(self, expr):
         return 'pi'
 
+
     def _print_ImaginaryUnit(self, expr):
         return "1i"
 
+
     def _print_Exp1(self, expr):
         return "exp(1)"
+
 
     def _print_GoldenRatio(self, expr):
         # FIXME: how to do better, e.g., for octave_code(2*GoldenRatio)?
         #return self._print((1+sqrt(S(5)))/2)
         return "(1+sqrt(5))/2"
+
 
     def _print_NumberSymbol(self, expr):
         # FIXME: perhaps this should be based on Assignment?  Like in
@@ -232,26 +233,33 @@ class OctaveCodePrinter(CodePrinter):
     def _print_Infinity(self, expr):
         return 'inf'
 
+
     def _print_NegativeInfinity(self, expr):
         return '-inf'
 
+
     def _print_NaN(self, expr):
         return 'NaN'
+
 
     def _print_list(self, expr):
         return '{' + ', '.join(self._print(a) for a in expr) + '}'
     _print_tuple = _print_list
     _print_Tuple = _print_list
 
+
     # FIXME: ccode (and fcode?) need better bool support
     def _print_BooleanTrue(self, expr):
         return "true"
 
+
     def _print_BooleanFalse(self, expr):
         return "false"
 
+
     def _print_bool(self, expr):
         return str(expr).lower()
+
 
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
@@ -281,18 +289,23 @@ class OctaveCodePrinter(CodePrinter):
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
 
+
     def _print_MatrixElement(self, expr):
         return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
+
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
+
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
+
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -334,6 +347,7 @@ class OctaveCodePrinter(CodePrinter):
             # nicer to teach parenthesize() to do this for us when needed!
             return "(" + pw + ")"
 
+
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
@@ -343,7 +357,9 @@ class OctaveCodePrinter(CodePrinter):
             return ''.join(code_lines)
 
         tab = "  "
-        inc_token = ('function ', 'if ', 'elseif ', 'else', 'for')
+        # FIXME: use regex here to have end/else at beginning and end of line?
+        # otherwise, we fail on "elsemy = 6" or "enditall = inf"
+        inc_token = ('function ', 'if ', 'elseif ', 'else', 'for ')
         dec_token = ('end')
 
         # pre-strip left-space from the code
