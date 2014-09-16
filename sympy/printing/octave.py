@@ -12,47 +12,20 @@ from sympy.printing.precedence import precedence
 # FIXME: causes errors on import
 #from sympy.functions import sqrt
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
-# Used in OctaveCodePrinter._print_Function(self)
-# FIXME: almost certainly incomplete, perhaps better to default yet!
-known_functions = {
-    "sin": "sin",
-    "cos": "cos",
-    "tan": "tan",
-    "asin": "asin",
-    "acos": "acos",
-    "atan": "atan",
-    "atan2": "atan2",
-    "sinh": "sinh",
-    "cosh": "cosh",
-    "tanh": "tanh",
-    "asinh": "asinh",
-    "acosh": "acosh",
-    "atanh": "atanh",
-    "log": "log",
-    "exp": "exp",
-    "erf": "erf",
-    "gamma": "gamma",
-    "sign": "sign",
-    "floor": "floor",
-    "Abs": "abs",       # different names after this line
+# List of known functions.  First, those that have the same name in
+# SymPy and Octave.   This is almost certainly incomplete!
+known_fcns_src1 = ["sin", "cos", "tan", "asin", "acos", "atan", "atan2",
+                   "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+                   "log", "exp", "erf", "gamma", "sign", "floor", "csc",
+                   "sec", "cot", "coth", "acot", "acoth", "erfc",
+                   "erfinv", "erfcinv", "factorial" ]
+# These functions have different names ("Sympy": "Octave"), more
+# generally a mapping to (argument_conditions, octave_function).
+known_fcns_src2 = {
+    "Abs": "abs",
     "ceiling": "ceil",
     "conjugate": "conj",
 }
-# FIXME: test and/or merge these in
-# csc
-# sec
-# cot
-# coth
-# acot
-# acoth
-# factorial
-# erfc
-# erfinv
-# erfcinv
-# erfi
-# heaviside|Heaviside
-# dirac|DiracDelta
 
 
 class OctaveCodePrinter(CodePrinter):
@@ -82,7 +55,8 @@ class OctaveCodePrinter(CodePrinter):
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
-        self.known_functions = dict(known_functions)
+        self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
+        self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
 
