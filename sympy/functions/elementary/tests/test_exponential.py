@@ -242,10 +242,11 @@ def test_exp_assumptions():
 def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
-    z = 2 - pi - pi*(1/pi - 1)
+    z = symbols('z', zero=True)
     assert log(2) > 0
     assert log(1).is_zero
-    assert log(z).is_zero is None  # is_zero is naive
+    assert log(1, evaluate=False).is_zero
+    assert log(1 + z).is_zero
     assert log(p).is_zero is None
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True
