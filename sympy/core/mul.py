@@ -1151,7 +1151,13 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_even(self):
-        return (self + S.One).is_odd
+        is_integer = self.is_integer
+
+        if is_integer:
+            return fuzzy_not(self._eval_is_odd())
+
+        elif is_integer is False:
+            return False
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
