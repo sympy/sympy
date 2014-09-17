@@ -91,7 +91,7 @@ def _pi_coeff(arg, cycles=1):
     ========
 
     >>> from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
-    >>> from sympy import pi
+    >>> from sympy import pi, Dummy
     >>> from sympy.abc import x, y
     >>> coeff(3*x*pi)
     3*x
@@ -108,6 +108,11 @@ def _pi_coeff(arg, cycles=1):
     >>> coeff(5.5*pi)
     3/2
     >>> coeff(2 + pi)
+
+    >>> coeff(2*Dummy(integer=True)*pi)
+    2
+    >>> coeff(2*Dummy(even=True)*pi)
+    0
     """
     arg = sympify(arg)
     if arg is S.Pi:
@@ -139,7 +144,7 @@ def _pi_coeff(arg, cycles=1):
                 elif not c2:
                     if x.is_even is not None:  # known parity
                         return S.Zero
-                    return 2*x
+                    return S(2)
                 else:
                     return c2*x
             return cx
