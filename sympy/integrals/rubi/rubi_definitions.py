@@ -19,5 +19,5 @@ def integer(a):
 def subst(a, x, y):
     return a.subs(x, y)
 
-def Int(a, x):
+def integrate(a, x):
     return a.integrate(x)

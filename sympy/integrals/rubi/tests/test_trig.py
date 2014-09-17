@@ -109,3 +109,17 @@ def test_auto():
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(0), S(0), S(2), S(0), x]
     assert intsin12(*args) == 9*x/2 - 9*sin(2*x + 1)*cos(2*x + 1)/4
     assert check_intsin12(*args)
+    args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(1), S(0), S(2), S(0), x]
+    assert check_intsin12(*args)
+    args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(1), S(1), S(2), S(0), x]
+    assert check_intsin12(*args)
+    args = [S(1), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
+    assert check_intsin12(*args)
+
+    a = Symbol("a")
+    args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
+    assert check_intsin12(*args)
+
+    b = Symbol("b")
+    args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(b), S(1), S(2), S(2), x]
+    assert check_intsin12(*args)
