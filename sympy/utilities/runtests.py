@@ -415,10 +415,14 @@ def test(*paths, **kwargs):
     """
     subprocess = kwargs.pop("subprocess", True)
     rerun = kwargs.pop("rerun", 0)
+    # count up from 0, do not print 0
+    print_counter = lambda i : (print("rerun %d" % (rerun-i))
+                                if rerun-i else None)
 
     if subprocess:
         # loop backwards so last i is 0
         for i in xrange(rerun, -1, -1):
+            print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_test",
                         function_args=paths, function_kwargs=kwargs)
             if ret is False:
@@ -430,6 +434,7 @@ def test(*paths, **kwargs):
 
     # rerun even if hash randomization is not supported
     for i in xrange(rerun, -1, -1):
+        print_counter(i)
         val = not bool(_test(*paths, **kwargs))
         if not val or i == 0:
             return val
