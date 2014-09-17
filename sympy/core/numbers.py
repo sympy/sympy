@@ -2824,14 +2824,22 @@ class NumberSymbol(AtomicExpr):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        return _sympify((-self) < (-other))
+        r = _sympify((-self) < (-other))
+        if r in (S.true, S.false):
+            return r
+        else:
+            return Expr.__gt__(self, other)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        return _sympify((-self) <= (-other))
+        r = _sympify((-self) <= (-other))
+        if r in (S.true, S.false):
+            return r
+        else:
+            return Expr.__ge__(self, other)
 
     def __int__(self):
         # subclass with appropriate return value
