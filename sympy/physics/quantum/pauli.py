@@ -258,10 +258,10 @@ class SigmaZ(SigmaOpBase):
             return Integer(1)
 
         if isinstance(other, SigmaMinus) and self.name == other.name:
-            return - SigmaMinus(self.name) # -(SigmaX(self.name) - I * SigmaY(self.name))/2  # 
+            return - SigmaMinus(self.name)
 
         if isinstance(other, SigmaPlus) and self.name == other.name:
-            return SigmaPlus(self.name) # (SigmaX(self.name) + I * SigmaY(self.name))/2  # 
+            return SigmaPlus(self.name)
 
         if isinstance(other, Mul):
             args1 = tuple(arg for arg in other.args if arg.is_commutative)

@@ -1,4 +1,4 @@
-from sympy.physics.quantum import Dagger, AntiCommutator, qapply
+from sympy.physics.quantum import Dagger, AntiCommutator, Commutator, qapply
 from sympy.physics.quantum.pauli import SigmaX, SigmaY, SigmaZ
 from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
 
