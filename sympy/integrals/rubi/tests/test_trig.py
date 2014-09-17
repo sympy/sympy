@@ -20,3 +20,7 @@ def test_intsin5():
     x = Symbol("x")
     assert intsin5(S(1), S(2), S(3), S(2), x) == 9*x/2 - 9*sin(2*x + 1)*cos(2*x + 1)/4
     assert intsin5(S(1), S(2), S(3), -S(2), x) == -cos(2*x + 1)/(18*sin(2*x + 1))
+
+def test_intsin12():
+    x = Symbol("x")
+    assert intsin12(S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(0), S(0), S(2), S(0), x) == 9*x/2 - 9*sin(2*x + 1)*cos(2*x + 1)/4
