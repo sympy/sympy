@@ -32,3 +32,69 @@ def test_ordered():
     assert list(ordered(l, warn=True)) == [[1], [1], [2]]
     raises(ValueError, lambda: list(ordered(['a', 'ab'], keys=[lambda x: x[0]],
         default=False, warn=True)))
+
+def test_reversed_rule_dispatch_sort_key():
+    from sympy.core.compatibility import reversed_rule_dispatch_sort_key as key
+    from sympy import symbols, Wild, S, sin, Function, cos
+
+    x, y, z = symbols('x y z')
+    u_, v_, w_ = map(Wild, list('uvw'))
+    f = Function('f')
+
+    pl = [x, u_, S.One, sin(x), sin(u_), sin(S.One)]
+    res = [u_, x, S.One, sin(u_), sin(x), sin(S.One)]
+    assert sorted(pl, key=key) == res
+
+    pl = [f(x), f(u_), f(S.One)]
+    res = [f(u_), f(x), f(S.One)]
+    assert sorted(pl, key=key) == res
+
+    pl = [f(x), f(u_), f(S.One), x, u_, S.One]
+    res = [u_, x, S.One, f(u_), f(x), f(S.One)]
+    assert sorted(pl, key=key) == res
+
+    pl = [f(x), f(x, y), f(x, y, z)]
+    res = [f(x), f(x, y), f(x, y, z)]
+    assert sorted(pl, key=key) == res
+
+    pl = [f(sin(x)),
+         f(w_),
+         f(sin(w_)),
+         f(x, y),
+         f(x, w_),
+         f(v_, w_),
+         f(x, y, z),
+         f(x, y, v_),
+         f(x, v_, y),
+         f(x, sin(w_), cos(y))
+        ]
+    # Mathics output:
+    #res = [
+         #f(w_),
+         #f(v_, w_),
+         #f(sin(w_)),
+         #f(sin(x)),
+         #f(x, w_),
+         #f(x, v_, y),
+         #f(x, sin(w_), cos(y)),
+         #f(x, y),
+         #f(x, y, v_),
+         #f(x, y, z),
+    #]
+    res = [
+         f(w_),
+         f(sin(w_)),
+         f(sin(x)),
+         f(v_, w_),
+         f(x, w_),
+         f(x, y),
+         f(x, v_, y),
+         f(x, y, v_),
+         f(x, y, z),
+         f(x, sin(w_), cos(y)),
+    ]
+    assert sorted(pl, key=key) == res
+
+    pl = [f(x, y), f(u_, v_), f(sin(x), cos(y)), f(sin(u_), cos(v_))]
+    res = [f(u_, v_), f(x, y), f(sin(u_), cos(v_)), f(sin(x), cos(y))]
+    assert sorted(pl, key=key) == res

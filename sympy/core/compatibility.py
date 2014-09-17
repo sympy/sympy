@@ -543,6 +543,45 @@ def default_sort_key(item, order=None):
             ), args, S.One.sort_key(), S.One
 
 
+def reversed_rule_dispatch_sort_key(item):
+    """
+    """
+    # promote partial-order to total-order
+
+    # sort keys:
+    #  * non-atoms expressions before atoms
+    #  * class MRO
+    #  * number of parameters
+    #  * wilds before symbols and expressions
+    #  * assumptions
+    from sympy import Wild
+
+    # MRO:
+    getrevmro = lambda ittype: \
+        tuple(i.__name__ for i in reversed(ittype.__mro__))
+    if isinstance(item, type):
+        mro_sort_key = getrevmro(item)
+    else:
+        mro_sort_key = getrevmro(type(item))
+
+
+    # type of object:
+    typ_sort_key = None
+    # typ_sort_key: (is_Atom, wild/non-number/number, mro, None, args recursion, item)
+    if item.is_Atom:
+        if isinstance(item, Wild):
+            typ_sort_key = (1, 1, mro_sort_key, None, None, item)
+        elif not item.is_Number:
+            # is this symbol?
+            typ_sort_key = (1, 2, mro_sort_key, None, None, item)
+        else:
+            # this is a number
+            typ_sort_key = (1, 3, mro_sort_key, None, None, item)
+    else:  # case: not an Atom
+        typ_sort_key = (2, 0, mro_sort_key, len(item.args), tuple(reversed_rule_dispatch_sort_key(i) for i in item.args), item)
+    return typ_sort_key
+
+
 def _nodes(e):
     """
     A helper for ordered() which returns the node count of ``e`` which
