@@ -77,7 +77,7 @@ matrix:
         - SPLIT="4/4"
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
-      pip install "fastcache==0.4.3";
+      pip install fastcache;
     fi
   - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
       pip uninstall -y numpy;
