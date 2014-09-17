@@ -36,7 +36,7 @@ def is_zero(e):
     function returns True, the expressions *might* be equal.
 
     The expression can contain any number of symbols (the test is slower the
-    more symbols it has). Currently is_zero() can handle up to 3 symbols, but
+    more symbols it has). Currently is_zero() can handle up to 4 symbols, but
     more can be easily implemented if needed.
     """
     symbols = e.atoms(Symbol)
@@ -71,6 +71,19 @@ def is_zero(e):
             y0 = S(randint(-10000, 10000))/500
             z0 = S(randint(-10000, 10000))/500
             if (abs(e.subs({x: x0, y: y0, z: z0}).n(100)) > 1e-100):
+                return False
+        return True
+    elif len(symbols) == 4:
+        x = symbols.pop()
+        y = symbols.pop()
+        z = symbols.pop()
+        a = symbols.pop()
+        for i in range(10):
+            x0 = S(randint(-10000, 10000))/500
+            y0 = S(randint(-10000, 10000))/500
+            z0 = S(randint(-10000, 10000))/500
+            a0 = S(randint(-10000, 10000))/500
+            if (abs(e.subs({x: x0, y: y0, z: z0, a: a0}).n(100)) > 1e-100):
                 return False
         return True
     else:
@@ -122,4 +135,8 @@ def test_auto():
 
     b = Symbol("b")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(b), S(1), S(2), S(2), x]
+    assert check_intsin12(*args)
+
+    c = Symbol("c")
+    args = [S(a), S(3), S(1), S(1), S(1), S(c), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
