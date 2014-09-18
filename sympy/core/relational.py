@@ -71,16 +71,17 @@ class Relational(Boolean, Expr, EvalfMixin):
         return self._args[1]
 
     @classmethod
-    def _eval_sides(cls, lhs, rhs):
+    def _eval_simplify_helper(cls, lhs, rhs, ratio, measure):
         """Takes the difference between lhs and rhs, simplifies and evaluates.
 
         If the difference can be simplified to a single real number, it will
-        be evaluated with ``cls._eval_relation``.  If the difference does not
-        simplify or cannot be calculated, None will be returned.
+        be evaluated with ``cls._eval_relation``.  But if the difference does
+        not simplify or cannot otherwise be reduced to True or False, None
+        will be returned.
 
         """
         if isinstance(lhs, Expr) and isinstance(rhs, Expr):
-            dif = (lhs - rhs).simplify()
+            dif = (lhs - rhs).simplify(ratio=ratio, measure=measure)
             r = cls(dif, S.Zero)
             if r in (S.true, S.false):
                return r
@@ -94,6 +95,11 @@ class Relational(Boolean, Expr, EvalfMixin):
                 if dif.is_real:
                     # note by docs _eval_relation only for reals
                     return cls._eval_relation(dif, S.Zero)
+            # Note: for Equality simplier code is possible
+            #if dif.is_number
+            #    rr = dif.equals(0)
+            #    if rr is not None:
+            #        return rr
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
@@ -111,22 +117,15 @@ class Relational(Boolean, Expr, EvalfMixin):
         return cls(lhs, rhs)
 
     def _eval_simplify(self, ratio, measure):
-        r = self.__class__(self.lhs.simplify(ratio=ratio),
-                           self.rhs.simplify(ratio=ratio))
+        r = self.__class__(self.lhs.simplify(ratio=ratio, measure=measure),
+                           self.rhs.simplify(ratio=ratio, measure=measure))
         if r not in (S.true, S.false):
             # try harder to reduce to boolean
-            # NOTE: may want to move _eval_sides() code here
-            rr = self._eval_sides(self.lhs, self.rhs)
+            rr = self._eval_simplify_helper(self.lhs, self.rhs,
+                                            ratio=ratio, measure=measure)
             if rr is not None:
                 return rr
         return r
-        # Note: In the case of equality, simplier code is possible:
-        #if not dif.has(Symbol):
-        #    rr = dif.equals(0)
-        #    if rr is not None:
-        #        return rr
-        # So perhaps we want to remove _eval_sides and define _eval_simplify
-        # separately for _Inequality and for Equality/Unequality
 
 
     def __nonzero__(self):
