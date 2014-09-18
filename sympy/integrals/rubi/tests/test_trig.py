@@ -46,8 +46,7 @@ def is_zero(e, n=10, prec=100):
     for i in range(n):
         d = {}
         for j in range(len(symbols)):
-            x0 = S(randint(-10000, 10000))/500
-            d[symbols[j]] = x0
+            d[symbols[j]] = S(randint(-10000, 10000))/500
         if (abs(e.subs(d).n(prec)) > S(10)**(-prec)):
             return False
     return True
