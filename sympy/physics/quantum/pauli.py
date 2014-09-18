@@ -1,15 +1,14 @@
 """Pauli operators and states"""
 
-from sympy import I, Add, Mul, Pow, Integer, exp, sqrt, conjugate
+from sympy import I, Mul, Integer
 from sympy.physics.quantum import (Operator, Commutator, AntiCommutator,
                                    Dagger, IdentityOperator, Ket, Bra)
-from sympy.physics.quantum import HilbertSpace, ComplexSpace
-from sympy.physics.quantum.boson import BosonOp
+from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 class SigmaOpBase(Operator):
-    """Pauli sigma x operator"""
+    """Pauli sigma operator, base class"""
 
     @property
     def name(self):
