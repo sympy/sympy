@@ -353,7 +353,7 @@ class OctaveCodePrinter(CodePrinter):
             # This Piecewise was used in an expression, so do inline
             # where each cond, expr pair is like a nested Horner form:
             #   (condition) .* (expr) + (not cond) .* (<others>)
-            # FIXME: ccode says some things won't work inline, true here?
+            # Expressions that result in multiple statements won't work here.
             ecpairs = ["({0}).*({1}) + (~({0})).*(".format
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]

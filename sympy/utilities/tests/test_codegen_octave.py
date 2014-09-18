@@ -101,7 +101,7 @@ def test_m_code_argument_order():
 
 
 def test_multiple_results_m():
-    # FIXME: is output order deterministic here, presumably input order?
+    # Here the output order is the input order
     expr1 = (x + y)*z
     expr2 = (x - y)*z
     name_expr = ("test", [expr1, expr2])
@@ -117,6 +117,7 @@ def test_multiple_results_m():
 
 
 def test_results_named_unordered():
+    # Here output order is alphabetical
     A, B, C = symbols('A,B,C')
     expr1 = Equality(C, (x + y)*z)
     expr2 = Equality(A, (x - y)*z)
@@ -174,6 +175,7 @@ def test_complicated_m_codegen():
 
 
 def test_m_output_arg_mixed_unordered():
+    # named outputs are alphabetical, unnamed output appear in the given order
     from sympy import sin, cos, tan
     a = symbols("a")
     r = Routine("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
