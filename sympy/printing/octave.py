@@ -264,7 +264,6 @@ class OctaveCodePrinter(CodePrinter):
     _print_Tuple = _print_list
 
 
-    # FIXME: ccode (and fcode?) need better bool support
     def _print_BooleanTrue(self, expr):
         return "true"
 
