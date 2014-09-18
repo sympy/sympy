@@ -8,8 +8,6 @@
 from sympy import Integer, sin, cos
 from .rubi_definitions import eq, gt, lt, ge, le, integer, subst, integrate
 
-true = True
-
 def intsin5(a,b,c,n,x):
     if eq(n,0) or eq(b,0) or eq(c,0):
         return x*(c*sin(a+b*x))**n
@@ -89,7 +87,7 @@ def intsin6(a,b,c,d,n,x):
                                     return intsin9(a,b,b**2*(Integer(-1)+n)+a**2*n,a*b*(Integer(-1)+Integer(2)*n),c,d,Integer(-2)+n,Integer(1),x)/n-b*cos(c+d*x)*(a+b*sin(c+d*x))**(Integer(-1)+n)/(d*n)
                             else:
                                 if eq(n,-1):
-                                    if false:
+                                    if False:
                                         return Integer(2)*subst(integrate(1/(a+b+(a-b)*x**2),x),x,tan(Integer(1)/Integer(2)*(c-Integer(1)/Integer(2)*Pi+d*x)))/d
                                     else:
                                         return Integer(2)*subst(integrate(1/(a+Integer(2)*b*x+a*x**2),x),x,tan(Integer(1)/Integer(2)*(c+d*x)))/d
@@ -155,45 +153,45 @@ def intsin9(a,b,c,d,e,f,m,n,x):
                                         if integer(n):
                                             return intsin9(c,d,a,b,e,f,n,m,x)
                                         else:
-                                            if eq(Integer(1)+m+n,0) and true:
+                                            if eq(Integer(1)+m+n,0) and not eq(m,Integer(-1)/Integer(2)):
                                                 return b*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n/(a*f*(Integer(1)+Integer(2)*m))
                                             else:
-                                                if eq(Integer(1)+m+n,0) and true:
+                                                if eq(Integer(1)+m+n,0) and not eq(n,Integer(-1)/Integer(2)):
                                                     return intsin9(c,d,a,b,e,f,n,m,x)
                                                 else:
                                                     if integer(Integer(2)*m):
                                                         if integer(Integer(2)*n):
-                                                            if eq(m,Integer(1)/Integer(2)) and true:
-                                                                if eq(n,Integer(1)/Integer(2)) and false:
+                                                            if eq(m,Integer(1)/Integer(2)) and not eq(n,Integer(-1)/Integer(2)):
+                                                                if eq(n,Integer(1)/Integer(2)) and False:
                                                                     return intsin9(c,d,a,b,e,f,n,m,x)
                                                                 else:
                                                                     return -Integer(2)*b*cos(e+f*x)*(c+d*sin(e+f*x))**n/(f*(Integer(1)+Integer(2)*n)*sqrt(a+b*sin(e+f*x)))
                                                             else:
-                                                                if eq(n,Integer(1)/Integer(2)) and true:
+                                                                if eq(n,Integer(1)/Integer(2)) and not eq(m,Integer(-1)/Integer(2)):
                                                                     return intsin9(c,d,a,b,e,f,n,m,x)
                                                                 else:
-                                                                    if gt(m,1) and lt(n,-1) and true:
+                                                                    if gt(m,1) and lt(n,-1) and not integer(m+n) and gt(Integer(-1)-m-n,0) and le(Integer(-1)-m-n,Integer(-1)/Integer(2)+m):
                                                                         return -b*(Integer(-1)+Integer(2)*m)*intsin9(a,b,c,d,e,f,Integer(-1)+m,Integer(1)+n,x)/(d*(Integer(1)+Integer(2)*n))-Integer(2)*b*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(-1)+m)*(c+d*sin(e+f*x))**n/(f*(Integer(1)+Integer(2)*n))
                                                                     else:
-                                                                        if gt(n,1) and lt(m,-1) and true:
+                                                                        if gt(n,1) and lt(m,-1) and not integer(m+n) and gt(Integer(-1)-m-n,0) and le(Integer(-1)-m-n,Integer(-1)/Integer(2)+n):
                                                                             return intsin9(c,d,a,b,e,f,n,m,x)
                                                                         else:
-                                                                            if integer(Integer(-1)/Integer(2)+m) and gt(m,1) and true and true and true:
+                                                                            if integer(Integer(-1)/Integer(2)+m) and gt(m,1) and not eq(m+n,0) and not integer(Integer(-1)/Integer(2)+n) and gt(n,1) and lt(-m+n,0) and not integer(m+n) and gt(Integer(-1)-m-n,0) and le(Integer(-1)-m-n,Integer(-1)/Integer(2)+m):
                                                                                 return a*(Integer(-1)+Integer(2)*m)*intsin9(a,b,c,d,e,f,Integer(-1)+m,n,x)/(m+n)-b*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(-1)+m)*(c+d*sin(e+f*x))**n/(f*(m+n))
                                                                             else:
-                                                                                if integer(Integer(-1)/Integer(2)+n) and gt(n,1) and true and true and true:
+                                                                                if integer(Integer(-1)/Integer(2)+n) and gt(n,1) and not eq(m+n,0) and not integer(Integer(-1)/Integer(2)+m) and gt(m,1) and lt(m-n,0) and not integer(m+n) and gt(Integer(-1)-m-n,0) and le(Integer(-1)-m-n,Integer(-1)/Integer(2)+n):
                                                                                     return intsin9(c,d,a,b,e,f,n,m,x)
                                                                                 else:
-                                                                                    if lt(m,-1) and true:
+                                                                                    if lt(m,-1) and not gt(-m+n,0) and lt(n,-1):
                                                                                         return (Integer(1)+m+n)*intsin9(a,b,c,d,e,f,Integer(1)+m,n,x)/(a*(Integer(1)+Integer(2)*m))+b*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n/(a*f*(Integer(1)+Integer(2)*m))
                                                                                     else:
-                                                                                        if lt(n,-1) and true:
+                                                                                        if lt(n,-1) and not gt(m-n,0) and lt(m,-1):
                                                                                             return intsin9(c,d,a,b,e,f,n,m,x)
                                                                                         else:
-                                                                                            if integer(normal(Integer(1)+m+n)) and lt(normal(Integer(1)+m+n),0) and Not(SumSimplerQ(n,Integer(1))) and true:
+                                                                                            if integer(normal(Integer(1)+m+n)) and lt(normal(Integer(1)+m+n),0) and not SumSimplerQ(n,Integer(1)) and not eq(m,Integer(-1)/Integer(2)):
                                                                                                 return (Integer(1)+m+n)*intsin9(a,b,c,d,e,f,Integer(1)+m,n,x)/(a*(Integer(1)+Integer(2)*m))+b*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n/(a*f*(Integer(1)+Integer(2)*m))
                                                                                             else:
-                                                                                                if integer(normal(Integer(1)+m+n)) and lt(normal(Integer(1)+m+n),0) and Not(SumSimplerQ(m,Integer(1))) and true:
+                                                                                                if integer(normal(Integer(1)+m+n)) and lt(normal(Integer(1)+m+n),0) and not SumSimplerQ(m,Integer(1)) and not eq(n,Integer(-1)/Integer(2)):
                                                                                                     return intsin9(c,d,a,b,e,f,n,m,x)
                                                                                                 else:
                                                                                                     return a**(Integer(1)/Integer(2)+m)*c**(Integer(1)/Integer(2)+m)*AppellF1(Integer(1)-m+n,Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m),Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m),Integer(2)-m+n,(c+d*Sin(e+f*x))/(c+d),(c+d*Sin(e+f*x))/(c-d))*cos(e+f*x)*Cos(e+f*x)**(Integer(-1)+Integer(2)*m)*(c+d*Sin(e+f*x))**(Integer(1)-m+n)*(Integer(1)+(-c-d*Sin(e+f*x))/(c-d))**(Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m))*(Integer(1)+(-c-d*Sin(e+f*x))/(c+d))**(Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m))/(d*f*(Integer(1)-m+n)*sqrt(a+b*sin(e+f*x))*sqrt(c+d*sin(e+f*x)))
@@ -206,7 +204,7 @@ def intsin9(a,b,c,d,e,f,m,n,x):
                                                         if integer(Integer(2)*n):
                                                             return intsin9(c,d,a,b,e,f,n,m,x)
                                                         else:
-                                                            if true:
+                                                            if True:
                                                                 return AppellF1(Integer(1)-m+n,Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m),Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m),Integer(2)-m+n,(c+d*Sin(e+f*x))/(c+d),(c+d*Sin(e+f*x))/(c-d))*Cos(e+f*x)**(Integer(-1)+Integer(2)*m)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**m*(c+d*Sin(e+f*x))**(Integer(1)-m+n)*(Integer(1)+(-c-d*Sin(e+f*x))/(c-d))**(Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m))*(Integer(1)+(-c-d*Sin(e+f*x))/(c+d))**(Integer(1)/Integer(2)*(Integer(1)-Integer(2)*m))/(d*f*(Integer(1)-m+n)*cos(e+f*x)**(Integer(2)*m))
                                                             else:
                                                                 return intsin9(c,d,a,b,e,f,n,m,x)
@@ -239,7 +237,7 @@ def intsin9(a,b,c,d,e,f,m,n,x):
                                                                 if lt(m,-1):
                                                                     return intsin9(a,b,(a*c-b*d)*(Integer(1)+m),-(b*c-a*d)*(Integer(2)+m),e,f,Integer(1)+m,Integer(1),x)/((a**2-b**2)*(Integer(1)+m))-(b*c-a*d)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)/((a**2-b**2)*f*(Integer(1)+m))
                                                                 else:
-                                                                    if eq(c**2-d**2,0) and true:
+                                                                    if eq(c**2-d**2,0) and not integer(Integer(2)*m):
                                                                         return -Integer(2)*c*appellf1(Integer(1)/Integer(2),Integer(-1)/Integer(2),-m,Integer(3)/Integer(2),Integer(1)/Integer(2)*(c-d*sin(e+f*x))/c,b*(c-d*sin(e+f*x))/(b*c+a*d))*(a+b*sin(e+f*x))**m*(c-d*sin(e+f*x))*sqrt(Integer(2))*sqrt((c+d*sin(e+f*x))/c)/(d*f*cos(e+f*x)*(c*(a+b*sin(e+f*x))/(a*c+b*d))**m)
                                                                     else:
                                                                         return (b*c-a*d)*intsin6(a,b,e,f,m,x)/b+d*intsin6(a,b,e,f,Integer(1)+m,x)/b
@@ -263,7 +261,7 @@ def intsin9(a,b,c,d,e,f,m,n,x):
                                                                         else:
                                                                             return intsin9(a,b,b*(d**2*(Integer(1)+m)+c**2*(Integer(2)+m)),-d*(a*d-Integer(2)*b*c*(Integer(2)+m)),e,f,m,Integer(1),x)/(b*(Integer(2)+m))-d**2*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)/(b*f*(Integer(2)+m))
                                                                 else:
-                                                                    if integer(Integer(2)*m) or true:
+                                                                    if integer(Integer(2)*m) or not eq(c**2-d**2,0):
                                                                         if lt(m,-1):
                                                                             return -intsin9(a,b,b*(Integer(2)*b*c*d-a*(c**2+d**2))*(Integer(1)+m),a**2*d**2-Integer(2)*a*b*c*d*(Integer(2)+m)+b**2*(d**2*(Integer(1)+m)+c**2*(Integer(2)+m)),e,f,Integer(1)+m,Integer(1),x)/(b*(a**2-b**2)*(Integer(1)+m))-(b**2*c**2-Integer(2)*a*b*c*d+a**2*d**2)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)/(b*(a**2-b**2)*f*(Integer(1)+m))
                                                                         else:
@@ -396,7 +394,7 @@ def intsin9(a,b,c,d,e,f,m,n,x):
                                                                                                 else:
                                                                                                     return intsin9(a,b,c,d,e,f,Integer(-1)/Integer(2),Integer(-1)/Integer(2),x)/(a-b)-b*intsin(a,b,c,d,e,f,Integer(1),Integer(1),Integer(-3)/Integer(2),Integer(-1)/Integer(2),x)/(a-b)
                                                                                             else:
-                                                                                                if eq(a,0) and integer(m) and true or true:
+                                                                                                if eq(a,0) and integer(m) and not integer(n) or not integer(Integer(2)*n) and lt(n,-1) and integer(n) and not integer(m) or eq(a,0):
                                                                                                     return intsin12(a,b,c,d,e,f,a*(b*c-a*d)*(Integer(1)+m)+b**2*d*(Integer(2)+m+n),-b**2*c-b*(b*c-a*d)*(Integer(1)+m),-b**2*d*(Integer(3)+m+n),Integer(1)+m,n,x)/((a**2-b**2)*(b*c-a*d)*(Integer(1)+m))-b**2*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)*(c+d*sin(e+f*x))**(Integer(1)+n)/((a**2-b**2)*(b*c-a*d)*f*(Integer(1)+m))
                                                                                                 else:
                                                                                                     return intsin9(c,d,a,b,e,f,n,m,x)
@@ -469,7 +467,7 @@ def intsin9(a,b,c,d,e,f,m,n,x):
                                                                                                                                         return intsin9(c,d,a,b,e,f,n,m,x)
                                                                                                                                     else:
                                                                                                                                         if pos((c+d)/(a+b)):
-                                                                                                                                            if true:
+                                                                                                                                            if True:
                                                                                                                                                 return Integer(2)*(a+b)**(Integer(1)/Integer(2))*ellipf(asin((c+d)**(Integer(1)/Integer(2))*sqrt(a+b*sin(e+f*x))/((a+b)**(Integer(1)/Integer(2))*sqrt(c+d*sin(e+f*x)))),(a+b)*(c-d)/((a-b)*(c+d)))*(c+d*sin(e+f*x))*sqrt((b*c-a*d)*(Integer(1)-sin(e+f*x))/((a+b)*(c+d*sin(e+f*x))))*sqrt(-(b*c-a*d)*(Integer(1)+sin(e+f*x))/((a-b)*(c+d*sin(e+f*x))))/((c+d)**(Integer(1)/Integer(2))*(b*c-a*d)*f*cos(e+f*x))
                                                                                                                                             else:
                                                                                                                                                 return intsin9(c,d,a,b,e,f,n,m,x)
@@ -601,10 +599,10 @@ def intsin(a,b,c,d,e,f,A,B,m,n,x):
                                                                             if lt(n,Integer(-1)/Integer(2)):
                                                                                 return intsin(c,d,a,b,e,f,A,B,n,m,x)
                                                                             else:
-                                                                                if integer(m+n) and lt(m+n,0) and Not(SumSimplerQ(n,Integer(1))) and true:
+                                                                                if integer(m+n) and lt(m+n,0) and not SumSimplerQ(n,Integer(1)) and not eq(m,Integer(-1)/Integer(2)):
                                                                                     return (a*B*(m-n)+A*b*(Integer(1)+m+n))*intsin9(a,b,c,d,e,f,Integer(1)+m,n,x)/(a*b*(Integer(1)+Integer(2)*m))+(A*b-a*B)*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n/(a*f*(Integer(1)+Integer(2)*m))
                                                                                 else:
-                                                                                    if integer(m+n) and lt(m+n,0) and Not(SumSimplerQ(m,Integer(1))) and true:
+                                                                                    if integer(m+n) and lt(m+n,0) and not SumSimplerQ(m,Integer(1)) and not eq(n,Integer(-1)/Integer(2)):
                                                                                         return intsin(c,d,a,b,e,f,A,B,n,m,x)
                                                                                     else:
                                                                                         return -(B*c*(m-n)-A*d*(Integer(1)+m+n))*intsin9(a,b,c,d,e,f,m,n,x)/(d*(Integer(1)+m+n))-B*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n/(f*(Integer(1)+m+n))
@@ -657,7 +655,7 @@ def intsin(a,b,c,d,e,f,A,B,m,n,x):
                                                     if lt(n,-1):
                                                         return intsin12(a,b,c,d,e,f,b*(b*c-a*d)*(B*c-A*d)*(Integer(-1)+m)+a*d*(a*A*c+b*B*c-(A*b+a*B)*d)*(Integer(1)+n),b*(b*d*(B*c-A*d)+a*(A*c*d+B*(c**2-Integer(2)*d**2)))*(Integer(1)+n)-a*(b*c-a*d)*(B*c-A*d)*(Integer(2)+n),b*(d*(A*b*c+a*B*c-a*A*d)*(Integer(1)+m+n)-b*B*(c**2*m+d**2*(Integer(1)+n))),Integer(-2)+m,Integer(1)+n,x)/(d*(c**2-d**2)*(Integer(1)+n))-(b*c-a*d)*(B*c-A*d)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(-1)+m)*(c+d*sin(e+f*x))**(Integer(1)+n)/(d*(c**2-d**2)*f*(Integer(1)+n))
                                                     else:
-                                                        if integer(n) and gt(n,1) and true or eq(a,0) and true:
+                                                        if integer(n) and gt(n,1) and not integer(m) or eq(a,0) and not eq(c,0):
                                                             return intsin(c,d,a,b,e,f,A,B,n,m,x)
                                                         else:
                                                             return intsin12(a,b,c,d,e,f,a**2*A*d*(Integer(1)+m+n)+b*B*(b*c*(Integer(-1)+m)+a*d*(Integer(1)+n)),a*(Integer(2)*A*b+a*B)*d*(Integer(1)+m+n)-b*B*(a*c-b*d*(m+n)),b*(A*b*d*(Integer(1)+m+n)-B*(b*c*m-a*d*(Integer(2)*m+n))),Integer(-2)+m,n,x)/(d*(Integer(1)+m+n))-b*B*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(-1)+m)*(c+d*sin(e+f*x))**(Integer(1)+n)/(d*f*(Integer(1)+m+n))
@@ -687,7 +685,7 @@ def intsin(a,b,c,d,e,f,A,B,m,n,x):
                                                                 if gt(n,0):
                                                                     return intsin12(a,b,c,d,e,f,(a*A-b*B)*c*(Integer(1)+m)+(A*b-a*B)*d*n,(a*A-b*B)*d*(Integer(1)+m)-(A*b-a*B)*c*(Integer(2)+m),-(A*b-a*B)*d*(Integer(2)+m+n),Integer(1)+m,Integer(-1)+n,x)/((a**2-b**2)*(Integer(1)+m))+(-A*b+a*B)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)*(c+d*sin(e+f*x))**n/((a**2-b**2)*f*(Integer(1)+m))
                                                                 else:
-                                                                    if eq(a,0) and integer(m) and true or true:
+                                                                    if eq(a,0) and integer(m) and not integer(n) or not integer(Integer(2)*n) and lt(n,-1) and integer(n) and not integer(m) or eq(a,0):
                                                                         return intsin12(a,b,c,d,e,f,(a*A-b*B)*(b*c-a*d)*(Integer(1)+m)+b*(A*b-a*B)*d*(Integer(2)+m+n),(A*b-a*B)*(a*d*(Integer(1)+m)-b*c*(Integer(2)+m)),-b*(A*b-a*B)*d*(Integer(3)+m+n),Integer(1)+m,n,x)/((a**2-b**2)*(b*c-a*d)*(Integer(1)+m))-b*(A*b-a*B)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)*(c+d*sin(e+f*x))**(Integer(1)+n)/((a**2-b**2)*(b*c-a*d)*f*(Integer(1)+m))
                                                                     else:
                                                                         return intsin(c,d,a,b,e,f,A,B,n,m,x)
@@ -711,7 +709,7 @@ def intsin(a,b,c,d,e,f,A,B,m,n,x):
                                                                                     else:
                                                                                         return intsin(a,b,Integer(0),Integer(1),e,f,A,B,Integer(-1)/Integer(2),Integer(-1)/Integer(2),x)*sqrt(sin(e+f*x))/sqrt(d*sin(e+f*x))
                                                                                 else:
-                                                                                    if eq(c,0) or true:
+                                                                                    if eq(c,0) or True:
                                                                                         return -(B*c-A*d)*intsin9(a,b,c,d,e,f,Integer(-1)/Integer(2),Integer(-1)/Integer(2),x)/d+B*intsin9(a,b,c,d,e,f,Integer(-1)/Integer(2),Integer(1)/Integer(2),x)/d
                                                                                     else:
                                                                                         return intsin(c,d,a,b,e,f,A,B,n,m,x)
@@ -771,21 +769,21 @@ def intsin12(a,b,c,d,e,f,A,B,C,m,n,x):
                                 else:
                                     return intsin12(c,d,Integer(1),Integer(0),e,f,A,B,C,m+n,Integer(0),x)*(a+b*sin(e+f*x))**m/(c+d*sin(e+f*x))**m
                         else:
-                            if eq(n,1) and true:
+                            if eq(n,1) and not eq(a**2-b**2,0):
                                 if lt(m,-1):
                                     return -intsin12(a,b,c,d,e,f,b*((b*B-a*C)*(b*c-a*d)-A*b*(a*c-b*d))*(Integer(1)+m),b*B*(a**2*d+b**2*d*(Integer(1)+m)-a*b*c*(Integer(2)+m))+(b*c-a*d)*(A*b**2*(Integer(2)+m)+C*(a**2+b**2*(Integer(1)+m))),-b*(a**2-b**2)*C*d*(Integer(1)+m),Integer(1)+m,Integer(0),x)/(b**2*(a**2-b**2)*(Integer(1)+m))-(A*b**2-a*b*B+a**2*C)*(b*c-a*d)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)/(b**2*(a**2-b**2)*f*(Integer(1)+m))
                                 else:
                                     return intsin12(a,b,c,d,e,f,a*C*d+A*b*c*(Integer(3)+m),b*(B*c*(Integer(3)+m)+d*(C*(Integer(2)+m)+A*(Integer(3)+m))),-Integer(2)*a*C*d+b*(c*C+B*d)*(Integer(3)+m),m,Integer(0),x)/(b*(Integer(3)+m))-C*d*cos(e+f*x)*sin(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)/(b*f*(Integer(3)+m))
                             else:
-                                if eq(m,1) and true:
+                                if eq(m,1) and not eq(c**2-d**2,0):
                                     return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
                                 else:
                                     if eq(a**2-b**2,0):
                                         if eq(c**2-d**2,0):
-                                            if lt(m,Integer(-1)/Integer(2)) or eq(Integer(2)+m+n,0) and true:
+                                            if lt(m,Integer(-1)/Integer(2)) or eq(Integer(2)+m+n,0) and not eq(m,Integer(-1)/Integer(2)):
                                                 return intsin(a,b,c,d,e,f,B*(b*c*m+a*d*(Integer(1)+n))-C*(a*c*m+b*d*(Integer(1)+n))+A*(a*c*(Integer(1)+m)-b*d*(Integer(2)+Integer(2)*m+n)),C*(b*c*(Integer(1)+Integer(2)*m)-a*d*(Integer(-1)+m-n))+(a*A-b*B)*d*(Integer(2)+m+n),Integer(1)+m,n,x)/(b*(b*c-a*d)*(Integer(1)+Integer(2)*m))+(a*A-b*B+a*C)*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**(Integer(1)+n)/((b*c-a*d)*f*(Integer(1)+Integer(2)*m))
                                             else:
-                                                if lt(n,Integer(-1)/Integer(2)) or eq(Integer(2)+m+n,0) and true:
+                                                if lt(n,Integer(-1)/Integer(2)) or eq(Integer(2)+m+n,0) and not eq(n,Integer(-1)/Integer(2)):
                                                     return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
                                                 else:
                                                     if eq(n,Integer(-1)/Integer(2)):
@@ -811,7 +809,7 @@ def intsin12(a,b,c,d,e,f,A,B,C,m,n,x):
                                                 if lt(n,-1):
                                                     return intsin12(a,b,c,d,e,f,A*d*(b*d*m+a*c*(Integer(1)+n))+(c*C-B*d)*(b*c*m+a*d*(Integer(1)+n)),C*(b*c*d*(Integer(1)+n)-a*(c**2+d**2*(Integer(1)+n)))-d*(B*(b*d*(Integer(1)+n)-a*c*(Integer(2)+n))+A*(-b*c*(Integer(1)+n)+a*d*(Integer(2)+n))),b*(d*(B*c-A*d)*(Integer(2)+m+n)-C*(c**2*(Integer(1)+m)+d**2*(Integer(1)+n))),Integer(-1)+m,Integer(1)+n,x)/(d*(c**2-d**2)*(Integer(1)+n))-(c**2*C-B*c*d+A*d**2)*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**(Integer(1)+n)/(d*(c**2-d**2)*f*(Integer(1)+n))
                                                 else:
-                                                    if integer(n) and gt(n,0) and true or eq(a,0) and true:
+                                                    if integer(n) and gt(n,0) and not integer(m) or eq(a,0) and not eq(c,0):
                                                         return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
                                                     else:
                                                         return intsin12(a,b,c,d,e,f,a*A*d*(Integer(2)+m+n)+C*(b*c*m+a*d*(Integer(1)+n)),(A*b+a*B)*d*(Integer(2)+m+n)-C*(a*c-b*d*(Integer(1)+m+n)),C*(a*d*m-b*c*(Integer(1)+m))+b*B*d*(Integer(2)+m+n),Integer(-1)+m,n,x)/(d*(Integer(2)+m+n))-C*cos(e+f*x)*(a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**(Integer(1)+n)/(d*f*(Integer(2)+m+n))
@@ -826,7 +824,7 @@ def intsin12(a,b,c,d,e,f,A,B,C,m,n,x):
                                                             else:
                                                                 return C*intsin9(a,b,c,d,e,f,Integer(1)/Integer(2),Integer(-1)/Integer(2),x)/b**2+intsin(a,b,c,d,e,f,A*b**2-a**2*C,b*(b*B-Integer(2)*a*C),Integer(-3)/Integer(2),Integer(-1)/Integer(2),x)/b**2
                                                         else:
-                                                            if eq(a,0) and integer(m) and true or true:
+                                                            if eq(a,0) and integer(m) and not integer(n) or not integer(Integer(2)*n) and lt(n,-1) and integer(n) and not integer(m) or eq(a,0):
                                                                 return intsin12(a,b,c,d,e,f,(a*A-b*B+a*C)*(b*c-a*d)*(Integer(1)+m)+(A*b**2-a*b*B+a**2*C)*d*(Integer(2)+m+n),-c*(A*b**2-a*b*B+a**2*C)-(A*b-a*B+b*C)*(b*c-a*d)*(Integer(1)+m),-(A*b**2-a*b*B+a**2*C)*d*(Integer(3)+m+n),Integer(1)+m,n,x)/((a**2-b**2)*(b*c-a*d)*(Integer(1)+m))-(A*b**2-a*b*B+a**2*C)*cos(e+f*x)*(a+b*sin(e+f*x))**(Integer(1)+m)*(c+d*sin(e+f*x))**(Integer(1)+n)/((a**2-b**2)*(b*c-a*d)*f*(Integer(1)+m))
                                                             else:
                                                                 return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
@@ -844,9 +842,10 @@ def intsin12(a,b,c,d,e,f,A,B,C,m,n,x):
                                                                         return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
                                                                     else:
                                                                         if eq(m,Integer(-1)/Integer(2)) and eq(n,Integer(-1)/Integer(2)):
-                                                                            if eq(a,0) or true:
+                                                                            if eq(a,0) or True:
                                                                                 return Integer(1)/Integer(2)*intsin12(a,b,c,d,e,f,Integer(2)*a*A*d-C*(b*c-a*d),-Integer(2)*(a*c*C-(A*b+a*B)*d),Integer(2)*b*B*d-C*(b*c+a*d),Integer(-3)/Integer(2),Integer(-1)/Integer(2),x)/d-C*cos(e+f*x)*sqrt(c+d*sin(e+f*x))/(d*f*sqrt(a+b*sin(e+f*x)))
                                                                             else:
                                                                                 return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
                                                                         else:
                                                                             return integrate((a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n*(A+B*sin(e+f*x)+C*sin(e+f*x)**2),x)
+
