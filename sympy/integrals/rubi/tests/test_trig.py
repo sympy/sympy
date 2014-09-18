@@ -1,6 +1,7 @@
 from random import randint
 from sympy import S, Symbol, sin, cos
 from sympy.integrals.rubi.SineIntegrationRules import intsin5, intsin12
+from sympy.integrals.rubi.TrigIntegrationRules import intcos12
 
 # The various functions in SineIntegrationRules return the antiderivatives of
 # the following expressions:
@@ -79,26 +80,40 @@ def check_intsin12(a,b,c,d,e,f,A,B,C,m,n,x):
     zero = expression - integral.diff(x)
     return is_zero(zero)
 
+def check_intcos12(a,b,c,d,e,f,A,B,C,m,n,x):
+    expression = (a+b*cos(e+f*x))**m * (c+d*cos(e+f*x))**n * \
+            (A+B*cos(e+f*x)+C*cos(e+f*x)**2)
+    integral = intcos12(a,b,c,d,e,f,A,B,C,m,n,x)
+    zero = expression - integral.diff(x)
+    return is_zero(zero)
+
 def test_auto():
     x = Symbol("x")
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(0), S(0), S(2), S(0), x]
     assert intsin12(*args) == 9*x/2 - 9*sin(2*x + 1)*cos(2*x + 1)/4
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(1), S(0), S(2), S(0), x]
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(1), S(1), S(2), S(0), x]
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
     args = [S(1), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
 
     a = Symbol("a")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
 
     b = Symbol("b")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
 
     c = Symbol("c")
     args = [S(a), S(3), S(1), S(1), S(1), S(c), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
+    assert check_intcos12(*args)
