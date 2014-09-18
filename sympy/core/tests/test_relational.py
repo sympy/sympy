@@ -523,7 +523,8 @@ def test_ineq_avoid_wild_symbol_flip():
     assert e == Ge(x, p, evaluate=False)
 
 
-def test_eq_no_simplification():
+def test_eq_no_auto_simplify():
+    # takes about half second
     from sympy import sin, cos, sqrt
     data = [ (cos(x)**2 + sin(x)**2, 1, S.true),
              (cos(x)**2 + sin(x)**2, 2, S.false),
@@ -534,3 +535,32 @@ def test_eq_no_simplification():
         e = Eq(lhs, rhs)
         assert e == Eq(lhs, rhs, evaluate=False)
         assert e.simplify() is truth
+
+
+def test_relational_simplify_with_x_both_sides():
+    # bit slow, 1 or 2 seconds
+    from sympy import sin, cos, sqrt
+    data = [
+        ((x+1)**2,      x**2 + 2*x + 1,      S.true,  S.false, S.false),
+        (sin(x)**2,     2 - cos(x)**2,       S.false, S.true,  S.false),
+        (sin(2*x) + 3,  2*cos(x)*sin(x) + 2, S.false, S.false, S.true),
+    ]
+    for (lhs, rhs, eq_truth, lt_truth, gt_truth) in data:
+        eq = Eq(lhs, rhs)
+        assert eq == Eq(lhs, rhs, evaluate=False)
+        assert eq.simplify() is eq_truth
+        ne = Ne(lhs, rhs)
+        assert ne == Ne(lhs, rhs, evaluate=False)
+        assert ne.simplify() is not eq_truth
+        lt = Lt(lhs, rhs)
+        assert lt == Lt(lhs, rhs, evaluate=False)
+        assert lt.simplify() is lt_truth
+        gt = Gt(lhs, rhs)
+        assert gt == Gt(lhs, rhs, evaluate=False)
+        assert gt.simplify() is gt_truth
+        le = Le(lhs, rhs)
+        assert le == Le(lhs, rhs, evaluate=False)
+        assert le.simplify() in (eq_truth, lt_truth)
+        ge = Ge(lhs, rhs)
+        assert ge == Ge(lhs, rhs, evaluate=False)
+        assert ge.simplify() in (eq_truth, gt_truth)

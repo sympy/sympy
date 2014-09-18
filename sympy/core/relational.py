@@ -80,15 +80,20 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         """
         if isinstance(lhs, Expr) and isinstance(rhs, Expr):
-            diff = lhs - rhs
-            if not diff.has(Symbol):
-                know = diff.equals(0)
+            dif = (lhs - rhs).simplify()
+            r = cls(dif, S.Zero)
+            if r in (S.true, S.false):
+               return r
+            # try potentially more expensive test
+            if dif.is_number:
+                know = dif.equals(0)
                 if know == True:
-                    diff = S.Zero
+                    dif = S.Zero
                 elif know == False:
-                    diff = diff.evalf()
-            if diff.is_Number and diff.is_real:
-                return cls._eval_relation(diff, S.Zero)
+                    dif = dif.evalf()
+                if dif.is_real:
+                    # note by docs _eval_relation only for reals
+                    return cls._eval_relation(dif, S.Zero)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
