@@ -1,4 +1,3 @@
-
 from __future__ import print_function, division
 
 from sympy.core import C, sympify
@@ -353,6 +352,17 @@ class exp(ExpBase):
             arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if self.exp.is_nonzero:
+                if self.exp.is_algebraic:
+                    return False
+                elif (self.exp/S.Pi).is_rational:
+                    return False
+        else:
+            return s.is_algebraic
+
     def _eval_is_positive(self):
         if self.args[0].is_real:
             return not self.args[0] is S.NegativeInfinity
@@ -628,6 +638,17 @@ class log(Function):
         else:
             return s.is_rational
 
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if (self.args[0] - 1).is_zero:
+                return True
+            elif (self.args[0] - 1).is_nonzero:
+                if self.args[0].is_algebraic:
+                    return False
+        else:
+            return s.is_algebraic
+
     def _eval_is_real(self):
         return self.args[0].is_positive
 
@@ -726,5 +747,14 @@ class LambertW(Function):
             return LambertW(x)/(x*(1 + LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if self.args[0].is_nonzero and self.args[0].is_algebraic:
+                return False
+        else:
+            return s.is_algebraic
+
 
 from sympy.core.function import _coeff_isneg

@@ -238,6 +238,17 @@ def test_exp_assumptions():
         assert e(re(x)).is_real is True
         assert e(re(x)).is_imaginary is False
 
+    assert exp(0, evaluate=False).is_algebraic
+
+    a = Symbol('a', algebraic=True)
+    an = Symbol('an', algebraic=True, nonzero=True)
+    r = Symbol('r', rational=True)
+    rn = Symbol('rn', rational=True, nonzero=True)
+    assert exp(a).is_algebraic is None
+    assert exp(an).is_algebraic is False
+    assert exp(pi*r).is_algebraic is None
+    assert exp(pi*rn).is_algebraic is False
+
 
 def test_log_assumptions():
     p = symbols('p', positive=True)
@@ -250,6 +261,9 @@ def test_log_assumptions():
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True
     assert log(exp(p) + 1).is_positive
+
+    assert log(1, evaluate=False).is_algebraic
+    assert log(42, evaluate=False).is_algebraic is False
 
 
 def test_log_hashing():
@@ -325,6 +339,10 @@ def test_lambertw():
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
         Float("0.701338383413663009202120278965", 30), 1e-29)
+
+    assert LambertW(0, evaluate=False).is_algebraic
+    na = Symbol('na', nonzero=True, algebraic=True)
+    assert LambertW(na).is_algebraic is False
 
 
 def test_issue_5673():

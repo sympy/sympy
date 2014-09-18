@@ -29,6 +29,14 @@ class TrigonometricFunction(Function):
         else:
             return s.is_rational
 
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if self.args[0].is_nonzero and self.args[0].is_algebraic:
+                return False
+        else:
+            return s.is_algebraic
+
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
