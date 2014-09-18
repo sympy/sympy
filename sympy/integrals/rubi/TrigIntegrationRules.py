@@ -19,3 +19,11 @@ def intsinh12(a,b,c,d,e,f,A,B,C,m,n,x):
     #     B -> -I*B
     #     C -> -C
     return intsin12(a,-I*b,c,-I*d,I*e,I*f,A,-I*B,-C,m,n,x)
+
+def intcosh12(a,b,c,d,e,f,A,B,C,m,n,x):
+    # intsin12 integrates:
+    # (a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n*(A+B*sin(e+f*x)+C*sin(e+f*x)**2)
+    # To change all sin() into cosh(), we substitute:
+    #     e -> I*e+pi/2
+    #     f -> I*f
+    return intsin12(a,b,c,d,I*e+pi/2,I*f,A,B,C,m,n,x)

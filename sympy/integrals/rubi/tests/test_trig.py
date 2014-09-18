@@ -1,7 +1,8 @@
 from random import randint
 from sympy import S, Symbol, sin, cos, sinh, cosh
 from sympy.integrals.rubi.SineIntegrationRules import intsin5, intsin12
-from sympy.integrals.rubi.TrigIntegrationRules import intcos12, intsinh12
+from sympy.integrals.rubi.TrigIntegrationRules import (intcos12, intsinh12,
+        intcosh12)
 
 # The various functions in SineIntegrationRules return the antiderivatives of
 # the following expressions:
@@ -94,6 +95,13 @@ def check_intsinh12(a,b,c,d,e,f,A,B,C,m,n,x):
     zero = expression - integral.diff(x)
     return is_zero(zero)
 
+def check_intcosh12(a,b,c,d,e,f,A,B,C,m,n,x):
+    expression = (a+b*cosh(e+f*x))**m * (c+d*cosh(e+f*x))**n * \
+            (A+B*cosh(e+f*x)+C*cosh(e+f*x)**2)
+    integral = intcosh12(a,b,c,d,e,f,A,B,C,m,n,x)
+    zero = expression - integral.diff(x)
+    return is_zero(zero)
+
 def test_auto():
     x = Symbol("x")
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(0), S(0), S(2), S(0), x]
@@ -101,33 +109,40 @@ def test_auto():
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     assert check_intsinh12(*args)
+    assert check_intcosh12(*args)
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(1), S(0), S(2), S(0), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     assert check_intsinh12(*args)
+    assert check_intcosh12(*args)
     args = [S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(1), S(1), S(2), S(0), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     assert check_intsinh12(*args)
+    assert check_intcosh12(*args)
     args = [S(1), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     #assert check_intsinh12(*args)
+    assert check_intcosh12(*args)
 
     a = Symbol("a")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     #assert check_intsinh12(*args)
+    assert check_intcosh12(*args)
 
     b = Symbol("b")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     #assert check_intsinh12(*args)
+    assert check_intcosh12(*args)
 
     c = Symbol("c")
     args = [S(a), S(3), S(1), S(1), S(1), S(c), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     #assert check_intsinh12(*args)
+    #assert check_intcosh12(*args)
