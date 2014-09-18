@@ -244,7 +244,6 @@ def test_log_assumptions():
     n = symbols('n', negative=True)
     z = symbols('z', zero=True)
     assert log(2) > 0
-    assert log(1).is_zero
     assert log(1, evaluate=False).is_zero
     assert log(1 + z).is_zero
     assert log(p).is_zero is None
