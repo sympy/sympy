@@ -26,7 +26,7 @@ def test_intsin12():
     x = Symbol("x")
     assert intsin12(S(0), S(3), S(1), S(0), S(1), S(2), S(1), S(0), S(0), S(2), S(0), x) == 9*x/2 - 9*sin(2*x + 1)*cos(2*x + 1)/4
 
-def is_zero(e):
+def is_zero(e, n=10, prec=100):
     """
     Tests that the expression 'e' is zero.
 
@@ -35,16 +35,20 @@ def is_zero(e):
     the function returns False, then the expressions are *not* equal. If the
     function returns True, the expressions *might* be equal.
 
+    n ...... the number of substitutions to try
+    prec ... the value of expression must be less than 10^(-prec) in order to
+             be zero
+
     The expression can contain any number of symbols (the test is slower the
     more symbols it has). is_zero() can handle any number of symbols.
     """
     symbols = list(e.atoms(Symbol))
-    for i in range(10):
+    for i in range(n):
         d = {}
         for j in range(len(symbols)):
             x0 = S(randint(-10000, 10000))/500
             d[symbols[j]] = x0
-        if (abs(e.subs(d).n(100)) > 1e-100):
+        if (abs(e.subs(d).n(prec)) > S(10)**(-prec)):
             return False
     return True
 
