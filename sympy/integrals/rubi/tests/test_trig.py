@@ -96,12 +96,12 @@ def check_intsinh12(a,b,c,d,e,f,A,B,C,m,n,x):
     zero = expression - integral.diff(x)
     return is_zero(zero)
 
-def check_intcosh12(a,b,c,d,e,f,A,B,C,m,n,x):
+def check_intcosh12(a,b,c,d,e,f,A,B,C,m,n,x, zero_a=10000, zero_b=500):
     expression = (a+b*cosh(e+f*x))**m * (c+d*cosh(e+f*x))**n * \
             (A+B*cosh(e+f*x)+C*cosh(e+f*x)**2)
     integral = intcosh12(a,b,c,d,e,f,A,B,C,m,n,x)
     zero = expression - integral.diff(x)
-    return is_zero(zero)
+    return is_zero(zero, a=zero_a, b=zero_b)
 
 def test_auto():
     x = Symbol("x")
@@ -146,4 +146,4 @@ def test_auto():
     assert check_intsin12(*args)
     assert check_intcos12(*args)
     #assert check_intsinh12(*args)
-    #assert check_intcosh12(*args)
+    assert check_intcosh12(*args, zero_a=10000, zero_b=10000)
