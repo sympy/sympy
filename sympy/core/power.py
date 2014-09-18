@@ -960,8 +960,15 @@ class Pow(Expr):
             return b.is_rational
 
     def _eval_is_algebraic(self):
-        if self.exp.is_rational:
+        if self.base.is_zero or (self.base - 1).is_zero:
+            return True
+        elif self.exp.is_rational:
             return self.base.is_algebraic
+        elif self.base.is_algebraic and self.exp.is_algebraic:
+            if ((self.base.is_nonzero and (self.base - 1).is_nonzero)
+                or self.base.is_integer is False
+                or self.base.is_irrational):
+                return self.exp.is_rational
 
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):

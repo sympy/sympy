@@ -1,5 +1,5 @@
 from sympy import I, sqrt, log, exp, sin, asin
-from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild
+from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
 
@@ -660,13 +660,29 @@ def test_Mul_is_algebraic():
 
 
 def test_Pow_is_algebraic():
+    e = Symbol('e', algebraic=True)
+
+    assert Pow(1, e, evaluate=False).is_algebraic
+    assert Pow(0, e, evaluate=False).is_algebraic
+
     a = Symbol('a', algebraic=True)
     na = Symbol('na', algebraic=False)
+    ia = Symbol('ia', algebraic=True, irrational=True)
+    ib = Symbol('ib', algebraic=True, irrational=True)
     r = Symbol('r', rational=True)
     x = Symbol('x')
     assert (a**r).is_algebraic
-    assert (a*x).is_algebraic is None
-    assert (na*r).is_algebraic is False
+    assert (a**x).is_algebraic is None
+    assert (na**r).is_algebraic is False
+    assert (ia**r).is_algebraic
+    assert (ia**ib).is_algebraic is False
+
+    assert (a**e).is_algebraic is None
+
+    # Gelfond-Schneider constant:
+    assert Pow(2, sqrt(2), evaluate=False).is_algebraic is False
+
+    assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
 
 
 def test_special_is_rational():
