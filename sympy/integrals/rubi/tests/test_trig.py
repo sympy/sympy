@@ -89,12 +89,12 @@ def check_intcos12(a,b,c,d,e,f,A,B,C,m,n,x):
     zero = expression - integral.diff(x)
     return is_zero(zero)
 
-def check_intsinh12(a,b,c,d,e,f,A,B,C,m,n,x):
+def check_intsinh12(a,b,c,d,e,f,A,B,C,m,n,x, zero_a=10000, zero_b=500):
     expression = (a+b*sinh(e+f*x))**m * (c+d*sinh(e+f*x))**n * \
             (A+B*sinh(e+f*x)+C*sinh(e+f*x)**2)
     integral = intsinh12(a,b,c,d,e,f,A,B,C,m,n,x)
     zero = expression - integral.diff(x)
-    return is_zero(zero)
+    return is_zero(zero, a=zero_a, b=zero_b)
 
 def check_intcosh12(a,b,c,d,e,f,A,B,C,m,n,x, zero_a=10000, zero_b=500):
     expression = (a+b*cosh(e+f*x))**m * (c+d*cosh(e+f*x))**n * \
@@ -124,26 +124,26 @@ def test_auto():
     args = [S(1), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
-    #assert check_intsinh12(*args)
+    assert check_intsinh12(*args)
     assert check_intcosh12(*args)
 
     a = Symbol("a")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(1), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
-    #assert check_intsinh12(*args)
+    assert check_intsinh12(*args)
     assert check_intcosh12(*args)
 
     b = Symbol("b")
     args = [S(a), S(3), S(1), S(1), S(1), S(2), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
-    #assert check_intsinh12(*args)
+    assert check_intsinh12(*args)
     assert check_intcosh12(*args)
 
     c = Symbol("c")
     args = [S(a), S(3), S(1), S(1), S(1), S(c), S(1), S(b), S(1), S(2), S(2), x]
     assert check_intsin12(*args)
     assert check_intcos12(*args)
-    #assert check_intsinh12(*args)
+    assert check_intsinh12(*args, zero_a=10000, zero_b=10000)
     assert check_intcosh12(*args, zero_a=10000, zero_b=10000)
