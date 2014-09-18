@@ -848,4 +848,3 @@ def intsin12(a,b,c,d,e,f,A,B,C,m,n,x):
                                                                                 return intsin12(c,d,a,b,e,f,A,B,C,n,m,x)
                                                                         else:
                                                                             return integrate((a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n*(A+B*sin(e+f*x)+C*sin(e+f*x)**2),x)
-
