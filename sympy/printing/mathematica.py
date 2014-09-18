@@ -19,6 +19,8 @@ known_functions = {
     "asin": [(lambda x: True, "ArcSin")],
     "acos": [(lambda x: True, "ArcCos")],
     "atan": [(lambda x: True, "ArcTan")],
+    "sinh": [(lambda x: True, "Sinh")],
+    "cosh": [(lambda x: True, "Cosh")],
 }
 
 
