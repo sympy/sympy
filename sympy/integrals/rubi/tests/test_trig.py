@@ -36,58 +36,17 @@ def is_zero(e):
     function returns True, the expressions *might* be equal.
 
     The expression can contain any number of symbols (the test is slower the
-    more symbols it has). Currently is_zero() can handle up to 4 symbols, but
-    more can be easily implemented if needed.
+    more symbols it has). is_zero() can handle any number of symbols.
     """
-    symbols = e.atoms(Symbol)
-    if len(symbols) == 0:
-        if e == 0:
-            return True
-        if (abs(e.n(100)) > 1e-100):
+    symbols = list(e.atoms(Symbol))
+    for i in range(10):
+        d = {}
+        for j in range(len(symbols)):
+            x0 = S(randint(-10000, 10000))/500
+            d[symbols[j]] = x0
+        if (abs(e.subs(d).n(100)) > 1e-100):
             return False
-        return True
-    elif len(symbols) == 1:
-        x = symbols.pop()
-        for i in range(10):
-            x0 = S(randint(-10000, 10000))/500
-            if (abs(e.subs(x, x0).n(100)) > 1e-100):
-                return False
-        return True
-    elif len(symbols) == 2:
-        x = symbols.pop()
-        y = symbols.pop()
-        for i in range(10):
-            x0 = S(randint(-10000, 10000))/500
-            y0 = S(randint(-10000, 10000))/500
-            if (abs(e.subs({x: x0, y: y0}).n(100)) > 1e-100):
-                return False
-        return True
-    elif len(symbols) == 3:
-        x = symbols.pop()
-        y = symbols.pop()
-        z = symbols.pop()
-        for i in range(10):
-            x0 = S(randint(-10000, 10000))/500
-            y0 = S(randint(-10000, 10000))/500
-            z0 = S(randint(-10000, 10000))/500
-            if (abs(e.subs({x: x0, y: y0, z: z0}).n(100)) > 1e-100):
-                return False
-        return True
-    elif len(symbols) == 4:
-        x = symbols.pop()
-        y = symbols.pop()
-        z = symbols.pop()
-        a = symbols.pop()
-        for i in range(10):
-            x0 = S(randint(-10000, 10000))/500
-            y0 = S(randint(-10000, 10000))/500
-            z0 = S(randint(-10000, 10000))/500
-            a0 = S(randint(-10000, 10000))/500
-            if (abs(e.subs({x: x0, y: y0, z: z0, a: a0}).n(100)) > 1e-100):
-                return False
-        return True
-    else:
-        raise NotImplementedError()
+    return True
 
 def test_is_zero():
     assert is_zero(S(0))
