@@ -93,18 +93,6 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
-    def doit(self, **hints):
-        lhs = self.lhs
-        rhs = self.rhs
-        if hints.get('deep', True):
-            lhs = lhs.doit(**hints)
-            rhs = rhs.doit(**hints)
-        return self._eval_relation_doit(lhs, rhs)
-
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls(lhs, rhs)
-
     def _eval_simplify(self, ratio, measure):
         r = self.__class__(self.lhs.simplify(ratio=ratio),
                            self.rhs.simplify(ratio=ratio))
@@ -316,10 +304,6 @@ class _Inequality(Relational):
 
         # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
-
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls._eval_relation(lhs, rhs)
 
 
 class _Greater(_Inequality):
