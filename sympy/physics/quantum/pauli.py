@@ -340,7 +340,8 @@ class SigmaMinus(SigmaOpBase):
             return - I * (Integer(1) - SigmaZ(self.name))/2
 
         if isinstance(other, SigmaZ) and self.name == other.name:
-            return SigmaMinus(self.name) # (SigmaX(self.name) - I * SigmaY(self.name))/2  # 
+            # (SigmaX(self.name) - I * SigmaY(self.name))/2
+            return SigmaMinus(self.name)
 
         if isinstance(other, SigmaMinus) and self.name == other.name:
             return Integer(0)
@@ -444,7 +445,8 @@ class SigmaPlus(SigmaOpBase):
             return I * (Integer(1) + SigmaZ(self.name))/2
 
         if isinstance(other, SigmaZ) and self.name == other.name:
-            return -SigmaPlus(self.name) #-(SigmaX(self.name) + I * SigmaY(self.name))/2  # 
+            #-(SigmaX(self.name) + I * SigmaY(self.name))/2
+            return -SigmaPlus(self.name)
 
         if isinstance(other, SigmaMinus) and self.name == other.name:
             return (Integer(1) + SigmaZ(self.name))/2
