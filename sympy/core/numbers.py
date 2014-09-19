@@ -3045,6 +3045,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     def _sage_(self):
         import sage.all as sage
         return sage.golden_ratio
+GoldenRatio = S.GoldenRatio
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
@@ -3105,6 +3106,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     def _sage_(self):
         import sage.all as sage
         return sage.euler_gamma
+EulerGamma = S.EulerGamma
 
 
 class Catalan(with_metaclass(Singleton, NumberSymbol)):
@@ -3158,6 +3160,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     def _sage_(self):
         import sage.all as sage
         return sage.catalan
+Catalan = S.Catalan
 
 
 class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
