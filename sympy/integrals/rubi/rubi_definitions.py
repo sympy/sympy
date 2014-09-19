@@ -8,10 +8,10 @@ def lt(a, b):
     return (a-b).is_negative
 
 def ge(a, b):
-    return eq(a, b) or gt(a, b)
+    return gt(a, b) or eq(a, b)
 
 def le(a, b):
-    return eq(a, b) or lt(a, b)
+    return lt(a, b) or eq(a, b)
 
 def integer(a):
     return a.is_integer
