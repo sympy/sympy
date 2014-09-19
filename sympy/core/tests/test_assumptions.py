@@ -1,5 +1,5 @@
 from sympy import I, sqrt, log, exp, sin, asin
-from sympy.core import Symbol, S, Rational, Integer, Dummy
+from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
 
@@ -665,11 +665,13 @@ def test_issue_6275():
 
 def test_sanitize_assumptions():
     # issue 6666
-    for cls in (Symbol, Dummy):
+    for cls in (Symbol, Dummy, Wild):
         x = cls('x', real=1, positive=0)
         assert x.is_real is True
         assert x.is_positive is False
         assert cls('', real=True, positive=None).is_positive is None
+        raises(ValueError, lambda: cls('', commutative=None))
+    raises(ValueError, lambda: Symbol._sanitize(dict(commutative=None)))
 
 
 def test_special_assumptions():
