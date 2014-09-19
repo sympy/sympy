@@ -53,6 +53,27 @@ class Symbol(AtomicExpr, Boolean):
         """
         return True
 
+    @staticmethod
+    def _sanitize(assumptions, obj=None):
+        """Remove None, covert values to bool, check commutativity *in place*.
+        """
+
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            whose = '%s ' % obj.__name__ if obj else ''
+            raise ValueError(
+                '%scommutativity must be True or False.' % whose)
+        assumptions['commutative'] = is_commutative
+
+        # sanitize other assumptions so 1 -> True and 0 -> False
+        for key in list(assumptions.keys()):
+            v = assumptions[key]
+            if v is None:
+                assumptions.pop(key)
+                continue
+            assumptions[key] = bool(v)
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -63,7 +84,7 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
-        _sanitize(assumptions)
+        cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
@@ -151,7 +172,7 @@ class Dummy(Symbol):
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
-        _sanitize(assumptions)
+        cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
@@ -245,11 +266,7 @@ class Wild(Symbol):
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Wild's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -554,21 +571,3 @@ def var(names, **args):
         del frame  # break cyclic dependencies as stated in inspect docs
 
     return syms
-
-def _sanitize(assumptions):
-    """Remove None, covert values to bool, make sure commutativity is T/F"""
-
-    # be strict about commutativity
-    is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-    if is_commutative is None:
-        raise ValueError(
-            '%s commutativity must be True or False.' % cls.__name__)
-    assumptions['commutative'] = is_commutative
-
-    # sanitize other assumptions so 1 -> True and 0 -> False
-    for key in list(assumptions.keys()):
-        v = assumptions[key]
-        if v is None:
-            assumptions.pop(key)
-            continue
-        assumptions[key] = bool(v)
