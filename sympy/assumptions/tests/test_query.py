@@ -1912,6 +1912,9 @@ def test_algebraic():
 
     assert ask(Q.algebraic(2.47)) is True
 
+    assert ask(Q.algebraic(x), Q.transcendental(x)) is False
+    assert ask(Q.transcendental(x), Q.algebraic(x)) is False
+
 
 def test_global():
     """Test ask with global assumptions"""
