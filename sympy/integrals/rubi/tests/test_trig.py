@@ -12,8 +12,10 @@ from sympy.integrals.rubi.TrigIntegrationRules import (intcos12, intsinh12,
 #       (a+b*sin(c+d*x))**n
 #   intsin9(a,b,c,d,e,f,m,n,x)
 #       (a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n
-#   intsin(a,b,c,d,e,f,A,B,m,n,x)
+#   intsin11(a,b,c,d,e,f,A,B,m,n,x)
 #       x*(a+b*sin(e+f*x))**m*(A+B*sin(e+f*x))*(c+d*sin(e+f*x))**n
+#   intsincos11(a,b,c,d,e,f,g,m,n,p,x)
+#       (g*cos(e+f*x))**p*(a+b*sin(e+f*x))**m (c+d*sin(e+f*x))**n
 #   intsin12(a,b,c,d,e,f,A,B,C,m,n,x)
 #       (a+b*sin(e+f*x))**m*(c+d*sin(e+f*x))**n*(A+B*sin(e+f*x)+C*sin(e+f*x)**2)
 # where the parameters (a,b,c,d,e,f,A,B,C) and exponents (m,n) are arbitrary
