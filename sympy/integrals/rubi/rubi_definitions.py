@@ -1,11 +1,11 @@
 def eq(a, b):
-    return (a-b).simplify() == 0
+    return (a-b) == 0
 
 def gt(a, b):
-    return (a-b).simplify().n() > 0
+    return (a-b).n() > 0
 
 def lt(a, b):
-    return (a-b).simplify().n() < 0
+    return (a-b).n() < 0
 
 def ge(a, b):
     return eq(a, b) or gt(a, b)
