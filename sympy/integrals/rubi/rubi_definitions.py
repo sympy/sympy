@@ -2,10 +2,10 @@ def eq(a, b):
     return (a-b) == 0
 
 def gt(a, b):
-    return (a-b).n() > 0
+    return (a-b).is_positive
 
 def lt(a, b):
-    return (a-b).n() < 0
+    return (a-b).is_negative
 
 def ge(a, b):
     return eq(a, b) or gt(a, b)
