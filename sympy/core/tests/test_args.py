@@ -2854,8 +2854,8 @@ def test_sympy__physics__unitsystems__units__Unit():
     assert _test_args(Unit(length, abbrev="u", factor=10))
 
 
-def test_sympy__polys__numberfields__AlgebraicNumber():
-    from sympy.polys.numberfields import AlgebraicNumber
+def test_sympy__core__numbers__AlgebraicNumber():
+    from sympy.core.numbers import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
 
 

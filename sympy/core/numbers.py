@@ -1871,6 +1871,121 @@ for i_type in integer_types:
     converter[i_type] = Integer
 
 
+class AlgebraicNumber(Expr):
+    """Class for representing algebraic numbers in SymPy. """
+
+    __slots__ = ['rep', 'root', 'alias', 'minpoly']
+
+    is_AlgebraicNumber = True
+    is_algebraic = True
+    is_number = True
+
+    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
+        """Construct a new algebraic number. """
+
+        from sympy.polys.polyclasses import ANP, DMP
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.core.symbol import Symbol
+
+        expr = sympify(expr)
+
+        if isinstance(expr, (tuple, Tuple)):
+            minpoly, root = expr
+
+            if not minpoly.is_Poly:
+                minpoly = C.Poly(minpoly)
+        elif expr.is_AlgebraicNumber:
+            minpoly, root = expr.minpoly, expr.root
+        else:
+            minpoly, root = minimal_polynomial(
+                expr, args.get('gen'), polys=True), expr
+
+        dom = minpoly.get_domain()
+
+        if coeffs != Tuple():
+            if not isinstance(coeffs, ANP):
+                rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
+                scoeffs = Tuple(*coeffs)
+            else:
+                rep = DMP.from_list(coeffs.to_list(), 0, dom)
+                scoeffs = Tuple(*coeffs.to_list())
+
+            if rep.degree() >= minpoly.degree():
+                rep = rep.rem(minpoly.rep)
+
+            sargs = (root, scoeffs)
+
+        else:
+            rep = DMP.from_list([1, 0], 0, dom)
+
+            if root.is_negative:
+                rep = -rep
+
+            sargs = (root, coeffs)
+
+        if alias is not None:
+            if not isinstance(alias, Symbol):
+                alias = Symbol(alias)
+            sargs = sargs + (alias,)
+
+        obj = Expr.__new__(cls, *sargs)
+
+        obj.rep = rep
+        obj.root = root
+        obj.alias = alias
+        obj.minpoly = minpoly
+
+        return obj
+
+    def __hash__(self):
+        return super(AlgebraicNumber, self).__hash__()
+
+    def _eval_evalf(self, prec):
+        return self.as_expr()._evalf(prec)
+
+    @property
+    def is_aliased(self):
+        """Returns ``True`` if ``alias`` was set. """
+        return self.alias is not None
+
+    def as_poly(self, x=None):
+        """Create a Poly instance from ``self``. """
+        if x is not None:
+            return C.Poly.new(self.rep, x)
+        else:
+            if self.alias is not None:
+                return C.Poly.new(self.rep, self.alias)
+            else:
+                return C.PurePoly.new(self.rep, C.Dummy('x'))
+
+    def as_expr(self, x=None):
+        """Create a Basic expression from ``self``. """
+        return self.as_poly(x or self.root).as_expr().expand()
+
+    def coeffs(self):
+        """Returns all SymPy coefficients of an algebraic number. """
+        return [ self.rep.dom.to_sympy(c) for c in self.rep.all_coeffs() ]
+
+    def native_coeffs(self):
+        """Returns all native coefficients of an algebraic number. """
+        return self.rep.all_coeffs()
+
+    def to_algebraic_integer(self):
+        """Convert ``self`` to an algebraic integer. """
+        f = self.minpoly
+
+        if f.LC() == 1:
+            return self
+
+        coeff = f.LC()**(f.degree() - 1)
+        poly = f.compose(C.Poly(f.gen/f.LC()))
+
+        minpoly = poly*coeff
+        root = f.LC()*self.root
+
+        return AlgebraicNumber((minpoly, root), self.coeffs())
+
+
 class RationalConstant(Rational):
     """
     Abstract base class for rationals with specific behaviors
