@@ -94,7 +94,9 @@ class Relational(Boolean, Expr, EvalfMixin):
                     dif = dif.evalf()
                 if dif.is_real:
                     # note by docs _eval_relation only for reals
-                    return cls._eval_relation(dif, S.Zero)
+                    r = cls._eval_relation(dif, S.Zero)
+                    if r in (S.true, S.false):
+                        return r
             # Note: for Equality simplier code is possible
             #if dif.is_number
             #    rr = dif.equals(0)
