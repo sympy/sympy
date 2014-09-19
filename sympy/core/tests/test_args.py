@@ -2410,7 +2410,7 @@ def test_sympy__physics__quantum__pauli__SigmaZBra():
     from sympy.physics.quantum.pauli import SigmaZBra
     assert _test_args(SigmaZBra(0))
 
-    
+
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
     from sympy.physics.quantum.piab import PIABHamiltonian
     assert _test_args(PIABHamiltonian('P'))
