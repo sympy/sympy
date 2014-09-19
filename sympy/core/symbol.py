@@ -63,21 +63,13 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
-
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Symbol commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
-        for key in assumptions.keys():
-            assumptions[key] = bool(assumptions[key])
+        _sanitize(assumptions)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
-        for key in assumptions.keys():
-            assumptions[key] = bool(assumptions[key])
+
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)
@@ -159,11 +151,7 @@ class Dummy(Symbol):
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Dummy's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        _sanitize(assumptions)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
@@ -566,3 +554,21 @@ def var(names, **args):
         del frame  # break cyclic dependencies as stated in inspect docs
 
     return syms
+
+def _sanitize(assumptions):
+    """Remove None, covert values to bool, make sure commutativity is T/F"""
+
+    # be strict about commutativity
+    is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+    if is_commutative is None:
+        raise ValueError(
+            '%s commutativity must be True or False.' % cls.__name__)
+    assumptions['commutative'] = is_commutative
+
+    # sanitize other assumptions so 1 -> True and 0 -> False
+    for key in list(assumptions.keys()):
+        v = assumptions[key]
+        if v is None:
+            assumptions.pop(key)
+            continue
+        assumptions[key] = bool(v)
