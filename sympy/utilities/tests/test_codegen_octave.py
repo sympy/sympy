@@ -292,7 +292,6 @@ def test_m_matrix_named_matsym():
 
 
 def test_m_matrix_output_autoname():
-    # See "matrix_can_be_single_symbol" hack
     expr = Matrix([[x, x+y, 3]])
     name_expr = ("test", expr)
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
