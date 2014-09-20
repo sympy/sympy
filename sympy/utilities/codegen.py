@@ -1084,8 +1084,8 @@ class OctaveCodeGen(CodeGen):
     """
     Generator for Octave code
 
-    The .write() method inherited from CodeGen will output a code file and an
-    interface file, <prefix>.m and <prefix>.h respectively. (FIXME: kill the .h)
+    The .write() method inherited from CodeGen will output a code file
+    <prefix>.m.
     """
 
     code_extension = "m"
@@ -1203,7 +1203,7 @@ class OctaveCodeGen(CodeGen):
                 else:
                     name = obj
                 declarations.append(
-                    "  %% unsupported: %s (FIXME: what is this for?)\n" % (name))
+                    "  %% unsupported: %s (FIXME: needs a test!)\n" % (name))
             code_lines.append("%s\n" % (oct_expr))
         return declarations + code_lines
 
