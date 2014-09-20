@@ -471,48 +471,29 @@ def octave_code(expr, assign_to=None, **settings):
     >>> octave_code(x**2*y*A**3)
     '(x.^2.*y)*A^3'
 
-    Matrices are supported.  They can be assigned to a string using
-    ``assign_to`` or to a ``MatrixSymbol``.  The latter must have the same
-    dimensions.
-    [FIXME: currently can also be assigned to a ``Symbol``.]
+    Matrices are supported using Octave inline notation.  When using
+    ``assign_to`` with matrices, the name can be specified either as a string
+    or as a ``MatrixSymbol``.  The dimenions must align in the latter case.
 
     FIXME: Hadamard products print with ".*" as well so if do need more careful
     control than the above, you could work solely with MatrixSymbols, using
     matrix and Hadamard products.
 
     >>> from sympy import Matrix, MatrixSymbol
-    >>> mat = Matrix([[x**2, sin(x)], [x*y, ceiling(x)]])
-    >>> print(octave_code(mat, assign_to='A'))
-    A = [x.^2  sin(x);
-    x.*y ceil(x)];
+    >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])
+    >>> octave_code(mat, assign_to='A')
+    'A = [x.^2 sin(x) ceil(x)];'
 
-    Contrast this with:
-
-    >>> A = MatrixSymbol('A', 2, 2)
-    >>> print(octave_code(mat, assign_to=A))
-    A(1, 1) = x.^2;
-    A(2, 1) = x.*y;
-    A(1, 2) = sin(x);
-    A(2, 2) = ceil(x);
-
-    ``Piecewise`` expressions can be dealt with in two ways using either
-    conditionals or logical masking.  Currently, if an ``assign_to`` variable
-    is provided then an ``if`` statement is created, otherwise logical masking
-    is used.  A future version might offer a more customizable choice [FIXME].
+    ``Piecewise`` expressions are dealt with using logical masking.  A future
+    version might offer an alternative treatment using if-else conditionals.
     Note that if the ``Piecewise`` lacks a default term, represented by
     ``(expr, True)`` then an error will be thrown.  This is to prevent
     generating an expression that may not evaluate to anything.
 
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
-    >>> print(octave_code(pw, assign_to=tau))
-    if (x > 0)
-      tau = x + 1;
-    else
-      tau = x;
-    end
-    >>> octave_code(pw)
-    '((x > 0).*(x + 1) + (~(x > 0)).*(x))'
+    >>> octave_code(pw, assign_to=tau)
+    'tau = ((x > 0).*(x + 1) + (~(x > 0)).*(x));'
 
     Note that any expression that can be generated normally can also exist
     inside a Matrix:
@@ -520,15 +501,6 @@ def octave_code(expr, assign_to=None, **settings):
     >>> mat = Matrix([[x**2, pw, sin(x)]])
     >>> octave_code(mat, assign_to='A')
     'A = [x.^2 ((x > 0).*(x + 1) + (~(x > 0)).*(x)) sin(x)];'
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> print(octave_code(mat, assign_to=A))
-    A(1, 1) = x.^2;
-    if (x > 0)
-      A(1, 2) = x + 1;
-    else
-      A(1, 2) = x;
-    end
-    A(1, 3) = sin(x);
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
