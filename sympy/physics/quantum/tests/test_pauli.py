@@ -1,23 +1,58 @@
 from sympy import I
-from sympy.physics.quantum import Dagger, Commutator, qapply
-from sympy.physics.quantum.pauli import SigmaOpBase, SigmaX, SigmaY, SigmaZ
+from sympy.physics.quantum import Dagger, Commutator, AntiCommutator, qapply
+from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,
+                                         SigmaMinus, SigmaPlus)
 from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
 
 
-def test_pauli_operators():
-    sx, sy, sz = SigmaX(), SigmaY(), SigmaZ()
+sx, sy, sz = SigmaX(), SigmaY(), SigmaZ()
+sm, sp = SigmaMinus(), SigmaPlus()
 
-    assert isinstance(sx, SigmaOpBase)
-    assert isinstance(sy, SigmaOpBase)
-    assert isinstance(sz, SigmaOpBase)
+
+def test_pauli_operators_types():
+
+    assert isinstance(sx, SigmaOpBase) and isinstance(sx, SigmaX)
+    assert isinstance(sy, SigmaOpBase) and isinstance(sy, SigmaY)
+    assert isinstance(sz, SigmaOpBase) and isinstance(sz, SigmaZ)
+    assert isinstance(sm, SigmaOpBase) and isinstance(sm, SigmaMinus)
+    assert isinstance(sp, SigmaOpBase) and isinstance(sp, SigmaPlus)
+
+
+def test_pauli_operators_commutator():
 
     assert Commutator(sx, sy).doit() == 2 * I * sz
     assert Commutator(sy, sz).doit() == 2 * I * sx
     assert Commutator(sz, sx).doit() == 2 * I * sy
 
+
+def test_pauli_operators_anticommutator():
+
+    assert AntiCommutator(sy, sz).doit() == 0
+    assert AntiCommutator(sz, sx).doit() == 0
+    assert AntiCommutator(sx, sm).doit() == 1
+    assert AntiCommutator(sx, sp).doit() == 1
+
+
+def test_pauli_operators_adjoint():
+
     assert Dagger(sx) == sx
     assert Dagger(sy) == sy
     assert Dagger(sz) == sz
+
+
+def test_pauli_operators_multiplication():
+
+    assert sx * sx == 1
+    assert sy * sy == 1
+    assert sz * sz == 1
+
+    assert sx * sy == I * sz
+    assert sy * sz == I * sx
+    assert sz * sx == I * sy
+
+    assert sy * sx == - I * sz
+    assert sz * sy == - I * sx
+    assert sx * sz == - I * sy
 
 
 def test_pauli_states():
