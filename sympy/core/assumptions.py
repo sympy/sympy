@@ -63,6 +63,8 @@ from sympy.core.compatibility import integer_types, with_metaclass
 # imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
 # composite     -- http://en.wikipedia.org/wiki/Composite_number
 # finite        -- http://en.wikipedia.org/wiki/Finite
+#                  https://docs.python.org/3/library/math.html#math.isfinite
+#                  http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
 # irrational    -- http://en.wikipedia.org/wiki/Irrational_number
 # transcendental -- http://en.wikipedia.org/wiki/Transcendental_number
 # ...
