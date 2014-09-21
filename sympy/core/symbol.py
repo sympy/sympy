@@ -134,6 +134,7 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
+        """Return a Dummy having the same name and same assumptions as self."""
         return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
