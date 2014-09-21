@@ -71,7 +71,7 @@ class Symbol(AtomicExpr, Boolean):
             from collections import defaultdict
             from sympy.utilities.exceptions import SymPyDeprecationWarning
             keymap = defaultdict(lambda: None)
-            keymap.update({'bounded': 'finite', 'unbounded': 'infinite'})
+            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
             if keymap[key]:
                 SymPyDeprecationWarning(
                     feature="%s assumption" % key,
