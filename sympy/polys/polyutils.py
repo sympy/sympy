@@ -8,7 +8,6 @@ from sympy.polys.polyoptions import build_options
 from sympy.core.exprtools import decompose_power
 
 from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
-from sympy.assumptions import ask, Q
 
 from sympy.core.compatibility import xrange
 
@@ -195,7 +194,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor in opt.domain
     elif opt.extension is True:
         def _is_coeff(factor):
-            return ask(Q.algebraic(factor))
+            return factor.is_algebraic
     elif opt.greedy is not False:
         def _is_coeff(factor):
             return False

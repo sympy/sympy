@@ -459,6 +459,8 @@ class Add(Expr, AssocOp):
         (a.is_integer for a in self.args), quick_exit=True)
     _eval_is_rational = lambda self: _fuzzy_group(
         (a.is_rational for a in self.args), quick_exit=True)
+    _eval_is_algebraic = lambda self: _fuzzy_group(
+        (a.is_algebraic for a in self.args), quick_exit=True)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
 

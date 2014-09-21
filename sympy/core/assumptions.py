@@ -21,6 +21,10 @@ Here follows a list of possible assumption names:
                         of real numbers
     - integer       - object can have only values from the set
                         of integers
+    - algebraic     - object can have only values from the set
+                        of algebraic numbers
+    - transcendental - object can have only values from the set
+                        of transcendental numbers
     - bounded       - object absolute value is bounded
     - positive      - object can have only positive values
     - negative      - object can have only negative values
@@ -60,12 +64,15 @@ from sympy.core.compatibility import integer_types, with_metaclass
 # composite     -- http://en.wikipedia.org/wiki/Composite_number
 # finite        -- http://en.wikipedia.org/wiki/Finite
 # irrational    -- http://en.wikipedia.org/wiki/Irrational_number
+# transcendental -- http://en.wikipedia.org/wiki/Transcendental_number
 # ...
 
 _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
+    'rational       ->  algebraic',
+    'algebraic      ->  complex',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -76,6 +83,7 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
+    'transcendental ==  complex & !algebraic',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',

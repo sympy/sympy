@@ -519,6 +519,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 
@@ -531,6 +532,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is True
 
@@ -540,6 +542,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is True
 
@@ -560,6 +563,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 
@@ -572,6 +576,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 
@@ -581,6 +586,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 

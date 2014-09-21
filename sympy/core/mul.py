@@ -970,6 +970,13 @@ class Mul(Expr, AssocOp):
         elif r is False:
             return self._eval_is_zero()
 
+    def _eval_is_algebraic(self):
+        r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
+        if r:
+            return r
+        elif r is False:
+            return self._eval_is_zero()
+
     def _eval_is_zero(self):
         zero = unbound = False
         for a in self.args:
@@ -1081,9 +1088,9 @@ class Mul(Expr, AssocOp):
             if a:
                 others = list(self.args)
                 others.remove(t)
-                if all(x.is_rational is True for x in others):
+                if all((x.is_rational and x.is_nonzero) is True for x in others):
                     return True
-                return None
+                return
             if a is None:
                 return
         return False
