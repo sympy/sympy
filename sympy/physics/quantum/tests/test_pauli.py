@@ -1,4 +1,4 @@
-from sympy import I
+from sympy import I, Mul
 from sympy.physics.quantum import Dagger, Commutator, AntiCommutator, qapply
 from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,
                                          SigmaMinus, SigmaPlus)
@@ -6,6 +6,9 @@ from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
 
 
 sx, sy, sz = SigmaX(), SigmaY(), SigmaZ()
+sx1, sy1, sz1 = SigmaX(1), SigmaY(1), SigmaZ(1)
+sx2, sy2, sz2 = SigmaX(2), SigmaY(2), SigmaZ(2)
+
 sm, sp = SigmaMinus(), SigmaPlus()
 
 
@@ -25,6 +28,21 @@ def test_pauli_operators_commutator():
     assert Commutator(sz, sx).doit() == 2 * I * sy
 
 
+def test_pauli_operators_commutator_with_labels():
+
+    assert Commutator(sx1, sy1).doit() == 2 * I * sz1
+    assert Commutator(sy1, sz1).doit() == 2 * I * sx1
+    assert Commutator(sz1, sx1).doit() == 2 * I * sy1
+
+    assert Commutator(sx2, sy2).doit() == 2 * I * sz2
+    assert Commutator(sy2, sz2).doit() == 2 * I * sx2
+    assert Commutator(sz2, sx2).doit() == 2 * I * sy2
+
+    assert Commutator(sx1, sy2).doit() == 0
+    assert Commutator(sy1, sz2).doit() == 0
+    assert Commutator(sz1, sx2).doit() == 0
+
+
 def test_pauli_operators_anticommutator():
 
     assert AntiCommutator(sy, sz).doit() == 0
@@ -40,6 +58,17 @@ def test_pauli_operators_adjoint():
     assert Dagger(sz) == sz
 
 
+def test_pauli_operators_adjoint_with_labels():
+
+    assert Dagger(sx1) == sx1
+    assert Dagger(sy1) == sy1
+    assert Dagger(sz1) == sz1
+
+    assert Dagger(sx1) != sx2
+    assert Dagger(sy1) != sy2
+    assert Dagger(sz1) != sz2
+
+
 def test_pauli_operators_multiplication():
 
     assert sx * sx == 1
@@ -53,6 +82,17 @@ def test_pauli_operators_multiplication():
     assert sy * sx == - I * sz
     assert sz * sy == - I * sx
     assert sx * sz == - I * sy
+
+
+def test_pauli_operators_multiplication_with_labels():
+
+    assert sx1 * sx1 == 1
+    assert sy1 * sy1 == 1
+    assert sz1 * sz1 == 1
+
+    assert isinstance(sx1 * sx2, Mul)
+    assert isinstance(sy1 * sy2, Mul)
+    assert isinstance(sz1 * sz2, Mul)
 
 
 def test_pauli_states():
