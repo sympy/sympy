@@ -43,19 +43,33 @@ matrix:
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/2"
+        - SPLIT="1/3"
+        - FASTCACHE="false"
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="2/2"
+        - SPLIT="2/3"
+        - FASTCACHE="false"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="3/3"
+        - FASTCACHE="false"
     - python: 3.4
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/2"
+        - SPLIT="1/3"
+        - FASTCACHE="false"
     - python: 3.4
       env:
         - TEST_SLOW="true"
-        - SPLIT="2/2"
+        - SPLIT="2/3"
+        - FASTCACHE="false"
+    - python: 3.4
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="3/3"
+        - FASTCACHE="false"
     - python: 2.7
       env:
         - TEST_THEANO="true"
