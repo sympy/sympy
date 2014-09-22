@@ -633,6 +633,8 @@ class log(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
+            if (self.args[0] - 1).is_zero:
+                return True
             if s.args[0].is_rational:
                 return False
         else:
