@@ -579,7 +579,7 @@ def doctest(*paths, **kwargs):
     # rerun even if hash randomization is not supported
     for i in xrange(rerun, -1, -1):
         print_counter(i)
-        val = not bool(_test(*paths, **kwargs))
+        val = not bool(_doctest(*paths, **kwargs))
         if not val or i == 0:
             return val
 
