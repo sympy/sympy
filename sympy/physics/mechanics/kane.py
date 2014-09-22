@@ -12,11 +12,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
         _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-import warnings
 from sympy.utilities.iterables import iterable
-
-warnings.simplefilter("always", SymPyDeprecationWarning)
-
 
 class KanesMethod(object):
     """Kane's method object.
