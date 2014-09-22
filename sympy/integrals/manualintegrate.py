@@ -234,9 +234,9 @@ def power_rule(integral):
     elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
         rule = ExpRule(base, exp, integrand, symbol)
 
-        if sympy.ask(~sympy.Q.zero(sympy.log(base))):
+        if sympy.log(base).is_nonzero:
             return rule
-        elif sympy.ask(sympy.Q.zero(sympy.log(base))):
+        elif sympy.log(base).is_zero:
             return ConstantRule(1, 1, symbol)
 
         return PiecewiseRule([
@@ -260,7 +260,7 @@ def inverse_trig_rule(integral):
         return
 
     def negative(x):
-        return sympy.ask(sympy.Q.negative(x)) or x.is_negative or x.could_extract_minus_sign()
+        return x.is_negative or x.could_extract_minus_sign()
 
     def ArcsinhRule(integrand, symbol):
         return InverseHyperbolicRule(sympy.asinh, integrand, symbol)
@@ -758,7 +758,7 @@ def substitution_rule(integral):
                         could_be_zero.append(denom)
 
                     for expr in could_be_zero:
-                        if not sympy.ask(~sympy.Q.zero(expr)):
+                        if not expr.is_nonzero:
                             substep = integral_steps(integrand.subs(expr, 0), symbol)
 
                             if substep:
