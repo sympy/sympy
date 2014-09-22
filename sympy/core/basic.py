@@ -1598,6 +1598,10 @@ class Basic(with_metaclass(ManagedProperties)):
     def is_unbounded(self):
         return super(Basic, self).__getattribute__('is_infinite')
 
+    @deprecated(useinstead="is_zero", issue=8071, deprecated_since_version="0.7.6")
+    def is_infinitesimal(self):
+        return super(Basic, self).__getattribute__('is_zero')
+
 
 class Atom(Basic):
     """
