@@ -314,7 +314,7 @@ class Range(Set):
             raise ValueError("Inputs to Range must be Integer Valued\n" +
                     "Use ImageSets of Ranges for other cases")
 
-        if not step.is_bounded:
+        if not step.is_finite:
             raise ValueError("Infinite step is not allowed")
         if start == stop:
             return S.EmptySet
@@ -325,7 +325,7 @@ class Range(Set):
 
         # normalize args: regardless of how they are entered they will show
         # canonically as Range(inf, sup, step) with step > 0
-        if n.is_bounded:
+        if n.is_finite:
             start, stop = sorted((start, start + (n - 1)*step))
         else:
             start, stop = sorted((start, stop - step))
@@ -358,7 +358,7 @@ class Range(Set):
             inf = ceiling(Max(self.inf, oinf))
             sup = floor(Min(self.sup, osup))
             # if we are off the sequence, get back on
-            if inf.is_bounded and self.inf.is_bounded:
+            if inf.is_finite and self.inf.is_finite:
                 off = (inf - self.inf) % self.step
             else:
                 off = S.Zero

@@ -492,10 +492,10 @@ def test_cot():
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
 
-    assert cot(x).is_bounded is None
-    assert cot(r).is_bounded is None
+    assert cot(x).is_finite is None
+    assert cot(r).is_finite is None
     i = Symbol('i', imaginary=True)
-    assert cot(i).is_bounded is True
+    assert cot(i).is_finite is True
 
     assert cot(x).subs(x, 3*pi) == zoo
 
@@ -1105,9 +1105,9 @@ def test_sec():
 
     assert sec(x).as_leading_term() == sec(x)
 
-    assert sec(0).is_bounded == True
-    assert sec(x).is_bounded == None
-    assert sec(pi/2).is_bounded == False
+    assert sec(0).is_finite == True
+    assert sec(x).is_finite == None
+    assert sec(pi/2).is_finite == False
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
@@ -1179,9 +1179,9 @@ def test_csc():
 
     assert csc(x).as_leading_term() == csc(x)
 
-    assert csc(0).is_bounded == False
-    assert csc(x).is_bounded == None
-    assert csc(pi/2).is_bounded == True
+    assert csc(0).is_finite == False
+    assert csc(x).is_finite == None
+    assert csc(pi/2).is_finite == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \
         1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))

@@ -33,8 +33,8 @@ def test_zero():
     assert z.is_nonnegative is True
     assert z.is_even is True
     assert z.is_odd is False
-    assert z.is_bounded is True
-    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinite is False
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_composite is False
@@ -59,8 +59,8 @@ def test_one():
     assert z.is_nonnegative is True
     assert z.is_even is False
     assert z.is_odd is True
-    assert z.is_bounded is True
-    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinite is False
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_number is True
@@ -89,8 +89,8 @@ def test_negativeone():
     assert z.is_nonnegative is False
     assert z.is_even is False
     assert z.is_odd is True
-    assert z.is_bounded is True
-    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinite is False
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_composite is False
@@ -116,8 +116,8 @@ def test_infinity():
     assert oo.is_nonnegative is True
     assert oo.is_even is None
     assert oo.is_odd is None
-    assert oo.is_bounded is False
-    assert oo.is_unbounded is True
+    assert oo.is_finite is False
+    assert oo.is_infinite is True
     assert oo.is_comparable is True
     assert oo.is_prime is None
     assert oo.is_composite is None
@@ -143,8 +143,8 @@ def test_neg_infinity():
     assert mm.is_nonnegative is False
     assert mm.is_even is None
     assert mm.is_odd is None
-    assert mm.is_bounded is False
-    assert mm.is_unbounded is True
+    assert mm.is_finite is False
+    assert mm.is_infinite is True
     assert mm.is_comparable is True
     assert mm.is_prime is False
     assert mm.is_composite is False
@@ -170,8 +170,8 @@ def test_nan():
     assert nan.is_nonnegative is None
     assert nan.is_even is None
     assert nan.is_odd is None
-    assert nan.is_bounded is None
-    assert nan.is_unbounded is None
+    assert nan.is_finite is None
+    assert nan.is_infinite is None
     assert nan.is_comparable is False
     assert nan.is_prime is None
     assert nan.is_composite is None
@@ -196,8 +196,8 @@ def test_pos_rational():
     assert r.is_nonnegative is True
     assert r.is_even is False
     assert r.is_odd is False
-    assert r.is_bounded is True
-    assert r.is_unbounded is False
+    assert r.is_finite is True
+    assert r.is_infinite is False
     assert r.is_comparable is True
     assert r.is_prime is False
     assert r.is_composite is False
@@ -260,8 +260,8 @@ def test_pi():
     assert z.is_nonnegative is True
     assert z.is_even is False
     assert z.is_odd is False
-    assert z.is_bounded is True
-    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinite is False
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_composite is False
@@ -285,8 +285,8 @@ def test_E():
     assert z.is_nonnegative is True
     assert z.is_even is False
     assert z.is_odd is False
-    assert z.is_bounded is True
-    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinite is False
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_composite is False
@@ -310,8 +310,8 @@ def test_I():
     assert z.is_nonnegative is False
     assert z.is_even is False
     assert z.is_odd is False
-    assert z.is_bounded is True
-    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinite is False
     assert z.is_comparable is False
     assert z.is_prime is False
     assert z.is_composite is False
@@ -629,10 +629,10 @@ def test_hash_vs_eq():
 
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, bounded=False)
-    p = Symbol('p', positive=True, bounded=False)
+    n = Symbol('n', negative=True, finite=False)
+    p = Symbol('p', positive=True, finite=False)
     x = Symbol('x')
-    xb = Symbol('xb', bounded=True)
+    xb = Symbol('xb', finite=True)
     assert (n + p).is_positive is None
     assert (n + x).is_positive is None
     assert (p + x).is_positive is None
@@ -741,7 +741,7 @@ def test_issue_6275():
     # This is similar to x/x => 1 even though if x = 0, it is really nan.
     assert isinstance(x*0, type(0*S.Infinity))
     if 0*S.Infinity is S.NaN:
-        b = Symbol('b', bounded=None)
+        b = Symbol('b', finite=None)
         assert (b*0).is_zero is None
 
 

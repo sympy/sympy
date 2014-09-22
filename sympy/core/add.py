@@ -130,7 +130,7 @@ class Add(Expr, AssocOp):
             # 3 or NaN
             elif o.is_Number:
                 if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_bounded is False):
+                        o.is_finite is False):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number:
@@ -141,7 +141,7 @@ class Add(Expr, AssocOp):
                 continue
 
             elif o is S.ComplexInfinity:
-                if coeff.is_bounded is False:
+                if coeff.is_finite is False:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 coeff = S.ComplexInfinity
@@ -216,11 +216,11 @@ class Add(Expr, AssocOp):
         # oo, -oo
         if coeff is S.Infinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonnegative or f.is_real and f.is_bounded)]
+                      (f.is_nonnegative or f.is_real and f.is_finite)]
 
         elif coeff is S.NegativeInfinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonpositive or f.is_real and f.is_bounded)]
+                      (f.is_nonpositive or f.is_real and f.is_finite)]
 
         if coeff is S.ComplexInfinity:
             # zoo might be
@@ -231,7 +231,7 @@ class Add(Expr, AssocOp):
             # change the zoo nature; if unbounded a NaN condition could result
             # if the unbounded symbol had sign opposite of the unbounded
             # portion of zoo, e.g., unbounded_real - unbounded_real.
-            newseq = [c for c in newseq if not (c.is_bounded and
+            newseq = [c for c in newseq if not (c.is_finite and
                                                 c.is_real is not None)]
 
         # process O(x)
@@ -451,8 +451,8 @@ class Add(Expr, AssocOp):
         (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_antihermitian = lambda self: _fuzzy_group(
         (a.is_antihermitian for a in self.args), quick_exit=True)
-    _eval_is_bounded = lambda self: _fuzzy_group(
-        (a.is_bounded for a in self.args), quick_exit=True)
+    _eval_is_finite = lambda self: _fuzzy_group(
+        (a.is_finite for a in self.args), quick_exit=True)
     _eval_is_hermitian = lambda self: _fuzzy_group(
         (a.is_hermitian for a in self.args), quick_exit=True)
     _eval_is_integer = lambda self: _fuzzy_group(
@@ -512,8 +512,8 @@ class Add(Expr, AssocOp):
             return False
         for a in args:
             ispos = a.is_positive
-            ubound = a.is_unbounded
-            if ubound:
+            infinite = a.is_infinite
+            if infinite:
                 unbounded.add(ispos)
                 if len(unbounded) > 1:
                     return
@@ -529,7 +529,7 @@ class Add(Expr, AssocOp):
             elif a.is_zero:
                 continue
 
-            if ubound is None:
+            if infinite is None:
                 return
             unknown_sign = True
 
@@ -554,8 +554,8 @@ class Add(Expr, AssocOp):
             return False
         for a in args:
             isneg = a.is_negative
-            ubound = a.is_unbounded
-            if ubound:
+            infinite = a.is_infinite
+            if infinite:
                 unbounded.add(isneg)
                 if len(unbounded) > 1:
                     return
@@ -571,7 +571,7 @@ class Add(Expr, AssocOp):
             elif a.is_zero:
                 continue
 
-            if ubound is None:
+            if infinite is None:
                 return
             unknown_sign = True
 
@@ -698,7 +698,7 @@ class Add(Expr, AssocOp):
         if not self.is_Add:
             return self.as_leading_term(x)
 
-        unbounded = [t for t in self.args if t.is_unbounded]
+        unbounded = [t for t in self.args if t.is_infinite]
 
         self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:

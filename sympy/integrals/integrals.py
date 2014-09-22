@@ -318,7 +318,7 @@ class Integral(AddWithLimits):
             where sign of b is considered
             """
             wok = F.subs(d, a)
-            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+            if wok is S.NaN or wok.is_finite is False and a.is_finite:
                 return limit(sign(b)*F, d, a)
             return wok
 

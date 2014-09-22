@@ -304,7 +304,7 @@ class Number(AtomicExpr):
             return -new
         return self  # there is no other possibility
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         return True
 
     @classmethod
@@ -723,7 +723,7 @@ class Float(Number):
     def _as_mpf_op(self, prec):
         return self._mpf_, max(prec, self._prec)
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         if self._mpf_ in (_mpf_inf, _mpf_ninf):
             return False
         return True
@@ -2131,7 +2131,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     is_commutative = True
     is_positive = True
-    is_bounded = False
+    is_finite = False
     is_integer = None
     is_rational = None
     is_algebraic = None
@@ -2291,7 +2291,7 @@ class Infinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
         if other.is_real:
-            if other.is_bounded or other is S.NegativeInfinity:
+            if other.is_finite or other is S.NegativeInfinity:
                 return S.false
             elif other is S.Infinity:
                 return S.true
@@ -2306,7 +2306,7 @@ class Infinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
         if other.is_real:
-            if other.is_bounded or other is S.NegativeInfinity:
+            if other.is_finite or other is S.NegativeInfinity:
                 return S.true
             elif other is S.Infinity:
                 return S.false
@@ -2347,7 +2347,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_commutative = True
     is_real = True
     is_positive = False
-    is_bounded = False
+    is_finite = False
     is_integer = None
     is_rational = None
     is_number = True
@@ -2503,7 +2503,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
         if other.is_real:
-            if other.is_bounded or other is S.Infinity:
+            if other.is_finite or other is S.Infinity:
                 return S.true
             elif other is S.NegativeInfinity:
                 return S.false
@@ -2542,7 +2542,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
         if other.is_real:
-            if other.is_bounded or other is S.Infinity:
+            if other.is_finite or other is S.Infinity:
                 return S.false
             elif other is S.NegativeInfinity:
                 return S.true
@@ -2603,7 +2603,7 @@ class NaN(with_metaclass(Singleton, Number)):
     is_transcendental = None
     is_integer = None
     is_comparable = False
-    is_bounded = None
+    is_finite = None
     is_zero = None
     is_prime = None
     is_positive = None
@@ -2718,7 +2718,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_commutative = True
-    is_bounded = False
+    is_finite = False
     is_real = None
     is_number = True
 
@@ -2757,7 +2757,7 @@ zoo = S.ComplexInfinity
 class NumberSymbol(AtomicExpr):
 
     is_commutative = True
-    is_bounded = True
+    is_finite = True
     is_number = True
 
     __slots__ = []
@@ -3197,7 +3197,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
     is_commutative = True
     is_imaginary = True
-    is_bounded = True
+    is_finite = True
     is_number = True
     is_algebraic = True
     is_transcendental = False

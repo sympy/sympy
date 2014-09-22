@@ -144,7 +144,7 @@ def test_sign():
     assert sign(sqrt(1 - sqrt(3))) == I
 
     x = Symbol('x')
-    assert sign(x).is_bounded is True
+    assert sign(x).is_finite is True
     assert sign(x).is_complex is True
     assert sign(x).is_imaginary is None
     assert sign(x).is_integer is None

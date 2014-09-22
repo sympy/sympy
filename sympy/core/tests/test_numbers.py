@@ -367,22 +367,22 @@ def test_Float():
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
-    assert Float('+inf').is_bounded is False
+    assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
     assert Float('+inf').is_positive is True
-    assert Float('+inf').is_unbounded is True
+    assert Float('+inf').is_infinite is True
     assert Float('+inf').is_zero is False
 
-    assert Float('-inf').is_bounded is False
+    assert Float('-inf').is_finite is False
     assert Float('-inf').is_negative is True
     assert Float('-inf').is_positive is False
-    assert Float('-inf').is_unbounded is True
+    assert Float('-inf').is_infinite is True
     assert Float('-inf').is_zero is False
 
-    assert Float('0.0').is_bounded is True
+    assert Float('0.0').is_finite is True
     assert Float('0.0').is_negative is False
     assert Float('0.0').is_positive is False
-    assert Float('0.0').is_unbounded is False
+    assert Float('0.0').is_infinite is False
     assert Float('0.0').is_zero is True
 
     # rationality properties
@@ -716,7 +716,7 @@ def test_Infinity_inequations():
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
 
     x = Symbol('x')
-    b = Symbol('b', bounded=True, real=True)
+    b = Symbol('b', finite=True, real=True)
     assert (x < oo) == Lt(x, oo)  # issue 7775
     assert b < oo and b > -oo and b <= oo and b >= -oo
     assert oo > b and oo >= b and (oo < b) == False and (oo <= b) == False
@@ -1246,23 +1246,23 @@ def test_Rational_int():
 
 
 def test_zoo():
-    b = Symbol('b', bounded=True)
+    b = Symbol('b', finite=True)
     nz = Symbol('nz', nonzero=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     im = Symbol('i', imaginary=True)
     c = Symbol('c', complex=True)
-    pb = Symbol('pb', positive=True, bounded=True)
-    nb = Symbol('nb', negative=True, bounded=True)
-    imb = Symbol('ib', imaginary=True, bounded=True)
+    pb = Symbol('pb', positive=True, finite=True)
+    nb = Symbol('nb', negative=True, finite=True)
+    imb = Symbol('ib', imaginary=True, finite=True)
     for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
               b, nz, p, n, im, pb, nb, imb, c]:
-        if i.is_bounded and (i.is_real or i.is_imaginary):
+        if i.is_finite and (i.is_real or i.is_imaginary):
             assert i + zoo is zoo
             assert i - zoo is zoo
             assert zoo + i is zoo
             assert zoo - i is zoo
-        elif i.is_bounded is not False:
+        elif i.is_finite is not False:
             assert (i + zoo).is_Add
             assert (i - zoo).is_Add
             assert (zoo + i).is_Add
@@ -1308,21 +1308,21 @@ def test_zoo():
 def test_issue_4122():
     x = Symbol('x', nonpositive=True)
     assert (oo + x).is_Add
-    x = Symbol('x', bounded=True)
+    x = Symbol('x', finite=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
-    x = Symbol('x', bounded=True, real=True)
+    x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
 
     # similarily for negative infinity
     x = Symbol('x', nonnegative=True)
     assert (-oo + x).is_Add
-    x = Symbol('x', bounded=True)
+    x = Symbol('x', finite=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
     assert -oo + x == -oo
-    x = Symbol('x', bounded=True, real=True)
+    x = Symbol('x', finite=True, real=True)
     assert -oo + x == -oo
 
 

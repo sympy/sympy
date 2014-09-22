@@ -75,14 +75,14 @@ class ExpBase(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_unbounded:
+        if arg.is_infinite:
             if arg.is_negative:
                 return True
             if arg.is_positive:
                 return False
-        if arg.is_bounded:
+        if arg.is_finite:
             return True
 
     def _eval_is_rational(self):
@@ -652,16 +652,16 @@ class log(Function):
     def _eval_is_real(self):
         return self.args[0].is_positive
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_zero:
             return False
-        return arg.is_bounded
+        return arg.is_finite
 
     def _eval_is_positive(self):
         arg = self.args[0]
         if arg.is_positive:
-            if arg.is_unbounded:
+            if arg.is_infinite:
                 return True
             if arg.is_zero:
                 return False

@@ -375,7 +375,7 @@ class sin(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_real:
             return True
@@ -720,7 +720,7 @@ class cos(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
 
         if arg.is_real:
@@ -953,7 +953,7 @@ class tan(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
 
         if arg.is_imaginary:
@@ -1189,7 +1189,7 @@ class cot(TrigonometricFunction):
                 return (C.re(P)/C.im(P)).subs([(z, cot(terms))])
         return cot(arg)
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
@@ -1302,8 +1302,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_as_leading_term(self, x):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
-    def _eval_is_bounded(self):
-        return (1/self._reciprocal_of(self.args[0])).is_bounded
+    def _eval_is_finite(self):
+        return (1/self._reciprocal_of(self.args[0])).is_finite
 
     def _eval_nseries(self, x, n, logx):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)

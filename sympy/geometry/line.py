@@ -1010,7 +1010,7 @@ class Line(LinearEntity):
                 'If it was a slope, enter it with keyword "slope".')
         elif slope is not None and pt is None:
             slope = sympify(slope)
-            if slope.is_bounded is False:
+            if slope.is_finite is False:
                 # when unbounded slope, don't change x
                 dx = 0
                 dy = 1

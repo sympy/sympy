@@ -1588,6 +1588,16 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
+    @property
+    @deprecated(useinstead="is_finite", issue=8071, deprecated_since_version="0.7.6")
+    def is_bounded(self):
+        return super(Basic, self).__getattribute__('is_finite')
+
+    @property
+    @deprecated(useinstead="is_infinite", issue=8071, deprecated_since_version="0.7.6")
+    def is_unbounded(self):
+        return super(Basic, self).__getattribute__('is_infinite')
+
 
 class Atom(Basic):
     """
