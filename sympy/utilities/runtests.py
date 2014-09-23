@@ -452,7 +452,10 @@ def _test(*paths, **kwargs):
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
-    kw = kwargs.get("kw", "")
+    kw = kwargs.get("kw", [])
+    # ensure that kw is a tuple (list is fine too)
+    if isinstance(kw, str):
+        kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     force_colors = kwargs.get("force_colors", False)
@@ -1136,9 +1139,12 @@ class SymPyTests(object):
 
         Always returns True if self._kw is "".
         """
-        if self._kw == "":
+        if not self._kw:
             return True
-        return x.__name__.find(self._kw) != -1
+        for kw in self._kw:
+            if x.__name__.find(kw) != -1:
+                return True
+        return False
 
     def get_test_files(self, dir, pat='test_*.py'):
         """
