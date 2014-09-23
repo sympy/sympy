@@ -602,7 +602,7 @@ class Function(Application, Expr):
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
-                if term.is_finite is False or term is S.NaN:
+                if term.is_finite is False:
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
