@@ -265,6 +265,8 @@ def test_log_assumptions():
     assert log(1, evaluate=False).is_algebraic
     assert log(42, evaluate=False).is_algebraic is False
 
+    assert log(1 + z).is_rational
+
 
 def test_log_hashing():
     x = Symbol("y")
