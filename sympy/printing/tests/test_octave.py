@@ -293,3 +293,17 @@ def test_octave_boolean():
     assert mcode(S.true) == "true"
     assert mcode(False) == "false"
     assert mcode(S.false) == "false"
+
+
+def test_octave_not_supported():
+    assert mcode(S.ComplexInfinity) == (
+        "% Not supported in Octave:\n"
+        "% ComplexInfinity\n"
+        "zoo"
+    )
+    f = Function('f')
+    assert mcode(f(x).diff(x)) == (
+        "% Not supported in Octave:\n"
+        "% Derivative\n"
+        "Derivative(f(x), x)"
+    )

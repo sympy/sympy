@@ -1,4 +1,5 @@
-from sympy.core import S, symbols, Eq, pi, Catalan, Lambda, Dummy
+from sympy.core import (S, symbols, Eq, pi, Catalan, EulerGamma, Lambda,
+                        Dummy, Function)
 from sympy.core.compatibility import StringIO
 from sympy import erf, Integral, Piecewise
 from sympy import Equality
@@ -40,7 +41,7 @@ def test_empty_m_code_with_header():
     assert source == expected
 
 
-def test_simple_m_code():
+def test_m_simple_code():
     name_expr = ("test", (x + y)*z)
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
     assert result[0] == "test.m"
@@ -81,14 +82,16 @@ def test_m_numbersymbol():
 @XFAIL
 def test_m_numbersymbol_no_inline():
     # FIXME: how to pass inline=False to the OctaveCodePrinter?
-    name_expr = ("test", pi**Catalan)
+    name_expr = ("test", [pi**Catalan, EulerGamma])
     result, = codegen(name_expr, "Octave", "test", header=False,
                       empty=False, inline=False)
     source = result[1]
     expected = (
-        "function out1 = test()\n"
-        "  Catalan = 0.915965594177219;\n"
+        "function [out1, out2] = test()\n"
+        "  Catalan = 0.915965594177219;  % constant\n"
+        "  EulerGamma = 0.5772156649015329;  % constant\n"
         "  out1 = pi^Catalan;\n"
+        "  out2 = EulerGamma;\n"
         "end\n"
     )
     assert source == expected
@@ -383,3 +386,59 @@ def test_m_loops():
     )
     assert (source == expected % {'rhs': 'A(%s, %s).*x(j)' % (i, j)} or
             source == expected % {'rhs': 'x(j).*A(%s, %s)' % (i, j)})
+
+
+def test_m_InOutArgument():
+    expr = Equality(x, x**2)
+    name_expr = ("mysqr", expr)
+    result, = codegen(name_expr, "Octave", "mysqr", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function x = mysqr(x)\n"
+        "  x = x.^2;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+@XFAIL
+def test_m_InOutArgument_order():
+    # can specify the order as (x, y)
+    expr = Equality(x, x**2 + y)
+    name_expr = ("test", expr)
+    result, = codegen(name_expr, "Octave", "test", header=False,
+                      empty=False, argument_sequence=(x,y))
+    source = result[1]
+    expected = (
+        "function x = test(x, y)\n"
+        "  x = x.^2 + y;\n"
+        "end\n"
+    )
+    assert source == expected
+    # gives (y, x) instead of (x, y) because InOutArguments are last
+    expr = Equality(x, x**2 + y)
+    name_expr = ("test", expr)
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function x = test(x, y)\n"
+        "  x = x.^2 + y;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_m_not_supported():
+    f = Function('f')
+    name_expr = ("test", [f(x).diff(x), S.ComplexInfinity])
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function [out1, out2] = test(x)\n"
+        "  % unsupported: Derivative(f(x), x)\n"
+        "  % unsupported: zoo\n"
+        "  out1 = Derivative(f(x), x);\n"
+        "  out2 = zoo;\n"
+        "end\n"
+    )
+    assert source == expected
