@@ -1,7 +1,8 @@
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
 from sympy import erf, Integral
-from sympy.matrices import Matrix
+from sympy import Equality
+from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
     InOutArgument)
@@ -1240,3 +1241,62 @@ def test_c_fortran_omit_routine_name():
     result = codegen(name_expr, "C", header=False, empty=False)
     expresult = codegen(name_expr, "C", "foo", header=False, empty=False)
     assert result[0][1] == expresult[0][1]
+
+
+def test_fcode_matrix_output():
+    x, y, z = symbols('x,y,z')
+    e1 = x + y
+    e2 = Matrix([[x, y], [z, 16]])
+    name_expr = ("test", (e1, e2))
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        "REAL*8 function test(x, y, z, out_%(hash)s)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "REAL*8, intent(in) :: z\n"
+        "REAL*8, intent(out), dimension(1:2, 1:2) :: out_%(hash)s\n"
+        "out_%(hash)s(1, 1) = x\n"
+        "out_%(hash)s(2, 1) = z\n"
+        "out_%(hash)s(1, 2) = y\n"
+        "out_%(hash)s(2, 2) = 16\n"
+        "test = x + y\n"
+        "end function\n"
+    )
+    # look for the magic number
+    a = source.splitlines()[5]
+    b = a.split('_')
+    out = b[1]
+    expected = expected % {'hash': out}
+    assert source == expected
+
+
+def test_fcode_results_named_ordered():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(C, (x + y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result = codegen(name_expr, "f95", "test", header=False, empty=False,
+                     argument_sequence=(x, z, y, C, A, B))
+    source = result[0][1]
+    expected = (
+        "subroutine test(x, z, y, C, A, B)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: z\n"
+        "REAL*8, intent(in) :: y\n"
+        "REAL*8, intent(out) :: C\n"
+        "REAL*8, intent(out) :: B\n"
+        "REAL*8, intent(out), dimension(1:1, 1:3) :: A\n"
+        "C = z*(x + y)\n"
+        "A(1, 1) = 1\n"
+        "A(1, 2) = 2\n"
+        "A(1, 3) = x\n"
+        "B = 2*x\n"
+        "end subroutine\n"
+    )
+    assert source == expected
