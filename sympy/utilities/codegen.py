@@ -97,7 +97,7 @@ __all__ = [
     # routines -> code
     "CodeGen", "CCodeGen", "FCodeGen",
     # friendly functions
-    "codegen",
+    "codegen", "make_routine",
 ]
 
 
@@ -116,134 +116,13 @@ class Routine(object):
        values are possible in Python, but not in C or Fortran. Another example:
        Fortran and Python support complex numbers, while C does not.
     """
-    def __init__(self, name, expr, argument_sequence=None):
-        """Initialize a Routine instance.
 
-        ``name``
-            A string with the name of this routine in the generated code
-        ``expr``
-            The sympy expression that the Routine instance will represent.  If
-            given a list or tuple of expressions, the routine will be
-            considered to have multiple return values.
-        ``argument_sequence``
-            Optional list/tuple containing arguments for the routine in a
-            preferred order.  If omitted, arguments will be ordered
-            alphabetically, but with all input aguments first, and then output
-            or in-out arguments.
-
-        A decision about whether to use output arguments or return values,
-        is made depending on the mathematical expressions.  For an expression
-        of type Equality, the left hand side is made into an OutputArgument
-        (or an InOutArgument if appropriate).  Else, the calculated
-        expression is the return values of the routine.
-
-        A tuple of exressions can be used to create a routine with both
-        return value(s) and output argument(s).
-
-        """
-        arg_list = []
-
-        if is_sequence(expr) and not isinstance(expr, MatrixBase):
-            if not expr:
-                raise ValueError("No expression given")
-            expressions = Tuple(*expr)
-        else:
-            expressions = Tuple(expr)
-
-        # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
-
-        # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars
-
-        # Decide whether to use output argument or return value
-        return_val = []
-        output_args = []
-        for expr in expressions:
-            if isinstance(expr, Equality):
-                out_arg = expr.lhs
-                expr = expr.rhs
-                if isinstance(out_arg, Indexed):
-                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
-                    symbol = out_arg.base.label
-                elif isinstance(out_arg, Symbol):
-                    dims = []
-                    symbol = out_arg
-                elif isinstance(out_arg, MatrixSymbol):
-                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
-                    symbol = out_arg
-                else:
-                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
-                                       "can define output arguments.")
-
-                if expr.has(symbol):
-                    output_args.append(
-                        InOutArgument(symbol, out_arg, expr, dimensions=dims))
-                else:
-                    output_args.append(OutputArgument(
-                        symbol, out_arg, expr, dimensions=dims))
-
-                # avoid duplicate arguments
-                symbols.remove(symbol)
-            elif isinstance(expr, ImmutableMatrix):
-                # Create a "dummy" MatrixSymbol to use as the Output arg
-                out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
-                dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
-                output_args.append(OutputArgument(out_arg, out_arg, expr,
-                        dimensions=dims))
-            else:
-                return_val.append(Result(expr))
-
-        # setup input argument list
-        array_symbols = {}
-        for array in expressions.atoms(Indexed):
-            array_symbols[array.base.label] = array
-        for array in expressions.atoms(MatrixSymbol):
-            array_symbols[array] = array
-
-        for symbol in sorted(symbols, key=str):
-            if symbol in array_symbols:
-                dims = []
-                array = array_symbols[symbol]
-                for dim in array.shape:
-                    dims.append((S.Zero, dim - 1))
-                metadata = {'dimensions': dims}
-            else:
-                metadata = {}
-
-            arg_list.append(InputArgument(symbol, **metadata))
-
-        output_args.sort(key=lambda x: str(x.name))
-        arg_list.extend(output_args)
-
-        if argument_sequence is not None:
-            # if the user has supplied IndexedBase instances, we'll accept that
-            new_sequence = []
-            for arg in argument_sequence:
-                if isinstance(arg, IndexedBase):
-                    new_sequence.append(arg.label)
-                else:
-                    new_sequence.append(arg)
-            argument_sequence = new_sequence
-
-            missing = [x for x in arg_list if x.name not in argument_sequence]
-            if missing:
-                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
-                        ", ".join([str(m.name) for m in missing]), missing)
-
-            # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
-            new_args = []
-            for symbol in argument_sequence:
-                try:
-                    new_args.append(name_arg_dict[symbol])
-                except KeyError:
-                    new_args.append(InputArgument(symbol))
-            arg_list = new_args
+    def __init__(self, name, arguments, results, local_vars):
+        """Initialize a Routine instance."""
 
         self.name = name
-        self.arguments = arg_list
-        self.results = return_val
+        self.arguments = arguments
+        self.results = results
         self.local_vars = local_vars
 
     @property
@@ -446,6 +325,123 @@ class CodeGen(object):
            code.
         """
         self.project = project
+
+    def routine(self, name, expr, argument_sequence):
+        """Creates an Routine object that is appropriate for this language.
+
+        This implementation is appropriate for at least C/Fortran.  Subclasses
+        can override this if necessary.
+
+        Here, we assume at most one return value (the l-value) which must be
+        scalar.  Additional outputs are OutputArguments (e.g., pointers on
+        right-hand-side or pass-by-reference).  Matrices are always returned
+        via OutputArguments.  If ``argument_sequence`` is None, arguments will
+        be ordered alphabetically, but with all InputArguments first, and then
+        OutputArgument and InOutArguments.
+
+        """
+
+        if is_sequence(expr) and not isinstance(expr, MatrixBase):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = Tuple(*expr)
+        else:
+            expressions = Tuple(expr)
+
+        # local variables
+        local_vars = set([i.label for i in expressions.atoms(Idx)])
+
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_vars
+
+        # Decide whether to use output argument or return value
+        return_val = []
+        output_args = []
+        for expr in expressions:
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                expr = expr.rhs
+                if isinstance(out_arg, Indexed):
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                    symbol = out_arg.base.label
+                elif isinstance(out_arg, Symbol):
+                    dims = []
+                    symbol = out_arg
+                elif isinstance(out_arg, MatrixSymbol):
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                    symbol = out_arg
+                else:
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
+
+                if expr.has(symbol):
+                    output_args.append(
+                        InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                else:
+                    output_args.append(
+                        OutputArgument(symbol, out_arg, expr, dimensions=dims))
+
+                # avoid duplicate arguments
+                symbols.remove(symbol)
+            elif isinstance(expr, ImmutableMatrix):
+                # Create a "dummy" MatrixSymbol to use as the Output arg
+                out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
+                output_args.append(
+                    OutputArgument(out_arg, out_arg, expr, dimensions=dims))
+            else:
+                return_val.append(Result(expr))
+
+        arg_list = []
+
+        # setup input argument list
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
+
+        for symbol in sorted(symbols, key=str):
+            if symbol in array_symbols:
+                dims = []
+                array = array_symbols[symbol]
+                for dim in array.shape:
+                    dims.append((S.Zero, dim - 1))
+                metadata = {'dimensions': dims}
+            else:
+                metadata = {}
+
+            arg_list.append(InputArgument(symbol, **metadata))
+
+        output_args.sort(key=lambda x: str(x.name))
+        arg_list.extend(output_args)
+
+        if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
+            missing = [x for x in arg_list if x.name not in argument_sequence]
+            if missing:
+                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
+                        ", ".join([str(m.name) for m in missing]), missing)
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
+
+        return Routine(name, arg_list, return_val, local_vars)
 
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
@@ -1043,10 +1039,94 @@ def codegen(name_expr, language, prefix=None, project="project",
     if prefix is None:
         prefix = name_expr[0][0]
 
-    # Construct the routines based on the name_expression pairs.
+    # Construct Routines appropriate for this code_gen from (name, expr) pairs.
     routines = []
     for name, expr in name_expr:
-        routines.append(Routine(name, expr, argument_sequence))
+        routines.append(code_gen.routine(name, expr, argument_sequence))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
+
+
+def make_routine(name, expr, argument_sequence=None, language="F95"):
+    """A factory that makes an appropriate Routine from an expression.
+
+    Parameters
+    ==========
+
+    name : string
+        The name of this routine in the generated code.
+
+    expr : expression or list/tuple of expressions
+        A SymPy expression that the Routine instance will represent.  If
+        given a list or tuple of expressions, the routine will be
+        considered to have multiple return values and/or output arguments.
+
+    argument_sequence : list or tuple, optional
+        List arguments for the routine in a preferred order.  If omitted,
+        the results are language dependent, for example, alphabetical order
+        or in the same order as the given expressions.
+
+    language : string, optional
+        Specify a target language.  The Routine itself should be
+        language-agnostic but the precise way one is created, error
+        checking, etc depend on the language.  [default: "F95"].
+
+    A decision about whether to use output arguments or return values is made
+    depending on both the language and the particular mathematical expressions.
+    For an expression of type Equality, the left hand side is typically made
+    into an OutputArgument (or perhaps an InOutArgument if appropriate).
+    Otherwise, typically, the calculated expression is made a return values of
+    the routine.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.codegen import make_routine
+    >>> from sympy.abc import x, y, f, g
+    >>> from sympy import Eq
+    >>> r = make_routine('test', [Eq(f, 2*x), Eq(g, x + y)])
+    >>> [arg.result_var for arg in r.results]
+    []
+    >>> [arg.name for arg in r.arguments]
+    [x, y, f, g]
+    >>> [arg.name for arg in r.result_variables]
+    [f, g]
+    >>> r.local_vars
+    set()
+
+    Another more complicated example with a mixture of specified and
+    automatically-assigned names.  Also has Matrix output.
+
+    >>> from sympy import Matrix
+    >>> r = make_routine('fcn', [x*y, Eq(f, 1), Eq(g, x + g), Matrix([[x, 2]])])
+    >>> [arg.result_var for arg in r.results]  # doctest: +SKIP
+    [result_5397460570204848505]
+    >>> [arg.expr for arg in r.results]
+    [x*y]
+    >>> [arg.name for arg in r.arguments]  # doctest: +SKIP
+    [x, y, f, g, out_8598435338387848786]
+
+    We can examine the various arguments more closely:
+
+    >>> from sympy.utilities.codegen import (InputArgument, OutputArgument,
+    ...                                      InOutArgument)
+    >>> [a.name for a in r.arguments if isinstance(a, InputArgument)]
+    [x, y]
+
+    >>> [a.name for a in r.arguments if isinstance(a, OutputArgument)]  # doctest: +SKIP
+    [f, out_8598435338387848786]
+    >>> [a.expr for a in r.arguments if isinstance(a, OutputArgument)]
+    [1, Matrix([[x, 2]])]
+
+    >>> [a.name for a in r.arguments if isinstance(a, InOutArgument)]
+    [g]
+    >>> [a.expr for a in r.arguments if isinstance(a, InOutArgument)]
+    [g + x]
+
+    """
+
+    # initialize a new code generator
+    code_gen = get_code_generator(language, "nothingElseMatters")
+
+    return code_gen.routine(name, expr, argument_sequence)

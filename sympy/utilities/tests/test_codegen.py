@@ -3,9 +3,9 @@ from sympy.core.compatibility import StringIO
 from sympy import erf, Integral
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
-    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
-    InOutArgument)
+from sympy.utilities.codegen import (CCodeGen, InputArgument, CodeGenError,
+    FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, InOutArgument)
+from sympy.utilities.codegen import routine as Routine
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import XFAIL
