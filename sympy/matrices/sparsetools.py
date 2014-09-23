@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import SparseMatrix, Matrix
+from sympy.core.compatibility import xrange
 
 
 def _doktocsr(dok):
@@ -43,7 +44,7 @@ def _doktodia(dok):
        ab[u + i - j, j] == a[i, j], where 'u' is the upper bandwidth of 'a'.
     """
     offsets = sorted(set(map(lambda x: x[1]-x[0], dok.CL)))[::-1]
-    offmap = {i:o for i,o in enumerate(offsets)}
+    offmap = dict(enumerate(offsets))
     def todia(i, j):
         im = j-offmap[i]
         if 0 <= im < dok.shape[0]:
@@ -51,6 +52,7 @@ def _doktodia(dok):
         return 0
     return ((abs(offsets[-1]), offsets[0]),
             Matrix(len(offsets), dok.shape[0], todia))
+
 
 def _banded_LUdecomposition(A, l_and_u=None, overwrite=False):
     """
@@ -85,14 +87,15 @@ def _banded_LUdecomposition(A, l_and_u=None, overwrite=False):
             A = A.copy()
 
     n = A.shape[-1]
-    for k in range(n-1):
+    for k in xrange(n-1):
         A[u+1:u+l+1, k] /= A[u, k]
 
         i, ii = k+1, min(k+l, n)+1
-        for j in range(k+1, min(k+u+1, n)):
+        for j in xrange(k+1, min(k+u+1, n)):
             A[u+i-j:u+ii-j, j] -= A[u+i-k:u+ii-k, k]*A[u+k-j,j]
 
     return (l, u), A
+
 
 def banded_LUsolve(A, rhs, l_and_u=None, have_LU=False, overwrite=False):
     """
@@ -134,11 +137,11 @@ def banded_LUsolve(A, rhs, l_and_u=None, have_LU=False, overwrite=False):
 
     n = A.shape[-1]
     # forward subs
-    for j in range(n):
+    for j in xrange(n):
         i, ii = j+1, min(j+l+1, n)
         rhs[i:ii, :] -= A[u+i-j:u+ii-j, j]*rhs[j, :]
     # backward subs
-    for j in range(n-1, -1, -1):
+    for j in xrange(n-1, -1, -1):
         rhs[j, :] /= A[u, j]
         i, ii = max(0, j-u), j
         rhs[i:ii, :] -= A[u+i-j:u+ii-j, j]*rhs[j, :]
