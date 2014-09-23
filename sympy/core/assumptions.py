@@ -51,6 +51,8 @@ from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types, with_metaclass
 
+from random import shuffle
+
 
 # This are the rules under which our assumptions function
 #
@@ -195,7 +197,9 @@ def _ask(fact, obj):
             return a
 
     # Try assumption's prerequisites
-    for pk in _assume_rules.prereq[fact]:
+    prereq = list(_assume_rules.prereq[fact])
+    shuffle(prereq)
+    for pk in prereq:
         if pk in assumptions:
             continue
         if pk in handler_map:
