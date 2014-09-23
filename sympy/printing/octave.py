@@ -288,11 +288,11 @@ class OctaveCodePrinter(CodePrinter):
         elif A.rows == 1:
             return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
         elif A.cols == 1:
-            # FIXME: not ideal, makes each equispaced
-            return "[%s]" % A.table(self, rowstart='', rowend='',
-                                    rowsep='; ', colsep=' ')
+            # note .table would unnecessarily equispace the rows
+            return "[%s]" % "; ".join([self._print(a) for a in A])
         return "[%s]" % A.table(self, rowstart='', rowend='',
                                 rowsep=';\n', colsep=' ')
+
     # FIXME: see my prosposed change for _print_NumberSymbol, same here
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
