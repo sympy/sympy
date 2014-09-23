@@ -52,10 +52,11 @@ class OctaveCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 16,
         'user_functions': {},
         'human': True,
-        'contract': True
+        'contract': True,
+        'inline': True,
     }
     # FIXME: contract is for expressing tensors as loops (if True), or
     # just assignment (if False).  Needs tests for tensors, borrow
@@ -173,7 +174,7 @@ class OctaveCodePrinter(CodePrinter):
                     divsym + "(%s)" % multjoin(b, b_str))
 
 
-    # FIXME: need tests that use HadamardProduct: user needs this to
+    # FIXME: add some tests for HadamardProduct: user needs this to
     # mix matrix symbols and .* products?
     #def _print_MatMul(self, expr):
     #def _print_HadamardProduct(self, expr):
@@ -224,10 +225,11 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_NumberSymbol(self, expr):
-        # FIXME: perhaps this should be based on Assignment?  Like in
-        # Piecewise.  This form is better for inline code, but the
-        # CodePrinter implementation is nicer for longer programs.
-        return "%.18g" % float(expr)
+        if self._settings["inline"]:
+            return self._print(expr.evalf(self._settings["precision"]))
+        else:
+            # assign to a variable, perhaps more readable for longer program
+            return super(OctaveCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_Assignment(self, expr):
@@ -235,6 +237,16 @@ class OctaveCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
+        if not self._settings["inline"] and isinstance(expr.rhs, C.Piecewise):
+            # Here we modify Piecewise so each expression is now
+            # an Assignment, and then continue on the print.
+            expressions = []
+            conditions = []
+            for (e, c) in rhs.args:
+                expressions.append(Assignment(lhs, e))
+                conditions.append(c)
+            temp = C.Piecewise(*zip(expressions, conditions))
+            return self._print(temp)
         if self._settings["contract"] and (lhs.has(C.IndexedBase) or
                 rhs.has(C.IndexedBase)):
             # Here we check if there is looping to be done, and if so
@@ -332,10 +344,19 @@ class OctaveCodePrinter(CodePrinter):
                              "expression may not evaluate to anything under "
                              "some condition.")
         lines = []
-        # FIXME: for Octave, user might want to force the inline mode (its
-        # better for vector operations for example).  How to expose this?
-        # Choosing just based on Assignment seems too coarse.
-        if expr.has(Assignment):
+        if self._settings["inline"]:
+            # Express each (cond, expr) pair in a nested Horner form:
+            #   (condition) .* (expr) + (not cond) .* (<others>)
+            # Expressions that result in multiple statements won't work here.
+            ecpairs = ["({0}).*({1}) + (~({0})).*(".format
+                       (self._print(c), self._print(e))
+                       for e, c in expr.args[:-1]]
+            elast = "%s" % self._print(expr.args[-1].expr)
+            pw = " ...\n".join(ecpairs) + elast + ")"*len(ecpairs)
+            # Note: current need these outer brackets for 2*pw.  Would be
+            # nicer to teach parenthesize() to do this for us when needed!
+            return "(" + pw + ")"
+        else:
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s)" % self._print(c))
@@ -348,19 +369,6 @@ class OctaveCodePrinter(CodePrinter):
                 if i == len(expr.args) - 1:
                     lines.append("end")
             return "\n".join(lines)
-        else:
-            # This Piecewise was used in an expression, so do inline
-            # where each cond, expr pair is like a nested Horner form:
-            #   (condition) .* (expr) + (not cond) .* (<others>)
-            # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}).*({1}) + (~({0})).*(".format
-                       (self._print(c), self._print(e))
-                       for e, c in expr.args[:-1]]
-            elast = "%s" % self._print(expr.args[-1].expr)
-            pw = " ...\n".join(ecpairs) + elast + ")"*len(ecpairs)
-            # Note: current need these outer brackets for 2*pw.  Would be
-            # nicer to teach parenthesize() to do this for us when needed!
-            return "(" + pw + ")"
 
 
     def indent_code(self, code):
@@ -413,8 +421,7 @@ def octave_code(expr, assign_to=None, **settings):
         ``MatrixSymbol``, or ``Indexed`` type.  This can be helpful for
         expressions that generate multi-line statements.
     precision : integer, optional
-        The precision for numbers such as pi [default=15].
-        [FIXME: is this used?  remove?]
+        The precision for numbers such as pi  [default=16].
     user_functions : dict, optional
         A dictionary where keys are ``FunctionClass`` instances and values are
         their string representations.  Alternatively, the dictionary value can
@@ -431,6 +438,9 @@ def octave_code(expr, assign_to=None, **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
+    inline: bool, optional
+        If True, we try to create single-statement code instead of multiple
+        statements.  [default=True].
 
     Examples
     ========

@@ -86,7 +86,7 @@ def test_mix_number_mult_symbols():
     assert mcode(x/y/z) == "x./(y.*z)"
     assert mcode((x+y)/z) == "(x + y)./z"
     assert mcode((x+y)/(z+x)) == "(x + y)./(x + z)"
-    assert mcode((x+y)/EulerGamma) == "(x + y)/0.577215664901532866"
+    assert mcode((x+y)/EulerGamma) == "(x + y)/0.5772156649015329"
     assert mcode(x/3/pi) == "x/(3*pi)"
     assert mcode(S(3)/5*x*y/pi) == "3*x.*y/(5*pi)"
 
@@ -120,8 +120,8 @@ def test_constants():
 
 def test_constants_other():
     assert mcode(2*GoldenRatio) == "2*(1+sqrt(5))/2"
-    assert mcode(2*Catalan) == "2*0.915965594177219011"
-    assert mcode(2*EulerGamma) == "2*0.577215664901532866"
+    assert mcode(2*Catalan) == "2*0.915965594177219"
+    assert mcode(2*EulerGamma) == "2*0.5772156649015329"
 
 
 def test_boolean():
@@ -201,38 +201,42 @@ def test_containers():
     assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0;\n0 1 0;\n0 0 1], [], {}}"
 
 
+def test_octave_noninline():
+    source = mcode((x+y)/Catalan, assign_to='me', inline=False)
+    expected = (
+        "Catalan = 0.915965594177219;\n"
+        "me = (x + y)/Catalan;"
+    )
+    assert source == expected
+
+
 def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
     assert mcode(expr) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))"
-    assert mcode(expr, assign_to="c") == (
-        "c = ((x < 1).*(x) + (~(x < 1)).*(x.^2));")
-    # FIXME:
-    #assert mcode(expr, assign_to="c", prefer_inline=False) == (
-    #        "if (x < 1)\n"
-    #        "  c = x;\n"
-    #        "else\n"
-    #        "  c = x.^2;\n"
-    #        "end")
+    assert mcode(expr, assign_to="r") == (
+        "r = ((x < 1).*(x) + (~(x < 1)).*(x.^2));")
+    assert mcode(expr, assign_to="r", inline=False) == (
+        "if (x < 1)\n"
+        "  r = x;\n"
+        "else\n"
+        "  r = x.^2;\n"
+        "end")
     expr = Piecewise((x**2, x < 1), (x**3, x < 2), (x**4, x < 3), (x**5, True))
-    assert mcode(expr) == (
-            "((x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
-            "(x < 2).*(x.^3) + (~(x < 2)).*( ...\n"
-            "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5))))")
-    assert mcode(expr, assign_to="c") == (
-            "c = ((x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
-            "(x < 2).*(x.^3) + (~(x < 2)).*( ...\n"
-            "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5))));")
-    # FIXME:
-    #assert mcode(expr, assign_to="c", prefer_inline=False) == (
-            # "if (x < 1)\n"
-            # "  c = x.^2;\n"
-            # "elseif (x < 2)\n"
-            # "  c = x.^3;\n"
-            # "elseif (x < 3)\n"
-            # "  c = x.^4;\n"
-            # "else\n"
-            # "  c = x.^5;\n"
-            # "end")
+    expected = ("((x < 1).*(x.^2) + (~(x < 1)).*( ...\n"
+                "(x < 2).*(x.^3) + (~(x < 2)).*( ...\n"
+                "(x < 3).*(x.^4) + (~(x < 3)).*(x.^5))))")
+    assert mcode(expr) == expected
+    assert mcode(expr, assign_to="r") == "r = " + expected + ";"
+    assert mcode(expr, assign_to="r", inline=False) == (
+        "if (x < 1)\n"
+        "  r = x.^2;\n"
+        "elseif (x < 2)\n"
+        "  r = x.^3;\n"
+        "elseif (x < 3)\n"
+        "  r = x.^4;\n"
+        "else\n"
+        "  r = x.^5;\n"
+        "end")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: mcode(expr))

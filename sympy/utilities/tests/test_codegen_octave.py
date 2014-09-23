@@ -66,20 +66,29 @@ def test_m_simple_code_nameout():
     assert source == expected
 
 
-def test_numbersymbol_m_code():
+def test_m_numbersymbol():
     name_expr = ("test", pi**Catalan)
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
     source = result[1]
-    # FIXME: see comments in _print_NumberSymbol
-    # expected = (
-    #     "function out1 = test()\n"
-    #     "  Catalan = 0.915965594177219011;\n"
-    #     "  out1 = pi^Catalan;\n"
-    #     "end\n"
-    # )
     expected = (
         "function out1 = test()\n"
-        "  out1 = pi^0.915965594177219011;\n"
+        "  out1 = pi^0.915965594177219;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+@XFAIL
+def test_m_numbersymbol_no_inline():
+    # FIXME: how to pass inline=False to the OctaveCodePrinter?
+    name_expr = ("test", pi**Catalan)
+    result, = codegen(name_expr, "Octave", "test", header=False,
+                      empty=False, inline=False)
+    source = result[1]
+    expected = (
+        "function out1 = test()\n"
+        "  Catalan = 0.915965594177219;\n"
+        "  out1 = pi^Catalan;\n"
         "end\n"
     )
     assert source == expected
@@ -210,11 +219,12 @@ def test_m_piecewise_():
 
 
 @XFAIL
-def test_m_piecewise_not_inline():
-    # FIXME: some sort of force non-inline to get this, or remove this
+def test_m_piecewise_no_inline():
+    # FIXME: how to pass inline=False to the OctaveCodePrinter?
     pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
     name_expr = ("pwtest", pw)
-    result, = codegen(name_expr, "Octave", "pwtest", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", "pwtest", header=False,
+                      empty=False, inline=False)
     source = result[1]
     expected = (
         "function out1 = pwtest(x)\n"
