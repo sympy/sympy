@@ -92,7 +92,7 @@ def _banded_LUdecomposition(A, l_and_u=None, overwrite=False):
         for j in range(k+1, min(k+u+1, n)):
             A[u+i-j:u+ii-j, j] -= A[u+i-k:u+ii-k, k]*A[u+k-j,j]
 
-    return (l, u), m
+    return (l, u), A
 
 def banded_LUsolve(A, rhs, l_and_u=None, have_LU=False, overwrite=False):
     """
@@ -126,16 +126,20 @@ def banded_LUsolve(A, rhs, l_and_u=None, have_LU=False, overwrite=False):
             raise TypeError("Expected tuple of lower, upper bandwidths.")
         if not have_LU:
             (l, u), A = _banded_LUdecomposition(A, (l, u), overwrite=overwrite)
-    rhs = rhs.copy()
-    l, u = l_and_u
-    n = lu.shape[-1]
+        else:
+            l, u = l_and_u
+
+    if not overwrite:
+        rhs = rhs.copy()
+
+    n = A.shape[-1]
     # forward subs
     for j in range(n):
         i, ii = j+1, min(j+l+1, n)
-        rhs[i:ii, :] -= lu[u+i-j:u+ii-j, j]*rhs[j, :]
+        rhs[i:ii, :] -= A[u+i-j:u+ii-j, j]*rhs[j, :]
     # backward subs
     for j in range(n-1, -1, -1):
-        rhs[j, :] /= lu[u, j]
+        rhs[j, :] /= A[u, j]
         i, ii = max(0, j-u), j
-        rhs[i:ii, :] -= lu[u+i-j:u+ii-j, j]*rhs[j, :]
+        rhs[i:ii, :] -= A[u+i-j:u+ii-j, j]*rhs[j, :]
     return rhs
