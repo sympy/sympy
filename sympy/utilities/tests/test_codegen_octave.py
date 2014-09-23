@@ -143,6 +143,7 @@ def test_results_named_unordered():
     )
     assert source == expected
 
+
 def test_results_named_ordered():
     A, B, C = symbols('A,B,C')
     expr1 = Equality(C, (x + y)*z)

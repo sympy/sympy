@@ -288,6 +288,10 @@ class OctaveCodePrinter(CodePrinter):
         return str(expr).lower()
 
 
+    # Could generate quadrature code for definite Integrals?
+    #_print_Integral = _print_not_supported
+
+
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
         if (A.rows, A.cols) == (0, 0):

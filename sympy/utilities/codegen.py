@@ -1090,7 +1090,7 @@ class OctaveCodeGen(CodeGen):
     code_extension = "m"
 
     def _get_symbol(self, s):
-        """returns the symbol as fcode print it"""
+        """print the symbol appropriately"""
         return octave_code(s).strip()
 
     # FIXME: we would prefer this to appear after the "function =" line?
