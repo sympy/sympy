@@ -461,17 +461,17 @@ class Add(Expr, AssocOp):
 
     # assumption methods
     _eval_is_antihermitian = lambda self: _fuzzy_group(
-        (a.is_antihermitian for a in self.args), quick_exit=True)
+        (a.is_antihermitian for a in Add.make_args(_unevaluated_Add(self))), quick_exit=True)
     _eval_is_hermitian = lambda self: _fuzzy_group(
-        (a.is_hermitian for a in self.args), quick_exit=True)
+        (a.is_hermitian for a in Add.make_args(_unevaluated_Add(self))), quick_exit=True)
     _eval_is_integer = lambda self: _fuzzy_group(
-        (a.is_integer for a in self.args), quick_exit=True)
+        (a.is_integer for a in Add.make_args(_unevaluated_Add(self))), quick_exit=True)
     _eval_is_rational = lambda self: _fuzzy_group(
-        (a.is_rational for a in self.args), quick_exit=True)
+        (a.is_rational for a in Add.make_args(_unevaluated_Add(self))), quick_exit=True)
     _eval_is_algebraic = lambda self: _fuzzy_group(
         (a.is_algebraic for a in self.args), quick_exit=True)
     _eval_is_commutative = lambda self: _fuzzy_group(
-        a.is_commutative for a in self.args)
+        a.is_commutative for a in Add.make_args(_unevaluated_Add(self)))
 
     def _eval_is_complex(self):
         c = True
@@ -534,6 +534,9 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_real(self):
+        self = _unevaluated_Add(self)
+        if not self.is_Add:
+            return self.is_real
         # complex is not False or we wouldn't be here
         if any(not a.is_complex for a in self.args):
             return
@@ -574,6 +577,9 @@ class Add(Expr, AssocOp):
 
     def _eval_is_imaginary(self):
         from sympy import im
+        self = _unevaluated_Add(self)
+        if not self.is_Add:
+            return self.is_imaginary
         i = _fuzzy_group(a.is_imaginary for a in self.args)
         if not i:
             inf = False
@@ -600,6 +606,9 @@ class Add(Expr, AssocOp):
             return True
 
     def _eval_is_odd(self):
+        self = _unevaluated_Add(self)
+        if not self.is_Add:
+            return self.is_odd
         l = [f for f in self.args if not (f.is_even is True)]
         if not l:
             return False
@@ -621,6 +630,10 @@ class Add(Expr, AssocOp):
             return True
 
     def _eval_is_positive(self):
+        from .function import AppliedUndef
+        self = _unevaluated_Add(self)
+        if not self.is_Add:
+            return self.is_positive
         if self.is_number and not self.has(AppliedUndef) and \
                 self._eval_is_real():
             return super(Add, self)._eval_is_positive()
@@ -664,6 +677,10 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_negative(self):
+        from .function import AppliedUndef
+        self = _unevaluated_Add(self)
+        if not self.is_Add:
+            return self.is_negative
         if self.is_number and not self.has(AppliedUndef) and \
                 self._eval_is_real():
             return super(Add, self)._eval_is_negative()
