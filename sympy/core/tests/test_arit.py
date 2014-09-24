@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan, cbrt, Dummy, subsets
+        sign, im, nan, cbrt, Dummy, subsets, Function
 )
 from sympy.core.evalf import PrecisionExhausted
 from sympy.core.tests.test_evalf import NS
@@ -363,6 +363,20 @@ def test_Add_Mul_is_integer():
 
 
 def test_Add_Mul_is_complex_finite_real_infinite():
+    # test flattening
+    eq = Add(1, I, Add(1, -I, evaluate=False), evaluate=False)
+    for atr in 'hermitian integer rational real positive'.split():
+        assert getattr(eq, '_eval_is_%s' % atr)()
+    for atr in 'imaginary negative'.split():
+        assert getattr(eq, '_eval_is_%s' % atr)() is False
+    eq = Add(1, I, Add(-1, I, evaluate=False), evaluate=False)
+    for atr in 'hermitian integer rational real positive negative'.split():
+        assert getattr(eq, '_eval_is_%s' % atr)() is False
+    for atr in 'imaginary antihermitian'.split():
+        assert getattr(eq, '_eval_is_%s' % atr)()
+    f = Function('f')
+    assert Add(f(0), -f(0), evaluate=False).is_real is None  # could be oo - oo
+
     _r = x = Dummy('r', infinite=True, real=True)
     _p = Dummy('p', infinite=True, positive=True)
     _n = Dummy('n', infinite=True, negative=True)
@@ -998,6 +1012,10 @@ def test_Add_is_negative_positive():
     assert (p + x - n).is_positive is None
 
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero is not False
+
+    f = Function('f')
+    assert (f(0) + 1).is_positive is None
+    assert (f(0) + 1).is_negative is None
 
 
 def test_Add_is_nonpositive_nonnegative():
