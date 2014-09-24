@@ -107,14 +107,16 @@ __all__ = [
 
 
 class Routine(object):
-    """Generic description of an evaluation routine for a set of sympy expressions.
+    """Generic description of evaluation routine for set of expressions.
 
-       A CodeGen class can translate instances of this class into C/Fortran/...
-       code. The routine specification covers all the features present in these
-       languages. The CodeGen part must raise an exception when certain features
-       are not present in the target language. For example, multiple return
-       values are possible in Python, but not in C or Fortran. Another example:
-       Fortran and Python support complex numbers, while C does not.
+    A CodeGen class can translate instances of this class into code in a
+    particular language.  The routine specification covers all the features
+    present in these languages.  The CodeGen part must raise an exception
+    when certain features are not present in the target language.  For
+    example, multiple return values are possible in Python, but not in C or
+    Fortran.  Another example: Fortran and Python support complex numbers,
+    while C does not.
+
     """
 
     def __init__(self, name, arguments, results, local_vars):
@@ -127,10 +129,11 @@ class Routine(object):
 
     @property
     def variables(self):
-        """Returns a set containing all variables possibly used in this routine.
+        """Returns a set of all variables possibly used in the routine.
 
-        For routines with unnamed return values, the dummies that may or may
-        not be used will be included in the set.
+        For routines with unnamed return values, the dummies that may or
+        may not be used will be included in the set.
+
         """
         v = set(self.local_vars)
         for arg in self.arguments:
@@ -152,7 +155,7 @@ class Routine(object):
 
 
 class DataType(object):
-    """Holds strings for a certain datatype in different programming languages."""
+    """Holds strings for a certain datatype in different languages."""
     def __init__(self, cname, fname, pyname):
         self.cname = cname
         self.fname = fname
@@ -166,13 +169,13 @@ default_datatypes = {
 
 
 def get_default_datatype(expr):
-    """Derives a decent data type based on the assumptions on the expression."""
+    """Derives an appropriate datatype based on the expression."""
     if expr.is_integer:
         return default_datatypes["int"]
     elif isinstance(expr, MatrixBase):
         for element in expr:
             if not element.is_integer:
-                return(default_datatypes["float"])
+                return default_datatypes["float"]
         return default_datatypes["int"]
     else:
         return default_datatypes["float"]
@@ -182,22 +185,33 @@ class Variable(object):
     """Represents a typed variable."""
 
     def __init__(self, name, datatype=None, dimensions=None, precision=None):
-        """Initializes a Variable instance
+        """Return a new variable.
 
-           name  --  must be of class Symbol or MatrixSymbol
-           datatype  --  When not given, the data type will be guessed based
-                         on the assumptions on the symbol argument.
-           dimension  --  If present, the argument is interpreted as an array.
-                          Dimensions must be a sequence containing tuples, i.e.
-                          (lower, upper) bounds for each index of the array
-           precision  --  FIXME
+        Parameters
+        ==========
+
+        name : Symbol or MatrixSymbol
+
+        datatype : optional
+            When not given, the data type will be guessed based on the
+            assumptions on the symbol argument.
+
+        dimension : sequence containing tupes, optional
+            If present, the argument is interpreted as an array, where this
+            sequence of tuples specifies (lower, upper) bounds for each
+            index of the array.
+
+        precision : int, optional
+            Controls the precision of floating point constants.
+
         """
         if not isinstance(name, (Symbol, MatrixSymbol)):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
         elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
+            raise TypeError("The (optional) `datatype' argument must be an"
+                            "instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError(
                 "The dimension argument must be a sequence of tuples")
@@ -218,13 +232,17 @@ class Variable(object):
     def get_datatype(self, language):
         """Returns the datatype string for the requested langage.
 
-            >>> from sympy import Symbol
-            >>> from sympy.utilities.codegen import Variable
-            >>> x = Variable(Symbol('x'))
-            >>> x.get_datatype('c')
-            'double'
-            >>> x.get_datatype('fortran')
-            'REAL*8'
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.utilities.codegen import Variable
+        >>> x = Variable(Symbol('x'))
+        >>> x.get_datatype('c')
+        'double'
+        >>> x.get_datatype('fortran')
+        'REAL*8'
+
         """
         try:
             return self._datatype[language.upper()]
@@ -236,14 +254,10 @@ class Variable(object):
 class Argument(Variable):
     """An abstract Argument data structure: a name and a data type.
 
-       This structure is refined in the descendants below.
+    This structure is refined in the descendants below.
+
     """
-
-    def __init__(self, name, datatype=None, dimensions=None, precision=None):
-        """ See docstring of Variable.__init__
-        """
-
-        Variable.__init__(self, name, datatype, dimensions, precision)
+    pass
 
 
 class InputArgument(Argument):
@@ -251,53 +265,81 @@ class InputArgument(Argument):
 
 
 class ResultBase(object):
-    """Base class for all ``outgoing'' information from a routine
+    """Base class for all "outgoing" information from a routine.
 
-       Objects of this class stores a sympy expression, and a sympy object
-       representing a result variable that will be used in the generated code
-       only if necessary.
-   """
+    Objects of this class stores a sympy expression, and a sympy object
+    representing a result variable that will be used in the generated code
+    only if necessary.
+
+    """
     def __init__(self, expr, result_var):
         self.expr = expr
         self.result_var = result_var
 
 
 class OutputArgument(Argument, ResultBase):
-    """OutputArgument are always initialized in the routine
-    """
+    """OutputArgument are always initialized in the routine."""
+
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
-        """ See docstring of Variable.__init__
+        """Return a new variable.
+
+        Parameters
+        ==========
+
+        name : Symbol or MatrixSymbol
+
+        result_var : Symbol
+            Used for output.
+            FIXME: check if this can be a string.
+            FIXME: document the difference/reason for having name and result_var.
+
+        expr : object
+            The expression that should be output, typically a SymPy
+            expression.
+
+        datatype : optional
+            When not given, the data type will be guessed based on the
+            assumptions on the symbol argument.
+
+        dimension : sequence containing tupes, optional
+            If present, the argument is interpreted as an array, where this
+            sequence of tuples specifies (lower, upper) bounds for each
+            index of the array.
+
+        precision : int, optional
+            Controls the precision of floating point constants.
+
         """
+
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
 
 
 class InOutArgument(Argument, ResultBase):
-    """InOutArgument are never initialized in the routine
-    """
+    """InOutArgument are never initialized in the routine."""
 
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
-        """ See docstring of Variable.__init__
-        """
         if not datatype:
             datatype = get_default_datatype(expr)
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
+    __init__.__doc__ = OutputArgument.__init__.__doc__
 
 
 class Result(ResultBase):
     """An expression for a scalar return value.
 
-       The name result is used to avoid conflicts with the reserved word
-       'return' in the python language. It is also shorter than ReturnValue.
+    The name result is used to avoid conflicts with the reserved word
+    "return" in the python language.  It is also shorter than ReturnValue.
 
     """
 
     def __init__(self, expr, datatype=None, precision=None):
         """Initialize a (scalar) return value.
 
-           The second argument is optional. When not given, the data type will
-           be guessed based on the assumptions on the expression argument.
+        The second argument is optional. When not given, the data type will
+        be guessed based on the assumptions on the expression argument.
+
         """
         if not isinstance(expr, Expr):
             raise TypeError("The first argument must be a sympy expression.")
@@ -321,8 +363,9 @@ class CodeGen(object):
     def __init__(self, project="project"):
         """Initialize a code generator.
 
-           Derived classes will offer more options that affect the generated
-           code.
+        Derived classes will offer more options that affect the generated
+        code.
+
         """
         self.project = project
 
@@ -428,7 +471,7 @@ class CodeGen(object):
 
             missing = [x for x in arg_list if x.name not in argument_sequence]
             if missing:
-                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
+                raise CodeGenArgumentListError("Argument list didn't specify: "
                         ", ".join([str(m.name) for m in missing]), missing)
 
             # create redundant arguments to produce the requested sequence
@@ -446,24 +489,30 @@ class CodeGen(object):
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
 
-            The generate source is returned as a list of (filename, contents)
-            tuples, or is written to files (see options). Each filename consists
-            of the given prefix, appended with an appropriate extension.
+        The generated source is returned as a list of (filename, contents)
+        tuples, or is written to files (see below).  Each filename consists
+        of the given prefix, appended with an appropriate extension.
 
-            ``routines``
-                A list of Routine instances to be written
-            ``prefix``
-                The prefix for the output files
-            ``to_files``
-                When True, the output is effectively written to files.
-                [DEFAULT=False] Otherwise, a list of (filename, contents)
-                tuples is returned.
-            ``header``
-                When True, a header comment is included on top of each source
-                file. [DEFAULT=True]
-            ``empty``
-                When True, empty lines are included to structure the source
-                files. [DEFAULT=True]
+        Parameters
+        ==========
+
+        routines : list
+            A list of Routine instances to be written
+
+        prefix : string
+            The prefix for the output files
+
+        to_files : bool, optional
+            When True, the output is written to files.  Otherwise, a list
+            of (filename, contents) tuples is returned.  [default: False]
+
+        header : bool, optional
+            When True, a header comment is included on top of each source
+            file. [default: True]
+
+        empty : bool, optional
+            When True, empty lines are included to structure the source
+            files. [default: True]
 
         """
         if to_files:
@@ -481,29 +530,32 @@ class CodeGen(object):
             return result
 
     def dump_code(self, routines, f, prefix, header=True, empty=True):
-        """Write the code file by calling language specific methods in correct order
+        """Write the code by calling language specific methods.
 
         The generated file contains all the definitions of the routines in
         low-level code and refers to the header file if appropriate.
 
-        :Arguments:
+        Parameters
+        ==========
 
-        routines
-            A list of Routine instances
-        f
-            A file-like object to write the file to
-        prefix
-            The filename prefix, used to refer to the proper header file. Only
-            the basename of the prefix is used.
+        routines : list
+            A list of Routine instances.
 
-        :Optional arguments:
+        f : file-like
+            Where to write the file.
 
-        header
-            When True, a header comment is included on top of each source file.
-            [DEFAULT=True]
-        empty
-            When True, empty lines are included to structure the source files.
-            [DEFAULT=True]
+        prefix : string
+            The filename prefix, used to refer to the proper header file.
+            Only the basename of the prefix is used.
+
+        header : bool, optional
+            When True, a header comment is included on top of each source
+            file.  [default : True]
+
+        empty : bool, optional
+            When True, empty lines are included to structure the source
+            files.  [default : True]
+
         """
 
         code_lines = self._preprocessor_statements(prefix)
@@ -549,11 +601,11 @@ This file is part of '%(project)s'
 
 
 class CCodeGen(CodeGen):
-    """
-    Generator for C code
+    """Generator for C code.
 
-    The .write() method inherited from CodeGen will output a code file and an
-    interface file, <prefix>.c and <prefix>.h respectively.
+    The .write() method inherited from CodeGen will output a code file and
+    an interface file, <prefix>.c and <prefix>.h respectively.
+
     """
 
     code_extension = "c"
@@ -571,12 +623,13 @@ class CCodeGen(CodeGen):
         return code_lines
 
     def get_prototype(self, routine):
-        """Returns a string for the function prototype for the given routine.
+        """Returns a string for the function prototype of the routine.
 
-           If the routine has multiple result objects, an CodeGenError is
-           raised.
+        If the routine has multiple result objects, an CodeGenError is
+        raised.
 
-           See: http://en.wikipedia.org/wiki/Function_prototype
+        See: http://en.wikipedia.org/wiki/Function_prototype
+
         """
         if len(routine.results) > 1:
             raise CodeGenError("C only supports a single or no return value.")
@@ -667,25 +720,29 @@ class CCodeGen(CodeGen):
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the C header file.
 
-           This file contains all the function declarations.
+        This file contains all the function declarations.
 
-           :Arguments:
+        Parameters
+        ==========
 
-           routines
-                A list of Routine instances
-           f
-                A file-like object to write the file to
-           prefix
-                The filename prefix, used to construct the include guards.
+        routines : list
+            A list of Routine instances.
 
-           :Optional arguments:
+        f : file-like
+            Where to write the file.
 
-           header
-                When True, a header comment is included on top of each source
-                file. [DEFAULT=True]
-           empty
-                When True, empty lines are included to structure the source
-                files. [DEFAULT=True]
+        prefix : string
+            The filename prefix, used to construct the include guards.
+            Only the basename of the prefix is used.
+
+        header : bool, optional
+            When True, a header comment is included on top of each source
+            file.  [default : True]
+
+        empty : bool, optional
+            When True, empty lines are included to structure the source
+            files.  [default : True]
+
         """
         if header:
             print(''.join(self._get_header()), file=f)
@@ -716,11 +773,11 @@ class CCodeGen(CodeGen):
 
 
 class FCodeGen(CodeGen):
-    """
-    Generator for Fortran 95 code
+    """Generator for Fortran 95 code
 
-    The .write() method inherited from CodeGen will output a code file and an
-    interface file, <prefix>.f90 and <prefix>.h respectively.
+    The .write() method inherited from CodeGen will output a code file and
+    an interface file, <prefix>.f90 and <prefix>.h respectively.
+
     """
 
     code_extension = "f90"
@@ -730,7 +787,7 @@ class FCodeGen(CodeGen):
         CodeGen.__init__(self, project)
 
     def _get_symbol(self, s):
-        """returns the symbol as fcode print it"""
+        """Returns the symbol as fcode prints it."""
         return fcode(s).strip()
 
     def _get_header(self):
@@ -748,9 +805,7 @@ class FCodeGen(CodeGen):
         return []
 
     def _get_routine_opening(self, routine):
-        """
-        Returns the opening statements of the fortran routine
-        """
+        """Returns the opening statements of the fortran routine."""
         code_list = []
         if len(routine.results) > 1:
             raise CodeGenError(
@@ -819,22 +874,20 @@ class FCodeGen(CodeGen):
         return code_list
 
     def _get_routine_ending(self, routine):
-        """
-        Returns the closing statements of the fortran routine
-        """
+        """Returns the closing statements of the fortran routine."""
         if len(routine.results) == 1:
             return ["end function\n"]
         else:
             return ["end subroutine\n"]
 
     def get_interface(self, routine):
-        """Returns a string for the function interface for the given routine and
-           a single result object, which can be None.
+        """Returns a string for the function interface.
 
-           If the routine has multiple result objects, a CodeGenError is
-           raised.
+        The routine should have a single result object, which can be None.
+        If the routine has multiple result objects, a CodeGenError is
+        raised.
 
-           See: http://en.wikipedia.org/wiki/Function_prototype
+        See: http://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -891,25 +944,28 @@ class FCodeGen(CodeGen):
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the interface to a header file.
 
-           This file contains all the function declarations.
+        This file contains all the function declarations.
 
-           :Arguments:
+        Parameters
+        ==========
 
-           routines
-                A list of Routine instances
-           f
-                A file-like object to write the file to
-           prefix
-                The filename prefix
+        routines : list
+            A list of Routine instances.
 
-           :Optional arguments:
+        f : file-like
+            Where to write the file.
 
-           header
-                When True, a header comment is included on top of each source
-                file. [DEFAULT=True]
-           empty
-                When True, empty lines are included to structure the source
-                files. [DEFAULT=True]
+        prefix : string
+            The filename prefix.
+
+        header : bool, optional
+            When True, a header comment is included on top of each source
+            file.  [default : True]
+
+        empty : bool, optional
+            When True, empty lines are included to structure the source
+            files.  [default : True]
+
         """
         if header:
             print(''.join(self._get_header()), file=f)
@@ -944,43 +1000,51 @@ def codegen(name_expr, language, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None):
     """Generate source code for expressions in a given language.
 
-    :Mandatory Arguments:
+    Parameters
+    ==========
 
-    ``name_expr``
+    name_expr : tuple, or list of tuples
         A single (name, expression) tuple or a list of (name, expression)
-        tuples. Each tuple corresponds to a routine.  If the expression is an
-        equality (an instance of class Equality) the left hand side is
-        considered an output argument.
-    ``language``
-            A string that indicates the source code language. This is case
-            insensitive. For the moment, only 'C' and 'F95' is supported.
-    ``prefix``
-            A prefix for the names of the files that contain the source code.
-            Proper (language dependent) suffixes will be appended.  If omitted,
-            the name of the first name_expr tuple is used.
+        tuples.  Each tuple corresponds to a routine.  If the expression is
+        an equality (an instance of class Equality) the left hand side is
+        considered an output argument.  If expression is an iterable, then
+        the routine will have multiple outputs.
 
+    language : string
+        A string that indicates the source code language.  This is case
+        insensitive.  For the moment, only 'C' and 'F95' is supported.
 
-    :Optional Arguments:
+    prefix : string, optional
+        A prefix for the names of the files that contain the source code.
+        Language-dependent suffixes will be appended.  If omitted, the name
+        of the first name_expr tuple is used.
 
-    ``project``
+    project : string, optional
         A project name, used for making unique preprocessor instructions.
-        [DEFAULT="project"]
-    ``to_files``
-        When True, the code will be written to one or more files with the given
-        prefix, otherwise strings with the names and contents of these files
-        are returned. [DEFAULT=False]
-    ``header``
-        When True, a header is written on top of each source file.
-        [DEFAULT=True]
-    ``empty``
-        When True, empty lines are used to structure the code.  [DEFAULT=True]
-    ``argument_sequence``
-        sequence of arguments for the routine in a preferred order.  A
-        CodeGenError is raised if required arguments are missing.  Redundant
-        arguments are used without warning.
+        [default: "project"]
 
-        If omitted, arguments will be ordered alphabetically, but with all
-        input aguments first, and then output or in-out arguments.
+    to_files : bool, optional
+        When True, the code will be written to one or more files with the
+        given prefix, otherwise strings with the names and contents of
+        these files are returned. [default: False]
+
+    header : bool, optional
+        When True, a header is written on top of each source file.
+        [default: True]
+
+    empty : bool, optional
+        When True, empty lines are used to structure the code.
+        [default: True]
+
+    argument_sequence : iterable, optional
+        Sequence of arguments for the routine in a preferred order.  A
+        CodeGenError is raised if required arguments are missing.
+        Redundant arguments are used without warning.  If omitted,
+        arguments will be ordered alphabetically, but with all input
+        aguments first, and then output or in-out arguments.
+
+    Examples
+    ========
 
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
