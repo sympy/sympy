@@ -9,7 +9,6 @@ import operator
 from collections import defaultdict
 from sympy.external import import_module
 
-
 """
 Python 2 and Python 3 compatible imports
 

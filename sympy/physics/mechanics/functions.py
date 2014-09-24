@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
@@ -28,8 +27,6 @@ __all__ = ['inertia',
            'mlatex',
            'msubs',
            'find_dynamicsymbols']
-
-warnings.simplefilter("always", SymPyDeprecationWarning)
 
 # These are functions that we've moved and renamed during extracting the
 # basic vector calculus code from the mechanics packages.
