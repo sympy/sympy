@@ -499,6 +499,13 @@ def test_sympy__sets__fancysets__Range():
     from sympy.sets.fancysets import Range
     assert _test_args(Range(1, 5, 1))
 
+
+def test_sympy__sets__contains__Contains():
+    from sympy.sets.fancysets import Range
+    from sympy.sets.contains import Contains
+    assert _test_args(Contains(x, Range(0, 10, 2)))
+
+
 # STATS
 
 
@@ -1155,6 +1162,10 @@ def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
 def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__InverseTrigonometricFunction():
+    pass
+
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
     assert _test_args(acos(2))
@@ -1168,6 +1179,16 @@ def test_sympy__functions__elementary__trigonometric__acot():
 def test_sympy__functions__elementary__trigonometric__asin():
     from sympy.functions.elementary.trigonometric import asin
     assert _test_args(asin(2))
+
+
+def test_sympy__functions__elementary__trigonometric__asec():
+    from sympy.functions.elementary.trigonometric import asec
+    assert _test_args(asec(2))
+
+
+def test_sympy__functions__elementary__trigonometric__acsc():
+    from sympy.functions.elementary.trigonometric import acsc
+    assert _test_args(acsc(2))
 
 
 def test_sympy__functions__elementary__trigonometric__atan():
@@ -3240,6 +3261,11 @@ def test_sympy__physics__optics__gaussopt__BeamParameter():
 def test_sympy__physics__optics__medium__Medium():
     from sympy.physics.optics import Medium
     assert _test_args(Medium('m'))
+
+
+def test_sympy__printing__codeprinter__Assignment():
+    from sympy.printing.codeprinter import Assignment
+    assert _test_args(Assignment(x, y))
 
 
 def test_sympy__vector__coordsysrect__CoordSysCartesian():

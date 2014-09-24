@@ -1477,6 +1477,15 @@ class PrettyPrinter(Printer):
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
+    def _print_Contains(self, e):
+        var, set = e.args
+        if self._use_unicode:
+            el = u(" \u2208 ")
+            return prettyForm(*stringPict.next(self._print(var),
+                                               el, self._print(set)), binding=8)
+        else:
+            return prettyForm(sstr(e))
+
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
         s = None

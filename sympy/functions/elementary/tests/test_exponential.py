@@ -238,18 +238,34 @@ def test_exp_assumptions():
         assert e(re(x)).is_real is True
         assert e(re(x)).is_imaginary is False
 
+    assert exp(0, evaluate=False).is_algebraic
+
+    a = Symbol('a', algebraic=True)
+    an = Symbol('an', algebraic=True, nonzero=True)
+    r = Symbol('r', rational=True)
+    rn = Symbol('rn', rational=True, nonzero=True)
+    assert exp(a).is_algebraic is None
+    assert exp(an).is_algebraic is False
+    assert exp(pi*r).is_algebraic is None
+    assert exp(pi*rn).is_algebraic is False
+
 
 def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
-    z = 2 - pi - pi*(1/pi - 1)
+    z = symbols('z', zero=True)
     assert log(2) > 0
-    assert log(1).is_zero
-    assert log(z).is_zero is None  # is_zero is naive
+    assert log(1, evaluate=False).is_zero
+    assert log(1 + z).is_zero
+    one = 2 - pi - pi*(1/pi - 1)
+    assert log(one).is_zero is None  # keep it naive
     assert log(p).is_zero is None
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True
     assert log(exp(p) + 1).is_positive
+
+    assert log(1, evaluate=False).is_algebraic
+    assert log(42, evaluate=False).is_algebraic is False
 
 
 def test_log_hashing():
@@ -326,6 +342,20 @@ def test_lambertw():
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
         Float("0.701338383413663009202120278965", 30), 1e-29)
 
+    assert LambertW(0, evaluate=False).is_algebraic
+    na = Symbol('na', nonzero=True, algebraic=True)
+    assert LambertW(na).is_algebraic is False
+
+
+def test_issue_5673():
+    e = LambertW(-1)
+    assert e.is_comparable is False
+    assert e.is_positive is not True
+    e2 = 1 - 1/(1 - exp(-1000))
+    assert e.is_positive is not True
+    e3 = -2 + exp(exp(LambertW(log(2)))*LambertW(log(2)))
+    assert e3.is_nonzero is not True
+
 
 def test_exp_expand_NC():
     A, B, C = symbols('A,B,C', commutative=False)
@@ -366,6 +396,9 @@ def test_polar():
 
     # Compare exp(1.0*pi*I).
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
+
+    assert exp_polar(0).is_rational is True  # issue 8008
+
 
 def test_log_product():
     from sympy.abc import n, m

@@ -1,4 +1,3 @@
-
 from __future__ import print_function, division
 
 from sympy.core import C, sympify
@@ -76,20 +75,22 @@ class ExpBase(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_unbounded:
+        if arg.is_infinite:
             if arg.is_negative:
                 return True
             if arg.is_positive:
                 return False
-        if arg.is_bounded:
+        if arg.is_finite:
             return True
 
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.exp is S.Zero:
+                return True
+            elif s.exp.is_rational:
                 return False
         else:
             return s.is_rational
@@ -350,6 +351,17 @@ class exp(ExpBase):
         elif self.args[0].is_imaginary:
             arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
+
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if self.exp.is_nonzero:
+                if self.exp.is_algebraic:
+                    return False
+                elif (self.exp/S.Pi).is_rational:
+                    return False
+        else:
+            return s.is_algebraic
 
     def _eval_is_positive(self):
         if self.args[0].is_real:
@@ -626,27 +638,37 @@ class log(Function):
         else:
             return s.is_rational
 
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if (self.args[0] - 1).is_zero:
+                return True
+            elif (self.args[0] - 1).is_nonzero:
+                if self.args[0].is_algebraic:
+                    return False
+        else:
+            return s.is_algebraic
+
     def _eval_is_real(self):
         return self.args[0].is_positive
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_infinitesimal:
+        if arg.is_zero:
             return False
-        return arg.is_bounded
+        return arg.is_finite
 
     def _eval_is_positive(self):
         arg = self.args[0]
         if arg.is_positive:
-            if arg.is_unbounded:
+            if arg.is_infinite:
                 return True
-            if arg.is_infinitesimal:
+            if arg.is_zero:
                 return False
             return (arg - 1).is_positive
 
     def _eval_is_zero(self):
-        # XXX This is not quite useless. Try evaluating log(0.5).is_negative
-        #     without it. There's probably a nicer way though.
+        # do not use equals or any other simplification; this should be fast
         return (self.args[0] - 1).is_zero
 
     def _eval_nseries(self, x, n, logx):
@@ -726,5 +748,14 @@ class LambertW(Function):
             return LambertW(x)/(x*(1 + LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if self.args[0].is_nonzero and self.args[0].is_algebraic:
+                return False
+        else:
+            return s.is_algebraic
+
 
 from sympy.core.function import _coeff_isneg

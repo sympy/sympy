@@ -393,7 +393,7 @@ def add_terms(terms, prec, target_prec):
     special = []
     for t in terms:
         arg = C.Float._new(t[0], 1)
-        if arg is S.NaN or arg.is_unbounded:
+        if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
         from sympy.core.add import Add
@@ -503,7 +503,7 @@ def evalf_mul(v, prec, options):
         if arg[0] is None:
             continue
         arg = C.Float._new(arg[0], 1)
-        if arg is S.NaN or arg.is_unbounded:
+        if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
         from sympy.core.mul import Mul

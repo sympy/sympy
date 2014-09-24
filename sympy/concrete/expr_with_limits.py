@@ -162,19 +162,9 @@ class ExprWithLimits(Expr):
 
     @property
     def free_symbols(self):
-        return self._free_symbols()
-
-    def as_dummy(self):
         """
-        see _as_dummy() for documentation
-        """
-        return self._as_dummy()
-
-    def _free_symbols(self):
-        """
-        This method returns the symbols that will exist when the object is
-        evaluated. This is useful if one is trying to determine whether the
-        object contains a certain symbol or not.
+        This method returns the symbols in the object, excluding those
+        that take on a specific value (i.e. the dummy symbols).
 
         Examples
         ========
@@ -184,6 +174,9 @@ class ExprWithLimits(Expr):
         >>> Sum(x, (x, y, 1)).free_symbols
         set([y])
         """
+        # don't test for any special values -- nominal free symbols
+        # should be returned, e.g. don't return set() if the
+        # function is zero -- treat it like an unevaluated expression.
         function, limits = self.function, self.limits
         isyms = function.free_symbols
         for xab in limits:
@@ -198,12 +191,12 @@ class ExprWithLimits(Expr):
                 isyms.update(i.free_symbols)
         return isyms
 
-    def _eval_interval(self, x, a, b):
-        limits = [( i if i[0] != x else (x,a,b) ) for i in self.limits]
-        integrand = self.function
-        return self.func(integrand, *limits)
+    @property
+    def is_number(self):
+        """Return True if the Sum has no free symbols, else False."""
+        return not self.free_symbols
 
-    def _as_dummy(self):
+    def as_dummy(self):
         """
         Replace instances of the given dummy variables with explicit dummy
         counterparts to make clear what are dummy variables and what
@@ -251,6 +244,11 @@ class ExprWithLimits(Expr):
             limits[i] = xab
         f = f.subs(reps)
         return self.func(f, *limits)
+
+    def _eval_interval(self, x, a, b):
+        limits = [( i if i[0] != x else (x,a,b) ) for i in self.limits]
+        integrand = self.function
+        return self.func(integrand, *limits)
 
     def _eval_subs(self, old, new):
         """

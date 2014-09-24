@@ -5,7 +5,6 @@ from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.series.order import O
-from sympy.utilities.pytest import slow
 
 
 def test_rational():
@@ -291,18 +290,7 @@ def test_issue_6782():
 
 def test_issue_6653():
     x = Symbol('x')
-    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 7) == \
-        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**7)
-    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 8) == \
-        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**8)
-
-
-@slow
-def test_issue_6653s():
-    x = Symbol('x')
-    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 15) == \
-        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + 4039*x**8/5760 - 5393*x**10/6720 + \
-        13607537*x**12/14515200 - 532056047*x**14/479001600 + O(x**15)
+    assert (1 / sqrt(1 + sin(x**2))).series(x, 0, 3) == 1 - x**2/2 + O(x**3)
 
 
 def test_issue_6429():

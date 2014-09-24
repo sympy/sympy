@@ -93,21 +93,16 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
-    def doit(self, **hints):
-        lhs = self.lhs
-        rhs = self.rhs
-        if hints.get('deep', True):
-            lhs = lhs.doit(**hints)
-            rhs = rhs.doit(**hints)
-        return self._eval_relation_doit(lhs, rhs)
-
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls(lhs, rhs)
-
     def _eval_simplify(self, ratio, measure):
-        return self.__class__(self.lhs.simplify(ratio=ratio),
-                              self.rhs.simplify(ratio=ratio))
+        r = self.__class__(self.lhs.simplify(ratio=ratio),
+                           self.rhs.simplify(ratio=ratio))
+        if r not in (S.true, S.false):
+            # try harder to reduce to boolean
+            # NOTE: may want to move _eval_sides() code here
+            rr = self._eval_sides(self.lhs, self.rhs)
+            if rr is not None:
+                return rr
+        return r
 
     def __nonzero__(self):
         raise TypeError("symbolic boolean expression has no truth value.")
@@ -292,16 +287,23 @@ class _Inequality(Relational):
         evaluate = options.pop('evaluate', global_evaluate[0])
 
         if evaluate:
-            # Try to evaluate the difference between sides.
-            r = cls._eval_sides(lhs, rhs)
+            # First we invoke the appropriate inequality method of `lhs`
+            # (e.g., `lhs.__lt__`).  That method will try to reduce to
+            # boolean or raise an exception.  It may keep calling
+            # superclasses until it reaches `Expr` (e.g., `Expr.__lt__`).
+            # In some cases, `Expr` will just invoke us again (if neither it
+            # nor a subclass was able to reduce to boolean or raise an
+            # exception).  In that case, it must call us with
+            # `evaluate=False` to prevent infinite recursion.
+            r = cls._eval_relation(lhs, rhs)
             if r is not None:
                 return r
+            # Note: not sure r could be None, perhaps we never take this
+            # path?  In principle, could use this to shortcut out if a
+            # class realizes the inequality cannot be evaluated further.
 
+        # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
-
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls._eval_relation(lhs, rhs)
 
 
 class _Greater(_Inequality):
@@ -585,7 +587,8 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs >= rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__ge__(rhs))
 
 Ge = GreaterThan
 
@@ -598,7 +601,8 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs <= rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__le__(rhs))
 
 Le = LessThan
 
@@ -611,7 +615,8 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs > rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__gt__(rhs))
 
 Gt = StrictGreaterThan
 
@@ -624,7 +629,8 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs < rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__lt__(rhs))
 
 Lt = StrictLessThan
 

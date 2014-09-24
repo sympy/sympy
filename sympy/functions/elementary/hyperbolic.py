@@ -177,7 +177,7 @@ class sinh(HyperbolicFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
@@ -325,7 +325,7 @@ class cosh(HyperbolicFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
@@ -462,7 +462,7 @@ class tanh(HyperbolicFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_real:
             return True

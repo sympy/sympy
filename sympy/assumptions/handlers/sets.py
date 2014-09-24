@@ -489,15 +489,14 @@ class AskImaginaryHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Imaginary**integer/odd  -> Imaginary
-        Imaginary**integer/even -> Real if integer % 2 == 0
-        b**Imaginary            -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
-        Imaginary**Real         -> ?
-        Negative**even root     -> Imaginary
-        Negative**odd root      -> Real
-        Negative**Real          -> Imaginary
-        Real**Integer           -> Real
-        Real**Positive          -> Real
+        Imaginary**Odd        -> Imaginary
+        Imaginary**Even       -> Real
+        b**Imaginary          -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
+        Imaginary**Real       -> ?
+        Positive**Real        -> Real
+        Negative**Integer     -> Real
+        Negative**(Integer/2) -> Imaginary
+        Negative**Real        -> not Imaginary if exponent is not Rational
         """
         rv = AskImaginaryHandler._number(expr, assumptions)
         if rv is not None:
@@ -523,16 +522,21 @@ class AskImaginaryHandler(CommonHandler):
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
-        if ask(Q.real(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
-                if ask(Q.rational(expr.exp) & Q.even(denom(expr.exp)), assumptions):
-                    return ask(Q.negative(expr.base), assumptions)
-                elif ask(Q.integer(expr.exp), assumptions):
+        if ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
+            if ask(Q.positive(expr.base), assumptions):
+                return False
+            else:
+                rat = ask(Q.rational(expr.exp), assumptions)
+                if not rat:
+                    return rat
+                if ask(Q.integer(expr.exp), assumptions):
                     return False
-                elif ask(Q.positive(expr.base), assumptions):
-                    return False
-                elif ask(Q.negative(expr.base), assumptions):
-                    return True
+                else:
+                    half = ask(Q.integer(2*expr.exp), assumptions)
+                    if half:
+                        return ask(Q.negative(expr.base), assumptions)
+                    return half
+
 
     @staticmethod
     def log(expr, assumptions):

@@ -838,7 +838,7 @@ def test_issue_4199():
 
 
 def test_issue_3940():
-    a, b, c, d = symbols('a:d', positive=True, bounded=True)
+    a, b, c, d = symbols('a:d', positive=True, finite=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \

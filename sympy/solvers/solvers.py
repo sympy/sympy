@@ -52,8 +52,6 @@ from sympy.mpmath import findroot
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
-from sympy.assumptions import Q, ask
-
 from types import GeneratorType
 from collections import defaultdict
 import warnings
@@ -115,10 +113,11 @@ def checksol(f, symbol, sol=None, **flags):
     """Checks whether sol is a solution of equation f == 0.
 
     Input can be either a single symbol and corresponding value
-    or a dictionary of symbols and values. ``f`` can be a single
-    equation or an iterable of equations. A solution must satisfy
-    all equations in ``f`` to be considered valid; if a solution
-    does not satisfy any equation, False is returned; if one or
+    or a dictionary of symbols and values. When given as a dictionary
+    and flag ``simplify=True``, the values in the dictionary will be
+    simplified. ``f`` can be a single equation or an iterable of equations.
+    A solution must satisfy all equations in ``f`` to be considered valid;
+    if a solution does not satisfy any equation, False is returned; if one or
     more checks are inconclusive (and none are False) then None
     is returned.
 
@@ -166,7 +165,7 @@ def checksol(f, symbol, sol=None, **flags):
     elif isinstance(symbol, dict):
         sol = symbol
     else:
-        msg = 'Expecting sym, val or {sym: val}, None but got %s, %s'
+        msg = 'Expecting (sym, val) or ({sym: val}, None) but got (%s, %s)'
         raise ValueError(msg % (symbol, sol))
 
     if iterable(f):
@@ -391,7 +390,7 @@ def solve(f, *symbols, **flags):
             do a fast numerical check if ``f`` has only one symbol.
         'minimal=True (default is False)'
             a very fast, minimal testing.
-        'warning=True (default is False)'
+        'warn=True (default is False)'
             show a warning if checksol() could not conclude.
         'simplify=True (default)'
             simplify all but cubic and quartic solutions before
@@ -435,7 +434,7 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(im(x) == 0, re(x) < 3)
+        And(-oo < re(x), im(x) == 0, re(x) < 3)
 
     * to always get a list of solution mappings, use flag dict=True
 
@@ -693,8 +692,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
         elif isinstance(fi, (bool, C.BooleanAtom)) or fi.is_Relational:
-            return reduce_inequalities(f, assume=flags.get('assume'),
-                                       symbols=symbols)
+            return reduce_inequalities(f, symbols=symbols)
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
@@ -706,8 +704,10 @@ def solve(f, *symbols, **flags):
         freei = f[i].free_symbols
         if freei and all(s.is_real or s.is_imaginary for s in freei):
             fr, fi = f[i].as_real_imag()
-            if fr and fi and not any(i.has(re, im, arg) for i in (fr, fi)) \
-                    and fr != fi:
+            # accept as long as new re, im, arg or atan2 are not introduced
+            had = f[i].atoms(re, im, arg, atan2)
+            if fr and fi and fr != fi and not any(
+                    i.atoms(re, im, arg, atan2) - had for i in (fr, fi)):
                 if bare_f:
                     bare_f = False
                 f[i: i + 1] = [fr, fi]
@@ -986,7 +986,7 @@ def solve(f, *symbols, **flags):
 
     if check and solution:
 
-        warning = flags.get('warn', False)
+        warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
         if type(solution) is list:
@@ -1041,7 +1041,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution, (Relational, And, Or)):
             if len(symbols) != 1:
                 raise ValueError("Length should be 1")
-            if warning and symbols[0].assumptions0:
+            if warn and symbols[0].assumptions0:
                 warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
                     not handled currently.""" % symbols[0]))
@@ -1051,7 +1051,7 @@ def solve(f, *symbols, **flags):
             raise TypeError('Unrecognized solution')  # improve the checker
 
         solution = no_False
-        if warning and got_None:
+        if warn and got_None:
             warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
                 can't be checked:""" + '\n\t' +
@@ -1449,7 +1449,7 @@ def _solve_system(exprs, symbols, **flags):
         dens.update(denoms(g, symbols))
         i, d = _invert(g, *symbols)
         g = d - i
-        g = exprs[j] = g.as_numer_denom()[0]
+        g = g.as_numer_denom()[0]
         if manual:
             failed.append(g)
             continue
@@ -1483,7 +1483,8 @@ def _solve_system(exprs, symbols, **flags):
                 result = solve_linear_system(matrix, *symbols, **flags)
             if result:
                 # it doesn't need to be checked but we need to see
-                # that it didn't set any denominators to 0
+                # that it didn't set any denominators to 0; the simplification
+                # is also handled by checksol
                 if any(checksol(d, result, **flags) for d in dens):
                     result = None
             if failed:
@@ -1535,8 +1536,26 @@ def _solve_system(exprs, symbols, **flags):
                     # or not, so let solve resolve that. A list of dictionaries
                     # is going to always be returned from here.
                     #
-                    # We do not check the solution obtained from polys, either.
                     result = [dict(list(zip(solved_syms, r))) for r in result]
+
+            if result:
+                # check & simplify nonlinear solutions
+                # simplify first
+                if flags.get('simplfy', True):
+                    for sol in result:
+                        for k in sol:
+                            sol[k] = simplify(sol[k])
+                flags['simplify'] = False  # don't need to do so in checksol now
+                if check:
+                    ok = []
+                    for sol in result:
+                        if any(checksol(e, sol, **flags) is False for e in exprs):
+                            continue
+                        if any(checksol(d, sol, **flags) for d in dens):
+                            continue
+                        ok.append(sol)
+                    result = ok
+                    del ok
 
     if failed:
         # For each failed equation, see if we can solve for one of the

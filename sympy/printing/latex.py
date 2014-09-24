@@ -774,8 +774,12 @@ class LatexPrinter(Printer):
         args = sorted(e.args, key=default_sort_key)
         return self._print_LogOp(args, r"\vee")
 
+    def _print_Xor(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"\veebar")
+
     def _print_Implies(self, e, altchar=None):
-        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
+        return self._print_LogOp(e.args, altchar or r"\Rightarrow")
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
@@ -1488,6 +1492,9 @@ class LatexPrinter(Printer):
             self._print(s.lamda.expr),
             ', '.join([self._print(var) for var in s.lamda.variables]),
             self._print(s.base_set))
+
+    def _print_Contains(self, e):
+        return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod

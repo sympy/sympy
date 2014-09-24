@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from .core import C
-from .sympify import sympify
+from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex
@@ -213,8 +213,11 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -222,10 +225,13 @@ class Expr(Basic, EvalfMixin):
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
             return sympify(dif.is_nonnegative)
-        return C.GreaterThan(self, other)
+        return C.GreaterThan(self, other, evaluate=False)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -233,10 +239,13 @@ class Expr(Basic, EvalfMixin):
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
             return sympify(dif.is_nonpositive)
-        return C.LessThan(self, other)
+        return C.LessThan(self, other, evaluate=False)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -244,10 +253,13 @@ class Expr(Basic, EvalfMixin):
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
             return sympify(dif.is_positive)
-        return C.StrictGreaterThan(self, other)
+        return C.StrictGreaterThan(self, other, evaluate=False)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -255,7 +267,7 @@ class Expr(Basic, EvalfMixin):
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
             return sympify(dif.is_negative)
-        return C.StrictLessThan(self, other)
+        return C.StrictLessThan(self, other, evaluate=False)
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -293,8 +305,6 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        if not self.args:
-            return False
         return all(obj.is_number for obj in self.args)
 
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
@@ -671,7 +681,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN) or A.has(S.Infinity):
+            if A.has(S.NaN) or A.has(S.Infinity) or A.has(S.NegativeInfinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -680,7 +690,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN) or B.has(S.Infinity):
+            if B.has(S.NaN) or B.has(S.Infinity) or B.has(S.NegativeInfinity):
                 B = limit(self, x, b)
 
         return B - A
@@ -2367,7 +2377,7 @@ class Expr(Basic, EvalfMixin):
 
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
-            xpos = C.Dummy('x', positive=True, bounded=True)
+            xpos = C.Dummy('x', positive=True, finite=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
@@ -3004,6 +3014,8 @@ class Expr(Basic, EvalfMixin):
             # use str or else it won't be a float
             return C.Float(str(rv), digits_needed)
         else:
+            if not allow and rv > self:
+                allow += 1
             return C.Float(rv, allow)
 
 
@@ -3014,7 +3026,7 @@ class AtomicExpr(Atom, Expr):
     For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
-
+    is_number = False
     is_Atom = True
 
     __slots__ = []

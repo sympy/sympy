@@ -18,8 +18,11 @@ class RoundFunction(Function):
     def eval(cls, arg):
         if arg.is_integer:
             return arg
-        if arg.is_imaginary:
-            return cls(C.im(arg))*S.ImaginaryUnit
+        if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
+            i = C.im(arg)
+            if not i.has(S.ImaginaryUnit):
+                return cls(i)*S.ImaginaryUnit
+            return cls(arg, evaluate=False)
 
         v = cls._eval_number(arg)
         if v is not None:
@@ -45,7 +48,7 @@ class RoundFunction(Function):
         # Evaluate npart numerically if independent of spart
         if npart and (
             not spart or
-            npart.is_real and spart.is_imaginary or
+            npart.is_real and (spart.is_imaginary or (S.ImaginaryUnit*spart).is_real) or
                 npart.is_imaginary and spart.is_real):
             try:
                 re, im = get_integer_part(
@@ -55,16 +58,16 @@ class RoundFunction(Function):
             except (PrecisionExhausted, NotImplementedError):
                 pass
 
-        spart = npart + spart
+        spart += npart
         if not spart:
             return ipart
-        elif spart.is_imaginary:
+        elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:
             return ipart + cls(C.im(spart), evaluate=False)*S.ImaginaryUnit
         else:
             return ipart + cls(spart, evaluate=False)
 
-    def _eval_is_bounded(self):
-        return self.args[0].is_bounded
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
     def _eval_is_real(self):
         return self.args[0].is_real

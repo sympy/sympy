@@ -48,6 +48,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 ]
 
     # To be overridden with True in the appropriate subclasses
+    is_number = False
     is_Atom = False
     is_Symbol = False
     is_Dummy = False
@@ -490,8 +491,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Any other method that uses bound variables should implement a symbols
         method."""
-        union = set.union
-        return reduce(union, [arg.free_symbols for arg in self.args], set())
+        return reduce(set.union, [a.free_symbols for a in self.args], set())
 
     @property
     def canonical_variables(self):
@@ -561,19 +561,6 @@ class Basic(with_metaclass(ManagedProperties)):
         return hypersimp(self, k) is not None
 
     @property
-    def is_number(self):
-        """Returns ``True`` if 'self' contains no free symbols.
-
-        See Also
-        ========
-        is_comparable
-        sympy.core.expr.is_number
-
-        """
-        # should be overriden by subclasses
-        return False
-
-    @property
     def is_comparable(self):
         """Return True if self can be computed to a real number
         with precision, else False.
@@ -595,7 +582,7 @@ class Basic(with_metaclass(ManagedProperties)):
         is_real = self.is_real
         if is_real is False:
             return False
-        is_number = (self.is_zero or self.is_number) and not self.has(AppliedUndef)
+        is_number = (self.is_number or self.is_zero) and not self.has(AppliedUndef)
         if is_number is False:
             return False
         # even though it is a real number, it might not be possible to
@@ -1609,6 +1596,20 @@ class Basic(with_metaclass(ManagedProperties)):
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
                 else:
                     return self
+
+    @property
+    @deprecated(useinstead="is_finite", issue=8071, deprecated_since_version="0.7.6")
+    def is_bounded(self):
+        return super(Basic, self).__getattribute__('is_finite')
+
+    @property
+    @deprecated(useinstead="is_infinite", issue=8071, deprecated_since_version="0.7.6")
+    def is_unbounded(self):
+        return super(Basic, self).__getattribute__('is_infinite')
+
+    @deprecated(useinstead="is_zero", issue=8071, deprecated_since_version="0.7.6")
+    def is_infinitesimal(self):
+        return super(Basic, self).__getattribute__('is_zero')
 
 
 class Atom(Basic):
