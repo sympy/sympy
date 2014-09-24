@@ -1388,9 +1388,8 @@ def test_fcode_matrixsymbol_slice():
     assert source == expected
 
 
-@XFAIL
 def test_fcode_matrixsymbol_slice_autoname():
-    # need MatrixSlice support somewhere, issue #8093
+    # see issue #8093
     A = MatrixSymbol('A', 2, 3)
     name_expr = ("test", A[:, 1])
     result = codegen(name_expr, "f95", "test", header=False, empty=False)
@@ -1404,5 +1403,9 @@ def test_fcode_matrixsymbol_slice_autoname():
         "out_%(hash)s(2, 1) = A(2, 2)\n"
         "end subroutine\n"
     )
-    if source != expected: print(), print(source); print(expected)
+    # look for the magic number
+    a = source.splitlines()[3]
+    b = a.split('_')
+    out = b[1]
+    expected = expected % {'hash': out}
     assert source == expected
