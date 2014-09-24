@@ -8,6 +8,7 @@ from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
     InOutArgument)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import XFAIL
 
 # import test:
 #FIXME: Fails due to circular import in with core
@@ -1299,4 +1300,54 @@ def test_fcode_results_named_ordered():
         "B = 2*x\n"
         "end subroutine\n"
     )
+    assert source == expected
+
+
+def test_fcode_matrixsymbol_slice():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 1, 3)
+    C = MatrixSymbol('C', 1, 3)
+    D = MatrixSymbol('D', 2, 1)
+    name_expr = ("test", [Equality(B, A[0, :]),
+                          Equality(C, A[1, :]),
+                          Equality(D, A[:, 2])])
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        "subroutine test(A, B, C, D)\n"
+        "implicit none\n"
+        "REAL*8, intent(in), dimension(1:2, 1:3) :: A\n"
+        "REAL*8, intent(out), dimension(1:1, 1:3) :: B\n"
+        "REAL*8, intent(out), dimension(1:1, 1:3) :: C\n"
+        "REAL*8, intent(out), dimension(1:2, 1:1) :: D\n"
+        "B(1, 1) = A(1, 1)\n"
+        "B(1, 2) = A(1, 2)\n"
+        "B(1, 3) = A(1, 3)\n"
+        "C(1, 1) = A(2, 1)\n"
+        "C(1, 2) = A(2, 2)\n"
+        "C(1, 3) = A(2, 3)\n"
+        "D(1, 1) = A(1, 3)\n"
+        "D(2, 1) = A(2, 3)\n"
+        "end subroutine\n"
+    )
+    assert source == expected
+
+
+@XFAIL
+def test_fcode_matrixsymbol_slice_autoname():
+    # need MatrixSlice support somewhere, issue #8093
+    A = MatrixSymbol('A', 2, 3)
+    name_expr = ("test", A[:, 1])
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        "subroutine test(A, out_%(hash)s)\n"
+        "implicit none\n"
+        "REAL*8, intent(in), dimension(1:2, 1:3) :: A\n"
+        "REAL*8, intent(out), dimension(1:2, 1:1) :: out_%(hash)s\n"
+        "out_%(hash)s(1, 1) = A(1, 2)\n"
+        "out_%(hash)s(2, 1) = A(2, 2)\n"
+        "end subroutine\n"
+    )
+    if source != expected: print(), print(source); print(expected)
     assert source == expected
