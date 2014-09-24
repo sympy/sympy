@@ -1096,9 +1096,8 @@ class OctaveCodeGen(CodeGen):
         perhaps its the C/Fortran one that is specialized!
 
         """
-        arg_list = []
 
-        if is_sequence(expr) and not isinstance(expr, MatrixBase):
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
                 raise ValueError("No expression given")
             expressions = Tuple(*expr)
@@ -1140,6 +1139,7 @@ class OctaveCodeGen(CodeGen):
                 return_vals.append(Result(expr))
 
         # setup input argument list
+        arg_list = []
         array_symbols = {}
         for array in expressions.atoms(Indexed):
             array_symbols[array.base.label] = array

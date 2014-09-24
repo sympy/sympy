@@ -381,6 +381,77 @@ def test_m_results_matrix_named_ordered():
     assert source == expected
 
 
+def test_m_matrixsymbol_slice():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 1, 3)
+    C = MatrixSymbol('C', 1, 3)
+    D = MatrixSymbol('D', 2, 1)
+    name_expr = ("test", [Equality(B, A[0, :]),
+                          Equality(C, A[1, :]),
+                          Equality(D, A[:, 2])])
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function [B, C, D] = test(A)\n"
+        "  B = A(1, :);\n"
+        "  C = A(2, :);\n"
+        "  D = A(:, 3);\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_m_matrixsymbol_slice2():
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 2, 2)
+    C = MatrixSymbol('C', 2, 2)
+    name_expr = ("test", [Equality(B, A[0:2, 0:2]),
+                          Equality(C, A[0:2, 1:3])])
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function [B, C] = test(A)\n"
+        "  B = A(1:2, 1:2);\n"
+        "  C = A(1:2, 2:3);\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_m_matrixsymbol_slice3():
+    A = MatrixSymbol('A', 8, 7)
+    B = MatrixSymbol('B', 2, 2)
+    C = MatrixSymbol('C', 4, 2)
+    name_expr = ("test", [Equality(B, A[6:, 1::3]),
+                          Equality(C, A[::2, ::3])])
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function [B, C] = test(A)\n"
+        "  B = A(7:end, 2:3:end);\n"
+        "  C = A(1:2:end, 1:3:end);\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_m_matrixsymbol_slice_autoname():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 1, 3)
+    name_expr = ("test", [Equality(B, A[0,:]), A[1,:], A[:,0], A[:,1]])
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
+    expected = (
+        "function [B, out2, out3, out4] = test(A)\n"
+        "  B = A(1, :);\n"
+        "  out2 = A(2, :);\n"
+        "  out3 = A(:, 1);\n"
+        "  out4 = A(:, 2);\n"
+        "end\n"
+    )
+    assert source == expected
+
+
 def test_m_loops():
     #FIXME: or would people using this want it to vectorize automatically?
     from sympy.tensor import IndexedBase, Idx

@@ -325,6 +325,27 @@ class OctaveCodePrinter(CodePrinter):
         return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
 
 
+    def _print_MatrixSlice(self, expr):
+        def strslice(x, lim):
+            l = x[0] + 1
+            h = x[1]
+            step = x[2]
+            lstr = self._print(l)
+            hstr = 'end' if h == lim else self._print(h)
+            if step == 1:
+                if l == 1 and h == lim:
+                    return ':'
+                if l == h:
+                    return lstr
+                else:
+                    return lstr + ':' + hstr
+            else:
+                return ':'.join((lstr, self._print(step), hstr))
+        return (self._print(expr.parent) + '(' +
+                strslice(expr.rowslice, expr.parent.shape[0]) + ', ' +
+                strslice(expr.colslice, expr.parent.shape[1]) + ')')
+
+
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
