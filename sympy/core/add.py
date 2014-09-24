@@ -21,20 +21,24 @@ def _addsort(args):
 
 def _unevaluated_Add(*args):
     """Return a well-formed unevaluated Add: Numbers are collected and
-    put in slot 0 and args are sorted. Use this when args have changed
-    but you still want to return an unevaluated Add.
+    put in slot 0, numbers are collected, and args are sorted. Use this
+    when args have changed or you want to flatten an Add that might
+    have unevaluated Add terms. Symbols are not joined so x - x will
+    remain unevaluated.
 
     Examples
     ========
 
     >>> from sympy.core.add import _unevaluated_Add as uAdd
-    >>> from sympy import S, Add
+    >>> from sympy import S, Add, I
     >>> from sympy.abc import x, y
     >>> a = uAdd(*[S(1.0), x, S(2)])
     >>> a.args[0]
     3.00000000000000
     >>> a.args[1]
     x
+    >>> uAdd(*[I, -I, S(1)])
+    1
 
     Beyond the Number being in slot 0, there is no other assurance of
     order for the arguments since they are hash sorted. So, for testing
@@ -47,9 +51,11 @@ def _unevaluated_Add(*args):
     >>> assert a in opts and a == uAdd(x, y)
 
     """
+    from .function import AppliedUndef
     args = list(args)
     newargs = []
     co = S.Zero
+    num = S.Zero
     while args:
         a = args.pop()
         if a.is_Add:
@@ -58,8 +64,17 @@ def _unevaluated_Add(*args):
             args.extend(a.args)
         elif a.is_Number:
             co += a
+        elif a.is_number and not a.has(AppliedUndef):
+            num += a
         else:
             newargs.append(a)
+    if num:
+        if num.is_Number:
+            co += num
+        elif num.is_Add:
+            newargs.extend(num.args)
+        else:
+            newargs.append(num)
     _addsort(newargs)
     if co:
         newargs.insert(0, co)
