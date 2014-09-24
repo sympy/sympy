@@ -621,7 +621,8 @@ class Add(Expr, AssocOp):
             return True
 
     def _eval_is_positive(self):
-        if self.is_number:
+        if self.is_number and not self.has(AppliedUndef) and \
+                self._eval_is_real():
             return super(Add, self)._eval_is_positive()
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
@@ -663,7 +664,8 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_negative(self):
-        if self.is_number:
+        if self.is_number and not self.has(AppliedUndef) and \
+                self._eval_is_real():
             return super(Add, self)._eval_is_negative()
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
