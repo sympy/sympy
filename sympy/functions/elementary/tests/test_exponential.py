@@ -1,6 +1,7 @@
-from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-        LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
+from sympy import (
+    symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
+    LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
+    sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
 
 
 def test_exp_values():
@@ -332,15 +333,37 @@ def test_log_simplify():
 
 def test_lambertw():
     x = Symbol('x')
-    assert LambertW(x) == LambertW(x)
+    k = Symbol('k')
+
+    assert LambertW(x, 0) == LambertW(x)
+    assert LambertW(x, 0, evaluate=False) != LambertW(x)
     assert LambertW(0) == 0
     assert LambertW(E) == 1
     assert LambertW(-1/E) == -1
     assert LambertW(-log(2)/2) == -log(2)
     assert LambertW(oo) == oo
+    assert LambertW(0, 1) == -oo
+    assert LambertW(0, 42) == -oo
+    assert LambertW(-pi/2, -1) == -I*pi/2
+    assert LambertW(-1/E, -1) == -1
+
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
+    assert LambertW(x, k).diff(x) == LambertW(x, k)/x/(1 + LambertW(x, k))
+
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
         Float("0.701338383413663009202120278965", 30), 1e-29)
+    assert re(LambertW(2, -1)).evalf().epsilon_eq(Float("-0.834310366631110"))
+
+    assert LambertW(-1).is_real is False  # issue 5215
+    assert LambertW(2, evaluate=False).is_real
+    p = Symbol('p', positive=True)
+    assert LambertW(p, evaluate=False).is_real
+    assert LambertW(p - 1, evaluate=False).is_real is None
+    assert LambertW(-p - 2/S.Exp1, evaluate=False).is_real is False
+    assert LambertW(S.Half, -1, evaluate=False).is_real is False
+    assert LambertW(-S.One/10, -1, evaluate=False).is_real
+    assert LambertW(-10, -1, evaluate=False).is_real is False
+    assert LambertW(-2, 2, evaluate=False).is_real is False
 
     assert LambertW(0, evaluate=False).is_algebraic
     na = Symbol('na', nonzero=True, algebraic=True)

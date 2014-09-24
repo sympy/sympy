@@ -718,37 +718,96 @@ class log(Function):
 
 
 class LambertW(Function):
-    """Lambert W function, defined as the inverse function of
-    x*exp(x). This function represents the principal branch
-    of this inverse function, which like the natural logarithm
-    is multivalued.
+    """
+    The Lambert W function `W(z)` is defined as the inverse
+    function of `w \exp(w)` [1]_.
 
-    For more information, see:
-    http://en.wikipedia.org/wiki/Lambert_W_function
+    In other words, the value of `W(z)` is such that `z = W(z) \exp(W(z))`
+    for any complex number `z`.  The Lambert W function is a multivalued
+    function with infinitely many branches `W_k(z)`, indexed by
+    `k \in \mathbb{Z}`.  Each branch gives a different solution `w`
+    of the equation `z = w \exp(w)`.
+
+    The Lambert W function has two partially real branches: the
+    principal branch (`k = 0`) is real for real `z > -1/e`, and the
+    `k = -1` branch is real for `-1/e < z < 0`. All branches except
+    `k = 0` have a logarithmic singularity at `z = 0`.
+
+    Examples
+    ========
+
+    >>> from sympy import LambertW
+    >>> LambertW(1.2)
+    0.635564016364870
+    >>> LambertW(1.2, -1).n()
+    -1.34747534407696 - 4.41624341514535*I
+    >>> LambertW(-1).is_real
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Lambert_W_function
     """
 
     @classmethod
-    def eval(cls, x):
-        if x == S.Zero:
-            return S.Zero
-        if x == S.Exp1:
-            return S.One
-        if x == -1/S.Exp1:
-            return S.NegativeOne
-        if x == -log(2)/2:
-            return -log(2)
-        if x == S.Infinity:
-            return S.Infinity
+    def eval(cls, x, k=None):
+        if k is S.Zero:
+            return cls(x)
+        elif k is None:
+            k = S.Zero
+
+        if k is S.Zero:
+            if x is S.Zero:
+                return S.Zero
+            if x is S.Exp1:
+                return S.One
+            if x == -1/S.Exp1:
+                return S.NegativeOne
+            if x == -log(2)/2:
+                return -log(2)
+            if x is S.Infinity:
+                return S.Infinity
+
+        if k.is_nonzero:
+            if x is S.Zero:
+                return S.NegativeInfinity
+        if k is S.NegativeOne:
+            if x == -S.Pi/2:
+                return -S.ImaginaryUnit*S.Pi/2
+            elif x == -1/S.Exp1:
+                return S.NegativeOne
 
     def fdiff(self, argindex=1):
         """
         Return the first derivative of this function.
         """
-        if argindex == 1:
-            x = self.args[0]
-            return LambertW(x)/(x*(1 + LambertW(x)))
+        x = self.args[0]
+
+        if len(self.args) == 1:
+            if argindex == 1:
+                return LambertW(x)/(x*(1 + LambertW(x)))
         else:
-            raise ArgumentIndexError(self, argindex)
+            k = self.args[1]
+            if argindex == 1:
+                return LambertW(x, k)/(x*(1 + LambertW(x, k)))
+
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_real(self):
+        x = self.args[0]
+        if len(self.args) == 1:
+            k = S.Zero
+        else:
+            k = self.args[1]
+        if k.is_zero:
+            return (x + 1/S.Exp1).is_positive
+        elif (k + 1).is_zero:
+            from sympy.core.logic import fuzzy_and
+            return fuzzy_and([x.is_negative, (x + 1/S.Exp1).is_positive])
+        elif k.is_nonzero and (k + 1).is_nonzero:
+            return False
+
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
