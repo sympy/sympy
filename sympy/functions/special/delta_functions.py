@@ -4,7 +4,7 @@ from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
 from sympy.polys.polyerrors import PolynomialError
-from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 
 ###############################################################################
@@ -238,3 +238,7 @@ class Heaviside(Function):
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
+
+    def _eval_rewrite_as_sign(self, arg):
+        if arg.is_real:
+            return (sign(arg)+1)/2
