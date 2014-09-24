@@ -509,6 +509,61 @@ def test_output_arg_c_reserved_words():
     assert result[0][1] == expected
 
 
+def test_ccode_results_named_ordered():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(C, (x + y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
+        '   (*C) = z*(x + y);\n'
+        '   A[0] = 1;\n'
+        '   A[1] = 2;\n'
+        '   A[2] = x;\n'
+        '   (*B) = 2*x;\n'
+        '}\n'
+    )
+    assert source == expected
+
+
+def test_ccode_matrixsymbol_slice():
+    A = MatrixSymbol('A', 5, 3)
+    B = MatrixSymbol('B', 1, 3)
+    C = MatrixSymbol('C', 1, 3)
+    D = MatrixSymbol('D', 5, 1)
+    name_expr = ("test", [Equality(B, A[0, :]),
+                          Equality(C, A[1, :]),
+                          Equality(D, A[:, 2])])
+    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *A, double *B, double *C, double *D) {\n'
+        '   B[0] = A[0];\n'
+        '   B[1] = A[1];\n'
+        '   B[2] = A[2];\n'
+        '   C[0] = A[3];\n'
+        '   C[1] = A[4];\n'
+        '   C[2] = A[5];\n'
+        '   D[0] = A[2];\n'
+        '   D[1] = A[5];\n'
+        '   D[2] = A[8];\n'
+        '   D[3] = A[11];\n'
+        '   D[4] = A[14];\n'
+        '}\n'
+    )
+    assert source == expected
+
+
 def test_empty_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [])
