@@ -1,7 +1,7 @@
 from sympy import (
     symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-    sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
+    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify, Eq)
 
 
 def test_exp_values():
@@ -121,6 +121,8 @@ def test_exp_rewrite():
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
     assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
+    assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
+    assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
 
 
 def test_exp_leading_term():

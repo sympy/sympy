@@ -416,6 +416,9 @@ class exp(ExpBase):
         I = S.ImaginaryUnit
         return C.cos(I*arg) + I*C.cos(I*arg + S.Pi/2)
 
+    def _eval_rewrite_as_tanh(self, arg):
+        return (1 + C.tanh(arg/2))/(1 - C.tanh(arg/2))
+
     def _sage_(self):
         import sage.all as sage
         return sage.exp(self.args[0]._sage_())
