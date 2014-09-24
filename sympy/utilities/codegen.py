@@ -1089,6 +1089,93 @@ class OctaveCodeGen(CodeGen):
 
     code_extension = "m"
 
+    def routine(self, name, expr, argument_sequence):
+        """Specialized Routine creation for Octave.
+
+        FIXME: this is probably general enough for other high-level languages,
+        perhaps its the C/Fortran one that is specialized!
+
+        """
+        arg_list = []
+
+        if is_sequence(expr) and not isinstance(expr, MatrixBase):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = Tuple(*expr)
+        else:
+            expressions = Tuple(expr)
+
+        # local variables
+        local_vars = set([i.label for i in expressions.atoms(Idx)])
+
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_vars
+
+        # Octave supports multiple return values.
+        # FIXME: should not use OutputArgument? (these only for rhs return?)
+        return_vals = []
+        for expr in expressions:
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                expr = expr.rhs
+                symbol = out_arg
+                if isinstance(out_arg, Indexed):
+                    symbol = out_arg.base.label
+                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
+
+                # FIXME: could use Result?  But how you give it a name?  Why
+                # isn't Result a subclass of Variable too?
+                if expr.has(symbol):
+                    return_vals.append(
+                        InOutArgument(symbol, out_arg, expr))
+                else:
+                    return_vals.append(
+                        OutputArgument(symbol, out_arg, expr))
+                    # remove from the symbols list, so it doesn't become an input
+                    symbols.remove(symbol)
+
+            else:
+                return_vals.append(Result(expr))
+
+        # setup input argument list
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
+
+        for symbol in sorted(symbols, key=str):
+            arg_list.append(InputArgument(symbol))
+
+        if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
+            missing = [x for x in arg_list if x.name not in argument_sequence]
+            if missing:
+                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
+                        ", ".join([str(m.name) for m in missing]), missing)
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
+
+        return Routine(name, arg_list, return_vals, local_vars)
+
     def _get_symbol(self, s):
         """print the symbol appropriately"""
         return octave_code(s).strip()

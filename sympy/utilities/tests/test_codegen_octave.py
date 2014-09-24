@@ -5,15 +5,11 @@ from sympy import erf, Integral, Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.codeprinter import Assignment
-from sympy.utilities.codegen import (CCodeGen, Routine,
-                                     InputArgument, CodeGenError,
-                                     FCodeGen, OctaveCodeGen, codegen,
-                                     CodeGenArgumentListError,
-                                     OutputArgument, InOutArgument)
+from sympy.utilities.codegen import OctaveCodeGen, codegen, make_routine
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
-import sympy
 from sympy.utilities.pytest import XFAIL
+import sympy
 
 
 x, y, z = symbols('x,y,z')
@@ -104,7 +100,7 @@ def test_m_numbersymbol_no_inline():
 
 def test_m_code_argument_order():
     expr = x + y
-    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    routine = make_routine("test", expr, argument_sequence=[z, x, y], language="octave")
     code_gen = OctaveCodeGen()
     output = StringIO()
     code_gen.dump_m([routine], output, "test", header=False, empty=False)
@@ -134,7 +130,7 @@ def test_multiple_results_m():
 
 
 def test_results_named_unordered():
-    # Here output order is alphabetical
+    # Here output order is based on name_expr
     A, B, C = symbols('A,B,C')
     expr1 = Equality(C, (x + y)*z)
     expr2 = Equality(A, (x - y)*z)
@@ -143,10 +139,10 @@ def test_results_named_unordered():
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
     source = result[1]
     expected = (
-        "function [A, B, C] = test(x, y, z)\n"
+        "function [C, A, B] = test(x, y, z)\n"
+        "  C = z.*(x + y);\n"
         "  A = z.*(x - y);\n"
         "  B = 2*x;\n"
-        "  C = z.*(x + y);\n"
         "end\n"
     )
     assert source == expected
@@ -159,7 +155,7 @@ def test_results_named_ordered():
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
     result = codegen(name_expr, "Octave", "test", header=False, empty=False,
-                     argument_sequence=(x, z, y, C, A, B))
+                     argument_sequence=(x, z, y))  # FIXME , A, C, B))
     assert result[0][0] == "test.m"
     source = result[0][1]
     expected = (
@@ -196,17 +192,16 @@ def test_m_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
     from sympy import sin, cos, tan
     a = symbols("a")
-    r = Routine("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
-    ocg = OctaveCodeGen()
-    result = ocg.write([r], "foo", header=False, empty=False)
-    assert result[0][0] == "foo.m"
-    source = result[0][1];
+    name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
+    result, = codegen(name_expr, "Octave", "foo", header=False, empty=False)
+    assert result[0] == "foo.m"
+    source = result[1];
     expected = (
-        'function [a, y, out3, out4] = foo(x)\n'
-        '  a = sin(2*x);\n'
+        'function [out1, y, out3, a] = foo(x)\n'
+        '  out1 = cos(2*x);\n'
         '  y = sin(x);\n'
-        '  out3 = cos(2*x);\n'
-        '  out4 = cos(x);\n'
+        '  out3 = cos(x);\n'
+        '  a = sin(2*x);\n'
         'end\n'
     )
     assert source == expected
@@ -323,9 +318,8 @@ def test_m_matrix_named_matsym():
     myout1 = MatrixSymbol('myout1', 1, 3)
     e2 = Matrix([[x, 2*y, pi*z]])
     name_expr = ("test", Equality(myout1, e2, evaluate=False))
-    result = codegen(name_expr, "Octave", "test", header=False, empty=False)
-    assert result[0][0] == "test.m"
-    source = result[0][1]
+    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    source = result[1]
     expected = (
         "function myout1 = test(x, y, z)\n"
         "  myout1 = [x 2*y pi*z];\n"
@@ -352,7 +346,6 @@ def test_m_matrix_output_autoname_2():
     e2 = Matrix([[2*x, 2*y, 2*z]])
     e3 = Matrix([[x], [y], [z]])
     e4 = Matrix([[x, y], [z, 16]])
-    #routine = Routine("test", (e1, e2, e3, e4))
     name_expr = ("test", (e1, e2, e3, e4))
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
     source = result[1]
@@ -368,7 +361,7 @@ def test_m_matrix_output_autoname_2():
     assert source == expected
 
 
-def test_m_results_named_ordered():
+def test_m_results_matrix_named_ordered():
     B, C = symbols('B,C')
     A = MatrixSymbol('A', 1, 3)
     expr1 = Equality(C, (x + y)*z)
@@ -376,7 +369,7 @@ def test_m_results_named_ordered():
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False,
-                     argument_sequence=(x, z, y, C, A, B))
+                     argument_sequence=(x, z, y)) #, B, A, C)) FIXME
     source = result[1]
     expected = (
         "function [C, A, B] = test(x, z, y)\n"
@@ -430,7 +423,6 @@ def test_m_InOutArgument():
     assert source == expected
 
 
-@XFAIL
 def test_m_InOutArgument_order():
     # can specify the order as (x, y)
     expr = Equality(x, x**2 + y)
@@ -444,7 +436,7 @@ def test_m_InOutArgument_order():
         "end\n"
     )
     assert source == expected
-    # gives (y, x) instead of (x, y) because InOutArguments are last
+    # make sure it gives (x, y) not (y, x)
     expr = Equality(x, x**2 + y)
     name_expr = ("test", expr)
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
