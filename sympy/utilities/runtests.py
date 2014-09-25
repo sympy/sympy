@@ -452,7 +452,10 @@ def _test(*paths, **kwargs):
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
-    kw = kwargs.get("kw", "")
+    kw = kwargs.get("kw", None) or ()
+    # ensure that kw is a tuple
+    if isinstance(kw, str):
+        kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     force_colors = kwargs.get("force_colors", False)
@@ -1012,10 +1015,7 @@ class SymPyTests(object):
     def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
         funcs = []
         try:
-            clear_cache()
-            self._count += 1
             gl = {'__file__': filename}
-            random.seed(self._seed)
             try:
                 if PY3:
                     open_file = lambda: open(filename, encoding="utf8")
@@ -1024,6 +1024,13 @@ class SymPyTests(object):
 
                 with open_file() as f:
                     source = f.read()
+                    if self._kw:
+                        for l in source.splitlines():
+                            if l.lstrip().startswith('def '):
+                                if any(l.find(k) != -1 for k in self._kw):
+                                    break
+                        else:
+                            return
 
                 if enhance_asserts:
                     try:
@@ -1038,6 +1045,9 @@ class SymPyTests(object):
             except ImportError:
                 self._reporter.import_error(filename, sys.exc_info())
                 return
+            clear_cache()
+            self._count += 1
+            random.seed(self._seed)
             pytestfile = ""
             if "XFAIL" in gl:
                 pytestfile = inspect.getsourcefile(gl["XFAIL"])
@@ -1136,9 +1146,12 @@ class SymPyTests(object):
 
         Always returns True if self._kw is "".
         """
-        if self._kw == "":
+        if not self._kw:
             return True
-        return x.__name__.find(self._kw) != -1
+        for kw in self._kw:
+            if x.__name__.find(kw) != -1:
+                return True
+        return False
 
     def get_test_files(self, dir, pat='test_*.py'):
         """
