@@ -108,7 +108,7 @@ _assume_rules = FactRules([
 
     'noninteger     ==  real & !integer',
 
-    'nonzero        ==  !zero & complex',
+    'nonzero        ==  real & !zero',
 
     'finite         ==  complex & !infinite',
     'infinite       ==  complex & !finite',
