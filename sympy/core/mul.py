@@ -1120,7 +1120,7 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_integer(self):
-        rational = self.is_rational
+        rational = self._eval_is_rational()
         if not rational:
             return rational
 
