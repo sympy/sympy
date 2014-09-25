@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan, cbrt, Dummy
+        sign, im, nan, cbrt, Dummy, subsets
 )
 from sympy.core.evalf import PrecisionExhausted
 from sympy.core.tests.test_evalf import NS
@@ -293,12 +293,8 @@ def test_ncmul():
 
 
 def test_ncpow():
-    x = Symbol('x', commutative=False)
-    y = Symbol('y', commutative=False)
-    z = Symbol('z', commutative=False)
-    a = Symbol('a')
-    b = Symbol('b')
-    c = Symbol('c')
+    x, y, z = symbols('x:z', commutative=False)
+    a, b, c = symbols('a:c')
 
     assert (x**2)*(y**2) != (y**2)*(x**2)
     assert (x**-2)*y != y*(x**2)
@@ -366,8 +362,14 @@ def test_Add_Mul_is_integer():
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
 
 
-def test_Add_Mul_is_finite():
-    x = Symbol('x', real=True, finite=False)
+def test_Add_Mul_is_complex_finite_real_infinite():
+    _r = x = Dummy('r', infinite=True, real=True)
+    _p = Dummy('p', infinite=True, positive=True)
+    _n = Dummy('n', infinite=True, negative=True)
+    _i = Dummy('i', infinite=True, imaginary=True)
+    _c = Dummy('c', infinite=True)
+    _z = Dummy('z', infinite=True, imaginary=False, real=False, complex=True)
+    all = [_r, _p, _n, _i, _c, _z]
 
     assert sin(x).is_finite is True
     assert (x*sin(x)).is_finite is False
@@ -379,9 +381,164 @@ def test_Add_Mul_is_finite():
     assert (sin(x) - 67).is_finite is True
     assert (sin(x) + exp(x)).is_finite is not True
     assert (1 + x).is_finite is False
-    assert (1 + x**2 + (1 + x)*(1 - x)).is_finite is None
+    assert (1 + x**2 + (1 + x)*(1 - x)).is_finite is False
     assert (sqrt(2)*(1 + x)).is_finite is False
     assert (sqrt(2)*(1 + x)*(1 - x)).is_finite is False
+
+    assert Add(_p, _r, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_r,_p)], evaluate=False).is_complex == None
+    assert Add(_n, _r, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_r,_n)], evaluate=False).is_complex == None
+    assert Add(_i, _r, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_r,_i)], evaluate=False).is_complex == True
+    assert Add(_c, _r, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_r,_c)], evaluate=False).is_complex == None
+    assert Add(_z, _r, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_r,_z)], evaluate=False).is_complex == None
+    assert Add(_n, _p, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_p,_n)], evaluate=False).is_complex == False
+    assert Add(_i, _p, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_p,_i)], evaluate=False).is_complex == True
+    assert Add(_c, _p, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_p,_c)], evaluate=False).is_complex == None
+    assert Add(_z, _p, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_p,_z)], evaluate=False).is_complex == None
+    assert Add(_i, _n, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_n,_i)], evaluate=False).is_complex == True
+    assert Add(_c, _n, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_n,_c)], evaluate=False).is_complex == None
+    assert Add(_z, _n, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_n,_z)], evaluate=False).is_complex == None
+    assert Add(_c, _i, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_i,_c)], evaluate=False).is_complex == None
+    assert Add(_z, _i, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_i,_z)], evaluate=False).is_complex == None
+    assert Add(_z, _c, evaluate=False).is_complex == \
+           Add(*[a.as_dummy() for a in (_c,_z)], evaluate=False).is_complex == None
+
+    assert Add(_p, _r, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_r,_p)], evaluate=False).is_finite == False
+    assert Add(_n, _r, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_r,_n)], evaluate=False).is_finite == False
+    assert Add(_i, _r, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_r,_i)], evaluate=False).is_finite == False
+    assert Add(_c, _r, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_r,_c)], evaluate=False).is_finite == False
+    assert Add(_z, _r, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_r,_z)], evaluate=False).is_finite == False
+    assert Add(_n, _p, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_p,_n)], evaluate=False).is_finite == False
+    assert Add(_i, _p, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_p,_i)], evaluate=False).is_finite == False
+    assert Add(_c, _p, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_p,_c)], evaluate=False).is_finite == False
+    assert Add(_z, _p, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_p,_z)], evaluate=False).is_finite == False
+    assert Add(_i, _n, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_n,_i)], evaluate=False).is_finite == False
+    assert Add(_c, _n, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_n,_c)], evaluate=False).is_finite == False
+    assert Add(_z, _n, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_n,_z)], evaluate=False).is_finite == False
+    assert Add(_c, _i, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_i,_c)], evaluate=False).is_finite == False
+    assert Add(_z, _i, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_i,_z)], evaluate=False).is_finite == False
+    assert Add(_z, _c, evaluate=False).is_finite == \
+           Add(*[a.as_dummy() for a in (_c,_z)], evaluate=False).is_finite == False
+
+    assert Add(_p, _r, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_r,_p)], evaluate=False).is_real == None
+    assert Add(_n, _r, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_r,_n)], evaluate=False).is_real == None
+    assert Add(_i, _r, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_r,_i)], evaluate=False).is_real == False
+    assert Add(_c, _r, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_r,_c)], evaluate=False).is_real == None
+    assert Add(_z, _r, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_r,_z)], evaluate=False).is_real == False
+    assert Add(_n, _p, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_p,_n)], evaluate=False).is_real == False
+    assert Add(_i, _p, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_p,_i)], evaluate=False).is_real == False
+    assert Add(_c, _p, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_p,_c)], evaluate=False).is_real == None
+    assert Add(_z, _p, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_p,_z)], evaluate=False).is_real == False
+    assert Add(_i, _n, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_n,_i)], evaluate=False).is_real == False
+    assert Add(_c, _n, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_n,_c)], evaluate=False).is_real == None
+    assert Add(_z, _n, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_n,_z)], evaluate=False).is_real == False
+    assert Add(_c, _i, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_i,_c)], evaluate=False).is_real == False
+    assert Add(_z, _i, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_i,_z)], evaluate=False).is_real == False
+    assert Add(_z, _c, evaluate=False).is_real == \
+           Add(*[a.as_dummy() for a in (_c,_z)], evaluate=False).is_real == None
+
+    assert Add(_p, _r, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_r,_p)], evaluate=False).is_infinite == None
+    assert Add(_n, _r, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_r,_n)], evaluate=False).is_infinite == None
+    assert Add(_i, _r, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_r,_i)], evaluate=False).is_infinite == True
+    assert Add(_c, _r, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_r,_c)], evaluate=False).is_infinite == None
+    assert Add(_z, _r, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_r,_z)], evaluate=False).is_infinite == None
+    assert Add(_n, _p, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_p,_n)], evaluate=False).is_infinite == False
+    assert Add(_i, _p, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_p,_i)], evaluate=False).is_infinite == True
+    assert Add(_c, _p, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_p,_c)], evaluate=False).is_infinite == None
+    assert Add(_z, _p, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_p,_z)], evaluate=False).is_infinite == None
+    assert Add(_i, _n, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_n,_i)], evaluate=False).is_infinite == True
+    assert Add(_c, _n, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_n,_c)], evaluate=False).is_infinite == None
+    assert Add(_z, _n, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_n,_z)], evaluate=False).is_infinite == None
+    assert Add(_c, _i, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_i,_c)], evaluate=False).is_infinite == None
+    assert Add(_z, _i, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_i,_z)], evaluate=False).is_infinite == None
+    assert Add(_z, _c, evaluate=False).is_infinite == \
+           Add(*[a.as_dummy() for a in (_c,_z)], evaluate=False).is_infinite == None
+
+    assert Add(_p, _r, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_r,_p)], evaluate=False).is_imaginary == False
+    assert Add(_n, _r, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_r,_n)], evaluate=False).is_imaginary == False
+    assert Add(_i, _r, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_r,_i)], evaluate=False).is_imaginary == False
+    assert Add(_c, _r, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_r,_c)], evaluate=False).is_imaginary == False
+    assert Add(_z, _r, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_r,_z)], evaluate=False).is_imaginary == False
+    assert Add(_n, _p, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_p,_n)], evaluate=False).is_imaginary == False
+    assert Add(_i, _p, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_p,_i)], evaluate=False).is_imaginary == False
+    assert Add(_c, _p, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_p,_c)], evaluate=False).is_imaginary == False
+    assert Add(_z, _p, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_p,_z)], evaluate=False).is_imaginary == False
+    assert Add(_i, _n, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_n,_i)], evaluate=False).is_imaginary == False
+    assert Add(_c, _n, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_n,_c)], evaluate=False).is_imaginary == False
+    assert Add(_z, _n, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_n,_z)], evaluate=False).is_imaginary == False
+    assert Add(_c, _i, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_i,_c)], evaluate=False).is_imaginary == None
+    assert Add(_z, _i, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_i,_z)], evaluate=False).is_imaginary == False
+    assert Add(_z, _c, evaluate=False).is_imaginary == \
+           Add(*[a.as_dummy() for a in (_c,_z)], evaluate=False).is_imaginary == None
 
 
 def test_Mul_is_even_odd():
@@ -444,17 +601,27 @@ def test_Mul_is_even_odd():
 
 
 def test_Mul_is_rational():
-    x = Symbol('x')
-    n = Symbol('n', integer=True)
-    m = Symbol('m', integer=True, nonzero=True)
+    x = Dummy()
+    n = Dummy(integer=True)
+    m = Dummy(integer=True)
+    z = Dummy(zero=True)
 
-    assert (n/m).is_rational is True
+    assert (z/pi).is_rational
+
     assert (x/pi).is_rational is None
     assert (x/n).is_rational is None
-    assert (m/pi).is_rational is False
+    assert (n/m).is_rational is None
+    assert (n/pi).is_rational is None
 
-    r = Symbol('r', rational=True)
-    assert (pi*r).is_rational is None
+    n = Dummy(integer=True, nonzero=True)
+    m = Dummy(integer=True, nonzero=True)
+    assert (n/m).is_rational is True
+    assert (n/pi).is_rational is False
+
+    n = Dummy(integer=True, zero=False)
+    m = Dummy(integer=True, zero=False)
+    assert (n/m).is_rational is True
+    assert (n/pi).is_rational is False
 
     # issue 8008
     z = Symbol('z', zero=True)
@@ -612,199 +779,223 @@ def test_Mul_is_negative_positive():
     assert (x*neg).is_positive is None
     assert (nneg*npos*pos*x*neg).is_positive is None
 
+    assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
+    assert (i*j).is_positive is None  # ditto
+    assert (I*sqrt(1 - sqrt(3))).is_negative
+    assert (-nc).is_negative is False
+
+    assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
+        is False
+    assert Mul(I, Mul(I, pos, evaluate=False), evaluate=False).is_negative
+    assert Mul(I, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(I, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is None
+    assert Mul(I, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(I, Mul(I, i, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, pos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
+
 
 def test_Mul_is_negative_positive_2():
-    a = Symbol('a', nonnegative=True)
-    b = Symbol('b', nonnegative=True)
-    c = Symbol('c', nonpositive=True)
-    d = Symbol('d', nonpositive=True)
+    nneg = Dummy(nonnegative=True)
+    nneg1 = Dummy(nonnegative=True)
+    npos = Dummy(nonpositive=True)
+    npos1 = Dummy(nonpositive=True)
 
-    assert (a*b).is_nonnegative is True
-    assert (a*b).is_negative is False
-    assert (a*b).is_zero is None
-    assert (a*b).is_positive is None
+    e = nneg*nneg1
+    assert e.is_nonpositive is None
+    assert e.is_nonnegative is None
+    assert e.is_negative is False
+    assert e.is_zero is None
+    assert e.is_positive is None
 
-    assert (c*d).is_nonnegative is True
-    assert (c*d).is_negative is False
-    assert (c*d).is_zero is None
-    assert (c*d).is_positive is None
+    e = npos*npos1
+    assert e.is_nonpositive is None
+    assert e.is_nonnegative is None
+    assert e.is_negative is False
+    assert e.is_zero is None
+    assert e.is_positive is None
 
-    assert (a*c).is_nonpositive is True
-    assert (a*c).is_positive is False
-    assert (a*c).is_zero is None
-    assert (a*c).is_negative is None
+    e = nneg*npos
+    assert e.is_nonnegative is None
+    assert e.is_nonpositive is None
+    assert e.is_positive is False
+    assert e.is_zero is None
+    assert e.is_negative is None
 
 
 def test_Mul_is_nonpositive_nonnegative():
-    x = Symbol('x', real=True)
+    r = Symbol('r', real=True)
 
-    k = Symbol('k', negative=True)
-    n = Symbol('n', positive=True)
-    u = Symbol('u', nonnegative=True)
-    v = Symbol('v', nonpositive=True)
+    n = Symbol('n', negative=True, finite=True)
+    p = Symbol('p', positive=True, finite=True)
+    nn = Symbol('nn', nonnegative=True, finite=True)
+    np = Symbol('np', nonpositive=True, finite=True)
 
-    assert k.is_nonpositive is True
-    assert (-k).is_nonpositive is False
-    assert (2*k).is_nonpositive is True
+    assert n.is_nonpositive is True
+    assert (-n).is_nonpositive is False
+    assert (2*n).is_nonpositive is True
 
-    assert n.is_nonpositive is False
-    assert (-n).is_nonpositive is True
-    assert (2*n).is_nonpositive is False
+    assert p.is_nonpositive is False
+    assert (-p).is_nonpositive is True
+    assert (2*p).is_nonpositive is False
 
-    assert (n*k).is_nonpositive is True
-    assert (2*n*k).is_nonpositive is True
-    assert (-n*k).is_nonpositive is False
+    assert (p*n).is_nonpositive is True
+    assert (2*p*n).is_nonpositive is True
+    assert (-p*n).is_nonpositive is False
 
-    assert u.is_nonpositive is None
-    assert (-u).is_nonpositive is True
-    assert (2*u).is_nonpositive is None
+    assert nn.is_nonpositive is None
+    assert (-nn).is_nonpositive is True
+    assert (2*nn).is_nonpositive is None
 
-    assert v.is_nonpositive is True
-    assert (-v).is_nonpositive is None
-    assert (2*v).is_nonpositive is True
+    assert np.is_nonpositive is True
+    assert (-np).is_nonpositive is None
+    assert (2*np).is_nonpositive is True
 
-    assert (u*v).is_nonpositive is True
+    assert (nn*np).is_nonpositive is True
 
-    assert (k*u).is_nonpositive is True
-    assert (k*v).is_nonpositive is None
+    assert (n*nn).is_nonpositive is True
+    assert (n*np).is_nonpositive is None
 
-    assert (n*u).is_nonpositive is None
-    assert (n*v).is_nonpositive is True
+    assert (p*nn).is_nonpositive is None
+    assert (p*np).is_nonpositive is True
 
-    assert (v*k*u).is_nonpositive is None
-    assert (v*n*u).is_nonpositive is True
+    assert (np*n*nn).is_nonpositive is None
+    assert (np*p*nn).is_nonpositive is True
 
-    assert (-v*k*u).is_nonpositive is True
-    assert (-v*n*u).is_nonpositive is None
+    assert (-np*n*nn).is_nonpositive is True
+    assert (-np*p*nn).is_nonpositive is None
 
-    assert (17*v*k*u).is_nonpositive is None
-    assert (17*v*n*u).is_nonpositive is True
+    assert (17*np*n*nn).is_nonpositive is None
+    assert (17*np*p*nn).is_nonpositive is True
 
-    assert (k*v*n*u).is_nonpositive is None
+    assert (n*np*p*nn).is_nonpositive is None
 
-    assert (x*k).is_nonpositive is None
-    assert (u*v*n*x*k).is_nonpositive is None
+    assert (r*n).is_nonpositive is None
+    assert (nn*np*p*r*n).is_nonpositive is None
 
-    assert k.is_nonnegative is False
-    assert (-k).is_nonnegative is True
-    assert (2*k).is_nonnegative is False
+    assert n.is_nonnegative is False
+    assert (-n).is_nonnegative is True
+    assert (2*n).is_nonnegative is False
 
-    assert n.is_nonnegative is True
-    assert (-n).is_nonnegative is False
-    assert (2*n).is_nonnegative is True
+    assert p.is_nonnegative is True
+    assert (-p).is_nonnegative is False
+    assert (2*p).is_nonnegative is True
 
-    assert (n*k).is_nonnegative is False
-    assert (2*n*k).is_nonnegative is False
-    assert (-n*k).is_nonnegative is True
+    assert (p*n).is_nonnegative is False
+    assert (2*p*n).is_nonnegative is False
+    assert (-p*n).is_nonnegative is True
 
-    assert u.is_nonnegative is True
-    assert (-u).is_nonnegative is None
-    assert (2*u).is_nonnegative is True
+    assert nn.is_nonnegative is True
+    assert (-nn).is_nonnegative is None
+    assert (2*nn).is_nonnegative is True
 
-    assert v.is_nonnegative is None
-    assert (-v).is_nonnegative is True
-    assert (2*v).is_nonnegative is None
+    assert np.is_nonnegative is None
+    assert (-np).is_nonnegative is True
+    assert (2*np).is_nonnegative is None
 
-    assert (u*v).is_nonnegative is None
+    assert (nn*np).is_nonnegative is None
 
-    assert (k*u).is_nonnegative is None
-    assert (k*v).is_nonnegative is True
+    assert (n*nn).is_nonnegative is None
+    assert (n*np).is_nonnegative is True
 
-    assert (n*u).is_nonnegative is True
-    assert (n*v).is_nonnegative is None
+    assert (p*nn).is_nonnegative is True
+    assert (p*np).is_nonnegative is None
 
-    assert (v*k*u).is_nonnegative is True
-    assert (v*n*u).is_nonnegative is None
+    assert (np*n*nn).is_nonnegative is True
+    assert (np*p*nn).is_nonnegative is None
 
-    assert (-v*k*u).is_nonnegative is None
-    assert (-v*n*u).is_nonnegative is True
+    assert (-np*n*nn).is_nonnegative is None
+    assert (-np*p*nn).is_nonnegative is True
 
-    assert (17*v*k*u).is_nonnegative is True
-    assert (17*v*n*u).is_nonnegative is None
+    assert (17*np*n*nn).is_nonnegative is True
+    assert (17*np*p*nn).is_nonnegative is None
 
-    assert (k*v*n*u).is_nonnegative is True
+    assert (n*np*p*nn).is_nonnegative is True
 
-    assert (x*k).is_nonnegative is None
-    assert (u*v*n*x*k).is_nonnegative is None
+    assert (r*n).is_nonnegative is None
+    assert (nn*np*p*r*n).is_nonnegative is None
 
 
 def test_Add_is_negative_positive():
     x = Symbol('x', real=True)
 
-    k = Symbol('k', negative=True)
-    n = Symbol('n', positive=True)
-    u = Symbol('u', nonnegative=True)
-    v = Symbol('v', nonpositive=True)
+    n = Symbol('n', negative=True)
+    p = Symbol('p', positive=True)
+    nn = Symbol('nn', nonnegative=True)
+    np = Symbol('np', nonpositive=True)
 
-    assert (k - 2).is_negative is True
-    assert (k + 17).is_negative is None
-    assert (-k - 5).is_negative is None
-    assert (-k + 123).is_negative is False
+    assert (n - 2).is_negative is True
+    assert (n + 17).is_negative is None
+    assert (-n - 5).is_negative is None
+    assert (-n + 123).is_negative is False
 
-    assert (k - n).is_negative is True
-    assert (k + n).is_negative is None
-    assert (-k - n).is_negative is None
-    assert (-k + n).is_negative is False
+    assert (n - p).is_negative is True
+    assert (n + p).is_negative is None
+    assert (-n - p).is_negative is None
+    assert (-n + p).is_negative is False
 
-    assert (k - n - 2).is_negative is True
-    assert (k + n + 17).is_negative is None
-    assert (-k - n - 5).is_negative is None
-    assert (-k + n + 123).is_negative is False
+    assert (n - p - 2).is_negative is True
+    assert (n + p + 17).is_negative is None
+    assert (-n - p - 5).is_negative is None
+    assert (-n + p + 123).is_negative is False
 
-    assert (-2*k + 123*n + 17).is_negative is False
+    assert (-2*n + 123*p + 17).is_negative is False
 
-    assert (k + u).is_negative is None
-    assert (k + v).is_negative is True
-    assert (n + u).is_negative is False
-    assert (n + v).is_negative is None
+    assert (n + nn).is_negative is None
+    assert (n + np).is_negative is True
+    assert (p + nn).is_negative is False
+    assert (p + np).is_negative is None
 
-    assert (u - v).is_negative is False
-    assert (u + v).is_negative is None
-    assert (-u - v).is_negative is None
-    assert (-u + v).is_negative is None
+    assert (nn - np).is_negative is False
+    assert (nn + np).is_negative is None
+    assert (-nn - np).is_negative is None
+    assert (-nn + np).is_negative is None
 
-    assert (u - v + n + 2).is_negative is False
-    assert (u + v + n + 2).is_negative is None
-    assert (-u - v + n + 2).is_negative is None
-    assert (-u + v + n + 2).is_negative is None
+    assert (nn - np + p + 2).is_negative is False
+    assert (nn + np + p + 2).is_negative is None
+    assert (-nn - np + p + 2).is_negative is None
+    assert (-nn + np + p + 2).is_negative is None
 
-    assert (k + x).is_negative is None
-    assert (k + x - n).is_negative is None
+    assert (n + x).is_negative is None
+    assert (n + x - p).is_negative is None
 
-    assert (k - 2).is_positive is False
-    assert (k + 17).is_positive is None
-    assert (-k - 5).is_positive is None
-    assert (-k + 123).is_positive is True
+    assert (n - 2).is_positive is False
+    assert (n + 17).is_positive is None
+    assert (-n - 5).is_positive is None
+    assert (-n + 123).is_positive is True
 
-    assert (k - n).is_positive is False
-    assert (k + n).is_positive is None
-    assert (-k - n).is_positive is None
-    assert (-k + n).is_positive is True
+    assert (n - p).is_positive is False
+    assert (n + p).is_positive is None
+    assert (-n - p).is_positive is None
+    assert (-n + p).is_positive is True
 
-    assert (k - n - 2).is_positive is False
-    assert (k + n + 17).is_positive is None
-    assert (-k - n - 5).is_positive is None
-    assert (-k + n + 123).is_positive is True
+    assert (n - p - 2).is_positive is False
+    assert (n + p + 17).is_positive is None
+    assert (-n - p - 5).is_positive is None
+    assert (-n + p + 123).is_positive is True
 
-    assert (-2*k + 123*n + 17).is_positive is True
+    assert (-2*n + 123*p + 17).is_positive is True
 
-    assert (k + u).is_positive is None
-    assert (k + v).is_positive is False
-    assert (n + u).is_positive is True
-    assert (n + v).is_positive is None
+    assert (n + nn).is_positive is None
+    assert (n + np).is_positive is False
+    assert (p + nn).is_positive is True
+    assert (p + np).is_positive is None
 
-    assert (u - v).is_positive is None
-    assert (u + v).is_positive is None
-    assert (-u - v).is_positive is None
-    assert (-u + v).is_positive is False
+    assert (nn - np).is_positive is None
+    assert (nn + np).is_positive is None
+    assert (-nn - np).is_positive is None
+    assert (-nn + np).is_positive is False
 
-    assert (u - v - n - 2).is_positive is None
-    assert (u + v - n - 2).is_positive is None
-    assert (-u - v - n - 2).is_positive is None
-    assert (-u + v - n - 2).is_positive is False
+    assert (nn - np - p - 2).is_positive is None
+    assert (nn + np - p - 2).is_positive is None
+    assert (-nn - np - p - 2).is_positive is None
+    assert (-nn + np - p - 2).is_positive is False
 
-    assert (n + x).is_positive is None
-    assert (n + x - k).is_positive is None
+    assert (p + x).is_positive is None
+    assert (p + x - n).is_positive is None
 
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero is not False
 
@@ -812,80 +1003,80 @@ def test_Add_is_negative_positive():
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
-    k = Symbol('k', negative=True)
-    n = Symbol('n', positive=True)
-    u = Symbol('u', nonnegative=True)
-    v = Symbol('v', nonpositive=True)
+    n = Symbol('n', negative=True)
+    p = Symbol('p', positive=True)
+    nn = Symbol('nn', nonnegative=True)
+    np = Symbol('np', nonpositive=True)
 
-    assert (u - 2).is_nonpositive is None
-    assert (u + 17).is_nonpositive is False
-    assert (-u - 5).is_nonpositive is True
-    assert (-u + 123).is_nonpositive is None
+    assert (nn - 2).is_nonpositive is None
+    assert (nn + 17).is_nonpositive is False
+    assert (-nn - 5).is_nonpositive is True
+    assert (-nn + 123).is_nonpositive is None
 
-    assert (u - v).is_nonpositive is None
-    assert (u + v).is_nonpositive is None
-    assert (-u - v).is_nonpositive is None
-    assert (-u + v).is_nonpositive is True
+    assert (nn - np).is_nonpositive is None
+    assert (nn + np).is_nonpositive is None
+    assert (-nn - np).is_nonpositive is None
+    assert (-nn + np).is_nonpositive is True
 
-    assert (u - v - 2).is_nonpositive is None
-    assert (u + v + 17).is_nonpositive is None
-    assert (-u - v - 5).is_nonpositive is None
-    assert (-u + v - 123).is_nonpositive is True
+    assert (nn - np - 2).is_nonpositive is None
+    assert (nn + np + 17).is_nonpositive is None
+    assert (-nn - np - 5).is_nonpositive is None
+    assert (-nn + np - 123).is_nonpositive is True
 
-    assert (-2*u + 123*v - 17).is_nonpositive is True
+    assert (-2*nn + 123*np - 17).is_nonpositive is True
 
-    assert (k + u).is_nonpositive is None
-    assert (k + v).is_nonpositive is True
-    assert (n + u).is_nonpositive is False
-    assert (n + v).is_nonpositive is None
+    assert (n + nn).is_nonpositive is None
+    assert (n + np).is_nonpositive is True
+    assert (p + nn).is_nonpositive is False
+    assert (p + np).is_nonpositive is None
 
-    assert (k - n).is_nonpositive is True
-    assert (k + n).is_nonpositive is None
-    assert (-k - n).is_nonpositive is None
-    assert (-k + n).is_nonpositive is False
+    assert (n - p).is_nonpositive is True
+    assert (n + p).is_nonpositive is None
+    assert (-n - p).is_nonpositive is None
+    assert (-n + p).is_nonpositive is False
 
-    assert (k - n + u + 2).is_nonpositive is None
-    assert (k + n + u + 2).is_nonpositive is None
-    assert (-k - n + u + 2).is_nonpositive is None
-    assert (-k + n + u + 2).is_nonpositive is False
+    assert (n - p + nn + 2).is_nonpositive is None
+    assert (n + p + nn + 2).is_nonpositive is None
+    assert (-n - p + nn + 2).is_nonpositive is None
+    assert (-n + p + nn + 2).is_nonpositive is False
 
-    assert (u + x).is_nonpositive is None
-    assert (v - x - n).is_nonpositive is None
+    assert (nn + x).is_nonpositive is None
+    assert (np - x - p).is_nonpositive is None
 
-    assert (u - 2).is_nonnegative is None
-    assert (u + 17).is_nonnegative is True
-    assert (-u - 5).is_nonnegative is False
-    assert (-u + 123).is_nonnegative is None
+    assert (nn - 2).is_nonnegative is None
+    assert (nn + 17).is_nonnegative is True
+    assert (-nn - 5).is_nonnegative is False
+    assert (-nn + 123).is_nonnegative is None
 
-    assert (u - v).is_nonnegative is True
-    assert (u + v).is_nonnegative is None
-    assert (-u - v).is_nonnegative is None
-    assert (-u + v).is_nonnegative is None
+    assert (nn - np).is_nonnegative is True
+    assert (nn + np).is_nonnegative is None
+    assert (-nn - np).is_nonnegative is None
+    assert (-nn + np).is_nonnegative is None
 
-    assert (u - v + 2).is_nonnegative is True
-    assert (u + v + 17).is_nonnegative is None
-    assert (-u - v - 5).is_nonnegative is None
-    assert (-u + v - 123).is_nonnegative is False
+    assert (nn - np + 2).is_nonnegative is True
+    assert (nn + np + 17).is_nonnegative is None
+    assert (-nn - np - 5).is_nonnegative is None
+    assert (-nn + np - 123).is_nonnegative is False
 
-    assert (2*u - 123*v + 17).is_nonnegative is True
+    assert (2*nn - 123*np + 17).is_nonnegative is True
 
-    assert (k + u).is_nonnegative is None
-    assert (k + v).is_nonnegative is False
-    assert (n + u).is_nonnegative is True
-    assert (n + v).is_nonnegative is None
+    assert (n + nn).is_nonnegative is None
+    assert (n + np).is_nonnegative is False
+    assert (p + nn).is_nonnegative is True
+    assert (p + np).is_nonnegative is None
 
-    assert (k - n).is_nonnegative is False
-    assert (k + n).is_nonnegative is None
-    assert (-k - n).is_nonnegative is None
-    assert (-k + n).is_nonnegative is True
+    assert (n - p).is_nonnegative is False
+    assert (n + p).is_nonnegative is None
+    assert (-n - p).is_nonnegative is None
+    assert (-n + p).is_nonnegative is True
 
-    assert (k - n - u - 2).is_nonnegative is False
-    assert (k + n - u - 2).is_nonnegative is None
-    assert (-k - n - u - 2).is_nonnegative is None
-    assert (-k + n - u - 2).is_nonnegative is None
+    assert (n - p - nn - 2).is_nonnegative is False
+    assert (n + p - nn - 2).is_nonnegative is None
+    assert (-n - p - nn - 2).is_nonnegative is None
+    assert (-n + p - nn - 2).is_nonnegative is None
 
-    assert (u - x).is_nonnegative is None
-    assert (v + x + n).is_nonnegative is None
+    assert (nn - x).is_nonnegative is None
+    assert (np + x + p).is_nonnegative is None
 
 
 def test_Pow_is_integer():
@@ -1106,6 +1297,11 @@ def test_Pow_is_zero():
     assert e.is_negative is False
 
 
+@XFAIL
+def test_Pow_rational():
+    assert (1/Dummy(integer=1)).is_rational is None
+
+
 def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
@@ -1123,7 +1319,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**2).is_nonnegative is True
     assert (k**(-2)).is_nonnegative is True
 
-    assert (k**x).is_nonnegative is None    # NOTE (0**x).is_real = U
+    assert (k**x).is_nonnegative is None  # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
@@ -1157,6 +1353,7 @@ def test_Mul_is_imaginary_real():
     p = Symbol('p', positive=True)
     i = Symbol('i', imaginary=True)
     ii = Symbol('ii', imaginary=True)
+    c = Symbol('c', complex=True, real=False, imaginary=False)
     x = Symbol('x')
 
     assert I.is_imaginary is True
@@ -1167,6 +1364,8 @@ def test_Mul_is_imaginary_real():
     assert (3*I).is_real is False
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
+    assert (I*c).is_real is False
+    assert (r*I*c).is_real is None
 
     e = (p + p*I)
     j = Symbol('j', integer=True, zero=False)
@@ -1196,8 +1395,8 @@ def test_Mul_is_imaginary_real():
     assert (i*ii).is_imaginary is False
     assert (i*ii).is_real is True
 
-    assert (r*i*ii).is_imaginary is False
-    assert (r*i*ii).is_real is True
+    assert (r*i*ii).is_imaginary is None
+    assert (r*i*ii).is_real is None
 
     # Github's issue 5874:
     nr = Symbol('nr', real=False, complex=True)
@@ -1233,6 +1432,7 @@ def test_Add_is_comparable():
     assert (x + y).is_comparable is False
     assert (x + 1).is_comparable is False
     assert (Rational(1, 3) - sqrt(8)).is_comparable is True
+    assert (1 + Symbol('x', imaginary=True)).is_comparable is False
 
 
 def test_Mul_is_comparable():
@@ -1718,36 +1918,60 @@ def test_mul_zero_detection():
     # zero value so args should be tested in both directions and
     # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
 
-    # real is unknonwn
-    def test(z, b, e):
-        if z.is_zero and b.is_finite:
-            assert e.is_real and e.is_zero
-        else:
-            assert e.is_real == e.is_zero == None
+    from sympy.core.facts import InconsistentAssumptions
+    def test(e):
+        from sympy.core.function import expand_mul
+        # get the assumptions for each arg
+        args = e.args
+        d = [a.assumptions0 for a in args]
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
-        z = Dummy(nonzero=iz)
-        b = Dummy(finite=ib)
-        e = Mul(z, b, evaluate=False)
-        test(z, b, e)
-        z = Dummy(nonzero=iz)
-        b = Dummy(finite=ib)
-        e = Mul(b, z, evaluate=False)
-        test(z, b, e)
+        # select from these numbers
+        n = [S.Zero, S.One, S.NegativeOne, I, 1 + I, oo, I*oo]
+        ni = [[i for i in n if all(getattr(i, 'is_' + k) == di[k] for k in di)] for di in d]
 
-    # real is True
-    def test(z, b, e):
-        if z.is_zero and not b.is_finite:
-            assert e.is_real is None
-        else:
-            assert e.is_real
+        # check that we got numbers for each symbol
+        for j, _n in enumerate(ni):
+            if not _n:
+                print('No numbers matched these attributes: %s' % (
+                    key[symbols.index(args[j])],))
+                assert None
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
-        z = Dummy('z', nonzero=iz, real=True)
-        b = Dummy('b', finite=ib, real=True)
-        e = Mul(z, b, evaluate=False)
-        test(z, b, e)
-        z = Dummy('z', nonzero=iz, real=True)
-        b = Dummy('b', finite=ib, real=True)
-        e = Mul(b, z, evaluate=False)
-        test(z, b, e)
+        def check(attr):
+            # perform the check of the is_* method's result
+            v = getattr(e, attr)  # this is what we get
+            # here are possible expressions that match the assumptions
+            possible = set([getattr(expand_mul(Mul(*m)), attr) for m in cartes(*ni)])
+            if len(possible) == 1:
+                assert v == possible.pop()
+            else:
+                if (len(possible) == 2 and None in possible and v in possible):
+                    # we don't fault a routine if it gives None as long
+                    # as the desired value is present
+                    pass
+                else:
+                    assert v is None
+
+        check('is_zero')
+        check('is_nonzero')
+        check('is_complex')
+        check('is_finite')
+        check('is_infinite')
+
+    # build a list of symbols to choose from
+    symbols = []
+    key = []
+    for iz, ib, ir in cartes(*[[True, False]]*3):
+        i += 1
+        if iz == ib == ir == False:
+            continue
+        try:
+            d = dict(zero=iz, finite=ib, real=ir)
+            symbols.append(Dummy(**d))
+            key.append(d)
+        except InconsistentAssumptions:
+            continue
+    for s in subsets(symbols, 3):
+        # generate a fresh symbol with the same assumptions
+        # to avoid cached results by using as_dummy()
+        test(Mul(*[i.as_dummy() for i in s], evaluate=False))
+        test(Mul(*[i.as_dummy() for i in reversed(s)], evaluate=False))
