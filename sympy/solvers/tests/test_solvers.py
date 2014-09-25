@@ -1522,3 +1522,7 @@ def test_issue_2777():
     e2 += 6
     assert solve((e1, e2), (x, y)) == []
     assert solve((e1, e2), (x, y), check=False) == ans
+
+def test_issue_7322():
+    number = 5.62527e-35
+    assert solve(x - number, x)[0] == number
