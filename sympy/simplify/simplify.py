@@ -3801,7 +3801,9 @@ def _real_to_rational(expr, tolerance=None):
         else:
             r = nsimplify(float, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if not r.is_Rational:
+            if float and not r:
+                r = Rational(float)
+            elif not r.is_Rational:
                 if float < 0:
                     float = -float
                     d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
