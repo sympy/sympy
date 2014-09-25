@@ -438,18 +438,17 @@ def test_symbol_falsenonnegative():
     assert x.is_negative is None
     assert x.is_nonnegative is False
     assert x.is_zero is False
-    assert x.is_nonzero is True
+    assert x.is_nonzero is None
 
 
-@XFAIL
 def test_neg_symbol_falsenonnegative():
     x = -Symbol('x', nonnegative=False)
     assert x.is_positive is None
-    assert x.is_nonpositive is False  # this currently returns None
-    assert x.is_negative is False  # this currently returns None
+    assert x.is_nonpositive is None
+    assert x.is_negative is False
     assert x.is_nonnegative is None
-    assert x.is_zero is False  # this currently returns None
-    assert x.is_nonzero is True  # this currently returns None
+    assert x.is_zero is False
+    assert x.is_nonzero is None
 
 
 def test_symbol_falsenonnegative_real():
@@ -644,10 +643,10 @@ def test_Add_is_pos_neg():
     p = Symbol('p', positive=True, finite=False)
     x = Symbol('x')
     xb = Symbol('xb', finite=True)
-    assert (n + p).is_positive is None
+    assert (n + p).is_positive is False
     assert (n + x).is_positive is None
     assert (p + x).is_positive is None
-    assert (n + p).is_negative is None
+    assert (n + p).is_negative is False
     assert (n + x).is_negative is None
     assert (p + x).is_negative is None
 
@@ -799,7 +798,7 @@ def test_issue_4149():
     assert (3*I + S.Pi*I).is_imaginary
     # as Zero.is_imaginary is False, see issue 7649
     y = Symbol('y', real=True)
-    assert (3*I + S.Pi*I + y*I).is_imaginary is None
+    assert (3*I + S.Pi*I + y*I).is_imaginary is None # 0 if y = -3 - pi
     p = Symbol('p', positive=True)
     assert (3*I + S.Pi*I + p*I).is_imaginary
     n = Symbol('n', negative=True)
@@ -825,3 +824,22 @@ def test_issue_7899():
     assert (I*x).is_real is None
     assert ((x - I)*(x - 1)).is_zero is None
     assert ((x - I)*(x - 1)).is_real is None
+
+
+def test_finite_infinite_bounded():
+    d = lambda **x: Symbol('x', **x)
+    assert d(zero=True).is_finite
+    assert d(infinite=True).is_finite is False
+
+    assert d(zero=True).is_infinite is False
+    assert d(finite=True).is_infinite is False
+
+    assert d(infinite=True).is_zero is False
+    assert d(finite=True).is_zero is None
+
+    assert d(infinite=True).is_complex
+    assert d(finite=True).is_complex
+
+    # finite=False --x--> infinite=True, etc...
+    assert d(infinite=False).is_finite is None
+    assert d(finite=False).is_complex is None
