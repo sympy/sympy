@@ -1190,11 +1190,17 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
+        z = self._eval_is_zero()
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_antihermitian(self):
-        if self.is_nonzero:
+        z = self._eval_is_zero()
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_hermitian
 
 
