@@ -619,8 +619,8 @@ def test_powsimp():
         (1 + exp(1 + E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='base') == \
         (1 + E*exp(E))*exp(-E)
-    x, y = symbols('x,y', nonnegative=True)
-    n = Symbol('n', real=True)
+    x, y = symbols('x,y', nonnegative=True, finite=True)
+    n = Symbol('n', real=True, finite=True)
     assert powsimp(y**n * (y/x)**(-n)) == x**n
     assert powsimp(x**(x**(x*y)*y**(x*y))*y**(x**(x*y)*y**(x*y)), deep=True) \
         == (x*y)**(x*y)**(x*y)

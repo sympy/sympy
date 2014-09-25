@@ -1350,7 +1350,7 @@ def test_P8():
 
 
 def test_P9():
-    a, b, c = symbols('a b c', real=True)
+    a, b, c = symbols('a b c', real=True, finite=True, zero=False)
     M = Matrix([[a/(b*c), 1/c, 1/b],
                 [1/c, b/(a*c), 1/a],
                 [1/b, 1/a, c/(a*b)]])

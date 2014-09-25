@@ -508,17 +508,20 @@ def test_Add_is_even_odd():
 
 
 def test_Mul_is_negative_positive():
-    x = Symbol('x', real=True)
-    y = Symbol('y', real=False, complex=True)
-    z = Symbol('z', zero=True)
+    x = Dummy(real=True)
+    y = Dummy(real=False, complex=True)
+    z = Dummy(zero=True)
+    i, j = symbols('i j', cls=Dummy, imaginary=True)
+    nc = Dummy(commutative=False)
 
     e = 2*z
     assert e.is_Mul and e.is_positive is False and e.is_negative is False
+    assert (z*i).is_positive is False
 
-    neg = Symbol('neg', negative=True)
-    pos = Symbol('pos', positive=True)
-    nneg = Symbol('nneg', nonnegative=True)
-    npos = Symbol('npos', nonpositive=True)
+    neg = Dummy(negative=True)
+    pos = Dummy(positive=True)
+    nneg = Dummy(nonnegative=True)
+    npos = Dummy(nonpositive=True)
 
     assert neg.is_negative is True
     assert (-neg).is_negative is False
