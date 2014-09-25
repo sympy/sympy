@@ -4,7 +4,7 @@ from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
-                                      test_numerically as tn)
+                                      verify_numerically as tn)
 from sympy.abc import x, y, z, m, n
 
 i = Symbol('i', integer=True)

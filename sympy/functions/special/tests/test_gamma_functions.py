@@ -5,7 +5,7 @@ from sympy import (
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
-                                      test_numerically as tn)
+                                      verify_numerically as tn)
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
