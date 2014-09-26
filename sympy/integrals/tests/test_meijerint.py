@@ -5,7 +5,7 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
-from sympy.utilities.randtest import (test_numerically,
+from sympy.utilities.randtest import (verify_numerically,
          random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
@@ -31,7 +31,7 @@ def test_rewrite_single():
         r = _rewrite_single(expr, x)
         e = Add(*[res[0]*res[2] for res in r[0]]).replace(
             exp_polar, exp)  # XXX Hack?
-        assert test_numerically(e, expr, x)
+        assert verify_numerically(e, expr, x)
 
     u(exp(-x)*sin(x), x)
 
@@ -63,7 +63,7 @@ def test_meijerint_indefinite_numerically():
                 c: randcplx(), d: randcplx()}
         integral = meijerint_indefinite(g, x)
         assert integral is not None
-        assert test_numerically(g.subs(subs), integral.diff(x).subs(subs), x)
+        assert verify_numerically(g.subs(subs), integral.diff(x).subs(subs), x)
     t(1, x)
     t(2, x)
     t(1, 2*x)
@@ -83,7 +83,7 @@ def test_inflate():
         m2 = Mul(*_inflate_g(m1, n))
         # NOTE: (the random number)**9 must still be on the principal sheet.
         # Thus make b&d small to create random numbers of small imaginary part.
-        return test_numerically(m1.subs(subs), m2.subs(subs), x, b=0.1, d=-0.1)
+        return verify_numerically(m1.subs(subs), m2.subs(subs), x, b=0.1, d=-0.1)
     assert t([[a], [b]], [[c], [d]], x, 3)
     assert t([[a, y], [b]], [[c], [d]], x, 3)
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)

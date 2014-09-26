@@ -6,7 +6,7 @@ from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime)
 from sympy.utilities.randtest import (random_complex_number as randcplx,
-                                      test_numerically as tn,
+                                      verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
 

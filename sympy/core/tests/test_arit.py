@@ -9,7 +9,7 @@ from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.randtest import test_numerically
+from sympy.utilities.randtest import verify_numerically
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -203,7 +203,7 @@ def test_pow_E():
         r, i = b.as_real_imag()
         if i:
             break
-    assert test_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1)
+    assert verify_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1)
 
 
 def test_pow_issue_3516():
@@ -1468,7 +1468,7 @@ def test_Mod():
     r3 = sqrt(3)
     for i in [-r3, -r2, r2, r3]:
         for j in [-r3, -r2, r2, r3]:
-            assert test_numerically(i % j, i.n() % j.n())
+            assert verify_numerically(i % j, i.n() % j.n())
     for _x in range(4):
         for _y in range(9):
             reps = [(x, _x), (y, _y)]

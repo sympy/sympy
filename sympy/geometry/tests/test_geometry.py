@@ -13,7 +13,7 @@ from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.geometry.util import idiff, are_coplanar
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
-from sympy.utilities.randtest import test_numerically
+from sympy.utilities.randtest import verify_numerically
 from sympy.utilities.pytest import raises, slow
 
 x = Symbol('x', real=True)
@@ -1535,7 +1535,7 @@ def test_reflect():
     r = p.reflect(l)
     dp = l.perpendicular_segment(p).length
     dr = l.perpendicular_segment(r).length
-    assert test_numerically(dp, dr)
+    assert verify_numerically(dp, dr)
     t = Triangle((0, 0), (1, 0), (2, 3))
     assert t.area == -t.reflect(l).area
     e = Ellipse((1, 0), 1, 2)
