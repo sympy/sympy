@@ -155,26 +155,26 @@ def test_nan():
     nan = S.NaN
 
     assert nan.is_commutative is True
-    assert nan.is_integer is None
-    assert nan.is_rational is None
-    assert nan.is_algebraic is None
-    assert nan.is_transcendental is None
-    assert nan.is_real is None
-    assert nan.is_complex is None
-    assert nan.is_noninteger is None
-    assert nan.is_irrational is None
-    assert nan.is_imaginary is None
-    assert nan.is_positive is None
-    assert nan.is_negative is None
-    assert nan.is_nonpositive is None
-    assert nan.is_nonnegative is None
-    assert nan.is_even is None
-    assert nan.is_odd is None
-    assert nan.is_finite is None
-    assert nan.is_infinite is None
+    assert nan.is_integer is False
+    assert nan.is_rational is False
+    assert nan.is_algebraic is False
+    assert nan.is_transcendental is False
+    assert nan.is_real is False
+    assert nan.is_complex is False
+    assert nan.is_noninteger is False
+    assert nan.is_irrational is False
+    assert nan.is_imaginary is False
+    assert nan.is_positive is False
+    assert nan.is_negative is False
+    assert nan.is_nonpositive is False
+    assert nan.is_nonnegative is False
+    assert nan.is_even is False
+    assert nan.is_odd is False
+    assert nan.is_finite is False
+    assert nan.is_infinite is False
     assert nan.is_comparable is False
-    assert nan.is_prime is None
-    assert nan.is_composite is None
+    assert nan.is_prime is False
+    assert nan.is_composite is False
     assert nan.is_number is True
 
 
