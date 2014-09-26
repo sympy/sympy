@@ -154,16 +154,14 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
-        if (i > j) is True:
-            return cls(j, i)
-
-        diff = C.Abs(i - j)
-        if diff == 0:
+        diff = i - j
+        if diff.is_zero:
             return S.One
-        elif diff.is_number:
+        d = diff.evalf(2, literal=True)
+        if d is not None:
+            return S.One if d == 0 else S.Zero
+        if diff.is_nonzero:
             return S.Zero
-        elif i != 0 and diff.is_nonzero:
-            return cls(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and \
                 j.assumptions0.get("above_fermi"):
@@ -171,6 +169,7 @@ class KroneckerDelta(Function):
         if j.assumptions0.get("below_fermi") and \
                 i.assumptions0.get("above_fermi"):
             return S.Zero
+
         # to make KroneckerDelta canonical
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order

@@ -670,6 +670,7 @@ class log(Function):
             return (arg - 1).is_positive
 
     def _eval_is_zero(self):
+        # do not use equals or any other simplification; this should be fast
         return (self.args[0] - 1).is_zero
 
     def _eval_nseries(self, x, n, logx):

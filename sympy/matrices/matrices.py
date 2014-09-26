@@ -1092,6 +1092,8 @@ class MatrixBase(object):
 
     def evalf(self, prec=None, **options):
         """Apply evalf() to each element of self."""
+        if options.get('literal', False):
+            return
         return self.applyfunc(lambda i: i.evalf(prec, **options))
 
     n = evalf

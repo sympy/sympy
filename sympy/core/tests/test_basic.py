@@ -169,6 +169,7 @@ def test_call():
 
     assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
 
+
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
     from sympy.core.symbol import symbols
@@ -176,11 +177,18 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     x = symbols('x')
     f = Function('f')
 
+    assert (x + 1).evalf(literal=False) == x + 1
+    assert (x + 1).evalf(literal=True) is None
+    assert (f(x) + 1).evalf(literal=True, subs={f(x): 1}) == 2
+    assert S(1).evalf(literal=True) == 1
+
     # the following should not be changed without a lot of dicussion
     # `foo.is_number` should be equivalent to `not foo.free_symbols`
     # it should not attempt anything fancy; see is_zero, is_constant
     # and equals for more rigorous tests.
     assert f(1).is_number is True
+    assert f(1).is_comparable is False
+    assert f(1).evalf(literal=True) is None
     i = Integral(0, (x, x, x))
     # expressions that are symbolically 0 can be difficult to prove
     # so in case there is some easy way to know if something is 0
@@ -189,5 +197,11 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     # zero
     assert i.n() == 0
     assert i.is_zero
+    # is_number was already discussed above
     assert i.is_number is False
+    # is_comparable should agree with being able to compute the number with precision
+    assert i.is_comparable
+    # as for is_comparable, the same thing applies to strict evaluation
     assert i.evalf(2, strict=False) == 0
+    # but literal evaluation fails if there are free symbols
+    assert i.evalf(2, literal=True) is None

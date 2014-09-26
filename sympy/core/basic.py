@@ -568,29 +568,38 @@ class Basic(with_metaclass(ManagedProperties)):
         Examples
         ========
 
-        >>> from sympy import exp_polar, pi, I
+        >>> from sympy import exp_polar, pi, I, cos, sin
         >>> (I*exp_polar(I*pi/2)).is_comparable
         True
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
+        >>> (cos(1)**2 + sin(1)**2 - 1).is_comparable
+        False
         """
+        from .evalf import PrecisionExhausted
+        from .function import AppliedUndef, Function
+
         is_real = self.is_real
         if is_real is False:
             return False
-        is_number = self.is_number
+        is_number = (self.is_number or self.is_zero) and not self.has(AppliedUndef)
         if is_number is False:
             return False
-        if is_real and is_number:
+        # even though it is a real number, it might not be possible to
+        # evalf with precission because it is a symbolic 0 like
+        # cos(1)**2 + sin(1)**2 - 1
+        # So...put any heuristic here if you know for certain that
+        # evalf will be able to evalf the expression
+        if not self.has(Function):
             return True
-        n, i = [p.evalf(2) for p in self.as_real_imag()]
+        # now actually try the evalf
+        try:
+            n, i = [p.evalf(2, strict=True) for p in self.as_real_imag()]
+        except PrecisionExhausted:
+            return False
         if not i.is_Number or not n.is_Number:
             return False
-        if i:
-            # if _prec = 1 we can't decide and if not,
-            # the answer is False so return False
-            return False
-        else:
-            return n._prec != 1
+        return not i
 
     @property
     def func(self):

@@ -326,8 +326,10 @@ def test_transform():
     a = Integral(exp(-x**2), (x, -oo, oo))
     assert a.transform(x, 2*y) == Integral(2*exp(-4*y**2), (y, -oo, oo))
     # < 3 arg limit handled properly
-    assert Integral(x, x).transform(x, a*y).doit() == \
-        Integral(y*a**2, y).doit()
+    a = 2
+    assert Integral(x, x).transform(x, a*y) == \
+        Integral(y*a**2, y)
+
     _3 = S(3)
     assert Integral(x, (x, 0, -_3)).transform(x, 1/y).doit() == \
         Integral(-1/x**3, (x, -oo, -1/_3)).doit()

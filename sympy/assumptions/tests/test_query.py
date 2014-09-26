@@ -22,7 +22,7 @@ from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
 
 
-def test_int_1():
+def test_int_query():
     z = 1
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is True
@@ -455,7 +455,7 @@ def test_GoldenRatio():
     assert ask(Q.antihermitian(z)) is False
 
 
-def test_I():
+def test_I_1():
     z = I
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False

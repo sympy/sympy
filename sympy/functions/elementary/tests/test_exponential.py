@@ -258,6 +258,8 @@ def test_log_assumptions():
     assert log(2) > 0
     assert log(1, evaluate=False).is_zero
     assert log(1 + z).is_zero
+    one = 2 - pi - pi*(1/pi - 1)
+    assert log(one).is_zero is None  # keep it naive
     assert log(p).is_zero is None
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True
