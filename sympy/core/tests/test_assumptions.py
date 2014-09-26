@@ -842,3 +842,16 @@ def test_finite_infinite_bounded():
     # finite=False --x--> infinite=True, etc...
     assert d(infinite=False).is_finite is None
     assert d(finite=False).is_complex is None
+
+
+def test_finite_reals():
+    assert Dummy(algebraic=True).is_complex
+
+    assert Dummy(rational=True).is_real
+    assert Dummy(irrational=True).is_real
+    assert Dummy(transcendental=True).is_real # None in master
+
+    assert Dummy(real=True).is_finite is None  # real includes oo
+    assert Dummy(algebraic=True).is_finite  # None in master
+    assert Dummy(irrational=True).is_finite  # None in master
+    assert Dummy(transcendental=True).is_finite  # None in master
