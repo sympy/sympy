@@ -12,8 +12,9 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient, divisor_sigma, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
+    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
+    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
+    divisor_sigma)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
