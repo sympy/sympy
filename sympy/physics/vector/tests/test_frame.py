@@ -1,10 +1,17 @@
 from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
+from sympy.utilities.pytest import USE_PYTEST
 
-
-Vector.simp = True
-A = ReferenceFrame('A')
+if USE_PYTEST:
+    from py.test import fixture
+    @fixture(autouse=True)
+    def global_vars(request):
+        request.function.__globals__['A'] = ReferenceFrame('A')
+        request.function.__globals__['Vector.simp'] = True
+else:
+    Vector.simp = True
+    A = ReferenceFrame('A')
 
 
 def test_coordinate_vars():

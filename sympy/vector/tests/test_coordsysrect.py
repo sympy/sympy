@@ -1,17 +1,25 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import Symbol, sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, sqrt, zeros
+     symbols, simplify, sqrt, zeros, S
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+from sympy.utilities.pytest import USE_PYTEST
 
-
-A = CoordSysCartesian('A')
-a, b, c, q = symbols('a b c q')
-q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
+if USE_PYTEST:
+    from py.test import fixture
+    @fixture(autouse=True)
+    def global_vars(request):
+        request.function.__globals__['A'] = CoordSysCartesian('A')
+        for v in ['a', 'b', 'c', 'q', 'q1', 'q2', 'q3', 'q4']:
+            request.function.__globals__[v] = S(v)
+else:
+    A = CoordSysCartesian('A')
+    a, b, c, q = symbols('a b c q')
+    q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
 def test_coordsyscartesian_equivalence():
