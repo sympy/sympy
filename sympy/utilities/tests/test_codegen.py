@@ -3,9 +3,9 @@ from sympy.core.compatibility import StringIO
 from sympy import erf, Integral
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.codegen import (CCodeGen, InputArgument, CodeGenError,
-    FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, InOutArgument)
-from sympy.utilities.codegen import routine as Routine
+from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
+            InputArgument, CodeGenError, FCodeGen, CodeGenArgumentListError,
+            OutputArgument, InOutArgument)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import XFAIL
@@ -33,15 +33,15 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
 def test_Routine_argument_order():
     a, x, y, z = symbols('a x y z')
     expr = (x + y)*z
-    raises(CodeGenArgumentListError, lambda: Routine("test", expr,
+    raises(CodeGenArgumentListError, lambda: make_routine("test", expr,
            argument_sequence=[z, x]))
-    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a,
+    raises(CodeGenArgumentListError, lambda: make_routine("test", Eq(a,
            expr), argument_sequence=[z, x, y]))
-    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    r = make_routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
     assert [ type(arg) for arg in r.arguments ] == [
         InputArgument, InputArgument, OutputArgument, InputArgument  ]
-    r = Routine('test', Eq(z, expr), argument_sequence=[z, x, y])
+    r = make_routine('test', Eq(z, expr), argument_sequence=[z, x, y])
     assert [ type(arg) for arg in r.arguments ] == [
         InOutArgument, InputArgument, InputArgument ]
 
@@ -49,11 +49,11 @@ def test_Routine_argument_order():
     A, B = map(IndexedBase, ['A', 'B'])
     m = symbols('m', integer=True)
     i = Idx('i', m)
-    r = Routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
+    r = make_routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
     assert [ arg.name for arg in r.arguments ] == [B.label, A.label, m]
 
     expr = Integral(x*y*z, (x, 1, 2), (y, 1, 3))
-    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    r = make_routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
 
 
@@ -90,7 +90,7 @@ def test_empty_c_header():
 def test_simple_c_code():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -108,7 +108,7 @@ def test_simple_c_code():
 def test_c_code_reserved_words():
     x, y, z = symbols('if, typedef, while')
     expr = (x + y) * z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -124,7 +124,7 @@ def test_c_code_reserved_words():
 
 
 def test_numbersymbol_c_code():
-    routine = Routine("test", pi**Catalan)
+    routine = make_routine("test", pi**Catalan)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -143,7 +143,7 @@ def test_numbersymbol_c_code():
 def test_c_code_argument_order():
     x, y, z = symbols('x,y,z')
     expr = x + y
-    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    routine = make_routine("test", expr, argument_sequence=[z, x, y])
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -161,7 +161,7 @@ def test_c_code_argument_order():
 def test_simple_c_header():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
@@ -199,7 +199,7 @@ def test_multiple_results_c():
     x, y, z = symbols('x,y,z')
     expr1 = (x + y)*z
     expr2 = (x - y)*z
-    routine = Routine(
+    routine = make_routine(
         "test",
         [expr1, expr2]
     )
@@ -208,7 +208,7 @@ def test_multiple_results_c():
 
 
 def test_no_results_c():
-    raises(ValueError, lambda: Routine("test", []))
+    raises(ValueError, lambda: make_routine("test", []))
 
 
 def test_ansi_math1_codegen():
@@ -419,7 +419,7 @@ def test_dummy_loops_c():
         '   }\n'
         '}\n'
     ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
-    r = Routine('test_dummies', Eq(y[i], x[i]))
+    r = make_routine('test_dummies', Eq(y[i], x[i]))
     c = CCodeGen()
     code = get_string(c.dump_c, [r])
     assert code == expected
@@ -472,7 +472,7 @@ def test_partial_loops_c():
 def test_output_arg_c():
     from sympy import sin, cos, Equality
     x, y, z = symbols("x,y,z")
-    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = CCodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.c"
@@ -492,7 +492,7 @@ def test_output_arg_c():
 def test_output_arg_c_reserved_words():
     from sympy import sin, cos, Equality
     x, y, z = symbols("if, while, z")
-    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = CCodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.c"
@@ -595,7 +595,7 @@ def test_empty_f_header():
 def test_simple_f_code():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -611,7 +611,7 @@ def test_simple_f_code():
 
 
 def test_numbersymbol_f_code():
-    routine = Routine("test", pi**Catalan)
+    routine = make_routine("test", pi**Catalan)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -626,7 +626,7 @@ def test_numbersymbol_f_code():
 
 def test_erf_f_code():
     x = symbols('x')
-    routine = Routine("test", erf(x) - erf(-2 * x))
+    routine = make_routine("test", erf(x) - erf(-2 * x))
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -641,7 +641,7 @@ def test_erf_f_code():
 def test_f_code_argument_order():
     x, y, z = symbols('x,y,z')
     expr = x + y
-    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    routine = make_routine("test", expr, argument_sequence=[z, x, y])
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -659,7 +659,7 @@ def test_f_code_argument_order():
 def test_simple_f_header():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
@@ -706,7 +706,7 @@ def test_multiple_results_f():
     x, y, z = symbols('x,y,z')
     expr1 = (x + y)*z
     expr2 = (x - y)*z
-    routine = Routine(
+    routine = make_routine(
         "test",
         [expr1, expr2]
     )
@@ -715,7 +715,7 @@ def test_multiple_results_f():
 
 
 def test_no_results_f():
-    raises(ValueError, lambda: Routine("test", []))
+    raises(ValueError, lambda: make_routine("test", []))
 
 
 def test_intrinsic_math_codegen():
@@ -1075,7 +1075,7 @@ def test_dummy_loops_f95():
         'end do\n'
         'end subroutine\n'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
-    r = Routine('test_dummies', Eq(y[i], x[i]))
+    r = make_routine('test_dummies', Eq(y[i], x[i]))
     c = FCodeGen()
     code = get_string(c.dump_f95, [r])
     assert code == expected
@@ -1180,7 +1180,7 @@ def test_partial_loops_f():
 def test_output_arg_f():
     from sympy import sin, cos, Equality
     x, y, z = symbols("x,y,z")
-    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = FCodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.f90"
@@ -1203,7 +1203,7 @@ def test_inline_function():
     i = Idx('i', m)
     p = FCodeGen()
     func = implemented_function('func', Lambda(n, n*(n + 1)))
-    routine = Routine('test_inline', Eq(y[i], func(x[i])))
+    routine = make_routine('test_inline', Eq(y[i], func(x[i])))
     code = get_string(p.dump_f95, [routine])
     expected = (
         'subroutine test_inline(m, x, y)\n'
@@ -1228,7 +1228,7 @@ def test_f_code_call_signature_wrap():
     expr = 0
     for sym in x:
         expr += sym
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = """\
