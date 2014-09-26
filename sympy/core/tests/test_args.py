@@ -652,6 +652,11 @@ def test_sympy__stats__frv_types__HypergeometricDistribution():
     assert _test_args(HypergeometricDistribution(10, 5, 3))
 
 
+def test_sympy__stats__frv_types__RademacherDistribution():
+    from sympy.stats.frv_types import RademacherDistribution
+    assert _test_args(RademacherDistribution())
+
+
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
     assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
