@@ -814,3 +814,26 @@ def test_issue_7899():
     assert (I*x).is_real is None
     assert ((x - I)*(x - 1)).is_zero is None
     assert ((x - I)*(x - 1)).is_real is None
+
+
+@XFAIL
+def test_zero_finite_infinite_interactions():
+    assert d(zero=True).is_finite is True
+    assert d(zero=True).is_infinite is False
+    assert d(infinite=True).is_zero is False
+
+
+def test_finite_infinite():
+    d = lambda **x: Symbol('x', **x)
+    assert d(infinite=True).is_finite is False
+
+    assert d(finite=True).is_infinite is False
+
+    assert d(finite=True).is_zero is None
+
+    assert d(infinite=True).is_complex
+    assert d(finite=True).is_complex
+
+    # finite=False --x--> infinite=True, etc...
+    assert d(infinite=False).is_finite is None
+    assert d(finite=False).is_complex is None

@@ -104,9 +104,11 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !real',
 
-    '!finite        ==  infinite',
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
+    '!zero          ==  nonzero',
+
+    'finite         ==  complex & !infinite',
+    'infinite       ==  complex & !finite',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
