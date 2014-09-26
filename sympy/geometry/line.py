@@ -1011,7 +1011,7 @@ class Line(LinearEntity):
         elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_finite is False:
-                # when unbounded slope, don't change x
+                # when infinite slope, don't change x
                 dx = 0
                 dy = 1
             else:

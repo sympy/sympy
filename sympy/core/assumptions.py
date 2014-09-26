@@ -15,23 +15,23 @@ being integer, is also real, complex, etc.
 
 Here follows a list of possible assumption names:
 
-    - commutative   - object commutes with any other object with
-                        respect to multiplication operation.
-    - real          - object can have only values from the set
-                        of real numbers
-    - integer       - object can have only values from the set
-                        of integers
-    - algebraic     - object can have only values from the set
-                        of algebraic numbers
+    - commutative    - object commutes with any other object with
+                       respect to multiplication operation.
+    - real           - object can have only values from the set
+                       of real numbers
+    - integer        - object can have only values from the set
+                       of integers
+    - algebraic      - object can have only values from the set
+                       of algebraic numbers
     - transcendental - object can have only values from the set
-                        of transcendental numbers
-    - finite        - object absolute value is bounded
-    - positive      - object can have only positive values
-    - negative      - object can have only negative values
-    - nonpositive      - object can have only nonpositive values
-    - nonnegative      - object can have only nonnegative values
-    - irrational    - object value cannot be represented exactly by Rational
-    - infinite      - object value is arbitrarily large
+                       of transcendental numbers
+    - finite         - object absolute value is bounded
+    - positive       - object can have only positive values
+    - negative       - object can have only negative values
+    - nonpositive    - object can have only nonpositive values
+    - nonnegative    - object can have only nonnegative values
+    - irrational     - object value cannot be represented exactly by Rational
+    - infinite       - object value is arbitrarily large
 
 Implementation note: assumption values are stored in
 ._assumptions dictionary or are returned by getter methods (with
@@ -40,9 +40,9 @@ property decorators) or are attributes of objects/classes.
 Examples
 ========
 
-    >>> from sympy import Symbol
-    >>> Symbol('x', real = True)
-    x
+>>> from sympy import Symbol
+>>> Symbol('x', real = True)
+x
 
 """
 from __future__ import print_function, division
@@ -51,21 +51,24 @@ from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types, with_metaclass
 
+from random import shuffle
+
+
 # This are the rules under which our assumptions function
 #
 # References
 # ----------
 #
-# negative,     -- http://en.wikipedia.org/wiki/Negative_number
+# negative,      -- http://en.wikipedia.org/wiki/Negative_number
 # nonnegative
 #
-# even, odd     -- http://en.wikipedia.org/wiki/Parity_(mathematics)
-# imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
-# composite     -- http://en.wikipedia.org/wiki/Composite_number
-# finite        -- http://en.wikipedia.org/wiki/Finite
-#                  https://docs.python.org/3/library/math.html#math.isfinite
-#                  http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
-# irrational    -- http://en.wikipedia.org/wiki/Irrational_number
+# even, odd      -- http://en.wikipedia.org/wiki/Parity_(mathematics)
+# imaginary      -- http://en.wikipedia.org/wiki/Imaginary_number
+# composite      -- http://en.wikipedia.org/wiki/Composite_number
+# finite         -- http://en.wikipedia.org/wiki/Finite
+#                   https://docs.python.org/3/library/math.html#math.isfinite
+#                   http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
+# irrational     -- http://en.wikipedia.org/wiki/Irrational_number
 # transcendental -- http://en.wikipedia.org/wiki/Transcendental_number
 # ...
 
@@ -74,7 +77,7 @@ _assume_rules = FactRules([
     'integer        ->  rational',
     'rational       ->  real',
     'rational       ->  algebraic',
-    'algebraic      ->  complex',
+    'algebraic      ->  complex & finite',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -85,7 +88,7 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic',
+    'transcendental ==  complex & !algebraic & finite',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
@@ -97,15 +100,18 @@ _assume_rules = FactRules([
     'zero           ->  even',
 
     'prime          ->  integer & positive',
-    'composite      ==  integer & positive & !prime',
+    'composite      ==  integer & nonzero & !prime',
 
-    'irrational     ==  real & !rational',
+    'irrational     ==  real & !rational & finite',
 
     'imaginary      ->  !real',
 
-    '!finite        ==  infinite',
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
+
+    'nonzero        ==  real & !zero',
+
+    'finite         ==  complex & !infinite',
+    'infinite       ==  complex & !finite',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -191,7 +197,9 @@ def _ask(fact, obj):
             return a
 
     # Try assumption's prerequisites
-    for pk in _assume_rules.prereq[fact]:
+    prereq = list(_assume_rules.prereq[fact])
+    shuffle(prereq)
+    for pk in prereq:
         if pk in assumptions:
             continue
         if pk in handler_map:
