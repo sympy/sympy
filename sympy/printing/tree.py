@@ -44,7 +44,7 @@ def print_node(node):
     """
     s = "%s: %s\n" % (node.__class__.__name__, str(node))
     if len(node._assumptions) > 0:
-        for a in node._assumptions:
+        for a in sorted(node._assumptions):
             s += "%s: %s\n" % (a, node._assumptions[a])
     return s
 
@@ -73,26 +73,28 @@ def print_tree(node):
 
     >>> from sympy.printing import print_tree
     >>> from sympy.abc import x
-    >>> print_tree(x**2) # doctest: +SKIP
+    >>> print_tree(x**2)
     Pow: x**2
     +-Symbol: x
-    | comparable: False
+    | commutative: True
     +-Integer: 2
-      real: True
-      nonzero: True
-      comparable: True
+      algebraic: True
       commutative: True
-      infinite: False
-      noninteger: False
-      zero: False
       complex: True
-      bounded: True
-      rational: True
-      integer: True
+      hermitian: True
       imaginary: False
-      finite: True
+      integer: True
       irrational: False
-    <BLANKLINE>
+      negative: False
+      noninteger: False
+      nonnegative: True
+      nonpositive: False
+      nonzero: True
+      positive: True
+      rational: True
+      real: True
+      transcendental: False
+      zero: False
 
     See also: tree()
     """
