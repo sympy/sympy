@@ -12,7 +12,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
 from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
-from sympy.utilities.randtest import test_numerically as tn
+from sympy.utilities.randtest import verify_numerically as tn
 from sympy.utilities.pytest import XFAIL, skip, slow
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,

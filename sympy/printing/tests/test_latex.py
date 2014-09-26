@@ -7,21 +7,21 @@ from sympy import (
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
-    assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
+    assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    divisor_sigma)
+    Contains, divisor_sigma)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, Xor
 from sympy.core.trace import Tr
 
 x, y, z, t, a, b = symbols('x y z t a b')
@@ -98,6 +98,8 @@ def test_latex_basic():
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x, y)) == r"x \Rightarrow y"
     assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
+    assert latex(Implies(Or(x,y), z)) == r"\left(x \vee y\right) \Rightarrow z"
+    assert latex(Implies(z, Or(x,y))) == r"z \Rightarrow \left(x \vee y\right)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -501,6 +503,10 @@ def test_latex_union():
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
 
 
+def test_latex_Complement():
+    assert latex(Complement(S.Reals, S.Naturals)) == r"\mathbb{R} \setminus \mathbb{N}"
+
+
 def test_latex_productset():
     line = Interval(0, 1)
     bigline = Interval(0, 10)
@@ -519,6 +525,11 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+
+
+def test_latex_Contains():
+    x = Symbol('x')
+    assert latex(Contains(x, S.Naturals)) == r"x \in \mathbb{N}"
 
 
 def test_latex_sum():
@@ -884,7 +895,7 @@ def test_latex_MatrixSlice():
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert latex(where(X > 0)) == "Domain: x_{1} > 0"
+    assert latex(where(X > 0)) == r"Domain: 0 < x_{1} \wedge x_{1} < \infty"
 
     D = Die('d1', 6)
     assert latex(where(D > 4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
@@ -892,7 +903,8 @@ def test_latex_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert latex(
-        pspace(Tuple(A, B)).domain) == "Domain: a \geq 0 \wedge b \geq 0"
+        pspace(Tuple(A, B)).domain) == \
+        r"Domain: 0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
 
 
 def test_PrettyPoly():
@@ -1068,6 +1080,10 @@ def test_boolean_args_order():
 
     expr = Equivalent(*syms)
     assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+
+    expr = Xor(*syms)
+    assert latex(expr) == 'a \\veebar b \\veebar c \\veebar d \\veebar e \\veebar f'
+
 
 
 def test_imaginary():

@@ -1,6 +1,6 @@
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos
+     sin, cos, Function, Integral, Derivative, diff, integrate
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSysCartesian
@@ -16,7 +16,7 @@ def test_vector_sympy():
     Test whether the Vector framework confirms to the hashing
     and equality testing properties of SymPy.
     """
-    i1 = BaseVector('i1', 0, C)
+    i1 = BaseVector('i1', 0, C, ' ', ' ')
     assert i1 == i
     assert i1.__hash__() == i.__hash__()
     v1 = 3*j
@@ -187,3 +187,14 @@ def test_vector_cross():
     assert k ^ i == j
     assert k ^ j == -i
     assert k ^ k == Vector.zero
+
+
+def test_vector_diff_integrate():
+    f = Function('f')
+    v = f(a)*C.i + a**2*C.j - C.k
+    assert Derivative(v, a) == Derivative((f(a))*C.i +
+                                          a**2*C.j + (-1)*C.k, a)
+    assert (diff(v, a) == v.diff(a) == Derivative(v, a).doit() ==
+            (Derivative(f(a), a))*C.i + 2*a*C.j)
+    assert (Integral(v, a) == (Integral(f(a), a))*C.i +
+            (Integral(a**2, a))*C.j + (Integral(-1, a))*C.k)

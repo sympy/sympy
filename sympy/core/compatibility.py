@@ -9,7 +9,6 @@ import operator
 from collections import defaultdict
 from sympy.external import import_module
 
-
 """
 Python 2 and Python 3 compatible imports
 
@@ -647,7 +646,6 @@ def ordered(seq, keys=None, default=True, warn=False):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
         keys = list(keys)
-
         f = keys.pop(0)
         for a in seq:
             d[f(a)].append(a)

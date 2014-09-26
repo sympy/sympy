@@ -215,10 +215,6 @@ def test_issue_3468():
     assert y.is_positive is False
     assert z.is_positive is None
 
-    assert x.is_infinitesimal is None
-    assert y.is_infinitesimal is None
-    assert z.is_infinitesimal is None
-
 
 def test_leading_order():
     assert (x + 1 + 1/x**5).extract_leading_order(x) == ((1/x**5, O(1/x**5)),)

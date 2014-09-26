@@ -2,7 +2,7 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
@@ -521,7 +521,7 @@ def test_Sum_doit():
     assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
         f(1) + f(2) + f(3)
     assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
-        Sum(Piecewise((f(n), n >= 0), (0, True)), (n, 1, oo))
+        Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
     l = Symbol('l', integer=True, positive=True)
     assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
         Sum(f(l), (l, 1, oo))
@@ -583,12 +583,6 @@ def test_issue_4170():
     assert summation(1/factorial(k), (k, 0, oo)) == E
 
 
-def test_is_zero():
-    for func in [Sum, Product]:
-        assert func(0, (x, 1, 1)).is_zero is True
-        assert func(x, (x, 1, 1)).is_zero is None
-
-
 def test_is_commutative():
     from sympy.physics.secondquant import NO, F, Fd
     m = Symbol('m', commutative=False)
@@ -600,10 +594,18 @@ def test_is_commutative():
         assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
 
 
+def test_is_zero():
+    for func in [Sum, Product]:
+        assert func(0, (x, 1, 1)).is_zero is True
+        assert func(x, (x, 1, 1)).is_zero is None
+
+
 def test_is_number():
+    # is number should not rely on evaluation or assumptions,
+    # it should be equivalent to `not foo.free_symbols`
     assert Sum(1, (x, 1, 1)).is_number is True
     assert Sum(1, (x, 1, x)).is_number is False
-    assert Sum(0, (x, y, z)).is_number is True
+    assert Sum(0, (x, y, z)).is_number is False
     assert Sum(x, (y, 1, 2)).is_number is False
     assert Sum(x, (y, 1, 1)).is_number is False
     assert Sum(x, (x, 1, 2)).is_number is True
@@ -611,8 +613,8 @@ def test_is_number():
 
     assert Product(2, (x, 1, 1)).is_number is True
     assert Product(2, (x, 1, y)).is_number is False
-    assert Product(0, (x, y, z)).is_number is True
-    assert Product(1, (x, y, z)).is_number is True
+    assert Product(0, (x, y, z)).is_number is False
+    assert Product(1, (x, y, z)).is_number is False
     assert Product(x, (y, 1, x)).is_number is False
     assert Product(x, (y, 1, 2)).is_number is False
     assert Product(x, (y, 1, 1)).is_number is False
@@ -622,7 +624,7 @@ def test_is_number():
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
-        assert func(0, (x, 1, y)).free_symbols == set()
+        assert func(0, (x, 1, y)).free_symbols == set([y])
         assert func(2, (x, 1, y)).free_symbols == set([y])
         assert func(x, (x, 1, 2)).free_symbols == set()
         assert func(x, (x, 1, y)).free_symbols == set([y])
@@ -635,7 +637,9 @@ def test_free_symbols():
         assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
-    assert Product(1, (x, 1, y)).free_symbols == set()
+    # free_symbols answers whether the object *as written* has free symbols,
+    # not whether the evaluated expression has free symbols
+    assert Product(1, (x, 1, y)).free_symbols == set([y])
 
 
 def test_conjugate_transpose():

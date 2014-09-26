@@ -53,6 +53,41 @@ class Symbol(AtomicExpr, Boolean):
         """
         return True
 
+    @staticmethod
+    def _sanitize(assumptions, obj=None):
+        """Remove None, covert values to bool, check commutativity *in place*.
+        """
+
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            whose = '%s ' % obj.__name__ if obj else ''
+            raise ValueError(
+                '%scommutativity must be True or False.' % whose)
+        assumptions['commutative'] = is_commutative
+
+        # sanitize other assumptions so 1 -> True and 0 -> False
+        for key in list(assumptions.keys()):
+            from collections import defaultdict
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            keymap = defaultdict(lambda: None)
+            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
+            if keymap[key]:
+                SymPyDeprecationWarning(
+                    feature="%s assumption" % key,
+                    useinstead="%s" % keymap[key],
+                    issue=8071,
+                    deprecated_since_version="0.7.6").warn()
+                assumptions[keymap[key]] = assumptions[key]
+                assumptions.pop(key)
+                key = keymap[key]
+
+            v = assumptions[key]
+            if v is None:
+                assumptions.pop(key)
+                continue
+            assumptions[key] = bool(v)
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -63,21 +98,13 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
-
-        if assumptions.get('zero', False):
-            return S.Zero
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Symbol commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
-        for key in assumptions.keys():
-            assumptions[key] = bool(assumptions[key])
+        cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
+
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)
@@ -129,10 +156,6 @@ class Symbol(AtomicExpr, Boolean):
         return not self in wrt
 
     @property
-    def is_number(self):
-        return False
-
-    @property
     def free_symbols(self):
         return set([self])
 
@@ -163,11 +186,7 @@ class Dummy(Symbol):
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Dummy's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
@@ -254,18 +273,14 @@ class Wild(Symbol):
     {a_: 2, b_: x**3*y*z}
 
     """
+    is_Wild = True
 
     __slots__ = ['exclude', 'properties']
-    is_Wild = True
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Wild's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):

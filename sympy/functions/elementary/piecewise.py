@@ -474,8 +474,8 @@ class Piecewise(Function):
                 return when_multiple
         return b
 
-    _eval_is_bounded = lambda self: self._eval_template_is_attr(
-        'is_bounded', when_multiple=False)
+    _eval_is_finite = lambda self: self._eval_template_is_attr(
+        'is_finite', when_multiple=False)
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
     _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
     _eval_is_imaginary = lambda self: self._eval_template_is_attr(
@@ -514,7 +514,7 @@ class Piecewise(Function):
 
     def as_expr_set_pairs(self):
         exp_sets = []
-        U = S.UniversalSet
+        U = S.Reals
         for expr, cond in self.args:
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int

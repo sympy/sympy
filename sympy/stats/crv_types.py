@@ -2150,7 +2150,7 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def compute_cdf(self, **kwargs):
         from sympy import Lambda, Min
-        z = Dummy('z', real=True, bounded=True)
+        z = Dummy('z', real=True, finite=True)
         result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
         result = result(z).subs({Min(z, self.right): z,
                                  Min(z, self.left, self.right): self.left,

@@ -3,8 +3,8 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, C, Expr, Rational,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
+    S, C, Expr, Rational, AlgebraicNumber,
+    Symbol, Add, Mul, sympify, Dummy, Tuple, expand_mul, I, pi
 )
 
 from sympy.polys.polytools import (
@@ -51,6 +51,10 @@ from sympy.mpmath import pslq, mp
 
 from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange
+
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
 
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
@@ -548,7 +552,7 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_add(x, dom, *ex.args)
     elif ex.is_Mul:
         f = Factors(ex).factors
-        r = sift(f.items(), lambda itx: itx[0].is_rational and itx[1].is_rational)
+        r = sift(f.items(), lambda itx: itx[0].is_Rational and itx[1].is_Rational)
         if r[True] and dom == QQ:
             ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
             r1 = r[True]
@@ -1060,114 +1064,6 @@ def to_number_field(extension, theta=None, **args):
             raise IsomorphismFailed(
                 "%s is not in a subfield of %s" % (root, theta.root))
 
-@public
-class AlgebraicNumber(Expr):
-    """Class for representing algebraic numbers in SymPy. """
-
-    __slots__ = ['rep', 'root', 'alias', 'minpoly']
-
-    is_AlgebraicNumber = True
-
-    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
-        """Construct a new algebraic number. """
-        expr = sympify(expr)
-
-        if isinstance(expr, (tuple, Tuple)):
-            minpoly, root = expr
-
-            if not minpoly.is_Poly:
-                minpoly = Poly(minpoly)
-        elif expr.is_AlgebraicNumber:
-            minpoly, root = expr.minpoly, expr.root
-        else:
-            minpoly, root = minimal_polynomial(
-                expr, args.get('gen'), polys=True), expr
-
-        dom = minpoly.get_domain()
-
-        if coeffs != Tuple():
-            if not isinstance(coeffs, ANP):
-                rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
-                scoeffs = Tuple(*coeffs)
-            else:
-                rep = DMP.from_list(coeffs.to_list(), 0, dom)
-                scoeffs = Tuple(*coeffs.to_list())
-
-            if rep.degree() >= minpoly.degree():
-                rep = rep.rem(minpoly.rep)
-
-            sargs = (root, scoeffs)
-
-        else:
-            rep = DMP.from_list([1, 0], 0, dom)
-
-            if ask(Q.negative(root)):
-                rep = -rep
-
-            sargs = (root, coeffs)
-
-        if alias is not None:
-            if not isinstance(alias, Symbol):
-                alias = Symbol(alias)
-            sargs = sargs + (alias,)
-
-        obj = Expr.__new__(cls, *sargs)
-
-        obj.rep = rep
-        obj.root = root
-        obj.alias = alias
-        obj.minpoly = minpoly
-
-        return obj
-
-    def __hash__(self):
-        return super(AlgebraicNumber, self).__hash__()
-
-    def _eval_evalf(self, prec):
-        return self.as_expr()._evalf(prec)
-
-    @property
-    def is_aliased(self):
-        """Returns ``True`` if ``alias`` was set. """
-        return self.alias is not None
-
-    def as_poly(self, x=None):
-        """Create a Poly instance from ``self``. """
-        if x is not None:
-            return Poly.new(self.rep, x)
-        else:
-            if self.alias is not None:
-                return Poly.new(self.rep, self.alias)
-            else:
-                return PurePoly.new(self.rep, Dummy('x'))
-
-    def as_expr(self, x=None):
-        """Create a Basic expression from ``self``. """
-        return self.as_poly(x or self.root).as_expr().expand()
-
-    def coeffs(self):
-        """Returns all SymPy coefficients of an algebraic number. """
-        return [ self.rep.dom.to_sympy(c) for c in self.rep.all_coeffs() ]
-
-    def native_coeffs(self):
-        """Returns all native coefficients of an algebraic number. """
-        return self.rep.all_coeffs()
-
-    def to_algebraic_integer(self):
-        """Convert ``self`` to an algebraic integer. """
-        f = self.minpoly
-
-        if f.LC() == 1:
-            return self
-
-        coeff = f.LC()**(f.degree() - 1)
-        poly = f.compose(Poly(f.gen/f.LC()))
-
-        minpoly = poly*coeff
-        root = f.LC()*self.root
-
-        return AlgebraicNumber((minpoly, root), self.coeffs())
-
 
 class IntervalPrinter(LambdaPrinter):
     """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
@@ -1189,7 +1085,7 @@ def isolate(alg, eps=None, fast=False):
 
     if alg.is_Rational:
         return (alg, alg)
-    elif not ask(Q.real(alg)):
+    elif not alg.is_real:
         raise NotImplementedError(
             "complex algebraic numbers are not supported")
 

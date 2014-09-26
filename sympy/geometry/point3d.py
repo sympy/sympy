@@ -414,10 +414,7 @@ class Point3D(GeometryEntity):
         Point3D(0.5, 1.5, 2.5)
 
         """
-        if prec is None:
-            coords = [x.evalf(**options) for x in self.args]
-        else:
-            coords = [x.evalf(prec, **options) for x in self.args]
+        coords = [x.evalf(prec, **options) for x in self.args]
         return Point3D(*coords, evaluate=False)
 
     n = evalf

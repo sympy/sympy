@@ -175,7 +175,6 @@ See also isympy --help.
 
 import os
 import sys
-import warnings
 
 # hook in-tree SymPy into Python path, if possible
 
@@ -350,9 +349,6 @@ def main():
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive
     args['auto_int_to_Integer'] = options.auto_int_to_Integer or options.interactive
-
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
-    warnings.simplefilter("always", SymPyDeprecationWarning)
 
     from sympy.interactive import init_session
     init_session(ipython, **args)

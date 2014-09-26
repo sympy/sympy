@@ -75,6 +75,9 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
         """
         if not hasattr(other, 'shape') or self.shape != other.shape:
             return S.false
+        if isinstance(other, MatrixExpr) and not isinstance(
+                other, ImmutableMatrix):
+            return None
         diff = self - other
         return sympify(diff.is_zero)
 

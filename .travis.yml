@@ -43,25 +43,44 @@ matrix:
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/2"
+        - SPLIT="1/3"
+        - FASTCACHE="false"
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="2/2"
+        - SPLIT="2/3"
+        - FASTCACHE="false"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="3/3"
+        - FASTCACHE="false"
     - python: 3.4
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/2"
+        - SPLIT="1/3"
+        - FASTCACHE="false"
     - python: 3.4
       env:
         - TEST_SLOW="true"
-        - SPLIT="2/2"
+        - SPLIT="2/3"
+        - FASTCACHE="false"
+    - python: 3.4
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="3/3"
+        - FASTCACHE="false"
     - python: 2.7
       env:
         - TEST_THEANO="true"
     - python: 3.4
       env:
         - TEST_THEANO="true"
+    - python: 2.7
+      env:
+        - TEST_AUTOWRAP="true"
+      virtualenv:
+        system_site_packages: true
   allow_failures:
     - python: 3.3 # Dummy value
       env:
@@ -72,7 +91,12 @@ matrix:
         - SPLIT="4/4"
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
-      pip install "fastcache==0.4.0";
+      pip install fastcache;
+    fi
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y numpy;
+      sudo apt-get update;
+      sudo apt-get install gfortran gcc python-numpy cython;
     fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;

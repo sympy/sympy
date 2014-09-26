@@ -96,7 +96,7 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             try:
                 l = limit(a, z, z0, dir)
-                if l.has(S.Infinity) and l.is_bounded is None:
+                if l.has(S.Infinity) and l.is_finite is None:
                     break
                 else:
                     r.append(l)

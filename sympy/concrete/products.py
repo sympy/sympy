@@ -204,51 +204,9 @@ class Product(ExprWithIntLimits):
         return self._args[0]
     function = term
 
-    @property
-    def free_symbols(self):
-        """
-        This method returns the symbols that will affect the value of
-        the Product when evaluated. This is useful if one is trying to
-        determine whether a product depends on a certain symbol or not.
-
-        >>> from sympy import Product
-        >>> from sympy.abc import x, y
-        >>> Product(x, (x, y, 1)).free_symbols
-        set([y])
-        """
-        if self.function.is_zero or self.function == 1:
-            return set()
-        return self._free_symbols()
-
-    @property
-    def is_zero(self):
-        """A Product is zero only if its term is zero.
-        """
+    def _eval_is_zero(self):
+        # a Product is zero only if its term is zero.
         return self.term.is_zero
-
-    @property
-    def is_number(self):
-        """
-        Return True if the Product will result in a number, else False.
-
-        Examples
-        ========
-
-        >>> from sympy import log, Product
-        >>> from sympy.abc import x, y, z
-        >>> log(2).is_number
-        True
-        >>> Product(x, (x, 1, 2)).is_number
-        True
-        >>> Product(y, (x, 1, 2)).is_number
-        False
-        >>> Product(1, (x, y, z)).is_number
-        True
-        >>> Product(2, (x, y, z)).is_number
-        False
-        """
-
-        return self.function.is_zero or self.function == 1 or not self.free_symbols
 
     def doit(self, **hints):
         f = self.function

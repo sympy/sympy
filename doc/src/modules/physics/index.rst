@@ -25,3 +25,4 @@ Contents
     mechanics/index.rst
     quantum/index.rst
     optics/index.rst
+    unitsystems/index.rst

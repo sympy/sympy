@@ -21,15 +21,17 @@ Here follows a list of possible assumption names:
                         of real numbers
     - integer       - object can have only values from the set
                         of integers
-    - bounded       - object absolute value is bounded
+    - algebraic     - object can have only values from the set
+                        of algebraic numbers
+    - transcendental - object can have only values from the set
+                        of transcendental numbers
+    - finite        - object absolute value is bounded
     - positive      - object can have only positive values
     - negative      - object can have only negative values
     - nonpositive      - object can have only nonpositive values
     - nonnegative      - object can have only nonnegative values
     - irrational    - object value cannot be represented exactly by Rational
-    - unbounded     - object value is arbitrarily large
-    - infinitesimal - object value is infinitesimal
-
+    - infinite      - object value is arbitrarily large
 
 Implementation note: assumption values are stored in
 ._assumptions dictionary or are returned by getter methods (with
@@ -61,14 +63,18 @@ from sympy.core.compatibility import integer_types, with_metaclass
 # imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
 # composite     -- http://en.wikipedia.org/wiki/Composite_number
 # finite        -- http://en.wikipedia.org/wiki/Finite
-# infinitesimal -- http://en.wikipedia.org/wiki/Infinitesimal
+#                  https://docs.python.org/3/library/math.html#math.isfinite
+#                  http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
 # irrational    -- http://en.wikipedia.org/wiki/Irrational_number
+# transcendental -- http://en.wikipedia.org/wiki/Transcendental_number
 # ...
 
 _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
+    'rational       ->  algebraic',
+    'algebraic      ->  complex',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -79,6 +85,7 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
+    'transcendental ==  complex & !algebraic',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
@@ -87,7 +94,7 @@ _assume_rules = FactRules([
     'nonpositive    ==  real & !positive',
     'nonnegative    ==  real & !negative',
 
-    'zero           ->  infinitesimal & even',
+    'zero           ->  even',
 
     'prime          ->  integer & positive',
     'composite      ==  integer & positive & !prime',
@@ -96,15 +103,9 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !real',
 
-
-    '!bounded     ==  unbounded',
+    '!finite        ==  infinite',
     'noninteger     ==  real & !integer',
     '!zero        ==  nonzero',
-
-    # XXX do we need this ?
-    'finite     ->  bounded',       # XXX do we need this?
-    'finite     ->  !zero',         # XXX wrong?
-    'infinitesimal ->  !finite',    # XXX is this ok?
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()

@@ -26,6 +26,8 @@ from .core import C
 from .singleton import S
 from .containers import Tuple
 
+from sympy.utilities.iterables import is_sequence
+
 LG10 = math.log(10, 2)
 rnd = round_nearest
 
@@ -391,7 +393,7 @@ def add_terms(terms, prec, target_prec):
     special = []
     for t in terms:
         arg = C.Float._new(t[0], 1)
-        if arg is S.NaN or arg.is_unbounded:
+        if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
         from sympy.core.add import Add
@@ -501,7 +503,7 @@ def evalf_mul(v, prec, options):
         if arg[0] is None:
             continue
         arg = C.Float._new(arg[0], 1)
-        if arg is S.NaN or arg.is_unbounded:
+        if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
         from sympy.core.mul import Mul
@@ -971,13 +973,21 @@ def evalf_integral(expr, prec, options):
     maxprec = options.get('maxprec', INF)
     while 1:
         result = do_integral(expr, workprec, options)
-        # if a scaled_zero comes back accuracy will compute to -1
-        # which will cause workprec to increment by 1
         accuracy = complex_accuracy(result)
-        if accuracy >= prec or workprec >= maxprec:
-            return result
-        workprec += prec - max(-2**i, accuracy)
+        if accuracy >= prec:  # achieved desired precision
+            break
+        if workprec >= maxprec:  # can't increase accuracy any more
+            break
+        if accuracy == -1:
+            # maybe the answer really is zero and maybe we just haven't increased
+            # the precision enough. So increase by doubling to not take too long
+            # to get to maxprec.
+            workprec *= 2
+        else:
+            workprec += max(prec, 2**i)
+        workprec = min(workprec, maxprec)
         i += 1
+    return result
 
 
 def check_convergence(numer, denom, n):
@@ -1025,6 +1035,9 @@ def hypsum(expr, n, start, prec):
     polynomials.
     """
     from sympy import hypersimp, lambdify
+    # TODO: This should be removed for the release of 0.7.7, see issue #7853
+    from functools import partial
+    lambdify = partial(lambdify, default_array=True)
 
     if start:
         expr = expr.subs(n, n + start)
@@ -1262,7 +1275,8 @@ class EvalfMixin(object):
 
             subs=<dict>
                 Substitute numerical values for symbols, e.g.
-                subs={x:3, y:1+pi}.
+                subs={x:3, y:1+pi}. The substitutions must be given as a
+                dictionary.
 
             maxn=<integer>
                 Allow a maximum temporary working precision of maxn digits
@@ -1286,6 +1300,11 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         """
+        n = n if n is not None else 15
+
+        if subs and is_sequence(subs):
+            raise TypeError('subs must be given as a dictionary')
+
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, C.Number):
             from sympy.core.expr import _mag

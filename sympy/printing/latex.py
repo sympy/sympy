@@ -443,6 +443,36 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+
+        o1 = []
+        if expr == expr.zero:
+            return expr.zero._latex_form
+        if isinstance(expr, Vector):
+            items = expr.separate().items()
+        else:
+            items = [(0, expr)]
+
+        for system, vect in items:
+            inneritems = list(vect.components.items())
+            inneritems.sort(key = lambda x:x[0].__str__())
+            for k, v in inneritems:
+                if v == 1:
+                    o1.append(' + ' + k._latex_form)
+                elif v == -1:
+                    o1.append(' - ' + k._latex_form)
+                else:
+                    arg_str = '(' + LatexPrinter().doprint(v) + ')'
+                    o1.append(' + ' + arg_str + k._latex_form)
+
+        outstr = (''.join(o1))
+        if outstr[1] != '-':
+            outstr = outstr[3:]
+        else:
+            outstr = outstr[1:]
+        return outstr
+
     def _print_Indexed(self, expr):
         tex = self._print(expr.base)+'_{%s}' % ','.join(
             map(self._print, expr.indices))
@@ -744,8 +774,12 @@ class LatexPrinter(Printer):
         args = sorted(e.args, key=default_sort_key)
         return self._print_LogOp(args, r"\vee")
 
+    def _print_Xor(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"\veebar")
+
     def _print_Implies(self, e, altchar=None):
-        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
+        return self._print_LogOp(e.args, altchar or r"\Rightarrow")
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
@@ -1435,6 +1469,9 @@ class LatexPrinter(Printer):
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
 
+    def _print_Complement(self, u):
+        return r" \setminus ".join([self._print(i) for i in u.args])
+
     def _print_Intersection(self, u):
         return r" \cap ".join([self._print(i) for i in u.args])
 
@@ -1455,6 +1492,9 @@ class LatexPrinter(Printer):
             self._print(s.lamda.expr),
             ', '.join([self._print(var) for var in s.lamda.variables]),
             self._print(s.base_set))
+
+    def _print_Contains(self, e):
+        return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod

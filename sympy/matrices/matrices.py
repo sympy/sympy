@@ -53,7 +53,7 @@ class DeferredVector(Symbol, NotIterable):
     >>> X
     X
     >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr )
+    >>> func = lambdify( X, expr, default_array=True )
     >>> func( [1, 2, 3] )
     (3, 6)
     """
@@ -1092,10 +1092,7 @@ class MatrixBase(object):
 
     def evalf(self, prec=None, **options):
         """Apply evalf() to each element of self."""
-        if prec is None:
-            return self.applyfunc(lambda i: i.evalf(**options))
-        else:
-            return self.applyfunc(lambda i: i.evalf(prec, **options))
+        return self.applyfunc(lambda i: i.evalf(prec, **options))
 
     n = evalf
 

@@ -1,7 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
                    sin, sqrt, sstr, sympify, S, integrate, atan, product,
-                   Sum, Product)
+                   Sum, Product, Integral)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from sympy.mpmath import inf, ninf, nan
@@ -346,12 +346,13 @@ def test_bugs():
     assert abs(polar_lift(0)).n() == 0
 
 
-def test_subs_bugs():
+def test_subs():
     from sympy import besseli
     assert NS('besseli(-x, y) - besseli(x, y)', subs={x: 3.5, y: 20.0}) == \
         '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x: 0.1}) == \
         '1.00000000000000'
+    raises(TypeError, lambda: x.evalf(subs=(x, 1)))
 
 
 def test_issue_4956_5204():
@@ -433,3 +434,9 @@ def test_issue_4945():
     from sympy.abc import H
     from sympy import zoo
     assert (H/0).evalf(subs={H:1}) == zoo*H
+
+
+def test_evalf_integral():
+    # test that workprec has to increase in order to get a result other than 0
+    eps = Rational(1, 1000000)
+    assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10

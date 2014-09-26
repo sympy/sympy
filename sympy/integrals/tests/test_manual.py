@@ -1,6 +1,6 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Mul, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Eq, Ne, Q, assuming, symbols,
+                   diff, I, sqrt, erf, Piecewise, Eq, Ne, Q, symbols,
                    And, Heaviside, Max, S, acos, asinh, acosh)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
@@ -207,6 +207,8 @@ def test_manual_true():
 
 
 def test_issue_6746():
+    y = Symbol('y')
+    n = Symbol('n')
     assert manualintegrate(y**x, x) == \
         Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
     assert manualintegrate(y**(n*x), x) == \
@@ -218,19 +220,20 @@ def test_issue_6746():
     assert manualintegrate(exp(n*x), x) == \
         Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
 
-    with assuming(~Q.zero(log(y))):
-        assert manualintegrate(y**x, x) == y**x/log(y)
-    with assuming(Q.zero(log(y))):
-        assert manualintegrate(y**x, x) == x
-    with assuming(~Q.zero(n)):
-        assert manualintegrate(y**(n*x), x) == \
-            Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
-    with assuming(~Q.zero(n) & ~Q.zero(log(y))):
-        assert manualintegrate(y**(n*x), x) == \
-            y**(n*x)/(n*log(y))
-    with assuming(Q.negative(a)):
-        assert manualintegrate(1 / (a + b*x**2), x) == \
-            Integral(1/(a + b*x**2), x)
+    y = Symbol('y', positive=True)
+    assert manualintegrate((y + 1)**x, x) == (y + 1)**x/log(y + 1)
+    y = Symbol('y', zero=True)
+    assert manualintegrate((y + 1)**x, x) == x
+    y = Symbol('y')
+    n = Symbol('n', nonzero=True)
+    assert manualintegrate(y**(n*x), x) == \
+        Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
+    y = Symbol('y', positive=True)
+    assert manualintegrate((y + 1)**(n*x), x) == \
+        (y + 1)**(n*x)/(n*log(y + 1))
+    a = Symbol('a', negative=True)
+    assert manualintegrate(1 / (a + b*x**2), x) == \
+        Integral(1/(a + b*x**2), x)
 
 
 def test_issue_2850():

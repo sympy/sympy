@@ -993,11 +993,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         factors[-1] = 1
         return factors
 
-    if limit:
-        if limit < 2:
-            if n == 1:
-                return {}
-            return {n: 1}
+    if limit and limit < 2:
+        if n == 1:
+            return {}
+        return {n: 1}
     elif n < 10:
         # doing this we are assured of getting a limit > 2
         # when we have to compute it later

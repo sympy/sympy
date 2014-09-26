@@ -25,7 +25,7 @@ def pytest_report_header(config):
 
 
 def pytest_addoption(parser):
-    parser.addoption("--slow", dest="runslow", action="store_true",
+    parser.addoption("--slow", action="store_true",
         help="allow slow tests to run")
 
 
@@ -37,7 +37,10 @@ def pytest_configure(config):
 def pytest_runtest_setup(item):
     if not isinstance(item, pytest.Function):
         return
-    if not item.config.getvalue("runslow") and hasattr(item.obj, 'slow'):
+    if item.config.getoption("--slow"):
+        if not 'slow' in item.keywords:
+            pytest.skip()
+    elif 'slow' in item.keywords:
         pytest.skip("slow test: pass --slow to run")
 
 

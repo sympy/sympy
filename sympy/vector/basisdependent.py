@@ -1,7 +1,7 @@
 from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
-from sympy import factor as fctr, diff as df
+from sympy import factor as fctr, diff as df, Integral
 from sympy.core import S, Add, Mul, count_ops
 from sympy.core.expr import Expr
 
@@ -55,7 +55,7 @@ class BasisDependent(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def evalf(self, *args):
+    def evalf(self, prec=None, **options):
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -65,9 +65,11 @@ class BasisDependent(Expr):
         """
         vec = self.zero
         for k, v in self.components.items():
-            vec += v.evalf(*args) * k
+            vec += v.evalf(prec, **options) * k
         return vec
     evalf.__doc__ += Expr.evalf.__doc__
+
+    n = evalf
 
     def simplify(self, ratio=1.7, measure=count_ops):
         """
@@ -103,6 +105,11 @@ class BasisDependent(Expr):
 
     def _eval_derivative(self, wrt):
         return self.diff(wrt)
+
+    def _eval_Integral(self, *symbols, **assumptions):
+        integral_components = [Integral(v, *symbols, **assumptions) * k
+                               for k, v in self.components.items()]
+        return self._add_func(*integral_components)
 
     def _eval_diff(self, *args, **kwargs):
         return self.diff(*args, **kwargs)

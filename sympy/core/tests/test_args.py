@@ -459,6 +459,11 @@ def test_sympy__sets__sets__Union():
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
 
+def test_sympy__sets__sets__Complement():
+    from sympy.sets.sets import Complement
+    assert _test_args(Complement(Interval(0, 2), Interval(0, 1)))
+
+
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
@@ -493,6 +498,13 @@ def test_sympy__sets__fancysets__ImageSet():
 def test_sympy__sets__fancysets__Range():
     from sympy.sets.fancysets import Range
     assert _test_args(Range(1, 5, 1))
+
+
+def test_sympy__sets__contains__Contains():
+    from sympy.sets.fancysets import Range
+    from sympy.sets.contains import Contains
+    assert _test_args(Contains(x, Range(0, 10, 2)))
+
 
 # STATS
 
@@ -1150,6 +1162,10 @@ def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
 def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__InverseTrigonometricFunction():
+    pass
+
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
     assert _test_args(acos(2))
@@ -1163,6 +1179,16 @@ def test_sympy__functions__elementary__trigonometric__acot():
 def test_sympy__functions__elementary__trigonometric__asin():
     from sympy.functions.elementary.trigonometric import asin
     assert _test_args(asin(2))
+
+
+def test_sympy__functions__elementary__trigonometric__asec():
+    from sympy.functions.elementary.trigonometric import asec
+    assert _test_args(asec(2))
+
+
+def test_sympy__functions__elementary__trigonometric__acsc():
+    from sympy.functions.elementary.trigonometric import acsc
+    assert _test_args(acsc(2))
 
 
 def test_sympy__functions__elementary__trigonometric__atan():
@@ -2803,8 +2829,33 @@ def test_sympy__physics__units__Unit():
     assert _test_args(Unit("meter", "m"))
 
 
-def test_sympy__polys__numberfields__AlgebraicNumber():
-    from sympy.polys.numberfields import AlgebraicNumber
+def test_sympy__physics__unitsystems__dimensions__Dimension():
+    from sympy.physics.unitsystems.dimensions import Dimension
+    assert _test_args(Dimension(name="length", symbol="L", length=1))
+
+
+def test_sympy__physics__unitsystems__quantities__Quantity():
+    from sympy.physics.unitsystems.quantities import Quantity
+    from sympy.physics.unitsystems.systems import mks
+    assert _test_args(Quantity(10, mks["m"]))
+
+
+def test_sympy__physics__unitsystems__units__Constant():
+    from sympy.physics.unitsystems.units import Constant
+    from sympy.physics.unitsystems.dimensions import Dimension
+    length = Dimension(length=1)
+    assert _test_args(Constant(length, abbrev="u", factor=10))
+
+
+def test_sympy__physics__unitsystems__units__Unit():
+    from sympy.physics.unitsystems.units import Unit
+    from sympy.physics.unitsystems.dimensions import Dimension
+    length = Dimension(length=1)
+    assert _test_args(Unit(length, abbrev="u", factor=10))
+
+
+def test_sympy__core__numbers__AlgebraicNumber():
+    from sympy.core.numbers import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
 
 
@@ -3220,6 +3271,11 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
+def test_sympy__printing__codeprinter__Assignment():
+    from sympy.printing.codeprinter import Assignment
+    assert _test_args(Assignment(x, y))
+
+
 def test_sympy__vector__coordsysrect__CoordSysCartesian():
     from sympy.vector.coordsysrect import CoordSysCartesian
     assert _test_args(CoordSysCartesian('C'))
@@ -3258,7 +3314,7 @@ def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
-    assert _test_args(BaseVector('Ci', 0, C))
+    assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
@@ -3331,8 +3387,41 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del(C))
 
 
+def test_sympy__vector__orienters__Orienter():
+    from sympy.vector.orienters import Orienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__ThreeAngleOrienter():
+    from sympy.vector.orienters import ThreeAngleOrienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__AxisOrienter():
+    from sympy.vector.orienters import AxisOrienter
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(AxisOrienter(x, C.i))
+
+
+def test_sympy__vector__orienters__BodyOrienter():
+    from sympy.vector.orienters import BodyOrienter
+    assert _test_args(BodyOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__SpaceOrienter():
+    from sympy.vector.orienters import SpaceOrienter
+    assert _test_args(SpaceOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__QuaternionOrienter():
+    from sympy.vector.orienters import QuaternionOrienter
+    a, b, c, d = symbols('a b c d')
+    assert _test_args(QuaternionOrienter(a, b, c, d))
+
+
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
-    assert _test_args(BaseScalar('Cx', 0, C))
+    assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
