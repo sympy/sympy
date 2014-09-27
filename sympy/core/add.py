@@ -445,14 +445,8 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: _fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True)
-    _eval_is_complex = lambda self: _fuzzy_group(
-        (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_antihermitian = lambda self: _fuzzy_group(
         (a.is_antihermitian for a in self.args), quick_exit=True)
-    _eval_is_finite = lambda self: _fuzzy_group(
-        (a.is_finite for a in self.args), quick_exit=True)
     _eval_is_hermitian = lambda self: _fuzzy_group(
         (a.is_hermitian for a in self.args), quick_exit=True)
     _eval_is_integer = lambda self: _fuzzy_group(
@@ -464,11 +458,114 @@ class Add(Expr, AssocOp):
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
 
+    def _eval_is_complex(self):
+        c = True
+        pos = POS = neg = NEG = unk = False
+        im = com = 0
+        for a in self.args:
+            ic = a.is_complex
+            if not ic:
+                if ic is False:
+                    return False
+                c = ic
+                continue
+            f = a.is_finite
+            if f:
+                continue
+            r = a.is_real
+            if r:
+                p = a.is_positive
+                if p:
+                    if f is False:
+                        POS = True
+                    else:
+                        pos = True
+                    continue
+                n = a.is_negative
+                if n:
+                    if f is False:
+                        NEG = True
+                    else:
+                        neg = True
+                    continue
+                unk = True
+                continue
+            i = a.is_imaginary
+            if i:
+                im += 1
+                continue
+            if not r and not i:
+                com += 1
+                continue
+        if not c:
+            return c
+        if NEG and POS:
+            return False
+        if sum([im, com]) > 1:
+            return
+        if sum([NEG or neg, POS or pos, unk, com]) > 1:
+            return
+        return True
+
+    def _eval_is_finite(self):
+        c = self._eval_is_complex()
+        if c is False:
+            return c
+        if c is True:
+            return _fuzzy_group((a.is_finite for a in self.args))
+        # it is not known if nan will occur; to answer finite we want to
+        # convert nan cases to False
+        if all(a.is_complex for a in self.args):
+            return False
+
+    def _eval_is_real(self):
+        # complex is not False or we wouldn't be here
+        if any(not a.is_complex for a in self.args):
+            return
+        # all args are complex;
+        f = self._eval_is_finite()
+        r = _fuzzy_group(a.is_real for a in self.args)
+        if f:  # no worry about nan
+            return r
+        if r:
+            # if actual nan, complex is False and we wouldn't be here
+            # if potential nan return None; if complex is None then
+            # we had a potential nan else we didn't; either way the answer
+            # for real is the same as for complex since we know all args
+            # are real
+            return self._eval_is_complex()
+        # a term had an imaginary component (since we know all terms are complex);
+        # if any of these terms is infinite then real is False or
+        # if there is only one term that has real and imag parts then False,
+        # else None
+        neither = False
+        im = False
+        notir = 0
+        for a in self.args:
+            if a.is_finite:
+                continue
+            if a.is_imaginary:
+                return False
+            elif a.is_imaginary is False and a.is_real is False:
+                notir += 1
+            elif not a.is_real:
+                if neither:
+                    return
+                neither = True
+        if neither and notir:
+            return
+        elif notir == 1:
+            return False
+
     def _eval_is_imaginary(self):
         from sympy import im
-        ret = _fuzzy_group(a.is_imaginary for a in self.args)
-        if not ret:
-            return ret
+        i = _fuzzy_group(a.is_imaginary for a in self.args)
+        if not i:
+            inf = False
+            for a in self.args:
+                if a.is_real and a.is_infinite:
+                    return False
+            return i
         newarg = []
         for a in self.args:
             t = im(a)
@@ -478,8 +575,8 @@ class Add(Expr, AssocOp):
                 newarg.append(t)
             else:
                 return
-        i = self.func(*newarg)
-        if i.is_zero is False:
+        z = self.func(*newarg).is_zero
+        if z is False:
             return True
 
     def _eval_is_odd(self):
@@ -493,14 +590,15 @@ class Add(Expr, AssocOp):
         for t in self.args:
             a = t.is_irrational
             if a:
-                others = list(self.args)
-                others.remove(t)
-                if all(x.is_rational is True for x in others):
-                    return True
-                return None
+                break
             if a is None:
                 return
-        return False
+        else:
+            return False
+        others = list(self.args)
+        others.remove(t)
+        if all(x.is_rational is True for x in others):
+            return True
 
     def _eval_is_positive(self):
         if self.is_number:
