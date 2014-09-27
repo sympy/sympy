@@ -586,7 +586,7 @@ class Hyper_Function(Expr):
         """
         for a in self.ap:
             for b in self.bq:
-                if (a - b).is_integer and (a - b).is_negative == False:
+                if (a - b).is_integer and (a - b).is_negative is False:
                     return False
         for a in self.ap:
             if a == 0:
@@ -1952,7 +1952,7 @@ def hyperexpand_special(ap, bq, z):
             b, a = a, b
         if z == -1 and simplify(a - b + c) == 1:
             # Kummer
-            if b.is_integer and b < 0:
+            if b.is_integer and b.is_negative:
                 return 2*cos(pi*b/2)*gamma(-b)*gamma(b - a + 1) \
                     /gamma(-b/2)/gamma(b/2 - a + 1)
             else:
