@@ -188,6 +188,17 @@ def Coin(name, p=S.Half):
 class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
+    def __new__(cls, *args):
+        n_sym = sympify(args[BinomialDistribution._argnames.index('n')])
+        p_sym = sympify(args[BinomialDistribution._argnames.index('p')])
+
+        if not (n_sym.is_Integer and n_sym >= 0):
+            raise ValueError("'n' must be positive integer. n = %s." % str(n_sym))
+        elif not (0 <= p_sym <= 1):
+            raise ValueError("'p' must be larger than 0 and less than 1. p = %s." % str(p_sym))
+        else:
+            return super(BinomialDistribution, cls).__new__(cls, *args)
+
     @property
     @cacheit
     def dict(self):
