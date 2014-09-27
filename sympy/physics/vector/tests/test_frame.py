@@ -1,21 +1,12 @@
 from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
-from sympy.utilities.pytest import USE_PYTEST
 
-if USE_PYTEST:
-    from py.test import fixture
-    @fixture(autouse=True)
-    def global_vars(request):
-        request.function.__globals__['A'] = ReferenceFrame('A')
-        request.function.__globals__['Vector.simp'] = True
-else:
-    Vector.simp = True
-    A = ReferenceFrame('A')
-
+Vector.simp = True
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
+    A = ReferenceFrame('A')
     assert CoordinateSym('Ax', A, 0) == A[0]
     assert CoordinateSym('Ax', A, 1) == A[1]
     assert CoordinateSym('Ax', A, 2) == A[2]
