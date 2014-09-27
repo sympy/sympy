@@ -594,8 +594,6 @@ class Float(Number):
 
     # A Float represents many real numbers,
     # both rational and irrational.
-    is_rational = None
-    is_irrational = None
     is_number = True
 
     is_real = True
@@ -1044,7 +1042,6 @@ class Rational(Number):
     ========
     sympify, sympy.simplify.simplify.nsimplify
     """
-    is_real = True
     is_integer = False
     is_rational = True
     is_number = True
@@ -2244,15 +2241,8 @@ class Infinity(with_metaclass(Singleton, Number)):
     .. [1] http://en.wikipedia.org/wiki/Infinity
     """
 
-    is_commutative = True
     is_positive = True
-    is_finite = False
-    is_integer = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_odd = None
-    is_number = True
+    is_infinite = True
 
     __slots__ = []
 
@@ -2459,15 +2449,8 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     Infinity
     """
 
-    is_commutative = True
-    is_real = True
-    is_positive = False
-    is_finite = False
-    is_integer = None
-    is_rational = None
-    is_number = True
-    is_algebraic = None
-    is_transcendental = None
+    is_negative = True
+    is_infinite = True
 
     __slots__ = []
 
@@ -2711,18 +2694,7 @@ class NaN(with_metaclass(Singleton, Number)):
     .. [1] http://en.wikipedia.org/wiki/NaN
 
     """
-    is_commutative = True
-    is_real = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_integer = None
-    is_comparable = False
-    is_finite = None
-    is_zero = None
-    is_prime = None
-    is_positive = None
-    is_negative = None
+    is_complex = False
     is_number = True
 
     __slots__ = []
@@ -2833,8 +2805,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_commutative = True
-    is_finite = False
-    is_real = None
+    is_infinite = True
     is_number = True
 
     __slots__ = []
@@ -3000,7 +2971,6 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False  # XXX Forces is_negative/is_nonnegative
     is_irrational = True
     is_number = True
     is_algebraic = False
@@ -3079,7 +3049,6 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
     is_irrational = True
     is_number = True
     is_algebraic = False
@@ -3140,7 +3109,6 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
     is_irrational = True
     is_number = True
     is_algebraic = True
@@ -3205,8 +3173,6 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
-    is_irrational = None
     is_number = True
 
     __slots__ = []
@@ -3261,8 +3227,6 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
-    is_irrational = None
     is_number = True
 
     __slots__ = []

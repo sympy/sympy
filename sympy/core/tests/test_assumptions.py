@@ -155,26 +155,26 @@ def test_nan():
     nan = S.NaN
 
     assert nan.is_commutative is True
-    assert nan.is_integer is None
-    assert nan.is_rational is None
-    assert nan.is_algebraic is None
-    assert nan.is_transcendental is None
-    assert nan.is_real is None
-    assert nan.is_complex is None
-    assert nan.is_noninteger is None
-    assert nan.is_irrational is None
-    assert nan.is_imaginary is None
-    assert nan.is_positive is None
-    assert nan.is_negative is None
-    assert nan.is_nonpositive is None
-    assert nan.is_nonnegative is None
-    assert nan.is_even is None
-    assert nan.is_odd is None
-    assert nan.is_finite is None
-    assert nan.is_infinite is None
+    assert nan.is_integer is False
+    assert nan.is_rational is False
+    assert nan.is_algebraic is False
+    assert nan.is_transcendental is False
+    assert nan.is_real is False
+    assert nan.is_complex is False
+    assert nan.is_noninteger is False
+    assert nan.is_irrational is False
+    assert nan.is_imaginary is False
+    assert nan.is_positive is False
+    assert nan.is_negative is False
+    assert nan.is_nonpositive is False
+    assert nan.is_nonnegative is False
+    assert nan.is_even is False
+    assert nan.is_odd is False
+    assert nan.is_finite is False
+    assert nan.is_infinite is False
     assert nan.is_comparable is False
-    assert nan.is_prime is None
-    assert nan.is_composite is None
+    assert nan.is_prime is False
+    assert nan.is_composite is False
     assert nan.is_number is True
 
 
@@ -814,3 +814,26 @@ def test_issue_7899():
     assert (I*x).is_real is None
     assert ((x - I)*(x - 1)).is_zero is None
     assert ((x - I)*(x - 1)).is_real is None
+
+
+@XFAIL
+def test_zero_finite_infinite_interactions():
+    assert d(zero=True).is_finite is True
+    assert d(zero=True).is_infinite is False
+    assert d(infinite=True).is_zero is False
+
+
+def test_finite_infinite():
+    d = lambda **x: Symbol('x', **x)
+    assert d(infinite=True).is_finite is False
+
+    assert d(finite=True).is_infinite is False
+
+    assert d(finite=True).is_zero is None
+
+    assert d(infinite=True).is_complex
+    assert d(finite=True).is_complex
+
+    # finite=False --x--> infinite=True, etc...
+    assert d(infinite=False).is_finite is None
+    assert d(finite=False).is_complex is None
