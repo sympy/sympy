@@ -43,9 +43,13 @@ def print_node(node):
     This includes class name, string representation and assumptions.
     """
     s = "%s: %s\n" % (node.__class__.__name__, str(node))
-    if len(node._assumptions) > 0:
-        for a in sorted(node._assumptions):
-            s += "%s: %s\n" % (a, node._assumptions[a])
+    d = node._assumptions
+    if len(d) > 0:
+        for a in sorted(d):
+            v = d[a]
+            if v is None:
+                continue
+            s += "%s: %s\n" % (a, v)
     return s
 
 
