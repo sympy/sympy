@@ -171,6 +171,9 @@ def test_coins():
 
     raises(ValueError, lambda: P(C > D))  # Can't intelligently compare H to T
 
+def test_binomial_verify_parameters():
+    raises(ValueError, lambda: Binomial('b', .2, .5))
+    raises(ValueError, lambda: Binomial('b', 3, 1.5))
 
 def test_binomial_numeric():
     nvals = range(5)
