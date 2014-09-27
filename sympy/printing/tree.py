@@ -38,7 +38,7 @@ def pprint_nodes(subtrees):
 
 def print_node(node):
     """
-    Returns an information about the "node".
+    Returns information about the "node".
 
     This includes class name, string representation and assumptions.
     """
@@ -76,25 +76,37 @@ def print_tree(node):
     ========
 
     >>> from sympy.printing import print_tree
-    >>> from sympy.abc import x
-    >>> print_tree(x**2)
-    Pow: x**2
-    +-Symbol: x
+    >>> from sympy import Symbol
+    >>> x = Symbol('x', odd=True)
+    >>> y = Symbol('y', even=True)
+    >>> print_tree(y**x)
+    Pow: y**x
+    +-Symbol: y
+    | algebraic: True
     | commutative: True
-    +-Integer: 2
+    | complex: True
+    | even: True
+    | hermitian: True
+    | imaginary: False
+    | integer: True
+    | irrational: False
+    | noninteger: False
+    | odd: False
+    | rational: True
+    | real: True
+    | transcendental: False
+    +-Symbol: x
       algebraic: True
       commutative: True
       complex: True
+      even: False
       hermitian: True
       imaginary: False
       integer: True
       irrational: False
-      negative: False
       noninteger: False
-      nonnegative: True
-      nonpositive: False
       nonzero: True
-      positive: True
+      odd: True
       rational: True
       real: True
       transcendental: False
