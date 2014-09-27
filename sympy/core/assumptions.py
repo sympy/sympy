@@ -89,6 +89,9 @@ _assume_rules = FactRules([
 
     'real           ==  negative | zero | positive',
 
+    'finite_real    ==  irrational | rational',
+    'finite_real    ==  finite & real',
+
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
     'zero           ==  nonnegative & nonpositive',

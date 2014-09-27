@@ -39,6 +39,7 @@ def test_zero():
     assert z.is_prime is False
     assert z.is_composite is False
     assert z.is_number is True
+    assert z.is_finite_real
 
 
 def test_one():
@@ -65,6 +66,7 @@ def test_one():
     assert z.is_prime is False
     #assert z.is_composite is False
     assert z.is_number is True
+    assert z.is_finite_real
 
 
 @XFAIL
@@ -97,6 +99,7 @@ def test_negativeone():
     assert z.is_prime is False
     #assert z.is_composite is True
     assert z.is_number is True
+    assert z.is_finite_real
 
 
 def test_infinity():
@@ -124,6 +127,7 @@ def test_infinity():
     assert oo.is_prime is False
     assert oo.is_composite is False
     assert oo.is_number is True
+    assert oo.is_finite_real is False
 
 
 def test_neg_infinity():
@@ -151,6 +155,7 @@ def test_neg_infinity():
     assert mm.is_prime is False
     assert mm.is_composite is False
     assert mm.is_number is True
+    assert mm.is_finite_real is False
 
 
 def test_nan():
@@ -178,6 +183,7 @@ def test_nan():
     assert nan.is_prime is False
     assert nan.is_composite is False
     assert nan.is_number is True
+    assert nan.is_finite_real is False
 
 
 def test_pos_rational():
@@ -203,6 +209,7 @@ def test_pos_rational():
     assert r.is_comparable is True
     assert r.is_prime is False
     assert r.is_composite is False
+    assert r.is_finite_real
 
     r = Rational(1, 4)
     assert r.is_nonpositive is False
@@ -267,6 +274,7 @@ def test_pi():
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_composite is False
+    assert z.is_finite_real
 
 
 def test_E():
@@ -292,6 +300,7 @@ def test_E():
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_composite is False
+    assert z.is_finite_real
 
 
 def test_I():
@@ -317,6 +326,7 @@ def test_I():
     assert z.is_comparable is False
     assert z.is_prime is False
     assert z.is_composite is False
+    assert z.is_finite_real is False
 
 
 def test_symbol_real():
@@ -341,6 +351,7 @@ def test_symbol_nonzero():
     assert x.is_zero is False
     assert x.is_nonzero is True
     assert x.is_complex
+    assert x.is_finite_real is None
 
 
 def test_symbol_zero():
@@ -351,6 +362,7 @@ def test_symbol_zero():
     assert x.is_nonnegative is True
     assert x.is_zero is True
     assert x.is_nonzero is False
+    assert x.is_finite_real
 
 
 def test_symbol_positive():
@@ -361,6 +373,7 @@ def test_symbol_positive():
     assert x.is_nonnegative is True
     assert x.is_zero is False
     assert x.is_nonzero is True
+    assert x.is_finite_real is None
 
 
 def test_neg_symbol_positive():
@@ -491,7 +504,7 @@ def test_composite():
     assert S(4).is_composite is True
 
 
-def test_prime_symbol():
+def test_prime_composite_symbol():
     x = Symbol('x', prime=True)
     assert x.is_prime is True
     assert x.is_integer is True
@@ -499,6 +512,7 @@ def test_prime_symbol():
     assert x.is_negative is False
     assert x.is_nonpositive is False
     assert x.is_nonnegative is True
+    assert x.is_finite_real
 
     x = Symbol('x', prime=False)
     assert x.is_prime is False
@@ -507,6 +521,15 @@ def test_prime_symbol():
     assert x.is_negative is None
     assert x.is_nonpositive is None
     assert x.is_nonnegative is None
+
+    x = Symbol('x', composite=True)
+    assert x.is_prime is False
+    assert x.is_integer
+    assert x.is_positive is None
+    assert x.is_negative is None
+    assert x.is_nonpositive is None
+    assert x.is_nonnegative is None
+    assert x.is_finite_real
 
 
 def test_symbol_noncommutative():
@@ -855,3 +878,8 @@ def test_finite_reals():
     assert Dummy(algebraic=True).is_finite  # None in master
     assert Dummy(irrational=True).is_finite  # None in master
     assert Dummy(transcendental=True).is_finite  # None in master
+
+    assert Dummy(algebraic=True).is_finite_real is None
+    assert Dummy(rational=True).is_finite_real
+    assert Dummy(irrational=True).is_finite_real
+    assert Dummy(transcendental=True).is_finite_real
