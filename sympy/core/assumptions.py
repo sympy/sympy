@@ -103,7 +103,7 @@ _assume_rules = FactRules([
 
     'irrational     ==  real & !rational',
 
-    'imaginary      ->  !real',
+    'imaginary      ->  zero | !real',
 
     'infinite       ->  !finite',
     'complex        ->  finite',
