@@ -101,7 +101,7 @@ def test_math_lambda():
     f = lambdify(x, sin(x), "math")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    raises(ValueError, lambda: f(x))
+    raises(TypeError, lambda: f(x))
            # if this succeeds, it can't be a python math function
 
 
