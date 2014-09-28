@@ -1,5 +1,5 @@
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, SKIP, USE_PYTEST
+from sympy.utilities.pytest import raises, SKIP
 
 theano = import_module('theano')
 if theano:
@@ -7,15 +7,15 @@ if theano:
     ts = theano.scalar
     tt = theano.tensor
     xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
-    disabled = False
 else:
     #bin/test will not execute any tests now
     disabled = True
 
-if USE_PYTEST:
-    import py.test
-    pytestmark = py.test.mark.skipif(disabled is True,
-                                     reason=("theano not installed"))
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("theano isn't available.")
 
 import sympy
 from sympy import S
