@@ -68,13 +68,14 @@ def _unevaluated_Add(*args):
             num += a
         else:
             newargs.append(a)
-    if num:
-        if num.is_Number:
-            co += num
-        elif num.is_Add:
-            newargs.extend(num.args)
-        else:
-            newargs.append(num)
+    if num.is_Number:
+        # usually this will just be zero but just in
+        # case, we add it anyway without testing
+        co += num
+    elif num.is_Add:
+        newargs.extend(num.args)
+    else:
+        newargs.append(num)
     _addsort(newargs)
     if co:
         newargs.insert(0, co)
@@ -651,8 +652,6 @@ class Add(Expr, AssocOp):
             elif a.is_nonpositive:
                 nonpos = True
                 continue
-            elif a.is_zero:
-                continue
 
             if infinite is None:
                 return
@@ -695,8 +694,6 @@ class Add(Expr, AssocOp):
                 continue
             elif a.is_nonnegative:
                 nonneg = True
-                continue
-            elif a.is_zero:
                 continue
 
             if infinite is None:
