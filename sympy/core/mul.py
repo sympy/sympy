@@ -1032,8 +1032,6 @@ class Mul(Expr, AssocOp):
                 if one_neither:
                     return  # (1 + I)*(1 -/+ I) would be real/complex
                 one_neither = t
-            else:
-                return
 
         if one_neither:  # the `neither` might be a+I*b or I*b
             if real:
