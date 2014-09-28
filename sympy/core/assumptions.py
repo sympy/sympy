@@ -106,7 +106,7 @@ _assume_rules = FactRules([
 
     'infinite       ->  !finite',
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
+    'nonzero        ==  real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
