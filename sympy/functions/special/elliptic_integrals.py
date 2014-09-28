@@ -223,9 +223,12 @@ class elliptic_e(Function):
         raise ArgumentIndexError(self, argindex)
 
     def _eval_conjugate(self):
-        z, m = self.args
-        if (m.is_real and (m - 1).is_positive) is False:
-            return self.func(z.conjugate(), m.conjugate())
+        if len(self.args) == 2:
+            z, m = self.args
+            if (m.is_real and (m - 1).is_positive) is False:
+                return self.func(z.conjugate(), m.conjugate())
+        #else:
+        #    return self.func(self.args[0].conjugate())
 
     def _eval_nseries(self, x, n, logx):
         from sympy.simplify import hyperexpand
