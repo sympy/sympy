@@ -8,7 +8,7 @@ from .basic import Basic, C
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group, _fuzzy_group_inverse
+from .logic import fuzzy_not, _fuzzy_group, _fuzzy_group_inverse, fuzzy_and
 from .compatibility import cmp_to_key, reduce, xrange
 from .expr import Expr
 
@@ -541,8 +541,8 @@ class Mul(Expr, AssocOp):
         # zoo
         if coeff is S.ComplexInfinity:
             # zoo might be
-            #   infinite_real + bounded_im
-            #   bounded_real + infinite_im
+            #   infinite_real + finite_im
+            #   finite_real + infinite_im
             #   infinite_real + infinite_im
             # and non-zero real or imaginary will not change that status.
             c_part = [c for c in c_part if not (c.is_nonzero and
@@ -956,19 +956,10 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_finite = lambda self: _fuzzy_group(
-        a.is_finite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
-    _eval_is_complex = lambda self: _fuzzy_group(
-        (a.is_complex for a in self.args), quick_exit=True)
-
-    def _eval_is_rational(self):
-        r = _fuzzy_group((a.is_rational for a in self.args), quick_exit=True)
-        if r:
-            return r
-        elif r is False:
-            return self._eval_is_zero()
+    _eval_is_finite = lambda self: _fuzzy_group(
+        a.is_finite for a in self.args)
 
     def _eval_is_algebraic(self):
         r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
@@ -978,75 +969,185 @@ class Mul(Expr, AssocOp):
             return self._eval_is_zero()
 
     def _eval_is_zero(self):
-        zero = unbound = False
+        # return True if 0, False if NaN or != 0, None if uncertain
+        zero = False
+        finite = True
         for a in self.args:
             z = a.is_zero
             if z:
-                if unbound:
-                    return  # 0*oo is nan and nan.is_zero is None
+                if not finite:
+                    return finite
                 zero = True
             else:
-                if not a.is_finite:
+                b = a.is_finite
+                if b is False:
                     if zero:
-                        return  # 0*oo is nan and nan.is_zero is None
-                    unbound = True
+                        return False
+                    if finite is not b:
+                        finite = b
+                elif finite is not None and b is None:
+                    finite = b  # trap None
                 if zero is False and z is None:  # trap None
                     zero = None
-        return zero
+        return fuzzy_and((zero, finite))
 
-    def _eval_is_integer(self):
-        is_rational = self.is_rational
-
-        if is_rational:
-            n, d = self.as_numer_denom()
-            if d is S.One:
-                return True
-            elif d is S(2):
-                return n.is_even
-        elif is_rational is False:
-            return False
-
-    def _eval_is_polar(self):
-        has_polar = any(arg.is_polar for arg in self.args)
-        return has_polar and \
-            all(arg.is_polar or arg.is_positive for arg in self.args)
+    def _eval_is_complex(self):
+        # return True if complex, False if NaN or other non-complex, else None
+        c = _fuzzy_group(a.is_complex for a in self.args)
+        if not c:
+            return c
+        z = self._eval_is_zero()
+        if z:
+            return True  # zero/finite is T/T
+        if z is False:
+            # zero/finite is F/F or T/F or F/T
+            if any(a.is_zero for a in self.args):
+                if any(a.is_infinite for a in self.args):
+                    return False
+            return True
+        # zero/finite is :
+        #     T/? - something that is not zero is not known to be finite -> complex or nan
+        #     ?/T - something that is finite is not known to be zero -> complex
+        #     ?/? - none of the above -> complex or nan
+        if any(not a.is_zero for a in self.args if a.is_finite):
+            return True  # this was ?/T case
 
     def _eval_is_real(self):
+        c = self._eval_is_complex()
+        if not c:
+            return c
+        zero = self._eval_is_zero()
+        if zero:
+            return True
+
         real = True
-        zero = one_neither = False
+        one_neither = False
 
         for t in self.args:
-            if not t.is_complex:
-                return t.is_complex
-            elif t.is_imaginary:
+            if t.is_imaginary:
                 real = not real
             elif t.is_real:
-                if not zero:
-                    z = t.is_zero
-                    if not z and zero is False:
-                        zero = z
-                    elif z:
-                        if all(a.is_finite for a in self.args):
-                            return True
-                        return
-            elif t.is_real is False:
+                pass
+            elif not t.is_real:
                 if one_neither:
-                    return  # complex terms might cancel
-                one_neither = True
-            else:
-                return
+                    return  # (1 + I)*(1 -/+ I) would be real/complex
+                one_neither = t
 
-        if one_neither:  # self is a+I*b or I*b
+        if one_neither:  # the `neither` might be a+I*b or I*b
             if real:
-                return zero  # real*self is like self: neither is real
+                return zero
+            if one_neither.is_real is False and one_neither.is_imaginary is False:
+                return zero
+            return
         elif zero is False:
             return real  # can't be trumped by 0
         elif real:
             return real  # doesn't matter what zero is
 
-    def _eval_is_imaginary(self):
-        if self.is_nonzero:
-            return (S.ImaginaryUnit*self).is_real
+    def _eval_is_rational(self):
+        r = self._eval_is_real()
+        if not r:
+            return r
+        r = _fuzzy_group((a.is_rational for a in self.args), quick_exit=True)
+        if r is None:
+            return
+        if r is True:
+            n, d = self.as_numer_denom()
+            return fuzzy_not(d.is_zero)
+        else:
+            # answer depends on whether the rational part is zero
+            return Mul._from_args([a for a in self.args
+                if a.is_rational]).is_zero
+
+    def _eval_is_positive(self):
+        """Return True if self is positive, False if not, and None if it
+        cannot be determined.
+
+        This algorithm works by keeping track of the sign which changes
+        when a negative, nonpositive or imaginary is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonpositive. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> None is returned
+            pos * neg * nonnegative -> neg or zero -> False is returned
+
+        If a non-complex factor is observed, False is returned; if a
+        factor is not known to be complex then None is returned. The presence
+        of a non-real that is also not imaginary is also tracked: if, except
+        for such factors, the sign is real then False is returned otherwise
+        None is returned.
+        """
+        from sympy.functions.elementary.complexes import sign
+        if self._eval_is_zero():
+            return False
+
+        s = S.One
+        saw_NON = saw_i = zero = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                s = -s
+            elif t.is_zero:
+                zero = True
+            elif t.is_imaginary:
+                if t.is_Symbol:
+                    if saw_i:
+                        return
+                    saw_i = True
+                else:
+                    s *= sign(t)
+            elif t.is_nonpositive:
+                s = -s
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            else:
+                return
+
+        if s.is_imaginary:
+            if saw_i:
+                return
+            return False
+        if zero and saw_i:
+            return False
+        if s.is_positive and saw_NON is False:
+            return True
+        if s.is_negative:
+            return False
+
+    def _eval_is_integer(self):
+        rational = self._eval_is_rational()
+        if not rational:
+            return rational
+
+        n, d = self.as_numer_denom()
+        if d is S.One:
+            return True
+        elif d is S(2):
+            return n.is_even
+
+    def _eval_is_odd(self):
+        i = self._eval_is_integer()
+        if not i:
+            return i
+
+        odd, acc = True, 1
+        for t in self.args:
+            if not t.is_integer:  # XXX necessary?
+                return None
+            elif t.is_even:
+                odd = False
+            elif t.is_integer:
+                if odd is False:
+                    pass
+                elif acc != 1 and (acc + t).is_odd:
+                    odd = False
+                elif t.is_odd is None:
+                    odd = None
+            acc = t
+        return odd
 
     def _eval_is_hermitian(self):
         real = True
@@ -1078,93 +1179,28 @@ class Mul(Expr, AssocOp):
         elif zero is False or real:
             return real
 
-    def _eval_is_antihermitian(self):
-        if self.is_nonzero:
-            return (S.ImaginaryUnit*self).is_hermitian
-
-    def _eval_is_irrational(self):
-        for t in self.args:
-            a = t.is_irrational
-            if a:
-                others = list(self.args)
-                others.remove(t)
-                if all((x.is_rational and x.is_nonzero) is True for x in others):
-                    return True
-                return
-            if a is None:
-                return
-        return False
-
-    def _eval_is_positive(self):
-        """Return True if self is positive, False if not, and None if it
-        cannot be determined.
-
-        This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative or nonpositive is encountered.
-        Whether a nonpositive or nonnegative is seen is also tracked since
-        the presence of these makes it impossible to return True, but
-        possible to return False if the end result is nonpositive. e.g.
-
-            pos * neg * nonpositive -> pos or zero -> None is returned
-            pos * neg * nonnegative -> neg or zero -> False is returned
-        """
-
-        sign = 1
-        saw_NON = False
-        for t in self.args:
-            if t.is_positive:
-                continue
-            elif t.is_negative:
-                sign = -sign
-            elif t.is_zero:
-                return False
-            elif t.is_nonpositive:
-                sign = -sign
-                saw_NON = True
-            elif t.is_nonnegative:
-                saw_NON = True
-            else:
-                return
-        if sign == 1 and saw_NON is False:
-            return True
-        if sign < 0:
-            return False
-
     def _eval_is_negative(self):
         return (-self).is_positive
 
-    def _eval_is_odd(self):
-        is_integer = self.is_integer
+    def _eval_is_polar(self):
+        has_polar = any(arg.is_polar for arg in self.args)
+        return has_polar and \
+            all(arg.is_polar or arg.is_positive for arg in self.args)
 
-        if is_integer:
-            r, acc = True, 1
-            for t in self.args:
-                if not t.is_integer:
-                    return None
-                elif t.is_even:
-                    r = False
-                elif t.is_integer:
-                    if r is False:
-                        pass
-                    elif acc != 1 and (acc + t).is_odd:
-                        r = False
-                    elif t.is_odd is None:
-                        r = None
-                acc = t
-            return r
-
-        # !integer -> !odd
-        elif is_integer is False:
+    def _eval_is_imaginary(self):
+        z = self._eval_is_zero()
+        if z:
             return False
+        elif z is False:
+            return (S.ImaginaryUnit*self).is_real
 
-    def _eval_is_even(self):
-        is_integer = self.is_integer
-
-        if is_integer:
-            return fuzzy_not(self._eval_is_odd())
-
-        elif is_integer is False:
+    def _eval_is_antihermitian(self):
+        z = self._eval_is_zero()
+        if z:
             return False
+        elif z is False:
+            return (S.ImaginaryUnit*self).is_hermitian
+
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
