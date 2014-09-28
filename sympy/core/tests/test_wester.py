@@ -2563,6 +2563,7 @@ def test_W23b():
     assert r1 == r2
 
 
+@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_W24():
@@ -2571,6 +2572,7 @@ def test_W24():
     assert (r1 - (sqrt(2) + asinh(1))/3).simplify() == 0
 
 
+@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_W25():

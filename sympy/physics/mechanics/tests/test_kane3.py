@@ -1,8 +1,9 @@
 from sympy import evalf, symbols, zeros, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot)
-from sympy.utilities.pytest import slow
+from sympy.utilities.pytest import slow, SKIP
 
+@SKIP("Way too slow.")
 @slow
 def test_bicycle():
     # Code to get equations of motion for a bicycle modeled as in:

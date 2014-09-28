@@ -74,6 +74,7 @@ def test_issue_4525():
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)
 
 
+@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_issue_4540():
@@ -126,6 +127,7 @@ def test_issue_4895d():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), (x, 0, oo)).has(Integral)
 
 
+@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_issue_4941():

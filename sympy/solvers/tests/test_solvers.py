@@ -15,7 +15,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import RootOf
 
-from sympy.utilities.pytest import slow, XFAIL, raises, skip
+from sympy.utilities.pytest import slow, XFAIL, raises, skip, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
@@ -1218,6 +1218,7 @@ def test_real_roots():
     assert len(solve(x**5 + x**3 + 1)) == 1
 
 
+@SKIP("Too slow.")
 @slow
 def test_issue_6528():
     eqs = [
