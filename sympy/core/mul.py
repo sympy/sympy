@@ -1045,7 +1045,10 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
+        z = self._eval_is_zero()
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
@@ -1079,7 +1082,10 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        if self.is_nonzero:
+        z = self._eval_is_zero()
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_hermitian
 
     def _eval_is_irrational(self):
