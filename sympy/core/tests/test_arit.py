@@ -362,6 +362,23 @@ def test_Add_Mul_is_integer():
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
 
 
+@XFAIL
+def test_Add_is_imaginary_fail():
+    nn = Dummy(nonnegative=True)
+    assert (3*I + nn*I).is_imaginary is True
+
+
+def test_Add_is_imaginary():
+    i = Dummy(imaginary=True)
+    nn = Dummy(nonnegative=True)
+    z = Dummy(zero=True)
+    assert (3*I + i).is_imaginary is None
+    assert (3*I - nn*I).is_imaginary is None
+    # this tests the Add and Mul routine
+    assert (z*I - sqrt(2)*z*I).is_imaginary is False
+    assert (z*I - sqrt(2)*z*I).is_antihermitian is S.Zero.is_antihermitian
+
+
 def test_Add_Mul_is_complex_finite_real_infinite():
     # test flattening
     eq = Add(1, I, Add(1, -I, evaluate=False), evaluate=False)
@@ -374,9 +391,12 @@ def test_Add_Mul_is_complex_finite_real_infinite():
         assert getattr(eq, '_eval_is_%s' % atr)() is False
     for atr in 'imaginary antihermitian'.split():
         assert getattr(eq, '_eval_is_%s' % atr)()
+    # coverage: case when eq collapses to non-Add
+    eq = Add(1, sqrt(2), Add(-1, -sqrt(2), evaluate=False), evaluate=False)
+    assert eq.is_zero
+
     f = Function('f')
     assert Add(f(0), -f(0), evaluate=False).is_real is None  # could be oo - oo
-
     _r = x = Dummy('r', infinite=True, real=True)
     _p = Dummy('p', infinite=True, positive=True)
     _n = Dummy('n', infinite=True, negative=True)
@@ -1444,6 +1464,10 @@ def test_Mul_hermitian_antihermitian():
     assert e4.is_antihermitian is None
     assert e5.is_antihermitian is None
     assert e6.is_antihermitian is None
+
+    nc1 = Dummy(commutative=False)
+    nc2 = Dummy(commutative=False)
+    assert (nc1*nc2).is_hermitian is None
 
 
 def test_Add_is_comparable():
