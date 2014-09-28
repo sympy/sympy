@@ -89,8 +89,10 @@ def test_E():
 
     mi = Symbol('m', real=False)
     assert E(z, mi).conjugate() == E(z.conjugate(), mi.conjugate())
+    assert E(mi).conjugate() == E(mi.conjugate())
     mr = Symbol('m', real=True, negative=True)
     assert E(z, mr).conjugate() == E(z.conjugate(), mr)
+    assert E(mr).conjugate() == E(mr)
 
     assert E(z).rewrite(hyper) == (pi/2)*hyper((-S.Half, S.Half), (S.One,), z)
     assert tn(E(z), (pi/2)*hyper((-S.Half, S.Half), (S.One,), z))
