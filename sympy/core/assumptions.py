@@ -179,7 +179,7 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !real',
 
-    '!finite        ==  infinite',
+    'infinite       ->  !finite',
     'noninteger     ==  real & !integer',
     '!zero        ==  nonzero',
 ])
