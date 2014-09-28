@@ -1719,6 +1719,8 @@ def test_mul_zero_detection():
     def test(z, b, e):
         if z.is_zero and b.is_finite:
             assert e.is_real and e.is_zero
+        elif z.is_nonzero and b.is_infinite:
+            assert e.is_nonzero and e.is_real is None
         else:
             assert e.is_real == e.is_zero == None
 
