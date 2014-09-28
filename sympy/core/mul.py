@@ -956,12 +956,17 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_finite = lambda self: _fuzzy_group(
-        a.is_finite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
+
+    def _eval_is_finite(self):
+        if all(a.is_finite for a in self.args):
+            return True
+        elif any(a.is_infinite for a in self.args):
+            if all(a.is_infinite or a.is_nonzero for a in self.args):
+                return False
 
     def _eval_is_rational(self):
         r = _fuzzy_group((a.is_rational for a in self.args), quick_exit=True)
