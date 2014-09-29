@@ -968,14 +968,14 @@ class Mul(Expr, AssocOp):
         if r:
             return r
         elif r is False:
-            return self._eval_is_zero()
+            return self.is_zero
 
     def _eval_is_algebraic(self):
         r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
         if r:
             return r
         elif r is False:
-            return self._eval_is_zero()
+            return self.is_zero
 
     def _eval_is_zero(self):
         zero = unbound = False
@@ -1045,7 +1045,10 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
+        z = self.is_zero
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
@@ -1079,7 +1082,10 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        if self.is_nonzero:
+        z = self.is_zero
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_hermitian
 
     def _eval_is_irrational(self):
@@ -1161,7 +1167,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            return fuzzy_not(self._eval_is_odd())
+            return fuzzy_not(self.is_odd)
 
         elif is_integer is False:
             return False
