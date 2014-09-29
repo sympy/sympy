@@ -1,5 +1,6 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from sympy.core.compatibility import combinations_with_replacement
+from sympy.core.compatibility import (
+    combinations_with_replacement, iterable)
 
 
 def euler_equations(L, funcs=(), vars=()):
@@ -25,11 +26,11 @@ def euler_equations(L, funcs=(), vars=()):
         Lagrangian, it will be autodetected (and an error raised if this
         couldn't be done).
 
-    funcs : Function or list/tuple of Functions
+    funcs : Function or an iterable of Functions
         The functions that the Lagrangian depends on. The Euler equations
         are differential equations for each of these functions.
 
-    vars : Symbol or list/tuple of Symbols
+    vars : Symbol or an iterable of Symbols
         The Symbols that are the independent variables of the functions.
 
     Returns
@@ -61,8 +62,7 @@ def euler_equations(L, funcs=(), vars=()):
 
     """
 
-    if not isinstance(funcs, (tuple, list)):
-        funcs = (funcs,)
+    funcs = tuple(funcs) if iterable(funcs) else (funcs,)
 
     if not funcs:
         funcs = tuple(L.atoms(Function))
@@ -71,8 +71,7 @@ def euler_equations(L, funcs=(), vars=()):
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
-    if not isinstance(vars, (tuple, list)):
-        vars = (vars,)
+    vars = tuple(vars) if iterable(vars) else (vars,)
 
     if not vars:
         vars = funcs[0].args
