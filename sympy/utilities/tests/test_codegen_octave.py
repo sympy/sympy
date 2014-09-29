@@ -288,12 +288,10 @@ def test_m_multifcns_per_file_w_header():
     assert source == expected
 
 
-@XFAIL
 def test_m_filename_match_first_fcn():
-    # FIXME: implement this check, foo and bar should match.  In fact, we
-    # should default "bar" here to the first fcn name---"foo".
+    # FIXME: why make user provide both prefix and first fcn name?
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
-    raises(NameError, lambda: codegen(name_expr,
+    raises(ValueError, lambda: codegen(name_expr,
                         "Octave", "bar", header=False, empty=False))
 
 
@@ -463,7 +461,7 @@ def test_m_loops():
     i = Idx('i', m)
     j = Idx('j', n)
     result, = codegen(('mat_vec_mult', Eq(y[i], A[i, j]*x[j])), "Octave", \
-                      "mat_vect_mult", header=False, empty=False)
+                      "mat_vec_mult", header=False, empty=False)
     source = result[1]
     expected = (
         'function y = mat_vec_mult(A, m, n, x)\n'
