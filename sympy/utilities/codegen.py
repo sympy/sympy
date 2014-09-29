@@ -1080,11 +1080,19 @@ class FCodeGen(CodeGen):
 
 
 class OctaveCodeGen(CodeGen):
-    """
-    Generator for Octave code
+    """Generator for Octave code
 
     The .write() method inherited from CodeGen will output a code file
     <prefix>.m.
+
+    Octave .m files usually contain one function.  That function name should
+    match the filename (``prefex``).  If you pass multiple ``name_expr`` pairs,
+    the latter ones are presumed to be private functions accessed by the
+    primary function.
+
+    You should only pass inputs to ``argument_sequence``: outputs are ordered
+    according to their order in ``name_expr``.
+
     """
 
     code_extension = "m"

@@ -155,7 +155,7 @@ def test_results_named_ordered():
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
     result = codegen(name_expr, "Octave", "test", header=False, empty=False,
-                     argument_sequence=(x, z, y))  # FIXME , A, C, B))
+                     argument_sequence=(x, z, y))
     assert result[0][0] == "test.m"
     source = result[0][1]
     expected = (
@@ -289,13 +289,13 @@ def test_m_multifcns_per_file_w_header():
 
 
 def test_m_filename_match_first_fcn():
-    # FIXME: why make user provide both prefix and first fcn name?
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     raises(ValueError, lambda: codegen(name_expr,
                         "Octave", "bar", header=False, empty=False))
 
 
-# FIXME: use Assignment directly to test string name?  easy way for user to name cpdegen outputs without MatrixSymbol?
+# FIXME: use Assignment directly to test octave.py string name?  Gives a way
+# for user to name codegen outputs without MatrixSymbol?
 
 
 def test_m_matrix_named():
@@ -367,7 +367,7 @@ def test_m_results_matrix_named_ordered():
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
     result, = codegen(name_expr, "Octave", "test", header=False, empty=False,
-                     argument_sequence=(x, z, y)) #, B, A, C)) FIXME
+                     argument_sequence=(x, z, y))
     source = result[1]
     expected = (
         "function [C, A, B] = test(x, z, y)\n"
@@ -451,7 +451,7 @@ def test_m_matrixsymbol_slice_autoname():
 
 
 def test_m_loops():
-    #FIXME: or would people using this want it to vectorize automatically?
+    # or perhaps users would expect us to vectorize automatically here?
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m = symbols('n m', integer=True)
