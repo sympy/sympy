@@ -227,11 +227,11 @@ class Logic(object):
 
     @staticmethod
     def fromstring(text):
-        """Logic from string
+        """Logic from string with space around & and | but none after !.
 
            e.g.
 
-           !a & !b | c
+           !a & b | c
         """
         lexpr = None  # current logical expression
         schedop = None  # scheduled operation
@@ -246,7 +246,11 @@ class Logic(object):
                         '%s cannot be in the beginning of expression' % term)
                 schedop = term
                 continue
+            if '&' in term or '|' in term:
+                raise ValueError('& and | must have space around them')
             if term[0] == '!':
+                if len(term) == 1:
+                    raise ValueError('do not include space after "!"')
                 term = Not(term[1:])
 
             # already scheduled operation, e.g. '&'
@@ -376,6 +380,7 @@ class Not(Logic):
     @property
     def arg(self):
         return self.args[0]
+
 
 Logic.op_2class['&'] = And
 Logic.op_2class['|'] = Or

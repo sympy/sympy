@@ -144,6 +144,9 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a | & b'))
     raises(ValueError, lambda: S('a & & b'))
     raises(ValueError, lambda: S('a |'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('!'))
+    raises(ValueError, lambda: S('! a'))
 
 
 def test_logic_not():
@@ -154,3 +157,10 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+
+def test_formatting():
+    S = Logic.fromstring
+    raises(ValueError, lambda: S('a&b'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('! a'))
