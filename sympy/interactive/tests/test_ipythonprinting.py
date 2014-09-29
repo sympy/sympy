@@ -15,6 +15,13 @@ if not ipython:
     disabled = True
 
 
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("ipython isn't available.")
+
+
 def test_ipythonprinting():
     # Initialize and setup IPython session
     app = init_ipython_session()
