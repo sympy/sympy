@@ -227,12 +227,36 @@ class Logic(object):
 
     @staticmethod
     def fromstring(text):
-        """Logic from string
+        """Logic from string with space around & and | but none after !. Unnested
+        parentheses are supported.
 
            e.g.
 
-           !a & !b | c
+           !a & (!b | c)
         """
+        # handle parentheses -- no nesting
+        if '(' in text or ')' in text:
+            import re
+            if text.count('(') != text.count(')'):
+                raise ValueError('mismatched parentheses in %s' % text)
+            pat = re.compile('\(([^\)]+)\)')
+            parens = pat.findall(text)
+            if not parens:
+                raise ValueError('malformed expression with parentheses')
+            if any('(' in i for i in parens):
+                raise ValueError('nested parentheses are not supported')
+            parts = pat.split(text)
+            kern = '__'
+            while kern in text:
+                kern += "_"
+            kern = kern + '%s'
+            reps = {}
+            for i in range(1, len(parts), 2):
+                k = kern % i
+                reps[k] = Logic.fromstring(parts[i])
+                parts[i] = k
+            return Logic.fromstring(''.join(parts))._subs(reps)
+
         lexpr = None  # current logical expression
         schedop = None  # scheduled operation
         for term in text.split():
@@ -246,7 +270,11 @@ class Logic(object):
                         '%s cannot be in the beginning of expression' % term)
                 schedop = term
                 continue
+            if '&' in term or '|' in term:
+                raise ValueError('& and | must have space around them')
             if term[0] == '!':
+                if len(term) == 1:
+                    raise ValueError('do not include space after "!"')
                 term = Not(term[1:])
 
             # already scheduled operation, e.g. '&'
@@ -317,6 +345,12 @@ class AndOr_Base(Logic):
         args = tuple(res)
         return args
 
+    def _subs(cls, reps):
+        args = []
+        for a in cls.args:
+            args.append(reps.get(a, a))
+        return cls.func(*args)
+
 
 class And(AndOr_Base):
     op_x_notx = False
@@ -345,6 +379,10 @@ class And(AndOr_Base):
         else:
             return self
 
+    @property
+    def func(self):
+        return And
+
 
 class Or(AndOr_Base):
     op_x_notx = True
@@ -352,6 +390,10 @@ class Or(AndOr_Base):
     def _eval_propagate_not(self):
         # !(a|b|c ...) == !a & !b & !c ...
         return And( *[Not(a) for a in self.args] )
+
+    @property
+    def func(self):
+        return Or
 
 
 class Not(Logic):
@@ -376,6 +418,10 @@ class Not(Logic):
     @property
     def arg(self):
         return self.args[0]
+
+    @property
+    def func(self):
+        return Not
 
 Logic.op_2class['&'] = And
 Logic.op_2class['|'] = Or
