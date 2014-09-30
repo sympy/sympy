@@ -12,6 +12,7 @@ from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
+from sympy.matrices.matrices import MatrixBase
 
 
 ##########################################################################
@@ -1112,6 +1113,8 @@ def laplace_transform(f, t, s, **hints):
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
     """
+    if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
+        return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
     return LaplaceTransform(f, t, s).doit(**hints)
 
 
@@ -1259,6 +1262,8 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     laplace_transform
     hankel_transform, inverse_hankel_transform
     """
+    if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
+        return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
 
 

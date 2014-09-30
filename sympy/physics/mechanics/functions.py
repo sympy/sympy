@@ -39,26 +39,6 @@ mlatex = vlatex
 
 def mechanics_printing(**kwargs):
 
-    # mechanics_printing has slightly different functionality in 0.7.5 but
-    # shouldn't fundamentally need a deprecation warning so we do this
-    # little wrapper that gives the warning that things have changed.
-
-    # TODO : Remove this warning in the release after SymPy 0.7.5
-
-    # The message is only printed if this function is called with no args,
-    # as was the previous only way to call it.
-
-    def dict_is_empty(D):
-        for k in D:
-            return False
-        return True
-
-    if dict_is_empty(kwargs):
-        msg = ('See the doc string for slight changes to this function: '
-               'keyword args may be needed for the desired effect. '
-               'Otherwise use sympy.physics.vector.init_vprinting directly.')
-        SymPyDeprecationWarning(filldedent(msg)).warn()
-
     init_vprinting(**kwargs)
 
 mechanics_printing.__doc__ = init_vprinting.__doc__

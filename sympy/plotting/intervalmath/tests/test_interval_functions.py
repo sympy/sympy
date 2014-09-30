@@ -11,6 +11,13 @@ np = import_module('numpy')
 if not np:
     disabled = True
 
+
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("numpy isn't available.")
+
 #requires Numpy. Hence included in interval_functions
 
 

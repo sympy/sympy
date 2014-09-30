@@ -21,6 +21,20 @@ if not ipython:
     disabled = True
 
 
+def setup_module(module):
+    """py.test support"""
+    import pytest
+    if getattr(module, 'disabled', False):
+        pytest.skip("ipython isn't available.")
+    else:
+        # versions of pytest prior to 2.6.3 will raise
+        # AttributeError: DontReadFromInput instance has no attribute 'encoding'
+        # This can be fixed by running py.test with the `-s` option
+        if (pytest.__version__ < '2.6.3' and
+            pytest.config.getvalue('-s') != 'no'):
+            pytest.skip("run py.test with -s or upgrade to newer version")
+
+
 def test_automatic_symbols():
     # this implicitly requires readline
     if not readline:
