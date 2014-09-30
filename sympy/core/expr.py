@@ -3020,6 +3020,8 @@ class Expr(Basic, EvalfMixin):
         x = self
         if not x.is_number:
             raise TypeError('%s is not a number' % x)
+        if x in (S.NaN, S.Infinity):
+            raise TypeError('cannot convert %s to number' % x)
         if not x.is_real:
             i, r = x.as_real_imag()
             return i.round(p) + S.ImaginaryUnit*r.round(p)
