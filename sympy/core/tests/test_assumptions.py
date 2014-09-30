@@ -630,7 +630,10 @@ def test_hash_vs_eq():
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
     n = Symbol('n', negative=True, finite=False)
+    nn = Symbol('n', nonnegative=True, finite=False)
+    np = Symbol('n', nonpositive=True, finite=False)
     p = Symbol('p', positive=True, finite=False)
+    r = Dummy(real=True, finite=False)
     x = Symbol('x')
     xb = Symbol('xb', finite=True)
     assert (n + p).is_positive is None
@@ -646,6 +649,9 @@ def test_Add_is_pos_neg():
     assert (p + xb).is_negative is False
 
     assert (x - S.Infinity).is_negative is None  # issue 7798
+    assert (p + nn).is_positive  # issue 8046, 16.1
+    assert (n + np).is_negative  # issue 8046, 16.2
+    assert (p + r).is_positive is None  # issue 8046, 16.3
 
 
 def test_Add_is_algebraic():
