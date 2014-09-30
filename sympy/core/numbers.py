@@ -2246,13 +2246,9 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     is_commutative = True
     is_positive = True
-    is_finite = False
-    is_integer = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_odd = None
+    is_complex = False
     is_number = True
+    is_infinite = True
 
     __slots__ = []
 
@@ -2460,14 +2456,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     """
 
     is_commutative = True
-    is_real = True
-    is_positive = False
-    is_finite = False
-    is_integer = None
-    is_rational = None
+    is_positive = True
+    is_complex = False
     is_number = True
-    is_algebraic = None
-    is_transcendental = None
+    is_infinite = True
 
     __slots__ = []
 
@@ -2833,8 +2825,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_commutative = True
-    is_finite = False
-    is_real = None
+    is_infinite = True
     is_number = True
 
     __slots__ = []
