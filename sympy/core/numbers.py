@@ -2033,6 +2033,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_zero = True
     is_composite = False
     is_number = True
+    is_imaginary = True
 
     __slots__ = []
 
