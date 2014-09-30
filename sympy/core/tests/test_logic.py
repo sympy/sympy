@@ -144,6 +144,9 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a | & b'))
     raises(ValueError, lambda: S('a & & b'))
     raises(ValueError, lambda: S('a |'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('!'))
+    raises(ValueError, lambda: S('! a'))
 
 
 def test_logic_not():
@@ -154,3 +157,20 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+def test_func():
+    S = Logic.fromstring
+    assert S('a & b').func == And
+    assert S('a | b').func == Or
+    assert S('!a').func == Not
+
+def test_paren():
+    S = Logic.fromstring
+    assert S('!a & (!b | c)') == And(Not('a'), Or(Not('b'), 'c'))
+    assert S('(a | b) | (b | c)') == Or(Or('a', 'b'), Or('b', 'c'))
+    raises(ValueError, lambda: S('a)'))  # missing (
+    raises(ValueError, lambda: S('(a'))  # missing )
+    raises(ValueError, lambda: S('(a & (b | c))'))  # nested
+    raises(ValueError, lambda: S('a ) & ( b'))  # malformed
+    raises(ValueError, lambda: S('a () &  b'))  # malformed
+    raises(ValueError, lambda: S('( ) &  b'))  # empty
