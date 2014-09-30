@@ -109,7 +109,7 @@ _assume_rules = FactRules([
     'complex        ->  finite',
 
     'noninteger     ==  real & !integer',
-    'nonzero        ==  real & !zero',
+    'nonzero        ==  complex & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
