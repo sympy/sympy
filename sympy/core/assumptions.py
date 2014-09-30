@@ -89,8 +89,8 @@ _assume_rules = FactRules([
     'extended_real  ==  negative | zero | positive',
     'transcendental ==  complex & !algebraic',
 
-    'negative       ==  nonpositive & nonzero',
-    'positive       ==  nonnegative & nonzero',
+    'negative       ==  nonpositive & !zero',
+    'positive       ==  nonnegative & !zero',
     'zero           ==  nonnegative & nonpositive',
 
     'nonpositive    ==  extended_real & !positive',
