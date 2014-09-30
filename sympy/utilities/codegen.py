@@ -120,7 +120,60 @@ class Routine(object):
     """
 
     def __init__(self, name, arguments, results, local_vars):
-        """Initialize a Routine instance."""
+        """Initialize a Routine instance.
+
+        Parameters
+        ==========
+
+        name : string
+            Name of the routine.
+
+        arguments : list of Arguments
+            These are things that appear in arguments of a routine, often
+            appearing on the right-hand side of a function call.  These are
+            commonly InputArguments but in some languages, they can also be
+            OutputArguments or InOutArguments (e.g., pass-by-reference in C
+            code).
+
+        results : list of Results
+            These are the return values of the routine, often appearing on
+            the left-hand side of a function call.  The difference between
+            Results and OutputArguments and when you should use each is
+            language-specific.
+
+        local_vars : list of Symbols
+            These are used internally by the routine.
+            FIXME: its not obvious we can even know these before the code
+            generator starts.
+
+        """
+
+        # extract all input symbols and all symbols appearing in an expression
+        input_symbols = set([])
+        symbols = set([])
+        for arg in arguments:
+            if isinstance(arg, OutputArgument):
+                symbols.update(arg.expr.free_symbols)
+            elif isinstance(arg, InputArgument):
+                input_symbols.add(arg.name)
+            elif isinstance(arg, InOutArgument):
+                input_symbols.add(arg.name)
+                symbols.update(arg.expr.free_symbols)
+            else:
+                raise ValueError("Unknown Routine argument: %s" % arg)
+
+        for r in results:
+            if not isinstance(r, Result):
+                raise ValueError("Unknown Routine result: %s" % r)
+            symbols.update(r.expr.free_symbols)
+
+        # Check that all symbols in the expressions are covered by
+        # InputArguments/InOutArguments---subset because user could
+        # specify additional (unused) InputArguments or local_vars.
+        notcovered = symbols.difference(input_symbols.union(local_vars))
+        if notcovered != set([]):
+            raise ValueError("Symbols needed for output are not in input " +
+                             ", ".join([str(x) for x in notcovered]))
 
         self.name = name
         self.arguments = arguments
