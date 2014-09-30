@@ -2704,17 +2704,8 @@ class NaN(with_metaclass(Singleton, Number)):
 
     """
     is_commutative = True
-    is_real = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_integer = None
     is_comparable = False
-    is_finite = None
-    is_zero = None
-    is_prime = None
-    is_positive = None
-    is_negative = None
+    is_finite = False
     is_number = True
 
     __slots__ = []
