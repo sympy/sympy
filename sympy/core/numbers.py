@@ -304,9 +304,6 @@ class Number(AtomicExpr):
             return -new
         return self  # there is no other possibility
 
-    def _eval_is_finite(self):
-        return True
-
     @classmethod
     def class_key(cls):
         return 1, 0, 'Number'
