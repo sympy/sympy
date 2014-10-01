@@ -87,7 +87,8 @@ from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.matrices import MatrixSymbol, ImmutableMatrix, MatrixBase
+from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
+                            MatrixExpr)
 
 
 __all__ = [
@@ -143,8 +144,6 @@ class Routine(object):
 
         local_vars : list of Symbols
             These are used internally by the routine.
-            FIXME: its not obvious we can even know these before the code
-            generator starts.
 
         """
 
@@ -339,12 +338,15 @@ class OutputArgument(Argument, ResultBase):
         Parameters
         ==========
 
-        name : Symbol or MatrixSymbol
+        name : Symbol, MatrixSymbol
+            The name of this variable.  When used for code generation, this
+            might appear, for example, in the prototype of function in the
+            argument list.
 
-        result_var : Symbol
-            Used for output.
-            FIXME: check if this can be a string.
-            FIXME: document the difference/reason for having name and result_var.
+        result_var : Symbol, Indexed
+            Something that can be used to assign a value to this variable.
+            Typically the same as `name` but for Indexed this should be e.g.,
+            "y[i]" whereas `name` should be the Symbol "y".
 
         expr : object
             The expression that should be output, typically a SymPy
@@ -379,31 +381,68 @@ class InOutArgument(Argument, ResultBase):
     __init__.__doc__ = OutputArgument.__init__.__doc__
 
 
-class Result(ResultBase):
-    """An expression for a scalar return value.
+class Result(Variable, ResultBase):
+    """An expression for a return value.
 
     The name result is used to avoid conflicts with the reserved word
     "return" in the python language.  It is also shorter than ReturnValue.
 
+    These may or may not need a name in the destination (e.g., "return(x*y)"
+    might return a value without ever naming it).
+
     """
 
-    def __init__(self, expr, datatype=None, precision=None):
-        """Initialize a (scalar) return value.
+    def __init__(self, expr, name=None, result_var=None, datatype=None,
+                 dimensions=None, precision=None):
+        """Initialize a return value.
 
-        The second argument is optional. When not given, the data type will
-        be guessed based on the assumptions on the expression argument.
+        Parameters
+        ==========
+
+        expr : SymPy expression
+
+        name : Symbol, MatrixSymbol, optional
+            The name of this return variable.  When used for code generation,
+            this might appear, for example, in the prototype of function in a
+            list of return values.  A dummy name is generated if omitted.
+
+        result_var : Symbol, Indexed, optional
+            Something that can be used to assign a value to this variable.
+            Typically the same as `name` but for Indexed this should be e.g.,
+            "y[i]" whereas `name` should be the Symbol "y".  Defaults to
+            `name` if omitted.
+
+        datatype : optional
+            When not given, the data type will be guessed based on the
+            assumptions on the symbol argument.
+
+        dimension : sequence containing tupes, optional
+            If present, this variable is interpreted as an array,
+            where this sequence of tuples specifies (lower, upper)
+            bounds for each index of the array.
+
+        precision : int, optional
+            Controls the precision of floating point constants.
 
         """
-        if not isinstance(expr, Expr):
+        if not isinstance(expr, (Expr, MatrixBase, MatrixExpr)):
             raise TypeError("The first argument must be a sympy expression.")
 
-        temp_var = Variable(Symbol('result_%s' % abs(hash(expr))),
-                datatype=datatype, dimensions=None, precision=precision)
-        ResultBase.__init__(self, expr, temp_var.name)
-        self._temp_variable = temp_var
+        if name is None:
+            name = 'result_%d' % abs(hash(expr))
 
-    def get_datatype(self, language):
-        return self._temp_variable.get_datatype(language)
+        if isinstance(name, string_types):
+            if isinstance(expr, (MatrixBase, MatrixExpr)):
+                name = MatrixSymbol(name, *expr.shape)
+            else:
+                name = Symbol(name)
+
+        if result_var is None:
+            result_var = name
+
+        Variable.__init__(self, name, datatype=datatype,
+                          dimensions=dimensions, precision=precision)
+        ResultBase.__init__(self, expr, result_var)
 
 
 #
