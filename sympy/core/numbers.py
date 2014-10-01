@@ -594,11 +594,8 @@ class Float(Number):
 
     # A Float represents many real numbers,
     # both rational and irrational.
-    is_rational = None
-    is_irrational = None
-    is_number = True
-
     is_real = True
+    is_number = True
 
     is_Float = True
 
@@ -2028,10 +2025,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
     p = 0
     q = 1
-    is_positive = False
-    is_negative = False
     is_zero = True
-    is_composite = False
     is_number = True
     is_imaginary = True
 
@@ -2245,11 +2239,10 @@ class Infinity(with_metaclass(Singleton, Number)):
     .. [1] http://en.wikipedia.org/wiki/Infinity
     """
 
-    is_commutative = True
     is_positive = True
-    is_complex = False
-    is_number = True
     is_infinite = True
+
+    is_number = True
 
     __slots__ = []
 
@@ -2456,11 +2449,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     Infinity
     """
 
-    is_commutative = True
-    is_positive = True
-    is_complex = False
-    is_number = True
+    is_negative = True
     is_infinite = True
+
+    is_number = True
 
     __slots__ = []
 
@@ -2705,8 +2697,8 @@ class NaN(with_metaclass(Singleton, Number)):
 
     """
     is_commutative = True
+    
     is_comparable = False
-    is_finite = False
     is_number = True
 
     __slots__ = []
@@ -3188,8 +3180,6 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
-    is_irrational = None
     is_number = True
 
     __slots__ = []
@@ -3244,8 +3234,6 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
-    is_irrational = None
     is_number = True
 
     __slots__ = []
@@ -3293,13 +3281,8 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
     """
 
-    is_commutative = True
     is_imaginary = True
-    is_finite = True
     is_number = True
-    is_algebraic = True
-    is_transcendental = False
-    is_real = False
 
     __slots__ = []
 
