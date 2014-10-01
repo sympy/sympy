@@ -2457,7 +2457,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     """
 
     is_commutative = True
-    is_positive = True
+    is_negative = True
     is_complex = False
     is_number = True
     is_infinite = True
