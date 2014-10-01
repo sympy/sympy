@@ -228,13 +228,16 @@ def multiplicity(p, n):
             except AttributeError:
                 pass
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
-
-    if p == 2:
-        return trailing(n)
-    if p < 2:
-        raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
-    if p == n:
-        return 1
+    
+    if n != 0:
+        if p == 2:
+            return trailing(n)
+        if p < 2:
+            raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
+        if p == n:
+            return 1
+    elif n == 0:
+        return oo
 
     m = 0
     n, rem = divmod(n, p)
