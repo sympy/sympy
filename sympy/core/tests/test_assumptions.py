@@ -654,6 +654,11 @@ def test_Add_is_pos_neg():
     assert (p + r).is_positive is None  # issue 8046, 16.3
 
 
+def test_Add_is_imaginary():
+    nn = Dummy(nonnegative=True)
+    assert (I*nn + I).is_imaginary  # issue 8046, 17
+
+
 def test_Add_is_algebraic():
     a = Symbol('a', algebraic=True)
     b = Symbol('a', algebraic=True)

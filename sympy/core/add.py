@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from .basic import C, Basic
 from .compatibility import cmp_to_key, reduce, is_sequence
-from .logic import _fuzzy_group, fuzzy_or
+from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
@@ -465,22 +465,14 @@ class Add(Expr, AssocOp):
         a.is_commutative for a in self.args)
 
     def _eval_is_imaginary(self):
-        from sympy import im
-        ret = _fuzzy_group(a.is_imaginary for a in self.args)
-        if not ret:
-            return ret
-        newarg = []
-        for a in self.args:
-            t = im(a)
-            if t.is_positive:
-                newarg.append(t)
-            elif t.is_negative:
-                newarg.append(t)
-            else:
-                return
-        i = self.func(*newarg)
-        if i.is_zero is False:
-            return True
+        rv = _fuzzy_group(a.is_imaginary for a in self.args)
+        if rv is False:
+            return rv
+        iargs = [a*S.ImaginaryUnit for a in self.args]
+        r = _fuzzy_group(a.is_real for a in iargs)
+        if r:
+            s = self.func(*iargs, evaluate=False)
+            return fuzzy_not(s.is_zero)
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even is True)]
