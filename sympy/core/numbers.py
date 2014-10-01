@@ -2250,6 +2250,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_complex = False
     is_number = True
     is_infinite = True
+    is_comparable = True
 
     __slots__ = []
 
@@ -2461,6 +2462,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_complex = False
     is_number = True
     is_infinite = True
+    is_comparable = True
 
     __slots__ = []
 
