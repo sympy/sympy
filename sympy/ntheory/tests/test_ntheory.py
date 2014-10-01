@@ -2,7 +2,7 @@ from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
     factorial as fac, pi, GoldenRatio as phi, sqrt
-from sympy.core.numbers import Integer, igcd, Rational
+from sympy.core.numbers import Integer, igcd, Rational, oo
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -65,6 +65,10 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
+    # display infinity when n == 0 and p > 2
+    assert multiplicity(2, 0) == oo
+    assert multiplicity(5, 0) == oo
+    assert multiplicity(11, 0) == oo
 
     # handles Rationals
     assert multiplicity(10, Rational(30, 7)) == 0

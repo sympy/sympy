@@ -229,14 +229,14 @@ def multiplicity(p, n):
                 pass
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
     
-    if n != 0:
-        if p == 2:
-            return trailing(n)
-        if p < 2:
-            raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
-        if p == n:
-            return 1
-    elif n == 0:
+    # check if n = 0, for the case when answer should be infinity and return infinity 
+    if p == 2 and n != 0:
+        return trailing(n)
+    if p < 2:
+        raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
+    if p == n:
+        return 1
+    if n == 0:
         return oo
 
     m = 0
