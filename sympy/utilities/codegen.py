@@ -1118,10 +1118,9 @@ class OctaveCodeGen(CodeGen):
         # symbols that should be arguments
         symbols = expressions.free_symbols - local_vars
 
-        # Octave supports multiple return values.
-        # FIXME: should not use OutputArgument? (these only for rhs return?)
+        # Octave supports multiple return values
         return_vals = []
-        for expr in expressions:
+        for (i, expr) in enumerate(expressions):
             if isinstance(expr, Equality):
                 out_arg = expr.lhs
                 expr = expr.rhs
@@ -1132,19 +1131,15 @@ class OctaveCodeGen(CodeGen):
                     raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
                                        "can define output arguments.")
 
-                # FIXME: could use Result?  But how you give it a name?  Why
-                # isn't Result a subclass of Variable too?
-                if expr.has(symbol):
-                    return_vals.append(
-                        InOutArgument(symbol, out_arg, expr))
-                else:
-                    return_vals.append(
-                        OutputArgument(symbol, out_arg, expr))
-                    # remove from the symbols list, so it doesn't become an input
+                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
+                if not expr.has(symbol):
+                    # this is a pure output: remove from the symbols list, so
+                    # it doesn't become an input.
                     symbols.remove(symbol)
 
             else:
-                return_vals.append(Result(expr))
+                # we have no name for this output
+                return_vals.append(Result(expr, name='out%d' % (i+1)))
 
         # setup input argument list
         arg_list = []
@@ -1211,27 +1206,28 @@ class OctaveCodeGen(CodeGen):
         code_list.append("function ")
 
         # Outputs
-        args = []
-        for i, result in enumerate(routine.result_variables):
-            try:
-                args.append(self._get_symbol(result.name))
-            except:
-                args.append("out%d" % (i+1))
-        args = ", ".join(args)
-        if len(routine.result_variables) > 1:
-            code_list.extend(("[", args, "]"))
+        outs = []
+        for i, result in enumerate(routine.results):
+            if isinstance(result, Result):
+                # Note: name not result_var; want `y` not `y(i)` for Indexed
+                s = self._get_symbol(result.name)
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+            outs.append(s)
+        if len(outs) > 1:
+            code_list.append("[" + (", ".join(outs)) + "]")
         else:
-            code_list.append(args)
+            code_list.append("".join(outs))
         code_list.append(" = ")
 
         # Inputs
         args = []
         for i, arg in enumerate(routine.arguments):
+            if isinstance(arg, (OutputArgument, InOutArgument)):
+                raise CodeGenError("Octave: invalid argument of type %s" %
+                                   str(type(arg)))
             if isinstance(arg, InputArgument):
                 args.append("%s" % self._get_symbol(arg.name))
-            elif isinstance(arg, InOutArgument):
-                args.append("%s" % self._get_symbol(arg.name))
-            # skip OutputArguments
         args = ", ".join(args)
         code_list.append("%s(%s)\n" % (routine.name, args))
         code_list = [ "".join(code_list) ]
@@ -1250,15 +1246,11 @@ class OctaveCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.result_variables):
+        for i, result in enumerate(routine.results):
             if isinstance(result, Result):
-                assign_to = "out%d" % (i+1)
-            elif isinstance(result, OutputArgument):
-                assign_to = result.result_var
-            elif isinstance(result, InOutArgument):
                 assign_to = result.result_var
             else:
-                raise NameError("ACK, CAN THIS HAPPEN?")
+                raise CodeGenError("unexpected object in Routine results")
 
             constants, not_supported, oct_expr = octave_code(result.expr,
                 assign_to=assign_to, human=False)
