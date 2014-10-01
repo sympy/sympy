@@ -2699,7 +2699,8 @@ class NaN(with_metaclass(Singleton, Number)):
 
     """
     is_commutative = True
-    
+    is_finite = False
+    is_infinite = False
     is_comparable = False
     is_number = True
 
