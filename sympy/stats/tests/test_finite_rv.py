@@ -236,3 +236,8 @@ def test_density_call():
     assert 0 in d
     assert 5 not in d
     assert d(S(0)) == d[S(0)]
+
+
+def test_issue_8103_8105():
+    raises(ValueError, lambda : Die('X', 0))
+    raises(TypeError, lambda : Die('X', 1.2))

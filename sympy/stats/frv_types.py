@@ -129,7 +129,12 @@ def Die(name, sides=6):
     >>> density(D4).dict
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
+    from sympy.core.compatibility import integer_types
 
+    if not isinstance(sides, integer_types):
+        raise TypeError('sides takes only strictly positive integer values.')
+    if sides < 1:
+        raise ValueError('sides takes strictly positive integer values.')
     return rv(name, DieDistribution, sides)
 
 
