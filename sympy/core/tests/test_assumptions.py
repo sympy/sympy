@@ -649,9 +649,10 @@ def test_Add_is_pos_neg():
     assert (p + xb).is_negative is False
 
     assert (x - S.Infinity).is_negative is None  # issue 7798
-    assert (p + nn).is_positive  # issue 8046, 16.1
-    assert (n + np).is_negative  # issue 8046, 16.2
-    assert (p + r).is_positive is None  # issue 8046, 16.3
+    # issue 8046, 16.2
+    assert (p + nn).is_positive
+    assert (n + np).is_negative
+    assert (p + r).is_positive is None
 
 
 def test_Add_is_imaginary():
