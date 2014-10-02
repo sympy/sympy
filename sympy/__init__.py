@@ -26,7 +26,12 @@ del sys
 def __sympy_debug():
     # helper function so we don't import os globally
     import os
-    return eval(os.getenv('SYMPY_DEBUG', 'False'))
+    debug_str = os.getenv('SYMPY_DEBUG', 'False')
+    if debug_str in ('True', 'False'):
+        return eval(debug_str)
+    else:
+        raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
+                           debug_str)
 SYMPY_DEBUG = __sympy_debug()
 
 from .core import *
