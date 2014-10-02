@@ -1,7 +1,7 @@
 from sympy.core.compatibility import default_sort_key, as_int, ordered, iterable
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
-
+from sympy import Rational
 from sympy.abc import x
 
 
@@ -13,6 +13,7 @@ def test_default_sort_key():
 def test_as_int():
     raises(ValueError, lambda : as_int(1.1))
     raises(ValueError, lambda : as_int([]))
+    raises(ValueError, lambda : as_int(as_int(Rational(0, 0)))) # issue #8147
 
 
 def test_iterable():

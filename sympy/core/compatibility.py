@@ -381,6 +381,9 @@ def as_int(n):
     ValueError: ... is not an integer
 
     """
+    from sympy.core.numbers import nan
+    if n is nan:
+        raise ValueError('%s is NaN, cannot conver to int.' % n)
     try:
         result = int(n)
         if result != n:
