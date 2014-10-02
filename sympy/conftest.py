@@ -24,11 +24,6 @@ def pytest_report_header(config):
     return s
 
 
-def pytest_runtest_setup(item):
-    if not isinstance(item, pytest.Function):
-        return
-
-
 def pytest_terminal_summary(terminalreporter):
     if (terminalreporter.stats.get('error', None) or
             terminalreporter.stats.get('failed', None)):
@@ -36,5 +31,6 @@ def pytest_terminal_summary(terminalreporter):
             ' ', 'DO *NOT* COMMIT!', red=True, bold=True)
 
 
-def pytest_runtest_teardown():
+@pytest.fixture(autouse=True, scope='module')
+def file_clear_cache():
     clear_cache()
