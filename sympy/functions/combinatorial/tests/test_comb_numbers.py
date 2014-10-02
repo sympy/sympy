@@ -1,10 +1,12 @@
 import string
 
-from sympy import (bernoulli, Symbol, symbols, Dummy, S, Sum, Rational,
-                   oo, zoo, pi, I, simplify, expand_func, harmonic,
-                   bell, fibonacci, lucas, euler, catalan, binomial, gamma,
-                   sqrt, hyper, log, digamma, trigamma, polygamma, diff,
-                   EulerGamma, factorial, sin, cos, cot, cancel, zeta)
+from sympy import (
+    Symbol, symbols, Dummy, S, Sum, Rational, oo, zoo, pi, I, simplify,
+    expand_func, diff, EulerGamma, cancel)
+from sympy.functions import (
+    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
+    gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
+    cos, cot, zeta)
 
 from sympy.utilities.pytest import XFAIL, raises
 

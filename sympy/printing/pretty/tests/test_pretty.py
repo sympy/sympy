@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from sympy import (
-    Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral, KroneckerDelta,
+    And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
-    Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2, binomial,
-    catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
-    factorial2, floor, gamma, groebner, hyper, log, lowergamma, meijerg,
-    oo, pi, sin, sqrt, subfactorial, symbols, tan, uppergamma, lex, ilex,
-    grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, Range,
+    Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
+    Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
+    groebner, oo, pi, symbols, lex, ilex, grlex, Range,
     Complement, Contains)
+from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
+    Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
+    euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
+    lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
