@@ -30,13 +30,6 @@ if sys.version_info[0] == 3:
     # Sage does not support Python 3 currently
     disabled = True
 
-
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("Sage isn't available.")
-
 import sympy
 
 from sympy.utilities.pytest import XFAIL

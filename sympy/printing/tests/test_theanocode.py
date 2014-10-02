@@ -11,12 +11,6 @@ else:
     #bin/test will not execute any tests now
     disabled = True
 
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("theano isn't available.")
-
 import sympy
 from sympy import S
 sy = sympy

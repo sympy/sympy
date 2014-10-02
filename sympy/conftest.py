@@ -34,3 +34,13 @@ def pytest_terminal_summary(terminalreporter):
 @pytest.fixture(autouse=True, scope='module')
 def file_clear_cache():
     clear_cache()
+
+@pytest.fixture(autouse=True, scope='module')
+def check_disabled(request):
+    if getattr(request.module, 'disabled', False):
+        pytest.skip("test requirements not met.")
+    elif getattr(request.module, 'ipython', False):
+        # need to check version and options for ipython tests
+        if (pytest.__version__ < '2.6.3' and
+            pytest.config.getvalue('-s') != 'no'):
+            pytest.skip("run py.test with -s or upgrade to newer version.")
