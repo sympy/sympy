@@ -24,7 +24,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL, slow, SKIP
+from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -2563,19 +2563,21 @@ def test_W23b():
     assert r1 == r2
 
 
-@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_W24():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     x, y = symbols('x y', real=True)
     r1 = integrate(integrate(sqrt(x**2 + y**2), (x, 0, 1)), (y, 0, 1))
     assert (r1 - (sqrt(2) + asinh(1))/3).simplify() == 0
 
 
-@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_W25():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(sin(a)*sin(y)/sqrt(1- sin(a)**2*sin(x)**2*sin(y)**2),
                    (x, 0, pi/2))

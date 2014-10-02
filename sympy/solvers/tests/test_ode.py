@@ -9,7 +9,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
     homogeneous_order, infinitesimals, checkinfsol, checksysodesol)
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, SKIP
+from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 x, y, z = symbols('x:z', real=True)
@@ -912,7 +912,6 @@ def test_1st_exact1():
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
 
 
-@SKIP("Too slow.")
 @slow
 @XFAIL
 def test_1st_exact2():
@@ -925,6 +924,8 @@ def test_1st_exact2():
     equivalent, but it is so complex that checkodesol fails, and takes a long
     time to do so.
     """
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
           sqrt(x**2 + f(x)**2)))*f(x).diff(x))
     sol = dsolve(eq)

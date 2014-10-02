@@ -7,7 +7,7 @@ from sympy import (
     tan, S, log, Function, gamma, sinh,
 )
 
-from sympy.utilities.pytest import XFAIL, SKIP, slow
+from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
 from sympy.abc import x, k, c, y, R, b, h, a, m, A, z, t
 
@@ -74,10 +74,12 @@ def test_issue_4525():
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)
 
 
-@SKIP("Too slow.")
+
 @XFAIL
 @slow
 def test_issue_4540():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     # Note, this integral is probably nonelementary
     assert not integrate(
         (sin(1/x) - x*exp(x)) /
@@ -127,10 +129,11 @@ def test_issue_4895d():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), (x, 0, oo)).has(Integral)
 
 
-@SKIP("Too slow.")
 @XFAIL
 @slow
 def test_issue_4941():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     assert not integrate(sqrt(1 + sinh(x/20)**2), (x, -25, 25)).has(Integral)
 
 
