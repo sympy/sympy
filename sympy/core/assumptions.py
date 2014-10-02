@@ -47,7 +47,7 @@ x
 """
 from __future__ import print_function, division
 
-from sympy.core.facts import FactRules, FactKB
+from sympy.core.facts import FactRules, FactKB, InconsistentAssumptions
 from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types, with_metaclass
 
@@ -179,11 +179,16 @@ def _ask(fact, obj):
     deduced, and the result is cached in ._assumptions.
     """
     assumptions = obj._assumptions
+    try:
+        # Store None into the assumptions so that recursive attempts at
+        # evaluating the same fact don't trigger infinite recursion.
+        assumptions._tell(fact, None)
+    except InconsistentAssumptions:
+        # we already know the fact
+        return assumptions[fact]
+
     handler_map = obj._prop_handler
 
-    # Store None into the assumptions so that recursive attempts at
-    # evaluating the same fact don't trigger infinite recursion.
-    assumptions._tell(fact, None)
 
     # First try the assumption evaluation function if it exists
     try:
