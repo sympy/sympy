@@ -1,3 +1,4 @@
+from __future__ import division
 from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
