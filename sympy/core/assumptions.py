@@ -15,34 +15,125 @@ being integer, is also real, complex, etc.
 
 Here follows a list of possible assumption names:
 
-    - commutative    - object commutes with any other object with
-                       respect to multiplication operation.
-    - real           - object can have only values from the set
-                       of real numbers
-    - integer        - object can have only values from the set
-                       of integers
-    - algebraic      - object can have only values from the set
-                       of algebraic numbers
-    - transcendental - object can have only values from the set
-                       of transcendental numbers
-    - finite         - object absolute value is bounded
-    - positive       - object can have only positive values
-    - negative       - object can have only negative values
-    - nonpositive    - object can have only nonpositive values
-    - nonnegative    - object can have only nonnegative values
-    - irrational     - object value cannot be represented exactly by Rational
-    - infinite       - object value is arbitrarily large
+.. glossary::
 
-Implementation note: assumption values are stored in
-._assumptions dictionary or are returned by getter methods (with
-property decorators) or are attributes of objects/classes.
+    commutative
+        object commutes with any other object with
+        respect to multiplication operation.
+
+    complex
+        object can have only values from the set
+        of complex numbers.
+
+    imaginary
+        object value is a number that can be written as a real
+        number multiplied by the imaginary unit ``I``.  See
+        [3]_.  Please note, that ``0`` is not considered to be an
+        imaginary number, see
+        `issue #7649 <https://github.com/sympy/sympy/issues/7649>`_.
+
+    real
+        object can have only values from the set
+        of real numbers.
+
+    integer
+        object can have only values from the set
+        of integers.
+
+    odd
+    even
+        object can have only values from the set of
+        odd (even) integers [2]_.
+
+    prime
+        object is a natural number greater than ``1`` that has
+        no positive divisors other than ``1`` and itself.  See [6]_.
+
+    composite
+        object is a positive integer that has at least one positive
+        divisor other than ``1`` or the number itself.  See [4]_.
+
+    zero
+    nonzero
+        object is zero (not zero).
+
+    rational
+        object can have only values from the set
+        of rationals.
+
+    algebraic
+        object can have only values from the set
+        of algebraic numbers [11]_.
+
+    transcendental
+        object can have only values from the set
+        of transcendental numbers [10]_.
+
+    irrational
+        object value cannot be represented exactly by Rational, see [5]_.
+
+    finite
+    infinite
+        object absolute value is bounded (is value is
+        arbitrarily large).  See [7]_, [8]_, [9]_.
+
+    negative
+    nonnegative
+        object can have only negative (only
+        nonnegative) values [1]_.
+
+    positive
+    nonpositive
+        object can have only positive (only
+        nonpositive) values.
+
+    hermitian
+    antihermitian
+        object belongs to the field of hermitian
+        (antihermitian) operators.
 
 Examples
 ========
 
->>> from sympy import Symbol
->>> Symbol('x', real = True)
-x
+    >>> from sympy import Symbol
+    >>> x = Symbol('x', real = True); x
+    x
+    >>> x.is_real
+    True
+    >>> x.is_complex
+    True
+
+See Also
+========
+
+.. seealso::
+
+    :py:class:`sympy.core.numbers.ImaginaryUnit`
+    :py:class:`sympy.core.numbers.Zero`
+    :py:class:`sympy.core.numbers.One`
+
+Notes
+=====
+
+Assumption values are stored in obj._assumptions dictionary or
+are returned by getter methods (with property decorators) or are
+attributes of objects/classes.
+
+
+References
+==========
+
+.. [1] http://en.wikipedia.org/wiki/Negative_number
+.. [2] http://en.wikipedia.org/wiki/Parity_%28mathematics%29
+.. [3] http://en.wikipedia.org/wiki/Imaginary_number
+.. [4] http://en.wikipedia.org/wiki/Composite_number
+.. [5] http://en.wikipedia.org/wiki/Irrational_number
+.. [6] http://en.wikipedia.org/wiki/Prime_number
+.. [7] http://en.wikipedia.org/wiki/Finite
+.. [8] https://docs.python.org/3/library/math.html#math.isfinite
+.. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
+.. [10] http://en.wikipedia.org/wiki/Transcendental_number
+.. [11] http://en.wikipedia.org/wiki/Algebraic_number
 
 """
 from __future__ import print_function, division
@@ -53,24 +144,6 @@ from sympy.core.compatibility import integer_types, with_metaclass
 
 from random import shuffle
 
-
-# This are the rules under which our assumptions function
-#
-# References
-# ----------
-#
-# negative,      -- http://en.wikipedia.org/wiki/Negative_number
-# nonnegative
-#
-# even, odd      -- http://en.wikipedia.org/wiki/Parity_(mathematics)
-# imaginary      -- http://en.wikipedia.org/wiki/Imaginary_number
-# composite      -- http://en.wikipedia.org/wiki/Composite_number
-# finite         -- http://en.wikipedia.org/wiki/Finite
-#                   https://docs.python.org/3/library/math.html#math.isfinite
-#                   http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
-# irrational     -- http://en.wikipedia.org/wiki/Irrational_number
-# transcendental -- http://en.wikipedia.org/wiki/Transcendental_number
-# ...
 
 _assume_rules = FactRules([
 
