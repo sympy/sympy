@@ -978,18 +978,18 @@ class Mul(Expr, AssocOp):
             return self.is_zero
 
     def _eval_is_zero(self):
-        zero = unbound = False
+        zero = infinite = False
         for a in self.args:
             z = a.is_zero
             if z:
-                if unbound:
+                if infinite:
                     return  # 0*oo is nan and nan.is_zero is None
                 zero = True
             else:
                 if not a.is_finite:
                     if zero:
                         return  # 0*oo is nan and nan.is_zero is None
-                    unbound = True
+                    infinite = True
                 if zero is False and z is None:  # trap None
                     zero = None
         return zero
