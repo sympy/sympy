@@ -638,9 +638,9 @@ def gruntz(e, z, z0, dir="+"):
     elif z0 == -oo:
         r = limitinf(e.subs(z, -z), z)
     else:
-        if dir == "-":
+        if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
-        elif dir == "+":
+        elif str(dir) == "+":
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")

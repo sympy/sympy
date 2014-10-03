@@ -37,51 +37,8 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-    e = sympify(e)
-    z = sympify(z)
-    z0 = sympify(z0)
 
-    if e == z:
-        return z0
-
-    if not e.has(z):
-        return e
-
-    # gruntz fails on factorials but works with the gamma function
-    # If no factorial term is present, e should remain unchanged.
-    # factorial is defined to be zero for negative inputs (which
-    # differs from gamma) so only rewrite for positive z0.
-    if z0.is_positive:
-        e = e.rewrite(factorial, gamma)
-
-    if e.is_Mul:
-        if abs(z0) is S.Infinity:
-            # XXX todo: this should probably be stated in the
-            # negative -- i.e. to exclude expressions that should
-            # not be handled this way but I'm not sure what that
-            # condition is; when ok is True it means that the leading
-            # term approach is going to succeed (hopefully)
-            ok = lambda w: (z in w.free_symbols and
-                 any(a.is_polynomial(z) or
-                 any(z in m.free_symbols and m.is_polynomial(z)
-                 for m in Mul.make_args(a))
-                 for a in Add.make_args(w)))
-            if all(ok(w) for w in e.as_numer_denom()):
-                u = C.Dummy(positive=(z0 is S.Infinity))
-                inve = e.subs(z, 1/u)
-                return limit(inve.as_leading_term(u), u,
-                    S.Zero, "+" if z0 is S.Infinity else "-")
-
-    if e.is_Order:
-        return C.Order(limit(e.expr, z, z0), *e.args[1:])
-
-    try:
-        r = gruntz(e, z, z0, dir)
-        if r is S.NaN:
-            raise PoleError()
-    except (PoleError, ValueError):
-        r = heuristics(e, z, z0, dir)
-    return r
+    return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
@@ -134,6 +91,7 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
+
         if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
@@ -141,6 +99,7 @@ class Limit(Expr):
         if str(dir) not in ('+', '-'):
             raise ValueError(
                 "direction must be either '+' or '-', not %s" % dir)
+
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
         return obj
@@ -148,8 +107,50 @@ class Limit(Expr):
     def doit(self, **hints):
         """Evaluates limit"""
         e, z, z0, dir = self.args
+
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
             z0 = z0.doit(**hints)
-        return limit(e, z, z0, str(dir))
+
+        if e == z:
+            return z0
+
+        if not e.has(z):
+            return e
+
+        # gruntz fails on factorials but works with the gamma function
+        # If no factorial term is present, e should remain unchanged.
+        # factorial is defined to be zero for negative inputs (which
+        # differs from gamma) so only rewrite for positive z0.
+        if z0.is_positive:
+            e = e.rewrite(factorial, gamma)
+
+        if e.is_Mul:
+            if abs(z0) is S.Infinity:
+                # XXX todo: this should probably be stated in the
+                # negative -- i.e. to exclude expressions that should
+                # not be handled this way but I'm not sure what that
+                # condition is; when ok is True it means that the leading
+                # term approach is going to succeed (hopefully)
+                ok = lambda w: (z in w.free_symbols and
+                                any(a.is_polynomial(z) or
+                                    any(z in m.free_symbols and m.is_polynomial(z)
+                                        for m in Mul.make_args(a))
+                                    for a in Add.make_args(w)))
+                if all(ok(w) for w in e.as_numer_denom()):
+                    u = C.Dummy(positive=(z0 is S.Infinity))
+                    inve = e.subs(z, 1/u)
+                    return limit(inve.as_leading_term(u), u,
+                                 S.Zero, "+" if z0 is S.Infinity else "-")
+
+        if e.is_Order:
+            return C.Order(limit(e.expr, z, z0), *e.args[1:])
+
+        try:
+            r = gruntz(e, z, z0, dir)
+            if r is S.NaN:
+                raise PoleError()
+        except (PoleError, ValueError):
+            r = heuristics(e, z, z0, dir)
+        return r
