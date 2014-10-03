@@ -65,10 +65,8 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
-    # display infinity when n == 0 and p > 2
-    assert multiplicity(2, 0) == oo
-    assert multiplicity(5, 0) == oo
-    assert multiplicity(11, 0) == oo
+    assert multiplicity(2, 0) == oo #8159
+    assert multiplicity(5, 0) == oo #8145
 
     # handles Rationals
     assert multiplicity(10, Rational(30, 7)) == 0
