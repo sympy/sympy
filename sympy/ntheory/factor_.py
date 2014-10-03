@@ -232,6 +232,8 @@ def multiplicity(p, n):
 
     if p >=2 and n == 0:
         return oo
+    if p== 2:
+        return trailing(n)
     if p < 2:
         raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
     if p == n:
