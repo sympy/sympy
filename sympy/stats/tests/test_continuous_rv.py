@@ -1,3 +1,4 @@
+from __future__ import division
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
