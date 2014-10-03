@@ -14,7 +14,7 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains)
+    Contains, divisor_sigma)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -331,6 +331,11 @@ def test_latex_functions():
         0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
+
+    assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
+    assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
+    assert latex(divisor_sigma(x, y)) == r"\sigma_y\left(x\right)"
+    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}_y\left(x\right)"
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
