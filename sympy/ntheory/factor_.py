@@ -230,7 +230,7 @@ def multiplicity(p, n):
                 pass
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
-    if p >=2 and n == 0:
+    if p >= 2 and n == 0:
         return oo
     if p == 2:
         return trailing(n)
@@ -238,8 +238,6 @@ def multiplicity(p, n):
         raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
     if p == n:
         return 1
-    if n == 0:
-        return oo
 
     m = 0
     n, rem = divmod(n, p)
