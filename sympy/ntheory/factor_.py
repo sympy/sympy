@@ -16,6 +16,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.symbol import Dummy
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1329,3 +1330,69 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+
+
+class divisor_sigma(Function):
+    """
+    Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
+        + p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
+        ``divisor_sigma(n, 1)`` is equal to ``sum(divisors(n))``
+
+        Default for k is 1.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Divisor_function
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import divisor_sigma
+    >>> divisor_sigma(18, 0)
+    6
+    >>> divisor_sigma(39, 1)
+    56
+    >>> divisor_sigma(12, 2)
+    210
+    >>> divisor_sigma(37)
+    38
+
+    See Also
+    ========
+
+    divisor_count, totient, divisors, factorint
+    """
+
+    @classmethod
+    def eval(cls, n, k=1):
+        n = sympify(n)
+        k = sympify(k)
+        if n.is_prime:
+            return 1 + n**k
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
+                           else e + 1 for p, e in factorint(n).items()])
