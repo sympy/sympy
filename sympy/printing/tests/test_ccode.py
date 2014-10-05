@@ -439,3 +439,9 @@ def test_Matrix_printing():
         "M[6] = 2*q[4]*1.0/q[1];\n"
         "M[7] = 4 + sqrt(q[0]);\n"
         "M[8] = 0;")
+
+def test_ccode_reserved_words():
+
+    a_symbol = symbols('if')
+
+    assert ccode(a_symbol**2) == 'pow(_if, 2)'
