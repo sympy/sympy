@@ -2235,11 +2235,11 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     .. [1] http://en.wikipedia.org/wiki/Infinity
     """
-
+    is_real = False
     is_positive = True
     is_infinite = True
-    is_comparable = True
 
+    is_comparable = True
     is_number = True
 
     __slots__ = []
@@ -2446,11 +2446,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     Infinity
     """
-
+    is_real = False
     is_negative = True
     is_infinite = True
-    is_comparable = True
 
+    is_comparable = True
     is_number = True
 
     __slots__ = []
