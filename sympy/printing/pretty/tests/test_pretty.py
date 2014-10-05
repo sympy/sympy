@@ -3116,6 +3116,22 @@ x─→0⁻  x   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Limit(sin(x)/x, x, 0, "real")
+    ascii_str = \
+"""\
+    sin(x)\n\
+lim ------\n\
+x->0  x   \
+"""
+    ucode_str = \
+u("""\
+    sin(x)\n\
+lim ──────\n\
+x─→0  x   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
 
 def test_pretty_RootOf():
     expr = RootOf(x**5 + 11*x - 2, 0)

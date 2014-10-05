@@ -558,6 +558,7 @@ def test_latex_limits():
     f = Function('f')
     assert latex(Limit(f(x), x, 0)) == r"\lim_{x \to 0^+} f{\left (x \right )}"
     assert latex(Limit(f(x), x, 0, "-")) == r"\lim_{x \to 0^-} f{\left (x \right )}"
+    assert latex(Limit(f(x), x, 0, "real")) == r"\lim_{x \to 0} f{\left (x \right )}"
 
 
 def test_issue_3568():
