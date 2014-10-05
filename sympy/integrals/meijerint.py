@@ -1727,6 +1727,9 @@ def meijerint_definite(f, x, a, b):
     f = f.subs(x, d)
     x = d
 
+    if (a == oo and b == oo) or (a == -oo and b == -oo):
+        return (0, True)
+
     if a == -oo and b != oo:
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 

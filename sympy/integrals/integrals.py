@@ -116,7 +116,7 @@ class Integral(AddWithLimits):
         got_none = False
         for l in self.limits:
             if len(l) == 3:
-                z = (l[1] - l[2]).is_zero
+                z = (l[1] == l[2]) or (l[1] - l[2]).is_zero
                 if z:
                     return True
                 elif z is None:
