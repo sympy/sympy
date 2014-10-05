@@ -13,8 +13,9 @@ def limit(e, z, z0, dir="+"):
     z0 can be any expression, including oo and -oo.
 
     For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-). For infinite z0
-    (oo or -oo), the dir argument doesn't matter.
+    (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
+    z0 (oo or -oo), the dir argument is determined from the direction
+    of the infinity (i.e., dir="-" for oo).
 
     Examples
     ========
@@ -91,6 +92,11 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
+
+        if z0 is S.Infinity:
+            dir = "-"
+        elif z0 is S.NegativeInfinity:
+            dir = "+"
 
         if isinstance(dir, string_types):
             dir = Symbol(dir)
