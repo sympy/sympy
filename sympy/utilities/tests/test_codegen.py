@@ -102,6 +102,24 @@ def test_simple_c_code():
     assert source == expected
 
 
+def test_c_code_reserved_words():
+    x, y, z = symbols('if, typedef, while')
+    expr = (x + y) * z
+    routine = Routine("test", expr)
+    code_gen = CCodeGen()
+    source = get_string(code_gen.dump_c, [routine])
+    expected = (
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double _if, double _typedef, double _while) {\n"
+        "   double test_result;\n"
+        "   test_result = _while*(_if + _typedef);\n"
+        "   return test_result;\n"
+        "}\n"
+    )
+    assert source == expected
+
+
 def test_numbersymbol_c_code():
     routine = Routine("test", pi**Catalan)
     code_gen = CCodeGen()
