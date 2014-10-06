@@ -305,6 +305,13 @@ class IdentityOperator(Operator):
 
         return Mul(self, other)
 
+    def __rmul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(other, self)
+
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
