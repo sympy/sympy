@@ -248,3 +248,39 @@ def Hypergeometric(name, N, m, n):
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
     return rv(name, HypergeometricDistribution, N, m, n)
+
+
+class RademacherDistribution(SingleFiniteDistribution):
+    @property
+    @cacheit
+    def dict(self):
+        return {-1: S.Half, 1: S.Half}
+
+
+def Rademacher(name):
+    """
+    Create a Finite Random Variable representing a Rademacher distribution.
+
+    Return a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Rademacher, density
+
+    >>> X = Rademacher('X')
+    >>> density(X).dict
+    {-1: 1/2, 1: 1/2}
+
+    See Also
+    ========
+
+    sympy.stats.Bernoulli
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Rademacher_distribution
+
+    """
+    return rv(name, RademacherDistribution)
