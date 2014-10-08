@@ -80,10 +80,10 @@ class ReprPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         # special case if either dimension is 0
-        if (expr.shape[0] == 0) ^ (expr.shape[1] == 0):
+        if (expr.rows == 0) ^ (expr.cols == 0):
             return '%s(%s, %s, %s)' % (expr.__class__.__name__,
-                                       self._print(expr.shape[0]),
-                                       self._print(expr.shape[1]),
+                                       self._print(expr.rows),
+                                       self._print(expr.cols),
                                        self._print([]))
         l = []
         for i in range(expr.rows):
