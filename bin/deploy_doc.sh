@@ -24,20 +24,9 @@
 # Exit on error
 set -e
 
-ACTUAL_TRAVIS_JOB_NUMBER=`echo $TRAVIS_JOB_NUMBER| cut -d'.' -f 2`
+if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$ACTUAL_TRAVIS_JOB_NUMBER" == "1" ]; then
-
-        echo "Installing dependencies"
-        sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick docbook2x
-        pip install "sphinx==1.1.3"
-
-        echo -e "Building docs"
-        cd doc
-        make clean
-        make html
-
-        cd ../../
+        cd ../
         echo -e "Setting git attributes"
         git config --global user.email "sympy@googlegroups.com"
         git config --global user.name "SymPy (Travis CI)"
