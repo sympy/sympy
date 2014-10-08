@@ -55,5 +55,6 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$ACTUAL_TRAVIS_JOB_NUMBER" == "1"
 
         git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
         echo -e "Pushing commit"
-        git push -fq origin gh-pages > /dev/null 2>&1
+        git pull > /dev/null 2>&1
+        git push -q origin gh-pages > /dev/null 2>&1
 fi
