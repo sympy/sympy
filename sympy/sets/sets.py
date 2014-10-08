@@ -203,9 +203,7 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if el not in self])
-
-        return None
+            return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     @property
     def inf(self):
@@ -1624,6 +1622,9 @@ class FiniteSet(Set, EvalfMixin):
 
             return false
 
+        if len(self) != len(other):
+            return false
+
         return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
 
     def __iter__(self):
@@ -1694,13 +1695,16 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        if other in self._elements:
-            return true
-        else:
-            if not other.free_symbols:
-                return false
-            elif all(e.is_Symbol for e in self._elements):
-                return false
+        r = false
+        for e in self._elements:
+            t = Eq(e, other, evaluate=True)
+            if isinstance(t, Eq):
+                t = t.simplify()
+            if t == true:
+                return t
+            elif t != false:
+                r = None
+        return r
 
     def _eval_imageset(self, f):
         return FiniteSet(*map(f, self))

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Dict, Symbol, Tuple
+from sympy.core import S, Basic, Dict, Symbol, Tuple
 from sympy.core.compatibility import xrange, iterable
 from sympy.sets import Set, FiniteSet, EmptySet
 
@@ -722,8 +722,8 @@ class Diagram(Basic):
 
                 for morphism in conclusions_arg:
                     # Check that no new objects appear in conclusions.
-                    if (morphism.domain in objects) and \
-                       (morphism.codomain in objects):
+                    if ((objects.contains(morphism.domain) == S.true) and
+                        (objects.contains(morphism.codomain) == S.true)):
                         # No need to add identities and recurse
                         # composites this time.
                         Diagram._add_morphism_closure(
@@ -920,12 +920,14 @@ class Diagram(Basic):
 
         new_premises = {}
         for morphism, props in self.premises.items():
-            if (morphism.domain in objects) and (morphism.codomain in objects):
+            if ((objects.contains(morphism.domain) == S.true) and
+                (objects.contains(morphism.codomain) == S.true)):
                 new_premises[morphism] = props
 
         new_conclusions = {}
         for morphism, props in self.conclusions.items():
-            if (morphism.domain in objects) and (morphism.codomain in objects):
+            if ((objects.contains(morphism.domain) == S.true) and
+                (objects.contains(morphism.codomain) == S.true)):
                 new_conclusions[morphism] = props
 
         return Diagram(new_premises, new_conclusions)
