@@ -11,7 +11,7 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Derivative, Expr, Integer, oo
+from sympy import Derivative, Expr, Integer, oo, Mul
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -297,6 +297,20 @@ class IdentityOperator(Operator):
 
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{I}}'
+
+    def __mul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(self, other)
+
+    def __rmul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(other, self)
 
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
