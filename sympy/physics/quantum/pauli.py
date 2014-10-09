@@ -512,7 +512,7 @@ class SigmaZBra(Bra):
 
 def _qsimplify_pauli_product(a, b):
     """
-    Simplify a product of two pauli operators.
+    Internal helper function for simplifying products of Pauli operators.
     """
     if not (isinstance(a, SigmaOpBase) and isinstance(b, SigmaOpBase)):
         return Mul(a, b)
@@ -618,6 +618,24 @@ def _qsimplify_pauli_product(a, b):
 def qsimplify_pauli(e):
     """
     Simplify an expression that include products of of pauli operators.
+
+    Parameters
+    ==========
+
+    e : expression
+        An expression that contains products of Pauli operators that is
+        to be simplified.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum.pauli import SigmaX, SigmaY
+    >>> from sympy.physics.quantum.pauli import qsimplify_pauli
+    >>> sx, sy = SigmaX(), SigmaY()
+    >>> sx * sy
+    SigmaX()*SigmaY()
+    >>> qsimplify_pauli(sx * sy)
+    I*SigmaZ()
     """
     if isinstance(e, Operator):
         return e
