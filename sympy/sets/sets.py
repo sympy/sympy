@@ -11,6 +11,7 @@ from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
+from sympy.core.relational import Eq
 from sympy.sets.contains import Contains
 
 from sympy.mpmath import mpi, mpf
@@ -564,6 +565,15 @@ class ProductSet(Set):
 
         return Basic.__new__(cls, *sets, **assumptions)
 
+    def _eval_Eq(self, other):
+        if not other.is_ProductSet:
+            return
+
+        if len(self.args) != len(other.args):
+            return false
+
+        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+
     def _contains(self, element):
         """
         'in' operator for ProductSets
@@ -1022,6 +1032,19 @@ class Interval(Set, EvalfMixin):
         else:
             left = self.start <= other
         return And(left, right)
+
+    def _eval_Eq(self, other):
+        if not other.is_Interval:
+            if (other.is_Union or other.is_Complement or
+                other.is_Intersection or other.is_ProductSet):
+                return
+
+            return false
+
+        return And(Eq(self.left, other.left),
+                   Eq(self.right, other.right),
+                   self.left_open == other.left_open,
+                   self.right_open == other.right_open)
 
 
 class Union(Set, EvalfMixin):
@@ -1592,6 +1615,16 @@ class FiniteSet(Set, EvalfMixin):
         obj = Basic.__new__(cls, *args)
         obj._elements = frozenset(args)
         return obj
+
+    def _eval_Eq(self, other):
+        if not other.is_FiniteSet:
+            if (other.is_Union or other.is_Complement or
+                other.is_Intersection or other.is_ProductSet):
+                return
+
+            return false
+
+        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
 
     def __iter__(self):
         return iter(self.args)
