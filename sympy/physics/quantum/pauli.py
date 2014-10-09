@@ -1,15 +1,14 @@
 """Pauli operators and states"""
 
-from sympy import I, Mul, Integer
-from sympy.physics.quantum import (Operator, Commutator, AntiCommutator,
-                                   Dagger, IdentityOperator, Ket, Bra)
+from sympy import I, Mul, Add, Pow, exp, Integer
+from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 __all__ = [
     'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',
-    'SigmaZBra'
+    'SigmaZBra', 'qsimplify_pauli'
 ]
 
 
@@ -22,7 +21,7 @@ class SigmaOpBase(Operator):
 
     @property
     def use_name(self):
-        return self.args[0] is not False
+        return bool(self.args[0]) is not False
 
     @classmethod
     def default_args(self):
@@ -99,40 +98,6 @@ class SigmaX(SigmaOpBase):
         if e.is_Integer and e.is_positive:
             return SigmaX(self.name).__pow__(int(e) % 2)
 
-    def __mul__(self, other):
-
-        if isinstance(other, SigmaOpBase) and self.name != other.name:
-            # Pauli matrices with different labels commute; sort by name
-            if self.name < other.name:
-                return Mul(self, other)
-            else:
-                return Mul(other, self)
-
-        if isinstance(other, SigmaX) and self.name == other.name:
-            return Integer(1)
-
-        if isinstance(other, SigmaY) and self.name == other.name:
-            return I * SigmaZ(self.name)
-
-        if isinstance(other, SigmaZ) and self.name == other.name:
-            return - I * SigmaY(self.name)
-
-        if isinstance(other, SigmaMinus) and self.name == other.name:
-            return (Integer(1)/2 + SigmaZ(self.name)/2)
-
-        if isinstance(other, SigmaPlus) and self.name == other.name:
-            return (Integer(1)/2 - SigmaZ(self.name)/2)
-
-        if isinstance(other, Mul):
-            args1 = tuple(arg for arg in other.args if arg.is_commutative)
-            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
-            x = self
-            for y in args2:
-                x = x * y
-            return Mul(*args1) * x
-
-        return Mul(self, other)
-
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
         if format == 'sympy':
@@ -203,40 +168,6 @@ class SigmaY(SigmaOpBase):
         if e.is_Integer and e.is_positive:
             return SigmaY(self.name).__pow__(int(e) % 2)
 
-    def __mul__(self, other):
-
-        if isinstance(other, SigmaOpBase) and self.name != other.name:
-            # Pauli matrices with different labels commute; sort by name
-            if self.name < other.name:
-                return Mul(self, other)
-            else:
-                return Mul(other, self)
-
-        if isinstance(other, SigmaX) and self.name == other.name:
-            return - I * SigmaZ(self.name)
-
-        if isinstance(other, SigmaY) and self.name == other.name:
-            return Integer(1)
-
-        if isinstance(other, SigmaZ) and self.name == other.name:
-            return I * SigmaX(self.name)
-
-        if isinstance(other, SigmaMinus) and self.name == other.name:
-            return -I * (Integer(1) + SigmaZ(self.name))/2
-
-        if isinstance(other, SigmaPlus) and self.name == other.name:
-            return I * (Integer(1) - SigmaZ(self.name))/2
-
-        if isinstance(other, Mul):
-            args1 = tuple(arg for arg in other.args if arg.is_commutative)
-            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
-            x = self
-            for y in args2:
-                x = x * y
-            return Mul(*args1) * x
-
-        return Mul(self, other)
-
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
         if format == 'sympy':
@@ -306,40 +237,6 @@ class SigmaZ(SigmaOpBase):
     def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
             return SigmaZ(self.name).__pow__(int(e) % 2)
-
-    def __mul__(self, other):
-
-        if isinstance(other, SigmaOpBase) and self.name != other.name:
-            # Pauli matrices with different labels commute; sort by name
-            if self.name < other.name:
-                return Mul(self, other)
-            else:
-                return Mul(other, self)
-
-        if isinstance(other, SigmaX) and self.name == other.name:
-            return I * SigmaY(self.name)
-
-        if isinstance(other, SigmaY) and self.name == other.name:
-            return - I * SigmaX(self.name)
-
-        if isinstance(other, SigmaZ) and self.name == other.name:
-            return Integer(1)
-
-        if isinstance(other, SigmaMinus) and self.name == other.name:
-            return - SigmaMinus(self.name)
-
-        if isinstance(other, SigmaPlus) and self.name == other.name:
-            return SigmaPlus(self.name)
-
-        if isinstance(other, Mul):
-            args1 = tuple(arg for arg in other.args if arg.is_commutative)
-            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
-            x = self
-            for y in args2:
-                x = x * y
-            return Mul(*args1) * x
-
-        return Mul(self, other)
 
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
@@ -415,41 +312,6 @@ class SigmaMinus(SigmaOpBase):
     def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
             return Integer(0)
-
-    def __mul__(self, other):
-
-        if isinstance(other, SigmaOpBase) and self.name != other.name:
-            # Pauli matrices with different labels commute; sort by name
-            if self.name < other.name:
-                return Mul(self, other)
-            else:
-                return Mul(other, self)
-
-        if isinstance(other, SigmaX) and self.name == other.name:
-            return (Integer(1) - SigmaZ(self.name))/2
-
-        if isinstance(other, SigmaY) and self.name == other.name:
-            return - I * (Integer(1) - SigmaZ(self.name))/2
-
-        if isinstance(other, SigmaZ) and self.name == other.name:
-            # (SigmaX(self.name) - I * SigmaY(self.name))/2
-            return SigmaMinus(self.name)
-
-        if isinstance(other, SigmaMinus) and self.name == other.name:
-            return Integer(0)
-
-        if isinstance(other, SigmaPlus) and self.name == other.name:
-            return Integer(1)/2 - SigmaZ(self.name)/2
-
-        if isinstance(other, Mul):
-            args1 = tuple(arg for arg in other.args if arg.is_commutative)
-            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
-            x = self
-            for y in args2:
-                x = x * y
-            return Mul(*args1) * x
-
-        return Mul(self, other)
 
     def _print_contents_latex(self, printer, *args):
         if self.use_name:
@@ -540,44 +402,6 @@ class SigmaPlus(SigmaOpBase):
     def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
             return Integer(0)
-
-    def __mul__(self, other):
-
-        if other == Integer(1):
-            return self
-
-        if isinstance(other, SigmaOpBase) and self.name != other.name:
-            # Pauli matrices with different labels commute; sort by name
-            if self.name < other.name:
-                return Mul(self, other)
-            else:
-                return Mul(other, self)
-
-        if isinstance(other, SigmaX) and self.name == other.name:
-            return (Integer(1) + SigmaZ(self.name))/2
-
-        if isinstance(other, SigmaY) and self.name == other.name:
-            return I * (Integer(1) + SigmaZ(self.name))/2
-
-        if isinstance(other, SigmaZ) and self.name == other.name:
-            #-(SigmaX(self.name) + I * SigmaY(self.name))/2
-            return -SigmaPlus(self.name)
-
-        if isinstance(other, SigmaMinus) and self.name == other.name:
-            return (Integer(1) + SigmaZ(self.name))/2
-
-        if isinstance(other, SigmaPlus) and self.name == other.name:
-            return Integer(0)
-
-        if isinstance(other, Mul):
-            args1 = tuple(arg for arg in other.args if arg.is_commutative)
-            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
-            x = self
-            for y in args2:
-                x = x * y
-            return Mul(*args1) * x
-
-        return Mul(self, other)
 
     def _print_contents_latex(self, printer, *args):
         if self.use_name:
@@ -684,3 +508,145 @@ class SigmaZBra(Bra):
     @classmethod
     def dual_class(self):
         return SigmaZKet
+
+
+def _qsimplify_pauli_product(a, b):
+    """
+    Simplify a product of two pauli operators.
+    """
+    if not (isinstance(a, SigmaOpBase) and isinstance(b, SigmaOpBase)):
+        return Mul(a, b)
+
+    if a.name != b.name:
+        # Pauli matrices with different labels commute; sort by name
+        if a.name < b.name:
+            return Mul(a, b)
+        else:
+            return Mul(b, a)
+
+    elif isinstance(a, SigmaX):
+
+        if isinstance(b, SigmaX):
+            return Integer(1)
+
+        if isinstance(b, SigmaY):
+            return I * SigmaZ(a.name)
+
+        if isinstance(b, SigmaZ):
+            return - I * SigmaY(a.name)
+
+        if isinstance(b, SigmaMinus):
+            return (Integer(1)/2 + SigmaZ(a.name)/2)
+
+        if isinstance(b, SigmaPlus):
+            return (Integer(1)/2 - SigmaZ(a.name)/2)
+
+    elif isinstance(a, SigmaY):
+
+        if isinstance(b, SigmaX):
+            return - I * SigmaZ(a.name)
+
+        if isinstance(b, SigmaY):
+            return Integer(1)
+
+        if isinstance(b, SigmaZ):
+            return I * SigmaX(a.name)
+
+        if isinstance(b, SigmaMinus):
+            return -I * (Integer(1) + SigmaZ(a.name))/2
+
+        if isinstance(b, SigmaPlus):
+            return I * (Integer(1) - SigmaZ(a.name))/2
+
+    elif isinstance(a, SigmaZ):
+
+        if isinstance(b, SigmaX):
+            return I * SigmaY(a.name)
+
+        if isinstance(b, SigmaY):
+            return - I * SigmaX(a.name)
+
+        if isinstance(b, SigmaZ):
+            return Integer(1)
+
+        if isinstance(b, SigmaMinus):
+            return - SigmaMinus(a.name)
+
+        if isinstance(b, SigmaPlus):
+            return SigmaPlus(a.name)
+
+    elif isinstance(a, SigmaMinus):
+
+        if isinstance(b, SigmaX):
+            return (Integer(1) - SigmaZ(a.name))/2
+
+        if isinstance(b, SigmaY):
+            return - I * (Integer(1) - SigmaZ(a.name))/2
+
+        if isinstance(b, SigmaZ):
+            # (SigmaX(a.name) - I * SigmaY(a.name))/2
+            return SigmaMinus(b.name)
+
+        if isinstance(b, SigmaMinus):
+            return Integer(0)
+
+        if isinstance(b, SigmaPlus):
+            return Integer(1)/2 - SigmaZ(a.name)/2
+
+    elif isinstance(a, SigmaPlus):
+
+        if isinstance(b, SigmaX):
+            return (Integer(1) + SigmaZ(a.name))/2
+
+        if isinstance(b, SigmaY):
+            return I * (Integer(1) + SigmaZ(a.name))/2
+
+        if isinstance(b, SigmaZ):
+            #-(SigmaX(a.name) + I * SigmaY(a.name))/2
+            return -SigmaPlus(a.name)
+
+        if isinstance(b, SigmaMinus):
+            return (Integer(1) + SigmaZ(a.name))/2
+
+        if isinstance(b, SigmaPlus):
+            return Integer(0)
+
+    else:
+        return a * b
+
+
+def qsimplify_pauli(e):
+    """
+    Simplify an expression that include products of of pauli operators.
+    """
+    if isinstance(e, Operator):
+        return e
+
+    if isinstance(e, (Add, Pow, exp)):
+        t = type(e)
+        return t(*(qsimplify_pauli(arg) for arg in e.args))
+
+    if isinstance(e, Mul):
+
+        c, nc = e.args_cnc()
+
+        nc_s = []
+        while nc:
+            curr = nc.pop(0)
+
+            while (len(nc) and
+                   isinstance(curr, SigmaOpBase) and
+                   isinstance(nc[0], SigmaOpBase) and
+                   curr.name == nc[0].name):
+
+                x = nc.pop(0)
+                y = _qsimplify_pauli_product(curr, x)
+                c1, nc1 = y.args_cnc()
+                curr = Mul(*nc1)
+                c = c + c1
+
+            nc_s.append(curr)
+
+        return Mul(*c) * Mul(*nc_s)
+
+    return e

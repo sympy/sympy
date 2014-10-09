@@ -1,7 +1,9 @@
 from sympy import I, Mul
-from sympy.physics.quantum import Dagger, Commutator, AntiCommutator, qapply
+from sympy.physics.quantum import (Dagger, Commutator, AntiCommutator, qapply,
+                                   Operator)
 from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,
-                                         SigmaMinus, SigmaPlus)
+                                         SigmaMinus, SigmaPlus,
+                                         qsimplify_pauli)
 from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
 
 
@@ -10,6 +12,7 @@ sx1, sy1, sz1 = SigmaX(1), SigmaY(1), SigmaZ(1)
 sx2, sy2, sz2 = SigmaX(2), SigmaY(2), SigmaZ(2)
 
 sm, sp = SigmaMinus(), SigmaPlus()
+A, B = Operator("A"), Operator("B")
 
 
 def test_pauli_operators_types():
@@ -71,28 +74,31 @@ def test_pauli_operators_adjoint_with_labels():
 
 def test_pauli_operators_multiplication():
 
-    assert sx * sx == 1
-    assert sy * sy == 1
-    assert sz * sz == 1
+    assert qsimplify_pauli(sx * sx) == 1
+    assert qsimplify_pauli(sy * sy) == 1
+    assert qsimplify_pauli(sz * sz) == 1
 
-    assert sx * sy == I * sz
-    assert sy * sz == I * sx
-    assert sz * sx == I * sy
+    assert qsimplify_pauli(sx * sy) == I * sz
+    assert qsimplify_pauli(sy * sz) == I * sx
+    assert qsimplify_pauli(sz * sx) == I * sy
 
-    assert sy * sx == - I * sz
-    assert sz * sy == - I * sx
-    assert sx * sz == - I * sy
+    assert qsimplify_pauli(sy * sx) == - I * sz
+    assert qsimplify_pauli(sz * sy) == - I * sx
+    assert qsimplify_pauli(sx * sz) == - I * sy
 
 
 def test_pauli_operators_multiplication_with_labels():
 
-    assert sx1 * sx1 == 1
-    assert sy1 * sy1 == 1
-    assert sz1 * sz1 == 1
+    assert qsimplify_pauli(sx1 * sx1) == 1
+    assert qsimplify_pauli(sy1 * sy1) == 1
+    assert qsimplify_pauli(sz1 * sz1) == 1
 
     assert isinstance(sx1 * sx2, Mul)
     assert isinstance(sy1 * sy2, Mul)
     assert isinstance(sz1 * sz2, Mul)
+
+    assert qsimplify_pauli(sx1 * sy1 * sx2 * sy2) == - sz1 * sz2
+    assert qsimplify_pauli(sy1 * sz1 * sz2 * sx2) == - sx1 * sy2
 
 
 def test_pauli_states():
