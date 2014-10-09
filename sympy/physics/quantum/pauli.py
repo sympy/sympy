@@ -617,7 +617,7 @@ def _qsimplify_pauli_product(a, b):
 
 def qsimplify_pauli(e):
     """
-    Simplify an expression that include products of of pauli operators.
+    Simplify an expression that includes products of pauli operators.
 
     Parameters
     ==========
