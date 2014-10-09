@@ -944,10 +944,9 @@ def get_code_generator(language, project):
 #
 
 
-def codegen(
-    name_expr, language, prefix, project="project", to_files=False, header=True, empty=True,
-        argument_sequence=None):
-    """Write source code for the given expressions in the given language.
+def codegen(name_expr, language, prefix=None, project="project",
+            to_files=False, header=True, empty=True, argument_sequence=None):
+    """Generate source code for expressions in a given language.
 
     :Mandatory Arguments:
 
@@ -961,7 +960,9 @@ def codegen(
             insensitive. For the moment, only 'C' and 'F95' is supported.
     ``prefix``
             A prefix for the names of the files that contain the source code.
-            Proper (language dependent) suffixes will be appended.
+            Proper (language dependent) suffixes will be appended.  If omitted,
+            the name of the first name_expr tuple is used.
+
 
     :Optional Arguments:
 
@@ -1007,18 +1008,43 @@ def codegen(
     double f(double x, double y, double z);
     #endif
 
+    Another example using Equality objects to give named outputs.  Here the
+    filename (prefix) is taken from the first (name, expr) pair.
+
+    >>> from sympy.abc import f, g
+    >>> from sympy import Eq
+    >>> [(c_name, c_code), (h_name, c_header)] = codegen(
+    ...      [("myfcn", x + y), ("fcn2", [Eq(f, 2*x), Eq(g, y)])],
+    ...      "C", header=False, empty=False)
+    >>> print(c_name)
+    myfcn.c
+    >>> print(c_code)
+    #include "myfcn.h"
+    #include <math.h>
+    double myfcn(double x, double y) {
+       double myfcn_result;
+       myfcn_result = x + y;
+       return myfcn_result;
+    }
+    void fcn2(double x, double y, double *f, double *g) {
+       (*f) = 2*x;
+       (*g) = y;
+    }
+
     """
 
     # Initialize the code generator.
     code_gen = get_code_generator(language, project)
 
-    # Construct the routines based on the name_expression pairs.
-    #  mainly the input arguments require some work
-    routines = []
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.
         name_expr = [name_expr]
 
+    if prefix is None:
+        prefix = name_expr[0][0]
+
+    # Construct the routines based on the name_expression pairs.
+    routines = []
     for name, expr in name_expr:
         routines.append(Routine(name, expr, argument_sequence))
 
