@@ -79,7 +79,7 @@ class ReprPrinter(Printer):
         return "[%s]" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
-        # special case if either dimension is 0
+        # special case for some empty matrices
         if (expr.rows == 0) ^ (expr.cols == 0):
             return '%s(%s, %s, %s)' % (expr.__class__.__name__,
                                        self._print(expr.rows),
