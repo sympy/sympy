@@ -180,6 +180,8 @@ class Expr(Basic, EvalfMixin):
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
+        if r in (S.NaN, S.Infinity, S.NegativeInfinity):
+            raise TypeError("can't convert %s to int" % r)
         i = int(r)
         if not i:
             return 0
@@ -3020,6 +3022,8 @@ class Expr(Basic, EvalfMixin):
         x = self
         if not x.is_number:
             raise TypeError('%s is not a number' % x)
+        if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            return x
         if not x.is_real:
             i, r = x.as_real_imag()
             return i.round(p) + S.ImaginaryUnit*r.round(p)

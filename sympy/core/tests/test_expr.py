@@ -1601,6 +1601,12 @@ def test_round():
     assert str(S(0.006).round(2)) == '0.01'
     assert str(S(0.00106).round(4)) == '0.0011'
 
+    # issue 8147
+    assert S.NaN.round() == S.NaN
+    assert S.Infinity.round() == S.Infinity
+    assert S.NegativeInfinity.round() == S.NegativeInfinity
+    assert S.ComplexInfinity.round() == S.ComplexInfinity
+
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
