@@ -347,8 +347,9 @@ class Add(Expr, AssocOp):
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 5524.
 
+    @cacheit
     def _eval_derivative(self, s):
-        return self.func(*[f.diff(s) for f in self.args])
+        return self.func(*[a.diff(s) for a in self.args])
 
     def _eval_nseries(self, x, n, logx):
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
