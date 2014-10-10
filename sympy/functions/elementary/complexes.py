@@ -99,6 +99,10 @@ class re(Function):
             return -S.ImaginaryUnit \
                 * im(Derivative(self.args[0], x, evaluate=True))
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.real_part(self.args[0]._sage_())
+
 
 class im(Function):
     """
@@ -192,6 +196,10 @@ class im(Function):
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
                 * re(Derivative(self.args[0], x, evaluate=True))
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.imag_part(self.args[0]._sage_())
 
 
 ###############################################################################
