@@ -3016,7 +3016,7 @@ x->oo \
     ucode_str = \
 u("""\
 lim x\n\
-x->∞ \
+x─→∞ \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3032,7 +3032,7 @@ x->0+  \
 u("""\
       2\n\
  lim x \n\
-x->0⁺  \
+x─→0⁺  \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3048,7 +3048,7 @@ x->0+x\
 u("""\
      1\n\
  lim ─\n\
-x->0⁺x\
+x─→0⁺x\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3064,7 +3064,7 @@ x->0+  x   \
 u("""\
      sin(x)\n\
  lim ──────\n\
-x->0⁺  x   \
+x─→0⁺  x   \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3080,7 +3080,7 @@ x->0-  x   \
 u("""\
      sin(x)\n\
  lim ──────\n\
-x->0⁻  x   \
+x─→0⁻  x   \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

@@ -550,7 +550,10 @@ class PrettyPrinter(Printer):
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
-        LimArg = prettyForm(*LimArg.right('->'))
+        if self._use_unicode:
+            LimArg = prettyForm(*LimArg.right(u('\u2500\u2192')))
+        else:
+            LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
 
         if z0 in (S.Infinity, S.NegativeInfinity):
