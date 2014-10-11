@@ -151,6 +151,8 @@ def test_functions():
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
     check_expression("log(x)", "x")
+    check_expression("re(x)", "x")
+    check_expression("im(x)", "x")
 
 
 def test_issue_4023():
