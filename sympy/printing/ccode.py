@@ -102,7 +102,7 @@ class CCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
-        self.reserved_words = reserved_words
+        self.reserved_words.update(reserved_words)
 
     def _rate_index_position(self, p):
         return p*5
@@ -212,18 +212,6 @@ class CCodePrinter(CodePrinter):
     def _print_MatrixElement(self, expr):
         return "{0}[{1}]".format(expr.parent, expr.j +
                 expr.i*expr.parent.shape[1])
-
-    def _print_Symbol(self, expr):
-
-        if expr.name in self.reserved_words:
-            name = '_' + expr.name
-        else:
-            name = expr.name
-
-        if expr in self._dereference:
-            return '(*{0})'.format(name)
-        else:
-            return name
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

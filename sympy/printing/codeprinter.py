@@ -88,6 +88,9 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
+    reserved_words = set()
+    _reserved_word_prefix = '_'
+
     def doprint(self, expr, assign_to=None):
         """
         Print the expression as code.
@@ -324,6 +327,13 @@ class CodePrinter(StrPrinter):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+    def _print_Symbol(self, expr):
+
+        if expr.name in self.reserved_words:
+            return self._reserved_word_prefix + expr.name
+        else:
+            return super(CodePrinter, self)._print_Symbol(expr)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:

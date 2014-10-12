@@ -51,3 +51,11 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(x*x, 1))
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
+
+def test_print_Symbol():
+    x, y = symbols('x, if')
+    p = setup_test_printer()
+    assert p._print(x) == 'x'
+    assert p._print(y) == 'if'
+    p.reserved_words.update(['if'])
+    assert p._print(y) == '_if'
