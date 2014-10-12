@@ -486,6 +486,26 @@ def test_output_arg_c():
     assert result[0][1] == expected
 
 
+def test_output_arg_c_reserved_words():
+    from sympy import sin, cos, Equality
+    x, y, z = symbols("if, while, z")
+    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    c = CCodeGen()
+    result = c.write([r], "test", header=False, empty=False)
+    assert result[0][0] == "test.c"
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'double foo(double _if, double *_while) {\n'
+        '   (*_while) = sin(_if);\n'
+        '   double foo_result;\n'
+        '   foo_result = cos(_if);\n'
+        '   return foo_result;\n'
+        '}\n'
+    )
+    assert result[0][1] == expected
+
+
 def test_empty_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [])

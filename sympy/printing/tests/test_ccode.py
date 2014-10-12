@@ -442,6 +442,7 @@ def test_Matrix_printing():
 
 def test_ccode_reserved_words():
 
-    a_symbol = symbols('if')
+    x, y = symbols('x, if')
 
-    assert ccode(a_symbol**2) == 'pow(_if, 2)'
+    assert ccode(y**2) == 'pow(_if, 2)'
+    assert ccode(x * y**2, dereference=[y]) == 'pow((*_if), 2)*x'

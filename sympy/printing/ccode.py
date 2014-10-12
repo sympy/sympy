@@ -214,10 +214,13 @@ class CCodePrinter(CodePrinter):
                 expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
+
+        name = super(CCodePrinter, self)._print_Symbol(expr)
+
         if expr in self._dereference:
-            return '(*{0})'.format(expr.name)
+            return '(*{0})'.format(name)
         else:
-            return super(CCodePrinter, self)._print_Symbol(expr)
+            return name
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

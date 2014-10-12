@@ -330,10 +330,12 @@ class CodePrinter(StrPrinter):
 
     def _print_Symbol(self, expr):
 
-        if expr.name in self.reserved_words:
-            return self._reserved_word_prefix + expr.name
+        name = super(CodePrinter, self)._print_Symbol(expr)
+
+        if name in self.reserved_words:
+            return self._reserved_word_prefix + name
         else:
-            return super(CodePrinter, self)._print_Symbol(expr)
+            return name
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:

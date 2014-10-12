@@ -1,9 +1,9 @@
 from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.ccode import ccode
 from sympy.core import C, symbols
 from sympy.matrices import MatrixSymbol, Matrix
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.pytest import raises
+
 
 def setup_test_printer(*args, **kwargs):
     p = CodePrinter(*args, **kwargs)
@@ -11,14 +11,12 @@ def setup_test_printer(*args, **kwargs):
     p._number_symbols = set()
     return p
 
+
 def test_print_Dummy():
     d = C.Dummy('d')
     p = setup_test_printer()
     assert p._print_Dummy(d) == "d_%i" % d.dummy_index
 
-def test_print_Mul():
-    x, y = symbols("x y")
-    s = ccode(x ** (-3) * y ** (-2))
 
 def test_Assignment():
     x, y = symbols("x, y")
@@ -52,9 +50,16 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
 
+
 def test_print_Symbol():
     x, y = symbols('x, if')
     p = setup_test_printer()
+    print(p.reserved_words)
+    # If I include the following two line the tests fail because
+    # p.reserved_words somehow obtains those from the CCodePrinter.
+    from sympy import ccode
+    ccode(x)
+    print(p.reserved_words)
     assert p._print(x) == 'x'
     assert p._print(y) == 'if'
     p.reserved_words.update(['if'])
