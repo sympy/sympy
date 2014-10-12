@@ -101,16 +101,24 @@ def deduce_alpha_implications(implications):
             continue    # skip a->a cyclic input
 
         res[a].add(b)
+        res[Not(b)].add(Not(a))
 
         # (x >> a) & (a >> b) => x >> b
+        # (x >> !b) & (a >> b) => x >> !a
         for fact in res:
             implied = res[fact]
             if a in implied:
                 implied.add(b)
+            if Not(b) in implied:
+                implied.add(Not(a))
 
         # (a >> b) & (b >> x) => a >> x
+        # (a >> b) & (!a >> x) => !b >> x
         if b in res:
             res[a] |= res[b]
+        if Not(a) in res:
+            res[Not(b)] |= res[Not(a)]
+
 
     # Clean up tautologies and check consistency
     for a, impl in res.items():
@@ -226,7 +234,11 @@ def rules_2prereq(rules):
     """
     prereq = defaultdict(set)
     for (a, _), impl in rules.items():
+        if isinstance(a, Not):
+            a = a.args[0]
         for (i, _) in impl:
+            if isinstance(i, Not):
+                i = i.args[0]
             prereq[i].add(a)
     return prereq
 
