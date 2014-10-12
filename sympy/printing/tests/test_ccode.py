@@ -450,4 +450,7 @@ def test_ccode_sign():
     assert ccode(expr, 'z') == 'z = y*(((x) > 0) - ((x) < 0));'
 
     assert ccode(sign(2 * x + x**2) * x + x**2) == \
-        'pow(x, 2) + x*(((x**2 + 2*x) > 0) - ((x**2 + 2*x) < 0))'
+        'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
+
+    expr = sign(cos(x))
+    assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'

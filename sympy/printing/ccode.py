@@ -182,7 +182,7 @@ class CCodePrinter(CodePrinter):
             return expr.name
 
     def _print_sign(self, func):
-       return '((({0}) > 0) - (({0}) < 0))'.format(func.args[0])
+        return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
