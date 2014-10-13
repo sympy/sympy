@@ -3024,15 +3024,15 @@ x->∞ \
     expr = Limit(x**2, x, 0)
     ascii_str = \
 """\
-     2\n\
-lim x \n\
-x->0  \
+      2\n\
+ lim x \n\
+x->0+  \
 """
     ucode_str = \
 u("""\
-     2\n\
-lim x \n\
-x->0  \
+      2\n\
+ lim x \n\
+x->0⁺  \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3040,15 +3040,15 @@ x->0  \
     expr = Limit(1/x, x, 0)
     ascii_str = \
 """\
-    1\n\
-lim -\n\
-x->0x\
+     1\n\
+ lim -\n\
+x->0+x\
 """
     ucode_str = \
 u("""\
-    1\n\
-lim ─\n\
-x->0x\
+     1\n\
+ lim ─\n\
+x->0⁺x\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3056,15 +3056,31 @@ x->0x\
     expr = Limit(sin(x)/x, x, 0)
     ascii_str = \
 """\
-    sin(x)\n\
-lim ------\n\
-x->0  x   \
+     sin(x)\n\
+ lim ------\n\
+x->0+  x   \
 """
     ucode_str = \
 u("""\
-    sin(x)\n\
-lim ──────\n\
-x->0  x   \
+     sin(x)\n\
+ lim ──────\n\
+x->0⁺  x   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Limit(sin(x)/x, x, 0, "-")
+    ascii_str = \
+"""\
+     sin(x)\n\
+ lim ------\n\
+x->0-  x   \
+"""
+    ucode_str = \
+u("""\
+     sin(x)\n\
+ lim ──────\n\
+x->0⁻  x   \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

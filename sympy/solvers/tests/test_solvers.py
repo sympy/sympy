@@ -15,7 +15,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import RootOf
 
-from sympy.utilities.pytest import slow, XFAIL, raises, skip
+from sympy.utilities.pytest import slow, XFAIL, raises, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
@@ -1220,6 +1220,8 @@ def test_real_roots():
 
 @slow
 def test_issue_6528():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
         895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]

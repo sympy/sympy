@@ -2,9 +2,9 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
         factor, cancel)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-        Hypergeometric, P, E, variance, covariance, skewness, sample, density,
-        given, independent, dependent, where, FiniteRV, pspace, cdf,
-        correlation, moment, cmoment, smoment)
+    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
+    density, given, independent, dependent, where, FiniteRV, pspace, cdf,
+    correlation, moment, cmoment, smoment)
 from sympy.utilities.pytest import raises, slow
 from sympy.abc import p
 
@@ -215,6 +215,15 @@ def test_hypergeometric_numeric():
                 if N > 2 and 0 < m < N and n < N:
                     assert skewness(X) == simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
                         / (sqrt(n*m*(N - m)*(N - n))*(N - 2)))
+
+
+def test_rademacher():
+    X = Rademacher('X')
+
+    assert E(X) == 0
+    assert variance(X) == 1
+    assert density(X)[-1] == S.Half
+    assert density(X)[1] == S.Half
 
 
 def test_FiniteRV():

@@ -652,6 +652,11 @@ def test_sympy__stats__frv_types__HypergeometricDistribution():
     assert _test_args(HypergeometricDistribution(10, 5, 3))
 
 
+def test_sympy__stats__frv_types__RademacherDistribution():
+    from sympy.stats.frv_types import RademacherDistribution
+    assert _test_args(RademacherDistribution())
+
+
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
     assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
@@ -2391,6 +2396,46 @@ def test_sympy__physics__quantum__fermion__FermionFockKet():
 def test_sympy__physics__quantum__fermion__FermionFockBra():
     from sympy.physics.quantum.fermion import FermionFockBra
     assert _test_args(FermionFockBra(1))
+
+
+def test_sympy__physics__quantum__pauli__SigmaOpBase():
+    from sympy.physics.quantum.pauli import SigmaOpBase
+    assert _test_args(SigmaOpBase())
+
+
+def test_sympy__physics__quantum__pauli__SigmaX():
+    from sympy.physics.quantum.pauli import SigmaX
+    assert _test_args(SigmaX())
+
+
+def test_sympy__physics__quantum__pauli__SigmaY():
+    from sympy.physics.quantum.pauli import SigmaY
+    assert _test_args(SigmaY())
+
+
+def test_sympy__physics__quantum__pauli__SigmaZ():
+    from sympy.physics.quantum.pauli import SigmaZ
+    assert _test_args(SigmaZ())
+
+
+def test_sympy__physics__quantum__pauli__SigmaMinus():
+    from sympy.physics.quantum.pauli import SigmaMinus
+    assert _test_args(SigmaMinus())
+
+
+def test_sympy__physics__quantum__pauli__SigmaPlus():
+    from sympy.physics.quantum.pauli import SigmaPlus
+    assert _test_args(SigmaPlus())
+
+
+def test_sympy__physics__quantum__pauli__SigmaZKet():
+    from sympy.physics.quantum.pauli import SigmaZKet
+    assert _test_args(SigmaZKet(0))
+
+
+def test_sympy__physics__quantum__pauli__SigmaZBra():
+    from sympy.physics.quantum.pauli import SigmaZBra
+    assert _test_args(SigmaZBra(0))
 
 
 def test_sympy__physics__quantum__piab__PIABHamiltonian():

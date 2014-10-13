@@ -14,6 +14,7 @@ from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
 from sympy.matrices import eye
 
+
 class CustomKet(Ket):
     @classmethod
     def default_args(self):
@@ -85,10 +86,16 @@ def test_unitary():
 def test_identity():
     I = IdentityOperator()
     O = Operator('O')
+    x = Symbol("x")
 
     assert isinstance(I, IdentityOperator)
     assert isinstance(I, Operator)
 
+    assert I * O == O
+    assert O * I == O
+    assert isinstance(I * I, IdentityOperator)
+    assert isinstance(3 * I, Mul)
+    assert isinstance(I * x, Mul)
     assert I.inv() == I
     assert Dagger(I) == I
     assert qapply(I * O) == O
@@ -96,6 +103,7 @@ def test_identity():
 
     for n in [2, 3, 5]:
         assert represent(IdentityOperator(n)) == eye(n)
+
 
 def test_outer_product():
     k = Ket('k')

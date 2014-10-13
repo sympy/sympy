@@ -79,9 +79,10 @@ def test_wrappers():
 
 
 def test_Eq():
-
     assert Eq(x**2) == Eq(x**2, 0)
     assert Eq(x**2) != Eq(x**2, 1)
+
+    assert Eq(x, x)  # issue 5719
 
 
 def test_rel_Infinity():

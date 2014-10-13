@@ -1,5 +1,7 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
+from sympy.core import (pi, oo, symbols, Function, Rational, Integer,
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+                             gamma, sign)
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -440,9 +442,23 @@ def test_Matrix_printing():
         "M[7] = 4 + sqrt(q[0]);\n"
         "M[8] = 0;")
 
+
 def test_ccode_reserved_words():
 
     x, y = symbols('x, if')
 
     assert ccode(y**2) == 'pow(_if, 2)'
     assert ccode(x * y**2, dereference=[y]) == 'pow((*_if), 2)*x'
+
+
+def test_ccode_sign():
+
+    expr = sign(x) * y
+    assert ccode(expr) == 'y*(((x) > 0) - ((x) < 0))'
+    assert ccode(expr, 'z') == 'z = y*(((x) > 0) - ((x) < 0));'
+
+    assert ccode(sign(2 * x + x**2) * x + x**2) == \
+        'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
+
+    expr = sign(cos(x))
+    assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'

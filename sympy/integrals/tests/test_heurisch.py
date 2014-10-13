@@ -2,7 +2,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
     LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
@@ -267,6 +267,8 @@ def test_pmint_besselj():
 
 @slow # 110 seconds on 3.4 GHz
 def test_pmint_WrightOmega():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     def omega(x):
         return LambertW(exp(x))
 

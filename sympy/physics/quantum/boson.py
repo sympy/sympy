@@ -5,7 +5,7 @@ from warnings import warn
 from sympy.core.compatibility import u
 from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
-from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
+from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
@@ -89,6 +89,21 @@ class BosonOp(Operator):
 
     def _eval_adjoint(self):
         return BosonOp(str(self.name), not self.is_annihilation)
+
+    def __mul__(self, other):
+
+        if other == IdentityOperator(2):
+            return self
+
+        if isinstance(other, Mul):
+            args1 = tuple(arg for arg in other.args if arg.is_commutative)
+            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
+            x = self
+            for y in args2:
+                x = x * y
+            return Mul(*args1) * x
+
+        return Mul(self, other)
 
     def _print_contents_latex(self, printer, *args):
         if self.is_annihilation:
