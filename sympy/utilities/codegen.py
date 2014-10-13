@@ -1,6 +1,6 @@
 """
-module for generating C, C++, Fortran77, Fortran90 and python routines that
-evaluate sympy expressions. This module is work in progress. Only the
+module for generating C, C++, Fortran77, Fortran90 and Octave/Matlab routines
+that evaluate sympy expressions.  This module is work in progress.  Only the
 milestones with a '+' character in the list below have been completed.
 
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
@@ -54,6 +54,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 + Also generate .pyf code for f2py (in autowrap module)
 + Isolate constants and evaluate them beforehand in double precision
 + Fortran 90
++ Octave/Matlab
 
 - Common Subexpression Elimination
 - User defined comments in the generated code
@@ -1080,13 +1081,13 @@ class FCodeGen(CodeGen):
 
 
 class OctaveCodeGen(CodeGen):
-    """Generator for Octave code
+    """Generator for Octave code.
 
     The .write() method inherited from CodeGen will output a code file
     <prefix>.m.
 
     Octave .m files usually contain one function.  That function name should
-    match the filename (``prefex``).  If you pass multiple ``name_expr`` pairs,
+    match the filename (``prefix``).  If you pass multiple ``name_expr`` pairs,
     the latter ones are presumed to be private functions accessed by the
     primary function.
 
@@ -1180,7 +1181,7 @@ class OctaveCodeGen(CodeGen):
         return Routine(name, arg_list, return_vals, local_vars)
 
     def _get_symbol(self, s):
-        """print the symbol appropriately"""
+        """Print the symbol appropriately."""
         return octave_code(s).strip()
 
     def _get_header(self):
@@ -1199,9 +1200,7 @@ class OctaveCodeGen(CodeGen):
         return []
 
     def _get_routine_opening(self, routine):
-        """
-        Returns the opening statements of the routine
-        """
+        """Returns the opening statements of the routine."""
         code_list = []
         code_list.append("function ")
 
@@ -1269,9 +1268,8 @@ class OctaveCodeGen(CodeGen):
         return declarations + code_lines
 
     def _indent_code(self, codelines):
-        # FIXME: this gets called twice?  I'd like to stop trimming the
-        # leading whitespace in OctaveCodePrinter.indent_code.  But if I do,
-        # some bits (notably PieceWise) get double-indented.
+        # Note that indenting seems to happen twice, first
+        # statement-by-statement by OctavePrinter then again here.
         p = OctaveCodePrinter({'human': False})
         return p.indent_code(codelines)
         return codelines
@@ -1345,6 +1343,7 @@ def codegen(name_expr, language, prefix=None, project="project",
     language : string
         A string that indicates the source code language.  This is case
         insensitive.  Currently, 'C', 'F95' and 'Octave' are supported.
+        'Octave' generates code compatible with both Octave and Matlab.
 
     prefix : string, optional
         A prefix for the names of the files that contain the source code.

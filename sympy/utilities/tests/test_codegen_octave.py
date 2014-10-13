@@ -294,10 +294,6 @@ def test_m_filename_match_first_fcn():
                         "Octave", "bar", header=False, empty=False))
 
 
-# FIXME: use Assignment directly to test octave.py string name?  Gives a way
-# for user to name codegen outputs without MatrixSymbol?
-
-
 def test_m_matrix_named():
     e2 = Matrix([[x, 2*y, pi*z]])
     name_expr = ("test", Equality(MatrixSymbol('myout1', 1, 3), e2))

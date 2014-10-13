@@ -17,8 +17,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
-# FIXME: causes errors on import
-#from sympy.functions import sqrt
 
 # List of known functions.  First, those that have the same name in
 # SymPy and Octave.   This is almost certainly incomplete!
@@ -58,9 +56,9 @@ class OctaveCodePrinter(CodePrinter):
         'contract': True,
         'inline': True,
     }
-    # FIXME: contract is for expressing tensors as loops (if True), or
-    # just assignment (if False).  Needs tests for tensors, borrow
-    # some from C?
+    # Note: contract is for expressing tensors as loops (if True), or
+    # just assignment (if False).
+    # FIXME: Needs tests for tensors, borrow some from C?
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
@@ -309,7 +307,7 @@ class OctaveCodePrinter(CodePrinter):
         return "[%s]" % A.table(self, rowstart='', rowend='',
                                 rowsep=';\n', colsep=' ')
 
-    # FIXME: see my prosposed change for _print_NumberSymbol, same here
+    # FIXME: see my proposed change for _print_NumberSymbol, same here
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
@@ -574,6 +572,6 @@ def octave_code(expr, assign_to=None, **settings):
 def print_octave_code(expr, **settings):
     """Prints the Octave (or Matlab) representation of the given expression.
 
-       See `octave_code` for the meaning of the optional arguments.
+    See `octave_code` for the meaning of the optional arguments.
     """
     print(octave_code(expr, **settings))
