@@ -17,6 +17,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
+from re import search
 
 # List of known functions.  First, those that have the same name in
 # SymPy and Octave.   This is almost certainly incomplete!
@@ -403,17 +404,15 @@ class OctaveCodePrinter(CodePrinter):
             return ''.join(code_lines)
 
         tab = "  "
-        # FIXME: use regex here to have end/else at beginning and end of line?
-        # otherwise, we fail on "elsemy = 6" or "enditall = inf"
-        inc_token = ('function ', 'if ', 'elseif ', 'else', 'for ')
-        dec_token = ('end')
+        inc_regex = ('^function ', '^if ', '^elseif ', '^else$', '^for ')
+        dec_regex = ('^end$', '^elseif ', '^else$')
 
         # pre-strip left-space from the code
         code = [ line.lstrip(' \t') for line in code ]
 
-        increase = [ int(any(map(line.startswith, inc_token)))
+        increase = [ int(any([search(re, line) for re in inc_regex]))
                      for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_token)))
+        decrease = [ int(any([search(re, line) for re in dec_regex]))
                      for line in code ]
 
         pretty = []
