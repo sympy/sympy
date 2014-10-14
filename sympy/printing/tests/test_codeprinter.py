@@ -54,12 +54,6 @@ def test_Assignment():
 def test_print_Symbol():
     x, y = symbols('x, if')
     p = setup_test_printer()
-    print(p.reserved_words)
-    # If I include the following two line the tests fail because
-    # p.reserved_words somehow obtains those from the CCodePrinter.
-    from sympy import ccode
-    ccode(x)
-    print(p.reserved_words)
     assert p._print(x) == 'x'
     assert p._print(y) == 'if'
     p.reserved_words.update(['if'])

@@ -102,7 +102,7 @@ class CCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
-        self.reserved_words.update(reserved_words)
+        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
         return p*5
