@@ -14,6 +14,8 @@ Hypergeometric
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import as_int
+from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 from sympy import (S, sympify, Rational, binomial, cacheit, Symbol, Integer,
         Dict, Basic)
@@ -188,10 +190,24 @@ def Coin(name, p=S.Half):
 class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
+    def __new__(cls, *args):
+        n = args[BinomialDistribution._argnames.index('n')]
+        p = args[BinomialDistribution._argnames.index('p')]
+        n_sym = sympify(n)
+        p_sym = sympify(p)
+
+        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
+            raise ValueError("'n' must be positive integer. n = %s." % str(n))
+        elif fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
+            raise ValueError("'p' must be: 0 <= p <= 1 . p = %s" % str(p))
+        else:
+            return super(BinomialDistribution, cls).__new__(cls, *args)
+
     @property
     @cacheit
     def dict(self):
         n, p, succ, fail = self.n, self.p, self.succ, self.fail
+        n = as_int(n)
         return dict((k*succ + (n - k)*fail,
                 binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
 
