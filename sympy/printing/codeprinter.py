@@ -88,8 +88,11 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    reserved_words = set()
     _reserved_word_prefix = '_'
+
+    def __init__(self, settings=None):
+        super(CodePrinter, self).__init__(settings=settings)
+        self.reserved_words = set()
 
     def doprint(self, expr, assign_to=None):
         """
