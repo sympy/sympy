@@ -1344,7 +1344,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if not other.is_Number and other.is_number and other.is_real:
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -1363,7 +1363,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if not other.is_Number and other.is_number and other.is_real:
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -1382,7 +1382,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if not other.is_Number and other.is_number and other.is_real:
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -1401,7 +1401,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if not other.is_Number and other.is_number and other.is_real:
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
