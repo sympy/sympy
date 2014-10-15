@@ -37,6 +37,11 @@ def test_roots_quadratic():
         [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
          -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
 
+    # issue 8255:
+    f = -24*x**2 - 180*x + 264
+    assert roots_quadratic(Poly(f, x)) == \
+        [-sqrt(401)/4 - Rational(15, 4), Rational(-15, 4) + sqrt(401)/4]
+
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
