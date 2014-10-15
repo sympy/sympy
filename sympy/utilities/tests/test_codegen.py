@@ -103,6 +103,24 @@ def test_simple_c_code():
     assert source == expected
 
 
+def test_c_code_reserved_words():
+    x, y, z = symbols('if, typedef, while')
+    expr = (x + y) * z
+    routine = Routine("test", expr)
+    code_gen = CCodeGen()
+    source = get_string(code_gen.dump_c, [routine])
+    expected = (
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double if_, double typedef_, double while_) {\n"
+        "   double test_result;\n"
+        "   test_result = while_*(if_ + typedef_);\n"
+        "   return test_result;\n"
+        "}\n"
+    )
+    assert source == expected
+
+
 def test_numbersymbol_c_code():
     routine = Routine("test", pi**Catalan)
     code_gen = CCodeGen()
@@ -463,6 +481,26 @@ def test_output_arg_c():
         '   (*y) = sin(x);\n'
         '   double foo_result;\n'
         '   foo_result = cos(x);\n'
+        '   return foo_result;\n'
+        '}\n'
+    )
+    assert result[0][1] == expected
+
+
+def test_output_arg_c_reserved_words():
+    from sympy import sin, cos, Equality
+    x, y, z = symbols("if, while, z")
+    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    c = CCodeGen()
+    result = c.write([r], "test", header=False, empty=False)
+    assert result[0][0] == "test.c"
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'double foo(double if_, double *while_) {\n'
+        '   (*while_) = sin(if_);\n'
+        '   double foo_result;\n'
+        '   foo_result = cos(if_);\n'
         '   return foo_result;\n'
         '}\n'
     )

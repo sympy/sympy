@@ -13,7 +13,7 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core import S
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
@@ -43,6 +43,43 @@ known_functions = {
     "ceiling": "ceil",
 }
 
+# These are the core reserved words in the C language. Taken from:
+# http://crasseux.com/books/ctutorial/Reserved-words-in-C.html
+
+reserved_words = ['auto',
+                  'if',
+                  'break',
+                  'int',
+                  'case',
+                  'long',
+                  'char',
+                  'register',
+                  'continue',
+                  'return',
+                  'default',
+                  'short',
+                  'do',
+                  'sizeof',
+                  'double',
+                  'static',
+                  'else',
+                  'struct',
+                  'entry',
+                  'switch',
+                  'extern',
+                  'typedef',
+                  'float',
+                  'union',
+                  'for',
+                  'unsigned',
+                  'goto',
+                  'while',
+                  'enum',
+                  'void',
+                  'const',
+                  'signed',
+                  'volatile']
+
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -56,7 +93,9 @@ class CCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': True,
-        'dereference': set()
+        'dereference': set(),
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
     }
 
     def __init__(self, settings={}):
@@ -65,6 +104,7 @@ class CCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
+        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
         return p*5
@@ -176,10 +216,13 @@ class CCodePrinter(CodePrinter):
                 expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
+
+        name = super(CCodePrinter, self)._print_Symbol(expr)
+
         if expr in self._dereference:
-            return '(*{0})'.format(expr.name)
+            return '(*{0})'.format(name)
         else:
-            return expr.name
+            return name
 
     def _print_sign(self, func):
         return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
