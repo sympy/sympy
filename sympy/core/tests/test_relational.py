@@ -299,6 +299,7 @@ def test_univariate_relational_as_set():
         Interval(0, oo, True, True)
 
     assert (x**2 >= 4).as_set() == Interval(-oo, -2) + Interval(2, oo)
+    assert And(x > -2, x < 3).as_set() == Interval(-2, 3, True, True)
 
 
 @XFAIL

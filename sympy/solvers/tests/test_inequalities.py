@@ -272,5 +272,8 @@ def test_solve_univariate_inequality():
     # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
+    assert isolve(x < oo, x, relational=False) == \
+        Interval(-oo, oo)
+
     x = Symbol('x', real=True, finite=True)
     assert isolve(x < oo, x, relational=False) == Interval(-oo, oo)
