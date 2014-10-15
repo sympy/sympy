@@ -388,6 +388,10 @@ def solve_univariate_inequality(expr, gen, relational=True):
     # Implementation for continous functions
 
     from sympy.solvers.solvers import solve
+    if expr == True:
+        return Interval(-S.Infinity, S.Infinity)
+    elif expr == False:
+        return S.EmptySet
 
     solns = solve(expr.lhs - expr.rhs, gen)
     oo = S.Infinity
