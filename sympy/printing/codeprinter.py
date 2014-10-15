@@ -88,10 +88,15 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    _reserved_word_prefix = '_'
+    _default_settings = {'order': None,
+                         'full_prec': 'auto',
+                         'error_on_reserved': False,
+                         'reserved_word_suffix': '_'}
 
     def __init__(self, settings=None):
+
         super(CodePrinter, self).__init__(settings=settings)
+
         self.reserved_words = set()
 
     def doprint(self, expr, assign_to=None):
@@ -336,7 +341,11 @@ class CodePrinter(StrPrinter):
         name = super(CodePrinter, self)._print_Symbol(expr)
 
         if name in self.reserved_words:
-            return self._reserved_word_prefix + name
+            if self._settings['error_on_reserved']:
+                msg = ('This expression includes the symbol "{}" which is a '
+                       'reserved keyword in this language.')
+                raise ValueError(msg.format(name))
+            return name + self._settings['reserved_word_suffix']
         else:
             return name
 

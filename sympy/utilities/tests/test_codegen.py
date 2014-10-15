@@ -112,9 +112,9 @@ def test_c_code_reserved_words():
     expected = (
         "#include \"file.h\"\n"
         "#include <math.h>\n"
-        "double test(double _if, double _typedef, double _while) {\n"
+        "double test(double if_, double typedef_, double while_) {\n"
         "   double test_result;\n"
-        "   test_result = _while*(_if + _typedef);\n"
+        "   test_result = while_*(if_ + typedef_);\n"
         "   return test_result;\n"
         "}\n"
     )
@@ -497,10 +497,10 @@ def test_output_arg_c_reserved_words():
     expected = (
         '#include "test.h"\n'
         '#include <math.h>\n'
-        'double foo(double _if, double *_while) {\n'
-        '   (*_while) = sin(_if);\n'
+        'double foo(double if_, double *while_) {\n'
+        '   (*while_) = sin(if_);\n'
         '   double foo_result;\n'
-        '   foo_result = cos(_if);\n'
+        '   foo_result = cos(if_);\n'
         '   return foo_result;\n'
         '}\n'
     )

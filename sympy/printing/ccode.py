@@ -93,7 +93,9 @@ class CCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': True,
-        'dereference': set()
+        'dereference': set(),
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
     }
 
     def __init__(self, settings={}):

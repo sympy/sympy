@@ -447,8 +447,14 @@ def test_ccode_reserved_words():
 
     x, y = symbols('x, if')
 
-    assert ccode(y**2) == 'pow(_if, 2)'
-    assert ccode(x * y**2, dereference=[y]) == 'pow((*_if), 2)*x'
+    assert ccode(y**2) == 'pow(if_, 2)'
+    assert ccode(x * y**2, dereference=[y]) == 'pow((*if_), 2)*x'
+
+    expected = 'pow(if_unreserved, 2)'
+    assert ccode(y**2, reserved_word_suffix='_unreserved') == expected
+
+    with raises(ValueError):
+        ccode(y**2, error_on_reserved=True)
 
 
 def test_ccode_sign():
