@@ -25,7 +25,7 @@ def test_empty_m_code():
 
 def test_m_simple_code():
     name_expr = ("test", (x + y)*z)
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     assert result[0] == "test.m"
     source = result[1]
     expected = (
@@ -38,7 +38,7 @@ def test_m_simple_code():
 
 def test_m_simple_code_with_header():
     name_expr = ("test", (x + y)*z)
-    result, = codegen(name_expr, "Octave", "test", header=True, empty=False)
+    result, = codegen(name_expr, "Octave", header=True, empty=False)
     assert result[0] == "test.m"
     source = result[1]
     expected = (
@@ -58,7 +58,7 @@ def test_m_simple_code_with_header():
 def test_m_simple_code_nameout():
     expr = Equality(z, (x + y))
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function z = test(x, y)\n"
@@ -70,7 +70,7 @@ def test_m_simple_code_nameout():
 
 def test_m_numbersymbol():
     name_expr = ("test", pi**Catalan)
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function out1 = test()\n"
@@ -84,7 +84,7 @@ def test_m_numbersymbol():
 def test_m_numbersymbol_no_inline():
     # FIXME: how to pass inline=False to the OctaveCodePrinter?
     name_expr = ("test", [pi**Catalan, EulerGamma])
-    result, = codegen(name_expr, "Octave", "test", header=False,
+    result, = codegen(name_expr, "Octave", header=False,
                       empty=False, inline=False)
     source = result[1]
     expected = (
@@ -118,7 +118,7 @@ def test_multiple_results_m():
     expr1 = (x + y)*z
     expr2 = (x - y)*z
     name_expr = ("test", [expr1, expr2])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [out1, out2] = test(x, y, z)\n"
@@ -136,7 +136,7 @@ def test_results_named_unordered():
     expr2 = Equality(A, (x - y)*z)
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [C, A, B] = test(x, y, z)\n"
@@ -154,7 +154,7 @@ def test_results_named_ordered():
     expr2 = Equality(A, (x - y)*z)
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
-    result = codegen(name_expr, "Octave", "test", header=False, empty=False,
+    result = codegen(name_expr, "Octave", header=False, empty=False,
                      argument_sequence=(x, z, y))
     assert result[0][0] == "test.m"
     source = result[0][1]
@@ -174,7 +174,7 @@ def test_complicated_m_codegen():
             [ ((sin(x) + cos(y) + tan(z))**3).expand(),
             cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
     ])
-    result = codegen(name_expr, "Octave", "testlong", header=False, empty=False)
+    result = codegen(name_expr, "Octave", header=False, empty=False)
     assert result[0][0] == "testlong.m"
     source = result[0][1]
     expected = (
@@ -193,7 +193,7 @@ def test_m_output_arg_mixed_unordered():
     from sympy import sin, cos, tan
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
-    result, = codegen(name_expr, "Octave", "foo", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     assert result[0] == "foo.m"
     source = result[1];
     expected = (
@@ -210,7 +210,7 @@ def test_m_output_arg_mixed_unordered():
 def test_m_piecewise_():
     pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
     name_expr = ("pwtest", pw)
-    result, = codegen(name_expr, "Octave", "pwtest", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function out1 = pwtest(x)\n"
@@ -227,8 +227,8 @@ def test_m_piecewise_no_inline():
     # FIXME: how to pass inline=False to the OctaveCodePrinter?
     pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
     name_expr = ("pwtest", pw)
-    result, = codegen(name_expr, "Octave", "pwtest", header=False,
-                      empty=False, inline=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False,
+                      inline=False)
     source = result[1]
     expected = (
         "function out1 = pwtest(x)\n"
@@ -248,7 +248,7 @@ def test_m_piecewise_no_inline():
 
 def test_m_multifcns_per_file():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
-    result = codegen(name_expr, "Octave", "foo", header=False, empty=False)
+    result = codegen(name_expr, "Octave", header=False, empty=False)
     assert result[0][0] == "foo.m"
     source = result[0][1];
     expected = (
@@ -266,7 +266,7 @@ def test_m_multifcns_per_file():
 
 def test_m_multifcns_per_file_w_header():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
-    result = codegen(name_expr, "Octave", "foo", header=True, empty=False)
+    result = codegen(name_expr, "Octave", header=True, empty=False)
     assert result[0][0] == "foo.m"
     source = result[0][1];
     expected = (
@@ -291,13 +291,13 @@ def test_m_multifcns_per_file_w_header():
 def test_m_filename_match_first_fcn():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     raises(ValueError, lambda: codegen(name_expr,
-                        "Octave", "bar", header=False, empty=False))
+                        "Octave", prefix="bar", header=False, empty=False))
 
 
 def test_m_matrix_named():
     e2 = Matrix([[x, 2*y, pi*z]])
     name_expr = ("test", Equality(MatrixSymbol('myout1', 1, 3), e2))
-    result = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result = codegen(name_expr, "Octave", header=False, empty=False)
     assert result[0][0] == "test.m"
     source = result[0][1]
     expected = (
@@ -312,7 +312,7 @@ def test_m_matrix_named_matsym():
     myout1 = MatrixSymbol('myout1', 1, 3)
     e2 = Matrix([[x, 2*y, pi*z]])
     name_expr = ("test", Equality(myout1, e2, evaluate=False))
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function myout1 = test(x, y, z)\n"
@@ -325,7 +325,7 @@ def test_m_matrix_named_matsym():
 def test_m_matrix_output_autoname():
     expr = Matrix([[x, x+y, 3]])
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function out1 = test(x, y)\n"
@@ -341,7 +341,7 @@ def test_m_matrix_output_autoname_2():
     e3 = Matrix([[x], [y], [z]])
     e4 = Matrix([[x, y], [z, 16]])
     name_expr = ("test", (e1, e2, e3, e4))
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [out1, out2, out3, out4] = test(x, y, z)\n"
@@ -362,7 +362,7 @@ def test_m_results_matrix_named_ordered():
     expr2 = Equality(A, Matrix([[1, 2, x]]))
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False,
+    result, = codegen(name_expr, "Octave", header=False, empty=False,
                      argument_sequence=(x, z, y))
     source = result[1]
     expected = (
@@ -383,7 +383,7 @@ def test_m_matrixsymbol_slice():
     name_expr = ("test", [Equality(B, A[0, :]),
                           Equality(C, A[1, :]),
                           Equality(D, A[:, 2])])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [B, C, D] = test(A)\n"
@@ -401,7 +401,7 @@ def test_m_matrixsymbol_slice2():
     C = MatrixSymbol('C', 2, 2)
     name_expr = ("test", [Equality(B, A[0:2, 0:2]),
                           Equality(C, A[0:2, 1:3])])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [B, C] = test(A)\n"
@@ -418,7 +418,7 @@ def test_m_matrixsymbol_slice3():
     C = MatrixSymbol('C', 4, 2)
     name_expr = ("test", [Equality(B, A[6:, 1::3]),
                           Equality(C, A[::2, ::3])])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [B, C] = test(A)\n"
@@ -433,7 +433,7 @@ def test_m_matrixsymbol_slice_autoname():
     A = MatrixSymbol('A', 2, 3)
     B = MatrixSymbol('B', 1, 3)
     name_expr = ("test", [Equality(B, A[0,:]), A[1,:], A[:,0], A[:,1]])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [B, out2, out3, out4] = test(A)\n"
@@ -457,7 +457,7 @@ def test_m_loops():
     i = Idx('i', m)
     j = Idx('j', n)
     result, = codegen(('mat_vec_mult', Eq(y[i], A[i, j]*x[j])), "Octave", \
-                      "mat_vec_mult", header=False, empty=False)
+                      header=False, empty=False)
     source = result[1]
     expected = (
         'function y = mat_vec_mult(A, m, n, x)\n'
@@ -478,7 +478,7 @@ def test_m_loops():
 def test_m_InOutArgument():
     expr = Equality(x, x**2)
     name_expr = ("mysqr", expr)
-    result, = codegen(name_expr, "Octave", "mysqr", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function x = mysqr(x)\n"
@@ -492,7 +492,7 @@ def test_m_InOutArgument_order():
     # can specify the order as (x, y)
     expr = Equality(x, x**2 + y)
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Octave", "test", header=False,
+    result, = codegen(name_expr, "Octave", header=False,
                       empty=False, argument_sequence=(x,y))
     source = result[1]
     expected = (
@@ -504,7 +504,7 @@ def test_m_InOutArgument_order():
     # make sure it gives (x, y) not (y, x)
     expr = Equality(x, x**2 + y)
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function x = test(x, y)\n"
@@ -517,7 +517,7 @@ def test_m_InOutArgument_order():
 def test_m_not_supported():
     f = Function('f')
     name_expr = ("test", [f(x).diff(x), S.ComplexInfinity])
-    result, = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
     expected = (
         "function [out1, out2] = test(x)\n"
