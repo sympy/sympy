@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor, zoo)
+from sympy.core.symbol import Dummy
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -164,6 +165,30 @@ def test_doit():
     assert Lt(nn, 0).doit() is S.false
 
     assert Eq(x, 0).doit() == Eq(x, 0)
+
+
+def test_eq_pos_neg_assumptions():
+    # see issue #6116
+    p = Dummy(positive=True)
+    n = Dummy(negative=True)
+    np = Dummy(nonpositive=True)
+    nn = Dummy(nonnegative=True)
+    assert Eq(p, 0) is S.false
+    assert Eq(n, 0) is S.false
+    assert Eq(np, 0) == Eq(np, 0, evaluate=False)
+    assert Eq(nn, 0) == Eq(nn, 0, evaluate=False)
+
+
+def test_eq_incompatibility_gives_false():
+    # Incompatibility between lhs and rhs should be detected by 'is_zero'
+    a = Dummy(irrational=True)
+    b = Dummy(integer=True)
+    assert Eq(a, b) is S.false
+
+
+def test_eq_noncommutative():
+    A, B = symbols('A B', commutative=False)
+    assert Eq(A, B) == Eq(A, B, evaluate=False)
 
 
 def test_new_relational():
@@ -506,3 +531,44 @@ def test_ineq_avoid_wild_symbol_flip():
     # Previously failed as 'p <= x':
     e = Ge(x, p).doit()
     assert e == Ge(x, p, evaluate=False)
+
+
+def test_eq_no_simplification():
+    from sympy import sin, cos, sqrt
+    data = [ (cos(x)**2 + sin(x)**2, 1, S.true),
+             (cos(x)**2 + sin(x)**2, 2, S.false),
+             (x*(y + z), x*y + x*z, S.true),
+             (sqrt(4*sqrt(2) + 4), 2*sqrt(sqrt(2) + 1), S.true),
+             ((6**pi + 2**pi)**(1/pi), 2*(3**pi + 1)**(1/pi), S.true) ]
+    for (lhs, rhs, truth) in data:
+        e = Eq(lhs, rhs)
+        assert e == Eq(lhs, rhs, evaluate=False)
+        assert e.simplify() is truth
+
+
+@XFAIL
+def test_eq_simplify_to_true():
+    # should probably simplify but doesn't with a variable.  The
+    # simplification is based on .equals(0) which returns None here.
+    lhs = (2**pi*x + 2**pi)**(1/pi)
+    rhs = 2*(x + 1)**(1/pi)
+    e = Eq(lhs, rhs)
+    assert e.subs(x, 10).simplify()
+    assert e.simplify()  # FAIL
+    #print((lhs - rhs).equals(0))
+
+
+@XFAIL
+def test_eq_simplify_cancels_lhs_rhs():
+    # should simplifying an Equality cancel terms from lhs and rhs?
+    b = Dummy(bounded=True)
+    r = Dummy(real=True)
+    data = [(2 + I, r + I, Eq(2, r)),
+            (2 + I, x + I, Eq(2, x)),
+            (2 + b, x + b, Eq(2, x)),
+            (x + 1, y + 1, Eq(x, y)),
+            (2 + y, x + y, Eq(2, x))]  # maybe not this one
+    for (lhs, rhs, expected_simplify) in data:
+        e = Eq(lhs, rhs)
+        assert e == Eq(lhs, rhs, evaluate=False)
+        assert e.simplify() == expected_simplify
