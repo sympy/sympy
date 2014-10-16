@@ -722,14 +722,15 @@ def bisect(f, a, b, tol):
     fb = f(b)
     if fa * fb >= 0:
         raise ValueError("bisect: f(a) and f(b) must have opposite signs")
-    while (b-a > tol):
-        c = (a+b)/2
+    while (b - a > tol):
+        c = (a + b)/2
         fc = f(c)
-        if (fc == 0): return c # We need to make sure f(c) is not zero below
+        if (fc == 0):
+            return c # We need to make sure f(c) is not zero below
         if (fa * fc < 0):
             b = c
             fb = fc
         else:
             a = c
             fa = fc
-    return (a+b)/2
+    return (a + b)/2
