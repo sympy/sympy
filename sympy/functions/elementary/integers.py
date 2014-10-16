@@ -66,8 +66,8 @@ class RoundFunction(Function):
         else:
             return ipart + cls(spart, evaluate=False)
 
-    def _eval_is_bounded(self):
-        return self.args[0].is_bounded
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
     def _eval_is_real(self):
         return self.args[0].is_real

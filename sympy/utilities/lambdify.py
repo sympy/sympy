@@ -14,8 +14,6 @@ from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-warnings.simplefilter("always", SymPyDeprecationWarning)
-
 # These are the namespaces the lambda functions will use.
 MATH = {}
 MPMATH = {}

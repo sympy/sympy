@@ -116,7 +116,7 @@ class Integral(AddWithLimits):
         got_none = False
         for l in self.limits:
             if len(l) == 3:
-                z = (l[1] - l[2]).is_zero
+                z = (l[1] == l[2]) or (l[1] - l[2]).is_zero
                 if z:
                     return True
                 elif z is None:
@@ -318,7 +318,7 @@ class Integral(AddWithLimits):
             where sign of b is considered
             """
             wok = F.subs(d, a)
-            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+            if wok is S.NaN or wok.is_finite is False and a.is_finite:
                 return limit(sign(b)*F, d, a)
             return wok
 

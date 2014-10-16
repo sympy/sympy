@@ -513,6 +513,8 @@ def test_dup_factor_list():
 
     assert R.dup_factor_list(x**2 + 2*x + 1) == (1, [(x + 1, 2)])
     assert R.dup_factor_list_include(x**2 + 2*x + 1) == [(x + 1, 2)]
+    # issue 8037
+    assert R.dup_factor_list(6*x**2 - 5*x - 6) == (1, [(2*x - 3, 1), (3*x + 2, 1)])
 
     R, x = ring("x", QQ)
     assert R.dup_factor_list(QQ(1,2)*x**2 + x + QQ(1,2)) == (QQ(1, 2), [(x + 1, 2)])

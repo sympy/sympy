@@ -13,7 +13,8 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
+    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
+    Contains, divisor_sigma)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -97,6 +98,8 @@ def test_latex_basic():
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x, y)) == r"x \Rightarrow y"
     assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
+    assert latex(Implies(Or(x,y), z)) == r"\left(x \vee y\right) \Rightarrow z"
+    assert latex(Implies(z, Or(x,y))) == r"z \Rightarrow \left(x \vee y\right)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -329,6 +332,11 @@ def test_latex_functions():
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
 
+    assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
+    assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
+    assert latex(divisor_sigma(x, y)) == r"\sigma_y\left(x\right)"
+    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}_y\left(x\right)"
+
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
     assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left (x \right )}'
@@ -519,6 +527,11 @@ def test_latex_ImageSet():
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
 
 
+def test_latex_Contains():
+    x = Symbol('x')
+    assert latex(Contains(x, S.Naturals)) == r"x \in \mathbb{N}"
+
+
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
         r"\sum_{\substack{-2 \leq x \leq 2\\-5 \leq y \leq 5}} x y^{2}"
@@ -539,6 +552,11 @@ def test_latex_product():
 
 def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
+
+    # issue 8175
+    f = Function('f')
+    assert latex(Limit(f(x), x, 0)) == r"\lim_{x \to 0^+} f{\left (x \right )}"
+    assert latex(Limit(f(x), x, 0, "-")) == r"\lim_{x \to 0^-} f{\left (x \right )}"
 
 
 def test_issue_3568():
@@ -882,7 +900,7 @@ def test_latex_MatrixSlice():
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert latex(where(X > 0)) == "Domain: x_{1} > 0"
+    assert latex(where(X > 0)) == r"Domain: 0 < x_{1} \wedge x_{1} < \infty"
 
     D = Die('d1', 6)
     assert latex(where(D > 4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
@@ -890,7 +908,8 @@ def test_latex_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert latex(
-        pspace(Tuple(A, B)).domain) == "Domain: a \geq 0 \wedge b \geq 0"
+        pspace(Tuple(A, B)).domain) == \
+        r"Domain: 0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
 
 
 def test_PrettyPoly():

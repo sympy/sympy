@@ -11,6 +11,7 @@ from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
+from sympy.sets.contains import Contains
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
@@ -129,7 +130,7 @@ class Set(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Disjoint_sets
+        .. [1] http://en.wikipedia.org/wiki/Disjoint_sets
         """
         return self.intersect(other) == S.EmptySet
 
@@ -263,11 +264,10 @@ class Set(Basic):
         True
 
         """
-        c = self._contains(sympify(other, strict=True))
-        if c in (true, false):
-            # TODO: would we want to return the Basic type here?
-            return bool(c)
-        return c
+        ret = self._contains(sympify(other, strict=True))
+        if ret is None:
+            ret = Contains(other, self, evaluate=False)
+        return ret
 
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
@@ -388,7 +388,7 @@ class Set(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Power_set
+        .. [1] http://en.wikipedia.org/wiki/Power_set
 
         """
         return self._eval_powerset()
@@ -492,14 +492,13 @@ class Set(Basic):
         return Complement(self, other)
 
     def __contains__(self, other):
-        from sympy.assumptions import ask
         symb = self.contains(other)
-        result = ask(symb)
-        if result is None:
+        if symb not in (true, false):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
-        return result
+        return bool(symb)
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return None
 
@@ -534,12 +533,14 @@ class ProductSet(Set):
 
     Notes
     =====
+
     - Passes most operations down to the argument sets
     - Flattens Products of ProductSets
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Cartesian_product
+
+    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -581,9 +582,9 @@ class ProductSet(Set):
         """
         try:
             if len(element) != len(self.args):
-                return False
+                return false
         except TypeError:  # maybe element isn't an iterable
-            return False
+            return false
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
@@ -624,6 +625,7 @@ class ProductSet(Set):
 
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.sets)
 
@@ -682,10 +684,14 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Interval_(mathematics)
+    .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
-    is_real = True
+
+    @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    def is_real(self):
+        return True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
@@ -878,8 +884,8 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is True) or
-                (self.right_open and other.contains(self.end) is True)):
+        if ((self.left_open and other.contains(self.start) is true) or
+                (self.right_open and other.contains(self.end) is true)):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -893,9 +899,8 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.real(other)) is False:
-            return False
+        if other.is_real is False:
+            return false
 
         if self.left_open:
             expr = other > self.start
@@ -907,7 +912,7 @@ class Interval(Set, EvalfMixin):
         else:
             expr = And(expr, other <= self.end)
 
-        return expr
+        return _sympify(expr)
 
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
@@ -1038,11 +1043,13 @@ class Union(Set, EvalfMixin):
 
     See Also
     ========
+
     Intersection
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Union_(set_theory)
+
+    .. [1] http://en.wikipedia.org/wiki/Union_%28set_theory%29
     """
     is_Union = True
 
@@ -1222,6 +1229,7 @@ class Union(Set, EvalfMixin):
             raise TypeError("Not all constituent sets are iterable")
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.args)
 
@@ -1244,11 +1252,13 @@ class Intersection(Set):
 
     See Also
     ========
+
     Union
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Intersection_(set_theory)
+
+    .. [1] http://en.wikipedia.org/wiki/Intersection_%28set_theory%29
     """
     is_Intersection = True
 
@@ -1330,7 +1340,7 @@ class Intersection(Set):
         for s in args:
             if s.is_FiniteSet:
                 return s.func(*[x for x in s
-                                if all(x in other for other in args)])
+                                if all(other.contains(x) == True for other in args)])
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1451,11 +1461,13 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     UniversalSet
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Empty_set
+
+    .. [1] http://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
     is_FiniteSet = True
@@ -1468,7 +1480,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return 0
 
     def _contains(self, other):
-        return False
+        return false
 
     def as_relational(self, symbol):
         return False
@@ -1510,11 +1522,13 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     EmptySet
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Universal_set
+
+    .. [1] http://en.wikipedia.org/wiki/Universal_set
     """
 
     is_UniversalSet = True
@@ -1530,7 +1544,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
         return S.Infinity
 
     def _contains(self, other):
-        return True
+        return true
 
     def as_relational(self, symbol):
         return True
@@ -1558,7 +1572,8 @@ class FiniteSet(Set, EvalfMixin):
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Finite_set
+
+    .. [1] http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
@@ -1622,9 +1637,9 @@ class FiniteSet(Set, EvalfMixin):
             return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) is True for x in self):
+        if any(other.contains(x) is true for x in self):
             return set((
-                FiniteSet(*[x for x in self if other.contains(x) is not True]),
+                FiniteSet(*[x for x in self if other.contains(x) is not true]),
                 other))
 
         return None
@@ -1646,7 +1661,13 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        return other in self._elements
+        if other in self._elements:
+            return true
+        else:
+            if not other.free_symbols:
+                return false
+            elif all(e.is_Symbol for e in self._elements):
+                return false
 
     def _eval_imageset(self, f):
         return FiniteSet(*map(f, self))
@@ -1678,6 +1699,7 @@ class FiniteSet(Set, EvalfMixin):
         return Or(*[Eq(symbol, elem) for elem in self])
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(el.is_real for el in self)
 

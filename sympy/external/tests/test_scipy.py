@@ -12,13 +12,6 @@ if not scipy:
     #bin/test will not execute any tests now
     disabled = True
 
-
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("scipy isn't available.")
-
 from sympy import jn_zeros
 
 

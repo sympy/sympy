@@ -2,13 +2,11 @@ from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
 
-
 Vector.simp = True
-A = ReferenceFrame('A')
-
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
+    A = ReferenceFrame('A')
     assert CoordinateSym('Ax', A, 0) == A[0]
     assert CoordinateSym('Ax', A, 1) == A[1]
     assert CoordinateSym('Ax', A, 2) == A[2]

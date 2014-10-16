@@ -11,10 +11,11 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
-    nthroot_mod, sqrt_mod_iter, mobius
+    nthroot_mod, sqrt_mod_iter, mobius, divisor_sigma
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
-from sympy.ntheory.factor_ import smoothness, smoothness_p
+from sympy.ntheory.factor_ import smoothness, smoothness_p, \
+    antidivisors, antidivisor_count
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
@@ -394,6 +395,26 @@ def test_totient():
     assert summation(totient(m), (m, 1, 11)) == 42
 
 
+def test_divisor_sigma():
+    assert [divisor_sigma(k) for k in range(1, 12)] == \
+        [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12]
+    assert [divisor_sigma(k, 2) for k in range(1, 12)] == \
+        [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122]
+    assert divisor_sigma(23450) == 50592
+    assert divisor_sigma(23450, 0) == 24
+    assert divisor_sigma(23450, 1) == 50592
+    assert divisor_sigma(23450, 2) == 730747500
+    assert divisor_sigma(23450, 3) == 14666785333344
+
+    m = Symbol("m", integer=True)
+    k = Symbol("k", integer=True)
+    assert divisor_sigma(m)
+    assert divisor_sigma(m, k)
+    assert divisor_sigma(m).subs(m, 3**10) == 88573
+    assert divisor_sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
+    assert summation(divisor_sigma(m), (m, 1, 11)) == 99
+
+
 def test_partitions():
     assert [npartitions(k) for k in range(13)] == \
         [1, 1, 2, 3, 5, 7, 11, 15, 22, 30, 42, 56, 77]
@@ -653,6 +674,29 @@ def test_divisors():
 def test_divisor_count():
     assert divisor_count(0) == 0
     assert divisor_count(6) == 4
+
+
+def test_antidivisors():
+    assert antidivisors(-1) == []
+    assert antidivisors(-3) == [2]
+    assert antidivisors(14) == [3, 4, 9]
+    assert antidivisors(237) == [2, 5, 6, 11, 19, 25, 43, 95, 158]
+    assert antidivisors(12345) == [2, 6, 7, 10, 30, 1646, 3527, 4938, 8230]
+    assert antidivisors(393216) == [262144]
+    assert sorted(x for x in antidivisors(3*5*7, 1)) == \
+        [2, 6, 10, 11, 14, 19, 30, 42, 70]
+    assert antidivisors(1) == []
+
+
+def test_antidivisor_count():
+    assert antidivisor_count(0) == 0
+    assert antidivisor_count(-1) == 0
+    assert antidivisor_count(-4) == 1
+    assert antidivisor_count(20) == 3
+    assert antidivisor_count(25) == 5
+    assert antidivisor_count(38) == 7
+    assert antidivisor_count(180) == 6
+    assert antidivisor_count(2*3*5) == 3
 
 
 def test_primorial():

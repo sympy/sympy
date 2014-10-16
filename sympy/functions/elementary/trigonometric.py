@@ -29,6 +29,14 @@ class TrigonometricFunction(Function):
         else:
             return s.is_rational
 
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if self.args[0].is_nonzero and self.args[0].is_algebraic:
+                return False
+        else:
+            return s.is_algebraic
+
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
@@ -91,7 +99,7 @@ def _pi_coeff(arg, cycles=1):
     ========
 
     >>> from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
-    >>> from sympy import pi
+    >>> from sympy import pi, Dummy
     >>> from sympy.abc import x, y
     >>> coeff(3*x*pi)
     3*x
@@ -108,6 +116,11 @@ def _pi_coeff(arg, cycles=1):
     >>> coeff(5.5*pi)
     3/2
     >>> coeff(2 + pi)
+
+    >>> coeff(2*Dummy(integer=True)*pi)
+    2
+    >>> coeff(2*Dummy(even=True)*pi)
+    0
     """
     arg = sympify(arg)
     if arg is S.Pi:
@@ -139,7 +152,7 @@ def _pi_coeff(arg, cycles=1):
                 elif not c2:
                     if x.is_even is not None:  # known parity
                         return S.Zero
-                    return 2*x
+                    return S(2)
                 else:
                     return c2*x
             return cx
@@ -362,7 +375,7 @@ class sin(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_real:
             return True
@@ -707,7 +720,7 @@ class cos(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
 
         if arg.is_real:
@@ -940,7 +953,7 @@ class tan(TrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
 
         if arg.is_imaginary:
@@ -1176,7 +1189,7 @@ class cot(TrigonometricFunction):
                 return (C.re(P)/C.im(P)).subs([(z, cot(terms))])
         return cot(arg)
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
@@ -1289,8 +1302,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_as_leading_term(self, x):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
-    def _eval_is_bounded(self):
-        return (1/self._reciprocal_of(self.args[0])).is_bounded
+    def _eval_is_finite(self):
+        return (1/self._reciprocal_of(self.args[0])).is_finite
 
     def _eval_nseries(self, x, n, logx):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)

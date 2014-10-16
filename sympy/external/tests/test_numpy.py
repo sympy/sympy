@@ -17,12 +17,6 @@ else:
     disabled = True
 
 
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("numpy isn't available.")
-
 from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
         Matrix, lambdify, symarray, symbols, Integer)
 import sympy

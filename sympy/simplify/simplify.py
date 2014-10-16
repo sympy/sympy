@@ -3801,7 +3801,9 @@ def _real_to_rational(expr, tolerance=None):
         else:
             r = nsimplify(float, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if not r.is_Rational:
+            if float and not r:
+                r = Rational(float)
+            elif not r.is_Rational:
                 if float < 0:
                     float = -float
                     d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
@@ -3906,7 +3908,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:

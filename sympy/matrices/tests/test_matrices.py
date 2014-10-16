@@ -1830,7 +1830,8 @@ def test_matrix_norm():
         # Check Triangle Inequality for all Pairs of Matrices
         for X in L:
             for Y in L:
-                assert X.norm(order) + Y.norm(order) >= (X + Y).norm(order)
+                assert simplify(X.norm(order) + Y.norm(order) >=
+                                (X + Y).norm(order))
         # Scalar multiplication linearity
         for M in [A, B, C, D]:
             if order in [2, -2]:
@@ -1863,7 +1864,8 @@ def test_matrix_norm():
         if order >= 1:  # Triangle InEq holds only for these norms
             for v in L:
                 for w in L:
-                    assert v.norm(order) + w.norm(order) >= (v + w).norm(order)
+                    assert simplify(v.norm(order) + w.norm(order) >=
+                                    (v + w).norm(order))
         # Linear to scalar multiplication
         if order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity]:
             for vec in L:
@@ -2396,3 +2398,13 @@ def test_from_ndarray():
     assert Matrix(array([x, y, z])) == Matrix([x, y, z])
     raises(NotImplementedError, lambda: Matrix(array([[
         [1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+
+def test_hermitian():
+    a = Matrix([[1, I], [-I, 1]])
+    assert a.is_hermitian
+    a[0, 0] = 2*I
+    assert a.is_hermitian is False
+    a[0, 0] = x
+    assert a.is_hermitian is None
+    a[0, 1] = a[1, 0]*I
+    assert a.is_hermitian is False

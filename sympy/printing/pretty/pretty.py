@@ -544,15 +544,25 @@ class PrettyPrinter(Printer):
         return prettyF
 
     def _print_Limit(self, l):
-        # XXX we do not print dir ...
         e, z, z0, dir = l.args
 
         E = self._print(e)
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
-        LimArg = prettyForm(*LimArg.right('->'))
+        if self._use_unicode:
+            LimArg = prettyForm(*LimArg.right(u('\u2500\u2192')))
+        else:
+            LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
+
+        if z0 in (S.Infinity, S.NegativeInfinity):
+            dir = ""
+        else:
+            if self._use_unicode:
+                dir = u('\u207A') if str(dir) == "+" else u('\u207B')
+
+        LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
         Lim = prettyForm(*Lim.below(LimArg))
         Lim = prettyForm(*Lim.right(E))
@@ -1476,6 +1486,15 @@ class PrettyPrinter(Printer):
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
+
+    def _print_Contains(self, e):
+        var, set = e.args
+        if self._use_unicode:
+            el = u(" \u2208 ")
+            return prettyForm(*stringPict.next(self._print(var),
+                                               el, self._print(set)), binding=8)
+        else:
+            return prettyForm(sstr(e))
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):

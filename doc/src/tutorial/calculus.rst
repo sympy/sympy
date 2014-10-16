@@ -244,9 +244,9 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
 
     >>> expr = Limit((cos(x) - 1)/x, x, 0)
     >>> expr
-        cos(x) - 1
-    lim ──────────
-    x->0    x
+         cos(x) - 1
+     lim ──────────
+    x─→0⁺    x
     >>> expr.doit()
     0
 

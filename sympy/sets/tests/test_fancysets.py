@@ -65,8 +65,9 @@ def test_ImageSet():
 
     harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
-    assert .25 in harmonics
-    assert .3 not in harmonics
+    assert Rational(.25) in harmonics
+    assert 0.25 not in harmonics
+    assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
 
