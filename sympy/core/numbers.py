@@ -1344,8 +1344,6 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
-            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q > self.q*other.p))
@@ -1354,6 +1352,8 @@ class Rational(Number):
                     self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__le__(self)
+        elif other.is_number and other.is_real:
+            self, other = Integer(self.p), self.q*other
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1363,8 +1363,6 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
-            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
                  return _sympify(bool(self.p*other.q >= self.q*other.p))
@@ -1373,6 +1371,8 @@ class Rational(Number):
                     self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__lt__(self)
+        elif other.is_number and other.is_real:
+            self, other = Integer(self.p), self.q*other
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1382,8 +1382,6 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
-            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q < self.q*other.p))
@@ -1392,6 +1390,8 @@ class Rational(Number):
                     self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__ge__(self)
+        elif other.is_number and other.is_real:
+            self, other = Integer(self.p), self.q*other
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1401,9 +1401,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
-            other = other.evalf()
-        if isinstance(other, Number):
+        elif isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q <= self.q*other.p))
             if isinstance(other, Float):
@@ -1411,6 +1409,8 @@ class Rational(Number):
                     self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__gt__(self)
+        elif other.is_number and other.is_real:
+            self, other = Integer(self.p), self.q*other
         return Expr.__le__(self, other)
 
     def __hash__(self):
