@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo)
+                   Implies, Xor, zoo, sqrt, Rational)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -517,3 +517,20 @@ def test_issue_8245():
     assert (a < q) == False
     assert (a >= q) == True
     assert (a <= q) == True
+
+    a = sqrt(2)
+    r = Rational(str(a.n(30)))
+    assert (r == a) is False
+    assert (r != a) is True
+    assert (r > a) == True
+    assert (r < a) == False
+    assert (r >= a) == True
+    assert (r <= a) == False
+    a = sqrt(2)
+    r = Rational(str(a.n(29)))
+    assert (r == a) is False
+    assert (r != a) is True
+    assert (r > a) == False
+    assert (r < a) == True
+    assert (r >= a) == False
+    assert (r <= a) == True
