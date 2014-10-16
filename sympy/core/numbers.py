@@ -304,9 +304,6 @@ class Number(AtomicExpr):
             return -new
         return self  # there is no other possibility
 
-    def _eval_is_finite(self):
-        return True
-
     @classmethod
     def class_key(cls):
         return 1, 0, 'Number'
@@ -594,11 +591,8 @@ class Float(Number):
 
     # A Float represents many real numbers,
     # both rational and irrational.
-    is_rational = None
-    is_irrational = None
-    is_number = True
-
     is_real = True
+    is_number = True
 
     is_Float = True
 
@@ -917,7 +911,7 @@ class Float(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_real and other.is_number:
+        if other.is_extended_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
             return _sympify(bool(
@@ -931,7 +925,7 @@ class Float(Number):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_real and other.is_number:
+        if other.is_extended_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
             return _sympify(bool(
@@ -1344,7 +1338,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if other.is_extended_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -1363,7 +1357,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if other.is_extended_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -1382,7 +1376,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if other.is_extended_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -1401,7 +1395,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_real and other.is_number and not isinstance(other, Rational):
+        if other.is_extended_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
@@ -2028,11 +2022,9 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
     p = 0
     q = 1
-    is_positive = False
-    is_negative = False
     is_zero = True
-    is_composite = False
     is_number = True
+    is_imaginary = True
 
     __slots__ = []
 
@@ -2243,15 +2235,11 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     .. [1] http://en.wikipedia.org/wiki/Infinity
     """
-
-    is_commutative = True
+    is_real = False
     is_positive = True
-    is_finite = False
-    is_integer = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_odd = None
+    is_infinite = True
+
+    is_comparable = True
     is_number = True
 
     __slots__ = []
@@ -2393,7 +2381,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.false
         return C.StrictLessThan(self, other, evaluate=False)
 
@@ -2405,7 +2393,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.false
             elif other is S.Infinity:
@@ -2420,7 +2408,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.true
             elif other is S.Infinity:
@@ -2435,7 +2423,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.true
         return C.GreaterThan(self, other, evaluate=False)
 
@@ -2458,16 +2446,12 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     Infinity
     """
+    is_real = False
+    is_negative = True
+    is_infinite = True
 
-    is_commutative = True
-    is_real = True
-    is_positive = False
-    is_finite = False
-    is_integer = None
-    is_rational = None
+    is_comparable = True
     is_number = True
-    is_algebraic = None
-    is_transcendental = None
 
     __slots__ = []
 
@@ -2617,7 +2601,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             if other.is_finite or other is S.Infinity:
                 return S.true
             elif other is S.NegativeInfinity:
@@ -2632,7 +2616,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.true
         return C.LessThan(self, other, evaluate=False)
 
@@ -2644,7 +2628,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.false
         return C.StrictGreaterThan(self, other, evaluate=False)
 
@@ -2656,7 +2640,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if other.is_complex and other.is_real is False:
             raise TypeError("Invalid complex comparison: %s and %s" %
                             (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             if other.is_finite or other is S.Infinity:
                 return S.false
             elif other is S.NegativeInfinity:
@@ -2712,17 +2696,9 @@ class NaN(with_metaclass(Singleton, Number)):
 
     """
     is_commutative = True
-    is_real = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_integer = None
+    is_finite = False
+    is_infinite = False
     is_comparable = False
-    is_finite = None
-    is_zero = None
-    is_prime = None
-    is_positive = None
-    is_negative = None
     is_number = True
 
     __slots__ = []
@@ -2833,8 +2809,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_commutative = True
-    is_finite = False
-    is_real = None
+    is_infinite = True
     is_number = True
 
     __slots__ = []
@@ -2922,7 +2897,7 @@ class NumberSymbol(AtomicExpr):
                 if other > u:
                     return S.true
             return _sympify(self.evalf() < other)
-        if other.is_real and other.is_number:
+        if other.is_extended_real and other.is_number:
             other = other.evalf()
             return _sympify(self.evalf() < other)
         return Expr.__lt__(self, other)
@@ -2934,7 +2909,7 @@ class NumberSymbol(AtomicExpr):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if self is other:
             return S.true
-        if other.is_real and other.is_number:
+        if other.is_extended_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
             return _sympify(self.evalf() <= other)
@@ -3205,8 +3180,6 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
-    is_irrational = None
     is_number = True
 
     __slots__ = []
@@ -3261,8 +3234,6 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
     is_real = True
     is_positive = True
-    is_negative = False
-    is_irrational = None
     is_number = True
 
     __slots__ = []
@@ -3310,12 +3281,8 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
     """
 
-    is_commutative = True
     is_imaginary = True
-    is_finite = True
     is_number = True
-    is_algebraic = True
-    is_transcendental = False
 
     __slots__ = []
 

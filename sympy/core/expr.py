@@ -661,7 +661,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_is_positive(self):
         if self.is_number:
-            if self.is_real is False:
+            if self.is_extended_real is False:
                 return False
             try:
                 # check to see that we can get a value
@@ -687,7 +687,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_is_negative(self):
         if self.is_number:
-            if self.is_real is False:
+            if self.is_extended_real is False:
                 return False
             try:
                 # check to see that we can get a value

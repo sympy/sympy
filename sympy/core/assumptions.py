@@ -138,7 +138,7 @@ References
 """
 from __future__ import print_function, division
 
-from sympy.core.facts import FactRules, FactKB
+from sympy.core.facts import FactRules, FactKB, InconsistentAssumptions
 from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types, with_metaclass
 
@@ -149,6 +149,7 @@ _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
+    'real           ==  finite & extended_real',
     'rational       ->  algebraic',
     'algebraic      ->  complex',
     'real           ->  complex',
@@ -160,15 +161,17 @@ _assume_rules = FactRules([
     'odd            ==  integer & !even',
     'even           ==  integer & !odd',
 
-    'real           ==  negative | zero | positive',
+    'extended_real  ==  negative | zero | positive',
     'transcendental ==  complex & !algebraic',
 
-    'negative       ==  nonpositive & nonzero',
-    'positive       ==  nonnegative & nonzero',
+    'negative       ==  nonpositive & !zero',
+    'positive       ==  nonnegative & !zero',
     'zero           ==  nonnegative & nonpositive',
+    'positive       ->  real | infinite',
+    'negative       ->  real | infinite',
 
-    'nonpositive    ==  real & !positive',
-    'nonnegative    ==  real & !negative',
+    'nonpositive    ==  extended_real & !positive',
+    'nonnegative    ==  extended_real & !negative',
 
     'zero           ->  even',
 
@@ -177,11 +180,13 @@ _assume_rules = FactRules([
 
     'irrational     ==  real & !rational',
 
-    'imaginary      ->  !real',
+    'imaginary      ->  zero | !real',
 
-    '!finite        ==  infinite',
+    'infinite       ->  !finite',
+    'complex        ->  finite',
+
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
+    'nonzero        ==  complex & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -249,11 +254,16 @@ def _ask(fact, obj):
     deduced, and the result is cached in ._assumptions.
     """
     assumptions = obj._assumptions
+    try:
+        # Store None into the assumptions so that recursive attempts at
+        # evaluating the same fact don't trigger infinite recursion.
+        assumptions._tell(fact, None)
+    except InconsistentAssumptions:
+        # we already know the fact
+        return assumptions[fact]
+
     handler_map = obj._prop_handler
 
-    # Store None into the assumptions so that recursive attempts at
-    # evaluating the same fact don't trigger infinite recursion.
-    assumptions._tell(fact, None)
 
     # First try the assumption evaluation function if it exists
     try:
