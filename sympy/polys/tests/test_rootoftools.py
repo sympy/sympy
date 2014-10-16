@@ -219,6 +219,18 @@ def test_RootOf_all_roots():
         RootOf(x**3 - x**2 + 1, 2),
     ]
 
+    # issue 8235, 8255
+    p1 = Poly(-24*x**2 - 180*x + 264)
+    assert [w.n(2) for w in p1.all_roots()] == \
+    [w.n(2) for w in p1.all_roots(radicals=False)]
+    assert Poly(x**5 - 2).all_roots() == list(S('''
+    2**(1/5), -2**(1/5)*sqrt(5)/4 - 2**(1/5)/4 -
+    2**(1/5)*I*sqrt(-sqrt(5)/8 + 5/8), -2**(1/5)*sqrt(5)/4 - 2**(1/5)/4 +
+    2**(1/5)*I*sqrt(-sqrt(5)/8 + 5/8), -2**(1/5)/4 + 2**(1/5)*sqrt(5)/4 -
+    2**(1/5)*I*sqrt(sqrt(5)/8 + 5/8), -2**(1/5)/4 + 2**(1/5)*sqrt(5)/4 +
+    2**(1/5)*I*sqrt(sqrt(5)/8 + 5/8)'''))
+
+
 def test_RootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
     roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]

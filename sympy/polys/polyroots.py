@@ -40,7 +40,7 @@ def roots_linear(f):
     return [r]
 
 
-def roots_quadratic(f):
+def roots_quadratic(f, sort=True):
     """Returns a list of roots of a quadratic polynomial."""
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
@@ -84,7 +84,10 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
+    roots = map(expand_2arg, (r0, r1))
+    if sort:
+        return sorted(roots, key=default_sort_key)
+    return roots
 
 
 def roots_cubic(f, trig=False):
@@ -326,7 +329,7 @@ def roots_quartic(f):
                 for a1, a2 in zip(_ans(y1), _ans(y2))]
 
 
-def roots_binomial(f):
+def roots_binomial(f, sort=True):
     """Returns a list of roots of a binomial polynomial."""
     n = f.degree()
 
@@ -342,7 +345,9 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    return sorted(roots, key=default_sort_key)
+    if sort:
+        return sorted(roots, key=default_sort_key)
+    return roots
 
 
 def _inv_totient_estimate(m):

@@ -245,6 +245,18 @@ def test_issue_6343():
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
 
 
+def test_issue_8235():
+    x = Symbol('x', real=True)
+    assert reduce_inequalities(x**2 - 1 < 0) == \
+        And(S(-1) < x, x < S(1))
+    assert reduce_inequalities(x**2 - 1 <= 0) == \
+        And(S(-1) <= x, x <= 1)
+    assert reduce_inequalities(x**2 - 1 > 0) == \
+        Or(And(-oo < x, x < -1), And(x < oo, S(1) < x))
+    assert reduce_inequalities(x**2 - 1 >= 0) == \
+        Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
+
+
 def test_issue_5526():
     x = Symbol('x')
     y = Symbol('y')
