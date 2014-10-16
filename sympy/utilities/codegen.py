@@ -88,7 +88,7 @@ from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
-                            MatrixExpr)
+                            MatrixExpr, MatrixSlice)
 
 
 __all__ = [
@@ -476,7 +476,7 @@ class CodeGen(object):
 
         """
 
-        if is_sequence(expr) and not isinstance(expr, MatrixBase):
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
                 raise ValueError("No expression given")
             expressions = Tuple(*expr)
@@ -518,7 +518,7 @@ class CodeGen(object):
 
                 # avoid duplicate arguments
                 symbols.remove(symbol)
-            elif isinstance(expr, ImmutableMatrix):
+            elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
                 # Create a "dummy" MatrixSymbol to use as the Output arg
                 out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
                 dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
