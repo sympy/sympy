@@ -84,7 +84,7 @@ def roots_quadratic(f, sort=True):
             r0 = E + F
             r1 = E - F
 
-    roots = map(expand_2arg, (r0, r1))
+    roots = list(map(expand_2arg, (r0, r1)))
     if sort:
         return sorted(roots, key=default_sort_key)
     return roots
@@ -574,7 +574,7 @@ def roots_quintic(f):
         r = r.n(2)
         if r in saw:
             return []
-        saw.append(r)
+        saw.add(r)
     return result
 
 
