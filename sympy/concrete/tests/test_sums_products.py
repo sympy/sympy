@@ -242,6 +242,9 @@ def test_geometric_sums():
         4*Piecewise((n + 1, Eq((-2)**y, 1)),
                     ((-(-2)**(y*(n + 1)) + 1)/(-(-2)**y + 1), True))
 
+    # issue 8251:
+    assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) == oo
+
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
