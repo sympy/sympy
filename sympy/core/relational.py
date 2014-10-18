@@ -203,10 +203,12 @@ class Equality(Relational):
             elif (lhs.is_real != rhs.is_real and
                   None not in (lhs.is_real, rhs.is_real)):
                 return S.false
+
             # Otherwise, see if the difference can be evaluated.
-            r = cls._eval_sides(lhs, rhs)
-            if r is not None:
-                return r
+            if lhs.is_complex and rhs.is_complex:
+                r = (lhs - rhs).is_zero
+                if r is not None:
+                    return _sympify(r)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
