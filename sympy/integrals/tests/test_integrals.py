@@ -81,6 +81,9 @@ def test_basics():
     assert diff_test(Integral(x, (x, 3*y))) == set([y])
     assert diff_test(Integral(x, (a, 3*y))) == set([x, y])
 
+    assert integrate(x, (x, oo, oo)) == 0 #issue 8171
+    assert integrate(x, (x, -oo, -oo)) == 0
+
     # sum integral of terms
     assert integrate(y + x + exp(x), x) == x*y + x**2/2 + exp(x)
 
@@ -732,6 +735,9 @@ def test_is_zero():
     assert i.is_zero is None
     assert Integral(m, (x, 0), (m, 1, exp(x))).is_zero is True
 
+    assert Integral(x, (x, oo, oo)).is_zero # issue 8171
+    assert Integral(x, (x, -oo, -oo)).is_zero
+
     # this is zero but is beyond the scope of what is_zero
     # should be doing
     assert Integral(sin(x), (x, 0, 2*pi)).is_zero is None
@@ -836,7 +842,7 @@ def test_issue_4199():
 
 
 def test_issue_3940():
-    a, b, c, d = symbols('a:d', positive=True, bounded=True)
+    a, b, c, d = symbols('a:d', positive=True, finite=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \

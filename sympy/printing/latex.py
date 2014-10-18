@@ -562,8 +562,11 @@ class LatexPrinter(Printer):
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
 
-        tex = r"\lim_{%s \to %s}" % (self._print(z),
-                                     self._print(z0))
+        tex = r"\lim_{%s \to " % self._print(z)
+        if z0 in (S.Infinity, S.NegativeInfinity):
+            tex += r"%s}" % self._print(z0)
+        else:
+            tex += r"%s^%s}" % (self._print(z0), self._print(dir))
 
         if isinstance(e, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(e))
@@ -779,7 +782,7 @@ class LatexPrinter(Printer):
         return self._print_LogOp(args, r"\veebar")
 
     def _print_Implies(self, e, altchar=None):
-        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
+        return self._print_LogOp(e.args, altchar or r"\Rightarrow")
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
@@ -1747,6 +1750,16 @@ class LatexPrinter(Printer):
 
     def _print_totient(self, expr):
         return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+
+    def _print_divisor_sigma(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_%s\left(%s\right)" % tuple(map(self._print,
+                                                (expr.args[1], expr.args[0])))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\sigma^{%s}%s" % (self._print(exp), tex)
+        return r"\sigma%s" % tex
 
 
 def translate(s):

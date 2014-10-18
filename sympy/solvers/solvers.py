@@ -52,8 +52,6 @@ from sympy.mpmath import findroot
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
-from sympy.assumptions import Q, ask
-
 from types import GeneratorType
 from collections import defaultdict
 import warnings
@@ -436,7 +434,7 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(im(x) == 0, re(x) < 3)
+        And(-oo < re(x), im(x) == 0, re(x) < 3)
 
     * to always get a list of solution mappings, use flag dict=True
 
@@ -694,8 +692,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
         elif isinstance(fi, (bool, C.BooleanAtom)) or fi.is_Relational:
-            return reduce_inequalities(f, assume=flags.get('assume'),
-                                       symbols=symbols)
+            return reduce_inequalities(f, symbols=symbols)
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:

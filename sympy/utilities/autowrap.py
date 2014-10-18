@@ -82,10 +82,9 @@ from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
-from sympy.utilities.codegen import (
-    get_code_generator, Routine, OutputArgument, InOutArgument, InputArgument,
-    CodeGenArgumentListError, Result, ResultBase, CCodeGen
-)
+from sympy.utilities.codegen import (make_routine, get_code_generator,
+            OutputArgument, InOutArgument, InputArgument,
+            CodeGenArgumentListError, Result, ResultBase, CCodeGen)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -490,7 +489,7 @@ def autowrap(
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
-        routine = Routine('autofunc', expr, args)
+        routine = make_routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
@@ -500,11 +499,11 @@ def autowrap(
             if not isinstance(missing, OutputArgument):
                 raise
             new_args.append(missing.name)
-        routine = Routine('autofunc', expr, args + new_args)
+        routine = make_routine('autofunc', expr, args + new_args)
 
     helps = []
     for name, expr, args in helpers:
-        helps.append(Routine(name, expr, args))
+        helps.append(make_routine(name, expr, args))
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 
@@ -856,10 +855,10 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     flags = flags if flags else ()
 
     if backend.upper() == 'NUMPY':
-        routine = Routine('autofunc', expr, args)
+        routine = make_routine('autofunc', expr, args)
         helps = []
         for name, expr, args in helpers:
-            helps.append(Routine(name, expr, args))
+            helps.append(make_routine(name, expr, args))
         code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
                                            flags, verbose)
         return code_wrapper.wrap_code(routine, helpers=helps)

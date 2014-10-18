@@ -358,6 +358,9 @@ want to be mentioned here, so see our repository history for a full list).
 #. Colin B. Macdonald: Fix to documentation
 #. Marcus Näslund: Fix to documentation
 #. Mridul Seth: correct is_tangent for Ellipse non-intersection
+#. Mihai A. Ionescu: Improvement to LaplaceTransform
+#. ck Lux: handle zoo, oo, nan in as_int and round
+#. leonidb: check input to Binomial
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

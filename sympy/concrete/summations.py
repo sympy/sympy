@@ -572,6 +572,7 @@ def eval_sum_direct(expr, limits):
 
 
 def eval_sum_symbolic(f, limits):
+    f_orig = f
     (i, a, b) = limits
     if not f.has(i):
         return f*(b - a + 1)
@@ -606,7 +607,9 @@ def eval_sum_symbolic(f, limits):
         rsum = eval_sum_symbolic(R, (i, a, b))
 
         if None not in (lsum, rsum):
-            return lsum + rsum
+            r = lsum + rsum
+            if not r is S.NaN:
+                return r
 
     # Polynomial terms with Faulhaber's formula
     n = Wild('n')
@@ -650,7 +653,7 @@ def eval_sum_symbolic(f, limits):
         if not r in (None, S.NaN):
             return r
 
-    return eval_sum_hyper(f, (i, a, b))
+    return eval_sum_hyper(f_orig, (i, a, b))
 
 
 def _eval_sum_hyper(f, i, a):

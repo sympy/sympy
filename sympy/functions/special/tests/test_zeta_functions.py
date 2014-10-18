@@ -2,7 +2,7 @@ from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
                    exp_polar, polar_lift, O)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
-                      random_complex_number as randcplx, test_numerically as tn)
+                      random_complex_number as randcplx, verify_numerically as tn)
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')

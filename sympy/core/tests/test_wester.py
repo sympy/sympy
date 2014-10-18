@@ -19,12 +19,12 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine)
+    residue, Derivative, logcombine, Symbol)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL, slow, SKIP
+from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -1155,35 +1155,43 @@ def test_N8():
 
 
 def test_N9():
-    with assuming(Q.real(x)):
-        assert solve(abs(x - 1) > 2) == Or(x < -1, x > 3)
+    x = Symbol('x', real=True)
+    assert solve(abs(x - 1) > 2) == Or(And(Lt(-oo, x), Lt(x, -1)),
+                                           And(Lt(3, x), Lt(x, oo)))
 
 
 def test_N10():
+    x = Symbol('x', real=True)
     p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solve(expand(p) < 0, assume=Q.real(x)) == Or(
-        And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+    assert solve(expand(p) < 0) == Or(
+        And(Lt(-oo, x), Lt(x, 1)), And(Lt(2, x), Lt(x, 3)),
+        And(Lt(4, x), Lt(x, 5)))
 
 
 def test_N11():
-    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
+    x = Symbol('x', real=True)
+    assert solve(6/(x - 3) <= 3) == \
+        Or(And(Le(5, x), Lt(x, oo)), And(Lt(-oo, x), Lt(x, 3)))
 
 
 @XFAIL
 def test_N12():
-    assert solve(sqrt(x) < 2, assume=Q.real(x)) == And(Le(0, x), Lt(x, 4))
+    x = Symbol('x', real=True)
+    assert solve(sqrt(x) < 2) == And(Le(0, x), Lt(x, 4))
 
 
 @XFAIL
 def test_N13():
     # raises NotImplementedError: can't reduce [sin(x) < 2]
-    assert solve(sin(x) < 2, assume=Q.real(x)) == [] # S.Reals not found
+    x = Symbol('x', real=True)
+    assert solve(sin(x) < 2) == [] # S.Reals not found
 
 
 @XFAIL
 def test_N14():
     # raises NotImplementedError: can't reduce [sin(x) < 1]
-    assert (solve(sin(x) < 1, assume=Q.real(x)) == Ne(x, pi/2))
+    x = Symbol('x', real=True)
+    assert (solve(sin(x) < 1) == Ne(x, pi/2))
 
 
 @XFAIL
@@ -2531,7 +2539,7 @@ def test_W22():
     s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
     assert (integrate(s(t)*cos(t), (t, 0, u)) ==
             Piecewise((sin(u) - sin(1), And(u <= 2, u >= 1)),
-                      (0, u <= 1),
+                      (0, And(u <= 1, u >= -oo)),
                       (-sin(1) + sin(2), True)))
 
 
@@ -2558,6 +2566,8 @@ def test_W23b():
 @XFAIL
 @slow
 def test_W24():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     x, y = symbols('x y', real=True)
     r1 = integrate(integrate(sqrt(x**2 + y**2), (x, 0, 1)), (y, 0, 1))
     assert (r1 - (sqrt(2) + asinh(1))/3).simplify() == 0
@@ -2566,6 +2576,8 @@ def test_W24():
 @XFAIL
 @slow
 def test_W25():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(sin(a)*sin(y)/sqrt(1- sin(a)**2*sin(x)**2*sin(y)**2),
                    (x, 0, pi/2))

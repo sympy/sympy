@@ -130,7 +130,7 @@ class Set(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Disjoint_sets
+        .. [1] http://en.wikipedia.org/wiki/Disjoint_sets
         """
         return self.intersect(other) == S.EmptySet
 
@@ -388,7 +388,7 @@ class Set(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Power_set
+        .. [1] http://en.wikipedia.org/wiki/Power_set
 
         """
         return self._eval_powerset()
@@ -498,6 +498,7 @@ class Set(Basic):
         return bool(symb)
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return None
 
@@ -532,12 +533,14 @@ class ProductSet(Set):
 
     Notes
     =====
+
     - Passes most operations down to the argument sets
     - Flattens Products of ProductSets
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Cartesian_product
+
+    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -622,6 +625,7 @@ class ProductSet(Set):
 
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.sets)
 
@@ -680,10 +684,14 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Interval_(mathematics)
+    .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
-    is_real = True
+
+    @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    def is_real(self):
+        return True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
@@ -1035,11 +1043,13 @@ class Union(Set, EvalfMixin):
 
     See Also
     ========
+
     Intersection
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Union_(set_theory)
+
+    .. [1] http://en.wikipedia.org/wiki/Union_%28set_theory%29
     """
     is_Union = True
 
@@ -1219,6 +1229,7 @@ class Union(Set, EvalfMixin):
             raise TypeError("Not all constituent sets are iterable")
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.args)
 
@@ -1241,11 +1252,13 @@ class Intersection(Set):
 
     See Also
     ========
+
     Union
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Intersection_(set_theory)
+
+    .. [1] http://en.wikipedia.org/wiki/Intersection_%28set_theory%29
     """
     is_Intersection = True
 
@@ -1327,7 +1340,7 @@ class Intersection(Set):
         for s in args:
             if s.is_FiniteSet:
                 return s.func(*[x for x in s
-                                if all(x in other for other in args)])
+                                if all(other.contains(x) == True for other in args)])
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1448,11 +1461,13 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     UniversalSet
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Empty_set
+
+    .. [1] http://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
     is_FiniteSet = True
@@ -1507,11 +1522,13 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     EmptySet
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Universal_set
+
+    .. [1] http://en.wikipedia.org/wiki/Universal_set
     """
 
     is_UniversalSet = True
@@ -1555,7 +1572,8 @@ class FiniteSet(Set, EvalfMixin):
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Finite_set
+
+    .. [1] http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
@@ -1681,6 +1699,7 @@ class FiniteSet(Set, EvalfMixin):
         return Or(*[Eq(symbol, elem) for elem in self])
 
     @property
+    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(el.is_real for el in self)
 

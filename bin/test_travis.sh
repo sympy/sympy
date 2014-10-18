@@ -34,7 +34,7 @@ EOF
     elif [[ "${TEST_SLOW}" == "true" ]]; then
         cat << EOF | python
 import sympy
-if not sympy.test(split='${SPLIT}', slow=True, timeout=180):
+if not sympy.test(split='${SPLIT}', slow=True):
     # Travis times out if no activity is seen for 10 minutes. It also times
     # out if the whole tests run for more than 50 minutes.
     raise Exception('Tests failed')

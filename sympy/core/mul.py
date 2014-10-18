@@ -541,9 +541,9 @@ class Mul(Expr, AssocOp):
         # zoo
         if coeff is S.ComplexInfinity:
             # zoo might be
-            #   unbounded_real + bounded_im
-            #   bounded_real + unbounded_im
-            #   unbounded_real + unbounded_im
+            #   infinite_real + bounded_im
+            #   bounded_real + infinite_im
+            #   infinite_real + infinite_im
             # and non-zero real or imaginary will not change that status.
             c_part = [c for c in c_part if not (c.is_nonzero and
                                                 c.is_real is not None)]
@@ -786,15 +786,15 @@ class Mul(Expr, AssocOp):
             else:
                 return plain
 
+    @cacheit
     def _eval_derivative(self, s):
-        terms = list(self.args)
-        factors = []
-        for i in xrange(len(terms)):
-            t = terms[i].diff(s)
-            if t is S.Zero:
-                continue
-            factors.append(self.func(*(terms[:i] + [t] + terms[i + 1:])))
-        return Add(*factors)
+        args = list(self.args)
+        terms = []
+        for i in xrange(len(args)):
+            d = args[i].diff(s)
+            if d:
+                terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
+        return Add(*terms)
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
@@ -956,28 +956,40 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_bounded = lambda self: _fuzzy_group(
-        a.is_bounded for a in self.args)
+    _eval_is_finite = lambda self: _fuzzy_group(
+        a.is_finite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
-    _eval_is_rational = lambda self: _fuzzy_group(
-        (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
 
+    def _eval_is_rational(self):
+        r = _fuzzy_group((a.is_rational for a in self.args), quick_exit=True)
+        if r:
+            return r
+        elif r is False:
+            return self.is_zero
+
+    def _eval_is_algebraic(self):
+        r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
+        if r:
+            return r
+        elif r is False:
+            return self.is_zero
+
     def _eval_is_zero(self):
-        zero = unbound = False
+        zero = infinite = False
         for a in self.args:
             z = a.is_zero
             if z:
-                if unbound:
+                if infinite:
                     return  # 0*oo is nan and nan.is_zero is None
                 zero = True
             else:
-                if not a.is_bounded:
+                if not a.is_finite:
                     if zero:
                         return  # 0*oo is nan and nan.is_zero is None
-                    unbound = True
+                    infinite = True
                 if zero is False and z is None:  # trap None
                     zero = None
         return zero
@@ -1014,7 +1026,7 @@ class Mul(Expr, AssocOp):
                     if not z and zero is False:
                         zero = z
                     elif z:
-                        if all(a.is_bounded for a in self.args):
+                        if all(a.is_finite for a in self.args):
                             return True
                         return
             elif t.is_real is False:
@@ -1033,7 +1045,10 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
+        z = self.is_zero
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
@@ -1067,7 +1082,10 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        if self.is_nonzero:
+        z = self.is_zero
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_hermitian
 
     def _eval_is_irrational(self):
@@ -1076,9 +1094,9 @@ class Mul(Expr, AssocOp):
             if a:
                 others = list(self.args)
                 others.remove(t)
-                if all(x.is_rational is True for x in others):
+                if all((x.is_rational and x.is_nonzero) is True for x in others):
                     return True
-                return None
+                return
             if a is None:
                 return
         return False
@@ -1119,39 +1137,7 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_negative(self):
-        """Return True if self is negative, False if not, and None if it
-        cannot be determined.
-
-        This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative or nonpositive is encountered.
-        Whether a nonpositive or nonnegative is seen is also tracked since
-        the presence of these makes it impossible to return True, but
-        possible to return False if the end result is nonnegative. e.g.
-
-            pos * neg * nonpositive -> pos or zero -> False is returned
-            pos * neg * nonnegative -> neg or zero -> None is returned
-        """
-
-        sign = 1
-        saw_NON = False
-        for t in self.args:
-            if t.is_positive:
-                continue
-            elif t.is_negative:
-                sign = -sign
-            elif t.is_zero:
-                return False
-            elif t.is_nonpositive:
-                sign = -sign
-                saw_NON = True
-            elif t.is_nonnegative:
-                saw_NON = True
-            else:
-                return
-        if sign == -1 and saw_NON is False:
-            return True
-        if sign > 0:
-            return False
+        return (-self).is_positive
 
     def _eval_is_odd(self):
         is_integer = self.is_integer
@@ -1181,7 +1167,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            return fuzzy_not(self._eval_is_odd())
+            return fuzzy_not(self.is_odd)
 
         elif is_integer is False:
             return False

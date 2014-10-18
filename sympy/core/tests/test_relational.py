@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo)
+                   Implies, Xor, zoo, sqrt, Rational)
 from sympy.core.symbol import Dummy
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -80,9 +80,10 @@ def test_wrappers():
 
 
 def test_Eq():
-
     assert Eq(x**2) == Eq(x**2, 0)
     assert Eq(x**2) != Eq(x**2, 1)
+
+    assert Eq(x, x)  # issue 5719
 
 
 def test_rel_Infinity():
@@ -466,9 +467,6 @@ def test_nan_equality_exceptions():
 
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
-    # currently fails because rhs reduces to bool but the lhs does not
-    assert Lt(x, oo) == (x < oo)
-
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
     A = (x, y, S(0), S(1)/3, pi, oo, -oo)
@@ -478,6 +476,18 @@ def test_inequalities_symbol_name_same():
             assert Lt(a, b) == (a < b)
             assert Ge(a, b) == (a >= b)
             assert Le(a, b) == (a <= b)
+
+    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+        assert Gt(x, b, evaluate=False) == (x > b)
+        assert Lt(x, b, evaluate=False) == (x < b)
+        assert Ge(x, b, evaluate=False) == (x >= b)
+        assert Le(x, b, evaluate=False) == (x <= b)
+
+    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+        assert Gt(b, x, evaluate=False) == (b > x)
+        assert Lt(b, x, evaluate=False) == (b < x)
+        assert Ge(b, x, evaluate=False) == (b >= x)
+        assert Le(b, x, evaluate=False) == (b <= x)
 
 
 def test_inequalities_symbol_name_same_complex():
@@ -574,3 +584,31 @@ def test_eq_simplify_with_variable():
     e = Eq(lhs, rhs)
     assert e.subs(x, 10).simplify()
     assert e.simplify()  # FAIL
+
+
+def test_issue_8245():
+    a = S("6506833320952669167898688709329/5070602400912917605986812821504")
+    q = a.n(10)
+    assert (a == q) is True
+    assert (a != q) is False
+    assert (a > q) == False
+    assert (a < q) == False
+    assert (a >= q) == True
+    assert (a <= q) == True
+
+    a = sqrt(2)
+    r = Rational(str(a.n(30)))
+    assert (r == a) is False
+    assert (r != a) is True
+    assert (r > a) == True
+    assert (r < a) == False
+    assert (r >= a) == True
+    assert (r <= a) == False
+    a = sqrt(2)
+    r = Rational(str(a.n(29)))
+    assert (r == a) is False
+    assert (r != a) is True
+    assert (r > a) == False
+    assert (r < a) == True
+    assert (r >= a) == False
+    assert (r <= a) == True

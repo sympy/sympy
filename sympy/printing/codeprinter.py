@@ -88,6 +88,17 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
+    _default_settings = {'order': None,
+                         'full_prec': 'auto',
+                         'error_on_reserved': False,
+                         'reserved_word_suffix': '_'}
+
+    def __init__(self, settings=None):
+
+        super(CodePrinter, self).__init__(settings=settings)
+
+        self.reserved_words = set()
+
     def doprint(self, expr, assign_to=None):
         """
         Print the expression as code.
@@ -325,6 +336,19 @@ class CodePrinter(StrPrinter):
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
+    def _print_Symbol(self, expr):
+
+        name = super(CodePrinter, self)._print_Symbol(expr)
+
+        if name in self.reserved_words:
+            if self._settings['error_on_reserved']:
+                msg = ('This expression includes the symbol "{}" which is a '
+                       'reserved keyword in this language.')
+                raise ValueError(msg.format(name))
+            return name + self._settings['reserved_word_suffix']
+        else:
+            return name
+
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
@@ -426,10 +450,7 @@ class CodePrinter(StrPrinter):
         if len(b) == 0:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
-            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/" % a_str[0] + '*'.join(b_str)
-            else:
-                return sign + '*'.join(a_str) + "/%s" % b_str[0]
+            return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 

@@ -263,7 +263,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     ``base`` - the base
     ``strong_gens_distr`` - strong generators distributed by membership in basic
     stabilizers
-    ``transversals_only`` - a flag swithing between returning only the
+    ``transversals_only`` - a flag switching between returning only the
     transversals/ both orbits and transversals
 
     Examples
@@ -405,7 +405,7 @@ def _strip(g, base, orbits, transversals):
     ``orbits`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
     under some subgroup of the pointwise stabilizer of `
     `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
-    in this function since the only infromation we need is encoded in the orbits
+    in this function since the only information we need is encoded in the orbits
     and transversals
     ``transversals`` - a list of orbit transversals associated with the orbits
     ``orbits``.

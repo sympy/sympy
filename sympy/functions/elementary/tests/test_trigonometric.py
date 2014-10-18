@@ -12,6 +12,9 @@ r = Symbol('r', real=True)
 k = Symbol('k', integer=True)
 p = Symbol('p', positive=True)
 n = Symbol('n', negative=True)
+a = Symbol('a', algebraic=True)
+na = Symbol('na', nonzero=True, algebraic=True)
+
 
 def test_sin():
     x, y = symbols('x y')
@@ -88,6 +91,10 @@ def test_sin():
     assert sin(k*pi*I) == sinh(k*pi)*I
 
     assert sin(r).is_real is True
+
+    assert sin(0, evaluate=False).is_algebraic
+    assert sin(a).is_algebraic is None
+    assert sin(na).is_algebraic is False
 
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
@@ -260,6 +267,10 @@ def test_cos():
 
     assert cos(r).is_real is True
 
+    assert cos(0, evaluate=False).is_algebraic
+    assert cos(a).is_algebraic is None
+    assert cos(na).is_algebraic is False
+
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
 
@@ -368,6 +379,10 @@ def test_tan():
 
     assert tan(r).is_real is True
 
+    assert tan(0, evaluate=False).is_algebraic
+    assert tan(a).is_algebraic is None
+    assert tan(na).is_algebraic is False
+
     assert tan(10*pi/7) == tan(3*pi/7)
     assert tan(11*pi/7) == -tan(3*pi/7)
     assert tan(-11*pi/7) == tan(3*pi/7)
@@ -470,14 +485,17 @@ def test_cot():
 
     assert cot(r).is_real is True
 
+    assert cot(a).is_algebraic is None
+    assert cot(na).is_algebraic is False
+
     assert cot(10*pi/7) == cot(3*pi/7)
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
 
-    assert cot(x).is_bounded is None
-    assert cot(r).is_bounded is None
+    assert cot(x).is_finite is None
+    assert cot(r).is_finite is None
     i = Symbol('i', imaginary=True)
-    assert cot(i).is_bounded is True
+    assert cot(i).is_finite is True
 
     assert cot(x).subs(x, 3*pi) == zoo
 
@@ -1082,11 +1100,14 @@ def test_sec():
     assert sec(x).is_real == True
     assert sec(z).is_real == None
 
+    assert sec(a).is_algebraic is None
+    assert sec(na).is_algebraic is False
+
     assert sec(x).as_leading_term() == sec(x)
 
-    assert sec(0).is_bounded == True
-    assert sec(x).is_bounded == None
-    assert sec(pi/2).is_bounded == False
+    assert sec(0).is_finite == True
+    assert sec(x).is_finite == None
+    assert sec(pi/2).is_finite == False
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
@@ -1153,11 +1174,14 @@ def test_csc():
     assert csc(x).is_real == True
     assert csc(z).is_real == None
 
+    assert csc(a).is_algebraic is None
+    assert csc(na).is_algebraic is False
+
     assert csc(x).as_leading_term() == csc(x)
 
-    assert csc(0).is_bounded == False
-    assert csc(x).is_bounded == None
-    assert csc(pi/2).is_bounded == True
+    assert csc(0).is_finite == False
+    assert csc(x).is_finite == None
+    assert csc(pi/2).is_finite == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \
         1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))

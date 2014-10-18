@@ -14,7 +14,7 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
 from sympy.polys.orthopolys import legendre_poly
 
 from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import test_numerically
+from sympy.utilities.randtest import verify_numerically
 import sympy
 
 
@@ -94,11 +94,11 @@ def test_roots_quartic():
     # not all symbolic quartics are unresolvable
     eq = Poly(q*x + q/4 + x**4 + x**3 + 2*x**2 - Rational(1, 3), x)
     sol = roots_quartic(eq)
-    assert all(test_numerically(eq.subs(x, i), 0) for i in sol)
+    assert all(verify_numerically(eq.subs(x, i), 0) for i in sol)
     z = symbols('z', negative=True)
     eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
     zans = roots_quartic(Poly(eq, x))
-    assert all([test_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
+    assert all([verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
     # but some are (see also issue 4989)
     # it's ok if the solution is not Piecewise, but the tests below should pass
     eq = Poly(y*x**4 + x**3 - x + z, x)
@@ -110,7 +110,7 @@ def test_roots_quartic():
         dict(y=-Rational(1, 3), z=-2))  # 0 real
     for rep in reps:
         sol = roots_quartic(Poly(eq.subs(rep), x))
-        assert all([test_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
+        assert all([verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
 
 
 def test_roots_cyclotomic():

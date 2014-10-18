@@ -14,6 +14,20 @@ from collections import defaultdict
 
 
 class Expr(Basic, EvalfMixin):
+    """
+    Base class for algebraic expressions.
+
+    Everything that requires arithmetic operations to be defined
+    should subclass this class, instead of Basic (which should be
+    used only for argument storage and expression manipulation, i.e.
+    pattern matching, substitutions, etc).
+
+    See Also
+    ========
+
+    sympy.core.basic.Basic
+    """
+
     __slots__ = []
 
     @property
@@ -180,6 +194,8 @@ class Expr(Basic, EvalfMixin):
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
+        if r in (S.NaN, S.Infinity, S.NegativeInfinity):
+            raise TypeError("can't convert %s to int" % r)
         i = int(r)
         if not i:
             return 0
@@ -715,7 +731,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN) or A.has(S.Infinity):
+            if A.has(S.NaN) or A.has(S.Infinity) or A.has(S.NegativeInfinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -724,7 +740,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN) or B.has(S.Infinity):
+            if B.has(S.NaN) or B.has(S.Infinity) or B.has(S.NegativeInfinity):
                 B = limit(self, x, b)
 
         return B - A
@@ -2411,7 +2427,7 @@ class Expr(Basic, EvalfMixin):
 
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
-            xpos = C.Dummy('x', positive=True, bounded=True)
+            xpos = C.Dummy('x', positive=True, finite=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
@@ -3020,6 +3036,8 @@ class Expr(Basic, EvalfMixin):
         x = self
         if not x.is_number:
             raise TypeError('%s is not a number' % x)
+        if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            return x
         if not x.is_real:
             i, r = x.as_real_imag()
             return i.round(p) + S.ImaginaryUnit*r.round(p)

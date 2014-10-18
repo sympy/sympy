@@ -1,24 +1,22 @@
 from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.ccode import ccode
 from sympy.core import C, symbols
 from sympy.matrices import MatrixSymbol, Matrix
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.pytest import raises
 
-def setup_test_printer(*args, **kwargs):
-    p = CodePrinter(*args, **kwargs)
+
+def setup_test_printer(**kwargs):
+    p = CodePrinter(settings=kwargs)
     p._not_supported = set()
     p._number_symbols = set()
     return p
+
 
 def test_print_Dummy():
     d = C.Dummy('d')
     p = setup_test_printer()
     assert p._print_Dummy(d) == "d_%i" % d.dummy_index
 
-def test_print_Mul():
-    x, y = symbols("x y")
-    s = ccode(x ** (-3) * y ** (-2))
 
 def test_Assignment():
     x, y = symbols("x, y")
@@ -51,3 +49,24 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(x*x, 1))
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
+
+
+def test_print_Symbol():
+
+    x, y = symbols('x, if')
+
+    p = setup_test_printer()
+    assert p._print(x) == 'x'
+    assert p._print(y) == 'if'
+
+    p.reserved_words.update(['if'])
+    assert p._print(y) == 'if_'
+
+    p = setup_test_printer(error_on_reserved=True)
+    p.reserved_words.update(['if'])
+    with raises(ValueError):
+        p._print(y)
+
+    p = setup_test_printer(reserved_word_suffix='_He_Man')
+    p.reserved_words.update(['if'])
+    assert p._print(y) == 'if_He_Man'

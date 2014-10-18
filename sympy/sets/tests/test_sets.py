@@ -464,13 +464,13 @@ def test_Interval_as_relational():
     assert Interval(-1, 2, True, True).as_relational(x) == \
         And(Lt(-1, x), Lt(x, 2))
 
-    assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
-    assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
+    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Le(x, 2), Lt(-oo, x))
+    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(x, 2), Lt(-oo, x))
 
-    assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
-    assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
+    assert Interval(-2, oo, left_open=False).as_relational(x) == And(Le(-2, x), Lt(x, oo))
+    assert Interval(-2, oo, left_open=True).as_relational(x) == And(Lt(-2, x), Lt(x, oo))
 
-    assert Interval(-oo, oo).as_relational(x) is S.true
+    assert Interval(-oo, oo).as_relational(x) == And(Lt(-oo, x), Lt(x, oo))
 
 
 def test_Finite_as_relational():
@@ -592,21 +592,21 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True)
+    x = Symbol('x', real=True, finite=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
-    A = FiniteSet(1, 2, 30, x, S.Pi, S.Infinity)
+    A = FiniteSet(1, 2, 30, x, S.Pi)
     B = FiniteSet(-4, 0)
-    C = FiniteSet(100, S.NegativeInfinity)
+    C = FiniteSet(100)
     D = FiniteSet('Ham', 'Eggs')
 
-    assert all(s.is_real for s in [I, J, A, B, C])
-    assert not D.is_real
-    assert all((a + b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
-    assert not any((a + D).is_real for a in [I, J, A, B, C, D])
+    assert all(s.is_subset(S.Reals) for s in [I, J, A, B, C])
+    assert not D.is_subset(S.Reals)
+    assert all((a + b).is_subset(S.Reals) for a in [I, J, A, B, C] for b in [I, J, A, B, C])
+    assert not any((a + D).is_subset(S.Reals) for a in [I, J, A, B, C, D])
 
-    assert not (I + A + D).is_real
+    assert not (I + A + D).is_subset(S.Reals)
 
 
 def test_supinf():
@@ -781,3 +781,7 @@ def test_closure():
 
 def test_interior():
     assert Interval(0, 1, False, True).interior == Interval(0, 1, True, True)
+
+
+def test_issue_7841():
+    raises(TypeError, lambda: x in S.Reals)

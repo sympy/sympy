@@ -652,6 +652,11 @@ def test_sympy__stats__frv_types__HypergeometricDistribution():
     assert _test_args(HypergeometricDistribution(10, 5, 3))
 
 
+def test_sympy__stats__frv_types__RademacherDistribution():
+    from sympy.stats.frv_types import RademacherDistribution
+    assert _test_args(RademacherDistribution())
+
+
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
     assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
@@ -2393,6 +2398,46 @@ def test_sympy__physics__quantum__fermion__FermionFockBra():
     assert _test_args(FermionFockBra(1))
 
 
+def test_sympy__physics__quantum__pauli__SigmaOpBase():
+    from sympy.physics.quantum.pauli import SigmaOpBase
+    assert _test_args(SigmaOpBase())
+
+
+def test_sympy__physics__quantum__pauli__SigmaX():
+    from sympy.physics.quantum.pauli import SigmaX
+    assert _test_args(SigmaX())
+
+
+def test_sympy__physics__quantum__pauli__SigmaY():
+    from sympy.physics.quantum.pauli import SigmaY
+    assert _test_args(SigmaY())
+
+
+def test_sympy__physics__quantum__pauli__SigmaZ():
+    from sympy.physics.quantum.pauli import SigmaZ
+    assert _test_args(SigmaZ())
+
+
+def test_sympy__physics__quantum__pauli__SigmaMinus():
+    from sympy.physics.quantum.pauli import SigmaMinus
+    assert _test_args(SigmaMinus())
+
+
+def test_sympy__physics__quantum__pauli__SigmaPlus():
+    from sympy.physics.quantum.pauli import SigmaPlus
+    assert _test_args(SigmaPlus())
+
+
+def test_sympy__physics__quantum__pauli__SigmaZKet():
+    from sympy.physics.quantum.pauli import SigmaZKet
+    assert _test_args(SigmaZKet(0))
+
+
+def test_sympy__physics__quantum__pauli__SigmaZBra():
+    from sympy.physics.quantum.pauli import SigmaZBra
+    assert _test_args(SigmaZBra(0))
+
+
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
     from sympy.physics.quantum.piab import PIABHamiltonian
     assert _test_args(PIABHamiltonian('P'))
@@ -2854,8 +2899,8 @@ def test_sympy__physics__unitsystems__units__Unit():
     assert _test_args(Unit(length, abbrev="u", factor=10))
 
 
-def test_sympy__polys__numberfields__AlgebraicNumber():
-    from sympy.polys.numberfields import AlgebraicNumber
+def test_sympy__core__numbers__AlgebraicNumber():
+    from sympy.core.numbers import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
 
 
@@ -3239,6 +3284,14 @@ def test_sympy__ntheory__factor___totient():
     from sympy.ntheory.factor_ import totient
     k = symbols('k', integer=True)
     t = totient(k)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___divisor_sigma():
+    from sympy.ntheory.factor_ import divisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = divisor_sigma(n, k)
     assert _test_args(t)
 
 
