@@ -132,10 +132,11 @@ Rel = Relational
 class Equality(Relational):
     """An equal relation between two objects.
 
-    Represents that two objects are equal.  If they can be shown to be
-    definitively equal, this will reduce to True; if definitively unequal,
-    this will reduce to False.  Otherwise, the relation is maintained as an
-    Equality object.
+    Represents that two objects are equal.  If they can be easily shown
+    to be definitively equal (or unequal), this will reduce to True (or
+    False).  Otherwise, the relation is maintained as an unevaluated
+    Equality object.  Use the ``simplify`` function on this object for
+    more nontrivial evaluation of the equality relation.
 
     Examples
     ========
@@ -147,11 +148,13 @@ class Equality(Relational):
 
     See Also
     ========
+
     sympy.logic.boolalg.Equivalent : for representing equality between two
         boolean expressions
 
     Notes
     =====
+
     This class is not the same as the == operator.  The == operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
