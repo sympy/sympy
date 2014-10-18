@@ -540,6 +540,10 @@ def test_simplify_measure():
     assert measure1(simplify(expr, measure=measure1)) <= measure1(expr)
     assert measure2(simplify(expr, measure=measure2)) <= measure2(expr)
 
+    expr2 = Eq(sin(x)**2 + cos(x)**2, 1)
+    assert measure1(simplify(expr2, measure=measure1)) <= measure1(expr2)
+    assert measure2(simplify(expr2, measure=measure2)) <= measure2(expr2)
+
 
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \

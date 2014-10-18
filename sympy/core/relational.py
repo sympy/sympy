@@ -70,39 +70,28 @@ class Relational(Boolean, Expr, EvalfMixin):
         """The right-hand side of the relation."""
         return self._args[1]
 
-    @classmethod
-    def _eval_sides(cls, lhs, rhs):
-        """Takes the difference between lhs and rhs, simplifies and evaluates.
-
-        If the difference can be simplified to a single real number, it will
-        be evaluated with ``cls._eval_relation``.  If the difference does not
-        simplify or cannot be calculated, None will be returned.
-
-        """
-        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
-            diff = lhs - rhs
-            if not diff.has(Symbol):
-                know = diff.equals(0)
-                if know == True:
-                    diff = S.Zero
-                elif know == False:
-                    diff = diff.evalf()
-            if diff.is_Number and diff.is_real:
-                return cls._eval_relation(diff, S.Zero)
-
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
     def _eval_simplify(self, ratio, measure):
-        r = self.__class__(self.lhs.simplify(ratio=ratio),
-                           self.rhs.simplify(ratio=ratio))
+        r = self.func(self.lhs.simplify(ratio=ratio, measure=measure),
+                      self.rhs.simplify(ratio=ratio, measure=measure))
         if r not in (S.true, S.false):
-            # try harder to reduce to boolean
-            # NOTE: may want to move _eval_sides() code here
-            rr = self._eval_sides(self.lhs, self.rhs)
-            if rr is not None:
-                return rr
-        return r
+            if isinstance(self.lhs, Expr) and isinstance(self.rhs, Expr):
+                dif = self.lhs - self.rhs
+                if not dif.has(Symbol):
+                    know = dif.equals(0)
+                    if know == True:
+                        dif = S.Zero
+                    elif know == False:
+                        dif = dif.evalf()
+                if dif.is_Number and (dif.is_real or self.func in (Eq, Ne)):
+                    r = self.func._eval_relation(dif, S.Zero)
+
+        if measure(r) < ratio*measure(self):
+            return r
+        else:
+            return self
 
     def __nonzero__(self):
         raise TypeError("symbolic boolean expression has no truth value.")
