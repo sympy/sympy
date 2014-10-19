@@ -7,7 +7,8 @@ from __future__ import print_function, division
 import math
 
 import sympy.mpmath.libmp as libmp
-from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
+from sympy.mpmath import (
+    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from sympy.mpmath import inf as mpmath_inf
 from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
         fnan, fnone, fone, fzero, mpf_abs, mpf_add,
@@ -881,13 +882,11 @@ def do_integral(expr, prec, options):
             diff = xhigh - xlow
             if not diff.free_symbols:
                 xlow, xhigh = 0, diff
-    orig = mp.prec
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
-    try:
-        mp.prec = prec + 5
+    with workprec(prec + 5):
         xlow = as_mpmath(xlow, prec + 15, options)
         xhigh = as_mpmath(xhigh, prec + 15, options)
 
@@ -932,9 +931,7 @@ def do_integral(expr, prec, options):
             result, quadrature_error = quadts(f, [xlow, xhigh], error=1)
             quadrature_error = fastlog(quadrature_error._mpf_)
 
-    finally:
-        options['maxprec'] = oldmaxprec
-        mp.prec = orig
+    options['maxprec'] = oldmaxprec
 
     if have_part[0]:
         re = result.real._mpf_
@@ -1086,12 +1083,9 @@ def hypsum(expr, n, start, prec):
                 _term[0] //= MPZ(func2(k - 1))
             return make_mpf(from_man_exp(_term[0], -prec2))
 
-        orig = mp.prec
-        try:
-            mp.prec = prec
+        with workprec(prec):
             v = nsum(summand, [0, mpmath_inf], method='richardson')
-        finally:
-            mp.prec = orig
+
         return v._mpf_
 
 

@@ -482,14 +482,8 @@ class Function(Application, Expr):
         except ValueError:
             return
 
-        # Set mpmath precision and apply. Make sure precision is restored
-        # afterwards
-        orig = mpmath.mp.prec
-        try:
-            mpmath.mp.prec = prec
+        with mpmath.workprec(prec):
             v = func(*args)
-        finally:
-            mpmath.mp.prec = orig
 
         return Expr._from_mpmath(v, prec)
 

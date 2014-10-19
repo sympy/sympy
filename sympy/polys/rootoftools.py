@@ -25,7 +25,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import QQ
 
-from sympy.mpmath import mp, mpf, mpc, findroot
+from sympy.mpmath import mp, mpf, mpc, findroot, workprec
 from sympy.mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
@@ -410,9 +410,7 @@ class RootOf(Expr):
 
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
-        _prec, mp.prec = mp.prec, prec
-
-        try:
+        with workprec(prec):
             func = lambdify(self.poly.gen, self.expr)
 
             interval = self._get_interval()
@@ -460,8 +458,6 @@ class RootOf(Expr):
                     continue
                 else:
                     break
-        finally:
-            mp.prec = _prec
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 
