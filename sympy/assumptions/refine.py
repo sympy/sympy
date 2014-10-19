@@ -191,40 +191,40 @@ def refine_exp(expr, assumptions):
                     return -S.ImaginaryUnit
                 elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
-                    
-def refine_atan2(expr,assumptions):
+
+
+def refine_atan2(expr, assumptions):
     """
     Handler for the atan2 function
 
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, Abs
-    >>> from sympy.assumptions.refine import refine_abs
-    >>> from sympy.abc import x
-    >>> refine_abs(atan2(x,y), Q.real(x) & Q.positive(y))
+    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy.assumptions.refine import refine_atan2
+    >>> from sympy.abc import x, y
+    >>> refine_atan2(atan2(x,y), Q.real(x) & Q.positive(y))
     atan(x/y)
-    >>> refine_abs(atan2(x,y), Q.negative(x) & Q.negative(y))
-    atan(x/y) - pi 
-    >>> refine_abs(atan2(x,y), Q.positive(x) & Q.negative(y))
+    >>> refine_atan2(atan2(x,y), Q.negative(x) & Q.negative(y))
+    atan(x/y) - pi
+    >>> refine_atan2(atan2(x,y), Q.positive(x) & Q.negative(y))
     atan(x/y) + pi
     """
     from sympy.functions.elementary.complexes import atan
-    from sympy import pi 
-    
+    from sympy import pi
     arg0 = expr.args[0]
     arg1 = expr.args[1]
-    if ask(Q.real(arg0), assumptions) and ask(Q.positive(arg1), assumptions) :
-        return atan(arg0/arg1)
+    if ask(Q.real(arg0), assumptions) and ask(Q.positive(arg1), assumptions):
+        return atan(arg0 / arg1)
     elif ask(Q.negative(arg0), assumptions) and \
-        ask(Q.negative(arg1),assumptions) :
-        return atan(arg0/arg1) - pi
+            ask(Q.negative(arg1), assumptions):
+        return atan(arg0 / arg1) - pi
     elif ask(Q.positive(arg0), assumptions) and \
-        ask(Q.negative(arg1),assumptions) :
-        return atan(arg0/arg1) + pi
-    else :
+            ask(Q.negative(arg1), assumptions):
+        return atan(arg0 / arg1) + pi
+    else:
         return expr
-        
+
 
 def refine_Relational(expr, assumptions):
     """
@@ -244,10 +244,10 @@ handlers_dict = {
     'Pow': refine_Pow,
     'exp': refine_exp,
     'atan2': refine_atan2,
-    'Equality' : refine_Relational,
-    'Unequality' : refine_Relational,
-    'GreaterThan' : refine_Relational,
-    'LessThan' : refine_Relational,
-    'StrictGreaterThan' : refine_Relational,
-    'StrictLessThan' : refine_Relational
+    'Equality': refine_Relational,
+    'Unequality': refine_Relational,
+    'GreaterThan': refine_Relational,
+    'LessThan': refine_Relational,
+    'StrictGreaterThan': refine_Relational,
+    'StrictLessThan': refine_Relational
 }
