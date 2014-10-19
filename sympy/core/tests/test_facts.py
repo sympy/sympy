@@ -48,6 +48,16 @@ def test_deduce_alpha_implications():
     assert P == {'a': set(['b', 'c']), 'b': set(['a', 'c']), 'c': set(['a', 'b'])}
 
 
+    # Long deductions
+    I, P = D([('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'e')])
+    assert I == {'a': set(['b', 'c', 'd', 'e']), 'b': set(['c', 'd', 'e']),
+        'c': set(['d', 'e']), 'd': set(['e']), Not('b'): set([Not('a')]),
+        Not('c'): set([Not('a'), Not('b')]), Not('d'): set([Not('a'), Not('b'),
+            Not('c')]), Not('e'): set([Not('a'), Not('b'), Not('c'), Not('d')])}
+    assert P == {'a': set(['b', 'c', 'd', 'e']), 'b': set(['a', 'c', 'd',
+        'e']), 'c': set(['a', 'b', 'd', 'e']), 'd': set(['a', 'b', 'c', 'e']),
+        'e': set(['a', 'b', 'c', 'd'])}
+
     # something related to real-world
     I, P = D([('rat', 'real'), ('int', 'rat')])
 

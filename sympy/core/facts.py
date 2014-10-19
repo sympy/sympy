@@ -74,6 +74,24 @@ def _as_pair(atom):
 
 # XXX this prepares forward-chaining rules for alpha-network
 
+def transitive_closure(implications):
+    """
+    Computes the transitive closure of a list of implications
+
+    Uses Warshall's algorithm, as described at
+    http://chuck.ferzle.com/Notes/Notes/DiscreteMath/Warshall.pdf.
+    """
+    full_implications = set(implications)
+    literals = set.union(*map(set, implications))
+
+    for k in literals:
+        for i in literals:
+            if (i, k) in full_implications:
+                for j in literals:
+                    if (k, j) in full_implications:
+                        full_implications.add((i, j))
+
+    return full_implications
 
 def deduce_alpha_implications(implications):
     """deduce all implications
@@ -95,30 +113,14 @@ def deduce_alpha_implications(implications):
        implications: [] of (a,b)
        return:       {} of a -> set([b, c, ...])
     """
-    res = defaultdict(set)
-    for a, b in implications:
+    implications = implications + [(Not(j), Not(i)) for (i, j) in implications]
+    res  = defaultdict(set)
+    full_implications = transitive_closure(implications)
+    for a, b in full_implications:
         if a == b:
             continue    # skip a->a cyclic input
 
         res[a].add(b)
-        res[Not(b)].add(Not(a))
-
-        # (x >> a) & (a >> b) => x >> b
-        # (x >> !b) & (a >> b) => x >> !a
-        for fact in res:
-            implied = res[fact]
-            if a in implied:
-                implied.add(b)
-            if Not(b) in implied:
-                implied.add(Not(a))
-
-        # (a >> b) & (b >> x) => a >> x
-        # (a >> b) & (!a >> x) => !b >> x
-        if b in res:
-            res[a] |= res[b]
-        if Not(a) in res:
-            res[Not(b)] |= res[Not(a)]
-
 
     # Clean up tautologies and check consistency
     for a, impl in res.items():
