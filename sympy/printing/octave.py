@@ -507,8 +507,8 @@ def octave_code(expr, assign_to=None, **settings):
     >>> octave_code(mat, assign_to='A')
     'A = [x.^2 sin(x) ceil(x)];'
 
-    ``Piecewise`` expressions are dealt with using logical masking.  A future
-    version might offer an alternative treatment using if-else conditionals.
+    ``Piecewise`` expressions are implemented with logical masking by default.
+    Alternatively, you can pass "inline=False" to use if-else conditionals.
     Note that if the ``Piecewise`` lacks a default term, represented by
     ``(expr, True)`` then an error will be thrown.  This is to prevent
     generating an expression that may not evaluate to anything.
