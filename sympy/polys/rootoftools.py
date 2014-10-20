@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
         sympify, Rational)
+from sympy.core.cache import cacheit
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -332,6 +333,7 @@ class RootOf(Expr):
         return roots
 
     @classmethod
+    @cacheit
     def _roots_trivial(cls, poly, radicals):
         """Compute roots in linear, quadratic and binomial cases. """
         if poly.degree() == 1:
