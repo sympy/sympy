@@ -11,9 +11,6 @@ from sympy.external import import_module
 import math
 import sympy
 
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
 
 MutableDenseMatrix = Matrix
 
@@ -59,8 +56,6 @@ def test_own_namespace():
 def test_own_module():
     f = lambdify(x, sin(x), math)
     assert f(0) == 0.0
-    f = lambdify(x, sympy.ceiling(x), math)
-    raises(NameError, lambda: f(4.5))
 
 
 def test_bad_args():
@@ -293,7 +288,7 @@ def test_numpy_matrix():
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     #Lambdify array first, to ensure return to matrix as default
-    f = lambdify((x, y, z), A)
+    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.array}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     #Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)

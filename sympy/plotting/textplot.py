@@ -3,10 +3,6 @@ from __future__ import print_function, division
 from sympy.core.symbol import Dummy
 from sympy.utilities.lambdify import lambdify
 
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
-
 
 def textplot(expr, a, b, W=55, H=18):
     """

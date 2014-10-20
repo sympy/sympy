@@ -1032,9 +1032,6 @@ def hypsum(expr, n, start, prec):
     polynomials.
     """
     from sympy import hypersimp, lambdify
-    # TODO: This should be removed for the release of 0.7.7, see issue #7853
-    from functools import partial
-    lambdify = partial(lambdify, default_array=True)
 
     if start:
         expr = expr.subs(n, n + start)
