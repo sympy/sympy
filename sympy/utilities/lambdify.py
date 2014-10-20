@@ -415,8 +415,10 @@ def lambdastr(args, expr, printer=None, dummify=False):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     from sympy import Dummy, sympify, Symbol, Function, flatten
 
+    EXCLUDE = (DeferredVector, MatrixSymbol)
     if printer is not None:
         if inspect.isfunction(printer):
             lambdarepr = printer
@@ -432,7 +434,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     def sub_args(args, dummies_dict):
         if isinstance(args, str):
             return args
-        elif isinstance(args, DeferredVector):
+        elif isinstance(args, EXCLUDE):
             return str(args)
         elif iterable(args):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
@@ -450,7 +452,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
         try:
             expr = sympify(expr).xreplace(dummies_dict)
         except Exception:
-            if isinstance(expr, DeferredVector):
+            if isinstance(expr, EXCLUDE):
                 pass
             elif isinstance(expr, dict):
                 k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
@@ -464,7 +466,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
 
     # Transform args
     def isiter(l):
-        return iterable(l, exclude=(str, DeferredVector))
+        return iterable(l, exclude=(str,)+EXCLUDE)
 
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten
@@ -486,7 +488,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     else:
         if isinstance(args, str):
             pass
-        elif iterable(args, exclude=DeferredVector):
+        elif iterable(args, exclude=EXCLUDE):
             args = ",".join(str(a) for a in args)
 
     # Transform expr
@@ -536,10 +538,14 @@ def _imp_namespace(expr, namespace=None):
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import FunctionClass
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     if namespace is None:
         namespace = {}
-    # tuples, lists, dicts are valid expressions
-    if is_sequence(expr):
+    # MatrixSymbol, tuples, lists, dicts are valid expressions
+    if isinstance(expr, MatrixSymbol):
+        _imp_namespace(expr.name, namespace)
+        return namespace
+    elif is_sequence(expr):
         for arg in expr:
             _imp_namespace(arg, namespace)
         return namespace
