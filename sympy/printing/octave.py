@@ -173,12 +173,6 @@ class OctaveCodePrinter(CodePrinter):
                     divsym + "(%s)" % multjoin(b, b_str))
 
 
-    # FIXME: add some tests for HadamardProduct: user needs this to
-    # mix matrix symbols and .* products?
-    #def _print_MatMul(self, expr):
-    #def _print_HadamardProduct(self, expr):
-
-
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
 
@@ -495,10 +489,11 @@ def octave_code(expr, assign_to=None, **settings):
 
     This class uses several rules to decide which symbol to use a product.
     Pure numbers use "*", Symbols use ".*" and MatrixSymbols use "*".
-    Unfortunately, there is currently there is no easy way to specify scalar
-    symbols (other than 1x1 Matrix), so sometimes the code might have some
-    minor cosmetic issues.  For example, here presumably x and y are scalars
-    and a human being might write "(x^2*y)*A^3":
+    A HadamardProduct can be used to specify componentwise multiplication ".*"
+    of two MatrixSymbols.  There is currently there is no easy way to specify
+    scalar symbols, so sometimes the code might have some minor cosmetic
+    issues.  For example, suppose x and y are scalars and A is a Matrix, then
+    while a human programmer might write "(x^2*y)*A^3", we generate:
 
     >>> octave_code(x**2*y*A**3)
     '(x.^2.*y)*A^3'
@@ -506,10 +501,6 @@ def octave_code(expr, assign_to=None, **settings):
     Matrices are supported using Octave inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
     or as a ``MatrixSymbol``.  The dimenions must align in the latter case.
-
-    FIXME: Hadamard products print with ".*" as well so if do need more careful
-    control than the above, you could work solely with MatrixSymbols, using
-    matrix and Hadamard products.
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])

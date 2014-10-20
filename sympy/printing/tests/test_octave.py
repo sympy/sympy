@@ -1,10 +1,10 @@
-from sympy.core import (S, pi, oo, symbols, Function,
-                        Rational, Integer, Tuple, Symbol)
+from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
+                        Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
 from sympy.functions import Piecewise, sqrt, Abs, ceiling, exp, sin, cos
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
-from sympy.matrices import eye, Matrix, MatrixSymbol, Identity
+from sympy.matrices import eye, Matrix, MatrixSymbol, Identity, HadamardProduct
 from sympy.integrals import Integral
 from sympy.concrete import Sum
 from sympy.utilities.pytest import XFAIL
@@ -322,3 +322,17 @@ def test_trick_indent_with_end_else_words():
         "else\n"
         "  1\n"
         "end")
+
+
+def test_haramard():
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    v = MatrixSymbol('v', 3, 1)
+    h = MatrixSymbol('h', 1, 3)
+    C = HadamardProduct(A, B)
+    assert mcode(C) == "A.*B"
+    assert mcode(C*v) == "(A.*B)*v"
+    assert mcode(h*C*v) == "h*(A.*B)*v"
+    assert mcode(C*A) == "(A.*B)*A"
+    # mixing Hadamard and scalar strange b/c we vectorize scalars
+    assert mcode(C*x*y) == "(x.*y)*(A.*B)"
