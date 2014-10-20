@@ -40,7 +40,7 @@ def roots_linear(f):
     return [r]
 
 
-def roots_quadratic(f):
+def roots_quadratic(f, sort=True):
     """Returns a list of roots of a quadratic polynomial."""
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
@@ -84,7 +84,10 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
+    roots = list(map(expand_2arg, (r0, r1)))
+    if sort:
+        return sorted(roots, key=default_sort_key)
+    return roots
 
 
 def roots_cubic(f, trig=False):
@@ -93,7 +96,7 @@ def roots_cubic(f, trig=False):
         a, b, c, d = f.all_coeffs()
         p = (3*a*c - b**2)/3/a**2
         q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
-        D = 18*a*b*c*d - 4*b**3*d+b**2*c**2 - 4*a*c**3 - 27*a**2*d**2
+        D = 18*a*b*c*d - 4*b**3*d + b**2*c**2 - 4*a*c**3 - 27*a**2*d**2
         if (D > 0) == True:
             rv = []
             for k in range(3):
@@ -326,7 +329,7 @@ def roots_quartic(f):
                 for a1, a2 in zip(_ans(y1), _ans(y2))]
 
 
-def roots_binomial(f):
+def roots_binomial(f, sort=True):
     """Returns a list of roots of a binomial polynomial."""
     n = f.degree()
 
@@ -342,7 +345,9 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    return sorted(roots, key=default_sort_key)
+    if sort:
+        return sorted(roots, key=default_sort_key)
+    return roots
 
 
 def _inv_totient_estimate(m):
@@ -564,19 +569,12 @@ def roots_quintic(f):
 
     # Now check if solutions are distinct
 
-    result_n = []
-    for root in result:
-        result_n.append(root.n(5))
-    result_n = sorted(result_n, key=default_sort_key)
-
-    prev_entry = None
-    for r in result_n:
-        if r == prev_entry:
-            # Roots are identical. Abort. Return []
-            # and fall back to usual solve
+    saw = set()
+    for r in result:
+        r = r.n(2)
+        if r in saw:
             return []
-        prev_entry = r
-
+        saw.add(r)
     return result
 
 

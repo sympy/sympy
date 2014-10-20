@@ -7,6 +7,8 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve)
 from sympy.utilities.pytest import raises
+from sympy.polys.rootoftools import RootOf
+from sympy.solvers.solvers import solve
 
 inf = oo.evalf()
 
@@ -243,6 +245,24 @@ def test_issue_6343():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
     assert reduce_inequalities(eq) == \
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
+
+
+def test_issue_8235():
+    x = Symbol('x', real=True)
+    assert reduce_inequalities(x**2 - 1 < 0) == \
+        And(S(-1) < x, x < S(1))
+    assert reduce_inequalities(x**2 - 1 <= 0) == \
+        And(S(-1) <= x, x <= 1)
+    assert reduce_inequalities(x**2 - 1 > 0) == \
+        Or(And(-oo < x, x < -1), And(x < oo, S(1) < x))
+    assert reduce_inequalities(x**2 - 1 >= 0) == \
+        Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
+
+    eq = x**8 + x**2 - 9
+    sol = solve(eq >= 0)
+    known_sol = Or(And(-oo < x, RootOf(x**8 + x**2 - 9, 1) <= x, x < oo), \
+            And(-oo < x, x < oo, x <= RootOf(x**8 + x**2 - 9, 0)))
+    assert sol == known_sol
 
 
 def test_issue_5526():

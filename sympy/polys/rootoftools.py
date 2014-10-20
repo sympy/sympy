@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
-        sympify, Rational)
+        sympify, Rational, C)
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -343,13 +343,21 @@ class RootOf(Expr):
 
         if not radicals:
             return None
-
+        free = len(poly.free_symbols)
+        sort = isinstance(poly, PurePoly) and free or free > 1
         if poly.degree() == 2:
-            return roots_quadratic(poly)
+            roots = roots_quadratic(poly, sort=sort)
         elif poly.length() == 2 and poly.TC():
-            return roots_binomial(poly)
+            roots = roots_binomial(poly, sort=sort)
         else:
             return None
+        # put roots in same order as RootOf instances
+        if not sort:
+            key = [r.n(2) for r in roots]
+            key = [(1 if not r.is_real else 0, C.re(r), C.im(r))
+                for r in key]
+            _, roots = zip(*sorted(zip(key, roots)))
+        return roots
 
     @classmethod
     def _preprocess_roots(cls, poly):
@@ -718,14 +726,15 @@ def bisect(f, a, b, tol):
     fb = f(b)
     if fa * fb >= 0:
         raise ValueError("bisect: f(a) and f(b) must have opposite signs")
-    while (b-a > tol):
-        c = (a+b)/2
+    while (b - a > tol):
+        c = (a + b)/2
         fc = f(c)
-        if (fc == 0): return c # We need to make sure f(c) is not zero below
+        if (fc == 0):
+            return c # We need to make sure f(c) is not zero below
         if (fa * fc < 0):
             b = c
             fb = fc
         else:
             a = c
             fa = fc
-    return (a+b)/2
+    return (a + b)/2
