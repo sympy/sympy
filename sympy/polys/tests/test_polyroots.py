@@ -2,7 +2,7 @@
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
     powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos)
+    acos, default_sort_key)
 
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)
@@ -13,12 +13,21 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
 
 from sympy.polys.orthopolys import legendre_poly
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.iterables import cartes
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.randtest import verify_numerically
 import sympy
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
+
+
+def _nsort(roots):
+    key = [r.n(2) for r in roots]
+    key = [(1 if not r.is_real else 0, re(r), im(r))
+        for r in key]
+    _, roots = zip(*sorted(zip(key, roots)))
+    return list(roots)
 
 
 def test_roots_linear():
@@ -36,6 +45,35 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(f, x)) == \
         [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
          -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
+
+    # check for simplification
+    f = Poly(y*x**2 - 2*x - 2*y, x)
+    assert roots_quadratic(f) == \
+        [-sqrt(2*y**2 + 1)/y + 1/y, sqrt(2*y**2 + 1)/y + 1/y]
+    f = Poly(x**2 + (-y**2 - 2)*x + y**2 + 1, x)
+    assert roots_quadratic(f) == \
+        [y**2/2 - sqrt(y**4)/2 + 1, y**2/2 + sqrt(y**4)/2 + 1]
+
+    f = Poly(sqrt(2)*x**2 - 1, x)
+    r = roots_quadratic(f)
+    assert r == _nsort(r)
+    r = roots_quadratic(f, _sort=True)
+    assert r == sorted(r, key=default_sort_key)
+
+    # issue 8255
+    f = Poly(-24*x**2 - 180*x + 264)
+    assert [w.n(2) for w in f.all_roots(radicals=True)] == \
+           [w.n(2) for w in f.all_roots(radicals=False)]
+    for _a, _b, _c in cartes((-2, 2), (-2, 2), (0, -1)):
+        f = Poly(_a*x**2 + _b*x + _c)
+        roots = roots_quadratic(f, _sort=False)
+        assert roots == _nsort(roots)
+
+
+@XFAIL
+def test_issue_8289():
+    roots = (Poly(x**2 + 2)*Poly(x**4 + 2)).all_roots()
+    assert roots == _nsort(roots)
 
 
 def test_roots_cubic():
@@ -179,6 +217,15 @@ def test_roots_binomial():
 
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
+    for a, b, s, n in cartes((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
+        if a == b and a != 1:  # a == b == 1 is sufficient
+            continue
+        p = Poly(a*x**n + s*b)
+        roots = roots_binomial(p, _sort=False)
+        assert roots == _nsort(roots)
+        roots = roots_binomial(p, _sort=True)
+        assert roots == sorted(roots, key=default_sort_key)
+
 
 def test_roots_preprocessing():
     f = a*y*x**2 + y - b
