@@ -13,6 +13,7 @@ from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, re, im, Abs, cos, acos, sin, Piecewise
+from sympy.functions.elementary.miscellaneous import root
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -118,18 +119,18 @@ def roots_cubic(f, trig=False):
         else:
             if q.is_real:
                 if (q > 0) == True:
-                    u1 = -q**Rational(1, 3)
+                    u1 = -root(q, 3)
                 else:
-                    u1 = (-q)**Rational(1, 3)
+                    u1 = root(-q, 3)
             else:
-                u1 = (-q)**Rational(1, 3)
+                u1 = root(-q, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
     elif q.is_real and q < 0:
-        u1 = -(-q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
+        u1 = -root(-q/2 + sqrt(q**2/4 + pon3**3), 3)
     else:
-        u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
+        u1 = root(q/2 + sqrt(q**2/4 + pon3**3), 3)
 
     coeff = S.ImaginaryUnit*sqrt(3)/2
 
@@ -409,7 +410,7 @@ def roots_cyclotomic(f, factor=False):
             if igcd(k, n) == 1:
                 roots.append(exp(2*k*S.Pi*I/n).expand(complex=True))
     else:
-        g = Poly(f, extension=(-1)**Rational(1, n))
+        g = Poly(f, extension=root(-1, n))
 
         for h, _ in g.factor_list()[1]:
             roots.append(-h.TC())
