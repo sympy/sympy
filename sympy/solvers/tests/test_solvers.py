@@ -405,6 +405,9 @@ def test_solve_transcendental():
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
 
+    # issue 7245
+    assert solve(sin(sqrt(x))) == [0, pi**2]
+
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
