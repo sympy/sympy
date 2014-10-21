@@ -435,7 +435,7 @@ class RootOf(Expr):
                     if self.is_real:
                         a = mpf(str(interval.a))
                         b = mpf(str(interval.b))
-                        # This is needed due to the bug #3364:
+                        # This is needed due to the issue 6463:
                         a, b = min(a, b), max(a, b)
                         if not (a < root < b):
                             raise ValueError("Root not in the interval.")
@@ -444,7 +444,7 @@ class RootOf(Expr):
                         bx = mpf(str(interval.bx))
                         ay = mpf(str(interval.ay))
                         by = mpf(str(interval.by))
-                        # This is needed due to the bug #3364:
+                        # This is needed due to the issue 6463:
                         ax, bx = min(ax, bx), max(ax, bx)
                         ay, by = min(ay, by), max(ay, by)
                         if not (ax < root.real < bx and ay < root.imag < by):
@@ -486,7 +486,7 @@ class RootOf(Expr):
         interval = self._get_interval()
         a = Rational(str(interval.a))
         b = Rational(str(interval.b))
-        # This is needed due to the bug #3364:
+        # This is needed due to the issue 6463:
         a, b = min(a, b), max(a, b)
         return bisect(func, a, b, tol)
 
