@@ -4,7 +4,8 @@ from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
 from sympy.functions import Piecewise, sqrt, Abs, ceiling, exp, sin, cos
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
-from sympy.matrices import eye, Matrix, MatrixSymbol, Identity, HadamardProduct
+from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
+                            HadamardProduct, SparseMatrix)
 from sympy.integrals import Integral
 from sympy.concrete import Sum
 from sympy.utilities.pytest import XFAIL
@@ -336,3 +337,15 @@ def test_haramard():
     assert mcode(C*A) == "(A.*B)*A"
     # mixing Hadamard and scalar strange b/c we vectorize scalars
     assert mcode(C*x*y) == "(x.*y)*(A.*B)"
+
+
+def test_sparse():
+    M = SparseMatrix(5, 6, {})
+    M[2, 2] = 10;
+    M[1, 2] = 20;
+    M[1, 3] = 22;
+    M[0, 3] = 30;
+    M[3, 0] = x*y;
+    assert mcode(M) == (
+        "sparse([4 2 3 1 2], [1 3 3 4 4], [x.*y 20 10 30 22], 5, 6)"
+    )

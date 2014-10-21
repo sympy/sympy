@@ -302,16 +302,29 @@ class OctaveCodePrinter(CodePrinter):
         return "[%s]" % A.table(self, rowstart='', rowend='',
                                 rowsep=';\n', colsep=' ')
 
+
+    def _print_SparseMatrix(self, A):
+        # FIXME: I get errors if I import this at the top
+        from sympy.matrices import Matrix
+        L = A.col_list();
+        # make row vectors of the indices and entries
+        I = Matrix([[k[0] + 1 for k in L]])
+        J = Matrix([[k[1] + 1 for k in L]])
+        AIJ = Matrix([[k[2] for k in L]])
+        return "sparse(%s, %s, %s, %s, %s)" % (self._print(I), self._print(J),
+                                            self._print(AIJ), A.rows, A.cols)
+
+
     # FIXME: see my proposed change for _print_NumberSymbol, same here
-    _print_SparseMatrix = \
-        _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_Matrix = \
+    _print_Matrix = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
         _print_ImmutableMatrix = \
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
+    _print_MutableSparseMatrix = \
+        _print_ImmutableSparseMatrix = \
+        _print_SparseMatrix
 
 
     def _print_MatrixElement(self, expr):
