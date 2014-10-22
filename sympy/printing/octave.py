@@ -57,9 +57,9 @@ class OctaveCodePrinter(CodePrinter):
         'contract': True,
         'inline': True,
     }
-    # Note: contract is for expressing tensors as loops (if True), or
-    # just assignment (if False).
-    # FIXME: Needs tests for tensors, borrow some from C?
+    # Note: contract is for expressing tensors as loops (if True), or just
+    # assignment (if False).  FIXME: this should be looked a more carefully
+    # for Octave.
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
