@@ -168,7 +168,7 @@ def test_Matrices_entries_not_hadamard():
     # leave it user's responsibility to put scalar data for x.
     A = Matrix([[1, sin(2/x), 3*pi/x/5], [1, 2, x*y]])
     expected = ("[1 sin(2/x) 3*pi/(5*x);\n"
-                "1        2        x*y]")
+                "1        2        x*y]") # <- we give x.*y
     assert mcode(A) == expected
 
 
@@ -244,7 +244,6 @@ def test_octave_piecewise():
 
 
 def test_octave_piecewise_times_const():
-    # FIXME: self.parenthesize something! but where?
     pw = Piecewise((x, x < 1), (x**2, True))
     assert mcode(2*pw) == "2*((x < 1).*(x) + (~(x < 1)).*(x.^2))"
     assert mcode(pw/x) == "((x < 1).*(x) + (~(x < 1)).*(x.^2))./x"
