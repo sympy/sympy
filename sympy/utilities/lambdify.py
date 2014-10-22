@@ -393,7 +393,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Apply the docstring
     sig = "func({0})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    func.__doc__ = "Created with lambdify. Signature:\n\n" + sig
+    expr_str = str(expr)
+    if len(expr_str) > 78:
+        expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+    func.__doc__ = ("Created with lambdify. Signature:\n\n{sig}\n\n"
+                    "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
 
 
