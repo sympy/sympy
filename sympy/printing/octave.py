@@ -304,7 +304,6 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_SparseMatrix(self, A):
-        # FIXME: I get errors if I import this at the top
         from sympy.matrices import Matrix
         L = A.col_list();
         # make row vectors of the indices and entries
