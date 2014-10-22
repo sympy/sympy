@@ -161,6 +161,7 @@ def test_ibasic():
 
 
 def test_relational():
+    from sympy import Lt
     assert (pi < 3) is S.false
     assert (pi <= 3) is S.false
     assert (pi > 3) is S.true
@@ -169,7 +170,9 @@ def test_relational():
     assert (-pi <= 3) is S.true
     assert (-pi > 3) is S.false
     assert (-pi >= 3) is S.false
-    assert (x - 2 < x - 3) is S.false
+    r = Symbol('r', real=True)
+    assert (r - 2 < r - 3) is S.false
+    assert Lt(x + I, x + I + 2).func == Lt  # issue 8288
 
 
 def test_relational_assumptions():
@@ -198,10 +201,10 @@ def test_relational_assumptions():
     assert (m2 <= 0) is S.true
     assert (m3 > 0) is S.true
     assert (m4 >= 0) is S.true
-    m1 = Symbol("m1", negative=False)
-    m2 = Symbol("m2", nonpositive=False)
-    m3 = Symbol("m3", positive=False)
-    m4 = Symbol("m4", nonnegative=False)
+    m1 = Symbol("m1", negative=False, real=True)
+    m2 = Symbol("m2", nonpositive=False, real=True)
+    m3 = Symbol("m3", positive=False, real=True)
+    m4 = Symbol("m4", nonnegative=False, real=True)
     assert (m1 < 0) is S.false
     assert (m2 <= 0) is S.false
     assert (m3 > 0) is S.false
