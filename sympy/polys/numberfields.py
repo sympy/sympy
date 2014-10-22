@@ -44,7 +44,7 @@ from sympy.utilities import (
 )
 
 from sympy.core.exprtools import Factors
-from sympy.simplify.simplify import _mexpand, _is_sum_surds
+from sympy.simplify.simplify import _mexpand, _is_sum_surds, _split_gcd
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
@@ -117,7 +117,6 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.simplify.simplify import _split_gcd, _mexpand
     from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
@@ -637,6 +636,9 @@ def minimal_polynomial(ex, x=None, **args):
     dom = args.get('domain', None)
 
     ex = sympify(ex)
+    if ex.is_number:
+        # not sure if it's always needed but try it for numbers (issue 8354)
+        ex = _mexpand(ex)
     for expr in preorder_traversal(ex):
         if expr.is_AlgebraicNumber:
             compose = False

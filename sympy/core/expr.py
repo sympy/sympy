@@ -643,14 +643,14 @@ class Expr(Basic, EvalfMixin):
                         pass
 
                 # try to prove with minimal_polynomial but know when
-                # *not* to use this or else it can take a long time.
+                # *not* to use this or else it can take a long time. e.g. issue 8354
                 if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
                             return True
                         return False
-                    except NotAlgebraic:
+                    except (NotAlgebraic, NotImplementedError):
                         pass
 
         # diff has not simplified to zero; constant is either None, True
@@ -662,6 +662,17 @@ class Expr(Basic, EvalfMixin):
         if failing_expression:
             return diff
         return None
+
+    def _eval_is_zero(self):
+        from sympy.polys import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
+        if self.is_number:
+            if self.is_algebraic:
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return True
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_is_positive(self):
         if self.is_number:
@@ -685,9 +696,7 @@ class Expr(Basic, EvalfMixin):
                 if i._prec != 1:
                     return False
             elif n._prec != 1:
-                if n > 0:
-                    return True
-                return False
+                return n > 0
 
     def _eval_is_negative(self):
         if self.is_number:
@@ -711,9 +720,7 @@ class Expr(Basic, EvalfMixin):
                 if i._prec != 1:
                     return False
             elif n._prec != 1:
-                if n < 0:
-                    return True
-                return False
+                return n < 0
 
     def _eval_interval(self, x, a, b):
         """
