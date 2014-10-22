@@ -1894,3 +1894,12 @@ def test_issue_2827_trigsimp_methods():
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+
+
+@XFAIL
+def test_ineq_cannot_determine_if_real():
+    # issue #8288
+    from sympy import simplify
+    lhs = x + I
+    rhs = x + I + 2
+    assert simplify(Ge(lhs, rhs)) == Ge(lhs, rhs, evaluate=False)
