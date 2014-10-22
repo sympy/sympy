@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor, zoo, sqrt, Rational)
+from sympy.core.symbol import Dummy
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -164,6 +165,30 @@ def test_doit():
     assert Lt(nn, 0).doit() is S.false
 
     assert Eq(x, 0).doit() == Eq(x, 0)
+
+
+def test_eq_pos_neg_assumptions():
+    # see issue #6116
+    p = Dummy(positive=True)
+    n = Dummy(negative=True)
+    np = Dummy(nonpositive=True)
+    nn = Dummy(nonnegative=True)
+    assert Eq(p, 0) is S.false
+    assert Eq(n, 0) is S.false
+    assert Eq(np, 0) == Eq(np, 0, evaluate=False)
+    assert Eq(nn, 0) == Eq(nn, 0, evaluate=False)
+
+
+def test_eq_incompatibility_gives_false():
+    # Incompatibility between lhs and rhs should be detected by 'is_zero'
+    a = Dummy(irrational=True)
+    b = Dummy(integer=True)
+    assert Eq(a, b) is S.false
+
+
+def test_eq_noncommutative():
+    A, B = symbols('A B', commutative=False)
+    assert Eq(A, B) == Eq(A, B, evaluate=False)
 
 
 def test_new_relational():
@@ -506,6 +531,59 @@ def test_ineq_avoid_wild_symbol_flip():
     # Previously failed as 'p <= x':
     e = Ge(x, p).doit()
     assert e == Ge(x, p, evaluate=False)
+
+
+def test_eq_no_auto_simplify():
+    # takes about half second
+    from sympy import sin, cos, sqrt
+    data = [ (cos(x)**2 + sin(x)**2, 1, S.true),
+             (cos(x)**2 + sin(x)**2, 2, S.false),
+             (x*(y + z), x*y + x*z, S.true),
+             (sqrt(4*sqrt(2) + 4), 2*sqrt(sqrt(2) + 1), S.true),
+             ((6**pi + 2**pi)**(1/pi), 2*(3**pi + 1)**(1/pi), S.true) ]
+    for (lhs, rhs, truth) in data:
+        e = Eq(lhs, rhs)
+        assert e == Eq(lhs, rhs, evaluate=False)
+        assert e.simplify() is truth
+
+
+def test_relational_simplify_with_x_both_sides():
+    # bit slow, 1 or 2 seconds
+    from sympy import sin, cos, sqrt
+    data = [
+        ((x+1)**2,      x**2 + 2*x + 1,      S.true,  S.false, S.false),
+        (sin(x)**2,     2 - cos(x)**2,       S.false, S.true,  S.false),
+        (sin(2*x) + 3,  2*cos(x)*sin(x) + 2, S.false, S.false, S.true),
+    ]
+    for (lhs, rhs, eq_truth, lt_truth, gt_truth) in data:
+        eq = Eq(lhs, rhs)
+        assert eq == Eq(lhs, rhs, evaluate=False)
+        assert eq.simplify() is eq_truth
+        ne = Ne(lhs, rhs)
+        assert ne == Ne(lhs, rhs, evaluate=False)
+        assert ne.simplify() is not eq_truth
+        lt = Lt(lhs, rhs)
+        assert lt == Lt(lhs, rhs, evaluate=False)
+        assert lt.simplify() is lt_truth
+        gt = Gt(lhs, rhs)
+        assert gt == Gt(lhs, rhs, evaluate=False)
+        assert gt.simplify() is gt_truth
+        le = Le(lhs, rhs)
+        assert le == Le(lhs, rhs, evaluate=False)
+        assert le.simplify() in (eq_truth, lt_truth)
+        ge = Ge(lhs, rhs)
+        assert ge == Ge(lhs, rhs, evaluate=False)
+        assert ge.simplify() in (eq_truth, gt_truth)
+
+
+@XFAIL
+def test_eq_simplify_with_variable():
+    # should probably simplify but doesn't with a variable.
+    lhs = (2**pi*x + 2**pi)**(1/pi)
+    rhs = 2*(x + 1)**(1/pi)
+    e = Eq(lhs, rhs)
+    assert e.subs(x, 10).simplify()
+    assert e.simplify()  # FAIL
 
 
 def test_issue_8245():
