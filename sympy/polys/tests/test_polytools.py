@@ -2716,6 +2716,10 @@ def test_nroots():
 
     raises(PolynomialError, lambda: nroots(0))
 
+    # issue 8296
+    f = Poly(x**4 - 1)
+    assert f.nroots(2) == [w.n(2) for w in f.all_roots()]
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2
