@@ -4,7 +4,7 @@ from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
     powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
     acos, default_sort_key)
 
-from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
+from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots, RootOf,
     PolynomialError)
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
@@ -70,9 +70,34 @@ def test_roots_quadratic():
         assert roots == _nsort(roots)
 
 
+def test_issue_8285():
+    roots = (Poly(4*x**8 - 1, x)*Poly(x**2 + 1)).all_roots()
+    assert roots == _nsort(roots)
+    f = Poly(x**4 + 5*x**2 + 6, x)
+    ro = [RootOf(f, i) for i in range(4)]
+    roots = Poly(x**4 + 5*x**2 + 6, x).all_roots()
+    assert roots == ro
+    assert roots == _nsort(roots)
+    # more than 2 complex roots from which to identify the
+    # imaginary ones
+    roots = Poly(2*x**8 - 1).all_roots()
+    assert roots == _nsort(roots)
+
+
 @XFAIL
+def test_Issue_8255_fail():
+    assert len(Poly(2*x**10 - 1).all_roots()) == 10  # doesn't fail
+
+
 def test_issue_8289():
     roots = (Poly(x**2 + 2)*Poly(x**4 + 2)).all_roots()
+    assert roots == _nsort(roots)
+    roots = Poly(x**6 + 3*x**3 + 2, x).all_roots()
+    assert roots == _nsort(roots)
+    roots = Poly(x**6 - x + 1).all_roots()
+    assert roots == _nsort(roots)
+    # all imaginary roots
+    roots = Poly(x**4 + 4*x**2 + 4, x).all_roots()
     assert roots == _nsort(roots)
 
 

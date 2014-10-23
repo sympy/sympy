@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
         sympify, Rational)
 from sympy.core.cache import cacheit
+from sympy.functions.elementary.miscellaneous import root as _root
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -12,7 +13,8 @@ from sympy.polys.polyfuncs import symmetrize, viete
 
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf)
+    dup_isolate_real_roots_sqf,
+    ComplexInterval)
 
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
@@ -32,6 +34,11 @@ from sympy.mpmath.libmp.libmpf import prec_to_dps
 from sympy.utilities import lambdify, public
 
 from sympy.core.compatibility import xrange
+
+from math import log as mathlog
+def _ispow2(i):
+    v = mathlog(i, 2)
+    return v == int(v)
 
 _reals_cache = {}
 _complexes_cache = {}
@@ -160,8 +167,7 @@ class RootOf(Expr):
         else:
             _complexes_cache[factor] = complex_part = \
                 dup_isolate_complex_roots_sqf(
-                    factor.rep.rep, factor.rep.dom, blackbox=True)
-
+                factor.rep.rep, factor.rep.dom, blackbox=True)
         return complex_part
 
     @classmethod
@@ -212,19 +218,156 @@ class RootOf(Expr):
         return reals
 
     @classmethod
+    def _separate_imaginary_from_complex(cls, complexes):
+        from sympy.utilities.iterables import sift
+        def is_imag(c):
+            '''
+            return True if all roots are imaginary (ax**2 + b)
+            return False if no roots are imaginary
+            return None if 2 roots are imaginary (ax**N'''
+            u, f, k = c
+            deg = f.degree()
+            if f.length() == 2:
+                if deg == 2:
+                    return True  # both imag
+                elif _ispow2(deg):
+                    if f.LC()*f.TC() < 0:
+                        return None # 2 are imag
+            return False  # none are imag
+        # separate according to the function
+        sifted = sift(complexes, lambda c: c[1])
+        del complexes
+        imag = []
+        complexes = []
+        for f in sifted:
+            isift = sift(sifted[f], lambda c: is_imag(c))
+            imag.extend(isift.pop(True, []))
+            complexes.extend(isift.pop(False, []))
+            mixed = isift.pop(None, [])
+            assert not isift
+            if not mixed:
+                continue
+            # only 2 of the mixed ones are actually imaginary
+            # issue 8316 indicates that there may be a problem
+            # in identifying the imaginary ones so we limit
+            # the iterations. If everything is working then
+            # the loop should just be controlled with "while True";
+            # for now it allows 4 iterations per element with
+            # hopes that that will be sufficient to allow all
+            # x-values to have refined from 0 if they are going
+            # to do so.
+            missing = f.degree() - 2 - len(mixed)
+            for i in range(len(mixed)*4):
+                # see if the non-imaginary ones can be identified
+                # as having no 0 in the x coordinates
+                i = 0
+                while i < len(mixed):
+                    u, f, k = mixed[i]
+                    if u.ax != 0 and u.bx != 0:
+                        complexes.append(mixed.pop(i))
+                    else:
+                        i += 1
+                if len(mixed) == 2:
+                    imag.extend(mixed)
+                    break
+                # refine
+                for i, (u, f, k) in enumerate(mixed):
+                    u = u._inner_refine()
+                    mixed[i] = u, f, k
+            else:
+                from sympy.utilities import filldedent
+                raise NotImplementedError(filldedent('''
+                    Known issue 8316: the imaginary roots have not been
+                    identified because no intervals has refined
+                    to give a nonzero x value.%s Poly.nroots should
+                    be able to give numerical approximations of the roots;
+                    roots() should be able to give all the unsorted
+                    roots.''' % ('' if not missing else ''' %s
+                    of the roots were missing, too.''' % missing)))
+        return imag, complexes
+
+    @classmethod
+    def _refine_complexes(cls, complexes):
+        """return complexes such that no bounding rectangles of non-conjugate
+        roots would intersect if slid horizontally or vertically/
+        """
+        from sympy.utilities.iterables import sift
+        while complexes:  # break when all are distinct
+            # get the intervals pairwise-disjoint. If rectangles were drawn around
+            # the coordinates of the bounding rectangles, no rectangles would
+            # intersect after this procedure
+            for i, (u, f, k) in enumerate(complexes):
+                for j, (v, g, m) in enumerate(complexes[i + 1:]):
+                    u, v = u.refine_disjoint(v)
+                    complexes[i + j + 1] = (v, g, m)
+
+                complexes[i] = (u, f, k)
+            # Although there are no intersecting rectangles, a given rectangle
+            # might intersect another when slid horizontally. We have to refine
+            # intervals until this is not true so we can sort the roots
+            # unambiguously. Since complex roots come in conjugate pairs, we
+            # will always have 2 rectangles above each other but we should not
+            # have more than that.
+            N = len(complexes)//2 - 1
+            # check x (real) parts: there must be N + 1 disjoint x ranges, i.e.
+            # the first one must be different from N others
+            uu = set([(u.ax, u.bx) for u, _, _ in complexes])
+            u = uu.pop()
+            if sum([u[1] <= v[0] or v[1] <= u[0] for v in uu]) < N:
+                # refine
+                for i, (u, f, k) in enumerate(complexes):
+                    u = u._inner_refine()
+                    complexes[i] = u, f, k
+            else:
+                # intervals with identical x-values have disjoint y-values or
+                # else they would not be disjoint so there is no need for
+                # further checks
+                break
+        return complexes
+
+    @classmethod
     def _complexes_sorted(cls, complexes):
         """Make complex isolating intervals disjoint and sort roots. """
+        if not complexes:
+            return []
         cache = {}
 
-        for i, (u, f, k) in enumerate(complexes):
-            for j, (v, g, m) in enumerate(complexes[i + 1:]):
-                u, v = u.refine_disjoint(v)
-                complexes[i + j + 1] = (v, g, m)
+        # imaginary roots can cause a problem in terms of sorting since
+        # their x-intervals will never refine as distinct from others
+        # so we handle them separately
+        imag, complexes = cls._separate_imaginary_from_complex(complexes)
+        complexes = cls._refine_complexes(complexes)
 
-            complexes[i] = (u, f, k)
+        # sort imaginary roots
+        def key(c):
+            '''return, for ax**n+b, +/-root(abs(b/a), b) according to the
+            apparent sign of the imaginary interval, e.g. if the interval
+            were (0, 3) the positive root would be returned.
+            '''
+            u, f, k = c
+            r = _root(abs(f.TC()/f.LC()), f.degree())
+            if u.ay < 0 or u.by < 0:
+                return -r
+            return r
+        imag = sorted(imag, key=lambda c: key(c))
 
-        complexes = sorted(complexes, key=lambda r: (r[0].ax, r[0].ay))
+        # sort complexes and combine with imag
+        if complexes:
+            # key is (x1, y1) e.g. (1, 2)x(3, 4) -> (1,3)
+            complexes = sorted(complexes, key=
+                lambda c: c[0].a)
+            # find insertion point for imaginary
+            for i, c in enumerate(reversed(complexes)):
+                if c[0].bx <= 0:
+                    break
+            i = len(complexes) - i - 1
+            if i:
+                i += 1
+            complexes = complexes[:i] + imag + complexes[i:]
+        else:
+            complexes = imag
 
+        # update cache
         for root, factor, _ in complexes:
             if factor in cache:
                 cache[factor].append(root)
