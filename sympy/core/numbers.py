@@ -722,6 +722,11 @@ class Float(Number):
             return False
         return True
 
+    def _eval_is_infinite(self):
+        if self._mpf_ in (_mpf_inf, _mpf_ninf):
+            return True
+        return False
+
     def _eval_is_integer(self):
         return self._mpf_ == _mpf_zero
 
