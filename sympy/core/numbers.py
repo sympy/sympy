@@ -3282,6 +3282,8 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_imaginary = True
+    is_real = False
+    is_algebraic = True
     is_number = True
 
     __slots__ = []
