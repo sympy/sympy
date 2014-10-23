@@ -629,13 +629,13 @@ def test_hash_vs_eq():
 
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, finite=False)
-    nn = Symbol('n', nonnegative=True, finite=False)
-    np = Symbol('n', nonpositive=True, finite=False)
-    p = Symbol('p', positive=True, finite=False)
+    n = Symbol('n', negative=True, infinite=True)
+    nn = Symbol('n', nonnegative=True, infinite=True)
+    np = Symbol('n', nonpositive=True, infinite=True)
+    p = Symbol('p', positive=True, infinite=True)
     r = Dummy(real=True, finite=False)
     x = Symbol('x')
-    xb = Symbol('xb', finite=True)
+    xf = Symbol('xb', finite=True)
     assert (n + p).is_positive is None
     assert (n + x).is_positive is None
     assert (p + x).is_positive is None
@@ -643,10 +643,10 @@ def test_Add_is_pos_neg():
     assert (n + x).is_negative is None
     assert (p + x).is_negative is None
 
-    assert (n + xb).is_positive is False
-    assert (p + xb).is_positive is True
-    assert (n + xb).is_negative is True
-    assert (p + xb).is_negative is False
+    assert (n + xf).is_positive is False
+    assert (p + xf).is_positive is True
+    assert (n + xf).is_negative is True
+    assert (p + xf).is_negative is False
 
     assert (x - S.Infinity).is_negative is None  # issue 7798
     # issue 8046, 16.2
