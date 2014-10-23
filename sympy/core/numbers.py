@@ -591,7 +591,7 @@ class Float(Number):
 
     # A Float represents many real numbers,
     # both rational and irrational.
-    is_real = True
+    is_extended_real = True
     is_number = True
 
     is_Float = True
