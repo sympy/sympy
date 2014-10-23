@@ -1011,7 +1011,7 @@ class Mul(Expr, AssocOp):
         return has_polar and \
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         real = True
         zero = one_neither = False
 
@@ -1020,7 +1020,7 @@ class Mul(Expr, AssocOp):
                 return t.is_complex
             elif t.is_imaginary:
                 real = not real
-            elif t.is_real:
+            elif t.is_extended_real:
                 if not zero:
                     z = t.is_zero
                     if not z and zero is False:
@@ -1029,7 +1029,7 @@ class Mul(Expr, AssocOp):
                         if all(a.is_finite for a in self.args):
                             return True
                         return
-            elif t.is_real is False:
+            elif t.is_extended_real is False:
                 if one_neither:
                     return  # complex terms might cancel
                 one_neither = True
