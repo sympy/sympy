@@ -250,7 +250,7 @@ class Ellipse(GeometryEntity):
         >>> Ellipse(p1, b, a).minor
         a
 
-        >>> m = Symbol('m')
+        >>> m = Symbol('m', real=True)
         >>> M = m + 1
         >>> Ellipse(p1, m, M).minor
         m
@@ -291,7 +291,7 @@ class Ellipse(GeometryEntity):
         >>> Ellipse(p1, b, a).major
         b
 
-        >>> m = Symbol('m')
+        >>> m = Symbol('m', real=True)
         >>> M = m + 1
         >>> Ellipse(p1, m, M).major
         m + 1

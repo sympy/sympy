@@ -341,7 +341,7 @@ class Integral(AddWithLimits):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if a > b:
+                    if a - b > 0:
                         a, b = b, a
                         newfunc = -newfunc
                     newlimits.append((uvar, a, b))
