@@ -212,3 +212,16 @@ def find_executable(executable, path=None):
                     return f
     else:
         return None
+
+
+def make_timeout_callback(timeout):
+    """Creates a timeout callback function. Function will return True if
+    the time is up, otherwise returns False."""
+
+    TIME = time.time() + timeout
+    def callback():
+        if time.time() > TIME:
+            return True
+        else:
+            return False
+    return callback

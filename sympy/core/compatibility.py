@@ -93,6 +93,8 @@ if PY3:
     exec_ = getattr(builtins, "exec")
 
     xrange = range
+    TimeoutError = TimeoutError
+
 else:
     import codecs
     import types
@@ -137,6 +139,9 @@ else:
         exec("exec _code_ in _globs_, _locs_")
 
     xrange = xrange
+
+    class TimeoutError(Exception):
+        pass
 
 def with_metaclass(meta, *bases):
     """
