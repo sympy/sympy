@@ -141,6 +141,7 @@ from __future__ import print_function, division
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types, with_metaclass
+from sympy.core.timeout import timeoutable
 
 from random import shuffle
 
@@ -224,6 +225,7 @@ def make_property(fact):
     return property(getit)
 
 
+@timeoutable
 def _ask(fact, obj):
     """
     Find the truth value for a property of an object.

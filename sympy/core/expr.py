@@ -6,8 +6,10 @@ from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
+from .timeout import timeout_after
+from .timeout import TIMEOUT as TOLIB
 from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, xrange
+from .compatibility import reduce, as_int, default_sort_key, xrange, TimeoutError
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -2813,7 +2815,7 @@ class Expr(Basic, EvalfMixin):
 
     @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
-            mul=True, log=True, multinomial=True, basic=True, **hints):
+            mul=True, log=True, multinomial=True, basic=True, timeout=None, **hints):
         """
         Expand an expression using hints.
 
@@ -2822,84 +2824,86 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import fraction
+        try:
+            with timeout_after(timeout):
+                hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
+                log=log, multinomial=multinomial, basic=basic, timeout=timeout)
+                expr = self
+                if hints.pop('frac', False):
+                    n, d = [a.expand(deep=deep, modulus=modulus, **hints)
+                            for a in fraction(self)]
+                    return n/d
+                elif hints.pop('denom', False):
+                    n, d = fraction(self)
+                    return n/d.expand(deep=deep, modulus=modulus, **hints)
+                elif hints.pop('numer', False):
+                    n, d = fraction(self)
+                    return n.expand(deep=deep, modulus=modulus, **hints)/d
 
-        hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
-           log=log, multinomial=multinomial, basic=basic)
+                # Although the hints are sorted here, an earlier hint may get applied
+                # at a given node in the expression tree before another because of how
+                # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
+                # x*z) because while applying log at the top level, log and mul are
+                # applied at the deeper level in the tree so that when the log at the
+                # upper level gets applied, the mul has already been applied at the
+                # lower level.
 
-        expr = self
-        if hints.pop('frac', False):
-            n, d = [a.expand(deep=deep, modulus=modulus, **hints)
-                    for a in fraction(self)]
-            return n/d
-        elif hints.pop('denom', False):
-            n, d = fraction(self)
-            return n/d.expand(deep=deep, modulus=modulus, **hints)
-        elif hints.pop('numer', False):
-            n, d = fraction(self)
-            return n.expand(deep=deep, modulus=modulus, **hints)/d
+                # Additionally, because hints are only applied once, the expression
+                # may not be expanded all the way.   For example, if mul is applied
+                # before multinomial, x*(x + 1)**2 won't be expanded all the way.  For
+                # now, we just use a special case to make multinomial run before mul,
+                # so that at least polynomials will be expanded all the way.  In the
+                # future, smarter heuristics should be applied.
+                # TODO: Smarter heuristics
 
-        # Although the hints are sorted here, an earlier hint may get applied
-        # at a given node in the expression tree before another because of how
-        # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
-        # x*z) because while applying log at the top level, log and mul are
-        # applied at the deeper level in the tree so that when the log at the
-        # upper level gets applied, the mul has already been applied at the
-        # lower level.
+                def _expand_hint_key(hint):
+                    """Make multinomial come before mul"""
+                    if hint == 'mul':
+                        return 'mulz'
+                    return hint
 
-        # Additionally, because hints are only applied once, the expression
-        # may not be expanded all the way.   For example, if mul is applied
-        # before multinomial, x*(x + 1)**2 won't be expanded all the way.  For
-        # now, we just use a special case to make multinomial run before mul,
-        # so that at least polynomials will be expanded all the way.  In the
-        # future, smarter heuristics should be applied.
-        # TODO: Smarter heuristics
+                for hint in sorted(hints.keys(), key=_expand_hint_key):
+                    use_hint = hints[hint]
+                    if use_hint:
+                        hint = '_eval_expand_' + hint
+                        expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
-        def _expand_hint_key(hint):
-            """Make multinomial come before mul"""
-            if hint == 'mul':
-                return 'mulz'
-            return hint
+                while True:
+                    was = expr
+                    if hints.get('multinomial', False):
+                        expr, _ = Expr._expand_hint(
+                            expr, '_eval_expand_multinomial', deep=deep, **hints)
+                    if hints.get('mul', False):
+                        expr, _ = Expr._expand_hint(
+                            expr, '_eval_expand_mul', deep=deep, **hints)
+                    if hints.get('log', False):
+                        expr, _ = Expr._expand_hint(
+                            expr, '_eval_expand_log', deep=deep, **hints)
+                    if expr == was:
+                        break
 
-        for hint in sorted(hints.keys(), key=_expand_hint_key):
-            use_hint = hints[hint]
-            if use_hint:
-                hint = '_eval_expand_' + hint
-                expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
+                if modulus is not None:
+                    modulus = sympify(modulus)
 
-        while True:
-            was = expr
-            if hints.get('multinomial', False):
-                expr, _ = Expr._expand_hint(
-                    expr, '_eval_expand_multinomial', deep=deep, **hints)
-            if hints.get('mul', False):
-                expr, _ = Expr._expand_hint(
-                    expr, '_eval_expand_mul', deep=deep, **hints)
-            if hints.get('log', False):
-                expr, _ = Expr._expand_hint(
-                    expr, '_eval_expand_log', deep=deep, **hints)
-            if expr == was:
-                break
+                    if not modulus.is_Integer or modulus <= 0:
+                        raise ValueError(
+                            "modulus must be a positive integer, got %s" % modulus)
 
-        if modulus is not None:
-            modulus = sympify(modulus)
+                    terms = []
 
-            if not modulus.is_Integer or modulus <= 0:
-                raise ValueError(
-                    "modulus must be a positive integer, got %s" % modulus)
+                    for term in Add.make_args(expr):
+                        coeff, tail = term.as_coeff_Mul(rational=True)
 
-            terms = []
+                        coeff %= modulus
 
-            for term in Add.make_args(expr):
-                coeff, tail = term.as_coeff_Mul(rational=True)
+                        if coeff:
+                            terms.append(coeff*tail)
 
-                coeff %= modulus
+                    expr = Add(*terms)
 
-                if coeff:
-                    terms.append(coeff*tail)
-
-            expr = Add(*terms)
-
-        return expr
+                return expr
+        except TimeoutError:
+            return self
 
     ###########################################################################
     ################### GLOBAL ACTION VERB WRAPPER METHODS ####################
