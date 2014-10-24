@@ -79,13 +79,19 @@ class Relational(Boolean, Expr, EvalfMixin):
         if r not in (S.true, S.false):
             if isinstance(self.lhs, Expr) and isinstance(self.rhs, Expr):
                 dif = self.lhs - self.rhs
+                # We want a Number to compare with zero and be sure to get a
+                # True/False answer.  Check if we can deduce that dif is
+                # definitively zero or non-zero.  If non-zero, replace with an
+                # approximation.  If .equals(0) gives None, cannot be deduced.
                 if not dif.has(Symbol):
                     know = dif.equals(0)
                     if know == True:
                         dif = S.Zero
                     elif know == False:
                         dif = dif.evalf()
+                # Can definitively compare a Number to zero, if appropriate.
                 if dif.is_Number and (dif.is_real or self.func in (Eq, Ne)):
+                    # Always T/F (we never return an expression w/ the evalf)
                     r = self.func._eval_relation(dif, S.Zero)
 
         if measure(r) < ratio*measure(self):
