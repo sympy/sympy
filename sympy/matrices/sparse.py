@@ -1111,7 +1111,7 @@ class SparseMatrix(MatrixBase):
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
-        from immutable import ImmutableSparseMatrix
+        from .immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
 
     def nnz(self):
