@@ -158,5 +158,8 @@ class Limit(Expr):
             if r is S.NaN:
                 raise PoleError()
         except (PoleError, ValueError):
-            r = heuristics(e, z, z0, dir)
+            try:
+                r = heuristics(e, z, z0, dir)
+            except PoleError:
+                return self
         return r
