@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import symbols, sin, cos, sqrt, Function
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u_decode as u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols
 from sympy.physics.vector.printing import (VectorPrettyPrinter,
                                            VectorLatexPrinter)
