@@ -50,8 +50,13 @@ def test_sin():
     assert sin(5*pi/2) == 1
     assert sin(7*pi/2) == -1
 
-    n = symbols('n', integer=True)
-    assert sin(pi*n/2) == (-1)**(n/2 - S.Half)
+    ne = symbols('ne', integer=True, even=False)
+    e = symbols('e', even=True)
+    assert sin(pi*ne/2) == (-1)**(ne/2 - S.Half)
+    assert sin(pi*k/2).func == sin
+    assert sin(pi*e/2) == 0
+    assert sin(pi*k) == 0
+    assert sin(pi*k).subs(k, 3) == sin(pi*k/2).subs(k, 6)  # issue 8298
 
     assert sin(pi/3) == S.Half*sqrt(3)
     assert sin(-2*pi/3) == -S.Half*sqrt(3)
@@ -223,8 +228,10 @@ def test_cos():
     assert cos((-3*10**73 + 1)*pi/2) == 0
     assert cos((7*10**103 + 1)*pi/2) == 0
 
-    n = symbols('n', integer=True)
+    n = symbols('n', integer=True, even=False)
+    e = symbols('e', even=True)
     assert cos(pi*n/2) == 0
+    assert cos(pi*e/2) == (-1)**(e/2)
 
     assert cos(pi) == -1
     assert cos(-pi) == -1
