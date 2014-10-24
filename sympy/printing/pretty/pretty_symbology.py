@@ -424,10 +424,14 @@ _xsym = {
     '!=':  ('!=', U('NOT EQUAL TO')),
     '*':   ('*', U('DOT OPERATOR')),
     '-->': ('-->', U('EM DASH') + U('EM DASH') +
-            U('BLACK RIGHT-POINTING TRIANGLE')),
+            U('BLACK RIGHT-POINTING TRIANGLE') if U('EM DASH')
+            and U('BLACK RIGHT-POINTING TRIANGLE') else None),
     '==>': ('==>', U('BOX DRAWINGS DOUBLE HORIZONTAL') +
             U('BOX DRAWINGS DOUBLE HORIZONTAL') +
-            U('BLACK RIGHT-POINTING TRIANGLE')),
+            U('BLACK RIGHT-POINTING TRIANGLE') if
+            U('BOX DRAWINGS DOUBLE HORIZONTAL') and
+            U('BOX DRAWINGS DOUBLE HORIZONTAL') and
+            U('BLACK RIGHT-POINTING TRIANGLE') else None),
     '.':   ('*', U('RING OPERATOR')),
 }
 
