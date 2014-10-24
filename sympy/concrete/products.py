@@ -245,6 +245,8 @@ class Product(ExprWithIntLimits):
         (k, a, n) = limits
 
         if k not in term.free_symbols:
+            if (term - 1).is_zero:
+                return S.One
             return term**(n - a + 1)
 
         if a == n:
