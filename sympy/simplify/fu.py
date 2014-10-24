@@ -194,7 +194,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, TimeoutError
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -209,6 +209,8 @@ from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 from sympy.polys.polytools import factor
 from sympy.ntheory.factor_ import perfect_power
+from sympy.utilities.timeout import init_timeout, check_timeout, safe_partial_tcb
+from sympy.utilities.iterables import nestmap
 
 from sympy import SYMPY_DEBUG
 
@@ -216,16 +218,17 @@ from sympy import SYMPY_DEBUG
 # ================== Fu-like tools ===========================
 
 
-def TR0(rv):
+def TR0(rv, tcb=None):
     """Simplification of rational polynomials, trying to simplify
     the expression, e.g. combine things like 3*x + 2*x, etc....
     """
+    check_timeout(tcb)
     # although it would be nice to use cancel, it doesn't work
     # with noncommutatives
     return rv.normal().factor().expand()
 
 
-def TR1(rv):
+def TR1(rv, tcb=None):
     """Replace sec, csc with 1/cos, 1/sin
 
     Examples
@@ -237,7 +240,8 @@ def TR1(rv):
     1/cos(x) + 2/sin(x)
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if rv.func is sec:
             a = rv.args[0]
             return S.One/cos(a)
@@ -249,7 +253,7 @@ def TR1(rv):
     return bottom_up(rv, f)
 
 
-def TR2(rv):
+def TR2(rv, tcb=None):
     """Replace tan and cot with sin/cos and cos/sin
 
     Examples
@@ -267,7 +271,8 @@ def TR2(rv):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if rv.func is tan:
             a = rv.args[0]
             return sin(a)/cos(a)
@@ -279,7 +284,7 @@ def TR2(rv):
     return bottom_up(rv, f)
 
 
-def TR2i(rv, half=False):
+def TR2i(rv, half=False, tcb=None):
     """Converts ratios involving sin and cos as follows::
         sin(x)/cos(x) -> tan(x)
         sin(x)/(cos(x) + 1) -> tan(x/2) if half=True
@@ -307,7 +312,8 @@ def TR2i(rv, half=False):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.is_Mul:
             return rv
 
@@ -395,7 +401,7 @@ def TR2i(rv, half=False):
     return bottom_up(rv, f)
 
 
-def TR3(rv):
+def TR3(rv, tcb=None):
     """Induced formula: example sin(-a) = -sin(a)
 
     Examples
@@ -423,7 +429,8 @@ def TR3(rv):
     #   Argument of type: pi +/- angle
     #   Argument of type : 2k*pi +/- angle
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
@@ -435,7 +442,7 @@ def TR3(rv):
     return bottom_up(rv, f)
 
 
-def TR4(rv):
+def TR4(rv, tcb=None):
     """Identify values of special angles.
 
         a=  0   pi/6        pi/4        pi/3        pi/2
@@ -463,7 +470,7 @@ def TR4(rv):
     return rv
 
 
-def _TR56(rv, f, g, h, max, pow):
+def _TR56(rv, f, g, h, max, pow, tcb=None):
     """Helper for TR5 and TR6 to replace f**2 with h(g**2)
 
     Options
@@ -489,7 +496,8 @@ def _TR56(rv, f, g, h, max, pow):
     (-cos(x)**2 + 1)**4
     """
 
-    def _f(rv):
+    def _f(rv, tcb=None):
+        check_timeout(tcb)
         # I'm not sure if this transformation should target all even powers
         # or only those expressible as powers of 2. Also, should it only
         # make the changes in powers that appear in sums -- making an isolated
@@ -520,7 +528,7 @@ def _TR56(rv, f, g, h, max, pow):
     return bottom_up(rv, _f)
 
 
-def TR5(rv, max=4, pow=False):
+def TR5(rv, max=4, pow=False, tcb=None):
     """Replacement of sin**2 with 1 - cos(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
@@ -538,10 +546,10 @@ def TR5(rv, max=4, pow=False):
     >>> TR5(sin(x)**4)
     (-cos(x)**2 + 1)**2
     """
-    return _TR56(rv, sin, cos, lambda x: 1 - x, max=max, pow=pow)
+    return _TR56(rv, sin, cos, lambda x: 1 - x, max=max, pow=pow, tcb=tcb)
 
 
-def TR6(rv, max=4, pow=False):
+def TR6(rv, max=4, pow=False, tcb=None):
     """Replacement of cos**2 with 1 - sin(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
@@ -559,10 +567,10 @@ def TR6(rv, max=4, pow=False):
     >>> TR6(cos(x)**4)
     (-sin(x)**2 + 1)**2
     """
-    return _TR56(rv, cos, sin, lambda x: 1 - x, max=max, pow=pow)
+    return _TR56(rv, cos, sin, lambda x: 1 - x, max=max, pow=pow, tcb=tcb)
 
 
-def TR7(rv):
+def TR7(rv, tcb=None):
     """Lowering the degree of cos(x)**2
 
     Examples
@@ -578,7 +586,8 @@ def TR7(rv):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (rv.is_Pow and rv.base.func == cos and rv.exp == 2):
             return rv
         return (1 + cos(2*rv.base.args[0]))/2
@@ -586,7 +595,7 @@ def TR7(rv):
     return bottom_up(rv, f)
 
 
-def TR8(rv, first=True):
+def TR8(rv, first=True, tcb=None):
     """Converting products of ``cos`` and/or ``sin`` to a sum or
     difference of ``cos`` and or ``sin`` terms.
 
@@ -603,7 +612,8 @@ def TR8(rv, first=True):
     -cos(5)/2 + cos(1)/2
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (
             rv.is_Mul or
             rv.is_Pow and
@@ -661,7 +671,7 @@ def TR8(rv, first=True):
     return bottom_up(rv, f)
 
 
-def TR9(rv):
+def TR9(rv, tcb=None):
     """Sum of ``cos`` or ``sin`` terms as a product of ``cos`` or ``sin``.
 
     Examples
@@ -684,7 +694,8 @@ def TR9(rv):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.is_Add:
             return rv
 
@@ -755,7 +766,7 @@ def TR9(rv):
     return bottom_up(rv, f)
 
 
-def TR10(rv, first=True):
+def TR10(rv, first=True, tcb=None):
     """Separate sums in ``cos`` and ``sin``.
 
     Examples
@@ -773,7 +784,8 @@ def TR10(rv, first=True):
     (sin(a)*cos(b) + sin(b)*cos(a))*cos(c)
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.func in (cos, sin):
             return rv
 
@@ -803,7 +815,7 @@ def TR10(rv, first=True):
     return bottom_up(rv, f)
 
 
-def TR10i(rv):
+def TR10i(rv, tcb=None):
     """Sum of products to function of sum.
 
     Examples
@@ -825,7 +837,8 @@ def TR10i(rv):
     if _ROOT2 is None:
         _roots()
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.is_Add:
             return rv
 
@@ -935,7 +948,7 @@ def TR10i(rv):
     return bottom_up(rv, f)
 
 
-def TR11(rv, base=None):
+def TR11(rv, base=None, tcb=None):
     """Function of double angle to product. The ``base`` argument can be used
     to indicate what is the un-doubled argument, e.g. if 3*pi/7 is the base
     then cosine and sine functions with argument 6*pi/7 will be replaced.
@@ -977,7 +990,8 @@ def TR11(rv, base=None):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.func in (cos, sin):
             return rv
 
@@ -1015,7 +1029,7 @@ def TR11(rv, base=None):
     return bottom_up(rv, f)
 
 
-def TR12(rv, first=True):
+def TR12(rv, first=True, tcb=None):
     """Separate sums in ``tan``.
 
     Examples
@@ -1029,7 +1043,8 @@ def TR12(rv, first=True):
     (tan(x) + tan(y))/(-tan(x)*tan(y) + 1)
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.func == tan:
             return rv
 
@@ -1051,7 +1066,7 @@ def TR12(rv, first=True):
     return bottom_up(rv, f)
 
 
-def TR12i(rv):
+def TR12i(rv, tcb=None):
     """Combine tan arguments as
     (tan(y) + tan(x))/(tan(x)*tan(y) - 1) -> -tan(x + y)
 
@@ -1074,7 +1089,8 @@ def TR12i(rv):
     """
     from sympy import factor, fraction
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
             return rv
 
@@ -1176,7 +1192,7 @@ def TR12i(rv):
     return bottom_up(rv, f)
 
 
-def TR13(rv):
+def TR13(rv, tcb=None):
     """Change products of ``tan`` or ``cot``.
 
     Examples
@@ -1190,7 +1206,8 @@ def TR13(rv):
     cot(2)*cot(5) + 1 + cot(3)*cot(5)
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.is_Mul:
             return rv
 
@@ -1223,7 +1240,7 @@ def TR13(rv):
     return bottom_up(rv, f)
 
 
-def TRmorrie(rv):
+def TRmorrie(rv, tcb=None):
     """Returns cos(x)*cos(2*x)*...*cos(2**(k-1)*x) -> sin(2**k*x)/(2**k*sin(x))
 
     Examples
@@ -1282,7 +1299,8 @@ def TRmorrie(rv):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.is_Mul:
             return rv
 
@@ -1340,7 +1358,7 @@ def TRmorrie(rv):
     return bottom_up(rv, f)
 
 
-def TR14(rv, first=True):
+def TR14(rv, first=True, tcb=None):
     """Convert factored powers of sin and cos identities into simpler
     expressions.
 
@@ -1362,7 +1380,8 @@ def TR14(rv, first=True):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not rv.is_Mul:
             return rv
 
@@ -1461,7 +1480,7 @@ def TR14(rv, first=True):
     return bottom_up(rv, f)
 
 
-def TR15(rv, max=4, pow=False):
+def TR15(rv, max=4, pow=False, tcb=None):
     """Convert sin(x)*-2 to 1 + cot(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
@@ -1477,7 +1496,8 @@ def TR15(rv, max=4, pow=False):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (isinstance(rv, Pow) and rv.base.func is sin):
             return rv
 
@@ -1490,7 +1510,7 @@ def TR15(rv, max=4, pow=False):
     return bottom_up(rv, f)
 
 
-def TR16(rv, max=4, pow=False):
+def TR16(rv, max=4, pow=False, tcb=None):
     """Convert cos(x)*-2 to 1 + tan(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
@@ -1506,7 +1526,8 @@ def TR16(rv, max=4, pow=False):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (isinstance(rv, Pow) and rv.base.func is cos):
             return rv
 
@@ -1519,7 +1540,7 @@ def TR16(rv, max=4, pow=False):
     return bottom_up(rv, f)
 
 
-def TR111(rv):
+def TR111(rv, tcb=None):
     """Convert f(x)**-i to g(x)**i where either ``i`` is an integer
     or the base is positive and f, g are: tan, cot; sin, csc; or cos, sec.
 
@@ -1534,7 +1555,8 @@ def TR111(rv):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (
             isinstance(rv, Pow) and
             (rv.base.is_positive or rv.exp.is_integer and rv.exp.is_negative)):
@@ -1551,7 +1573,7 @@ def TR111(rv):
     return bottom_up(rv, f)
 
 
-def TR22(rv, max=4, pow=False):
+def TR22(rv, max=4, pow=False, tcb=None):
     """Convert tan(x)**2 to sec(x)**2 - 1 and cot(x)**2 to csc(x)**2 - 1.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
@@ -1569,7 +1591,8 @@ def TR22(rv, max=4, pow=False):
 
     """
 
-    def f(rv):
+    def f(rv, tcb=None):
+        check_timeout(tcb)
         if not (isinstance(rv, Pow) and rv.base.func in (cot, tan)):
             return rv
 
@@ -1580,7 +1603,7 @@ def TR22(rv, max=4, pow=False):
     return bottom_up(rv, f)
 
 
-def L(rv):
+def L(rv, tcb=None):
     """Return count of trigonometric functions in expression.
 
     Examples
@@ -1592,6 +1615,7 @@ def L(rv):
     >>> L(cos(x)+sin(x))
     2
     """
+    check_timeout(tcb)
     return S(rv.count(C.TrigonometricFunction))
 
 
@@ -1632,7 +1656,7 @@ RL2 = [
     ]
 
 
-def fu(rv, measure=lambda x: (L(x), x.count_ops())):
+def fu(rv, measure=lambda x: (L(x), x.count_ops()), timeout=None):
     """Attempt to simplify expression by using transformation rules given
     in the algorithm by Fu et al.
 
@@ -1701,25 +1725,34 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
     DESTIME2006/DES_contribs/Fu/simplification.pdf
     """
-    fRL1 = greedy(RL1, measure)
-    fRL2 = greedy(RL2, measure)
 
-    was = rv
-    rv = sympify(rv)
-    if not isinstance(rv, C.Expr):
-        return rv.func(*[fu(a, measure=measure) for a in rv.args])
-    rv = TR1(rv)
-    if rv.has(tan, cot):
-        rv1 = fRL1(rv)
-        if (measure(rv1) < measure(rv)):
-            rv = rv1
+    tcb = init_timeout(timeout)
+    applytcb = lambda func: safe_partial_tcb(func, tcb)
+    rl1 = nestmap(applytcb, RL1)
+    rl2 = nestmap(applytcb, RL2)
+
+    try:
+        fRL1 = greedy(rl1, measure)
+        fRL2 = greedy(rl2, measure)
+
+        was = rv
+        rv = sympify(rv)
+        if not isinstance(rv, C.Expr):
+            return rv.func(*[fu(a, measure=measure, tcb=tcb) for a in rv.args])
+        rv = TR1(rv, tcb=tcb)
         if rv.has(tan, cot):
-            rv = TR2(rv)
-    if rv.has(sin, cos):
-        rv1 = fRL2(rv)
-        rv2 = TR8(TRmorrie(rv1))
-        rv = min([was, rv, rv1, rv2], key=measure)
-    return min(TR2i(rv), rv, key=measure)
+            rv1 = fRL1(rv)
+            if (measure(rv1) < measure(rv)):
+                rv = rv1
+            if rv.has(tan, cot):
+                rv = TR2(rv, tcb=tcb)
+        if rv.has(sin, cos):
+            rv1 = fRL2(rv)
+            rv2 = TR8(TRmorrie(rv1, tcb=tcb), tcb=tcb)
+            rv = min([was, rv, rv1, rv2], key=measure)
+        return min(TR2i(rv, tcb=tcb), rv, key=measure)
+    except TimeoutError:
+        return rv
 
 
 def process_common_addends(rv, do, key2=None, key1=True):

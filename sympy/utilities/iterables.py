@@ -2087,3 +2087,9 @@ def kbins(l, k, ordered=None):
     else:
         raise ValueError(
             'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+
+def nestmap(func, itbl, exceptions=()):
+    if iterable(itbl) and not isinstance(itbl, exceptions):
+        return type(itbl)(nestmap(func, i) for i in itbl)
+    else:
+        return func(itbl)
