@@ -70,39 +70,28 @@ class Relational(Boolean, Expr, EvalfMixin):
         """The right-hand side of the relation."""
         return self._args[1]
 
-    @classmethod
-    def _eval_sides(cls, lhs, rhs):
-        """Takes the difference between lhs and rhs, simplifies and evaluates.
-
-        If the difference can be simplified to a single real number, it will
-        be evaluated with ``cls._eval_relation``.  If the difference does not
-        simplify or cannot be calculated, None will be returned.
-
-        """
-        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
-            diff = lhs - rhs
-            if not diff.has(Symbol):
-                know = diff.equals(0)
-                if know == True:
-                    diff = S.Zero
-                elif know == False:
-                    diff = diff.evalf()
-            if diff.is_Number and diff.is_real:
-                return cls._eval_relation(diff, S.Zero)
-
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
     def _eval_simplify(self, ratio, measure):
-        r = self.__class__(self.lhs.simplify(ratio=ratio),
-                           self.rhs.simplify(ratio=ratio))
+        r = self.func(self.lhs.simplify(ratio=ratio, measure=measure),
+                      self.rhs.simplify(ratio=ratio, measure=measure))
         if r not in (S.true, S.false):
-            # try harder to reduce to boolean
-            # NOTE: may want to move _eval_sides() code here
-            rr = self._eval_sides(self.lhs, self.rhs)
-            if rr is not None:
-                return rr
-        return r
+            if isinstance(self.lhs, Expr) and isinstance(self.rhs, Expr):
+                dif = self.lhs - self.rhs
+                if not dif.has(Symbol):
+                    know = dif.equals(0)
+                    if know == True:
+                        dif = S.Zero
+                    elif know == False:
+                        dif = dif.evalf()
+                if dif.is_Number and (dif.is_real or self.func in (Eq, Ne)):
+                    r = self.func._eval_relation(dif, S.Zero)
+
+        if measure(r) < ratio*measure(self):
+            return r
+        else:
+            return self
 
     def __nonzero__(self):
         raise TypeError("symbolic boolean expression has no truth value.")
@@ -143,10 +132,11 @@ Rel = Relational
 class Equality(Relational):
     """An equal relation between two objects.
 
-    Represents that two objects are equal.  If they can be shown to be
-    definitively equal, this will reduce to True; if definitively unequal,
-    this will reduce to False.  Otherwise, the relation is maintained as an
-    Equality object.
+    Represents that two objects are equal.  If they can be easily shown
+    to be definitively equal (or unequal), this will reduce to True (or
+    False).  Otherwise, the relation is maintained as an unevaluated
+    Equality object.  Use the ``simplify`` function on this object for
+    more nontrivial evaluation of the equality relation.
 
     Examples
     ========
@@ -158,11 +148,13 @@ class Equality(Relational):
 
     See Also
     ========
+
     sympy.logic.boolalg.Equivalent : for representing equality between two
         boolean expressions
 
     Notes
     =====
+
     This class is not the same as the == operator.  The == operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
@@ -203,10 +195,12 @@ class Equality(Relational):
             elif (lhs.is_real != rhs.is_real and
                   None not in (lhs.is_real, rhs.is_real)):
                 return S.false
+
             # Otherwise, see if the difference can be evaluated.
-            r = cls._eval_sides(lhs, rhs)
-            if r is not None:
-                return r
+            if lhs.is_complex and rhs.is_complex:
+                r = (lhs - rhs).is_zero
+                if r is not None:
+                    return _sympify(r)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 

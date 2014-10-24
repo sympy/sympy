@@ -56,10 +56,6 @@ from types import GeneratorType
 from collections import defaultdict
 import warnings
 
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
-
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""

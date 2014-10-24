@@ -321,6 +321,8 @@ def test_linear_systemLU():
 
 
 def test_solve_transcendental():
+    from sympy.abc import a, b
+
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
     assert solve(cos(x) - y, x) == [-acos(y) + 2*pi, acos(y)]
@@ -404,6 +406,14 @@ def test_solve_transcendental():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
+
+    # issue 7245
+    assert solve(sin(sqrt(x))) == [0, pi**2]
+
+    # issue 7602
+    a, b = symbols('a, b', real=True, negative=False)
+    assert str(solve(Eq(a, 0.5 - cos(pi*b)/2), b)) == \
+        '[-0.318309886183791*acos(-2.0*a + 1.0) + 2.0, 0.318309886183791*acos(-2.0*a + 1.0)]'
 
 
 def test_solve_for_functions_derivatives():
