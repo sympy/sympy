@@ -379,7 +379,13 @@ def split_symbols_custom(predicate):
     def _split_symbols(tokens, local_dict, global_dict):
         result = []
         split = False
+        split_previous=False
         for tok in tokens:
+            if split_previous:
+                # throw out closing parenthesis of Symbol that was split
+                split_previous=False
+                continue
+            split_previous=False
             if tok[0] == NAME and tok[1] == 'Symbol':
                 split = True
             elif split and tok[0] == NAME:
@@ -389,17 +395,18 @@ def split_symbols_custom(predicate):
                         if char in local_dict or char in global_dict:
                             # Get rid of the call to Symbol
                             del result[-2:]
-                            result.extend([(OP, '('), (NAME, "%s" % char), (OP, ')'),
+                            result.extend([(NAME, "%s" % char),
                                            (NAME, 'Symbol'), (OP, '(')])
                         else:
                             result.extend([(NAME, "'%s'" % char), (OP, ')'),
                                            (NAME, 'Symbol'), (OP, '(')])
-                    # Delete the last three tokens: get rid of the extraneous
-                    # Symbol( we just added, and also get rid of the last )
-                    # because the closing parenthesis of the original Symbol is
-                    # still there
-                    del result[-3:]
+                    # Delete the last two tokens: get rid of the extraneous
+                    # Symbol( we just added
+                    # Also, set split_previous=True so will skip
+                    # the closing parenthesis of the original Symbol
+                    del result[-2:]
                     split = False
+                    split_previous = True
                     continue
                 else:
                     split = False
