@@ -1607,6 +1607,17 @@ def test_round():
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
 
+def test_round_exception_nostr():
+    # Don't use the string form of the expression in the round exception, as
+    # it's too slow
+    s = Symbol('bad')
+    try:
+        s.round()
+    except TypeError as e:
+        assert 'bad' not in str(e)
+    else:
+        # Did not raise
+        raise Exception
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
