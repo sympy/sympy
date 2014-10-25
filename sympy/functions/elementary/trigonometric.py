@@ -231,7 +231,10 @@ class sin(TrigonometricFunction):
                 return S.Zero
 
             if (2*pi_coeff).is_integer:
-                return S.NegativeOne**(pi_coeff - S.Half)
+                if pi_coeff.is_even:
+                    return S.Zero
+                elif pi_coeff.is_even is False:
+                    return S.NegativeOne**(pi_coeff - S.Half)
 
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
@@ -463,7 +466,10 @@ class cos(TrigonometricFunction):
                 return (S.NegativeOne)**pi_coeff
 
             if (2*pi_coeff).is_integer:
-                return S.Zero
+                if pi_coeff.is_even:
+                    return (S.NegativeOne)**(pi_coeff/2)
+                elif pi_coeff.is_even is False:
+                    return S.Zero
 
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
