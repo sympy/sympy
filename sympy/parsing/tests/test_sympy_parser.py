@@ -1,11 +1,11 @@
-from sympy.core import Symbol, Float, Rational, Integer, I, Mul, Pow
+from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow
 from sympy.functions import exp, factorial, sin
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.utilities.pytest import raises
 
 from sympy.parsing.sympy_parser import (
-    parse_expr, standard_transformations, rationalize, TokenError
+    parse_expr, standard_transformations, rationalize, TokenError, split_symbols, implicit_multiplication,
 )
 
 
@@ -85,3 +85,25 @@ def test_issue_2515():
 def test_issue_7663():
     x = Symbol('x')
     parse_expr('2*(x+1)', evaluate=0) == Mul(2, x + 1, evaluate=False)
+
+def test_split_symbols():
+    transformations = standard_transformations + \
+                      (split_symbols, implicit_multiplication,)
+    x = Symbol('x')
+    y = Symbol('y')
+    xy = Symbol('xy')
+
+    assert parse_expr("xy") == xy
+    assert parse_expr("xy", transformations=transformations) == x*y
+
+def test_split_symbols_function():
+    transformations = standard_transformations + \
+                      (split_symbols, implicit_multiplication,)
+    x = Symbol('x')
+    a = Symbol('a')
+    f = Function('f')
+    fsym= Symbol('f')
+
+    assert parse_expr("af(x)", transformations=transformations) == a*fsym*x
+    assert parse_expr("af(x)", transformations=transformations,
+                      local_dict={'f':f}) == a*f(x)
