@@ -1039,6 +1039,9 @@ def hypsum(expr, n, start, prec):
     from functools import partial
     lambdify = partial(lambdify, default_array=True)
 
+    if prec == float('inf'):
+        raise NotImplementedError('does not support inf prec')
+
     if start:
         expr = expr.subs(n, n + start)
     hs = hypersimp(expr, n)
@@ -1054,9 +1057,12 @@ def hypsum(expr, n, start, prec):
     if h < 0:
         raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
+    term = expr.subs(n, 0)
+    if not term.is_Rational:
+        raise NotImplementedError("Non rational term functionality is not implemented.")
+
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
-        term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec) // term.q
         s = term
         k = 1
@@ -1076,7 +1082,6 @@ def hypsum(expr, n, start, prec):
         # Need to use at least quad precision because a lot of cancellation
         # might occur in the extrapolation process
         prec2 = 4*prec
-        term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec2) // term.q
 
         def summand(k, _term=[term]):
