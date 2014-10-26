@@ -453,6 +453,10 @@ class prettyForm(stringPict):
             # if there is a - sign in front of all
             # This test was failing to catch a prettyForm.__mul__(prettyForm("-1", 0, 6)) being negative
             bin = prettyForm.NEG
+            if result[0] == '-':
+                right = result[1]
+                if right.picture[right.baseline][0] == '-':
+                    result[0] = '- '
         else:
             bin = prettyForm.MUL
         return prettyForm(binding=bin, *stringPict.next(*result))

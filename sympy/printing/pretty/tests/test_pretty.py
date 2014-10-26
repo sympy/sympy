@@ -4826,3 +4826,20 @@ u("""\
 """
     assert pretty(e) == ascii_str
     assert upretty(e) == ucode_str
+
+def test_issue_4335():
+    expr = -y(x).diff(x)
+    ucode_str = \
+u("""\
+ d       \n\
+-──(y(x))\n\
+ dx      \
+""")
+    ascii_str = \
+"""\
+  d       \n\
+- --(y(x))\n\
+  dx      \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
