@@ -1232,7 +1232,8 @@ class PrettyPrinter(Printer):
 
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
-                pform = self._print(-term)
+                coeff, other = term.as_coeff_mul()
+                pform = self._print(C.Mul(-coeff, *other, evaluate=False))
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)

@@ -4803,3 +4803,26 @@ def test_pretty_Complement():
 def test_pretty_Contains():
     assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
     assert upretty(Contains(x, S.Integers)) == u('x ∈ ℤ')
+
+
+def test_issue_8292():
+    from sympy.core import sympify
+    e = sympify('((x+x**4)/(x-1))-(2*(x-1)**4/(x-1)**4)', evaluate=False)
+    ucode_str = \
+u("""\
+           4    4    \n\
+  2⋅(x - 1)    x  + x\n\
+- ────────── + ──────\n\
+          4    x - 1 \n\
+   (x - 1)           \
+""")
+    ascii_str = \
+"""\
+           4    4    \n\
+  2*(x - 1)    x  + x\n\
+- ---------- + ------\n\
+          4    x - 1 \n\
+   (x - 1)           \
+"""
+    assert pretty(e) == ascii_str
+    assert upretty(e) == ucode_str
