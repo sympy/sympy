@@ -1617,7 +1617,7 @@ def test_round_exception_nostr():
         assert 'bad' not in str(e)
     else:
         # Did not raise
-        raise Exception
+        raise AssertionError("Did not raise")
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
