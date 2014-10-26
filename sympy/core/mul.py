@@ -8,7 +8,7 @@ from .basic import Basic, C
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group, _fuzzy_group_inverse
+from .logic import fuzzy_not, fuzzy_or, _fuzzy_group, _fuzzy_group_inverse
 from .compatibility import cmp_to_key, reduce, xrange
 from .expr import Expr
 
@@ -958,6 +958,8 @@ class Mul(Expr, AssocOp):
 
     _eval_is_finite = lambda self: _fuzzy_group(
         a.is_finite for a in self.args)
+    _eval_is_infinite = lambda self: fuzzy_or(
+        a.is_infinite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
     _eval_is_complex = lambda self: _fuzzy_group(

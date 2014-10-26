@@ -713,6 +713,18 @@ def test_Pow_is_algebraic():
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
 
+def test_Mul_is_infinite():
+    x = Symbol('x')
+    f = Symbol('f', finite=True)
+    i = Symbol('i', infinite=True)
+    assert (x*f).is_finite is None
+    assert (x*i).is_finite is False
+    assert (f*i).is_finite is False
+    assert (x*f).is_infinite is None
+    assert (x*i).is_infinite is True
+    assert (f*i).is_infinite is True
+    assert (x*f*i).is_finite is False
+    assert (x*f*i).is_infinite is True
 
 def test_special_is_rational():
     i = Symbol('i', integer=True)
