@@ -412,7 +412,7 @@ def limitinf(e, x):
         e = e.expand().removeO()
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
-        # get all the correct mathematical bechavior from the expression.
+        # get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
         p = Dummy('p', positive=True, finite=True)
         e = e.subs(x, p)
