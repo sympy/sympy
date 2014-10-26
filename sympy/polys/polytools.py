@@ -3404,12 +3404,10 @@ class Poly(Expr):
             roots = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps,
                     cleanup=cleanup, error=False, extraprec=f.degree()*10)
 
-            # Mpmath puts real roots first, then complex ones. SymPy polynomial
-            # module orders roots by their real components (if they are equal,
-            # then by their imaginary components). So we reorder the roots here
-            # to conform to the SymPy ordering.
+            # Mpmath puts real roots first, then complex ones (as does all_roots)
+            # so we make sure this convention holds here, too.
             roots = list(map(sympify,
-                sorted(roots, key=lambda r: (r.real, r.imag))))
+                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, r.imag))))
         finally:
             sympy.mpmath.mp.dps = dps
 

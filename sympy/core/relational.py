@@ -94,7 +94,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             return self
 
     def __nonzero__(self):
-        raise TypeError("symbolic boolean expression has no truth value.")
+        raise TypeError("cannot determine truth value of\n%s" % self)
 
     __bool__ = __nonzero__
 
