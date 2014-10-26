@@ -3035,7 +3035,7 @@ class Expr(Basic, EvalfMixin):
         """
         x = self
         if not x.is_number:
-            raise TypeError('%s is not a number' % x)
+            raise TypeError('%s is not a number' % type(x))
         if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_real:
