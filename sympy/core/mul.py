@@ -8,7 +8,7 @@ from .basic import Basic, C
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group, _fuzzy_group_inverse
+from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import cmp_to_key, reduce, xrange
 from .expr import Expr
 

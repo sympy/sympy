@@ -5,7 +5,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
-from sympy.core.logic import _fuzzy_group_inverse, fuzzy_and
+from sympy.core.logic import fuzzy_and
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
@@ -2163,9 +2163,9 @@ class MatrixBase(object):
         """
         def cond():
             yield self.is_square
-            yield _fuzzy_group_inverse(
+            yield fuzzy_and(
                     self[i, i].is_real for i in range(self.rows))
-            yield _fuzzy_group_inverse(
+            yield fuzzy_and(
                     (self[i, j] - self[j, i].conjugate()).is_zero
                     for i in range(self.rows)
                     for j in range(i + 1, self.cols))
