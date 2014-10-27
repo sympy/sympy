@@ -534,16 +534,19 @@ class Max(MinMaxBase, Application):
         return (x < y)
 
     def fdiff( self, argindex ):
-        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[argindex] - self.args[1-argindex] )
+                return C.Heaviside( self.args[argindex] - self.args[1-argindex] )
             newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
-            return Heaviside( self.args[argindex] - Max(*newargs) )
+            return C.Heaviside( self.args[argindex] - Max(*newargs) )
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        return C.Add(*[j*C.Mul(*[C.Heaviside(j-i) for i in args if i!=j]) \
+                for j in args])
 
 
 class Min(MinMaxBase, Application):
@@ -596,13 +599,16 @@ class Min(MinMaxBase, Application):
         return (x > y)
 
     def fdiff( self, argindex ):
-        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[1-argindex] - self.args[argindex] )
+                return C.Heaviside( self.args[1-argindex] - self.args[argindex] )
             newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
-            return Heaviside( Min(*newargs) - self.args[argindex] )
+            return C.Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        return C.Add(*[j*C.Mul(*[C.Heaviside(i-j) for i in args if i!=j]) \
+                for j in args])

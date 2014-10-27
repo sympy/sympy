@@ -229,6 +229,8 @@ def test_sign():
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
@@ -347,6 +349,7 @@ def test_Abs_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
     assert Abs(y).rewrite(Piecewise) == Abs(y)
+    assert Abs(y).rewrite(sign) == y/sign(y)
 
 
 def test_Abs_real():

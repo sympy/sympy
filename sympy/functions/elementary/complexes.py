@@ -353,6 +353,10 @@ class sign(Function):
         if arg.is_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
+    def _eval_rewrite_as_Heaviside(self, arg):
+        if arg.is_real:
+            return C.Heaviside(arg)*2-1
+
     def _eval_simplify(self, ratio, measure):
         return self.func(self.args[0].factor())
 
@@ -508,6 +512,9 @@ class Abs(Function):
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
+
+    def _eval_rewrite_as_sign(self, arg):
+        return arg/C.sign(arg)
 
 
 class arg(Function):
