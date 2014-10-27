@@ -789,13 +789,28 @@ class LambertW(Function):
 
         if len(self.args) == 1:
             if argindex == 1:
-                return LambertW(x)/(x*(1 + LambertW(x)))
+                return 1/(LambertW(x) + 1)/exp(LambertW(x))
         else:
             k = self.args[1]
             if argindex == 1:
-                return LambertW(x, k)/(x*(1 + LambertW(x, k)))
+                return 1/(LambertW(x, k) + 1)/exp(LambertW(x, k))
 
         raise ArgumentIndexError(self, argindex)
+
+    def _eval_heurisch_diff(self, s):
+        """
+        Evaluate derivative for heurisch
+        """
+        x = self.args[0]
+        da = x._eval_derivative(s)
+        if da is S.Zero:
+            return da
+
+        if len(self.args) == 1:
+            return da * LambertW(x)/(x*(1 + LambertW(x)))
+        else:
+            k = self.args[1]
+            return da * LambertW(x, k)/(x*(1 + LambertW(x, k)))
 
     def _eval_is_real(self):
         x = self.args[0]
