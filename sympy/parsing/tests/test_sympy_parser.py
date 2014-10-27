@@ -91,4 +91,4 @@ def test_issue_7663():
 def test_unicode_symbol():
     if sys.version_info < (3,):
         skip("Unicode symbols are only supported in python 3")
-    assert parse_expr(u'µ') == Symbol(u'µ')
+    assert parse_expr(u'\u03B1') == Symbol(u'\u03B1')
