@@ -5,16 +5,16 @@ from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile
 from sympy.utilities.pytest import skip
 from sympy.external import import_module
+from sympy.plotting.tests.test_plot import TmpFileManager
 
 #Set plots not to show
 unset_show()
 
 
-def tmp_file(name=''):
-    return NamedTemporaryFile(suffix='.png').name
-
-
 def plot_and_save(name):
+
+    tmp_file = TmpFileManager.tmp_file
+
     x = Symbol('x')
     y = Symbol('y')
     z = Symbol('z')
@@ -60,6 +60,10 @@ def plot_and_save(name):
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
-        plot_and_save('test')
+        try:
+            plot_and_save('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
     else:
         skip("Matplotlib not the default backend")
