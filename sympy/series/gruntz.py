@@ -118,7 +118,7 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
+from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
@@ -273,7 +273,11 @@ def mrv(e, x):
         # be simplified here, and doing so is vital for termination.
         if e.args[0].func is log:
             return mrv(e.args[0].args[0], x)
-        if limitinf(e.args[0], x).is_infinite:
+        # if a product has an infinite factor the result will be
+        # infinite if there is no zero, otherwise NaN; here, we
+        # consider the result infinite if any factor is infinite
+        li = limitinf(e.args[0], x)
+        if any(_.is_infinite for _ in Mul.make_args(li)):
             s1 = SubsSet()
             e1 = s1[e]
             s2, e2 = mrv(e.args[0], x)
