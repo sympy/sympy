@@ -85,7 +85,16 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
+    r0, r1 = sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
+
+    if dom.is_Numerical:
+        d = r0 - r1
+        if d.is_imaginary:
+            d = im(d)
+        if d.is_positive:
+            r0, r1 = r1, r0
+
+    return [r0, r1]
 
 
 def roots_cubic(f, trig=False):
