@@ -1,8 +1,10 @@
+import sys
+
 from sympy.core import Symbol, Float, Rational, Integer, I, Mul, Pow
 from sympy.functions import exp, factorial, sin
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError
@@ -85,3 +87,8 @@ def test_issue_2515():
 def test_issue_7663():
     x = Symbol('x')
     parse_expr('2*(x+1)', evaluate=0) == Mul(2, x + 1, evaluate=False)
+
+def test_unicode_symbol():
+    if sys.version_info < (3,):
+        skip("Unicode symbols are only supported in python 3")
+    assert parse_expr(u'µ') == Symbol(u'µ')

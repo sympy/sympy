@@ -58,7 +58,7 @@ def maybe(*choices):
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
 Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
-Name = r'[a-zA-Z_]\w*'
+Name = r'[^\d\W]\w*'
 
 Hexnumber = r'0[xX][\da-fA-F]+[lL]?'
 Octnumber = r'(0[oO][0-7]+)|(0[0-7]*)[lL]?'
@@ -304,7 +304,7 @@ def generate_tokens(readline):
     logical line; continuation lines are included.
     """
     lnum = parenlev = continued = 0
-    namechars, numchars = string.ascii_letters + '_', '0123456789'
+    numchars = '0123456789'
     contstr, needcont = '', 0
     contline = None
     indents = [0]
@@ -424,7 +424,7 @@ def generate_tokens(readline):
                         break
                     else:                                  # ordinary string
                         yield (STRING, token, spos, epos, line)
-                elif initial in namechars:                 # ordinary name
+                elif re.match(Name, initial):  # ordinary name
                     yield (NAME, token, spos, epos, line)
                 elif initial == '\\':                      # continued stmt
                     continued = 1
