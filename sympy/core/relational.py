@@ -191,12 +191,9 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
-            # If one side is real and the other complex, they must be unequal.
-            elif (lhs.is_real != rhs.is_real and
-                  None not in (lhs.is_real, rhs.is_real)):
-                return S.false
 
-            # Otherwise, see if the difference can be evaluated.
+            # If appropriate, check if the difference evaluates.  Detect
+            # incompatibility such as lhs real and rhs not real.
             if lhs.is_complex and rhs.is_complex:
                 r = (lhs - rhs).is_zero
                 if r is not None:
