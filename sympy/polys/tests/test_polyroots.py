@@ -57,8 +57,6 @@ def test_roots_quadratic():
     f = Poly(sqrt(2)*x**2 - 1, x)
     r = roots_quadratic(f)
     assert r == _nsort(r)
-    r = roots_quadratic(f, _sort=True)
-    assert r == sorted(r, key=default_sort_key)
 
     # issue 8255
     f = Poly(-24*x**2 - 180*x + 264)
@@ -66,7 +64,7 @@ def test_roots_quadratic():
            [w.n(2) for w in f.all_roots(radicals=False)]
     for _a, _b, _c in cartes((-2, 2), (-2, 2), (0, -1)):
         f = Poly(_a*x**2 + _b*x + _c)
-        roots = roots_quadratic(f, _sort=False)
+        roots = roots_quadratic(f)
         assert roots == _nsort(roots)
 
 
@@ -110,12 +108,12 @@ def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
          S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
     eq = -x**3 + 2*x**2 + 3*x - 2
-    assert list(sorted((
-        roots(eq, trig=True, multiple=True)))) == \
-        roots_cubic(Poly(eq, x), trig=True) == [
-        -2*sqrt(13)*cos(-acos(8*sqrt(13)/169)/3 + pi/3)/3 + S(2)/3,
+    assert roots(eq, trig=True, multiple=True) == \
+           roots_cubic(Poly(eq, x), trig=True) == [
+        S(2)/3 + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3,
         -2*sqrt(13)*sin(-acos(8*sqrt(13)/169)/3 + pi/6)/3 + S(2)/3,
-        S(2)/3 + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3]
+        -2*sqrt(13)*cos(-acos(8*sqrt(13)/169)/3 + pi/3)/3 + S(2)/3,
+        ]
 
 
 def test_roots_quartic():
@@ -188,10 +186,10 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7) - I*sin(pi/7),
         -cos(pi/7) + I*sin(pi/7),
-        cos(2*pi/7) - I*sin(2*pi/7),
-        cos(2*pi/7) + I*sin(2*pi/7),
         -cos(3*pi/7) - I*sin(3*pi/7),
         -cos(3*pi/7) + I*sin(3*pi/7),
+        cos(2*pi/7) - I*sin(2*pi/7),
+        cos(2*pi/7) + I*sin(2*pi/7),
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
@@ -214,12 +212,12 @@ def test_roots_cyclotomic():
         cyclotomic_poly(2, x, polys=True), factor=True) == [-1]
 
     assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True), factor=True) == \
-        [-(-1)**(S(1)/3), -1 + (-1)**(S(1)/3)]
+        [-1 + (-1)**(S(1)/3), -(-1)**(S(1)/3)]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True), factor=True) == \
-        [-I, I]
+        [I, -I]
     assert roots_cyclotomic(cyclotomic_poly(5, x, polys=True), factor=True) == \
-        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5),
-         -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
+        [(-1)**(S(2)/5), -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5), -(-1)**(S(1)/5), -(-1)**(S(3)/5)]
+
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
         [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
 
@@ -246,10 +244,8 @@ def test_roots_binomial():
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
         p = Poly(a*x**n + s*b)
-        roots = roots_binomial(p, _sort=False)
+        roots = roots_binomial(p)
         assert roots == _nsort(roots)
-        roots = roots_binomial(p, _sort=True)
-        assert roots == sorted(roots, key=default_sort_key)
 
 
 def test_roots_preprocessing():
@@ -425,7 +421,7 @@ def test_roots():
         (x - 1)*(x + 1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
 
     assert roots(x**4 - 1, x, filter='Z', multiple=True) == [-S.One, S.One]
-    assert roots(x**4 - 1, x, filter='I', multiple=True) == [-I, I]
+    assert roots(x**4 - 1, x, filter='I', multiple=True) == [I, -I]
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
@@ -577,14 +573,14 @@ def test_root_factors():
     assert root_factors(Poly(1, x)) == [Poly(1, x)]
     assert root_factors(Poly(x, x)) == [Poly(x, x)]
 
-    assert root_factors(x**2 - 1, x) == [x - 1, x + 1]
+    assert root_factors(x**2 - 1, x) == [x + 1, x - 1]
     assert root_factors(x**2 - y, x) == [x - sqrt(y), x + sqrt(y)]
 
     assert root_factors((x**4 - 1)**2) == \
-        [x - 1, x - 1, x + 1, x + 1, x - I, x - I, x + I, x + I]
+        [x + 1, x + 1, x - 1, x - 1, x - I, x - I, x + I, x + I]
 
     assert root_factors(Poly(x**4 - 1, x), filter='Z') == \
-        [Poly(x - 1, x), Poly(x + 1, x), Poly(x**2 + 1, x)]
+        [Poly(x + 1, x), Poly(x - 1, x), Poly(x**2 + 1, x)]
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
 

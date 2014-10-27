@@ -486,9 +486,9 @@ class RootOf(Expr):
             return None
 
         if poly.degree() == 2:
-            return roots_quadratic(poly, _sort=False)
+            return roots_quadratic(poly)
         elif poly.length() == 2 and poly.TC():
-            return roots_binomial(poly, _sort=False)
+            return roots_binomial(poly)
         else:
             return None
 
