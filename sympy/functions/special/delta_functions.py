@@ -101,15 +101,17 @@ class DiracDelta(Function):
         if not self.args[0].has(x) or (len(self.args) > 1 and self.args[1] != 0 ):
             return self
         try:
-            argroots = roots(self.args[0], x, multiple=True)
+            argroots = roots(self.args[0], x)
             result = 0
             valid = True
-            darg = diff(self.args[0], x)
-            for r in argroots:
-                #should I care about multiplicities of roots?
-                if r.is_real is not False and not darg.subs(x, r).is_zero:
-                    result += self.func(x - r)/abs(darg.subs(x, r))
+            darg = abs(diff(self.args[0], x))
+            for r, m in argroots.items():
+                if r.is_real is not False and m == 1:
+                    result += self.func(x - r)/darg.subs(x, r)
                 else:
+                    # don't handle non-real and if m != 1 then
+                    # a polynomial will have a zero in the derivative (darg)
+                    # at r
                     valid = False
                     break
             if valid:
