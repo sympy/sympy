@@ -71,8 +71,7 @@ def solve_poly_inequality(poly, rel):
 
         right, right_open = S.Infinity, True
 
-        reals.sort(key=lambda w: w[0], reverse=True)
-        for left, multiplicity in reals:
+        for left, multiplicity in reversed(reals):
             if multiplicity % 2:
                 if sign == eq_sign:
                     intervals.insert(

@@ -32,6 +32,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.core.compatibility import xrange
 
+
 def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.
@@ -1752,11 +1753,13 @@ class RealInterval(object):
         return self._inner_refine()
 
 class ComplexInterval(object):
-    """A fully qualified representation of a complex isolation interval. """
+    """A fully qualified representation of a complex isolation interval.
+    The printed form is shown as (x1, y1) x (x2, y2): the southwest x northeast
+    coordinates of the interval's rectangle."""
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
         """Initialize new complex interval with complete information. """
-        self.a, self.b = a, b
+        self.a, self.b = a, b  # the southwest and northeast corner: (x1, y1), (x2, y2)
         self.I, self.Q = I, Q
 
         self.f1, self.F1 = f1, F1
@@ -1820,8 +1823,13 @@ class ComplexInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return ((self.conj != other.conj) or ((self.bx <= other.ax or other.bx <= self.ax) or
-                                              (self.by <= other.ay or other.by <= self.ay)))
+        if self.conj != other.conj:
+            return True
+        re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
+        if re_distinct:
+            return True
+        im_distinct = (self.by <= other.ay or other.by <= self.ay)
+        return im_distinct
 
     def _inner_refine(self):
         """Internal one step complex root refinement procedure. """
