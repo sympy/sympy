@@ -225,6 +225,8 @@ def test_pow_as_base_exp():
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
+    # issue 8344:
+    assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
 def test_issue_6100():
