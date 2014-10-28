@@ -1,8 +1,9 @@
 from itertools import product as cartes
 
-from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-                   atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
-                   tan, cot, integrate, Sum, sign)
+from sympy import (
+    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
+    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
+    tan, cot, integrate, Sum, sign, Function)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -90,6 +91,15 @@ def test_basic4():
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo) == 0
     assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
+
+
+def test_basic5():
+    class my(Function):
+        @classmethod
+        def eval(cls, arg):
+            if arg is S.Infinity:
+                return S.NaN
+    assert limit(my(x), x, oo) == Limit(my(x), x, oo)
 
 
 def test_issue_3885():
