@@ -393,6 +393,7 @@ def test_tan():
     assert tan(10*pi/7) == tan(3*pi/7)
     assert tan(11*pi/7) == -tan(3*pi/7)
     assert tan(-11*pi/7) == tan(3*pi/7)
+    assert tan(x).diff(x) == 1/cos(x)**2
 
 
 def test_tan_series():

@@ -30,7 +30,17 @@ from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
 from sympy.core.compatibility import reduce, default_sort_key
+from sympy.integrals.heurisch_diff import replace_heurisch_diff, \
+    restore_heurisch_diff, has_heurisch_diff
 
+def eval_heurisch_diff(f, x):
+    f = f.replace(has_heurisch_diff,
+                  replace_heurisch_diff)
+    diff = f.diff(x)
+    print(f, diff)
+    diff = diff.replace(has_heurisch_diff,
+                        restore_heurisch_diff)
+    return diff
 
 def components(f, x):
     """
@@ -336,7 +346,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             terms |= set(hints)
 
     for g in set(terms):
-        terms |= components(cancel(g.diff(x)), x)
+        terms |= components(cancel(eval_heurisch_diff(g, x)), x)
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
@@ -366,7 +376,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for mapping in mappings:
         mapping = list(mapping)
         mapping = mapping + unnecessary_permutations
-        diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
+        diffs = [ _substitute(cancel(eval_heurisch_diff(g, x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
             denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
