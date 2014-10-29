@@ -100,6 +100,8 @@ def test_sin():
     assert sin(0, evaluate=False).is_algebraic
     assert sin(a).is_algebraic is None
     assert sin(na).is_algebraic is False
+    q = Symbol('q', rational=True)
+    assert sin(pi*q).is_algebraic
 
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
@@ -277,6 +279,9 @@ def test_cos():
     assert cos(0, evaluate=False).is_algebraic
     assert cos(a).is_algebraic is None
     assert cos(na).is_algebraic is False
+    q = Symbol('q', rational=True)
+    assert cos(pi*q).is_algebraic
+    assert cos(2*pi/7).is_algebraic
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1

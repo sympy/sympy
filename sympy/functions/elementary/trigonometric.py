@@ -34,6 +34,9 @@ class TrigonometricFunction(Function):
         if s.func == self.func:
             if self.args[0].is_nonzero and self.args[0].is_algebraic:
                 return False
+            pi_coeff = _pi_coeff(self.args[0])
+            if pi_coeff is not None and pi_coeff.is_rational:
+                return True
         else:
             return s.is_algebraic
 
