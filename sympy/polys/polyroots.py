@@ -138,7 +138,7 @@ def roots_cubic(f, trig=False):
     else:
         u1 = root(q/2 + sqrt(q**2/4 + pon3**3), 3)
 
-    coeff = S.ImaginaryUnit*sqrt(3)/2
+    coeff = I*sqrt(3)/2
 
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
@@ -383,7 +383,7 @@ def roots_binomial(f):
                 pair = list(reversed(pair))
 
     # compute the roots
-    roots, d = [], 2*S.Pi*S.ImaginaryUnit/n
+    roots, d = [], 2*I*pi/n
     for k in ks:
         zeta = exp(k*d).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
@@ -456,7 +456,7 @@ def roots_cyclotomic(f, factor=False):
         h = n//2
         ks = [i for i in xrange(1, n + 1) if igcd(i, n) == 1]
         ks.sort(key=lambda x: (x, -1) if x <= h else (abs(x - n), 1))
-        d = 2*I*S.Pi/n
+        d = 2*I*pi/n
         for k in reversed(ks):
             roots.append(exp(k*d).expand(complex=True))
     else:
