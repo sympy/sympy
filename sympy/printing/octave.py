@@ -314,7 +314,9 @@ class OctaveCodePrinter(CodePrinter):
                                             self._print(AIJ), A.rows, A.cols)
 
 
-    # FIXME: see my proposed change for _print_NumberSymbol, same here
+    # FIXME: Str/CodePrinter could define each of these to call the _print
+    # method from higher up the class hierarchy (see _print_NumberSymbol).
+    # Then subclasses like us would not need to repeat all this.
     _print_Matrix = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
