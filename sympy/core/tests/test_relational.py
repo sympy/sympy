@@ -512,6 +512,24 @@ def test_ineq_avoid_wild_symbol_flip():
     assert e == Ge(x, p, evaluate=False)
 
 
+def test_ineq_cannot_determine_if_real():
+    # issue #8288
+    lhs = x + I
+    rhs = x + I + 2
+    e = Lt(lhs, rhs)
+    assert e == Lt(lhs, rhs, evaluate=False)
+    # Similarly:
+    assert Gt(x, x + 2) == Gt(x, x + 2, evaluate=False)
+    # Substitution can cause evaluation:
+    assert e.subs(x, -I)
+    raises(TypeError, lambda: e.subs(x, 0))
+    # With some assumptions, can evaluate.  Here we make no comment
+    # what should happen with real, possibly infinite r.
+    r = Symbol('r', real=True, finite=True)
+    assert Ge(r + 2, r)
+    assert Le(r, r + 2)
+
+
 def test_issue_8245():
     a = S("6506833320952669167898688709329/5070602400912917605986812821504")
     q = a.n(10)
