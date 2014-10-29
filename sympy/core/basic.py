@@ -14,7 +14,7 @@ from inspect import getmro
 
 class Basic(with_metaclass(ManagedProperties)):
     """
-    Base class for all objects in SymPy.
+    Base class for most objects in SymPy.
 
     Conventions:
 
