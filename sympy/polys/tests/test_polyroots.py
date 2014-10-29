@@ -80,10 +80,6 @@ def test_issue_8285():
     # imaginary ones
     roots = Poly(2*x**8 - 1).all_roots()
     assert roots == _nsort(roots)
-
-
-@XFAIL
-def test_Issue_8255_fail():
     assert len(Poly(2*x**10 - 1).all_roots()) == 10  # doesn't fail
 
 

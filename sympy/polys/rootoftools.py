@@ -247,23 +247,13 @@ class RootOf(Expr):
             assert not isift
             if not mixed:
                 continue
-            # only 2 of the mixed ones are actually imaginary
-            # issue 8316 indicates that there may be a problem
-            # in identifying the imaginary ones so we limit
-            # the iterations. If everything is working then
-            # the loop should just be controlled with "while True";
-            # for now it allows 4 iterations per element with
-            # hopes that that will be sufficient to allow all
-            # x-values to have refined from 0 if they are going
-            # to do so.
-            missing = f.degree() - 2 - len(mixed)
-            for i in range(len(mixed)*4):
-                # see if the non-imaginary ones can be identified
-                # as having no 0 in the x coordinates
+            while True:
+                # the non-imaginary ones will be on one side or the other
+                # of the y-axis
                 i = 0
                 while i < len(mixed):
                     u, f, k = mixed[i]
-                    if u.ax != 0 and u.bx != 0:
+                    if u.ax*u.bx > 0:
                         complexes.append(mixed.pop(i))
                     else:
                         i += 1
@@ -274,16 +264,6 @@ class RootOf(Expr):
                 for i, (u, f, k) in enumerate(mixed):
                     u = u._inner_refine()
                     mixed[i] = u, f, k
-            else:
-                from sympy.utilities import filldedent
-                raise NotImplementedError(filldedent('''
-                    Known issue 8316: the imaginary roots have not been
-                    identified because no intervals has refined
-                    to give a nonzero x value.%s Poly.nroots should
-                    be able to give numerical approximations of the roots;
-                    roots() should be able to give all the unsorted
-                    roots.''' % ('' if not missing else ''' %s
-                    of the roots were missing, too.''' % missing)))
         return imag, complexes
 
     @classmethod
