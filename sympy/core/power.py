@@ -561,7 +561,7 @@ class Pow(Expr):
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1:
+        if b.is_Rational and b.p == 1 and b.q != 1:
             return Integer(b.q), -e
         return b, e
 

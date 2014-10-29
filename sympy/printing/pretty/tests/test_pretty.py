@@ -4827,6 +4827,7 @@ u("""\
     assert pretty(e) == ascii_str
     assert upretty(e) == ucode_str
 
+
 def test_issue_4335():
     expr = -y(x).diff(x)
     ucode_str = \
@@ -4843,3 +4844,17 @@ u("""\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_issue_8344():
+    from sympy.core import sympify
+    e = sympify('2*x*y**2/1**2 + 1', evaluate=False)
+    ucode_str = \
+u("""\
+     2    \n\
+2⋅x⋅y     \n\
+────── + 1\n\
+   2      \n\
+  1       \
+""")
+    assert upretty(e) == ucode_str
