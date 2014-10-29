@@ -46,9 +46,10 @@ def roots_linear(f):
 def roots_quadratic(f):
     """Returns a list of roots of a quadratic polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
-    Otherwise the ordering is not guaranteed to be that way but as long as
-    the coefficients are numbers they will be if the assumption system does
-    not fail."""
+    The ordering will be the same for any numerical coefficients as long as
+    the assumptions tested are correct, otherwise the ordering will not be
+    sorted (but will be canonical).
+    """
 
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
@@ -336,9 +337,9 @@ def roots_quartic(f):
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
-    Otherwise the ordering is not guaranteed to be that way but as long as
-    the coefficients are numbers they will be if the assumption system does
-    not fail.
+    The ordering will be the same for any numerical coefficients as long as
+    the assumptions tested are correct, otherwise the ordering will not be
+    sorted (but will be canonical).
     """
     n = f.degree()
 
