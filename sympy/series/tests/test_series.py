@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols
+    Function, log, sqrt, Symbol, Subs, pi, symbols, LambertW
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -148,3 +148,8 @@ def test_exp_product_positive_factors():
     assert series(exp(x), x, n=8) == 1 + a*b + a**2*b**2/2 + \
         a**3*b**3/6 + a**4*b**4/24 + a**5*b**5/120 + a**6*b**6/720 + \
         a**7*b**7/5040 + O(a**8*b**8, a, b)
+
+
+def test_lambertw_issue_7259():
+    assert series(LambertW(x),x, n=6) == x - x**2 + 3*x**3/2 - 8*x**4/3 + \
+        125*x**5/24 + O(x**6)

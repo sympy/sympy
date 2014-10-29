@@ -349,8 +349,8 @@ def test_lambertw():
     assert LambertW(-pi/2, -1) == -I*pi/2
     assert LambertW(-1/E, -1) == -1
 
-    assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
-    assert LambertW(x, k).diff(x) == LambertW(x, k)/x/(1 + LambertW(x, k))
+    assert LambertW(x**2).diff(x) == 2*x/(LambertW(x**2) + 1)/exp(LambertW(x**2))
+    assert LambertW(x, k).diff(x) == 1/(LambertW(x, k) + 1)/exp(LambertW(x, k))
 
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
         Float("0.701338383413663009202120278965", 30), 1e-29)

@@ -774,9 +774,17 @@ class tan(TrigonometricFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.One + self**2
+            return 1/cos(self.args[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_heurisch_diff(self, x):
+        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        da = self.args[0].diff(x)
+        if da is S.Zero:
+            return da
+        df = S.One + self**2
+        return da * df
 
     def inverse(self, argindex=1):
         """
