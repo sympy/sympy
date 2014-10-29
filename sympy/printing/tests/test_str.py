@@ -565,14 +565,14 @@ def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
 
 
-def test_bug2():
+def test_issue_3101():
     e = x - y
     a = str(e)
     b = str(e)
     assert a == b
 
 
-def test_bug4():
+def test_issue_3103():
     e = -2*sqrt(x) - y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]

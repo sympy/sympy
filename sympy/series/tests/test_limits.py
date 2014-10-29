@@ -209,10 +209,6 @@ def test_doit2():
     assert l.doit(deep=False) == l
 
 
-def test_bug693a():
-    assert sin(sin(x + 1) + 1).limit(x, 0) == sin(sin(1) + 1)
-
-
 def test_issue_3792():
     assert limit( (1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
     assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
