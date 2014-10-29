@@ -204,7 +204,10 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
                      repr(function_kwargs)))
 
     try:
-        return subprocess.call([command, "-R", "-c", commandstring])
+        p = subprocess.Popen([command, "-R", "-c", commandstring])
+        p.communicate()
+    except KeyboardInterrupt:
+        p.wait()
     finally:
         # Put the environment variable back, so that it reads correctly for
         # the current Python process.
@@ -212,6 +215,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
             del os.environ["PYTHONHASHSEED"]
         else:
             os.environ["PYTHONHASHSEED"] = hash_seed
+        return p.returncode
 
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
