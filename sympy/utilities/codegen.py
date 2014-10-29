@@ -218,8 +218,8 @@ class DataType(object):
 
 
 default_datatypes = {
-    "int": DataType("int", "INTEGER*4", "int", None),
-    "float": DataType("double", "REAL*8", "float", None)
+    "int": DataType("int", "INTEGER*4", "int", ""),
+    "float": DataType("double", "REAL*8", "float", "")
 }
 
 
