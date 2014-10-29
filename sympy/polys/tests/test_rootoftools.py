@@ -382,9 +382,8 @@ def test_issue_7876():
     assert frozenset(l1) == frozenset(l2)
 
 
-@XFAIL
 def test_issue_8316():
-    f = Poly(7*x**8 - 9)  # error: 2 missing, 4 don't refine
+    f = Poly(7*x**8 - 9)
     assert len(f.all_roots()) == 8
-    f = Poly(7*x**8 - 10)  # error: 0 missing, 4 don't refine
+    f = Poly(7*x**8 - 10)
     assert len(f.all_roots()) == 8

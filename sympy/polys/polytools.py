@@ -48,6 +48,7 @@ from sympy.utilities import group, sift, public
 
 import sympy.polys
 import sympy.mpmath
+from sympy.mpmath.libmp.libhyper import NoConvergence
 
 from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.constructor import construct_domain
@@ -3408,6 +3409,10 @@ class Poly(Expr):
             # so we make sure this convention holds here, too.
             roots = list(map(sympify,
                 sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, r.imag))))
+        except NoConvergence:
+            raise NoConvergence(
+                'convergence to root failed; try n < %s or maxsteps > %s' % (
+                n, maxsteps))
         finally:
             sympy.mpmath.mp.dps = dps
 
