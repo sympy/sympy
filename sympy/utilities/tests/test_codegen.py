@@ -8,7 +8,6 @@ from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
             OutputArgument, InOutArgument)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import XFAIL
 
 # import test:
 #FIXME: Fails due to circular import in with core

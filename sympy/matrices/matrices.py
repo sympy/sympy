@@ -607,12 +607,17 @@ class MatrixBase(object):
         """Return self + b """
         return self + b
 
-    def table(self, printer, rowsep='\n', colsep=', ', align='right'):
+    def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
+              colsep=', ', align='right'):
         r"""
         String form of Matrix as a table.
 
         ``printer`` is the printer to use for on the elements (generally
         something like StrPrinter())
+
+        ``rowstart`` is the string used to start each row (by default '[').
+
+        ``rowend`` is the string used to end each row (by default ']').
 
         ``rowsep`` is the string used to separate rows (by default a newline).
 
@@ -648,6 +653,9 @@ class MatrixBase(object):
         >>> print(M.table(printer, align='center'))
         [ 1 , 2]
         [-33, 4]
+        >>> print(M.table(printer, rowstart='{', rowend='}'))
+        {  1, 2}
+        {-33, 4}
         """
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
@@ -674,7 +682,7 @@ class MatrixBase(object):
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
                 row[j] = getattr(elem, align)(maxlen[j])
-            res[i] = "[" + colsep.join(row) + "]"
+            res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
     def _format_str(self, printer=None):

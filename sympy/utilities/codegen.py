@@ -1,6 +1,6 @@
 """
-module for generating C, C++, Fortran77, Fortran90 and python routines that
-evaluate sympy expressions. This module is work in progress. Only the
+module for generating C, C++, Fortran77, Fortran90 and Octave/Matlab routines
+that evaluate sympy expressions.  This module is work in progress.  Only the
 milestones with a '+' character in the list below have been completed.
 
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
@@ -54,6 +54,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 + Also generate .pyf code for f2py (in autowrap module)
 + Isolate constants and evaluate them beforehand in double precision
 + Fortran 90
++ Octave/Matlab
 
 - Common Subexpression Elimination
 - User defined comments in the generated code
@@ -86,6 +87,7 @@ from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
+from sympy.printing.octave import octave_code, OctaveCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
@@ -96,7 +98,7 @@ __all__ = [
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
     "Argument", "InputArgument", "Result",
     # routines -> code
-    "CodeGen", "CCodeGen", "FCodeGen",
+    "CodeGen", "CCodeGen", "FCodeGen", "OctaveCodeGen",
     # friendly functions
     "codegen", "make_routine",
 ]
@@ -208,15 +210,16 @@ class Routine(object):
 
 class DataType(object):
     """Holds strings for a certain datatype in different languages."""
-    def __init__(self, cname, fname, pyname):
+    def __init__(self, cname, fname, pyname, octname):
         self.cname = cname
         self.fname = fname
         self.pyname = pyname
+        self.octname = octname
 
 
 default_datatypes = {
-    "int": DataType("int", "INTEGER*4", "int"),
-    "float": DataType("double", "REAL*8", "float")
+    "int": DataType("int", "INTEGER*4", "int", ""),
+    "float": DataType("double", "REAL*8", "float", "")
 }
 
 
@@ -272,6 +275,7 @@ class Variable(object):
         self._datatype = {
             'C': datatype.cname,
             'FORTRAN': datatype.fname,
+            'OCTAVE': datatype.octname,
             'PYTHON': datatype.pyname
         }
         self.dimensions = dimensions
@@ -1076,8 +1080,240 @@ class FCodeGen(CodeGen):
     dump_fns = [dump_f95, dump_h]
 
 
+class OctaveCodeGen(CodeGen):
+    """Generator for Octave code.
+
+    The .write() method inherited from CodeGen will output a code file
+    <prefix>.m.
+
+    Octave .m files usually contain one function.  That function name should
+    match the filename (``prefix``).  If you pass multiple ``name_expr`` pairs,
+    the latter ones are presumed to be private functions accessed by the
+    primary function.
+
+    You should only pass inputs to ``argument_sequence``: outputs are ordered
+    according to their order in ``name_expr``.
+
+    """
+
+    code_extension = "m"
+
+    def routine(self, name, expr, argument_sequence):
+        """Specialized Routine creation for Octave."""
+
+        # FIXME: this is probably general enough for other high-level
+        # languages, perhaps its the C/Fortran one that is specialized!
+
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = Tuple(*expr)
+        else:
+            expressions = Tuple(expr)
+
+        # local variables
+        local_vars = set([i.label for i in expressions.atoms(Idx)])
+
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_vars
+
+        # Octave supports multiple return values
+        return_vals = []
+        for (i, expr) in enumerate(expressions):
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                expr = expr.rhs
+                symbol = out_arg
+                if isinstance(out_arg, Indexed):
+                    symbol = out_arg.base.label
+                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
+
+                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
+                if not expr.has(symbol):
+                    # this is a pure output: remove from the symbols list, so
+                    # it doesn't become an input.
+                    symbols.remove(symbol)
+
+            else:
+                # we have no name for this output
+                return_vals.append(Result(expr, name='out%d' % (i+1)))
+
+        # setup input argument list
+        arg_list = []
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
+
+        for symbol in sorted(symbols, key=str):
+            arg_list.append(InputArgument(symbol))
+
+        if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
+            missing = [x for x in arg_list if x.name not in argument_sequence]
+            if missing:
+                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
+                        ", ".join([str(m.name) for m in missing]), missing)
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
+
+        return Routine(name, arg_list, return_vals, local_vars)
+
+    def _get_symbol(self, s):
+        """Print the symbol appropriately."""
+        return octave_code(s).strip()
+
+    def _get_header(self):
+        """Writes a common header for the generated files."""
+        code_lines = []
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
+        for line in tmp.splitlines():
+            if line == '':
+                code_lines.append("%\n")
+            else:
+                code_lines.append("%%   %s\n" % line)
+        return code_lines
+
+    def _preprocessor_statements(self, prefix):
+        return []
+
+    def _get_routine_opening(self, routine):
+        """Returns the opening statements of the routine."""
+        code_list = []
+        code_list.append("function ")
+
+        # Outputs
+        outs = []
+        for i, result in enumerate(routine.results):
+            if isinstance(result, Result):
+                # Note: name not result_var; want `y` not `y(i)` for Indexed
+                s = self._get_symbol(result.name)
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+            outs.append(s)
+        if len(outs) > 1:
+            code_list.append("[" + (", ".join(outs)) + "]")
+        else:
+            code_list.append("".join(outs))
+        code_list.append(" = ")
+
+        # Inputs
+        args = []
+        for i, arg in enumerate(routine.arguments):
+            if isinstance(arg, (OutputArgument, InOutArgument)):
+                raise CodeGenError("Octave: invalid argument of type %s" %
+                                   str(type(arg)))
+            if isinstance(arg, InputArgument):
+                args.append("%s" % self._get_symbol(arg.name))
+        args = ", ".join(args)
+        code_list.append("%s(%s)\n" % (routine.name, args))
+        code_list = [ "".join(code_list) ]
+
+        return code_list
+
+    def _declare_arguments(self, routine):
+        return []
+
+    def _declare_locals(self, routine):
+        return []
+
+    def _get_routine_ending(self, routine):
+        return ["end\n"]
+
+    def _call_printer(self, routine):
+        declarations = []
+        code_lines = []
+        for i, result in enumerate(routine.results):
+            if isinstance(result, Result):
+                assign_to = result.result_var
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+
+            constants, not_supported, oct_expr = octave_code(result.expr,
+                assign_to=assign_to, human=False)
+
+            for obj, v in sorted(constants, key=str):
+                declarations.append(
+                    "  %s = %s;  %% constant\n" % (obj, v))
+            for obj in sorted(not_supported, key=str):
+                if isinstance(obj, Function):
+                    name = obj.func
+                else:
+                    name = obj
+                declarations.append(
+                    "  %% unsupported: %s\n" % (name))
+            code_lines.append("%s\n" % (oct_expr))
+        return declarations + code_lines
+
+    def _indent_code(self, codelines):
+        # Note that indenting seems to happen twice, first
+        # statement-by-statement by OctavePrinter then again here.
+        p = OctaveCodePrinter({'human': False})
+        return p.indent_code(codelines)
+        return codelines
+
+    def dump_m(self, routines, f, prefix, header=True, empty=True, inline=True):
+        # Note used to call self.dump_code() but we need more control for header
+
+        code_lines = self._preprocessor_statements(prefix)
+
+        for i, routine in enumerate(routines):
+            if i > 0:
+                if empty:
+                    code_lines.append("\n")
+            code_lines.extend(self._get_routine_opening(routine))
+            if i == 0:
+                if routine.name != prefix:
+                    raise ValueError('Octave function name should match prefix')
+                if header:
+                    code_lines.append("%" + prefix.upper() +
+                                      "  Autogenerated by sympy\n")
+                    code_lines.append(''.join(self._get_header()))
+            code_lines.extend(self._declare_arguments(routine))
+            code_lines.extend(self._declare_locals(routine))
+            if empty:
+                code_lines.append("\n")
+            code_lines.extend(self._call_printer(routine))
+            if empty:
+                code_lines.append("\n")
+            code_lines.extend(self._get_routine_ending(routine))
+
+        code_lines = self._indent_code(''.join(code_lines))
+
+        if code_lines:
+            f.write(code_lines)
+
+    dump_m.extension = code_extension
+    dump_m.__doc__ = CodeGen.dump_code.__doc__
+
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
+    dump_fns = [dump_m]
+
+
 def get_code_generator(language, project):
-    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen}.get(language.upper())
+    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen,
+                    "OCTAVE": OctaveCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
     return CodeGenClass(project)
@@ -1104,7 +1340,8 @@ def codegen(name_expr, language, prefix=None, project="project",
 
     language : string
         A string that indicates the source code language.  This is case
-        insensitive.  For the moment, only 'C' and 'F95' is supported.
+        insensitive.  Currently, 'C', 'F95' and 'Octave' are supported.
+        'Octave' generates code compatible with both Octave and Matlab.
 
     prefix : string, optional
         A prefix for the names of the files that contain the source code.

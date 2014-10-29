@@ -5,7 +5,7 @@ from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 
 
 class AssignmentError(Exception):
@@ -114,7 +114,10 @@ class CodePrinter(StrPrinter):
         """
 
         if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
+            if expr.is_Matrix:
+                assign_to = C.MatrixSymbol(assign_to, *expr.shape)
+            else:
+                assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))
@@ -122,7 +125,8 @@ class CodePrinter(StrPrinter):
         if assign_to:
             expr = Assignment(assign_to, expr)
         else:
-            expr = _sympify(expr)
+            # _sympify is not enough b/c it errors on iterables
+            expr = sympify(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
@@ -378,11 +382,16 @@ class CodePrinter(StrPrinter):
         # dummies must be printed as unique symbols
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
-    _print_Catalan = _print_NumberSymbol
-    _print_EulerGamma = _print_NumberSymbol
-    _print_GoldenRatio = _print_NumberSymbol
-    _print_Exp1 = _print_NumberSymbol
-    _print_Pi = _print_NumberSymbol
+    def _print_Catalan(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_EulerGamma(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_GoldenRatio(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_Exp1(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_Pi(self, expr):
+        return self._print_NumberSymbol(expr)
 
     def _print_And(self, expr):
         PREC = precedence(expr)
