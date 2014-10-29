@@ -125,14 +125,8 @@ class CodePrinter(StrPrinter):
         if assign_to:
             expr = Assignment(assign_to, expr)
         else:
-            # FIXME: temporary workaround for issue #8283
-            from sympy.matrices import MutableSparseMatrix
-            if isinstance(expr, MutableSparseMatrix):
-                pass
-            else:
-                # _sympify is not enough b/c it errors on iterables
-                expr = sympify(expr)
-
+            # _sympify is not enough b/c it errors on iterables
+            expr = sympify(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
