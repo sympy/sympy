@@ -99,6 +99,9 @@ class re(Function):
             return -S.ImaginaryUnit \
                 * im(Derivative(self.args[0], x, evaluate=True))
 
+    def _eval_rewrite_as_im(self, arg):
+        return self.args[0] - im(self.args[0])
+
     def _sage_(self):
         import sage.all as sage
         return sage.real_part(self.args[0]._sage_())
@@ -200,6 +203,9 @@ class im(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.imag_part(self.args[0]._sage_())
+
+    def _eval_rewrite_as_re(self, arg):
+        return self.args[0] - re(self.args[0])
 
 
 ###############################################################################
@@ -466,6 +472,8 @@ class Abs(Function):
                 return arg
             if exponent.is_integer and base is S.NegativeOne:
                 return S.One
+        if isinstance(arg, C.exp):
+            return C.exp(re(arg.args[0]))
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero

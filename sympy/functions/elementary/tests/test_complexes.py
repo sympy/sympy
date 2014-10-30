@@ -70,6 +70,9 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
+    assert re(x).rewrite(im) == x - im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -128,6 +131,9 @@ def test_im():
 
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
+
+    assert im(x).rewrite(re) == x - re(x)
+    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
 
 
 def test_sign():
@@ -336,6 +342,8 @@ def test_Abs():
     p = expand(q**3)**Rational(1, 3)
     d = p - q
     assert abs(d).func is Abs or abs(d) == 0
+
+    assert Abs(4*exp(pi*I/4)) == 4
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
