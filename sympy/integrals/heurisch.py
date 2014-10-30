@@ -33,6 +33,7 @@ from sympy.core.compatibility import reduce, default_sort_key
 from sympy.integrals.heurisch_diff import replace_heurisch_diff, \
     restore_heurisch_diff, has_heurisch_diff
 
+
 def eval_heurisch_diff(f, x):
     f = f.replace(has_heurisch_diff,
                   replace_heurisch_diff)
@@ -40,6 +41,7 @@ def eval_heurisch_diff(f, x):
     diff = diff.replace(lambda e: hasattr(e, "_old_class"),
                         restore_heurisch_diff)
     return diff
+
 
 def components(f, x):
     """

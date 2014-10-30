@@ -21,6 +21,7 @@ def _eval_derivative_heurisch(f, s):
         l.append(df * da)
     return Add(*l)
 
+
 def replace_heurisch_diff(function):
     cls = function.func
     overrides = dict(_eval_derivative=_eval_derivative_heurisch,
@@ -28,10 +29,12 @@ def replace_heurisch_diff(function):
     newcls = type(cls.__name__, (cls,), overrides)
     return newcls(*function.args)
 
+
 def restore_heurisch_diff(function):
     cls = function.func
     oldcls = cls._old_class
     return oldcls(*function.args)
+
 
 def has_heurisch_diff(f):
     return hasattr(f, "heurisch_fdiff")
