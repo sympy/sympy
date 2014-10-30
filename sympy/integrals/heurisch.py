@@ -37,7 +37,7 @@ def eval_heurisch_diff(f, x):
     f = f.replace(has_heurisch_diff,
                   replace_heurisch_diff)
     diff = f.diff(x)
-    diff = diff.replace(has_heurisch_diff,
+    diff = diff.replace(lambda e: hasattr(e, "_old_class"),
                         restore_heurisch_diff)
     return diff
 
