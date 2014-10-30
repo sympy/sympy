@@ -193,6 +193,8 @@ def test_simple_products():
     raises(ValueError, lambda: Product(n, (k, 1)))
 
     assert product(1, (n, 1, oo)) == 1  # issue 8301
+    assert product(2, (n, 1, oo)) == oo
+    assert product(-1, (n, 1, oo)).func is Product
 
 
 def test_multiple_products():

@@ -89,7 +89,7 @@ class Product(ExprWithIntLimits):
     Direct computation currently fails:
 
     >>> W.doit()
-    nan
+    Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, oo))
 
     But we can approach the infinite product by a limit of finite products:
 
@@ -219,7 +219,7 @@ class Product(ExprWithIntLimits):
                 f = 1 / f
 
             g = self._eval_product(f, (i, a, b))
-            if g is None:
+            if g in (None, S.NaN):
                 return self.func(powsimp(f), *self.limits[index:])
             else:
                 f = g
