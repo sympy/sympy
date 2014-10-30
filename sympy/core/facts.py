@@ -114,7 +114,7 @@ def deduce_alpha_implications(implications):
        return:       {} of a -> set([b, c, ...])
     """
     implications = implications + [(Not(j), Not(i)) for (i, j) in implications]
-    res  = defaultdict(set)
+    res = defaultdict(set)
     full_implications = transitive_closure(implications)
     for a, b in full_implications:
         if a == b:
