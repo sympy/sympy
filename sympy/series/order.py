@@ -328,7 +328,7 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp, PoleError
+        from sympy import powsimp
         if expr is S.Zero:
             return True
         if expr is S.NaN:

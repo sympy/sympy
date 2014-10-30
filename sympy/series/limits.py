@@ -43,32 +43,28 @@ def limit(e, z, z0, dir="+"):
 
 
 def heuristics(e, z, z0, dir):
-    if abs(z0) is S.Infinity:
-        return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
-
     rv = None
-    bad = (S.NaN, None)
 
-    if e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
+    if abs(z0) is S.Infinity:
+        rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
+        if isinstance(rv, Limit):
+            return
+    elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
         r = []
         for a in e.args:
-            try:
-                l = limit(a, z, z0, dir)
-                if l.has(S.Infinity) and l.is_finite is None:
-                    break
-                else:
-                    r.append(l)
-            except PoleError:
-                break
-            if r[-1] in bad:
-                break
-        else:
-            if r:
-                rv = e.func(*r)
-
-    if rv in bad:
-        msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
-        raise PoleError(msg % (e, z, z0, dir))
+            l = limit(a, z, z0, dir)
+            if l.has(S.Infinity) and l.is_finite is None:
+                return
+            elif isinstance(l, Limit):
+                return
+            elif l is S.NaN:
+                return
+            else:
+                r.append(l)
+        if r:
+            rv = e.func(*r)
+            if rv is S.NaN:
+                return
 
     return rv
 
@@ -147,8 +143,12 @@ class Limit(Expr):
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = C.Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
-                    return limit(inve.as_leading_term(u), u,
-                                 S.Zero, "+" if z0 is S.Infinity else "-")
+                    r = limit(inve.as_leading_term(u), u,
+                              S.Zero, "+" if z0 is S.Infinity else "-")
+                    if isinstance(r, Limit):
+                        return self
+                    else:
+                        return r
 
         if e.is_Order:
             return C.Order(limit(e.expr, z, z0), *e.args[1:])
@@ -158,8 +158,8 @@ class Limit(Expr):
             if r is S.NaN:
                 raise PoleError()
         except (PoleError, ValueError):
-            try:
-                r = heuristics(e, z, z0, dir)
-            except PoleError:
+            r = heuristics(e, z, z0, dir)
+            if r is None:
                 return self
+
         return r
