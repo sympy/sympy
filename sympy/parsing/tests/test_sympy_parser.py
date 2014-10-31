@@ -86,7 +86,7 @@ def test_issue_2515():
 def test_issue_7663():
     x = Symbol('x')
     e = '2*(x+1)'
-    assert parse_expr(e, evaluate=0) == Mul(e, evaluate=False)
+    assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
 
 
 def test_split_symbols():
