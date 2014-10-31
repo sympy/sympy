@@ -738,6 +738,12 @@ A3 = 'A3'  # Axis #3 (-0): re < 0 and im = 0
 A4 = 'A4'  # Axis #4 (0-): re = 0 and im < 0
 
 _rules_simple = {
+    # Q --> Q (same) => no change
+    (Q1, Q1): 0,
+    (Q2, Q2): 0,
+    (Q3, Q3): 0,
+    (Q4, Q4): 0,
+
     # A -- CCW --> Q => +1/4 (CCW)
     (A1, Q1): 1,
     (A2, Q2): 1,
@@ -914,6 +920,7 @@ _rules_ambiguous = {
 }
 
 _values = {
+    0: [( 0, 1)],
     1: [(+1, 4)],
     2: [(-1, 4)],
     3: [(+1, 4)],
@@ -1272,7 +1279,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
     f1L1F, f1L2F, f1L3F, f1L4F = F1
     f2L1F, f2L2F, f2L3F, f2L4F = F2
 
-    x = (u + s) / 2 or u + (s - u) / 3  # keep off the y-axis
+    x = (u + s) / 2
 
     f1V = dmp_eval_in(f1, x, 0, 1, F)
     f2V = dmp_eval_in(f2, x, 0, 1, F)
@@ -1305,7 +1312,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L1_L.append(((a, b), indices, h))
-                else:
+                if a >= x:
                     I_L1_R.append(((a, b), indices, h))
 
     for I in I_L3:
@@ -1329,7 +1336,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L3_L.append(((b, a), indices, h))
-                else:
+                if a >= x:
                     I_L3_R.append(((b, a), indices, h))
 
     Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
@@ -1411,7 +1418,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L2_B.append(((a, b), indices, h))
-                else:
+                if a >= y:
                     I_L2_U.append(((a, b), indices, h))
 
     for I in I_L4:
@@ -1435,7 +1442,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L4_B.append(((b, a), indices, h))
-                else:
+                if a >= y:
                     I_L4_U.append(((b, a), indices, h))
 
     Q_L1_B = Q_L1
