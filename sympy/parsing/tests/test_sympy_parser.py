@@ -5,7 +5,8 @@ from sympy.series import Limit
 from sympy.utilities.pytest import raises
 
 from sympy.parsing.sympy_parser import (
-    parse_expr, standard_transformations, rationalize, TokenError, split_symbols, implicit_multiplication,
+    parse_expr, standard_transformations, rationalize, TokenError,
+    split_symbols, implicit_multiplication,
 )
 
 
@@ -84,7 +85,9 @@ def test_issue_2515():
 
 def test_issue_7663():
     x = Symbol('x')
-    parse_expr('2*(x+1)', evaluate=0) == Mul(2, x + 1, evaluate=False)
+    e = '2*(x+1)'
+    assert parse_expr(e, evaluate=0) == Mul(e, evaluate=False)
+
 
 def test_split_symbols():
     transformations = standard_transformations + \
@@ -95,6 +98,7 @@ def test_split_symbols():
 
     assert parse_expr("xy") == xy
     assert parse_expr("xy", transformations=transformations) == x*y
+
 
 def test_split_symbols_function():
     transformations = standard_transformations + \
