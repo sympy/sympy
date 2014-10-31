@@ -760,6 +760,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         undefined variables into SymPy symbols, and allow the use of standard
         mathematical factorial notation (e.g. ``x!``).
 
+    evaluate : bool, optional
+        When False, the order of the arguments will remain as they were in the
+        string and automatic simplification that would normally occur is
+        suppressed. (see examples)
 
     Examples
     ========
@@ -775,6 +779,23 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     ...     (implicit_multiplication_application,))
     >>> parse_expr("2x", transformations=transformations)
     2*x
+
+    When evaluate=False, some automatic simplifications will not occur:
+
+    >>> parse_expr("2**3"), parse_expr("2**3", evaluate=False)
+    (8, 2**3)
+
+    In addition the order of the arguments will not be made canonical.
+    This feature allows one to tell exactly how the expression was entered:
+
+    >>> a = parse_expr('1 + x', evaluate=False)
+    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> a == b
+    False
+    >>> a.args
+    (1, x)
+    >>> b.args
+    (x, 1)
 
     See Also
     ========
