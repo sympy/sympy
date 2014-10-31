@@ -370,7 +370,7 @@ def test_Add_Mul_is_finite():
     x = Symbol('x', real=True, finite=False)
 
     assert sin(x).is_finite is True
-    assert (x*sin(x)).is_finite is False
+    assert (x*sin(x)).is_finite is None
     assert (1024*sin(x)).is_finite is True
     assert (sin(x)*exp(x)).is_finite is not True
     assert (sin(x)*cos(x)).is_finite is True
@@ -1719,6 +1719,8 @@ def test_mul_zero_detection():
     def test(z, b, e):
         if z.is_zero and b.is_finite:
             assert e.is_real and e.is_zero
+        elif z.is_nonzero and b.is_infinite:
+            assert e.is_nonzero and e.is_real is None
         else:
             assert e.is_real == e.is_zero == None
 
