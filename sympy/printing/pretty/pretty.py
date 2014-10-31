@@ -1283,7 +1283,10 @@ class PrettyPrinter(Printer):
         # Gather terms for numerator/denominator
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(C.Pow(item.base, -item.exp))
+                if item.exp != -1:
+                    b.append(C.Pow(item.base, -item.exp, evaluate=False))
+                else:
+                    b.append(C.Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append( C.Rational(item.p) )
