@@ -215,7 +215,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 "svg": ["-o", "texput.svg", "texput.dvi"],
             }
 
-            cmd = ["dvi" + output]
             if output == "svg":
                 cmd = ["dvisvgm"]
             else:
