@@ -26,7 +26,7 @@ def replace_heurisch_diff(function):
     cls = function.func
     overrides = dict(_eval_derivative=_eval_derivative_heurisch,
                      _old_class=cls)
-    newcls = type(cls.__name__, (cls,), overrides)
+    newcls = type("_%s__heurisch" % cls.__name__, (cls,), overrides)
     return newcls(*function.args)
 
 
