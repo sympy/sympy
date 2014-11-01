@@ -328,6 +328,7 @@ def test_Abs():
         Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
+    assert Abs(x)**-3 == Abs(x)/(x**4)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)

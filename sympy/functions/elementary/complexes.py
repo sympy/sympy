@@ -487,13 +487,12 @@ class Abs(Function):
     def _eval_is_positive(self):
         return self.is_nonzero
 
-    def _eval_power(self, other):
-        if self.args[0].is_real and other.is_integer:
-            if other.is_even:
-                return self.args[0]**other
-            elif other is not S.NegativeOne and other.is_Integer:
-                e = other - sign(other)
-                return self.args[0]**e*self
+    def _eval_power(self, exponent):
+        if self.args[0].is_real and exponent.is_integer:
+            if exponent.is_even:
+                return self.args[0]**exponent
+            elif exponent is not S.NegativeOne and exponent.is_Integer:
+                return self.args[0]**(exponent - 1)*self
         return
 
     def _eval_nseries(self, x, n, logx):
