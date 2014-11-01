@@ -7,6 +7,7 @@
 import os
 import re
 import warnings
+import io
 
 from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
 from sympy.utilities.pytest import XFAIL, SKIP
@@ -34,7 +35,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), "r") as f:
+            with io.open(os.path.join(root, file), "r", encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
