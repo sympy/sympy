@@ -1720,15 +1720,26 @@ def test_mul_zero_detection():
         if z.is_zero and b.is_finite:
             assert e.is_real and e.is_zero
         else:
-            assert e.is_real == e.is_zero == None
+            assert e.is_real is None
+            if b.is_finite:
+                if z.is_zero:
+                    assert e.is_zero
+                else:
+                    assert e.is_zero is None
+            elif b.is_finite is False:
+                if z.is_zero is None:
+                    assert e.is_zero is None
+                else:
+                    assert e.is_zero is False
+
 
     for iz, ib in cartes(*[[True, False, None]]*2):
-        z = Dummy(nonzero=iz)
-        b = Dummy(finite=ib)
+        z = Dummy('z', nonzero=iz)
+        b = Dummy('f', finite=ib)
         e = Mul(z, b, evaluate=False)
         test(z, b, e)
-        z = Dummy(nonzero=iz)
-        b = Dummy(finite=ib)
+        z = Dummy('nz', nonzero=iz)
+        b = Dummy('f', finite=ib)
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 

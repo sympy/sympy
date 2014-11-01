@@ -170,7 +170,7 @@ _assume_rules = FactRules([
     'nonpositive    ==  real & !positive',
     'nonnegative    ==  real & !negative',
 
-    'zero           ->  even',
+    'zero           ->  even & finite',
 
     'prime          ->  integer & positive',
     'composite      ==  integer & positive & !prime',
@@ -179,9 +179,9 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !real',
 
-    '!finite        ==  infinite',
+    'infinite       ->  !finite',
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
+    'nonzero        ==  !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()

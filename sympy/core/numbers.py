@@ -728,6 +728,11 @@ class Float(Number):
             return False
         return True
 
+    def _eval_is_infinite(self):
+        if self._mpf_ in (_mpf_inf, _mpf_ninf):
+            return True
+        return False
+
     def _eval_is_integer(self):
         return self._mpf_ == _mpf_zero
 
@@ -2246,12 +2251,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     is_commutative = True
     is_positive = True
-    is_finite = False
-    is_integer = None
-    is_rational = None
-    is_algebraic = None
-    is_transcendental = None
-    is_odd = None
+    is_infinite = True
     is_number = True
 
     __slots__ = []
@@ -2460,14 +2460,9 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     """
 
     is_commutative = True
-    is_real = True
-    is_positive = False
-    is_finite = False
-    is_integer = None
-    is_rational = None
+    is_negative = True
+    is_infinite = True
     is_number = True
-    is_algebraic = None
-    is_transcendental = None
 
     __slots__ = []
 
@@ -2833,8 +2828,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_commutative = True
-    is_finite = False
-    is_real = None
+    is_infinite = True
     is_number = True
 
     __slots__ = []

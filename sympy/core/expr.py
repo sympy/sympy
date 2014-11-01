@@ -723,7 +723,7 @@ class Expr(Basic, EvalfMixin):
         respectively.
 
         """
-        from sympy.series import limit
+        from sympy.series import limit, Limit
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
 
@@ -735,6 +735,8 @@ class Expr(Basic, EvalfMixin):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
+                if isinstance(A, Limit):
+                    raise NotImplementedError("Could not compute limit")
 
         if b is None:
             B = 0
@@ -742,6 +744,8 @@ class Expr(Basic, EvalfMixin):
             B = self.subs(x, b)
             if B.has(S.NaN) or B.has(S.Infinity) or B.has(S.NegativeInfinity):
                 B = limit(self, x, b)
+                if isinstance(B, Limit):
+                    raise NotImplementedError("Could not compute limit")
 
         return B - A
 

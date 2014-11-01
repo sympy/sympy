@@ -333,11 +333,12 @@ def test_symbol_real():
 def test_symbol_zero():
     x = Symbol('x', zero=True)
     assert x.is_positive is False
-    assert x.is_nonpositive is True
+    assert x.is_nonpositive
     assert x.is_negative is False
-    assert x.is_nonnegative is True
+    assert x.is_nonnegative
     assert x.is_zero is True
     assert x.is_nonzero is False
+    assert x.is_finite is True
 
 
 def test_symbol_positive():
@@ -629,13 +630,13 @@ def test_hash_vs_eq():
 
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, finite=False)
-    nn = Symbol('n', nonnegative=True, finite=False)
-    np = Symbol('n', nonpositive=True, finite=False)
-    p = Symbol('p', positive=True, finite=False)
+    n = Symbol('n', negative=True, infinite=True)
+    nn = Symbol('n', nonnegative=True, infinite=True)
+    np = Symbol('n', nonpositive=True, infinite=True)
+    p = Symbol('p', positive=True, infinite=True)
     r = Dummy(real=True, finite=False)
     x = Symbol('x')
-    xb = Symbol('xb', finite=True)
+    xf = Symbol('xb', finite=True)
     assert (n + p).is_positive is None
     assert (n + x).is_positive is None
     assert (p + x).is_positive is None
@@ -643,10 +644,10 @@ def test_Add_is_pos_neg():
     assert (n + x).is_negative is None
     assert (p + x).is_negative is None
 
-    assert (n + xb).is_positive is False
-    assert (p + xb).is_positive is True
-    assert (n + xb).is_negative is True
-    assert (p + xb).is_negative is False
+    assert (n + xf).is_positive is False
+    assert (p + xf).is_positive is True
+    assert (n + xf).is_negative is True
+    assert (p + xf).is_negative is False
 
     assert (x - S.Infinity).is_negative is None  # issue 7798
     # issue 8046, 16.2
@@ -712,6 +713,34 @@ def test_Pow_is_algebraic():
     assert Pow(2, sqrt(2), evaluate=False).is_algebraic is False
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
+
+
+def test_Mul_is_infinite():
+    x = Symbol('x')
+    f = Symbol('f', finite=True)
+    i = Symbol('i', infinite=True)
+    z = Dummy(zero=True)
+    nzf = Dummy(finite=True, zero=False)
+    from sympy import Mul
+    assert (x*f).is_finite is None
+    assert (x*i).is_finite is None
+    assert (f*i).is_finite is False
+    assert (x*f*i).is_finite is None
+    assert (z*i).is_finite is False
+    assert (nzf*i).is_finite is False
+    assert (z*f).is_finite is True
+    assert Mul(0, f, evaluate=False).is_finite is True
+    assert Mul(0, i, evaluate=False).is_finite is False
+
+    assert (x*f).is_infinite is None
+    assert (x*i).is_infinite is None
+    assert (f*i).is_infinite is None
+    assert (x*f*i).is_infinite is None
+    assert (z*i).is_infinite is S.NaN.is_infinite
+    assert (nzf*i).is_infinite is True
+    assert (z*f).is_infinite is False
+    assert Mul(0, f, evaluate=False).is_infinite is False
+    assert Mul(0, i, evaluate=False).is_infinite is S.NaN.is_infinite
 
 
 def test_special_is_rational():
