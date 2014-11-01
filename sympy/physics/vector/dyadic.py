@@ -204,7 +204,7 @@ class Dyadic(object):
                 else:
                     from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
                     use_unicode = pretty_use_unicode()
-                mpp = VectorPrettyPrinter(settings)
+                mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
                 ol = []  # output list, to be concatenated to a string
