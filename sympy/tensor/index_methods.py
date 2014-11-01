@@ -334,11 +334,11 @@ def get_contraction_structure(expr):
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys(), key=default_sort_key)
-    [x[i]*(y[i] + A[i, j]*x[j]), (i,)]
+    [(x[j]*A[i, j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    set([x[i]*(y[i] + A[i, j]*x[j])])
+    set([(x[j]*A[i, j] + y[i])*x[i]])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
-    [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
+    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
 
     Powers with contractions in either base or exponent will also be found as
     keys in the dictionary, mapping to a list of results from recursive calls:

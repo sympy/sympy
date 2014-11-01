@@ -18,7 +18,7 @@ from sympy.core.compatibility import xrange
 
 
 class Sum(AddWithLimits,ExprWithIntLimits):
-    """Represents unevaluated summation.
+    r"""Represents unevaluated summation.
 
     ``Sum`` represents a finite or infinite series, with the first argument
     being the general form of terms in the series, and the second argument
@@ -145,45 +145,13 @@ class Sum(AddWithLimits,ExprWithIntLimits):
 
         return obj
 
-    @property
-    def is_zero(self):
-        """A Sum is only zero if its function is zero or if all terms
-        cancel out. This only answers whether the summand zero."""
-
-        return self.function.is_zero
-
-    @property
-    def is_number(self):
-        """
-        Return True if the Sum will result in a number, else False.
-
-        Sums are a special case since they contain symbols that can
-        be replaced with numbers. Whether the sum can be done or not in
-        closed form is another issue. But answering whether the final
-        result is a number is not difficult.
-
-        Examples
-        ========
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, y
-        >>> Sum(x, (y, 1, x)).is_number
-        False
-        >>> Sum(1, (y, 1, x)).is_number
-        False
-        >>> Sum(0, (y, 1, x)).is_number
-        True
-        >>> Sum(x, (y, 1, 2)).is_number
-        False
-        >>> Sum(x, (y, 1, 1)).is_number
-        False
-        >>> Sum(x, (x, 1, 2)).is_number
-        True
-        >>> Sum(x*y, (x, 1, 2), (y, 1, 3)).is_number
-        True
-        """
-
-        return self.function.is_zero or not self.free_symbols
+    def _eval_is_zero(self):
+        # a Sum is only zero if its function is zero or if all terms
+        # cancel out. This only answers whether the summand is zero; if
+        # not then None is returned since we don't analyze whether all
+        # terms cancel out.
+        if self.function.is_zero:
+            return True
 
     def doit(self, **hints):
         if hints.get('deep', True):
@@ -194,7 +162,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and (dif < 0) is True:
+            if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -289,7 +257,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
             >>> s
             -log(a) + log(b) + 1/(2*b) + 1/(2*a)
             >>> e
-            Abs(-1/(12*b**2) + 1/(12*a**2))
+            Abs(1/(12*b**2) - 1/(12*a**2))
 
         If the function is a polynomial of degree at most 2n+1, the
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
@@ -308,7 +276,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         if len(self.limits) != 1:
             raise ValueError("More than 1 limit")
         i, a, b = self.limits[0]
-        if (a > b) is True:
+        if (a > b) == True:
             if a - b == 1:
                 return S.Zero,S.Zero
             a, b = b + 1, a - 1
@@ -324,10 +292,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
                 term = f.subs(i, a)
                 if term:
                     test = abs(term.evalf(3)) < eps
-                    if isinstance(test, bool):
-                        if test is True:
-                            return s, abs(term)
-                    else:
+                    if test == True:
+                        return s, abs(term)
+                    elif not (test == False):
                         # a symbolic Relational class, can't go further
                         return term, S.Zero
                 s += term
@@ -605,6 +572,7 @@ def eval_sum_direct(expr, limits):
 
 
 def eval_sum_symbolic(f, limits):
+    f_orig = f
     (i, a, b) = limits
     if not f.has(i):
         return f*(b - a + 1)
@@ -639,7 +607,9 @@ def eval_sum_symbolic(f, limits):
         rsum = eval_sum_symbolic(R, (i, a, b))
 
         if None not in (lsum, rsum):
-            return lsum + rsum
+            r = lsum + rsum
+            if not r is S.NaN:
+                return r
 
     # Polynomial terms with Faulhaber's formula
     n = Wild('n')
@@ -683,7 +653,7 @@ def eval_sum_symbolic(f, limits):
         if not r in (None, S.NaN):
             return r
 
-    return eval_sum_hyper(f, (i, a, b))
+    return eval_sum_hyper(f_orig, (i, a, b))
 
 
 def _eval_sum_hyper(f, i, a):
@@ -758,7 +728,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
-            if cond is False:
+            if cond == False:
                 return None
         return Piecewise((res1 - res2, cond), (old_sum, True))
 
@@ -770,7 +740,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond is False:
+        if cond == False:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 

@@ -94,7 +94,7 @@ def qfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     r"""
     Returns the elliptic nome `q`, given any of `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> qfrom(q=0.25)
         0.25
@@ -125,7 +125,7 @@ def qbarfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the number-theoretic nome `\bar q`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> qbarfrom(qbar=0.25)
         0.25
@@ -156,7 +156,7 @@ def taufrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the elliptic half-period ratio `\tau`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> taufrom(tau=0.5j)
         (0.0 + 0.5j)
@@ -190,7 +190,7 @@ def kfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the elliptic modulus `k`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> kfrom(k=0.25)
         0.25
@@ -235,7 +235,7 @@ def mfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the elliptic parameter `m`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> mfrom(m=0.25)
         0.25
@@ -374,7 +374,7 @@ def kleinj(ctx, tau=None, **kwargs):
 
     Verifying the functional equation `J(\tau) = J(\tau+1) = J(-\tau^{-1})`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> tau = 0.625+0.75*j
         >>> tau = 0.625+0.75*j
@@ -575,7 +575,7 @@ def elliprf(ctx, x, y, z):
 
     Some basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprf(0,1,1); pi/2
         1.570796326794896619231322
@@ -700,7 +700,7 @@ def elliprc(ctx, x, y, pv=True):
 
     Some special values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprc(1,2)*4; elliprc(0,1)*2; +pi
         3.141592653589793238462643
@@ -764,7 +764,7 @@ def elliprj(ctx, x, y, z, p):
 
     Some values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprj(1,1,1,1)
         1.0
@@ -834,7 +834,7 @@ def elliprd(ctx, x, y, z):
 
     **Examples**
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprd(1,2,3)
         0.2904602810289906442326534
@@ -869,7 +869,7 @@ def elliprg(ctx, x, y, z):
 
     Evaluation for real and complex arguments::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprg(0,1,1)*4; +pi
         3.141592653589793238462643
@@ -948,7 +948,7 @@ def ellipf(ctx, phi, m):
 
     Basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> ellipf(0,1)
         0.0
@@ -1068,7 +1068,7 @@ def ellipe(ctx, *args):
 
     Basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> ellipe(0)
         1.570796326794896619231322
@@ -1227,7 +1227,7 @@ def ellippi(ctx, *args):
 
     Some basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> ellippi(0,-5); ellipk(-5)
         0.9555039270640439337379334

@@ -5,9 +5,10 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
-from sympy.core.sets import FiniteSet
+from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
+from sympy.core.cache import clear_cache
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -82,7 +83,7 @@ def test_diff_symbols():
     assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
 
-    # issue 1929
+    # issue 5028
     assert [diff(-z + x/y, sym) for sym in (z, x, y)] == [-1, 1/y, -x/y**2]
     assert diff(f(x, y, z), x, y, z, 2) == Derivative(f(x, y, z), x, y, z, z)
     assert diff(f(x, y, z), x, y, z, 2, evaluate=False) == \
@@ -270,8 +271,8 @@ def test_function_comparable_infinities():
 
 
 def test_deriv1():
-    # These all requre derivatives evaluated at a point (issue 1620) to work.
-    # See issue 1525
+    # These all requre derivatives evaluated at a point (issue 4719) to work.
+    # See issue 4624
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
     assert (
@@ -297,7 +298,7 @@ def test_deriv2():
 
 def test_func_deriv():
     assert f(x).diff(x) == Derivative(f(x), x)
-    # issue 1435
+    # issue 4534
     assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
     assert Derivative(f(x, y), x, y).args[1:] == (x, y)
     assert Derivative(f(x, y), y, x).args[1:] == (y, x)
@@ -376,7 +377,7 @@ def test_function__eval_nseries():
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
-    # issue 3626:
+    # issue 6725:
     assert expint(S(3)/2, -x)._eval_nseries(x, 5, None) == \
         2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
@@ -401,7 +402,7 @@ def test_evalf_default():
     assert type(sin(Rational(1, 4))) == sin
 
 
-def test_issue2300():
+def test_issue_5399():
     args = [x, y, S(2), S.Half]
 
     def ok(a):
@@ -583,7 +584,7 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-def test_issue_1612():
+def test_issue_4711():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
 
@@ -607,14 +608,68 @@ def test_nfloat():
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
-    # issue 3243
+    # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
     assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
 
-    # issue 3533
+    # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
         9.99999999800000e-11
 
-    # issue 4023
+    # issue 7122
     eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+
+
+def test_issue_7068():
+    from sympy.abc import a, b, f
+    y1 = Dummy('y')
+    y2 = Dummy('y')
+    func1 = f(a + y1 * b)
+    func2 = f(a + y2 * b)
+    func1_y = func1.diff(y1)
+    func2_y = func2.diff(y2)
+    assert func1_y != func2_y
+    z1 = Subs(f(a), a, y1)
+    z2 = Subs(f(a), a, y2)
+    assert z1 != z2
+
+
+def test_issue_7231():
+    from sympy.abc import a
+    ans1 = f(x).series(x, a)
+    _xi_1 = ans1.atoms(Dummy).pop()
+    res = (f(a) + (-a + x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
+           (-a + x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
+           (-a + x)**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/6 +
+           (-a + x)**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/24 +
+           (-a + x)**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/120 + O((-a + x)**6, (x, a)))
+    assert res == ans1
+    ans2 = f(x).series(x, a)
+    assert res == ans2
+
+def test_issue_7687():
+    from sympy.core.function import Function
+    from sympy.abc import x
+    f = Function('f')(x)
+    ff = Function('f')(x)
+    match_with_cache = ff.matches(f)
+    assert isinstance(f, type(ff))
+    clear_cache()
+    ff = Function('f')(x)
+    assert isinstance(f, type(ff))
+    assert match_with_cache == ff.matches(f)
+
+def test_issue_7688():
+    from sympy.core.function import Function, UndefinedFunction
+    from sympy.abc import x
+
+    f = Function('f')  # actually an UndefinedFunction
+    clear_cache()
+    class A(UndefinedFunction):
+        pass
+    a = A('f')
+    assert isinstance(a, type(f))

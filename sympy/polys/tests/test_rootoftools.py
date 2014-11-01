@@ -14,9 +14,11 @@ from sympy import (
     S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan,
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, x, y, z, r
+
+import warnings
 
 
 def test_RootOf___new__():
@@ -187,6 +189,7 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("+1.272897223922499190910"))
     assert im.epsilon_eq(Float("+0.719798681483861386681"))
 
+
 def test_RootOf_evalf_caching_bug():
     r = RootOf(x**5 - 5*x + 12, 1)
     r.n()
@@ -195,6 +198,7 @@ def test_RootOf_evalf_caching_bug():
     r.n()
     b = r._get_interval()
     assert a == b
+
 
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
@@ -219,6 +223,7 @@ def test_RootOf_all_roots():
         RootOf(x**3 - x**2 + 1, 2),
     ]
 
+
 def test_RootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
     roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
@@ -235,6 +240,7 @@ def test_RootOf_eval_rational():
              "0.86113631159405258",
              ]
 
+
 def test_RootSum___new__():
     f = x**3 + x + 3
 
@@ -246,7 +252,7 @@ def test_RootSum___new__():
     assert RootSum(f**2, g) == 2*RootSum(f, g)
     assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
 
-    # Issue 2472
+    # issue 5571
     assert hash(RootSum((x - 7)*f**3, g)) == hash(log(7*x) + 3*RootSum(f, g))
 
     raises(MultivariatePolynomialError, lambda: RootSum(x**3 + x + y))
@@ -317,9 +323,9 @@ def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
     assert rs.evalf(n=20, chop=True).epsilon_eq(
-        Float("1.0806046117362794348", 20), Float("1e-20")) is True
+        Float("1.0806046117362794348", 20), Float("1e-20")) is S.true
     assert rs.evalf(n=15, chop=True).epsilon_eq(
-        Float("1.08060461173628", 15), Float("1e-15")) is True
+        Float("1.08060461173628", 15), Float("1e-15")) is S.true
 
     rs = RootSum(x**2 + a, exp, x)
 
@@ -368,3 +374,16 @@ def test_RootSum_independent():
     r1 = RootSum(x**4 - b, h, x)
 
     assert RootSum(f, g, x).as_ordered_terms() == [10*r0, 15*r1, 126]
+
+
+def test_issue_7876():
+    l1 = Poly(x**6 - x + 1, x).all_roots()
+    l2 = [RootOf(x**6 - x + 1, i) for i in range(6)]
+    assert frozenset(l1) == frozenset(l2)
+
+
+def test_issue_8316():
+    f = Poly(7*x**8 - 9)
+    assert len(f.all_roots()) == 8
+    f = Poly(7*x**8 - 10)
+    assert len(f.all_roots()) == 8

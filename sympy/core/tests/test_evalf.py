@@ -1,6 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
+                   sin, sqrt, sstr, sympify, S, integrate, atan, product,
+                   Sum, Product, Integral)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from sympy.mpmath import inf, ninf, nan
@@ -125,6 +126,7 @@ def test_evalf_complex_cancellation():
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
+    assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
 
 
 def test_evalf_trig():
@@ -183,9 +185,9 @@ def test_evalf_bugs():
     assert NS((x*(1 + y*(1 + n))).subs(d).evalf(), 6) == '0.346011 + 0.433884*I'
     assert NS(((-I - sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
     assert NS((1 + I)**2*I, 15) == '-2.00000000000000'
-    #1659 (1/2):
+    # issue 4758 (1/2):
     assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
-    #1659 (2/2): With the bug present, this still only fails if the
+    # issue 4758 (2/2): With the bug present, this still only fails if the
     # terms are in the order given here. This is not generally the case,
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
@@ -196,7 +198,7 @@ def test_evalf_bugs():
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
     assert cos(x).n(subs={x: 1+I}) == cos(x).subs(x, 1+I).n()
-    #3561. Also NaN != mpmath.nan
+    # issue 6660. Also NaN != mpmath.nan
     # In this order:
     # 0*nan, 0/nan, 0*inf, 0/inf
     # 0+nan, 0-nan, 0+inf, 0-inf
@@ -227,9 +229,7 @@ def test_evalf_bugs():
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
-    raises(PrecisionExhausted, lambda: a.evalf())
-    assert a.evalf(chop=True) == 3
-    assert a.evalf(maxn=500) == 2
+    assert a.evalf() == 3
     assert b.evalf() == 3
     # equals, as a fallback, can still fail but it might succeed as here
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
@@ -243,6 +243,10 @@ def test_evalf_integer_parts():
     assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2)))
                .evalf(1000)) == fibonacci(1000)
 
+    assert ceiling(x).evalf(subs={x: 3}) == 3
+    assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
+    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -252,11 +256,13 @@ def test_evalf_trig_zero_detection():
     assert a.evalf(chop=True) == 0
     raises(PrecisionExhausted, lambda: a.evalf(strict=True))
 
+
 def test_evalf_sum():
     assert Sum(n,(n,1,2)).evalf() == 3.
     assert Sum(n,(n,1,2)).doit().evalf() == 3.
     # the next test should return instantly
     assert Sum(1/n,(n,1,2)).evalf() == 1.5
+
 
 def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum(1/n, (n, 1, oo)).evalf())
@@ -268,6 +274,12 @@ def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum((-2)**n, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum((2*n + 3)/(3*n**2 + 4), (n, 0, oo)).evalf())
     raises(ValueError, lambda: Sum((0.5*n**3)/(n**4 + 1), (n, 0, oo)).evalf())
+
+
+def test_evalf_product():
+    assert Product(n, (n, 1, 10)).evalf() == 3628800.
+    assert Product(1 - S.Half**2/n**2, (n, 1, oo)).evalf(5)==0.63662
+    assert Product(n, (n, -1, 3)).evalf() == 0
 
 
 def test_evalf_py_methods():
@@ -305,7 +317,7 @@ def test_implemented_function_evalf():
 
 
 def test_evaluate_false():
-    for no in [0, False, None]:
+    for no in [0, False]:
         assert Add(3, 2, evaluate=no).is_Add
         assert Mul(3, 2, evaluate=no).is_Mul
         assert Pow(3, 2, evaluate=no).is_Pow
@@ -316,11 +328,11 @@ def test_evalf_relational():
     assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
 
 
-def test_issue_2387():
+def test_issue_5486():
     assert not cos(sqrt(0.5 + I)).n().is_Function
 
 
-def test_issue_2387_bug():
+def test_issue_5486_bug():
     from sympy import I, Expr
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
 
@@ -334,23 +346,24 @@ def test_bugs():
     assert abs(polar_lift(0)).n() == 0
 
 
-def test_subs_bugs():
+def test_subs():
     from sympy import besseli
     assert NS('besseli(-x, y) - besseli(x, y)', subs={x: 3.5, y: 20.0}) == \
         '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x: 0.1}) == \
         '1.00000000000000'
+    raises(TypeError, lambda: x.evalf(subs=(x, 1)))
 
 
-def test_issue_1857_2105():
-    # 1857
+def test_issue_4956_5204():
+    # issue 4956
     v = S('''(-27*12**(1/3)*sqrt(31)*I +
     27*2**(2/3)*3**(1/3)*sqrt(31)*I)/(-2511*2**(2/3)*3**(1/3) +
     (29*18**(1/3) + 9*2**(1/3)*3**(2/3)*sqrt(31)*I +
     87*2**(1/3)*3**(1/6)*I)**2)''')
     assert NS(v, 1) == '0.e-118 - 0.e-118*I'
 
-    # 2105
+    # issue 5204
     v = S('''-(357587765856 + 18873261792*249**(1/2) + 56619785376*I*83**(1/2) +
     108755765856*I*3**(1/2) + 41281887168*6**(1/3)*(1422 +
     54*249**(1/2))**(1/3) - 1239810624*6**(1/3)*249**(1/2)*(1422 +
@@ -372,7 +385,7 @@ def test_old_docstring():
     assert a.n() == 17.25866050002001
 
 
-def test_issue_1707():
+def test_issue_4806():
     assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == 0.5
     assert atan(0, evaluate=False).n() == 0
 
@@ -411,7 +424,19 @@ def test_to_mpmath():
     assert S(3.2)._to_mpmath(20)._mpf_ == (0, long(838861), -18, 20)
 
 
-def test_issue_3533_evalf():
+def test_issue_6632_evalf():
     add = (-100000*sqrt(2500000001) + 5000000001)
     assert add.n() == 9.999999998e-11
     assert (add*add).n() == 9.999999996e-21
+
+
+def test_issue_4945():
+    from sympy.abc import H
+    from sympy import zoo
+    assert (H/0).evalf(subs={H:1}) == zoo*H
+
+
+def test_evalf_integral():
+    # test that workprec has to increase in order to get a result other than 0
+    eps = Rational(1, 1000000)
+    assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10

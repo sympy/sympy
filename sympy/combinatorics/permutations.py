@@ -290,7 +290,7 @@ class Cycle(dict):
     =====
 
     The underlying structure of the Cycle is a dictionary and although
-    the __iter__ method has been redefiend to give the array form of the
+    the __iter__ method has been redefined to give the array form of the
     cycle, the underlying dictionary items are still available with the
     such methods as items():
 
@@ -316,6 +316,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
@@ -348,6 +349,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
@@ -400,6 +402,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2, 6)
         Cycle(1, 2, 6)
@@ -434,7 +437,7 @@ class Permutation(Basic):
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
     mapping with itself. The permutation of a given arrangement is given by
-    indicating the positions of the elements after re-arrangment [2]_. For
+    indicating the positions of the elements after re-arrangement [2]_. For
     example, if one started with elements [x, y, a, b] (in that order) and
     they were reordered as [x, y, b, a] then the permutation would be
     [0, 1, 3, 2]. Notice that (in SymPy) the first element is always referred
@@ -687,7 +690,7 @@ class Permutation(Basic):
     same elements, but what that rank is depends on how the permutations are
     enumerated. (There are a number of different methods of doing so.) The
     lexicographic rank is given by the rank method and this rank is used to
-    increment a partion with addition/subtraction:
+    increment a permutation with addition/subtraction:
 
     >>> p.rank()
     6
@@ -955,6 +958,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Permutation(2, 3)(4, 5)
@@ -1295,6 +1299,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation
         >>> p = Permutation(1, 2, 9)
         >>> 2^p == p(2) == 9
@@ -1513,7 +1518,7 @@ class Permutation(Basic):
                 try:
                     # P([a, b, c])
                     return [i[j] for j in self._array_form]
-                except:
+                except Exception:
                     raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)
@@ -1854,6 +1859,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([])
         >>> p.is_Identity
@@ -2145,7 +2151,7 @@ class Permutation(Basic):
         See Also
         ========
 
-        min, max, suppport, cardinality, order, rank, size
+        min, max, support, cardinality, order, rank, size
         """
 
         return len(self.support())
@@ -2462,7 +2468,7 @@ class Permutation(Basic):
         Computes the precedence distance between two permutations.
 
         Suppose p and p' represent n jobs. The precedence metric
-        counts the number of times a job j is prededed by job i
+        counts the number of times a job j is preceded by job i
         in both p and p'. This metric is commutative.
 
         Examples
@@ -2613,7 +2619,7 @@ class Permutation(Basic):
         were selected.
 
         The parameter ``s`` stops the selection process when there are ``s``
-        items remaining and these are selected by countinuing the selection,
+        items remaining and these are selected by continuing the selection,
         counting by 1 rather than by ``m``.
 
         Consider selecting every 3rd item from 6 until only 2 remain::
@@ -2686,7 +2692,7 @@ class Permutation(Basic):
         """
         Generates a random permutation of length ``n``.
 
-        Uses the underlying Python psuedo-random number generator.
+        Uses the underlying Python pseudo-random number generator.
 
         Examples
         ========

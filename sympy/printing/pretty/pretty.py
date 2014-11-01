@@ -141,9 +141,14 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Not(self, e):
+        from sympy import Equivalent, Implies
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
+            if isinstance(arg, Equivalent):
+                return self._print_Equivalent(arg, altchar=u("\u2262"))
+            if isinstance(arg, Implies):
+                return self._print_Implies(arg, altchar=u("\u219b"))
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
@@ -203,15 +208,15 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e, sort=True)
 
-    def _print_Implies(self, e):
+    def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, u("\u2192"), sort=False)
+            return self.__print_Boolean(e, altchar or u("\u2192"), sort=False)
         else:
             return self._print_Function(e)
 
-    def _print_Equivalent(self, e):
+    def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, u("\u2261"))
+            return self.__print_Boolean(e, altchar or u("\u2261"))
         else:
             return self._print_Function(e, sort=True)
 
@@ -539,15 +544,25 @@ class PrettyPrinter(Printer):
         return prettyF
 
     def _print_Limit(self, l):
-        # XXX we do not print dir ...
         e, z, z0, dir = l.args
 
         E = self._print(e)
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
-        LimArg = prettyForm(*LimArg.right('->'))
+        if self._use_unicode:
+            LimArg = prettyForm(*LimArg.right(u('\u2500\u2192')))
+        else:
+            LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
+
+        if z0 in (S.Infinity, S.NegativeInfinity):
+            dir = ""
+        else:
+            if self._use_unicode:
+                dir = u('\u207A') if str(dir) == "+" else u('\u207B')
+
+        LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
         Lim = prettyForm(*Lim.below(LimArg))
         Lim = prettyForm(*Lim.right(E))
@@ -740,6 +755,86 @@ class PrettyPrinter(Printer):
         D = self._print(X.lamda.expr)
         D = prettyForm(*D.parens('[', ']'))
         return D
+
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+        e = expr
+
+        class Fake(object):
+            baseline = 0
+
+            def render(self, *args, **kwargs):
+                self = e
+                if self == e.zero:
+                    return e.zero._pretty_form
+                o1 = []
+                vectstrs = []
+                if isinstance(self, Vector):
+                    items = self.separate().items()
+                else:
+                    items = [(0, self)]
+                for system, vect in items:
+                    inneritems = list(vect.components.items())
+                    inneritems.sort(key = lambda x: x[0].__str__())
+                    for k, v in inneritems:
+                        #if the coef of the basis vector is 1
+                        #we skip the 1
+                        if v == 1:
+                            o1.append(u("") +
+                                      k._pretty_form)
+                        #Same for -1
+                        elif v == -1:
+                            o1.append(u("(-1) ") +
+                                      k._pretty_form)
+                        #For a general expr
+                        else:
+                            #We always wrap the measure numbers in
+                            #parantheses
+                            arg_str = PrettyPrinter()._print(
+                                v).parens()[0]
+
+                            o1.append(arg_str + ' ' + k._pretty_form)
+                        vectstrs.append(k._pretty_form)
+
+                #outstr = u("").join(o1)
+                if o1[0].startswith(u(" + ")):
+                    o1[0] = o1[0][3:]
+                elif o1[0].startswith(" "):
+                    o1[0] = o1[0][1:]
+                #Fixing the newlines
+                lengths = []
+                strs = ['']
+                for i, partstr in enumerate(o1):
+                    if '\n' in partstr:
+                        tempstr = partstr
+                        tempstr = tempstr.replace(vectstrs[i], '')
+                        tempstr = tempstr.replace(u('\u239e'),
+                                                  u('\u239e')
+                                                  + ' ' + vectstrs[i])
+                        o1[i] = tempstr
+                o1 = [x.split('\n') for x in o1]
+                n_newlines = max([len(x) for x in o1])
+                for parts in o1:
+                    lengths.append(len(parts[0]))
+                    for j in range(n_newlines):
+                        if j+1 <= len(parts):
+                            if j >= len(strs):
+                                strs.append(' ' * (sum(lengths[:-1]) +
+                                                   3*(len(lengths)-1)))
+                            if j == 0:
+                                strs[0] += parts[0] + ' + '
+                            else:
+                                strs[j] += parts[j] + ' '*(lengths[-1] -
+                                                           len(parts[j])+
+                                                           3)
+                        else:
+                            if j >= len(strs):
+                                strs.append(' ' * (sum(lengths[:-1]) +
+                                                   3*(len(lengths)-1)))
+                            strs[j] += ' '*(lengths[-1]+3)
+
+                return u('\n').join([s[:-3] for s in strs])
+        return Fake()
 
     def _print_Piecewise(self, pexpr):
 
@@ -1137,7 +1232,8 @@ class PrettyPrinter(Printer):
 
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
-                pform = self._print(-term)
+                coeff, other = term.as_coeff_mul()
+                pform = self._print(C.Mul(-coeff, *other, evaluate=False))
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)
@@ -1187,7 +1283,10 @@ class PrettyPrinter(Printer):
         # Gather terms for numerator/denominator
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(C.Pow(item.base, -item.exp))
+                if item.exp != -1:
+                    b.append(C.Pow(item.base, -item.exp, evaluate=False))
+                else:
+                    b.append(C.Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append( C.Rational(item.p) )
@@ -1329,7 +1428,10 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
-        if len(s) > 4:
+        if s.start is S.NegativeInfinity:
+            it = iter(s)
+            printset = s.start, dots, s._last_element - s.step, s._last_element
+        elif s.stop is S.Infinity or len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s._last_element
         else:
@@ -1368,6 +1470,15 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
 
+    def _print_Complement(self, u):
+
+        delimiter = ' \ '
+
+        return self._print_seq(u.args, None, None, delimiter,
+             parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
+                               or set.is_Union)
+
+
     def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\u220a")
@@ -1379,6 +1490,15 @@ class PrettyPrinter(Printer):
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
+
+    def _print_Contains(self, e):
+        var, set = e.args
+        if self._use_unicode:
+            el = u(" \u2208 ")
+            return prettyForm(*stringPict.next(self._print(var),
+                                               el, self._print(set)), binding=8)
+        else:
+            return prettyForm(sstr(e))
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
@@ -1636,7 +1756,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
 
-        except:
+        except Exception:
             try:
                 pform = self._print('Domain: ')
                 pform = prettyForm(*pform.right(self._print(d.symbols)))

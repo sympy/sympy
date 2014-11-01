@@ -11,7 +11,7 @@ from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_variety, has_dups
+from sympy.utilities.iterables import has_variety, has_dups, uniq
 
 from .entity import GeometryEntity
 from .point import Point
@@ -145,15 +145,15 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted(
-                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
+            a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
             if b not in shared and Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
                 nodup.pop(i + 1)
-            i += 1
+                if a == c:
+                    nodup.pop(i)
+            else:
+                i += 1
 
-        vertices = list(filter(lambda x: x is not None, nodup))
+        vertices = list(nodup)
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -170,23 +170,33 @@ class Polygon(GeometryEntity):
         # random set of segments since only those sides that are not
         # part of the convex hull can possibly intersect with other
         # sides of the polygon...but for now we use the n**2 algorithm
-        # and check if any side intersects with any preceding side
-        hit = _symbol('hit')
-        if not rv.is_convex:
+        # and check if any side intersects with any preceding side,
+        # excluding the ones it is connected to
+        try:
+            convex = rv.is_convex()
+        except ValueError:
+            convex = True
+        if not convex:
             sides = rv.sides
             for i, si in enumerate(sides):
-                pts = si[0], si[1]
-                ai = si.arbitrary_point(hit)
-                for j in xrange(i):
+                pts = si.args
+                # exclude the sides connected to si
+                for j in xrange(1 if i == len(sides) - 1 else 0, i - 1):
                     sj = sides[j]
-                    if sj[0] not in pts and sj[1] not in pts:
-                        aj = si.arbitrary_point(hit)
-                        tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
-                        if tx.is_number and 0 <= tx <= 1:
-                            ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
-                            if (tx or ty) and ty.is_number and 0 <= ty <= 1:
-                                raise GeometryError(
-                                    "Polygon has intersecting sides.")
+                    if sj.p1 not in pts and sj.p2 not in pts:
+                        hit = si.intersection(sj)
+                        if not hit:
+                            continue
+                        hit = hit[0]
+                        # don't complain unless the intersection is definite;
+                        # if there are symbols present then the intersection
+                        # might not occur; this may not be necessary since if
+                        # the convex test passed, this will likely pass, too.
+                        # But we are about to raise an error anyway so it
+                        # won't matter too much.
+                        if all(i.is_number for i in hit.args):
+                            raise GeometryError(
+                                "Polygon has intersecting sides.")
 
         return rv
 
@@ -667,7 +677,7 @@ class Polygon(GeometryEntity):
             inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
-        return res
+        return list(uniq(res))
 
     def distance(self, o):
         """
@@ -1080,6 +1090,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> square = RegularPolygon((0, 0), 1, 4)
         >>> square.area
@@ -1100,6 +1111,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> from sympy import sqrt
         >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)

@@ -518,7 +518,7 @@ def test_ANP_unify():
 
 
 def test___hash__():
-    # Issue 2472
+    # issue 5571
     # Make sure int vs. long doesn't affect hashing with Python ground types
     assert DMP([[1, 2], [3]], ZZ) == DMP([[long(1), long(2)], [long(3)]], ZZ)
     assert hash(DMP([[1, 2], [3]], ZZ)) == hash(DMP([[long(1), long(2)], [long(3)]], ZZ))

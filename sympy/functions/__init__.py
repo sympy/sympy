@@ -14,8 +14,8 @@ from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
         principal_branch, transpose, adjoint)
-from sympy.functions.elementary.trigonometric import (tan, cos, sin,
-        asin, acos, atan, atan2, acot, cot, sec, csc)
+from sympy.functions.elementary.trigonometric import (sin, cos, tan,
+        sec, csc, cot, asin, acos, atan, asec, acsc, acot, atan2)
 from sympy.functions.elementary.exponential import (exp_polar, exp, log,
         LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
@@ -26,7 +26,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
         fresnels, fresnelc)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
-        uppergamma, polygamma, loggamma, digamma, trigamma, beta)
+        uppergamma, polygamma, loggamma, digamma, trigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
         lerchphi, polylog)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
@@ -42,5 +42,5 @@ from sympy.functions.special.polynomials import (legendre, assoc_legendre,
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 from sympy.functions.special.elliptic_integrals import (elliptic_k,
         elliptic_f, elliptic_e, elliptic_pi)
-
+from sympy.functions.special.beta_functions import beta
 ln = log

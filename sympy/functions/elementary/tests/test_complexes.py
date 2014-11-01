@@ -140,9 +140,11 @@ def test_sign():
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
+    assert sign(im(sqrt(1 - sqrt(3)))) == 1
+    assert sign(sqrt(1 - sqrt(3))) == I
 
     x = Symbol('x')
-    assert sign(x).is_bounded is True
+    assert sign(x).is_finite is True
     assert sign(x).is_complex is True
     assert sign(x).is_imaginary is None
     assert sign(x).is_integer is None
@@ -215,10 +217,20 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    assert sign(Symbol('x', nonnegative=True)).is_nonnegative
+    assert sign(Symbol('x', nonnegative=True)).is_nonpositive is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonnegative is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonpositive
+    assert sign(Symbol('x', real=True)).is_nonnegative is None
+    assert sign(Symbol('x', real=True)).is_nonpositive is None
+    assert sign(Symbol('x', real=True, zero=False)).is_nonpositive is None
+
     x, y = Symbol('x', real=True), Symbol('y')
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
@@ -243,13 +255,13 @@ def test_as_real_imag():
     # this should not hang
     assert n.as_real_imag() == (n, 0)
 
-    # issue 3162
+    # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
         ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
      (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
-    # issue 754
+    # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
@@ -257,6 +269,9 @@ def test_as_real_imag():
                    1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
+    assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
+    i = symbols('i', imaginary=True)
+    assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
 @XFAIL
 def test_sign_issue_3068():
@@ -312,7 +327,7 @@ def test_Abs():
     assert Abs(x).diff(x) == -sign(x)
 
     eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
-    # if there is a fast way to know when and when you cannot prove an
+    # if there is a fast way to know when you can and when you cannot prove an
     # expression like this is zero then the equality to zero is ok
     assert abs(eq).func is Abs or abs(eq) == 0
     # but sometimes it's hard to do this so it's better not to load
@@ -334,6 +349,7 @@ def test_Abs_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
     assert Abs(y).rewrite(Piecewise) == Abs(y)
+    assert Abs(y).rewrite(sign) == y/sign(y)
 
 
 def test_Abs_real():
@@ -387,6 +403,8 @@ def test_arg():
     assert arg(1 + I) == pi/4
     assert arg(-1 + I) == 3*pi/4
     assert arg(1 - I) == -pi/4
+    f = Function('f')
+    assert not arg(f(0) + I*f(1)).atoms(re)
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0
@@ -396,6 +414,23 @@ def test_arg():
 
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
+
+    e = p + I*p**2
+    assert arg(e) == arg(1 + p*I)
+    # make sure sign doesn't swap
+    e = -2*p + 4*I*p**2
+    assert arg(e) == arg(-1 + 2*p*I)
+    # make sure sign isn't lost
+    x = symbols('x', real=True)  # could be zero
+    e = x + I*x
+    assert arg(e) == arg(x*(1 + I))
+    assert arg(e/p) == arg(x*(1 + I))
+    e = p*cos(p) + I*log(p)*exp(p)
+    assert arg(e).args[0] == e
+    # keep it simple -- let the user do more advanced cancellation
+    e = (p + 1) + I*(p**2 - 1)
+    assert arg(e).args[0] == e
+
 
 def test_arg_rewrite():
     assert arg(1 + I) == atan2(1, 1)
@@ -495,19 +530,19 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
-def test_issue936():
+def test_issue_4035():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
     assert sign(x).expand(trig=True) == sign(x)
     assert arg(x).expand(trig=True) == arg(x)
 
 
-def test_issue3206():
+def test_issue_3206():
     x = Symbol('x')
     assert Abs(Abs(x)) == Abs(x)
 
 
-def test_issue1655_derivative_conjugate():
+def test_issue_4754_derivative_conjugate():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')
@@ -515,7 +550,7 @@ def test_issue1655_derivative_conjugate():
     assert (f(y).conjugate()).diff(y) == -(f(y).diff(y)).conjugate()
 
 
-def test_derivatives_issue1658():
+def test_derivatives_issue_4757():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')
@@ -557,6 +592,8 @@ def test_periodic_argument():
     assert periodic_argument(2*p, p) == periodic_argument(p, p)
     assert periodic_argument(pi*p, p) == periodic_argument(p, p)
 
+    assert Abs(polar_lift(1 + I)) == Abs(1 + I)
+
 
 @XFAIL
 def test_principal_branch_fail():
@@ -592,7 +629,7 @@ def test_principal_branch():
 
 
 @XFAIL
-def test_issue_3068_3052():
+def test_issue_6167_6151():
     n = pi**1000
     i = int(n)
     assert sign(n - i) == 1

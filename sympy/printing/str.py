@@ -121,7 +121,7 @@ class StrPrinter(Printer):
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
-        except:
+        except Exception:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
@@ -287,10 +287,7 @@ class StrPrinter(Printer):
         if len(b) == 0:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
-            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/" % a_str[0] + '*'.join(b_str)
-            else:
-                return sign + '*'.join(a_str) + "/%s" % b_str[0]
+            return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
@@ -485,7 +482,8 @@ class StrPrinter(Printer):
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
                 return "1/sqrt(%s)" % self._print(expr.base)
-            if expr.exp == -1:
+            if expr.exp is -S.One:
+                # Similarly to the S.Half case, don't test with "==" here.
                 return '1/%s' % self.parenthesize(expr.base, PREC)
 
         e = self.parenthesize(expr.exp, PREC)
@@ -645,8 +643,15 @@ class StrPrinter(Printer):
     def _print_Union(self, expr):
         return ' U '.join(self._print(set) for set in expr.args)
 
+    def _print_Complement(self, expr):
+        return ' \ '.join(self._print(set) for set in expr.args)
+
+
     def _print_Unit(self, expr):
         return expr.abbrev
+
+    def _print_Dimension(self, expr):
+        return str(expr)
 
     def _print_Wild(self, expr):
         return expr.name + '_'

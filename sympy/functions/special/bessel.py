@@ -921,7 +921,7 @@ class airyai(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
@@ -1091,7 +1091,7 @@ class airybi(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
@@ -1209,13 +1209,11 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp
+        from sympy.mpmath import mp, workprec
         from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
-        oprec = mp.prec
-        mp.prec = prec
-        res = mp.airyai(z, derivative=1)
-        mp.prec = oprec
+        with workprec(prec):
+            res = mp.airyai(z, derivative=1)
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z):
@@ -1243,7 +1241,7 @@ class airyaiprime(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
@@ -1367,13 +1365,11 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp
+        from sympy.mpmath import mp, workprec
         from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
-        oprec = mp.prec
-        mp.prec = prec
-        res = mp.airybi(z, derivative=1)
-        mp.prec = oprec
+        with workprec(prec):
+            res = mp.airybi(z, derivative=1)
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z):
@@ -1401,7 +1397,7 @@ class airybiprime(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()

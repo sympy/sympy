@@ -255,7 +255,7 @@ def rubik(n):
     g = []  # container for the group's permutations
     I = list(range(6*n**2))  # the identity permutation used for checking
 
-    # define permutations corresonding to cw rotations of the planes
+    # define permutations corresponding to cw rotations of the planes
     # up TO the last plane from that direction; by not including the
     # last plane, the orientation of the cube is maintained.
 
@@ -276,7 +276,7 @@ def rubik(n):
         # record
         perm()
         # restore
-        # bring face to fron
+        # bring face to front
         UCW()
         fccw(i)
     # restore

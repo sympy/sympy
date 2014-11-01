@@ -108,7 +108,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
-    # issue 2895
+    # issue 5994
     eq = S('''
         -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
         sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
@@ -166,7 +166,7 @@ def test_minimal_polynomial_sq():
 
 
 def test_minpoly_compose():
-    # issue 3769
+    # issue 6868
     eq = S('''
         -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
         sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
@@ -174,7 +174,7 @@ def test_minpoly_compose():
     mp = minimal_polynomial(eq + 3, x)
     assert mp == 8000*x**2 - 48000*x + 71999
 
-    # issue 2789
+    # issue 5888
     assert minimal_polynomial(exp(I*pi/8), x) == x**8 + 1
 
     mp = minimal_polynomial(sin(pi/7) + sqrt(2), x)
@@ -232,7 +232,7 @@ def test_minpoly_compose():
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(pi*sqrt(2)), x))
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(I*pi*sqrt(2)), x))
 
-    # issue 2835
+    # issue 5934
     ex = 1/(-36000 - 7200*sqrt(5) + (12*sqrt(10)*sqrt(sqrt(5) + 5) +
         24*sqrt(10)*sqrt(-sqrt(5) + 5))**2) + 1
     raises(ZeroDivisionError, lambda: minimal_polynomial(ex, x))
@@ -241,13 +241,20 @@ def test_minpoly_compose():
     mp = minimal_polynomial(ex, x)
     assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576
 
-def test_minpoly_issue4014():
+
+def test_minpoly_issue_7113():
     # see discussion in https://github.com/sympy/sympy/pull/2234
     from sympy.simplify.simplify import nsimplify
     r = nsimplify(pi, tolerance=0.000000001)
     mp = minimal_polynomial(r, x)
     assert mp == 1768292677839237920489538677417507171630859375*x**109 - \
     2734577732179183863586489182929671773182898498218854181690460140337930774573792597743853652058046464
+
+
+def test_minpoly_issue_7574():
+    ex = -(-1)**Rational(1, 3) + (-1)**Rational(2,3)
+    assert minimal_polynomial(ex, x) == x + 1
+
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
@@ -512,6 +519,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 
@@ -524,6 +532,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is True
 
@@ -533,6 +542,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is True
 
@@ -553,6 +563,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 
@@ -565,6 +576,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 
@@ -574,6 +586,7 @@ def test_AlgebraicNumber():
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
+    assert a.is_number
 
     assert a.is_aliased is False
 

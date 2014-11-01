@@ -41,6 +41,9 @@ parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   "subprocess.  This may prevent hash randomization from being enabled.")
 parser.add_option('--split', action="store", type='str', default=None,
     help="Only run part of the doctests. Should be of the form a/b, e.g., 1/2")
+parser.add_option('--rerun', action="store", dest="rerun",
+                  default=0, help="Number of times to rerun the specified tests",
+                  type='int')
 parser.set_usage("test [options ...] [files ...]")
 parser.epilog = """\
 "options" are any of the options above. "files" are 0 or more glob strings of \
@@ -66,7 +69,8 @@ if options.types:
 import sympy
 
 ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
-    normal=options.normal, subprocess=options.subprocess, split=options.split)
+    normal=options.normal, subprocess=options.subprocess, split=options.split,
+    rerun=options.rerun)
 
 if ok:
     sys.exit(0)

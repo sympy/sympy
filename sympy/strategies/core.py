@@ -75,7 +75,7 @@ def tryit(rule):
     def try_rl(expr):
         try:
             return rule(expr)
-        except:
+        except Exception:
             return expr
     return try_rl
 

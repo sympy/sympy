@@ -1,4 +1,5 @@
-from sympy.core import Set, Dict, Tuple, Rational
+from sympy.core import Dict, Tuple, Rational
+from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
@@ -52,6 +53,7 @@ class TypeE(Standard_Cartan):
 
         Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.simple_root(2)
@@ -280,6 +282,6 @@ class TypeE(Standard_Cartan):
         diag += " "*8 + "0\n"
         diag += " "*8 + "|\n"
         diag += " "*8 + "|\n"
-        diag += "---".join("0" for i in range (1, n)) + "\n"
+        diag += "---".join("0" for i in range(1, n)) + "\n"
         diag += "1   " + "   ".join(str(i) for i in range(3, n+1))
         return diag

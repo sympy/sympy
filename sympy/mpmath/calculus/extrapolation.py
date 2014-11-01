@@ -56,7 +56,7 @@ def richardson(ctx, seq):
 
     Applying Richardson extrapolation to the Leibniz series for `\pi`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 30; mp.pretty = True
         >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
         ...     for m in range(1,30)]
@@ -175,7 +175,7 @@ def shanks(ctx, seq, table=None, randomized=False):
     We illustrate by applying Shanks transformation to the Leibniz
     series for `\pi`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 50
         >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
         ...     for m in range(1,30)]
@@ -367,7 +367,7 @@ class levin_class:
 
     First we sum the zeta function::
 
-        >>> from mpmath import mp
+        >>> from sympy.mpmath import mp
         >>> mp.prec = 53
         >>> eps = mp.mpf(mp.eps)
         >>> with mp.extraprec(2 * mp.prec): # levin needs a high working precision
@@ -769,7 +769,7 @@ class cohen_alt_class:
 
     Here we compute the alternating zeta function using ``update_psum``::
 
-        >>> from mpmath import mp
+        >>> from sympy.mpmath import mp
         >>> AC = mp.cohen_alt()
         >>> S, s, n = [], 0, 1
         >>> while 1:
@@ -916,7 +916,7 @@ def sumap(ctx, f, interval, integral=None, error=False):
     decreases like a power of `k`; for example when the sum is a pure
     zeta function::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> sumap(lambda k: 1/k**2.5, [1,inf])
         1.34148725725091717975677
@@ -1015,7 +1015,7 @@ def sumem(ctx, f, interval, tol=None, reject=10, integral=None,
     Summation of an infinite series, with automatic and symbolic
     integral and derivative values (the second should be much faster)::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 50; mp.pretty = True
         >>> sumem(lambda n: 1/n**2, [32, inf])
         0.03174336652030209012658168043874142714132886413417
@@ -1264,7 +1264,7 @@ def nsum(ctx, f, *intervals, **options):
     where the first converges rapidly and the second converges slowly,
     are::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> nsum(lambda n: 1/fac(n), [0, inf])
         2.71828182845905
@@ -1863,7 +1863,7 @@ def nprod(ctx, f, interval, nsum=False, **kwargs):
 
     A simple finite product::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> nprod(lambda k: k, [1, 4])
         24.0
@@ -2042,7 +2042,7 @@ def limit(ctx, f, x, direction=1, exp=False, **kwargs):
 
     A basic evaluation of a removable singularity::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 30; mp.pretty = True
         >>> limit(lambda x: (x-sin(x))/x**3, 0)
         0.166666666666666666666666666667

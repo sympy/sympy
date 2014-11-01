@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -28,9 +28,6 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
-
-# TODO get these helper functions into a super class for sum-like
-# objects: Sum, Product, Integral (issue 3662)
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
@@ -73,6 +70,12 @@ class Integral(AddWithLimits):
         Integral(_x, (_x, x))
 
         """
+
+        #This will help other classes define their own definitions
+        #of behaviour with Integral.
+        if hasattr(function, '_eval_Integral'):
+            return function._eval_Integral(*symbols, **assumptions)
+
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
@@ -100,101 +103,44 @@ class Integral(AddWithLimits):
 
         function, limits, variables
         """
-        for xab in self.limits:
-            if len(xab) == 3 and xab[1] == xab[2]:
-                return set()
         return AddWithLimits.free_symbols.fget(self)
 
-    @property
-    def is_zero(self):
-        """Since Integral doesn't autosimplify it it useful to see if
-        it would simplify to zero or not in a trivial manner, i.e. when
-        the function is 0 or two limits of a definite integral are the same.
-
-        This is a very naive and quick test, not intended to check for special
-        patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y, z
-        >>> Integral(1, (x, 1, 1)).is_zero
-        True
-        >>> Integral(0, (x, y, z)).is_zero
-        True
-        >>> Integral(1, (x, 1, 2)).is_zero
-        False
-
-        See Also
-        ========
-
-        is_number
-        """
-        if (self.function.is_zero or
-                any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
+    def _eval_is_zero(self):
+        # This is a very naive and quick test, not intended to do the integral to
+        # answer whether it is zero or not, e.g. Integral(sin(x), (x, 0, 2*pi))
+        # is zero but this routine should return None for that case. But, like
+        # Mul, there are trivial situations for which the integral will be
+        # zero so we check for those.
+        if self.function.is_zero:
             return True
-        if not self.free_symbols and self.function.is_number:
-            # the integrand is a number and the limits are numerical
-            return False
-
-    @property
-    def is_number(self):
-        """
-        Return True if the Integral will result in a number, else False.
-
-        Integrals are a special case since they contain symbols that can
-        be replaced with numbers. Whether the integral can be done or not is
-        another issue. But answering whether the final result is a number is
-        not difficult.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y
-        >>> Integral(x).is_number
-        False
-        >>> Integral(x, y).is_number
-        False
-        >>> Integral(x, (y, 1, x)).is_number
-        False
-        >>> Integral(x, (y, 1, 2)).is_number
-        False
-        >>> Integral(x, (y, 1, 1)).is_number
-        True
-        >>> Integral(x, (x, 1, 2)).is_number
-        True
-        >>> Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number
-        True
-        >>> Integral(1, x, (x, 1, 2)).is_number
-        True
-
-        See Also
-        ========
-
-        is_zero
-        """
-
-        integrand, limits = self.function, self.limits
-        isyms = integrand.atoms(Symbol)
-        for xab in limits:
+        got_none = False
+        for l in self.limits:
+            if len(l) == 3:
+                z = (l[1] == l[2]) or (l[1] - l[2]).is_zero
+                if z:
+                    return True
+                elif z is None:
+                    got_none = True
+        free = self.function.free_symbols
+        for xab in self.limits:
             if len(xab) == 1:
-                isyms.add(xab[0])
-                continue  # it may be removed later
-            elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
-                return True  # integral collapsed
-            if xab[0] in isyms:
-                # take it out of the symbols since it will be replace
-                # with whatever the limits of the integral are
-                isyms.remove(xab[0])
+                free.add(xab[0])
+                continue
+            if len(xab) == 2 and xab[0] not in free:
+                if xab[1].is_zero:
+                    return True
+                elif xab[1].is_zero is None:
+                    got_none = True
+            # take integration symbol out of free since it will be replaced
+            # with the free symbols in the limits
+            free.discard(xab[0])
             # add in the new symbols
             for i in xab[1:]:
-                isyms.update(i.free_symbols)
-        # if there are no surviving symbols then the result is a number
-        return len(isyms) == 0
+                free.update(i.free_symbols)
+        if self.function.is_zero is False and got_none is False:
+            return False
 
-    def transform(self, x, u, inverse=False):
+    def transform(self, x, u):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
@@ -207,9 +153,6 @@ class Integral(AddWithLimits):
         2) If `u` is a Symbol then `x` will be interpreted as some function,
            F(x), with inverse f(u). This is commonly referred to as
            u-substitution.
-
-        The `inverse` option will reverse `x` and `u`. It is a deprecated option
-        since `x` and `u` can just be passed in reverse order.
 
         Once f and F have been identified, the transformation is made as
         follows:
@@ -301,20 +244,6 @@ class Integral(AddWithLimits):
         as_dummy : Replace integration variables with dummy ones
         """
 
-        if inverse:
-            # when this is removed, update the docstring
-            from sympy.utilities.exceptions import SymPyDeprecationWarning
-            SymPyDeprecationWarning(
-                feature="transform(x, f(x), inverse=True)",
-                useinstead="transform(f(x), x)",
-                issue=3380, deprecated_since_version="0.7.2",
-            ).warn()
-            # in the old style x and u contained the same variable so
-            # don't worry about using the old-style feature with the
-            # new style input...but it will still work:
-            # i.transform(x, u).transform(x, u, inverse=True) -> i
-            x, u = u, x
-
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -389,7 +318,7 @@ class Integral(AddWithLimits):
             where sign of b is considered
             """
             wok = F.subs(d, a)
-            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+            if wok is S.NaN or wok.is_finite is False and a.is_finite:
                 return limit(sign(b)*F, d, a)
             return wok
 
@@ -462,7 +391,7 @@ class Integral(AddWithLimits):
         if risch and any(len(xab) > 1 for xab in self.limits):
             raise ValueError('risch=True is only allowed for indefinite integrals.')
 
-        # check for the trivial case of equal upper and lower limits
+        # check for the trivial zero
         if self.is_zero:
             return S.Zero
 
@@ -470,7 +399,6 @@ class Integral(AddWithLimits):
         function = self.function
         if deep:
             function = function.doit(**hints)
-
         if function.is_zero:
             return S.Zero
 
@@ -495,6 +423,10 @@ class Integral(AddWithLimits):
             if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
                 undone_limits.append(xab)
                 ulj.update(uli)
+                function = self.func(*([function] + [xab]))
+                factored_function = function.factor()
+                if not isinstance(factored_function, Integral):
+                    function = factored_function
                 continue
 
             # There are a number of tradeoffs in using the meijer g method.
@@ -561,15 +493,22 @@ class Integral(AddWithLimits):
 
             if antideriv is None:
                 undone_limits.append(xab)
+                function = self.func(*([function] + [xab])).factor()
+                factored_function = function.factor()
+                if not isinstance(factored_function, Integral):
+                    function = factored_function
+                continue
             else:
                 if len(xab) == 1:
                     function = antideriv
                 else:
                     if len(xab) == 3:
                         x, a, b = xab
-                    if len(xab) == 2:
+                    elif len(xab) == 2:
                         x, b = xab
                         a = None
+                    else:
+                        raise NotImplementedError
 
                     if deep:
                         if isinstance(a, Basic):
@@ -585,6 +524,9 @@ class Integral(AddWithLimits):
 
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
+                    elif isinstance(antideriv, Add):
+                        function = Add(*[i._eval_interval(x,a,b) for i in
+                            Add.make_args(antideriv)])
                     else:
                         try:
                             function = antideriv._eval_interval(x, a, b)
@@ -592,9 +534,10 @@ class Integral(AddWithLimits):
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
                             undone_limits.append(xab)
-
-        if undone_limits:
-            return self.func(*([function] + undone_limits))
+                            function = self.func(*([function] + [xab]))
+                            factored_function = function.factor()
+                            if not isinstance(factored_function, Integral):
+                                function = factored_function
         return function
 
     def _eval_derivative(self, sym):
@@ -633,7 +576,7 @@ class Integral(AddWithLimits):
         """
 
         # differentiate under the integral sign; we do not
-        # check for regularity conditions (TODO), see issue 1116
+        # check for regularity conditions (TODO), see issue 4215
 
         # get limits and the function
         f, limits = self.function, list(self.limits)
@@ -964,7 +907,7 @@ class Integral(AddWithLimits):
             # a product that could have been expanded,
             # so let's try an expansion of the whole
             # thing before giving up; we don't try this
-            # out the outset because there are things
+            # at the outset because there are things
             # that cannot be solved unless they are
             # NOT expanded e.g., x**x*(1+log(x)). There
             # should probably be a checker somewhere in this

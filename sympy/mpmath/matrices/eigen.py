@@ -205,7 +205,7 @@ def hessenberg(ctx, A, overwrite_a = False):
       H : an upper right Hessenberg matrix
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[3, -1, 2], [2, 5, -5], [-2, -3, 7]])
       >>> Q, H = mp.hessenberg(A)
       >>> mp.nprint(H, 3) # doctest:+SKIP
@@ -504,7 +504,7 @@ def schur(ctx, A, overwrite_a = False):
     return value:   (Q, R)
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[3, -1, 2], [2, 5, -5], [-2, -3, 7]])
       >>> Q, R = mp.schur(A)
       >>> mp.nprint(R, 3) # doctest:+SKIP
@@ -694,7 +694,7 @@ def eig(ctx, A, left = False, right = True, overwrite_a = False):
 
 
     examples:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[3, -1, 2], [2, 5, -5], [-2, -3, 7]])
       >>> E, ER = mp.eig(A)
       >>> print(mp.chop(A * ER[:,0] - E[0] * ER[:,0]))
@@ -798,7 +798,7 @@ def eig_sort(ctx, E, EL = False, ER = False, f = "real"):
       (E, EL, ER)   if EL and ER are not false.
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[3, -1, 2], [2, 5, -5], [-2, -3, 7]])
       >>> E, EL, ER = mp.eig(A,left = True, right = True)
       >>> E, EL, ER = mp.eig_sort(E, EL, ER)

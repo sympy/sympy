@@ -286,7 +286,7 @@ domains, which includes:
     >>> alg = AlgebraicNumber((sqrt(5) - 1)/2, alias='alpha')
 
     >>> factor(f, extension=alg)
-    (x - 1 - α)⋅(x - α)⋅(x + α)⋅(x + 1 + α)
+    (x - α)⋅(x + α)⋅(x - 1 - α)⋅(x + α + 1)
 
 Factoring polynomials into linear factors
 -----------------------------------------
@@ -449,4 +449,3 @@ Literature
 
 .. [Wester1999] Michael J. Wester, A Critique of the Mathematical Abilities of
     CA Systems, 1999, `<http://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_
-

@@ -24,6 +24,7 @@ PRECEDENCE = {
 PRECEDENCE_VALUES = {
     "Equivalent": PRECEDENCE["Xor"],
     "Xor": PRECEDENCE["Xor"],
+    "Implies": PRECEDENCE["Xor"],
     "Or": PRECEDENCE["Or"],
     "And": PRECEDENCE["And"],
     "Add": PRECEDENCE["Add"],
@@ -36,6 +37,7 @@ PRECEDENCE_VALUES = {
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
+    "MatPow": PRECEDENCE["Pow"],
     "HadamardProduct": PRECEDENCE["Mul"]
 }
 

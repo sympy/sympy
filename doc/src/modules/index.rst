@@ -25,7 +25,7 @@ access any SymPy module, or use this contens:
    numeric-computation.rst
    functions/index.rst
    galgebra/index.rst
-   geometry.rst
+   geometry/index.rst
    integrals/integrals.rst
    logic.rst
    matrices/index.rst
@@ -39,7 +39,6 @@ access any SymPy module, or use this contens:
    sets.rst
    simplify/simplify.rst
    simplify/hyperexpand.rst
-   statistics.rst
    stats.rst
    solvers/ode.rst
    solvers/pde.rst

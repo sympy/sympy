@@ -29,7 +29,7 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
 
     def __new__(cls):
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         x = C.Dummy('x')
         #construct "by hand" to avoid infinite loop
         obj = Expr.__new__(cls, Tuple(x), x)
@@ -232,7 +232,7 @@ def root(arg, n):
     ==========
 
     * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/real_root
+    * http://en.wikipedia.org/wiki/Real_root
     * http://en.wikipedia.org/wiki/Root_of_unity
     * http://en.wikipedia.org/wiki/Principal_value
     * http://mathworld.wolfram.com/CubeRoot.html
@@ -307,14 +307,14 @@ class MinMaxBase(Expr, LatticeOp):
         # variant II: find local zeros
         args = cls._find_localzeros(set(_args), **assumptions)
 
-        _args = frozenset(args)
-
-        if not _args:
+        if not args:
             return cls.identity
-        elif len(_args) == 1:
-            return set(_args).pop()
+        elif len(args) == 1:
+            return args.pop()
         else:
             # base creation
+            # XXX should _args be made canonical with sorting?
+            _args = frozenset(args)
             obj = Expr.__new__(cls, _args, **assumptions)
             obj._argset = _args
             return obj
@@ -331,7 +331,7 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if (arg.is_real is False) or (arg is S.ComplexInfinity):
+            if (not isinstance(arg, Expr)) or (arg.is_real is False) or (arg is S.ComplexInfinity):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:
@@ -339,7 +339,7 @@ class MinMaxBase(Expr, LatticeOp):
             elif arg == cls.identity:
                 continue
             elif arg.func == cls:
-                for x in arg.iter_basic_args():
+                for x in arg.args:
                     yield x
             else:
                 yield arg
@@ -374,7 +374,9 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        if (x == y) or isinstance(x > y, bool) or isinstance(x < y, bool):
+        xy = x > y
+        yx = x < y
+        if (x == y) or xy == True or xy == False or yx == True or yx == False:
             return True
         if x.is_Number and y.is_Number:
             return True
@@ -395,15 +397,11 @@ class MinMaxBase(Expr, LatticeOp):
             if cls._rel(x, y):
                 return True
         xy = cls._rel(x, y)
-        if isinstance(xy, bool):
-            if xy:
-                return True
-            return False
+        if xy == True or xy == False:
+            return bool(xy)
         yx = cls._rel_inversed(x, y)
-        if isinstance(yx, bool):
-            if yx:
-                return False  # never occurs?
-            return True
+        if yx == True or yx == False:
+            return not bool(yx)
         return False
 
     def _eval_derivative(self, s):
@@ -421,6 +419,10 @@ class MinMaxBase(Expr, LatticeOp):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
+
+    def evalf(self, prec=None, **options):
+        return self.func(*[a.evalf(prec, options) for a in self.args])
+    n = evalf
 
     @property
     def is_real(self):
@@ -532,16 +534,19 @@ class Max(MinMaxBase, Application):
         return (x < y)
 
     def fdiff( self, argindex ):
-        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[argindex] - self.args[1-argindex] )
+                return C.Heaviside( self.args[argindex] - self.args[1-argindex] )
             newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
-            return Heaviside( self.args[argindex] - Max(*newargs) )
+            return C.Heaviside( self.args[argindex] - Max(*newargs) )
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        return C.Add(*[j*C.Mul(*[C.Heaviside(j-i) for i in args if i!=j]) \
+                for j in args])
 
 
 class Min(MinMaxBase, Application):
@@ -594,13 +599,16 @@ class Min(MinMaxBase, Application):
         return (x > y)
 
     def fdiff( self, argindex ):
-        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[1-argindex] - self.args[argindex] )
+                return C.Heaviside( self.args[1-argindex] - self.args[argindex] )
             newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
-            return Heaviside( Min(*newargs) - self.args[argindex] )
+            return C.Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        return C.Add(*[j*C.Mul(*[C.Heaviside(i-j) for i in args if i!=j]) \
+                for j in args])

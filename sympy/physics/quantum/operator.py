@@ -11,15 +11,17 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Derivative, Expr
+from sympy import Derivative, Expr, Integer, oo, Mul
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.matrices import eye
 
 __all__ = [
     'Operator',
     'HermitianOperator',
     'UnitaryOperator',
+    'IdentityOperator',
     'OuterProduct',
     'DifferentialOperator'
 ]
@@ -235,6 +237,92 @@ class UnitaryOperator(Operator):
 
     def _eval_adjoint(self):
         return self._eval_inverse()
+
+
+class IdentityOperator(Operator):
+    """An identity operator I that satisfies op * I == I * op == op for any
+    operator op.
+
+    Parameters
+    ==========
+
+    N : Integer
+        Optional parameter that specifies the dimension of the Hilbert space
+        of operator. This is used when generating a matrix representation.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum import IdentityOperator
+    >>> IdentityOperator()
+    I
+    """
+    @property
+    def dimension(self):
+        return self.N
+
+    @classmethod
+    def default_args(self):
+        return (oo,)
+
+    def __init__(self, *args, **hints):
+        if not len(args) in [0, 1]:
+            raise ValueError('0 or 1 parameters expected, got %s' % args)
+
+        self.N = args[0] if (len(args) == 1 and args[0]) else oo
+
+    def _eval_commutator(self, other, **hints):
+        return Integer(0)
+
+    def _eval_anticommutator(self, other, **hints):
+        return 2 * other
+
+    def _eval_inverse(self):
+        return self
+
+    def _eval_adjoint(self):
+        return self
+
+    def _apply_operator(self, ket, **options):
+        return ket
+
+    def _eval_power(self, exp):
+        return self
+
+    def _print_contents(self, printer, *args):
+        return 'I'
+
+    def _print_contents_pretty(self, printer, *args):
+        return prettyForm('I')
+
+    def _print_contents_latex(self, printer, *args):
+        return r'{\mathcal{I}}'
+
+    def __mul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(self, other)
+
+    def __rmul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(other, self)
+
+    def _represent_default_basis(self, **options):
+        if not self.N or self.N == oo:
+            raise NotImplementedError('Cannot represent infinite dimensional' +
+                                      ' identity operator as a matrix')
+
+        format = options.get('format', 'sympy')
+        if format != 'sympy':
+            raise NotImplementedError('Representation in format ' +
+                                      '%s not implemented.' % format)
+
+        return eye(self.N)
 
 
 class OuterProduct(Operator):

@@ -30,13 +30,6 @@ if sys.version_info[0] == 3:
     # Sage does not support Python 3 currently
     disabled = True
 
-
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("Sage isn't available.")
-
 import sympy
 
 from sympy.utilities.pytest import XFAIL
@@ -158,9 +151,11 @@ def test_functions():
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
     check_expression("log(x)", "x")
+    check_expression("re(x)", "x")
+    check_expression("im(x)", "x")
 
 
-def test_issue924():
+def test_issue_4023():
     sage.var("a x")
     log = sage.log
     i = sympy.integrate(log(x)/a, (x, a, a + 1))
@@ -187,6 +182,6 @@ TESTS::
     sage: test_Catalan()
     sage: test_GoldenRation()
     sage: test_functions()
-    sage: test_issue924()
+    sage: test_issue_4023()
 
 """

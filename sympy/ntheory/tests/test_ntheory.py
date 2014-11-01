@@ -1,8 +1,8 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
-    factorial as fac, Rational
-from sympy.core.numbers import Integer, igcd
+    factorial as fac, pi, GoldenRatio as phi, sqrt
+from sympy.core.numbers import Integer, igcd, Rational
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -11,21 +11,32 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
-    nthroot_mod, sqrt_mod_iter
+    nthroot_mod, sqrt_mod_iter, mobius, divisor_sigma
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
-from sympy.ntheory.factor_ import smoothness, smoothness_p
+from sympy.ntheory.factor_ import smoothness, smoothness_p, \
+    antidivisors, antidivisor_count
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.continued_fraction import \
+    (continued_fraction_periodic as cf_p,
+     continued_fraction_iterator as cf_i,
+     continued_fraction_convergents as cf_c,
+     continued_fraction_reduce as cf_r)
+from sympy.ntheory.egyptian_fraction import egyptian_fraction
+
+from fractions import Fraction
+
+from sympy.core.add import Add
 
 from sympy.polys.domains import ZZ
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
+from sympy.utilities.randtest import random_complex_number
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
-
 
 def test_trailing():
     assert trailing(0) == 0
@@ -291,6 +302,7 @@ def test_factorint():
     assert factorint(
         12345, limit=3) == {4115: 1, 3: 1}  # the 5 is greater than the limit
     assert factorint(1, limit=1) == {}
+    assert factorint(0, 3) == {0: 1}
     assert factorint(12, limit=1) == {12: 1}
     assert factorint(30, limit=2) == {2: 1, 15: 1}
     assert factorint(16, limit=2) == {2: 4}
@@ -365,7 +377,7 @@ def test_divisors_and_divisor_count():
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
 
-def test_issue3882():
+def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == set([1,2,4])
 
@@ -381,6 +393,26 @@ def test_totient():
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
     assert summation(totient(m), (m, 1, 11)) == 42
+
+
+def test_divisor_sigma():
+    assert [divisor_sigma(k) for k in range(1, 12)] == \
+        [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12]
+    assert [divisor_sigma(k, 2) for k in range(1, 12)] == \
+        [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122]
+    assert divisor_sigma(23450) == 50592
+    assert divisor_sigma(23450, 0) == 24
+    assert divisor_sigma(23450, 1) == 50592
+    assert divisor_sigma(23450, 2) == 730747500
+    assert divisor_sigma(23450, 3) == 14666785333344
+
+    m = Symbol("m", integer=True)
+    k = Symbol("k", integer=True)
+    assert divisor_sigma(m)
+    assert divisor_sigma(m, k)
+    assert divisor_sigma(m).subs(m, 3**10) == 88573
+    assert divisor_sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
+    assert summation(divisor_sigma(m), (m, 1, 11)) == 99
 
 
 def test_partitions():
@@ -548,6 +580,19 @@ def test_residue():
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
 
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
+    raises(ValueError, lambda: mobius(-3))
+
+    p = Symbol('p', integer=True, positive=True, prime=True)
+    x = Symbol('x', positive=True)
+    i = Symbol('i', integer=True)
+    assert mobius(p) == -1
+    raises(TypeError, lambda: mobius(x))
+    raises(ValueError, lambda: mobius(i))
+
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
@@ -616,7 +661,7 @@ def test_multinomial_coefficients():
       ((0, 2, 0, 0, 0, 0, 0), 1), ((1, 0, 1, 0, 0, 0, 0), 2)]
 
 
-def test_issue1257():
+def test_issue_4356():
     assert factorint(1030903) == {53: 2, 367: 1}
 
 
@@ -629,6 +674,29 @@ def test_divisors():
 def test_divisor_count():
     assert divisor_count(0) == 0
     assert divisor_count(6) == 4
+
+
+def test_antidivisors():
+    assert antidivisors(-1) == []
+    assert antidivisors(-3) == [2]
+    assert antidivisors(14) == [3, 4, 9]
+    assert antidivisors(237) == [2, 5, 6, 11, 19, 25, 43, 95, 158]
+    assert antidivisors(12345) == [2, 6, 7, 10, 30, 1646, 3527, 4938, 8230]
+    assert antidivisors(393216) == [262144]
+    assert sorted(x for x in antidivisors(3*5*7, 1)) == \
+        [2, 6, 10, 11, 14, 19, 30, 42, 70]
+    assert antidivisors(1) == []
+
+
+def test_antidivisor_count():
+    assert antidivisor_count(0) == 0
+    assert antidivisor_count(-1) == 0
+    assert antidivisor_count(-4) == 1
+    assert antidivisor_count(20) == 3
+    assert antidivisor_count(25) == 5
+    assert antidivisor_count(38) == 7
+    assert antidivisor_count(180) == 6
+    assert antidivisor_count(2*3*5) == 3
 
 
 def test_primorial():
@@ -727,3 +795,86 @@ def test_search():
     assert 1 not in sieve
     assert 2**1000 not in sieve
     raises(ValueError, lambda: sieve.search(1))
+
+
+def test_sieve_slice():
+    assert sieve[5] == 11
+    assert list(sieve[5:10]) == [sieve[x] for x in range(5, 10)]
+    assert list(sieve[5:10:2]) == [sieve[x] for x in range(5, 10, 2)]
+
+
+def test_continued_fraction():
+    raises(ValueError, lambda: cf_p(1, 0, 0))
+    raises(ValueError, lambda: cf_p(1, 1, -1))
+    assert cf_p(4, 3, 0) == [1, 3]
+    assert cf_p(0, 3, 5) == [0, 1, [2, 1, 12, 1, 2, 2]]
+    assert cf_p(1, 1, 0) == [1]
+    assert cf_p(3, 4, 0) == [0, 1, 3]
+    assert cf_p(4, 5, 0) == [0, 1, 4]
+    assert cf_p(5, 6, 0) == [0, 1, 5]
+    assert cf_p(11, 13, 0) == [0, 1, 5, 2]
+    assert cf_p(16, 19, 0) == [0, 1, 5, 3]
+    assert cf_p(27, 32, 0) == [0, 1, 5, 2, 2]
+    assert cf_p(1, 2, 5) == [[1]]
+    assert cf_p(0, 1, 2) == [1, [2]]
+    assert cf_p(6, 7, 49) == [1, 1, 6]
+    assert cf_p(3796, 1387, 0) == [2, 1, 2, 1, 4]
+    assert cf_p(3245, 10000) == [0, 3, 12, 4, 13]
+    assert cf_p(1932, 2568) == [0, 1, 3, 26, 2]
+    assert cf_p(6589, 2569) == [2, 1, 1, 3, 2, 1, 3, 1, 23]
+
+    def take(iterator, n=7):
+        res = []
+        for i, t in enumerate(cf_i(iterator)):
+            if i >= n:
+                break
+            res.append(t)
+        return res
+
+    assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
+    assert take(pi) == [3, 7, 15, 1, 292, 1, 1]
+
+    assert list(cf_i(S(17)/12)) == [1, 2, 2, 2]
+    assert list(cf_i(S(-17)/12)) == [-2, 1, 1, 2, 2]
+
+    assert list(cf_c([1, 6, 1, 8])) == [S(1), S(7)/6, S(8)/7, S(71)/62]
+    assert list(cf_c([2])) == [S(2)]
+    assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), S(3)/2, S(5)/3,
+                                                 S(8)/5, S(13)/8, S(21)/13]
+    assert list(cf_c([1, 6, S(-1)/2, 4])) == [S.One, S(7)/6, S(5)/4, S(3)/2]
+
+    assert cf_r([1, 6, 1, 8]) == S(71)/62
+    assert cf_r([3]) == S(3)
+    assert cf_r([-1, 5, 1, 4]) == S(-24)/29
+    assert (cf_r([0, 1, 1, 7, [24, 8]]) - (sqrt(3) + 2)/7).expand() == 0
+    assert cf_r([1, 5, 9]) == S(55)/46
+    assert (cf_r([[1]]) - (sqrt(5) + 1)/2).expand() == 0
+
+
+def test_egyptian_fraction():
+    def test_equality(r, alg="Greedy"):
+        return r == Add(*[Rational(1, i) for i in egyptian_fraction(r, alg)])
+
+    r = random_complex_number(a=0, c=1, b=0, d=0, rational=True)
+    assert test_equality(r)
+
+    assert egyptian_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
+    assert egyptian_fraction(Rational(7, 13), "Greedy") == [2, 26]
+    assert egyptian_fraction(Rational(23, 101), "Greedy") == \
+        [5, 37, 1438, 2985448, 40108045937720]
+    assert egyptian_fraction(Rational(18, 23), "Takenouchi") == \
+        [2, 6, 12, 35, 276, 2415]
+    assert egyptian_fraction(Rational(5, 6), "Graham Jewett") == \
+        [6, 7, 8, 9, 10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807,
+         1808, 1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443,
+         3267056, 3581556, 10192056, 10650056950806]
+    assert egyptian_fraction(Rational(5, 6), "Golomb") == [2, 6, 12, 20, 30]
+    assert egyptian_fraction(Rational(5, 121), "Golomb") == [25, 1225, 3577, 7081, 11737]
+    raises(ValueError, lambda: egyptian_fraction(Rational(-4, 9)))
+    assert egyptian_fraction(Rational(8, 3), "Golomb") == [1, 2, 3, 4, 5, 6, 7,
+                                                           14, 574, 2788, 6460,
+                                                           11590, 33062, 113820]
+    assert egyptian_fraction(Rational(355, 113)) == [1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                     10, 11, 12, 27, 744, 893588,
+                                                     1251493536607,
+                                                     20361068938197002344405230]

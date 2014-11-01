@@ -25,6 +25,8 @@ class Q:
     integer = Predicate('integer')
     irrational = Predicate('irrational')
     rational = Predicate('rational')
+    algebraic = Predicate('algebraic')
+    transcendental = Predicate('transcendental')
     negative = Predicate('negative')
     nonzero = Predicate('nonzero')
     positive = Predicate('positive')
@@ -71,6 +73,9 @@ def _extract_facts(expr, symbol):
             return expr.func
         else:
             return
+    if isinstance(expr, Not) and expr.args[0].func in (And, Or):
+        cls = Or if expr.args[0] == And else And
+        expr = cls(*[~arg for arg in expr.args[0].args])
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
         args = [x for x in args if x is not None]
@@ -135,7 +140,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
-        return res
+        return bool(res)
 
     if assumptions == True:
         return
@@ -300,7 +305,7 @@ _handlers = [
     ("real",              "sets.AskRealHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("algebraic",         "sets.AskAlgebraicHandler"),
-    ("is_true",           "TautologicalHandler"),
+    ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
     ("orthogonal",        "matrices.AskOrthogonalHandler"),
@@ -331,6 +336,7 @@ known_facts = And(
     Implies(Q.integer, Q.rational),
     Implies(Q.rational, Q.algebraic),
     Implies(Q.algebraic, Q.complex),
+    Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
     Implies(Q.imaginary, Q.complex & ~Q.real),
     Implies(Q.imaginary, Q.antihermitian),
     Implies(Q.antihermitian, ~Q.hermitian),

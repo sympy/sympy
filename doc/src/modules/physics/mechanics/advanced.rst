@@ -1,6 +1,6 @@
-============================================================================
-Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module
-============================================================================
+=====================================================================
+Potential Issues/Advanced Topics/Future Features in Physics/Mechanics
+=====================================================================
 
 This document will describe some of the more advanced functionality that this
 module offers but which is not part of the "official" interface. Here, some of
@@ -10,7 +10,7 @@ will be discussed, along with some solutions.
 
 Common Issues
 =============
-Here issues with numerically integrating code, choice of `dynamicsymbols` for
+Here issues with numerically integrating code, choice of ``dynamicsymbols`` for
 coordinate and speed representation, printing, differentiating, and
 substitution will occur.
 
@@ -57,18 +57,42 @@ evaluated. This will most commonly come up in linearization.
 
 Substitution
 ------------
-Substitution into large expressions can be slow, and take a few minutes.
+There are two common issues with substitution in mechanics:
+
+- When subbing in expressions for ``dynamicsymbols``, sympy's normal ``subs``
+  will substitute in for derivatives of the dynamic symbol as well: ::
+
+    >>> from sympy.physics.mechanics import dynamicsymbols
+    >>> x = dynamicsymbols('x')
+    >>> expr = x.diff() + x
+    >>> sub_dict = {x: 1}
+    >>> expr.subs(sub_dict)
+    Derivative(1, t) + 1
+
+  In this case, ``x`` was replaced with 1 inside the ``Derivative`` as well,
+  which is undesired.
+
+- Substitution into large expressions can be slow.
+
+If your substitution is simple (direct replacement of expressions with other
+expressions, such as when evaluating at an operating point) it is recommended
+to use the provided ``msubs`` function, as it is significantly faster, and
+handles the derivative issue appropriately: ::
+
+  >>> from sympy.physics.mechanics import msubs
+  >>> msubs(expr, sub_dict)
+  Derivative(x(t), t) + 1
 
 Linearization
 -------------
-Currently, the ``Kane`` object's ``linearize`` method doesn't support cases
-where there are non-coordinate, non-speed dynamic symbols outside of the
-"dynamic equations". It also does not support cases where time derivatives of
-these types of dynamic symbols show up. This means if you have kinematic
-differential equations which have a non-coordinate, non-speed dynamic symbol,
-it will not work. It also means if you have defined a system parameter (say a
-length or distance or mass) as a dynamic symbol, its time derivative is likely
-to show up in the dynamic equations, and this will prevent linearization.
+Currently, the linearization methods don't support cases where there are
+non-coordinate, non-speed dynamic symbols outside of the "dynamic equations".
+It also does not support cases where time derivatives of these types of dynamic
+symbols show up. This means if you have kinematic differential equations which
+have a non-coordinate, non-speed dynamic symbol, it will not work. It also
+means if you have defined a system parameter (say a length or distance or mass)
+as a dynamic symbol, its time derivative is likely to show up in the dynamic
+equations, and this will prevent linearization.
 
 Acceleration of Points
 ----------------------
@@ -105,26 +129,6 @@ Future Features
 
 This will cover the planned features to be added to this submodule.
 
-Additional Options on Initialization of Kane, RigidBody, and Particle
----------------------------------------------------------------------
-This would allow a user to specify all relevant information using keyword
-arguments when creating these objects. This is fairly clear for ``RigidBody``
-and ``Point``. For ``Kane``, everything but the force and body lists will be
-able to be entered, as computation of Fr and Fr* can take a while, and produce
-an output.
-
-Additional Methods for RigidBody and Particle
----------------------------------------------
-For ``RigidBody`` and ``Particle`` (not all methods for ``Particle`` though),
-add methods for getting: momentum, angular momentum, and kinetic energy.
-Additionally, adding a attribute and method for defining potential energy would
-allow for a total energy method/property.
-
-Also possible is including the method which creates a transformation matrix for
-3D animations; this would require a "reference orientation" for a camera as
-well as a "reference point" for distance to the camera. Development of this
-could also be tied into code output.
-
 Code Output
 -----------
 A function for generating code output for numerical integration is the highest
@@ -141,4 +145,3 @@ Care needs to be taken when constructing the strings for these expressions, as
 well as handling of input parameters, and other dynamic symbols. How to deal
 with output quantities when integrating also needs to be decided, with the
 potential for multiple options being considered.
-

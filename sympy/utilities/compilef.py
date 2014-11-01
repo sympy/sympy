@@ -98,6 +98,35 @@ if not libtcc:
     raise ImportError('Could not load libtcc')
 
 
+def __getClosePos(expr, braces, stopchar):
+    """
+    Returns the closing position of the expression which is either the first occurrence of a character
+    in stopchar that is not in braces, the first unmatched closing brace or the end of the expression.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.compilef import __getClosePos
+    >>> __getClosePos('3*x', '()', '+-')
+    2
+    >>> __getClosePos('3 + x) + 2', '()', '+-')
+    2
+    >>> __getClosePos('(3 + x)*y) + 4', '()', '+-')
+    9
+    """
+    openbraces = 0
+    for i, char in enumerate(expr):
+        if char == braces[0]:
+            openbraces += 1
+        elif char == braces[1]:
+            if not openbraces:  # happens when operator is in braces
+                return i
+            openbraces -= 1
+        elif char in stopchar and not openbraces:
+            return i
+    return i
+
+
 def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     """
     Gets the expressions to the left and right of an operator.
@@ -108,53 +137,11 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
 
     """
     # assumes correct syntax
-    # TODO: never repeat yourself
     # get left expression
-    left = ''
-    openbraces = 0
-    for char in reversed(expr[:index]):
-        if char == ' ':  # skip whitespaces but keep them
-            left = char + left
-            continue
-        elif char == ')':
-            openbraces += 1
-            left = char + left
-        elif char == '(':
-            if not openbraces:  # happens when operator is in braces
-                break
-            openbraces -= 1
-            left = char + left
-        elif char in stopchar:
-            if openbraces:
-                left = char + left
-                continue
-            else:
-                break
-        else:
-            left = char + left
-    # get right expression
-    right = ''
-    openbraces = 0
-    for char in expr[index + oplength:]:
-        if char == ' ':  # skip whitespaces but keep them
-            right += char
-            continue
-        elif char == '(':
-            openbraces += 1
-            right += char
-        elif char == ')':
-            if not openbraces:  # happens when operator is in braces
-                break
-            openbraces -= 1
-            right += char
-        elif char in stopchar:
-            if openbraces:
-                right += char
-                continue
-            else:
-                break
-        else:
-            right += char
+    i = __getClosePos(expr[:index][::-1], ")(", stopchar)
+    left = expr[index-i:index]
+    i = __getClosePos(expr[index + oplength:], "()", stopchar)
+    right = expr[index + oplength:index + oplength + i]
     return (left, right)
 
 

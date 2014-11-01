@@ -159,8 +159,10 @@ class Ynm(Function):
 
     def _eval_expand_func(self, **hints):
         n, m, theta, phi = self.args
-        return (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
+        rv = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
                 C.exp(I*m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        # We can do this because of the range of theta
+        return rv.subs(sqrt(-cos(theta)**2 + 1), sin(theta))
 
     def fdiff(self, argindex=4):
         if argindex == 1:
@@ -217,16 +219,14 @@ class Ynm(Function):
         # Note: works without this function by just calling
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.
-        from sympy.mpmath import mp
+        from sympy.mpmath import mp, workprec
         from sympy import Expr
         n = self.args[0]._to_mpmath(prec)
         m = self.args[1]._to_mpmath(prec)
         theta = self.args[2]._to_mpmath(prec)
         phi = self.args[3]._to_mpmath(prec)
-        oprec = mp.prec
-        mp.prec = prec
-        res = mp.spherharm(n, m, theta, phi)
-        mp.prec = oprec
+        with workprec(prec):
+            res = mp.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
 

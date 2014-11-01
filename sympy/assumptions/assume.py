@@ -19,18 +19,18 @@ class AssumptionsContext(set):
     Examples
     ========
 
-        >>> from sympy import AppliedPredicate, Q
-        >>> from sympy.assumptions.assume import global_assumptions
-        >>> global_assumptions
-        AssumptionsContext()
-        >>> from sympy.abc import x
-        >>> global_assumptions.add(Q.real(x))
-        >>> global_assumptions
-        AssumptionsContext([Q.real(x)])
-        >>> global_assumptions.remove(Q.real(x))
-        >>> global_assumptions
-        AssumptionsContext()
-        >>> global_assumptions.clear()
+    >>> from sympy import AppliedPredicate, Q
+    >>> from sympy.assumptions.assume import global_assumptions
+    >>> global_assumptions
+    AssumptionsContext()
+    >>> from sympy.abc import x
+    >>> global_assumptions.add(Q.real(x))
+    >>> global_assumptions
+    AssumptionsContext([Q.real(x)])
+    >>> global_assumptions.remove(Q.real(x))
+    >>> global_assumptions
+    AssumptionsContext()
+    >>> global_assumptions.clear()
 
     """
 
@@ -44,6 +44,9 @@ global_assumptions = AssumptionsContext()
 
 class AppliedPredicate(Boolean):
     """The class of expressions resulting from applying a Predicate.
+
+    Examples
+    ========
 
     >>> from sympy import Q, Symbol
     >>> x = Symbol('x')
@@ -71,11 +74,11 @@ class AppliedPredicate(Boolean):
         Examples
         ========
 
-            >>> from sympy import Q, Symbol
-            >>> x = Symbol('x')
-            >>> a = Q.integer(x + 1)
-            >>> a.arg
-            x + 1
+        >>> from sympy import Q, Symbol
+        >>> x = Symbol('x')
+        >>> a = Q.integer(x + 1)
+        >>> a.arg
+        x + 1
 
         """
         return self._args[1]
@@ -187,6 +190,9 @@ class Predicate(Boolean):
 @contextmanager
 def assuming(*assumptions):
     """ Context manager for assumptions
+
+    Examples
+    ========
 
     >>> from sympy.assumptions import assuming, Q, ask
     >>> from sympy.abc import x, y

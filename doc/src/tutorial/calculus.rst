@@ -244,9 +244,9 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
 
     >>> expr = Limit((cos(x) - 1)/x, x, 0)
     >>> expr
-        cos(x) - 1
-    lim ──────────
-    x->0    x
+         cos(x) - 1
+     lim ──────────
+    x─→0⁺    x
     >>> expr.doit()
     0
 
@@ -303,20 +303,66 @@ If you do not want the order term, use the ``removeO`` method.
     ── + x + 1
     2
 
-Currently, ``O`` only supports orders at 0, so series expansions at points
-other than 0 are computed by first shifting to 0 and then shifting back.
+The ``O`` notation supports arbitrary limit points (other than 0):
 
-    >>> exp(x - 6).series(x, 6)
-             2    3    4     5
-            x    x    x     x     ⎛ 6⎞
-    1 + x + ── + ── + ── + ─── + O⎝x ⎠
-            2    6    24   120
+    >>> exp(x - 6).series(x, x0=6)
+                2          3          4          5
+         (x - 6)    (x - 6)    (x - 6)    (x - 6)         ⎛       6       ⎞
+    -5 + ──────── + ──────── + ──────── + ──────── + x + O⎝(x - 6) ; x → 6⎠
+            2          6          24        120
 
-This means that if you compute the series expansion at a point other than 0,
-the result will be shifted to 0. You can easily shift it back with ``subs``.
+Finite differences
+==================
 
-    >>> exp(x - 6).series(x, 6).removeO().subs(x, x - 6)
-               5          4          3          2
-        (x - 6)    (x - 6)    (x - 6)    (x - 6)
-    x + ──────── + ──────── + ──────── + ──────── - 5
-          120         24         6          2
+So far we have looked at expressions with analytical derivatives
+and primitive functions respectively. But what if we want to have an
+expression to estimate a derivative of a curve for which we lack a
+closed form representation, or for which we don't know the functional
+values for yet. One approach would be to use a finite difference
+approach.
+
+You can use the ``as_finite_diff`` method of on any ``Derivative``
+instance to generate approximations to derivatives of arbitrary order:
+
+    >>> f = Function('f')
+    >>> dfdx = f(x).diff(x)
+    >>> as_finite_diff(dfdx)
+    -f(x - 1/2) + f(x + 1/2)
+
+here the first order derivative was approximated around x using a
+minimum number of points (2 for 1st order derivative) evaluated
+equidistantly using a step-size of 1. We can use arbitrary steps
+(possibly containing symbolic expressions):
+
+    >>> f = Function('f')
+    >>> d2fdx2 = f(x).diff(x, 2)
+    >>> h = Symbol('h')
+    >>> as_finite_diff(d2fdx2, [-3*h,-h,2*h])
+    f(-3⋅h)   f(-h)   2⋅f(2⋅h)
+    ─────── - ───── + ────────
+         2        2        2
+      5⋅h      3⋅h     15⋅h
+
+If you are just interested in evaluating the weights, you can do so
+manually:
+
+    >>> finite_diff_weights(2, [-3, -1, 2], 0)[-1][-1]
+    [1/5, -1/3, 2/15]
+
+note that we only need the last element in the last sublist
+returned from finite_diff_weights. The reason for this is that
+finite_diff_weights also generates weights for lower derivatives and
+using fewer points (see the documentation of ``finite_diff_weights``
+for more details).
+
+if using ``finite_diff_weights`` directly looks complicated and the
+``as_finite_diff`` function operating on ``Derivative`` instances
+is not flexible enough, you can use ``apply_finite_diff`` which
+takes order, x_list, y_list and x0 as parameters:
+
+    >>> x_list = [-3, 1, 2]
+    >>> y_list = symbols('a b c')
+    >>> apply_finite_diff(1, x_list, y_list, 0)
+      3⋅a   b   2⋅c
+    - ─── - ─ + ───
+       20   4    5

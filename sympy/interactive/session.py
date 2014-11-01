@@ -11,6 +11,7 @@ from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
+init_printing()
 """
 
 verbose_message = """\
@@ -490,4 +491,5 @@ def init_session(ipython=None, pretty_print=True, order=None,
         sys.exit('Exiting ...')
     else:
         ip.write(message)
-        ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
+        import atexit
+        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)

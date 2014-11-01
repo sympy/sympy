@@ -379,7 +379,13 @@ def split_symbols_custom(predicate):
     def _split_symbols(tokens, local_dict, global_dict):
         result = []
         split = False
+        split_previous=False
         for tok in tokens:
+            if split_previous:
+                # throw out closing parenthesis of Symbol that was split
+                split_previous=False
+                continue
+            split_previous=False
             if tok[0] == NAME and tok[1] == 'Symbol':
                 split = True
             elif split and tok[0] == NAME:
@@ -389,17 +395,18 @@ def split_symbols_custom(predicate):
                         if char in local_dict or char in global_dict:
                             # Get rid of the call to Symbol
                             del result[-2:]
-                            result.extend([(OP, '('), (NAME, "%s" % char), (OP, ')'),
+                            result.extend([(NAME, "%s" % char),
                                            (NAME, 'Symbol'), (OP, '(')])
                         else:
                             result.extend([(NAME, "'%s'" % char), (OP, ')'),
                                            (NAME, 'Symbol'), (OP, '(')])
-                    # Delete the last three tokens: get rid of the extraneous
-                    # Symbol( we just added, and also get rid of the last )
-                    # because the closing parenthesis of the original Symbol is
-                    # still there
-                    del result[-3:]
+                    # Delete the last two tokens: get rid of the extraneous
+                    # Symbol( we just added
+                    # Also, set split_previous=True so will skip
+                    # the closing parenthesis of the original Symbol
+                    del result[-2:]
                     split = False
+                    split_previous = True
                     continue
                 else:
                     split = False
@@ -536,6 +543,41 @@ def auto_symbol(tokens, local_dict, global_dict):
     return result
 
 
+def lambda_notation(tokens, local_dict, global_dict):
+    """Substitutes "lambda" with its Sympy equivalent Lambda().
+    However, the conversion doesn't take place if only "lambda"
+    is passed because that is a syntax error.
+
+    """
+    result = []
+    flag = False
+    toknum, tokval = tokens[0]
+    tokLen = len(tokens)
+    if toknum == NAME and tokval == 'lambda':
+        if tokLen == 2:
+            result.extend(tokens)
+        elif tokLen > 2:
+            result.extend([
+                (NAME, 'Lambda'),
+                (OP, '('),
+                (OP, '('),
+                (OP, ')'),
+                (OP, ')'),
+            ])
+            for tokNum, tokVal in tokens[1:]:
+                if tokNum == OP and tokVal == ':':
+                    tokVal = ','
+                    flag = True
+                if flag:
+                    result.insert(-1, (tokNum, tokVal))
+                else:
+                    result.insert(-2, (tokNum, tokVal))
+    else:
+        result.extend(tokens)
+
+    return result
+
+
 def factorial_notation(tokens, local_dict, global_dict):
     """Allows standard notation for factorial."""
     result = []
@@ -660,7 +702,7 @@ def rationalize(tokens, local_dict, global_dict):
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (auto_symbol, auto_number, factorial_notation)
+standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
@@ -718,6 +760,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         undefined variables into SymPy symbols, and allow the use of standard
         mathematical factorial notation (e.g. ``x!``).
 
+    evaluate : bool, optional
+        When False, the order of the arguments will remain as they were in the
+        string and automatic simplification that would normally occur is
+        suppressed. (see examples)
 
     Examples
     ========
@@ -733,6 +779,23 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     ...     (implicit_multiplication_application,))
     >>> parse_expr("2x", transformations=transformations)
     2*x
+
+    When evaluate=False, some automatic simplifications will not occur:
+
+    >>> parse_expr("2**3"), parse_expr("2**3", evaluate=False)
+    (8, 2**3)
+
+    In addition the order of the arguments will not be made canonical.
+    This feature allows one to tell exactly how the expression was entered:
+
+    >>> a = parse_expr('1 + x', evaluate=False)
+    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> a == b
+    False
+    >>> a.args
+    (1, x)
+    >>> b.args
+    (x, 1)
 
     See Also
     ========
@@ -751,7 +814,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
-    if evaluate is False:
+    if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
     return eval_expr(code, local_dict, global_dict)

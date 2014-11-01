@@ -1,12 +1,14 @@
 Sets
 ===========
 
-.. automodule:: sympy.core.sets
+.. automodule:: sympy.sets.sets
 
 Set
 ^^^
 .. autoclass:: Set
    :members:
+
+.. autofunction:: imageset
 
 Elementary Sets
 ---------------
@@ -36,6 +38,11 @@ Intersection
 ProductSet
 ^^^^^^^^^^
 .. autoclass:: ProductSet
+   :members:
+
+Complement
+^^^^^^^^^^
+.. autoclass:: Complement
    :members:
 
 Singleton Sets
@@ -74,4 +81,3 @@ ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
    :members:
-

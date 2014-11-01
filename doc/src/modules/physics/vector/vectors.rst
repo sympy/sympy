@@ -748,8 +748,8 @@ How Vectors are Coded
 
 What follows is a short description of how vectors are defined by the code in
 :mod:`vector`. It is provided for those who want to learn more about how
-this part of :mod:`sympy.physics.vector` works, and does not need to be read 
-to use this module; don't read it unless you want to learn how this module was 
+this part of :mod:`sympy.physics.vector` works, and does not need to be read
+to use this module; don't read it unless you want to learn how this module was
 implemented.
 
 Every ``Vector``'s main information is stored in the ``args`` attribute, which

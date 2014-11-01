@@ -1,8 +1,8 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Piecewise, Symbol, Add, ratsimp
+    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
@@ -66,6 +66,9 @@ def test_heurisch_exp():
 
     assert heurisch(2**x, x) == 2**x/log(2)
     assert heurisch(x*2**x, x) == x*2**x/log(2) - 2**x*log(2)**(-2)
+
+    assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
+    assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
 
 
 def test_heurisch_trigonometric():
@@ -191,12 +194,12 @@ def test_heurisch_wrapper():
     f = 1/((y - x)*(y + x))
     assert heurisch_wrapper(f, x) == \
         Piecewise((1/x, Eq(y, 0)), (log(x + y)/2/y - log(x - y)/2/y, True))
-    # issue 3827
+    # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
     assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
         - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
 
-def test_issue510():
+def test_issue_3609():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
         I*log(log(x) - I)/2
 
@@ -264,6 +267,8 @@ def test_pmint_besselj():
 
 @slow # 110 seconds on 3.4 GHz
 def test_pmint_WrightOmega():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     def omega(x):
         return LambertW(exp(x))
 

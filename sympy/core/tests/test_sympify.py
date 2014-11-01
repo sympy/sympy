@@ -14,7 +14,7 @@ from sympy.core.compatibility import exec_, HAS_GMPY
 from sympy import mpmath
 
 
-def test_439():
+def test_issue_3538():
     v = sympify("exp(x)")
     assert v == exp(x)
     assert type(v) == type(exp(x))
@@ -25,7 +25,7 @@ def test_sympify1():
     assert sympify("x") == Symbol("x")
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
-    # 1778
+    # issue 4877
     n1 = Rational(1, 2)
     assert sympify('--.5') == n1
     assert sympify('-1/2') == -n1
@@ -97,15 +97,15 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 12
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) == True
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) == False
 
     mpmath.mp.dps = 6
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) == True
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
@@ -225,20 +225,23 @@ def test_sage():
     assert hasattr(log(x), "_sage_")
 
 
-def test_bug496():
+def test_issue_3595():
     assert sympify("a_") == Symbol("a_")
     assert sympify("_a") == Symbol("_a")
 
 
-@XFAIL
 def test_lambda():
     x = Symbol('x')
     assert sympify('lambda: 1') == Lambda((), 1)
+    assert sympify('lambda x: x') == Lambda(x, x)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
 
 
 def test_lambda_raises():
+    raises(SympifyError, lambda: sympify("lambda *args: args")) # args argument error
+    raises(SympifyError, lambda: sympify("lambda **kwargs: kwargs[0]")) # kwargs argument error
+    raises(SympifyError, lambda: sympify("lambda x = 1: x"))    # Keyword argument error
     with raises(SympifyError):
         _sympify('lambda: 1')
 
@@ -398,14 +401,14 @@ def test_evaluate_false():
         assert sympify(case, evaluate=False) == result
 
 
-def test_issue1034():
+def test_issue_4133():
     a = sympify('Integer(4)')
 
     assert a == Integer(4)
     assert a.is_Integer
 
 
-def test_issue883():
+def test_issue_3982():
     a = [3, 2.0]
     assert sympify(a) == [Integer(3), Float(2.0)]
     assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
@@ -417,19 +420,19 @@ def test_S_sympify():
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 
-def test_issue1689():
+def test_issue_4788():
     assert srepr(S(1.0 + 0J)) == srepr(S(1.0)) == srepr(Float(1.0))
 
 
-def test_issue1699_None():
+def test_issue_4798_None():
     assert S(None) is None
 
 
-def test_issue3218():
+def test_issue_3218():
     assert sympify("x+\ny") == x + y
 
 
-def test_issue1889_builtins():
+def test_issue_4988_builtins():
     C = Symbol('C')
     vars = {}
     vars['C'] = C
@@ -460,7 +463,7 @@ def test_kernS():
         'x', '_kern')
     ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
-    # issue 3588
+    # issue 6687
     assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
     assert kernS('_kern') == Symbol('_kern')
     assert kernS('E**-(x)') == exp(-x)
@@ -470,13 +473,13 @@ def test_kernS():
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
 
 
-def test_issue_3441_3453():
+def test_issue_6540_6552():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
-def test_issue_2497():
+def test_issue_5596():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'

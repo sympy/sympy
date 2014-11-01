@@ -5,17 +5,21 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+import inspect
+import textwrap
+import warnings
+
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 from sympy.utilities.decorator import doctest_depends_on
-
-import inspect
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # These are the namespaces the lambda functions will use.
 MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
+NUMEXPR = {}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -25,6 +29,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -50,7 +55,6 @@ MPMATH_TRANSLATIONS = {
     "oo": "inf",
     #"uppergamma":"upper_gamma",
     "LambertW": "lambertw",
-    "Matrix": "matrix",
     "MutableDenseMatrix": "matrix",
     "ImmutableMatrix": "matrix",
     "conjugate": "conj",
@@ -76,7 +80,6 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Matrix": "matrix",
     "MutableDenseMatrix": "matrix",
     "ImmutableMatrix": "matrix",
     "Max": "amax",
@@ -84,6 +87,8 @@ NUMPY_TRANSLATIONS = {
     "oo": "inf",
     "re": "real",
 }
+
+NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
@@ -94,6 +99,8 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
+                 ("import_module('numexpr')", )),
 }
 
 
@@ -145,7 +152,8 @@ def _import(module, reload="False"):
 
 
 @doctest_depends_on(modules=('numpy'))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+        dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -154,7 +162,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -167,12 +175,38 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
 
+    For functions involving large array calculations, numexpr can provide a
+    significant speedup over numpy.  Please note that the available functions
+    for numexpr are more limited than numpy but can be expanded with
+    implemented_function and user defined subclasses of Function.  If specified,
+    numexpr may be the only option in modules. The official list of numexpr
+    functions can be found at:
+    https://github.com/pydata/numexpr#supported-functions
+
+    Deprecation Warnings
+    ====================
+
+    In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
+    by default. As of release 0.7.6 ``numpy.array`` is being transitioned to
+    the default. In release 0.7.7 this transition will be complete. For now, to
+    use the new default behavior you must pass in ``[{'ImmutableMatrix':
+    numpy.array}, 'numpy']`` to the ``modules`` kwarg.
+
+    >>> from sympy import lambdify, Matrix
+    >>> from sympy.abc import x, y
+    >>> import numpy
+    >>> mat2array = [{'ImmutableMatrix': numpy.array}, 'numpy']
+    >>> f = lambdify((x, y), Matrix([x, y]), modules=mat2array)
+    >>> f(1, 2)
+    array([[1],
+           [2]])
+
     Usage
     =====
 
     (1) Use one of the provided modules:
 
-        >>> from sympy import lambdify, sin, tan, gamma
+        >>> from sympy import sin, tan, gamma
         >>> from sympy.utilities.lambdify import lambdastr
         >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
@@ -210,7 +244,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     Examples
     ========
 
-    >>> from sympy.utilities.lambdify import implemented_function, lambdify
+    >>> from sympy.utilities.lambdify import implemented_function
     >>> from sympy import sqrt, sin, Matrix
     >>> from sympy import Function
     >>> from sympy.abc import w, x, y, z
@@ -274,13 +308,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
+        #Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:
             pass
         else:
             modules.insert(1, "numpy")
-
 
     # Get the needed namespaces.
     namespaces = []
@@ -291,12 +325,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
+        # consistency check
+        if 'numexpr' in modules and len(modules) > 1:
+            raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
     namespace = {}
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
+    _issue_7853_dep_check(namespaces, namespace, expr)
 
     if hasattr(expr, "atoms"):
         #Try if you can extract symbols from the expression.
@@ -305,14 +343,70 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         for term in syms:
             namespace.update({str(term): term})
 
+    if 'numexpr' in namespaces and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import NumExprPrinter as printer
+
+    # Get the names of the args, for creating a docstring
+    if not iterable(args):
+        args = (args,)
+    names = []
+    # Grab the callers frame, for getting the names by inspection (if needed)
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+    for n, var in enumerate(args):
+        if hasattr(var, 'name'):
+            names.append(var.name)
+        else:
+            # It's an iterable. Try to get name by inspection of calling frame.
+            name_list = [var_name for var_name, var_val in callers_local_vars
+                    if var_val is var]
+            if len(name_list) == 1:
+                names.append(name_list[0])
+            else:
+                # Cannot infer name with certainty. arg_# will have to do.
+                names.append('arg_' + str(n))
+
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
+
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
-    return eval(lstr, namespace)
+    func = eval(lstr, namespace)
+    # Apply the docstring
+    sig = "func({0})".format(", ".join(str(i) for i in names))
+    sig = textwrap.fill(sig, subsequent_indent=' '*8)
+    expr_str = str(expr)
+    if len(expr_str) > 78:
+        expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+    func.__doc__ = ("Created with lambdify. Signature:\n\n{sig}\n\n"
+                    "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
+    return func
 
+def _issue_7853_dep_check(namespaces, namespace, expr):
+    """Used for checking things passed into modules kwarg for deprecation
+    issue #7853. This function and the call to it in lambdify should be
+    deleted once the cycle has ended."""
+
+    # If some module changed `ImmutableMatrix` to be something else
+    mat = namespace.get('ImmutableMatrix', False)
+    if not mat or 'numpy' not in namespaces or ('%s.%s' % (mat.__module__,
+            mat.__name__) == 'numpy.matrixlib.defmatrix.matrix'):
+        return
+    dicts = [m for m in namespaces if isinstance(m, dict)]
+    test = lambda expr: hasattr(expr, 'is_Matrix') and expr.is_Matrix
+    if test(expr) and not [d for d in dicts if 'ImmutableMatrix' in d]:
+        SymPyDeprecationWarning(
+                "Currently, `sympy.Matrix` is replaced with `numpy.matrix` if "
+                "the NumPy package is utilized in lambdify. In future versions "
+                "of SymPy (> 0.7.6), we will default to replacing "
+                "`sympy.Matrix` with `numpy.array`. To use the future "
+                "behavior now, supply the kwarg "
+                "`modules=[{'ImmutableMatrix': numpy.array}, 'numpy']`. "
+                "The old behavior can be retained in future versions by "
+                "supplying `modules=[{'ImmutableMatrix': numpy.matrix}, "
+                "'numpy']`.", issue=7853).warn()
 
 def _get_namespace(m):
     """
@@ -375,7 +469,8 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            if isinstance(args, Function):
+            #Sub in dummy variables for functions or symbols
+            if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
@@ -385,7 +480,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     def sub_expr(expr, dummies_dict):
         try:
             expr = sympify(expr).xreplace(dummies_dict)
-        except:
+        except Exception:
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):
@@ -401,6 +496,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     # Transform args
     def isiter(l):
         return iterable(l, exclude=(str, DeferredVector))
+
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten
         import re
@@ -511,7 +607,7 @@ def implemented_function(symfunc, implementation):
 
     Be aware that this is a quick workaround, not a general method to create
     special symbolic functions. If you want to create a symbolic function to be
-    used by all the machinery of sympy you should subclass the ``Function``
+    used by all the machinery of SymPy you should subclass the ``Function``
     class.
 
     Parameters

@@ -2,7 +2,7 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
@@ -225,14 +225,14 @@ def test_geometric_sums():
     assert summation(2**(-4*n + 3), (n, 1, oo)) == Rational(8, 15)
     assert summation(2**(n + 1), (n, 1, b)).expand() == 4*(2**b - 1)
 
-    # issue 3565:
+    # issue 6664:
     assert summation(x**n, (n, 0, oo)) == \
         Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
 
     assert summation(-2**n, (n, 0, oo)) == -oo
     assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
 
-    # issue 3703:
+    # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
     assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
     assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S(1)/2
@@ -241,6 +241,9 @@ def test_geometric_sums():
     assert summation((-2)**(y*x + 2), (x, 0, n)) == \
         4*Piecewise((n + 1, Eq((-2)**y, 1)),
                     ((-(-2)**(y*(n + 1)) + 1)/(-(-2)**y + 1), True))
+
+    # issue 8251:
+    assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) == oo
 
 
 def test_harmonic_sums():
@@ -312,7 +315,7 @@ def test_evalf_fast_series():
               fac(2*n + 1)**5, (n, 0, oo)), 100) == astr
 
 
-def test_evalf_fast_series_issue998():
+def test_evalf_fast_series_issue_4021():
     # Catalan's constant
     assert NS(Sum((-1)**(n - 1)*2**(8*n)*(40*n**2 - 24*n + 3)*fac(2*n)**3*
         fac(n)**2/n**3/(2*n - 1)/fac(4*n)**2, (n, 1, oo))/64, 100) == \
@@ -370,7 +373,7 @@ def test_evalf_euler_maclaurin():
 
 def test_evalf_symbolic():
     f, g = symbols('f g', cls=Function)
-    # issue 3229
+    # issue 6328
     expr = Sum(f(x), (x, 1, 3)) + Sum(g(x), (x, 1, 3))
     assert expr.evalf() == expr
 
@@ -442,7 +445,7 @@ def test_wallis_product():
 
 
 def test_telescopic_sums():
-    #checks also input 2 of comment 1 issue 1028
+    #checks also input 2 of comment 1 issue 4127
     assert Sum(1/k - 1/(k + 1), (k, 1, n)).doit() == 1 - 1/(1 + n)
     f = Function("f")
     assert Sum(
@@ -501,7 +504,7 @@ def test_equality():
         assert F(1, (x, 1, x)) != F(1, (y, 1, x))
         assert F(1, (x, 1, x)) != F(1, (y, 1, y))
 
-    # issue 2166
+    # issue 5265
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 
@@ -521,12 +524,12 @@ def test_Sum_doit():
     assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
         f(1) + f(2) + f(3)
     assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
-        Sum(Piecewise((f(n), n >= 0), (0, True)), (n, 1, oo))
+        Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
     l = Symbol('l', integer=True, positive=True)
     assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
         Sum(f(l), (l, 1, oo))
 
-    # github issue #2597
+    # issue 2597
     nmax = symbols('N', integer=True, positive=True)
     pw = Piecewise((1, And(S(1) <= n, n <= nmax)), (0, True))
     assert Sum(pw, (n, 1, nmax)).doit() == Sum(pw, (n, 1, nmax))
@@ -579,14 +582,8 @@ def test_hypersum():
     assert summation(binomial(m, k), (k, 0, m)) == 2**m
 
 
-def test_issue_1071():
+def test_issue_4170():
     assert summation(1/factorial(k), (k, 0, oo)) == E
-
-
-def test_is_zero():
-    for func in [Sum, Product]:
-        assert func(0, (x, 1, 1)).is_zero is True
-        assert func(x, (x, 1, 1)).is_zero is None
 
 
 def test_is_commutative():
@@ -600,10 +597,18 @@ def test_is_commutative():
         assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
 
 
+def test_is_zero():
+    for func in [Sum, Product]:
+        assert func(0, (x, 1, 1)).is_zero is True
+        assert func(x, (x, 1, 1)).is_zero is None
+
+
 def test_is_number():
+    # is number should not rely on evaluation or assumptions,
+    # it should be equivalent to `not foo.free_symbols`
     assert Sum(1, (x, 1, 1)).is_number is True
     assert Sum(1, (x, 1, x)).is_number is False
-    assert Sum(0, (x, y, z)).is_number is True
+    assert Sum(0, (x, y, z)).is_number is False
     assert Sum(x, (y, 1, 2)).is_number is False
     assert Sum(x, (y, 1, 1)).is_number is False
     assert Sum(x, (x, 1, 2)).is_number is True
@@ -611,8 +616,8 @@ def test_is_number():
 
     assert Product(2, (x, 1, 1)).is_number is True
     assert Product(2, (x, 1, y)).is_number is False
-    assert Product(0, (x, y, z)).is_number is True
-    assert Product(1, (x, y, z)).is_number is True
+    assert Product(0, (x, y, z)).is_number is False
+    assert Product(1, (x, y, z)).is_number is False
     assert Product(x, (y, 1, x)).is_number is False
     assert Product(x, (y, 1, 2)).is_number is False
     assert Product(x, (y, 1, 1)).is_number is False
@@ -622,7 +627,7 @@ def test_is_number():
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
-        assert func(0, (x, 1, y)).free_symbols == set()
+        assert func(0, (x, 1, y)).free_symbols == set([y])
         assert func(2, (x, 1, y)).free_symbols == set([y])
         assert func(x, (x, 1, 2)).free_symbols == set()
         assert func(x, (x, 1, y)).free_symbols == set([y])
@@ -635,7 +640,9 @@ def test_free_symbols():
         assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
-    assert Product(1, (x, 1, y)).free_symbols == set()
+    # free_symbols answers whether the object *as written* has free symbols,
+    # not whether the evaluated expression has free symbols
+    assert Product(1, (x, 1, y)).free_symbols == set([y])
 
 
 def test_conjugate_transpose():
@@ -646,16 +653,16 @@ def test_conjugate_transpose():
     assert p.transpose().doit() == p.doit().transpose()
 
 
-def test_issue_1072():
+def test_issue_4171():
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
     assert summation(2*k + 1, (k, 0, oo)) == oo
 
 
-def test_issue_3174():
+def test_issue_6273():
     assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == 1
 
 
-def test_issue_3175():
+def test_issue_6274():
     assert Sum(x, (x, 1, 0)).doit() == 0
     assert NS(Sum(x, (x, 1, 0))) == '0'
     assert Sum(n, (n, 10, 5)).doit() == -30
@@ -750,7 +757,7 @@ def test_reverse_order():
     assert Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
-def test_issue_3998():
+def test_issue_7097():
     assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))
 
 def test_factor_expand_subs():
@@ -788,7 +795,7 @@ def test_distribution_over_equality():
         Eq(Sum(f(x), (x, 0, y)), Sum(x**2, (x, 0, y)))
 
 
-def test_github_issue_2787():
+def test_issue_2787():
     n, k = symbols('n k', positive=True, integer=True)
     p = symbols('p', positive=True)
     binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)
@@ -797,3 +804,7 @@ def test_github_issue_2787():
     assert res == Piecewise((n*p, And(Or(-n + 1 < 0, -n + 1 >= 0),
         Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p*Abs(1/(p - 1)) <= 1)),
         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)), True))
+
+
+def test_issue_4668():
+    assert summation(1/n, (n, 2, oo)) == oo

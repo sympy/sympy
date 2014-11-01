@@ -12,7 +12,6 @@ from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import string
 import re as _re
@@ -54,6 +53,41 @@ class Symbol(AtomicExpr, Boolean):
         """
         return True
 
+    @staticmethod
+    def _sanitize(assumptions, obj=None):
+        """Remove None, covert values to bool, check commutativity *in place*.
+        """
+
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            whose = '%s ' % obj.__name__ if obj else ''
+            raise ValueError(
+                '%scommutativity must be True or False.' % whose)
+        assumptions['commutative'] = is_commutative
+
+        # sanitize other assumptions so 1 -> True and 0 -> False
+        for key in list(assumptions.keys()):
+            from collections import defaultdict
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            keymap = defaultdict(lambda: None)
+            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
+            if keymap[key]:
+                SymPyDeprecationWarning(
+                    feature="%s assumption" % key,
+                    useinstead="%s" % keymap[key],
+                    issue=8071,
+                    deprecated_since_version="0.7.6").warn()
+                assumptions[keymap[key]] = assumptions[key]
+                assumptions.pop(key)
+                key = keymap[key]
+
+            v = assumptions[key]
+            if v is None:
+                assumptions.pop(key)
+                continue
+            assumptions[key] = bool(v)
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -64,21 +98,13 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
-
-        if assumptions.get('zero', False):
-            return S.Zero
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Symbol commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
-        for key in assumptions.keys():
-            assumptions[key] = bool(assumptions[key])
+        cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
+
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)
@@ -108,6 +134,7 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
+        """Return a Dummy having the same name and same assumptions as self."""
         return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
@@ -128,10 +155,6 @@ class Symbol(AtomicExpr, Boolean):
         if not wrt:
             return False
         return not self in wrt
-
-    @property
-    def is_number(self):
-        return False
 
     @property
     def free_symbols(self):
@@ -164,11 +187,7 @@ class Dummy(Symbol):
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Dummy's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
@@ -177,6 +196,11 @@ class Dummy(Symbol):
 
     def __getstate__(self):
         return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
+
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (
+            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
@@ -250,18 +274,14 @@ class Wild(Symbol):
     {a_: 2, b_: x**3*y*z}
 
     """
+    is_Wild = True
 
     __slots__ = ['exclude', 'properties']
-    is_Wild = True
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Wild's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -331,8 +351,8 @@ def symbols(names, **args):
     To reduce typing, range syntax is supported to create indexed symbols.
     Ranges are indicated by a colon and the type of range is determined by
     the character to the right of the colon. If the character is a digit
-    then all continguous digits to the left are taken as the nonnegative
-    starting value (or 0 if there are no digit of the colon) and all
+    then all contiguous digits to the left are taken as the nonnegative
+    starting value (or 0 if there is no digit left of the colon) and all
     contiguous digits to the right are taken as 1 greater than the ending
     value::
 
@@ -515,22 +535,25 @@ def var(names, **args):
     into the *global* namespace. It's recommended not to use :func:`var` in
     library code, where :func:`symbols` has to be used::
 
-        >>> from sympy import var
+    Examples
+    ========
 
-        >>> var('x')
-        x
-        >>> x
-        x
+    >>> from sympy import var
 
-        >>> var('a,ab,abc')
-        (a, ab, abc)
-        >>> abc
-        abc
+    >>> var('x')
+    x
+    >>> x
+    x
 
-        >>> var('x,y', real=True)
-        (x, y)
-        >>> x.is_real and y.is_real
-        True
+    >>> var('a,ab,abc')
+    (a, ab, abc)
+    >>> abc
+    abc
+
+    >>> var('x,y', real=True)
+    (x, y)
+    >>> x.is_real and y.is_real
+    True
 
     See :func:`symbol` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.

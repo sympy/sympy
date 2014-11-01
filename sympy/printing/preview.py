@@ -139,11 +139,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
                     "specified filename", deprecated_since_version="0.7.3",
                     useinstead="viewer=\"file\" and filename=\"desiredname\"",
-                    issue=3919).warn()
+                    issue=7018).warn()
         elif viewer == "StringIO":
             SymPyDeprecationWarning(feature="The preview() viewer StringIO",
                 useinstead="BytesIO", deprecated_since_version="0.7.4",
-                issue=3984).warn()
+                issue=7083).warn()
             viewer = "BytesIO"
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
@@ -204,16 +204,21 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             defaultoptions = {
                 "ps": [],
                 "pdf": [],
-                "png": ["-T", "tight", "-z", "9", "--truecolor"]
+                "png": ["-T", "tight", "-z", "9", "--truecolor"],
+                "svg": ["--no-fonts"],
             }
 
             commandend = {
                 "ps": ["-o", "texput.ps", "texput.dvi"],
                 "pdf": ["texput.dvi", "texput.pdf"],
-                "png": ["-o", "texput.png", "texput.dvi"]
+                "png": ["-o", "texput.png", "texput.dvi"],
+                "svg": ["-o", "texput.svg", "texput.dvi"],
             }
 
-            cmd = ["dvi" + output]
+            if output == "svg":
+                cmd = ["dvisvgm"]
+            else:
+                cmd = ["dvi" + output]
             if not find_executable(cmd[0]):
                 raise RuntimeError("%s is not installed" % cmd[0])
             try:

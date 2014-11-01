@@ -5,7 +5,7 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
-from sympy.utilities.randtest import (test_numerically,
+from sympy.utilities.randtest import (verify_numerically,
          random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
@@ -31,7 +31,7 @@ def test_rewrite_single():
         r = _rewrite_single(expr, x)
         e = Add(*[res[0]*res[2] for res in r[0]]).replace(
             exp_polar, exp)  # XXX Hack?
-        assert test_numerically(e, expr, x)
+        assert verify_numerically(e, expr, x)
 
     u(exp(-x)*sin(x), x)
 
@@ -63,7 +63,7 @@ def test_meijerint_indefinite_numerically():
                 c: randcplx(), d: randcplx()}
         integral = meijerint_indefinite(g, x)
         assert integral is not None
-        assert test_numerically(g.subs(subs), integral.diff(x).subs(subs), x)
+        assert verify_numerically(g.subs(subs), integral.diff(x).subs(subs), x)
     t(1, x)
     t(2, x)
     t(1, 2*x)
@@ -83,7 +83,7 @@ def test_inflate():
         m2 = Mul(*_inflate_g(m1, n))
         # NOTE: (the random number)**9 must still be on the principal sheet.
         # Thus make b&d small to create random numbers of small imaginary part.
-        return test_numerically(m1.subs(subs), m2.subs(subs), x, b=0.1, d=-0.1)
+        return verify_numerically(m1.subs(subs), m2.subs(subs), x, b=0.1, d=-0.1)
     assert t([[a], [b]], [[c], [d]], x, 3)
     assert t([[a, y], [b]], [[c], [d]], x, 3)
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)
@@ -327,10 +327,10 @@ def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y, z
     from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp, sin
-    mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
-    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
-                             bounded=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, bounded=True)
+    mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
+    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
+                             finite=True, positive=True)
+    rate = Symbol('lambda', real=True, positive=True, finite=True)
 
     def normal(x, mu, sigma):
         return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
@@ -601,12 +601,12 @@ def test_messy():
         Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
 
 
-def test_3023():
+def test_issue_6122():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
         -I*sqrt(pi)*exp(I*pi/4)
 
 
-def test_3153():
+def test_issue_6252():
     expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
     assert not expr.has(hyper)
@@ -614,7 +614,7 @@ def test_3153():
     # putting in numerical values seems to work...
 
 
-def test_3249():
+def test_issue_6348():
     assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
         == pi*exp(-1)
 
@@ -625,5 +625,5 @@ def test_fresnel():
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
-def test_3761():
+def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None

@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo)
+                   Function, Product, Rational, Sum, oo, exp, log, S)
 from sympy.utilities.pytest import raises
 from sympy import simplify
 
@@ -224,21 +224,21 @@ def test_special_products():
 
 def test__eval_product():
     from sympy.abc import i, n
-    # 1710
+    # issue 4809
     a = Function('a')
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
-    # 1711
+    # issue 4810
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
 
 
 def test_product_pow():
-    # Issue 1718
+    # issue 4817
     assert product(2**f(k), (k, 1, n)) == 2**Sum(f(k), (k, 1, n))
     assert product(2**(2*f(k)), (k, 1, n)) == 2**Sum(2*f(k), (k, 1, n))
 
 
 def test_infinite_product():
-    # Issue 2638
+    # issue 5737
     assert isinstance(Product(2**(1/factorial(n)), (n, 0, oo)), Product)
 
 
@@ -333,3 +333,8 @@ def test_reverse_order():
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert Product(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+
+def test_rewrite_Sum():
+    assert Product(1 - S.Half**2/k**2,(k,1,oo)).rewrite(Sum) == \
+        exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))

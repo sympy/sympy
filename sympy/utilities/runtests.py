@@ -33,7 +33,8 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
+from sympy.core.compatibility import (exec_, PY3, get_function_code,
+                                      string_types, xrange)
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -203,7 +204,10 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
                      repr(function_kwargs)))
 
     try:
-        return subprocess.call([command, "-R", "-c", commandstring])
+        p = subprocess.Popen([command, "-R", "-c", commandstring])
+        p.communicate()
+    except KeyboardInterrupt:
+        p.wait()
     finally:
         # Put the environment variable back, so that it reads correctly for
         # the current Python process.
@@ -211,6 +215,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
             del os.environ["PYTHONHASHSEED"]
         else:
             os.environ["PYTHONHASHSEED"] = hash_seed
+        return p.returncode
 
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
@@ -290,6 +295,8 @@ def test(*paths, **kwargs):
     - If sort=False, tests are run in random order (not default).
     - Paths can be entered in native system format or in unix,
       forward-slash format.
+    - Files that are on the blacklist can be tested by providing
+      their path; they are only excluded if no paths are given.
 
     **Explanation of test results**
 
@@ -406,17 +413,35 @@ def test(*paths, **kwargs):
 
     If the seed is not set, a random seed will be chosen.
 
-    Note that to reproduce the same hash values, you must use both the same as
-    well as the same architecture (32-bit vs. 64-bit).
+    Note that to reproduce the same hash values, you must use both the same seed
+    as well as the same architecture (32-bit vs. 64-bit).
 
     """
     subprocess = kwargs.pop("subprocess", True)
+    rerun = kwargs.pop("rerun", 0)
+    # count up from 0, do not print 0
+    print_counter = lambda i : (print("rerun %d" % (rerun-i))
+                                if rerun-i else None)
+
     if subprocess:
-        ret = run_in_subprocess_with_hash_randomization("_test",
-            function_args=paths, function_kwargs=kwargs)
-        if ret is not False:
-            return not bool(ret)
-    return not bool(_test(*paths, **kwargs))
+        # loop backwards so last i is 0
+        for i in xrange(rerun, -1, -1):
+            print_counter(i)
+            ret = run_in_subprocess_with_hash_randomization("_test",
+                        function_args=paths, function_kwargs=kwargs)
+            if ret is False:
+                break
+            val = not bool(ret)
+            # exit on the first failure or if done
+            if not val or i == 0:
+                return val
+
+    # rerun even if hash randomization is not supported
+    for i in xrange(rerun, -1, -1):
+        print_counter(i)
+        val = not bool(_test(*paths, **kwargs))
+        if not val or i == 0:
+            return val
 
 
 def _test(*paths, **kwargs):
@@ -431,7 +456,10 @@ def _test(*paths, **kwargs):
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
-    kw = kwargs.get("kw", "")
+    kw = kwargs.get("kw", None) or ()
+    # ensure that kw is a tuple
+    if isinstance(kw, str):
+        kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     force_colors = kwargs.get("force_colors", False)
@@ -443,9 +471,15 @@ def _test(*paths, **kwargs):
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
+    blacklist = kwargs.get('blacklist', [])
+    blacklist.extend([
+        "sympy/mpmath", # needs to be fixed upstream
+    ])
+    blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed)
+
 
     # Disable warnings for external modules
     import sympy.external
@@ -458,12 +492,15 @@ def _test(*paths, **kwargs):
 
     test_files = t.get_test_files('sympy')
 
+    not_blacklisted = [f for f in test_files
+                       if not any(b in f for b in blacklist)]
+
     if len(paths) == 0:
-        matched = test_files
+        matched = not_blacklisted
     else:
         paths = convert_to_native_paths(paths)
         matched = []
-        for f in test_files:
+        for f in not_blacklisted:
             basename = os.path.basename(f)
             for p in paths:
                 if p in f or fnmatch(basename, p):
@@ -528,12 +565,30 @@ def doctest(*paths, **kwargs):
 
     """
     subprocess = kwargs.pop("subprocess", True)
+    rerun = kwargs.pop("rerun", 0)
+    # count up from 0, do not print 0
+    print_counter = lambda i : (print("rerun %d" % (rerun-i))
+                                if rerun-i else None)
+
     if subprocess:
-        ret = run_in_subprocess_with_hash_randomization("_doctest",
-            function_args=paths, function_kwargs=kwargs)
-        if ret is not False:
-            return not bool(ret)
-    return not bool(_doctest(*paths, **kwargs))
+        # loop backwards so last i is 0
+        for i in xrange(rerun, -1, -1):
+            print_counter(i)
+            ret = run_in_subprocess_with_hash_randomization("_doctest",
+                        function_args=paths, function_kwargs=kwargs)
+            if ret is False:
+                break
+            val = not bool(ret)
+            # exit on the first failure or if done
+            if not val or i == 0:
+                return val
+
+    # rerun even if hash randomization is not supported
+    for i in xrange(rerun, -1, -1):
+        print_counter(i)
+        val = not bool(_doctest(*paths, **kwargs))
+        if not val or i == 0:
+            return val
 
 
 def _doctest(*paths, **kwargs):
@@ -554,9 +609,8 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/statistics",                # prints a deprecation
-        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py"  # needs tcc
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/physics/gaussopt.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
@@ -602,7 +656,7 @@ def _doctest(*paths, **kwargs):
     #         "sympy/utilities/benchmarking.py"
     #     ])
 
-    # blacklist these modules until issue 1741 is resolved
+    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"
@@ -965,10 +1019,7 @@ class SymPyTests(object):
     def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
         funcs = []
         try:
-            clear_cache()
-            self._count += 1
             gl = {'__file__': filename}
-            random.seed(self._seed)
             try:
                 if PY3:
                     open_file = lambda: open(filename, encoding="utf8")
@@ -977,6 +1028,13 @@ class SymPyTests(object):
 
                 with open_file() as f:
                     source = f.read()
+                    if self._kw:
+                        for l in source.splitlines():
+                            if l.lstrip().startswith('def '):
+                                if any(l.find(k) != -1 for k in self._kw):
+                                    break
+                        else:
+                            return
 
                 if enhance_asserts:
                     try:
@@ -991,6 +1049,9 @@ class SymPyTests(object):
             except ImportError:
                 self._reporter.import_error(filename, sys.exc_info())
                 return
+            clear_cache()
+            self._count += 1
+            random.seed(self._seed)
             pytestfile = ""
             if "XFAIL" in gl:
                 pytestfile = inspect.getsourcefile(gl["XFAIL"])
@@ -1089,9 +1150,12 @@ class SymPyTests(object):
 
         Always returns True if self._kw is "".
         """
-        if self._kw == "":
+        if not self._kw:
             return True
-        return x.__name__.find(self._kw) != -1
+        for kw in self._kw:
+            if x.__name__.find(kw) != -1:
+                return True
+        return False
 
     def get_test_files(self, dir, pat='test_*.py'):
         """
@@ -1398,10 +1462,6 @@ class SymPyDocTestFinder(DocTestFinder):
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
                         raise
-                    except ValueError:
-                        raise
-                    except Exception:
-                        pass
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
@@ -1431,19 +1491,21 @@ class SymPyDocTestFinder(DocTestFinder):
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                    inspect.isclass(val) or
-                    isinstance(val, property)):
+                        inspect.isclass(val) or
+                        isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
-                        if val.fget.__module__ != module.__name__:
-                            continue
+                        if hasattr(val.fget, '__module__'):
+                            if val.fget.__module__ != module.__name__:
+                                continue
                     else:
                         if val.__module__ != module.__name__:
                             continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (valname %s)" % (val, module, valname)
+                        "%s is not in module %s (valname %s)" % (
+                            val, module, valname)
 
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
@@ -1500,10 +1562,16 @@ class SymPyDocTestFinder(DocTestFinder):
         if lineno is None:
             # handling of properties is not implemented in _find_lineno so do
             # it here
-            tobj = obj if not isinstance(obj, property) else obj.fget
+            if hasattr(obj, 'func_closure') and obj.func_closure is not None:
+                tobj = obj.func_closure[0].cell_contents
+            elif isinstance(obj, property):
+                tobj = obj.fget
+            else:
+                tobj = obj
             lineno = self._find_lineno(tobj, source_lines)
 
-        assert lineno is not None
+        if lineno is None:
+            return None
 
         # Return a DocTest for this object.
         if module is None:
@@ -1530,7 +1598,7 @@ class SymPyDocTestRunner(DocTestRunner):
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
-    issue 2041).
+    issue 5140).
 
     See the docstring of the original DocTestRunner for more information.
     """

@@ -43,6 +43,7 @@ def _naive_list_centralizer(self, other, af=False):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.testutil import _naive_list_centralizer
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> D = DihedralGroup(4)
@@ -211,6 +212,7 @@ def canonicalize_naive(g, dummies, sym, *v):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.testutil import canonicalize_naive
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> from sympy.combinatorics import Permutation, PermutationGroup

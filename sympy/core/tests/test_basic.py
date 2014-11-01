@@ -19,7 +19,6 @@ b21 = Basic(b2, b1)
 
 def test_structure():
     assert b21.args == (b2, b1)
-    assert tuple(b21.iter_basic_args()) == b21.args
     assert b21.func(*b21.args) == b21
     assert bool(b1)
 
@@ -151,7 +150,7 @@ def test_sorted_args():
 
 def test_call():
     x, y = symbols('x y')
-    # See the long history of this in issues 1927 and 2006.
+    # See the long history of this in issues 5026 and 5105.
 
     raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
     raises(TypeError, lambda: sin(x)(1))
@@ -169,3 +168,26 @@ def test_call():
     #assert (2*f)(x) == 2*f(x)
 
     assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
+
+def test_literal_evalf_is_number_is_zero_is_comparable():
+    from sympy.integrals.integrals import Integral
+    from sympy.core.symbol import symbols
+    from sympy.core.function import Function
+    x = symbols('x')
+    f = Function('f')
+
+    # the following should not be changed without a lot of dicussion
+    # `foo.is_number` should be equivalent to `not foo.free_symbols`
+    # it should not attempt anything fancy; see is_zero, is_constant
+    # and equals for more rigorous tests.
+    assert f(1).is_number is True
+    i = Integral(0, (x, x, x))
+    # expressions that are symbolically 0 can be difficult to prove
+    # so in case there is some easy way to know if something is 0
+    # it should appear in the is_zero property for that object;
+    # if is_zero is true evalf should always be able to compute that
+    # zero
+    assert i.n() == 0
+    assert i.is_zero
+    assert i.is_number is False
+    assert i.evalf(2, strict=False) == 0

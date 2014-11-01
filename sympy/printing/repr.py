@@ -79,6 +79,12 @@ class ReprPrinter(Printer):
         return "[%s]" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
+        # special case for some empty matrices
+        if (expr.rows == 0) ^ (expr.cols == 0):
+            return '%s(%s, %s, %s)' % (expr.__class__.__name__,
+                                       self._print(expr.rows),
+                                       self._print(expr.cols),
+                                       self._print([]))
         l = []
         for i in range(expr.rows):
             l.append([])

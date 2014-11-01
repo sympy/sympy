@@ -1,4 +1,5 @@
-from sympy import ImmutableMatrix, Matrix, eye, zeros
+from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
+        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify)
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -38,7 +39,10 @@ def test_subs():
 
 def test_as_immutable():
     X = Matrix([[1, 2], [3, 4]])
-    assert X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
+    assert sympify(X) == X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
+    X = SparseMatrix(5, 5, {})
+    assert sympify(X) == X.as_immutable() == ImmutableSparseMatrix(
+            [[0 for i in range(5)] for i in range(5)])
 
 
 def test_function_return_types():
@@ -73,8 +77,8 @@ def test_function_return_types():
 
     assert type(X.minorMatrix(0, 0)) == ImmutableMatrix
 
-# Issue 3180
-# http://code.google.com/p/sympy/issues/detail?id=3180
+# issue 6279
+# https://github.com/sympy/sympy/issues/6279
 # Test that Immutable _op_ Immutable => Immutable and not MatExpr
 
 
@@ -86,3 +90,23 @@ def test_immutable_evaluation():
     assert isinstance(X * 2, ImmutableMatrix)
     assert isinstance(2 * X, ImmutableMatrix)
     assert isinstance(A**2, ImmutableMatrix)
+
+
+def test_deterimant():
+    assert ImmutableMatrix(4, 4, lambda i, j: i + j).det() == 0
+
+
+def test_Equality():
+    assert Equality(IM, IM) is S.true
+    assert Unequality(IM, IM) is S.false
+    assert Equality(IM, IM.subs(1, 2)) is S.false
+    assert Unequality(IM, IM.subs(1, 2)) is S.true
+    assert Equality(IM, 2) is S.false
+    assert Unequality(IM, 2) is S.true
+    M = ImmutableMatrix([x, y])
+    assert Equality(M, IM) is S.false
+    assert Unequality(M, IM) is S.true
+    assert Equality(M, M.subs(x, 2)).subs(x, 2) is S.true
+    assert Unequality(M, M.subs(x, 2)).subs(x, 2) is S.false
+    assert Equality(M, M.subs(x, 2)).subs(x, 3) is S.false
+    assert Unequality(M, M.subs(x, 2)).subs(x, 3) is S.true

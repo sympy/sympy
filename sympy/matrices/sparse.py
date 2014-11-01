@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from sympy.core.containers import Dict
 from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
@@ -539,6 +540,49 @@ class SparseMatrix(MatrixBase):
         return rv
     extract.__doc__ = MatrixBase.extract.__doc__
 
+    @property
+    def is_hermitian(self):
+        """Checks if the matrix is Hermitian.
+
+        In a Hermitian matrix element i,j is the complex conjugate of
+        element j,i.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> a = SparseMatrix([[1, I], [-I, 1]])
+        >>> a
+        Matrix([
+        [ 1, I],
+        [-I, 1]])
+        >>> a.is_hermitian
+        True
+        >>> a[0, 0] = 2*I
+        >>> a.is_hermitian
+        False
+        >>> a[0, 0] = x
+        >>> a.is_hermitian
+        >>> a[0, 1] = a[1, 0]*I
+        >>> a.is_hermitian
+        False
+        """
+        def cond():
+            d = self._smat
+            yield self.is_square
+            if len(d) <= self.rows:
+                yield fuzzy_and(
+                    d[i, i].is_real for i, j in d if i == j)
+            else:
+                yield fuzzy_and(
+                    d[i, i].is_real for i in range(self.rows) if (i, i) in d)
+            yield fuzzy_and(
+                    ((self[i, j] - self[j, i].conjugate()).is_zero
+                    if (j, i) in d else False) for (i, j) in d)
+        return fuzzy_and(i for i in cond())
+
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
 
@@ -654,8 +698,7 @@ class SparseMatrix(MatrixBase):
 
         Symbolic Sparse Cholesky Factorization using Elimination Trees,
         Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582,
-        downloaded from http://tinyurl.com/9o2jsxj
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
         """
         # Algorithm 2.4, p 17 of reference
 
@@ -699,8 +742,7 @@ class SparseMatrix(MatrixBase):
 
         Symbolic Sparse Cholesky Factorization using Elimination Trees,
         Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582,
-        downloaded from http://tinyurl.com/9o2jsxj
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
         """
 
         R, parent = self.liupc()
@@ -1069,7 +1111,7 @@ class SparseMatrix(MatrixBase):
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
-        from immutable import ImmutableSparseMatrix
+        from .immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
 
     def nnz(self):
@@ -1079,15 +1121,7 @@ class SparseMatrix(MatrixBase):
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
+        c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
         return cls(r, c, {})

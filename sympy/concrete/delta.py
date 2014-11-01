@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Interval, Mul, S, Dummy, symbols
+from sympy.core import Add, Mul, S, Dummy, symbols
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
+from sympy.sets import Interval
 
 
 @cacheit
@@ -166,7 +167,7 @@ def deltaproduct(f, limit):
     """
     from sympy.concrete.products import product
 
-    if ((limit[2] - limit[1]) < 0) is True:
+    if ((limit[2] - limit[1]) < 0) == True:
         return S.One
 
     if not f.has(KroneckerDelta):
@@ -257,8 +258,9 @@ def deltasummation(f, limit, no_piecewise=False):
     Examples
     ========
 
-    >>> from sympy import oo
-    >>> from sympy.abc import i, j, k
+    >>> from sympy import oo, symbols
+    >>> from sympy.abc import k
+    >>> i, j = symbols('i, j', integer=True, finite=True)
     >>> from sympy.concrete.delta import deltasummation
     >>> from sympy import KroneckerDelta, Piecewise
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
@@ -284,7 +286,7 @@ def deltasummation(f, limit, no_piecewise=False):
     from sympy.concrete.summations import summation
     from sympy.solvers import solve
 
-    if ((limit[2] - limit[1]) < 0) is True:
+    if ((limit[2] - limit[1]) < 0) == True:
         return S.Zero
 
     if not f.has(KroneckerDelta):
