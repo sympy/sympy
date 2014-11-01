@@ -360,7 +360,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Mridul Seth: correct is_tangent for Ellipse non-intersection
 #. Mihai A. Ionescu: Improvement to LaplaceTransform
 #. ck Lux: handle zoo, oo, nan in as_int and round
-#. leonidb: check input to Binomial
+#. leonidb: make integrals aware of both limits being +/-oo
 #. Michael Gallaspy: improve handling of inequalities involving RootOf
 #. Roman Inflianskas: add svg support to preview
 
