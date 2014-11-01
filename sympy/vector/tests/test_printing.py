@@ -1,9 +1,19 @@
 # -*- coding: utf-8 -*-
-from sympy import Integral, pretty, latex, Function
+from sympy import Integral, latex, Function
+from sympy import pretty as xpretty
 from sympy.vector import CoordSysCartesian, Vector, Dyadic, express
 from sympy.abc import a, b, c
 from sympy.core.compatibility import u_decode as u
+from sympy.utilities.pytest import XFAIL
 
+def pretty(expr):
+    """ASCII pretty-printing"""
+    return xpretty(expr, use_unicode=False, wrap_line=False)
+
+
+def upretty(expr):
+    """Unicode pretty-printing"""
+    return xpretty(expr, use_unicode=True, wrap_line=False)
 
 #Initialize the basic and tedious vector/dyadic expressions
 #needed for testing.
@@ -23,35 +33,63 @@ v.append((a**2 + N.x)*N.i + N.k)
 v.append((a**2 + b)*N.i + 3*(C.y - c)*N.k)
 f = Function('f')
 v.append(N.j - (Integral(f(b)) - C.x**2)*N.k)
-pretty_v_8 = u(
+upretty_v_8 = u(
 """\
 N_j + ⎛   2   ⌠        ⎞ N_k\n\
       ⎜C_x  - ⎮ f(b) db⎟    \n\
       ⎝       ⌡        ⎠    \
 """)
+pretty_v_8 = u(
+"""\
+N_j + /         /       \\\n\
+      |   2    |        |\n\
+      |C_x  -  | f(b) db|\n\
+      |        |        |\n\
+      \\       /         / \
+""")
+
 v.append(N.i + C.k)
 v.append(express(N.i, C))
 v.append((a**2 + b)*N.i + (Integral(f(b)))*N.k)
-pretty_v_11 = u(
+upretty_v_11 = u(
 """\
 ⎛ 2    ⎞ N_i + ⎛⌠        ⎞ N_k\n\
 ⎝a  + b⎠       ⎜⎮ f(b) db⎟    \n\
                ⎝⌡        ⎠    \
 """)
+pretty_v_11 = u(
+"""\
+/ 2    \\ + /  /       \\\n\
+\\a  + b/ N_i| |        |\n\
+           | | f(b) db|\n\
+           | |        |\n\
+           \\/         / \
+""")
+
 for x in v:
     d.append(x | N.k)
 s = 3*N.x**2*C.y
-pretty_s = u(
+upretty_s = u(
 """\
          2\n\
 3⋅C_y⋅N_x \
 """)
+pretty_s = u(
+"""\
+         2\n\
+3*C_y*N_x \
+""")
 
 #This is the pretty form for ((a**2 + b)*N.i + 3*(C.y - c)*N.k) | N.k
-pretty_d_7 = u(
+upretty_d_7 = u(
 """\
 ⎛ 2    ⎞ (N_i|N_k) + (3⋅C_y - 3⋅c) (N_k|N_k)\n\
 ⎝a  + b⎠                                    \
+""")
+pretty_d_7 = u(
+"""\
+/ 2    \\ (N_i|N_k) + (3*C_y - 3*c) (N_k|N_k)\n\
+\\a  + b/                                    \
 """)
 
 
