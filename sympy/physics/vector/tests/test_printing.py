@@ -21,10 +21,10 @@ y = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
 x = alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) + alpha * beta * (N.z | N.x)
 
 def ascii_vpretty(expr):
-    return vpprint(expr, use_unicode=False)
+    return vpprint(expr, use_unicode=False, wrap_line=False)
 
 def unicode_vpretty(expr):
-    return vpprint(expr, use_unicode=True)
+    return vpprint(expr, use_unicode=True, wrap_line=False)
 
 def test_latex_printer():
     r = Function('r')('t')
@@ -46,6 +46,7 @@ a  n_x + b n_y + c*sin(alpha) n_z\
  2
 a  n_x + b n_y + c⋅sin(α) n_z\
 """)
+
 
     assert ascii_vpretty(v) == expected
     assert unicode_vpretty(v) == uexpected

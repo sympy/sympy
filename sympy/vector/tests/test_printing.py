@@ -70,8 +70,8 @@ def test_str_printing():
     assert str(d[8]) == ('(N.j|N.k) + (C.x**2 - ' +
                          'Integral(f(b), b))*(N.k|N.k)')
 
-
-def test_pretty_printing():
+@XFAIL
+def test_pretty_printing_ascii():
     assert pretty(v[0]) == u('0')
     assert pretty(v[1]) == u('N_i')
     assert pretty(v[5]) == u('(a) N_i + (-b) N_j')
@@ -83,6 +83,19 @@ def test_pretty_printing():
     assert pretty(d[5]) == u('(a) (N_i|N_k) + (-b) (N_j|N_k)')
     assert pretty(d[7]) == pretty_d_7
     assert pretty(d[10]) == u('(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)')
+
+def pretty_print_unicode():
+    assert upretty(v[0]) == u('0')
+    assert upretty(v[1]) == u('N_i')
+    assert upretty(v[5]) == u('(a) N_i + (-b) N_j')
+    assert upretty(v[8]) == upretty_v_8
+    assert upretty(v[2]) == u('(-1) N_i')
+    assert upretty(v[11]) == upretty_v_11
+    assert upretty(s) == upretty_s
+    assert upretty(d[0]) == u('(0|0)')
+    assert upretty(d[5]) == u('(a) (N_i|N_k) + (-b) (N_j|N_k)')
+    assert upretty(d[7]) == upretty_d_7
+    assert upretty(d[10]) == u('(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)')
 
 
 def test_latex_printing():

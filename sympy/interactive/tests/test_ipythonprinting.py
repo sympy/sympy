@@ -67,6 +67,8 @@ def test_print_builtin_option():
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
     # Note : In Python 3 the text is unicode, but in 2 it is a string.
+    # XXX: How can we make this ignore the terminal width? This test fails if
+    # the terminal is too narrow.
     assert text in ("{pi: 3.14, n_i: 3}", u('{n\u1d62: 3, \u03c0: 3.14}'),
         "{n_i: 3, pi: 3.14}", u('{\u03c0: 3.14, n\u1d62: 3}'))
 
