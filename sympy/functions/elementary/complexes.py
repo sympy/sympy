@@ -468,10 +468,16 @@ class Abs(Function):
                 return sqrt(expand_mul(arg * arg.conjugate()))
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
-            if exponent.is_even and base.is_real:
-                return arg
-            if exponent.is_integer and base is S.NegativeOne:
-                return S.One
+            if base.is_real:
+                if exponent.is_integer:
+                    if exponent.is_even:
+                        return arg
+                    if base is S.NegativeOne:
+                        return S.One
+                    return Abs(base)**exponent
+                if base.is_positive == True:
+                    return base**re(exponent)
+                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
         if isinstance(arg, C.exp):
             return C.exp(re(arg.args[0]))
 

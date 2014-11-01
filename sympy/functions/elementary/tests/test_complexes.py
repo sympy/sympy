@@ -344,6 +344,9 @@ def test_Abs():
     assert abs(d).func is Abs or abs(d) == 0
 
     assert Abs(4*exp(pi*I/4)) == 4
+    assert Abs(3**(2 + I)) == 9
+    assert Abs((-3)**(1 - I)) == 3*exp(pi)
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
