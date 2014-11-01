@@ -130,6 +130,16 @@ def test_dice_bayes():
     BayesTest(X > 3, X > 2)
 
 
+def test_die_args():
+    raises(ValueError, lambda: Die('X', -1))  # issue 8105: negative sides.
+    raises(ValueError, lambda: Die('X', 0))
+    raises(ValueError, lambda: Die('X', 1.5))  # issue 8103: non integer sides.
+
+    k = Symbol('k')
+    sym_die = Die('X', k)
+    raises(ValueError, lambda: density(sym_die).dict)
+
+
 def test_bernoulli():
     p, a, b = symbols('p a b')
     X = Bernoulli('B', p, a, b)
