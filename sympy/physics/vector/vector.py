@@ -1,6 +1,6 @@
 from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
                    ImmutableMatrix as Matrix)
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
