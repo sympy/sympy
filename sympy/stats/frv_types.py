@@ -14,6 +14,8 @@ Hypergeometric
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import as_int
+from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 from sympy import (S, sympify, Rational, binomial, cacheit, Symbol, Integer,
         Dict, Basic)
@@ -100,6 +102,19 @@ def DiscreteUniform(name, items):
 
 class DieDistribution(SingleFiniteDistribution):
     _argnames = ('sides',)
+
+    def __new__(cls, sides):
+        sides_sym = sympify(sides)
+        if fuzzy_not(fuzzy_and((sides_sym.is_integer, sides_sym.is_positive))):
+            raise ValueError("'sides' must be a positive integer.")
+        else:
+            return super(DieDistribution, cls).__new__(cls, sides)
+
+    @property
+    @cacheit
+    def dict(self):
+        sides = as_int(self.sides)
+        return super(DieDistribution, self).dict
 
     @property
     def set(self):
