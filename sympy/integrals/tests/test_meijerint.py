@@ -73,6 +73,13 @@ def test_meijerint_indefinite_numerically():
     t(3*x**S('3/2'), 4*x**S('7/3'))
 
 
+def test_meijerint_definite():
+    v, b = meijerint_definite(x, x, 0, 0)
+    assert v.is_zero and b is True
+    v, b = meijerint_definite(x, x, oo, oo)
+    assert v.is_zero and b is True
+
+
 def test_inflate():
     subs = {a: randcplx()/10, b: randcplx()/10 + I, c: randcplx(),
             d: randcplx(), y: randcplx()/10}
