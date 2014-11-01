@@ -337,6 +337,21 @@ class Pow(Expr):
             if self.exp.is_even:
                 return False
 
+    def _eval_is_zero(self):
+        if self.base.is_zero:
+            if self.exp.is_positive:
+                return True
+            elif self.exp.is_nonpositive:
+                return False
+        elif self.base.is_nonzero:
+            if self.exp.is_finite:
+                return False
+            elif self.exp.is_infinite:
+                if (1 - abs(self.base)).is_positive:
+                    return self.exp.is_positive
+                elif (1 - abs(self.base)).is_negative:
+                    return self.exp.is_negative
+
     def _eval_is_integer(self):
         b, e = self.args
         c1 = b.is_integer

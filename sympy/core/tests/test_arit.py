@@ -1094,13 +1094,27 @@ def test_Pow_is_negative_positive():
     assert (2**x).is_negative is None
 
 
-@XFAIL
 def test_Pow_is_zero():
     z = Symbol('z', zero=True)
     e = z**2
     assert e.is_zero
     assert e.is_positive is False
     assert e.is_negative is False
+
+    assert Pow(0, 0, evaluate=False).is_zero is False
+    assert Pow(0, 3, evaluate=False).is_zero
+    assert Pow(0, oo, evaluate=False).is_zero
+    assert Pow(0, -3, evaluate=False).is_zero is False
+    assert Pow(0, -oo, evaluate=False).is_zero is False
+    assert Pow(2, 2, evaluate=False).is_zero is False
+
+    a = Symbol('a', zero=False)
+    assert Pow(a, 3).is_zero is False  # issue 7965
+
+    assert Pow(2, oo, evaluate=False).is_zero is False
+    assert Pow(2, -oo, evaluate=False).is_zero
+    assert Pow(S.Half, oo, evaluate=False).is_zero
+    assert Pow(S.Half, -oo, evaluate=False).is_zero is False
 
 
 def test_Pow_is_nonpositive_nonnegative():
