@@ -122,7 +122,7 @@ def test_pretty_printing_ascii():
     assert pretty(d[7]) == pretty_d_7
     assert pretty(d[10]) == u('(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)')
 
-def pretty_print_unicode():
+def test_pretty_print_unicode():
     assert upretty(v[0]) == u('0')
     assert upretty(v[1]) == u('N_i')
     assert upretty(v[5]) == u('(a) N_i + (-b) N_j')
