@@ -358,6 +358,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nathan Woods: Fix to C code printer
 #. Colin B. Macdonald: Fix to documentation
 #. Marcus Näslund: Fix to documentation
+#. Clemens Novak: improved docstring for apart
 #. Mridul Seth: correct is_tangent for Ellipse non-intersection
 #. Mihai A. Ionescu: Improvement to LaplaceTransform
 #. Leonid Blouvshtein: make integrals aware of both limits being +/-oo
