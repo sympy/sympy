@@ -352,6 +352,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ambar Mehrotra: Fix to documentation
 #. Mark Shoulson: Enhanced Egyptian fractions
 #. David P. Sanders: Fix to latex printer
+#. Peter Brady: avoid caching problem by using function instead of lambda
 #. John V. Siratt: Fix to documentation
 #. Sarwar Chahal: Fix to documentation
 #. Nathan Woods: Fix to C code printer
