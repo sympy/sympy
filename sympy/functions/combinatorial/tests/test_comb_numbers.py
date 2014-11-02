@@ -2,7 +2,7 @@ import string
 
 from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, zoo, pi, I, simplify,
-    expand_func, diff, EulerGamma, cancel)
+    expand_func, diff, EulerGamma, cancel, re, im)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
     gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
@@ -83,7 +83,9 @@ def test_harmonic():
     n = Symbol("n")
 
     assert harmonic(n, 0) == n
+    assert harmonic(n).evalf() == harmonic(n)
     assert harmonic(n, 1) == harmonic(n)
+    assert harmonic(1, n).evalf() == harmonic(1, n)
 
     assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1
@@ -277,9 +279,11 @@ def test_catalan():
     assert diff(catalan(x), x) == (polygamma(
         0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
 
-    c = catalan(0.5).evalf()
+    assert catalan(x).evalf() == catalan(x)
+    c = catalan(S.Half).evalf()
     assert str(c) == '0.848826363156775'
-
+    c = catalan(I).evalf(3)
+    assert str((re(c), im(c))) == '(0.398, -0.0209)'
 
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
