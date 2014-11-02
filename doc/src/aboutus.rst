@@ -361,6 +361,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Clemens Novak: improved docstring for apart
 #. Craig A. Stoudt: correct addition of TWave objects
 #. Mridul Seth: correct is_tangent for Ellipse non-intersection
+#. Raj: fixed typos in four files
 #. Mihai A. Ionescu: Improvement to LaplaceTransform
 #. Leonid Blouvshtein: make integrals aware of both limits being +/-oo
 #. ck Lux: handle zoo, oo, nan in as_int and round
