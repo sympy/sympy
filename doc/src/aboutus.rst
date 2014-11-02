@@ -368,6 +368,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Peleg Michaeli: implement the Rademacher distribution
 #. Chai Wah Wu: Implement divisor_sigma function
 #. ck Lux: handle zoo, oo, nan in as_int and round
+#. zsc347: fixed a bug in crypto.rsa_private_key
 #. Michael Gallaspy: improve handling of inequalities involving RootOf
 #. Roman Inflianskas: add svg support to preview
 #. Duane Nykamp: improved function handling in parse_expr
