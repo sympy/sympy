@@ -363,6 +363,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Mridul Seth: correct is_tangent for Ellipse non-intersection
 #. Raj: fixed typos in four files
 #. Mihai A. Ionescu: Improvement to LaplaceTransform
+#. immerrr: add check of SYMPY_DEBUG value
 #. Leonid Blouvshtein: make integrals aware of both limits being +/-oo
 #. ck Lux: handle zoo, oo, nan in as_int and round
 #. Michael Gallaspy: improve handling of inequalities involving RootOf
