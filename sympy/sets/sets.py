@@ -1235,7 +1235,7 @@ class Union(Set, EvalfMixin):
                         yield next()
                 except StopIteration:
                     pending -= 1
-                    nexts = itertools.cycle(islice(nexts, pending))
+                    nexts = itertools.cycle(itertools.islice(nexts, pending))
 
         if all(set.is_iterable for set in self.args):
             if any((not set.is_FiniteSet) for set in self.args):
