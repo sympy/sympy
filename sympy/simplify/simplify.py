@@ -2822,7 +2822,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # e.g., 2**(2*x) => 4**x
         for i in xrange(len(c_powers)):
             b, e = c_powers[i]
-            if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
+            if not (all(x.is_nonnegative for x in b.as_numer_denom()) or e.is_integer or force or b.is_polar):
                 continue
             exp_c, exp_t = e.as_coeff_Mul(rational=True)
             if exp_c is not S.One and exp_t is not S.One:

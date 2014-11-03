@@ -1132,13 +1132,14 @@ def test_Pow_is_nonpositive_nonnegative():
     assert ((-2)**m).is_nonnegative is False
 
     assert (k**2).is_nonnegative is True
-    assert (k**(-2)).is_nonnegative is True
+    assert (k**(-2)).is_nonnegative is None
+    assert (k**k).is_nonnegative is True
 
     assert (k**x).is_nonnegative is None    # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
-    assert ((-k)**n).is_nonnegative is True
+    assert ((-k)**n).is_nonnegative is None
     assert ((-k)**m).is_nonnegative is None
 
     assert (2**x).is_nonpositive is False
@@ -1152,7 +1153,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**x).is_nonpositive is None
     assert ((-k)**x).is_nonpositive is None
     assert ((-k)**n).is_nonpositive is None
-    assert ((-k)**m).is_nonpositive is True
+    assert ((-k)**m).is_nonpositive is None
 
     assert (x**2).is_nonnegative is True
     i = symbols('i', imaginary=True)
