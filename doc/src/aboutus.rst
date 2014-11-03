@@ -352,15 +352,24 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ambar Mehrotra: Fix to documentation
 #. Mark Shoulson: Enhanced Egyptian fractions
 #. David P. Sanders: Fix to latex printer
+#. Peter Brady: avoid caching problem by using function instead of lambda
 #. John V. Siratt: Fix to documentation
 #. Sarwar Chahal: Fix to documentation
 #. Nathan Woods: Fix to C code printer
 #. Colin B. Macdonald: Fix to documentation
 #. Marcus Näslund: Fix to documentation
+#. Clemens Novak: improved docstring for apart
+#. Craig A. Stoudt: correct addition of TWave objects
 #. Mridul Seth: correct is_tangent for Ellipse non-intersection
+#. Raj: fixed typos in four files
 #. Mihai A. Ionescu: Improvement to LaplaceTransform
+#. immerrr: add check of SYMPY_DEBUG value
+#. Leonid Blouvshtein: make integrals aware of both limits being +/-oo
+#. Peleg Michaeli: implement the Rademacher distribution
+#. Chai Wah Wu: Implement divisor_sigma function
 #. ck Lux: handle zoo, oo, nan in as_int and round
-#. leonidb: make integrals aware of both limits being +/-oo
+#. zsc347: fixed a bug in crypto.rsa_private_key
+#. Hamish Dickson: improve qubit tests
 #. Michael Gallaspy: improve handling of inequalities involving RootOf
 #. Roman Inflianskas: add svg support to preview
 #. Duane Nykamp: improved function handling in parse_expr
