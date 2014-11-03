@@ -38,7 +38,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
         cd gh-pages
         git remote rm origin
         git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git > /dev/null 2>&1
-        git fetch origin
+        git fetch origin > /dev/null 2>&1
         git branch --set-upstream-to=origin/gh-pages gh-pages
         rm -rf dev/
         cp -R ../sympy/doc/_build/html dev/
