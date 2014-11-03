@@ -43,7 +43,8 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
         ./generate_indexes.py
 
         git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
-        echo -e "Pushing commit"
+        echo -e "Pulling"
         git pull > /dev/null 2>&1
+        echo -e "Pushing commit"
         git push -q origin gh-pages > /dev/null 2>&1
 fi
