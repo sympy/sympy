@@ -8,7 +8,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Lt
 from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -341,7 +341,7 @@ class Integral(AddWithLimits):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if a - b > 0:
+                    if Lt(b, a, 1):
                         a, b = b, a
                         newfunc = -newfunc
                     newlimits.append((uvar, a, b))

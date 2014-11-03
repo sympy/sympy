@@ -233,61 +233,67 @@ class Expr(Basic, EvalfMixin):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        for me in (self, other):
-            if me.is_complex and me.is_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
-        if self.is_real and other.is_real:
-            dif = self - other
-            if dif.is_nonnegative is not None and \
-                    dif.is_nonnegative is not dif.is_negative:
-                return sympify(dif.is_nonnegative)
-        return C.GreaterThan(self, other, evaluate=False)
+            raise TypeError("Invalid comparison of %s" % type(other))
+        _compare(self, other, 0)  # check that args are not non-real
+        try:
+            c = _compare(self, other, 2)
+            if c.is_Symbol:
+                if c.is_nonpositive:
+                    raise TypeError
+                c = 0
+            return _sympify(int(c) >= 0)
+        except TypeError:
+            return C.GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        for me in (self, other):
-            if me.is_complex and me.is_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
-        if self.is_real and other.is_real:
-            dif = self - other
-            if dif.is_nonpositive is not None and \
-                    dif.is_nonpositive is not dif.is_positive:
-                return sympify(dif.is_nonpositive)
-        return C.LessThan(self, other, evaluate=False)
+            raise TypeError("Invalid comparison of %s" % type(other))
+        _compare(self, other, 0)  # check that args are not non-real
+        try:
+            c = _compare(self, other, 2)
+            if c.is_Symbol:
+                if c.is_nonnegative:
+                    raise TypeError
+                c = 0
+            return _sympify(int(c) <= 0)
+        except TypeError:
+            return C.LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        for me in (self, other):
-            if me.is_complex and me.is_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
-        if self.is_real and other.is_real:
-            dif = self - other
-            if dif.is_positive is not None and \
-                    dif.is_positive is not dif.is_nonpositive:
-                return sympify(dif.is_positive)
-        return C.StrictGreaterThan(self, other, evaluate=False)
+            raise TypeError("Invalid comparison of %s" % type(other))
+        _compare(self, other, 0)  # check that args are not non-real
+        try:
+            c = _compare(self, other, 2)
+            if c.is_Symbol:
+                if c.is_nonpositive:
+                    return S.false
+                else:
+                    raise TypeError
+            return _sympify(int(c) > 0)
+        except TypeError:
+            return C.StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        for me in (self, other):
-            if me.is_complex and me.is_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
-        if self.is_real and other.is_real:
-            dif = self - other
-            if dif.is_negative is not None and \
-                    dif.is_negative is not dif.is_nonnegative:
-                return sympify(dif.is_negative)
-        return C.StrictLessThan(self, other, evaluate=False)
+            raise TypeError("Invalid comparison of %s" % type(other))
+        _compare(self, other, 0)  # check that args are not non-real
+        try:
+            c = _compare(self, other, 2)
+            if c.is_Symbol:
+                if c.is_nonnegative:
+                    return S.false
+                else:
+                    raise TypeError
+            return _sympify(int(c) < 0)
+        except TypeError:
+            return C.StrictLessThan(self, other, evaluate=False)
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -3145,3 +3151,4 @@ from .function import Derivative, expand_mul
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational
+from .relational import _compare

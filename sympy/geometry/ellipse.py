@@ -11,6 +11,7 @@ from __future__ import print_function, division
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo, zoo, Rational
+from sympy.core.relational import Le
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
@@ -260,12 +261,10 @@ class Ellipse(GeometryEntity):
         if len(ab) == 1:
             return ab[0]
         a, b = ab
-        o = a - b < 0
-        if o == True:
-            return a
-        elif o == False:
-            return b
-        return self.vradius
+        try:
+           return a if Le(a, b, 1) else b
+        except TypeError:
+            return self.vradius
 
     @property
     def major(self):
@@ -307,12 +306,10 @@ class Ellipse(GeometryEntity):
         if len(ab) == 1:
             return ab[0]
         a, b = ab
-        o = b - a < 0
-        if o == True:
-            return a
-        elif o == False:
-            return b
-        return self.hradius
+        try:
+           return a if Le(b, a, 1) else b
+        except TypeError:
+            return self.hradius
 
     @property
     def area(self):

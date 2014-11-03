@@ -315,6 +315,10 @@ def test_integrate_derivatives():
 
 
 def test_transform():
+    a = Integral(x**2 + 1, (x, z, z + 2))
+    fx = x
+    fy = 3*y + 1
+    assert a.doit().equals(a.transform(fx, fy).doit())
     a = Integral(x**2 + 1, (x, -1, 2))
     fx = x
     fy = 3*y + 1
