@@ -663,42 +663,39 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_zero(self):
+    def _eval_is_positive(self):
         from sympy.polys import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_algebraic:
+            if self.is_real is False:
+                return False
+            try:
+                # check to see that we can get a value
+                n2 = self._eval_evalf(2)
+                if n2 is None:
+                    raise AttributeError
+                if n2._prec == 1:  # no significance
+                    raise AttributeError
+                if n2 == S.NaN:
+                    raise AttributeError
+            except (AttributeError, ValueError):
+                return None
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n > 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic:
                 try:
                     if minimal_polynomial(self).is_Symbol:
-                        return True
+                        return False
                 except (NotAlgebraic, NotImplementedError):
                     pass
 
-    def _eval_is_positive(self):
-        if self.is_number:
-            if self.is_real is False:
-                return False
-            try:
-                # check to see that we can get a value
-                n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
-                return None
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
-                return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                return n > 0
-
     def _eval_is_negative(self):
+        from sympy.polys import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -716,11 +713,15 @@ class Expr(Basic, EvalfMixin):
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                return n < 0
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n < 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic:
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_interval(self, x, a, b):
         """
