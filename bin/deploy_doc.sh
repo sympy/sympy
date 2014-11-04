@@ -25,29 +25,41 @@
 # Exit on error
 set -e
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+# Don't use set -x as that would print the GH_TOKEN variable
+set +x
 
-        cd ../
-        echo -e "Setting git attributes"
-        git config --global user.email "sympy@googlegroups.com"
-        git config --global user.name "SymPy (Travis CI)"
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-        echo -e "Cloning repository"
-        git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/sympy/sympy_doc.git  gh-pages > /dev/null 2>&1
+if [[ "$GIT_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+    cd ../
+    echo -e "Setting git attributes"
+    git config --global user.email "sympy@googlegroups.com"
+    git config --global user.name "SymPy (Travis CI)"
 
-        cd gh-pages
-        git remote rm origin
-        git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git > /dev/null 2>&1
-        git fetch origin > /dev/null 2>&1
-        git branch --set-upstream-to=origin/gh-pages gh-pages
-        rm -rf dev/
-        cp -R ../sympy/doc/_build/html dev/
-        git add -A dev/
-        ./generate_indexes.py
+    echo -e "Cloning repository"
+    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/sympy/sympy_doc.git  gh-pages > /dev/null 2>&1
 
-        git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
-        echo -e "Pulling"
-        git pull > /dev/null 2>&1
-        echo -e "Pushing commit"
-        git push -q origin gh-pages > /dev/null 2>&1
+    cd gh-pages
+    git remote rm origin
+    git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git > /dev/null 2>&1
+    git fetch origin > /dev/null 2>&1
+    git branch --set-upstream-to=origin/gh-pages gh-pages
+    rm -rf dev/
+    cp -R ../sympy/doc/_build/html dev/
+    git add -A dev/
+    ./generate_indexes.py
+
+    git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
+    echo -e "Pulling"
+    git pull > /dev/null 2>&1
+    echo -e "Pushing commit"
+    git push -q origin gh-pages > /dev/null 2>&1
+fi
+
+if [ "$GIT_BRANCH" != "master" ]; then
+    echo -e "The docs are only deployed from master"
+fi
+
+if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+    echo -e "The docs are not deployed on pull requests"
 fi
