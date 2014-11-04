@@ -53,7 +53,7 @@ if [[ "$GIT_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" != "false" ]]; then
     echo -e "Pulling"
     git pull > /dev/null 2>&1
     echo -e "Pushing commit"
-    git push -q origin gh-pages > /dev/null 2>&1
+    git push -q origin gh-pages
 fi
 
 if [ "$GIT_BRANCH" != "master" ]; then
