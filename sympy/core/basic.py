@@ -16,6 +16,9 @@ class Basic(with_metaclass(ManagedProperties)):
     """
     Base class for most objects in SymPy.
 
+    Not all SymPy objects inherit from Basic: for example mutable objects
+    (e.g., MutableMatrix) do not.
+
     Conventions:
 
     1) Always use ``.args``, when accessing parameters of some instance:
