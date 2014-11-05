@@ -30,7 +30,7 @@ set +x
 
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-if [[ "$GIT_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" != "false" ]]; then
+if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
     cd ../
     echo -e "Setting git attributes"
     git config --global user.email "sympy@googlegroups.com"
