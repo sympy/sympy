@@ -144,13 +144,26 @@ class Equality(Relational):
     Equality object.  Use the ``simplify`` function on this object for
     more nontrivial evaluation of the equality relation.
 
+    As usual, the keyword argument ``evaluate=False`` can be used to
+    prevent any evaluation.
+
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
-    >>> Eq(y, x+x**2)
+    >>> Eq(y, x + x**2)
     y == x**2 + x
+    >>> Eq(2, 5)
+    False
+    >>> Eq(2, 5, evaluate=False)
+    2 == 5
+    >>> _.doit()
+    False
+    >>> Eq(exp(x), exp(x).rewrite(cos))
+    exp(x) == sinh(x) + cosh(x)
+    >>> simplify(_)
+    True
 
     See Also
     ========
