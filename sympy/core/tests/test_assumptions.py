@@ -857,12 +857,10 @@ def test_issue_7899():
     assert ((x - I)*(x - 1)).is_real is None
 
 
-@XFAIL
-def test_is_zero_int_minus_nonzero_nonint():
-    # see issue #7993
+def test_issue_7993():
     x = Dummy(integer=True)
     y = Dummy(noninteger=True)
-    assert (x-y).is_zero == False
+    assert (x - y).is_zero == False
 
 
 def test_issue_8075():
