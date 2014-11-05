@@ -860,7 +860,7 @@ def test_issue_7899():
 def test_issue_7993():
     x = Dummy(integer=True)
     y = Dummy(noninteger=True)
-    assert (x - y).is_zero == False
+    assert (x - y).is_zero is False
 
 
 def test_issue_8075():
