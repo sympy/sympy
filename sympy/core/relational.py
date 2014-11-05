@@ -144,6 +144,9 @@ class Equality(Relational):
     Equality object.  Use the ``simplify`` function on this object for
     more nontrivial evaluation of the equality relation.
 
+    As usual, the keyword argument ``evaluate=False`` can be used to
+    prevent any evaluation to True/False.
+
     Examples
     ========
 
@@ -151,6 +154,17 @@ class Equality(Relational):
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
     y == x**2 + x
+    >>> Eq(2, 5)
+    False
+    >>> Eq(2, 5, evaluate=False)
+    2 == 5
+    >>> _.doit()
+    False
+    >>> from sympy import simplify, sin, cos
+    >>> Eq(sin(x)**2 + cos(x)**2, 1)
+    sin(x)**2 + cos(x)**2 == 1
+    >>> simplify(_)
+    True
 
     See Also
     ========
