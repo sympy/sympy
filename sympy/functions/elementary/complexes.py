@@ -99,6 +99,9 @@ class re(Function):
             return -S.ImaginaryUnit \
                 * im(Derivative(self.args[0], x, evaluate=True))
 
+    def _eval_rewrite_as_im(self, arg):
+        return self.args[0] - im(self.args[0])
+
     def _sage_(self):
         import sage.all as sage
         return sage.real_part(self.args[0]._sage_())
@@ -200,6 +203,9 @@ class im(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.imag_part(self.args[0]._sage_())
+
+    def _eval_rewrite_as_re(self, arg):
+        return self.args[0] - re(self.args[0])
 
 
 ###############################################################################
@@ -443,6 +449,20 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg.is_Pow:
+            base, exponent = arg.as_base_exp()
+            if base.is_real:
+                if exponent.is_integer:
+                    if exponent.is_even:
+                        return arg
+                    if base is S.NegativeOne:
+                        return S.One
+                    return Abs(base)**exponent
+                if base.is_positive == True:
+                    return base**re(exponent)
+                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
+        if isinstance(arg, C.exp):
+            return C.exp(re(arg.args[0]))
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_nonnegative:
@@ -460,12 +480,6 @@ class Abs(Function):
             if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
                 from sympy import expand_mul
                 return sqrt(expand_mul(arg * arg.conjugate()))
-        if arg.is_Pow:
-            base, exponent = arg.as_base_exp()
-            if exponent.is_even and base.is_real:
-                return arg
-            if exponent.is_integer and base is S.NegativeOne:
-                return S.One
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
@@ -473,13 +487,12 @@ class Abs(Function):
     def _eval_is_positive(self):
         return self.is_nonzero
 
-    def _eval_power(self, other):
-        if self.args[0].is_real and other.is_integer:
-            if other.is_even:
-                return self.args[0]**other
-            elif other is not S.NegativeOne and other.is_Integer:
-                e = other - sign(other)
-                return self.args[0]**e*self
+    def _eval_power(self, exponent):
+        if self.args[0].is_real and exponent.is_integer:
+            if exponent.is_even:
+                return self.args[0]**exponent
+            elif exponent is not S.NegativeOne and exponent.is_Integer:
+                return self.args[0]**(exponent - 1)*self
         return
 
     def _eval_nseries(self, x, n, logx):

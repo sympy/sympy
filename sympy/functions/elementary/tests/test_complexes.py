@@ -70,6 +70,9 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
+    assert re(x).rewrite(im) == x - im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -128,6 +131,9 @@ def test_im():
 
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
+
+    assert im(x).rewrite(re) == x - re(x)
+    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
 
 
 def test_sign():
@@ -273,6 +279,7 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+
 @XFAIL
 def test_sign_issue_3068():
     n = pi**1000
@@ -322,6 +329,8 @@ def test_Abs():
         Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
+    assert Abs(x)**-3 == Abs(x)/(x**4)
+    assert Abs(x**3) == x**2*Abs(x)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -336,6 +345,11 @@ def test_Abs():
     p = expand(q**3)**Rational(1, 3)
     d = p - q
     assert abs(d).func is Abs or abs(d) == 0
+
+    assert Abs(4*exp(pi*I/4)) == 4
+    assert Abs(3**(2 + I)) == 9
+    assert Abs((-3)**(1 - I)) == 3*exp(pi)
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -438,6 +452,7 @@ def test_arg_rewrite():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
+
 
 def test_adjoint():
     a = Symbol('a', antihermitian=True)
