@@ -686,7 +686,7 @@ class Expr(Basic, EvalfMixin):
             if n._prec != 1 and i._prec != 1:
                 return bool(not i and n > 0)
             elif n._prec == 1 and (not i or i._prec == 1) and \
-                    self.is_algebraic:
+                    self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
                         return False
@@ -716,7 +716,7 @@ class Expr(Basic, EvalfMixin):
             if n._prec != 1 and i._prec != 1:
                 return bool(not i and n < 0)
             elif n._prec == 1 and (not i or i._prec == 1) and \
-                    self.is_algebraic:
+                    self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
                         return False
@@ -3149,7 +3149,7 @@ def _mag(x):
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, expand_mul
+from .function import Derivative, expand_mul, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

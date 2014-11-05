@@ -488,9 +488,14 @@ def test_roots_slow():
     f = x**3 + 2*x**2 + 8
     R = list(roots(f).keys())
 
-    assert f.subs(x, R[0]).is_zero
-    assert f.subs(x, R[1]).is_zero
-    assert f.subs(x, R[2]).is_zero
+    # these 3 tests *can* be done symboliccaly but they are very slow
+    # the issue was to affirm that the numerical calculation did not
+    # fail
+    assert not any(i for i in [f.subs(x, ri).n(chop=True) for ri in R])
+
+    assert f.subs(x, R[0]).simplify() == 0
+    assert f.subs(x, R[1]).simplify() == 0
+    assert f.subs(x, R[2]).is_zero  # simplify is very slow on this!
 
 
 def test_roots_inexact():
