@@ -279,6 +279,7 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+
 @XFAIL
 def test_sign_issue_3068():
     n = pi**1000
@@ -329,6 +330,7 @@ def test_Abs():
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x)**-3 == Abs(x)/(x**4)
+    assert Abs(x**3) == x**2*Abs(x)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -450,6 +452,7 @@ def test_arg_rewrite():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
+
 
 def test_adjoint():
     a = Symbol('a', antihermitian=True)
