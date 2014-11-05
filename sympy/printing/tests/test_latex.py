@@ -17,7 +17,8 @@ from sympy import (
     Contains, divisor_sigma)
 
 from sympy.abc import mu, tau
-from sympy.printing.latex import latex, translate
+from sympy.printing.latex import (latex, translate, greek_letters_set,
+                                  tex_greek_dictionary)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
@@ -137,6 +138,9 @@ def test_latex_symbols():
     assert latex(Tau) == "T"
     assert latex(TAU) == r"\tau"
     assert latex(taU) == r"\tau"
+    # Check that all capitalized greek letters are handled explicitly
+    capitalized_letters = set(l.capitalize() for l in greek_letters_set)
+    assert len(capitalized_letters - set(tex_greek_dictionary.keys())) == 0
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q1')) == r"q_{1}"
