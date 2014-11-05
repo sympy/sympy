@@ -145,14 +145,14 @@ class Equality(Relational):
     more nontrivial evaluation of the equality relation.
 
     As usual, the keyword argument ``evaluate=False`` can be used to
-    prevent any evaluation to True/False.
+    prevent any evaluation.
 
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, simplify, sin, cos
     >>> from sympy.abc import x, y
-    >>> Eq(y, x+x**2)
+    >>> Eq(y, x + x**2)
     y == x**2 + x
     >>> Eq(2, 5)
     False
@@ -160,7 +160,6 @@ class Equality(Relational):
     2 == 5
     >>> _.doit()
     False
-    >>> from sympy import simplify, sin, cos
     >>> Eq(sin(x)**2 + cos(x)**2, 1)
     sin(x)**2 + cos(x)**2 == 1
     >>> simplify(_)
