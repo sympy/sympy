@@ -3529,7 +3529,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
-    n = Dummy("n")
+    n = Dummy("n", integer=True)
     s = Wild("s")
     k = Wild("k", exclude=[x])
     x0 = match.get('x0')

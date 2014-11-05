@@ -125,6 +125,7 @@ def test_Max():
     p_ = Symbol('p_', positive=True)
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
+    r = Symbol('r', real=True)
 
     assert Max(5, 4) == 5
 
@@ -139,7 +140,7 @@ def test_Max():
     assert Max(n, -oo, n_, p) == p
     assert Max(2, x, p, n, -oo, S.NegativeInfinity, n_, p, 2) == Max(2, x, p)
     assert Max(0, x, 1, y) == Max(1, x, y)
-    assert Max(x, x + 1, x - 1) == 1 + x
+    assert Max(r, r + 1, r - 1) == 1 + r
     assert Max(1000, 100, -100, x, p, n) == Max(p, x, 1000)
     assert Max(cos(x), sin(x)) == Max(sin(x), cos(x))
     assert Max(cos(x), sin(x)).subs(x, 1) == sin(1)
