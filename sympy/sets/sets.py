@@ -1244,8 +1244,24 @@ class Union(Set, EvalfMixin):
 
     def __iter__(self):
         import itertools
+
+        # roundrobin recipe taken from itertools documentation:
+        # https://docs.python.org/2/library/itertools.html#recipes
+        def roundrobin(*iterables):
+            "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
+            # Recipe credited to George Sakkis
+            pending = len(iterables)
+            nexts = itertools.cycle(iter(it).next for it in iterables)
+            while pending:
+                try:
+                    for next in nexts:
+                        yield next()
+                except StopIteration:
+                    pending -= 1
+                    nexts = itertools.cycle(itertools.islice(nexts, pending))
+
         if all(set.is_iterable for set in self.args):
-            return itertools.chain(*(iter(arg) for arg in self.args))
+            return roundrobin(*(iter(arg) for arg in self.args))
         else:
             raise TypeError("Not all constituent sets are iterable")
 
