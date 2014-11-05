@@ -5,12 +5,8 @@ from sympy.core import S, Wild, sympify, Mul, Add, Expr
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, _mexpand
 from sympy.utilities import default_sort_key
-
-
-def _mexpand(expr):
-    return expand_mul(expand_multinomial(expr))
 
 
 def is_sqrt(expr):

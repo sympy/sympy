@@ -1774,3 +1774,9 @@ def test_issue_8247_8354():
     z = 2*(-3*tan(19*pi/90) + sqrt(3))*cos(11*pi/90)*cos(19*pi/90) - \
         sqrt(3)*(-3 + 4*cos(19*pi/90)**2)
     assert z.is_positive is not True  # it's zero and it shouldn't hang
+    z = S('''9*(3*sqrt(93) + 29)**(2/3)*((3*sqrt(93) +
+        29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) - 2) - 2*2**(1/3))**3 +
+        72*(3*sqrt(93) + 29)**(2/3)*(81*sqrt(93) + 783) + (162*sqrt(93) +
+        1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
+        2) - 2*2**(1/3))**2''')
+    assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)

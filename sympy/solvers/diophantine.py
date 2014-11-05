@@ -4,7 +4,8 @@ from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
     isprime, nextprime, integer_nthroot, Expr, Pow)
 
-from sympy.simplify.simplify import rad_rationalize, _mexpand
+from sympy.core.function import _mexpand
+from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex

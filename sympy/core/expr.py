@@ -664,7 +664,7 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
-        from sympy.polys import minimal_polynomial
+        from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
@@ -694,7 +694,7 @@ class Expr(Basic, EvalfMixin):
                     pass
 
     def _eval_is_negative(self):
-        from sympy.polys import minimal_polynomial
+        from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:

@@ -237,7 +237,7 @@ from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand, expand_mul, Subs)
+    expand, expand_mul, Subs, _mexpand)
 from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import Rational, NaN, zoo, I
 from sympy.core.relational import Equality, Eq
@@ -256,7 +256,7 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify, cse
-from sympy.simplify.simplify import _mexpand, collect_const, powdenest
+from sympy.simplify.simplify import collect_const, powdenest
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift

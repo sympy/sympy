@@ -44,7 +44,8 @@ from sympy.utilities import (
 )
 
 from sympy.core.exprtools import Factors
-from sympy.simplify.simplify import _mexpand, _is_sum_surds, _split_gcd
+from sympy.core.function import _mexpand
+from sympy.simplify.simplify import _is_sum_surds, _split_gcd
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
@@ -638,7 +639,7 @@ def minimal_polynomial(ex, x=None, **args):
     ex = sympify(ex)
     if ex.is_number:
         # not sure if it's always needed but try it for numbers (issue 8354)
-        ex = _mexpand(ex)
+        ex = _mexpand(ex, recursive=True)
     for expr in preorder_traversal(ex):
         if expr.is_AlgebraicNumber:
             compose = False
