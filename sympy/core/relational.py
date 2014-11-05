@@ -369,8 +369,6 @@ class _Inequality(Relational):
         else:
             if evaluate is None:
                 evaluate = global_evaluate[0]
-            if evaluate is not False:
-                _compare(lhs, rhs, 0)  # check that args are not non-real
 
         if evaluate:
             # First we invoke the appropriate inequality method of `lhs`
