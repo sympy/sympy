@@ -449,6 +449,20 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg.is_Pow:
+            base, exponent = arg.as_base_exp()
+            if base.is_real:
+                if exponent.is_integer:
+                    if exponent.is_even:
+                        return arg
+                    if base is S.NegativeOne:
+                        return S.One
+                    return Abs(base)**exponent
+                if base.is_positive == True:
+                    return base**re(exponent)
+                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
+        if isinstance(arg, C.exp):
+            return C.exp(re(arg.args[0]))
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_nonnegative:
@@ -466,20 +480,6 @@ class Abs(Function):
             if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
                 from sympy import expand_mul
                 return sqrt(expand_mul(arg * arg.conjugate()))
-        if arg.is_Pow:
-            base, exponent = arg.as_base_exp()
-            if base.is_real:
-                if exponent.is_integer:
-                    if exponent.is_even:
-                        return arg
-                    if base is S.NegativeOne:
-                        return S.One
-                    return Abs(base)**exponent
-                if base.is_positive == True:
-                    return base**re(exponent)
-                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
-        if isinstance(arg, C.exp):
-            return C.exp(re(arg.args[0]))
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
