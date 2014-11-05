@@ -59,8 +59,8 @@ def test_solve_biquadratic():
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(1 - sqrt(4*r**2 - 1)/2, S(3)/2),
-         (1 + sqrt(4*r**2 - 1)/2, S(3)/2)]
+        [(1 - sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2),
+         (1 + sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2)]
 
     query = lambda expr: expr.is_Pow and expr.exp is S.Half
 

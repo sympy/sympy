@@ -948,26 +948,29 @@ def roots(f, *gens, **flags):
                 _update_dict(result, r, 1)
         else:
             _, factors = Poly(f.as_expr()).factor_list()
-
-            if len(factors) == 1 and factors[0][1] == 1:
-                if f.get_domain().is_EX:
-                    res = to_rational_coeffs(f)
-                    if res:
-                        if res[0] is None:
-                            translate_x, f = res[2:]
-                        else:
-                            rescale_x, f = res[1], res[-1]
-                        result = roots(f)
-                        if not result:
-                            for root in _try_decompose(f):
-                                _update_dict(result, root, 1)
-                else:
-                    for root in _try_decompose(f):
-                        _update_dict(result, root, 1)
+            if len(factors) == 1 and f.degree() == 2:
+                for r in roots_quadratic(f):
+                    _update_dict(result, r, 1)
             else:
-                for factor, k in factors:
-                    for r in _try_heuristics(Poly(factor, f.gen, field=True)):
-                        _update_dict(result, r, k)
+                if len(factors) == 1 and factors[0][1] == 1:
+                    if f.get_domain().is_EX:
+                        res = to_rational_coeffs(f)
+                        if res:
+                            if res[0] is None:
+                                translate_x, f = res[2:]
+                            else:
+                                rescale_x, f = res[1], res[-1]
+                            result = roots(f)
+                            if not result:
+                                for root in _try_decompose(f):
+                                    _update_dict(result, root, 1)
+                    else:
+                        for root in _try_decompose(f):
+                            _update_dict(result, root, 1)
+                else:
+                    for factor, k in factors:
+                        for r in _try_heuristics(Poly(factor, f.gen, field=True)):
+                            _update_dict(result, r, k)
 
     if coeff is not S.One:
         _result, result, = result, {}
