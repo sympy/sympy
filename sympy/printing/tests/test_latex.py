@@ -132,7 +132,11 @@ def test_latex_Float():
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
-    mass, volume = symbols('mass, volume')
+    tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
+    assert latex(tau) == r"\tau"
+    assert latex(Tau) == "T"
+    assert latex(TAU) == r"\tau"
+    assert latex(taU) == r"\tau"
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q1')) == r"q_{1}"

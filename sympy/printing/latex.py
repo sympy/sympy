@@ -34,18 +34,29 @@ accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
 tex_greek_dictionary = {
     'Alpha': 'A',
     'Beta': 'B',
+    'Gamma': r'\Gamma',
+    'Delta': r'\Delta',
     'Epsilon': 'E',
     'Zeta': 'Z',
     'Eta': 'H',
+    'Theta': r'\Theta',
     'Iota': 'I',
     'Kappa': 'K',
+    'Lambda': r'\Lambda',
     'Mu': 'M',
     'Nu': 'N',
+    'Xi': r'\Xi',
     'omicron': 'o',
     'Omicron': 'O',
+    'Pi': r'\Pi',
     'Rho': 'P',
+    'Sigma': r'\Sigma',
     'Tau': 'T',
+    'Upsilon': r'\Upsilon',
+    'Phi': r'\Phi',
     'Chi': 'X',
+    'Psi': r'\Psi',
+    'Omega': r'\Omega',
     'lamda': r'\lambda',
     'Lamda': r'\Lambda',
     'khi': r'\chi',
@@ -1780,7 +1791,9 @@ def translate(s):
     tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
-    elif s.lower() in greek_letters_set or s in other_symbols:
+    elif s.lower() in greek_letters_set:
+        return "\\" + s.lower()
+    elif s in other_symbols:
         return "\\" + s
     else:
         # Process modifiers, if any, and recurse
