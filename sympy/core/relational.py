@@ -150,7 +150,7 @@ class Equality(Relational):
     Examples
     ========
 
-    >>> from sympy import Eq, simplify, sin, cos
+    >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
     >>> Eq(y, x + x**2)
     y == x**2 + x
@@ -160,8 +160,8 @@ class Equality(Relational):
     2 == 5
     >>> _.doit()
     False
-    >>> Eq(sin(x)**2 + cos(x)**2, 1)
-    sin(x)**2 + cos(x)**2 == 1
+    >>> Eq(exp(x), exp(x).rewrite(cos))
+    exp(x) == sinh(x) + cosh(x)
     >>> simplify(_)
     True
 
