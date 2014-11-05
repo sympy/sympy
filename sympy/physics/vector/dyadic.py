@@ -207,33 +207,22 @@ class Dyadic(object):
                 mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
+                bar = u("\u2297") if use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        if use_unicode:
-                            ol.append(u(" + ") +
-                                      mpp.doprint(ar[i][1]) +
-                                      u("\u2297") +
-                                      mpp.doprint(ar[i][2]))
-                        else:
-                            ol.append(" + " +
-                                      mpp.doprint(ar[i][1]) +
-                                      "|" +
-                                      mpp.doprint(ar[i][2]))
+                        ol.extend([u(" + "),
+                                  mpp.doprint(ar[i][1]),
+                                  bar,
+                                  mpp.doprint(ar[i][2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        if use_unicode:
-                            ol.append(u(" - ") +
-                                      mpp.doprint(ar[i][1]) +
-                                      u("\u2297") +
-                                      mpp.doprint(ar[i][2]))
-                        else:
-                            ol.append(" - " +
-                                  mpp.doprint(ar[i][1]) +
-                                  "|" +
-                                  mpp.doprint(ar[i][2]))
+                        ol.extend([u(" - "),
+                                  mpp.doprint(ar[i][1]),
+                                  bar,
+                                  mpp.doprint(ar[i][2])])
 
                     # If the coefficient of the dyadic is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
@@ -248,16 +237,10 @@ class Dyadic(object):
                             str_start = u(" - ")
                         else:
                             str_start = u(" + ")
-                        if use_unicode:
-                            ol.append(str_start + arg_str + u(" ") +
-                                      mpp.doprint(ar[i][1]) +
-                                      u("\u2297") +
-                                      mpp.doprint(ar[i][2]))
-                        else:
-                            ol.append(str_start + arg_str + u(" ") +
-                                      mpp.doprint(ar[i][1]) +
-                                      "|" +
-                                      mpp.doprint(ar[i][2]))
+                        ol.extend([str_start, arg_str, u(" "),
+                                  mpp.doprint(ar[i][1]),
+                                  bar,
+                                  mpp.doprint(ar[i][2])])
 
                 outstr = u("").join(ol)
                 if outstr.startswith(u(" + ")):
