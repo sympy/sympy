@@ -19,7 +19,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol)
+    residue, Derivative, logcombine, Symbol, AlgebraicNumber)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -48,6 +48,7 @@ from sympy.solvers.recurr import rsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
 from itertools import islice, takewhile
+
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -179,16 +180,15 @@ def test_C19():
     assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
-@XFAIL
 def test_C20():
     inside = (135 + 78*sqrt(3))
-    test = simplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
-    assert test == 12
+    test = AlgebraicNumber((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
+    assert simplify(test) == AlgebraicNumber(12)
 
 
-@XFAIL
 def test_C21():
-    assert simplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
+    assert simplify(AlgebraicNumber((41 + 29*sqrt(2)) ** R(1, 5))) == \
+        AlgebraicNumber(1 + sqrt(2))
 
 
 @XFAIL
