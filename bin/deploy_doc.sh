@@ -50,4 +50,4 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
         git pull
         echo -e "Pushing commit"
         git push origin gh-pages
-fi
+fi 2>&1 | sed "s/${GH_TOKEN}/GH_TOKEN/"
