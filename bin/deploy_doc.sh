@@ -33,12 +33,12 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
         git config --global user.name "SymPy (Travis CI)"
 
         echo -e "Cloning repository"
-        git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/sympy/sympy_doc.git  gh-pages > /dev/null 2>&1
+        git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/sympy/sympy_doc.git  gh-pages
 
         cd gh-pages
         git remote rm origin
-        git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git > /dev/null 2>&1
-        git fetch origin > /dev/null 2>&1
+        git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git
+        git fetch origin
         git branch --set-upstream-to=origin/gh-pages gh-pages
         rm -rf dev/
         cp -R ../sympy/doc/_build/html dev/
@@ -47,7 +47,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
         git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
         echo -e "Pulling"
-        git pull > /dev/null 2>&1
+        git pull
         echo -e "Pushing commit"
-        git push -q origin gh-pages > /dev/null 2>&1
+        git push origin gh-pages
 fi
