@@ -380,6 +380,7 @@ git_whitelist = {
     'bin/ask_update.py',
     'bin/coverage_doctest.py',
     'bin/coverage_report.py',
+    'bin/build_doc.sh',
     'bin/diagnose_imports',
     'bin/doctest',
     'bin/get_sympy.py',
