@@ -2151,15 +2151,12 @@ class UniformDistribution(SingleContinuousDistribution):
     def compute_cdf(self, **kwargs):
         from sympy import Lambda, Min
         z = Dummy('z', real=True, finite=True)
-        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
-        result = result(z).subs({Min(z, self.right): z,
-                                 Min(z, self.left, self.right): self.left,
-                                 Min(z, self.left): self.left})
-        # XXX debug statement to figure out why the substitution may fail
-        margs = z, self.left, self.right, -z, -self.left, -self.right
-        min = self.atoms(Min)
-        if min and all(a in margs for m in min for a in m.args):
-            print(min)
+        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)(z)
+        reps = {
+            Min(z, self.right): z,
+            Min(z, self.left, self.right): self.left,
+            Min(z, self.left): self.left}
+        result = result.subs(reps)
         return Lambda(z, result)
 
     def expectation(self, expr, var, **kwargs):
