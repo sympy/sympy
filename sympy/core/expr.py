@@ -651,14 +651,14 @@ class Expr(Basic, EvalfMixin):
                         pass
 
                 # try to prove with minimal_polynomial but know when
-                # *not* to use this or else it can take a long time.
+                # *not* to use this or else it can take a long time. e.g. issue 8354
                 if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
                             return True
                         return False
-                    except NotAlgebraic:
+                    except (NotAlgebraic, NotImplementedError):
                         pass
 
         # diff has not simplified to zero; constant is either None, True
@@ -672,6 +672,8 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -689,15 +691,19 @@ class Expr(Basic, EvalfMixin):
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n > 0:
-                    return True
-                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n > 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_is_negative(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -715,13 +721,15 @@ class Expr(Basic, EvalfMixin):
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n < 0:
-                    return True
-                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n < 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_interval(self, x, a, b):
         """
@@ -3149,7 +3157,7 @@ def _mag(x):
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, expand_mul
+from .function import Derivative, expand_mul, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

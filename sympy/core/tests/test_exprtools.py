@@ -285,7 +285,7 @@ def test_factor_nc():
     n, m, o = symbols('n,m,o', commutative=False)
 
     # mul and multinomial expansion is needed
-    from sympy.simplify.simplify import _mexpand
+    from sympy.core.function import _mexpand
     e = x*(1 + y)**2
     assert _mexpand(e) == x + x*2*y + x*y**2
 

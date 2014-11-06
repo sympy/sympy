@@ -764,7 +764,6 @@ def test_wronskian():
 
 
 def test_eigen():
-
     R = Rational
 
     assert eye(3).charpoly(x) == Poly((x - 1)**3, x)
@@ -793,6 +792,12 @@ def test_eigen():
             ( 0, 1, [Matrix([0, -1, 1])]),
             ( 2, 1, [Matrix([R(2, 3), R(1, 3), 1])])
         ])
+
+    a = Symbol('a')
+    M = Matrix([[a, 0],
+                [0, 1]])
+
+    assert M.eigenvals() == {a: 1, S.One: 1}
 
     M = Matrix([[1, -1],
                 [1,  3]])

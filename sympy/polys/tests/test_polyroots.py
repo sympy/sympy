@@ -330,6 +330,8 @@ def test_roots():
     assert roots(((a*x - b)**5).expand(), x) == { b/a: 5}
     assert roots(((a*x + b)**5).expand(), x) == {-b/a: 5}
 
+    assert roots(x**2 + (-a - 1)*x + a, x) == {a: 1, S.One: 1}
+
     assert roots(x**4 - 2*x**2 + 1, x) == {S.One: 2, -S.One: 2}
 
     assert roots(x**6 - 4*x**4 + 4*x**3 - x**2, x) == \
@@ -488,9 +490,7 @@ def test_roots_slow():
     f = x**3 + 2*x**2 + 8
     R = list(roots(f).keys())
 
-    assert f.subs(x, R[0]).simplify() == 0
-    assert f.subs(x, R[1]).simplify() == 0
-    assert f.subs(x, R[2]).simplify() == 0
+    assert not any(i for i in [f.subs(x, ri).n(chop=True) for ri in R])
 
 
 def test_roots_inexact():

@@ -1982,6 +1982,16 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.polys import RootOf, minpoly
+
+        for r in [r for r in self.minpoly.all_roots() if r.func != RootOf]:
+            if minpoly(self.root - r).is_Symbol:
+                # use the matching root if it's simpler
+                if measure(r) < ratio*measure(self.root):
+                    return AlgebraicNumber(r)
+        return self
+
 
 class RationalConstant(Rational):
     """

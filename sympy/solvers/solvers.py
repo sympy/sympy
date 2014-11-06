@@ -23,7 +23,8 @@ from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function, expand_power_exp, Lambda)
+                          count_ops, Function, expand_power_exp, Lambda,
+                          _mexpand)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge
 from sympy.logic.boolalg import And, Or
@@ -36,7 +37,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
-from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
+from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, hyper_as_trig
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,

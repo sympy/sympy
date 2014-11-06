@@ -1,7 +1,8 @@
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le)
+                   Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
+                   AlgebraicNumber, simplify)
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
@@ -1429,3 +1430,15 @@ def test_latex():
 
 def test_issue_7742():
     assert -oo % 1 == nan
+
+
+def test_simplify_AlgebraicNumber():
+    A = AlgebraicNumber
+    e = 3**(S(1)/6)*(3 + (135 + 78*sqrt(3))**(S(2)/3))/(45 + 26*sqrt(3))**(S(1)/3)
+    assert simplify(A(e)) == A(12)  # wester test_C20
+
+    e = (41 + 29*sqrt(2))**(S(1)/5)
+    assert simplify(A(e)) == A(1 + sqrt(2))  # wester test_C21
+
+    e = (3 + 4*I)**(Rational(3, 2))
+    assert simplify(A(e)) == A(2 + 11*I)  # issue 4401
