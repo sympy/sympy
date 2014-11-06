@@ -141,6 +141,7 @@ def __cacheit_nocache(func):
 def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
+        from .decorators import wraps
 
         cfunc = __cacheit(maxsize)(func)
 
