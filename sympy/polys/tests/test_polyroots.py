@@ -330,6 +330,8 @@ def test_roots():
     assert roots(((a*x - b)**5).expand(), x) == { b/a: 5}
     assert roots(((a*x + b)**5).expand(), x) == {-b/a: 5}
 
+    assert roots(x**2 + (-a - 1)*x + a, x) == {a: 1, S.One: 1}
+
     assert roots(x**4 - 2*x**2 + 1, x) == {S.One: 2, -S.One: 2}
 
     assert roots(x**6 - 4*x**4 + 4*x**3 - x**2, x) == \
