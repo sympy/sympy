@@ -857,6 +857,12 @@ def test_issue_7899():
     assert ((x - I)*(x - 1)).is_real is None
 
 
+def test_issue_7993():
+    x = Dummy(integer=True)
+    y = Dummy(noninteger=True)
+    assert (x - y).is_zero is False
+
+
 def test_issue_8075():
     raises(InconsistentAssumptions, lambda: Dummy(zero=True, finite=False))
     raises(InconsistentAssumptions, lambda: Dummy(zero=True, infinite=True))
