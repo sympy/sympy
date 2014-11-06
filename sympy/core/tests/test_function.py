@@ -4,7 +4,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Tuple, Dummy, Eq, Expr, symbols, nfloat)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
-from sympy.core.function import PoleError
+from sympy.core.function import PoleError, _mexpand
 from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
@@ -651,6 +651,7 @@ def test_issue_7231():
     ans2 = f(x).series(x, a)
     assert res == ans2
 
+
 def test_issue_7687():
     from sympy.core.function import Function
     from sympy.abc import x
@@ -663,6 +664,7 @@ def test_issue_7687():
     assert isinstance(f, type(ff))
     assert match_with_cache == ff.matches(f)
 
+
 def test_issue_7688():
     from sympy.core.function import Function, UndefinedFunction
     from sympy.abc import x
@@ -673,3 +675,10 @@ def test_issue_7688():
         pass
     a = A('f')
     assert isinstance(a, type(f))
+
+
+def test_mexpand():
+    from sympy.abc import x
+    assert _mexpand(None) is None
+    assert _mexpand(1) is S.One
+    assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()

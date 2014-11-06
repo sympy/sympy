@@ -14,7 +14,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
-from sympy.core.function import expand_log, count_ops
+from sympy.core.function import expand_log, count_ops, _mexpand
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
@@ -36,9 +36,6 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
 
 import sympy.mpmath as mpmath
 
-
-def _mexpand(expr):
-    return expand_mul(expand_multinomial(expr))
 
 
 def fraction(expr, exact=False):

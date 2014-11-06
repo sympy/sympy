@@ -488,9 +488,7 @@ def test_roots_slow():
     f = x**3 + 2*x**2 + 8
     R = list(roots(f).keys())
 
-    assert f.subs(x, R[0]).simplify() == 0
-    assert f.subs(x, R[1]).simplify() == 0
-    assert f.subs(x, R[2]).simplify() == 0
+    assert not any(i for i in [f.subs(x, ri).n(chop=True) for ri in R])
 
 
 def test_roots_inexact():
