@@ -78,12 +78,15 @@ modules = [
     'sympy.physics.mechanics',
     'sympy.physics.optics',
     'sympy.physics.quantum',
+    'sympy.physics.unitsystems',
+    'sympy.physics.unitsystems.systems',
     'sympy.physics.vector',
     'sympy.plotting',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',
     'sympy.polys',
     'sympy.polys.agca',
+    'sympy.polys.benchmarks',
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
@@ -98,7 +101,7 @@ modules = [
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
-    'sympy.vector'
+    'sympy.vector',
 ]
 
 class audit(Command):
@@ -242,6 +245,7 @@ tests = [
     'sympy.physics.optics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
+    'sympy.physics.unitsystems.tests',
     'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
@@ -261,7 +265,7 @@ tests = [
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
-    'sympy.vector'
+    'sympy.vector.tests',
     ]
 
 classifiers = [
