@@ -538,3 +538,12 @@ def test_issue_8245():
     assert (r < a) == True
     assert (r >= a) == False
     assert (r <= a) == True
+
+
+def test_inequality_check():
+    # any inequality will traverse the new code, so just use Lt here
+    x, y = symbols('x y')
+    assert Lt(x, y, 0).func == Lt
+    raises(TypeError, lambda: Lt(x, y, 1))
+    assert Lt(x, x + 1, 1)
+    raises(TypeError, lambda: Lt(x, x + 1, 2))

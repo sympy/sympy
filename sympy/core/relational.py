@@ -281,6 +281,83 @@ class Unequality(Relational):
 Ne = Unequality
 
 
+_compare_dict = {
+        (True, False): S.NegativeOne,
+        (False, None): Symbol('nonneg', nonnegative=True),
+        (False, True): S.One,
+        (None, False): Symbol('nonpos', nonpositive=True),
+        (False, False): S.Zero,
+    }
+def _compare(a, b, check):
+    """Raise an error if either arg fails the initial test,
+    `i.is_imaginary and i.is_real is False`. Otherwise, return a value
+    depending on the value of ``check``.
+
+    Parameters
+    ==========
+
+    a : Basic object
+    b : Basic object
+    check : int, controls the level of testing of the arguments
+        0 - return None if the initial test is performed
+        1 - check that a - b is real and return the sign if it is known or
+            None if the difference is known to be nonpositive or nonnegative
+        2 - check that a and b are real and return the sign if it is known or
+            None if the difference is known to be nonpositive or nonnegative
+
+    Examples
+    ========
+
+    >>> from sympy.core.relational import _compare as compare
+    >>> from sympy import S, symbols
+    >>> from sympy.abc import x, y
+    >>> compare(S.Zero, S.One, check=2)
+    -1
+
+    >>> compare(x, x + 1, check=2)
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot compare unless both values are real
+
+    >>> compare(x, x + 1, check=1)
+    -1
+
+    >>> compare(x, y, check=1)
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot compare unless the difference is real
+
+    >>> compare(x, y, check=0) is None
+    True
+
+    >>> x, y = symbols("x y", real=True)
+    >>> compare(x, x + y, check=1) is None
+    Traceback (most recent call last):
+    ...
+    TypeError: could not determine the sign of the difference
+
+    >>> nn = symbols('nn', nonnegative=True)
+    >>> compare(nn, S.Zero, check=2)
+    nonneg
+    """
+    for me in (a, b):
+        if me.is_complex and me.is_real is False:
+            raise TypeError("cannot compare non-reals")
+    if not check:
+        return
+    if check == 2:
+        if not all(i.is_real for i in (a, b)):
+            raise TypeError("cannot compare unless both values are real")
+    diff = a - b
+    if check == 1 and not diff.is_real:
+        raise TypeError("cannot compare unless the difference is real")
+    key=(diff.is_negative, diff.is_positive)
+    rv = _compare_dict.get(key, None)
+    if rv is None:
+        raise TypeError("could not determine the sign of the difference")
+    return rv
+
+
 class _Inequality(Relational):
     """Internal base class for all *Than types.
 
@@ -290,11 +367,21 @@ class _Inequality(Relational):
     """
     __slots__ = []
 
-    def __new__(cls, lhs, rhs, **options):
+    def __new__(cls, lhs, rhs, check=None, evaluate=None, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        if check:
+            if check not in (1, 2):
+                raise ValueError('invalid check value: %s' % check)
+            c = _compare(lhs, rhs, check)
+            if c is not None:
+                lhs = c
+                rhs = S.Zero
+            evaluate = True
+        else:
+            if evaluate is None:
+                evaluate = global_evaluate[0]
 
         if evaluate:
             # First we invoke the appropriate inequality method of `lhs`
