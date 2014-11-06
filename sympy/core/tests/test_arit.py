@@ -1096,13 +1096,27 @@ def test_Pow_is_negative_positive():
     assert (2**x).is_negative is None
 
 
-@XFAIL
 def test_Pow_is_zero():
     z = Symbol('z', zero=True)
     e = z**2
     assert e.is_zero
     assert e.is_positive is False
     assert e.is_negative is False
+
+    assert Pow(0, 0, evaluate=False).is_zero is False
+    assert Pow(0, 3, evaluate=False).is_zero
+    assert Pow(0, oo, evaluate=False).is_zero
+    assert Pow(0, -3, evaluate=False).is_zero is False
+    assert Pow(0, -oo, evaluate=False).is_zero is False
+    assert Pow(2, 2, evaluate=False).is_zero is False
+
+    a = Symbol('a', zero=False)
+    assert Pow(a, 3).is_zero is False  # issue 7965
+
+    assert Pow(2, oo, evaluate=False).is_zero is False
+    assert Pow(2, -oo, evaluate=False).is_zero
+    assert Pow(S.Half, oo, evaluate=False).is_zero
+    assert Pow(S.Half, -oo, evaluate=False).is_zero is False
 
 
 def test_Pow_is_nonpositive_nonnegative():
@@ -1120,13 +1134,14 @@ def test_Pow_is_nonpositive_nonnegative():
     assert ((-2)**m).is_nonnegative is False
 
     assert (k**2).is_nonnegative is True
-    assert (k**(-2)).is_nonnegative is True
+    assert (k**(-2)).is_nonnegative is None
+    assert (k**k).is_nonnegative is True
 
     assert (k**x).is_nonnegative is None    # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
-    assert ((-k)**n).is_nonnegative is True
+    assert ((-k)**n).is_nonnegative is None
     assert ((-k)**m).is_nonnegative is None
 
     assert (2**x).is_nonpositive is False
@@ -1140,7 +1155,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**x).is_nonpositive is None
     assert ((-k)**x).is_nonpositive is None
     assert ((-k)**n).is_nonpositive is None
-    assert ((-k)**m).is_nonpositive is True
+    assert ((-k)**m).is_nonpositive is None
 
     assert (x**2).is_nonnegative is True
     i = symbols('i', imaginary=True)
