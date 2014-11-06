@@ -364,6 +364,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Michael Gallaspy: improve handling of inequalities involving RootOf
 #. Roman Inflianskas: add svg support to preview
 #. Duane Nykamp: improved function handling in parse_expr
+#. Ted Dokos: implemented interleaving for unions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
