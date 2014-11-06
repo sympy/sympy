@@ -7,7 +7,7 @@ env:
   - SPLIT="3/4"
   - SPLIT="4/4"
   global:
-  - secure: BF23oOuywoCc4NYwIKNqQDzkh5GjqhRZiezL45RA6h5AaB8Yl/DsL1Rna7wNqy+umpf0b0uNdWltGW+vpOzjGJr07Ef9+b0J8PH0I6JNVGwLMCittnlmvwM7wYjGidos7mqtNXitGoyoUuXusUTdgtrkGKHmvfixqA0YQF68S5c=
+    secure: BF23oOuywoCc4NYwIKNqQDzkh5GjqhRZiezL45RA6h5AaB8Yl/DsL1Rna7wNqy+umpf0b0uNdWltGW+vpOzjGJr07Ef9+b0J8PH0I6JNVGwLMCittnlmvwM7wYjGidos7mqtNXitGoyoUuXusUTdgtrkGKHmvfixqA0YQF68S5c=
 python:
   - 2.6
   - 2.7
