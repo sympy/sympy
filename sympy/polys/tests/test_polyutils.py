@@ -251,11 +251,13 @@ def test__parallel_dict_from_expr_no_gens():
 
 
 def test_parallel_dict_from_expr():
-    parallel_dict_from_expr([Eq(x, 1), Eq(
-        x**2, 2)]) == ([{(1,): Integer(1)}, {(2,): Integer(2)}], (x,))
+    assert parallel_dict_from_expr([Eq(x, 1), Eq(
+        x**2, 2)]) == ([{(0,): -Integer(1), (1,): Integer(1)},
+                        {(0,): -Integer(2), (2,): Integer(1)}], (x,))
     raises(PolynomialError, lambda: parallel_dict_from_expr([A*B - B*A]))
 
 
 def test_dict_from_expr():
-    dict_from_expr(Eq(x, 1)) == ({(1,): Integer(1)}, (x,))
+    assert dict_from_expr(Eq(x, 1)) == \
+        ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
