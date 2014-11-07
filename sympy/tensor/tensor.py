@@ -2260,7 +2260,7 @@ class TensExpr(Basic):
         ``[1, 1]`` Young tableau when constructing `sym2`. One has to be
         careful to assign symmetric component data to ``A``, as the symmetry
         properties of data are currently not checked to be compatible with the
-        defined tensor symmetry.  
+        defined tensor symmetry.
 
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
         >>> Lorentz.data = [1, -1, -1, -1]
@@ -2269,8 +2269,8 @@ class TensExpr(Basic):
         >>> A(i0, i1).get_matrix()
         Matrix([
         [0, 1, 2, 3],
-        [1, 2, 3, 4], 
-        [2, 3, 4, 5], 
+        [1, 2, 3, 4],
+        [2, 3, 4, 5],
         [3, 4, 5, 6]])
 
         It is possible to perform usual operation on matrices, such as the
