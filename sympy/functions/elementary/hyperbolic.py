@@ -205,6 +205,12 @@ class cosh(HyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return acosh
+
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
@@ -595,6 +601,171 @@ class coth(HyperbolicFunction):
         import sage.all as sage
         return sage.coth(self.args[0]._sage_())
 
+class csch(HyperbolicFunction):
+    r"""
+    The hyperbolic cosecant function, `\frac{2}{e^x - e^{-x}`.
+
+    * csch(x) -> Returns the hyperbolic cosecant of x
+
+    See Also
+    ========
+
+    cosh, tanh, asinh
+    """
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex == 1:
+            return -coth(self.args[0]) * csch(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    """def inverse(self, argindex=1):
+
+        #Returns the inverse of this function.
+
+        return acsch
+    """
+    @classmethod
+    def eval(cls, arg):
+        arg = sympify(arg)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.ComplexInfinity
+            elif arg.is_negative:
+                return -cls(-arg)
+        else:
+            if arg is S.ComplexInfinity:
+                return S.NaN 
+
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return S.ImaginaryUnit * C.csc(i_coeff)
+            else:
+                if _coeff_isneg(arg):
+                    return -cls(-arg)
+
+            if arg.func == asinh:
+                return 1/arg.args[0]
+
+            if arg.func == acosh:
+                x = arg.args[0]
+                return 1/(sqrt(x - 1) * sqrt(x + 1))
+
+            if arg.func == atanh:
+                x = arg.args[0]
+                return sqrt(1 - x**2) / x
+
+            if arg.func == acoth:
+                x = arg.args[0]
+                return sqrt(x - 1) * sqrt(x + 1)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        """
+        Returns the next term in the Taylor series expansion.
+        """
+        if n == 0:
+            return 1/sympify(x)
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            B = C.bernoulli(n + 1)
+            F = C.factorial(n + 1)
+
+            return 2 * (1 - 2**n) * B/F * x**n
+
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a complex coordinate.
+        """
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (sinh(re)*C.cos(im) / (sinh(re)**2 + sin(im)**2), -cosh(re)*sin(im) / (sinh(re)**2 + C.sin(im)**2))
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand(deep, **hints)
+        else:
+            arg = self.args[0]
+        x = None
+        if arg.is_Add: # TODO, implement more if deep stuff here
+            x, y = arg.as_two_terms()
+        else:
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+                x = terms
+                y = (coeff - 1)*x
+        if x is not None:
+            return (1/(sinh(x)*cosh(y) + sinh(y)*cosh(x))).expand(trig=True)
+
+        return csch(arg)
+
+    def _eval_rewrite_as_tractable(self, arg):
+        return 2 / (C.exp(arg) - C.exp(-arg))
+
+    def _eval_rewrite_as_exp(self, arg):
+        return 2 / (C.exp(arg) - C.exp(-arg))
+
+    def _eval_rewrite_as_cosh(self, arg):
+        return S.ImaginaryUnit / cosh(arg + S.Pi*S.ImaginaryUnit/2)
+
+    def _eval_rewrite_as_tanh(self, arg):
+        tanh_half = tanh(S.Half*arg)
+        return (1 - tanh_half**2)/(2*tanh_half)
+
+    def _eval_rewrite_as_coth(self, arg):
+        coth_half = coth(S.Half*arg)
+        return (coth_half**2 - 1)/(2*coth_half)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
+            return S.One
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_is_finite(self):
+        arg = self.args[0]
+        if arg.is_imaginary:
+            return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.csch(self.args[0]._sage_())
+
 class sech(HyperbolicFunction):
     r"""
     The hyperbolic secant function, `\frac{2}{e^x + e^{-x}}`.
@@ -612,7 +783,7 @@ class sech(HyperbolicFunction):
             return - tanh(self.args[0])*sech(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
+   #ToDo Inverse function
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
@@ -665,7 +836,6 @@ class sech(HyperbolicFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-#Contains references to yet to be defined functions
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
@@ -678,8 +848,7 @@ class sech(HyperbolicFunction):
         else:
             re, im = self.args[0].as_real_imag()
 
-        return (sec(im)*sech(re)/(1 + tan(im)**2 * coth(re)**2), csc(im)*csch(re)/(1 + cot(im)**2 * cot(re)**2))
-
+        return (cosh(re)*C.cos(im) / (cosh(re)**2 + C.sin(im)**2) , -sinh(re)*C.sin(im) / (cosh(re)**2 + C.sin(im)**2))
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
         return re_part + im_part*S.ImaginaryUnit
@@ -698,8 +867,8 @@ class sech(HyperbolicFunction):
                 x = terms
                 y = (coeff - 1)*x
         if x is not None:
-            return (sech(x)*sech(y) / (1 + tanh(x)*tanh(y)).expand(trig=True))
-        return cosh(arg)
+            return (1 / (cosh(x)*cosh(y) + sinh(x)*sinh(y))).expand(trig=True)
+        return sech(arg)
 
     def _eval_rewrite_as_tractable(self, arg):
         return 2 / (C.exp(arg) + C.exp(-arg))
@@ -708,7 +877,7 @@ class sech(HyperbolicFunction):
         return 2 / (C.exp(arg) + C.exp(-arg))
 
     def _eval_rewrite_as_sinh(self, arg):
-        return -1 / S.ImaginaryUnit*sinh(arg + S.Pi*S.ImaginaryUnit/2)
+        return  S.ImaginaryUnit / sinh(arg + S.Pi*S.ImaginaryUnit/2)
 
     def _eval_rewrite_as_tanh(self, arg):
         tanh_half = tanh(S.Half*arg)**2
