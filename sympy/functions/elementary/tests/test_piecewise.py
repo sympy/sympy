@@ -272,7 +272,7 @@ def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
                   ((-1)**x*(-1), True))
     assert p.simplify() == \
-        Piecewise((1 + 1/x**2, Eq(x, 0)), ((-1)**(x + 1), True))
+        Piecewise((1 + 1/x**2, Eq(0, x)), ((-1)**(x + 1), True))
 
 
 def test_piecewise_solve():

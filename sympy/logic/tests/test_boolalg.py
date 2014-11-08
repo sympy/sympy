@@ -155,12 +155,13 @@ def test_Equivalent():
     assert Equivalent(A, Equivalent(B, C)) != Equivalent(Equivalent(A, B), C)
 
 
-def test_equal():
+def test_equals():
     assert Not(Or(A, B)).equals( And(Not(A), Not(B)) ) is True
     assert Equivalent(A, B).equals((A >> B) & (B >> A)) is True
     assert ((A | ~B) & (~A | B)).equals((~A & ~B) | (A & B)) is True
     assert (A >> B).equals(~A >> ~B) is False
     assert (A >> (B >> A)).equals(A >> (C >> A)) is False
+    raises(NotImplementedError, lambda: And(A, A < B).equals(And(A, B > A)))
 
 
 def test_simplification():

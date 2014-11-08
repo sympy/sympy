@@ -72,8 +72,11 @@ class Boolean(Basic):
         >>> Not(And(A, Not(A))).equals(Or(B, Not(B)))
         False
         """
-
         from sympy.logic.inference import satisfiable
+        from sympy.core.relational import Relational
+
+        if self.has(Relational) or other.has(Relational):
+            raise NotImplementedError('handling of relationals')
         return self.atoms() == other.atoms() and \
                 not satisfiable(Not(Equivalent(self, other)))
 

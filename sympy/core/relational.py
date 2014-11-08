@@ -16,6 +16,16 @@ __all__ = (
 )
 
 
+def _still_relational(r, self):
+    if not r.is_Relational:
+        from sympy.utilities.misc import filldedent
+        raise NotImplementedError(filldedent('''
+        The canonical form evaluated. This means that %s should
+        be special-cased in sympy.core.relational._Inequality (like
+        floor, ceiling and +/-oo) so the order of the args doesn't
+        affect evaluation.''' % self.rhs))
+    return r
+
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
@@ -73,12 +83,42 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
+    @property
+    def canonical(self):
+        """If self is Gt/Ge, return equivalent Lt/Le instances,
+        leave Lt/Le leave unchanged, else return self with ordered args."""
+        r = self
+        if r.func is Gt:
+            r = Lt(r.lts, r.gts)
+        elif r.func is Ge:
+            r = Le(r.lts, r.gts)
+        elif r.func in (Lt, Le):
+            pass
+        else:
+            r = r.func(*ordered(r.args))
+        return _still_relational(r, self)
+
+    def equals(self, other):
+        if isinstance(other, Relational):
+            if self == other or self.reversed == other:
+                return True
+            a, b = self.canonical, other.canonical
+            if a.lhs == b.lhs:
+                if a.rhs == b.rhs and a.func != b.func:
+                    return False
+                if a.func == b.func and a.rhs != b.rhs:
+                    return False
+            if a.rhs == b.rhs:
+                if a.func == b.func and a.lhs != b.lhs:
+                    return False
+
     def _eval_simplify(self, ratio, measure):
-        r = self.func(self.lhs.simplify(ratio=ratio, measure=measure),
-                      self.rhs.simplify(ratio=ratio, measure=measure))
+        r = self
+        r = r.func(r.lhs.simplify(ratio=ratio, measure=measure),
+                   r.rhs.simplify(ratio=ratio, measure=measure))
         if r not in (S.true, S.false):
-            if isinstance(self.lhs, Expr) and isinstance(self.rhs, Expr):
-                dif = self.lhs - self.rhs
+            if isinstance(r.lhs, Expr) and isinstance(r.rhs, Expr):
+                dif = r.lhs - r.rhs
                 # We want a Number to compare with zero and be sure to get a
                 # True/False answer.  Check if we can deduce that dif is
                 # definitively zero or non-zero.  If non-zero, replace with an
@@ -90,14 +130,14 @@ class Relational(Boolean, Expr, EvalfMixin):
                     elif know == False:
                         dif = dif.evalf()
                 # Can definitively compare a Number to zero, if appropriate.
-                if dif.is_Number and (dif.is_real or self.func in (Eq, Ne)):
+                if dif.is_Number and (dif.is_real or r.func in (Eq, Ne)):
                     # Always T/F (we never return an expression w/ the evalf)
-                    r = self.func._eval_relation(dif, S.Zero)
+                    r = r.func._eval_relation(dif, S.Zero)
 
         if measure(r) < ratio*measure(self):
-            return r
+            return r.canonical if r.is_Relational else r
         else:
-            return self
+            return self.canonical
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of\n%s" % self)

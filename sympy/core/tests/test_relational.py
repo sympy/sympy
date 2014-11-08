@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational)
+                   Implies, Xor, zoo, sqrt, Rational, simplify)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -546,3 +546,17 @@ def test_issue_8449():
     assert Ge(-oo, p) is S.false
     assert Gt(oo, -p)
     assert Le(oo, -p) is S.false
+
+
+def test_simplify():
+    g, l, ge, le = x > 1, S(1) < x, x >= 1, S(1) <= x
+    assert g.simplify() == l
+    assert ge.simplify() == le
+    assert simplify(And(g, l, ge, le)) == And(l, le)
+
+
+def test_equals():
+    assert (x < 1).equals(S(1) > x)
+    assert (x < 1).equals(x <= 1) is False
+    assert (x < y).equals(x < t) is False
+    assert (y < x).equals(t < x) is False

@@ -2324,6 +2324,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     else:
                         lhs = ode_or_bool.lhs
                         rhs = ode_or_bool.rhs
+                        if lhs is S.Zero:
+                            lhs, rhs = rhs, lhs
                 # No sense in overworking simplify -- just prove that the
                 # numerator goes to zero
                 num = trigsimp((lhs - rhs).as_numer_denom()[0])
