@@ -1074,6 +1074,11 @@ def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__hyperbolic__ReciprocalHyperbolicFunction():
+    pass
+
+
 def test_sympy__functions__elementary__hyperbolic__acosh():
     from sympy.functions.elementary.hyperbolic import acosh
     assert _test_args(acosh(2))
@@ -1102,6 +1107,16 @@ def test_sympy__functions__elementary__hyperbolic__cosh():
 def test_sympy__functions__elementary__hyperbolic__coth():
     from sympy.functions.elementary.hyperbolic import coth
     assert _test_args(coth(2))
+
+
+def test_sympy__functions__elementary__hyperbolic__csch():
+    from sympy.functions.elementary.hyperbolic import csch
+    assert _test_args(csch(2))
+
+
+def test_sympy__functions__elementary__hyperbolic__sech():
+    from sympy.functions.elementary.hyperbolic import sech
+    assert _test_args(sech(2))
 
 
 def test_sympy__functions__elementary__hyperbolic__sinh():
