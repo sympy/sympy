@@ -81,6 +81,26 @@ class Relational(Boolean, Expr, EvalfMixin):
         """The right-hand side of the relation."""
         return self._args[1]
 
+    @property
+    def reversed(self):
+        """Return the relationship with sides (and sign) reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        x == 1
+        >>> _.reversed
+        1 == x
+        >>> x < 1
+        x < 1
+        >>> _.reversed
+        1 > x
+        """
+        return self.func(self.rhs, self.lhs)
+
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
@@ -141,7 +161,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             return self.canonical
 
     def __nonzero__(self):
-        raise TypeError("cannot determine truth value of\n%s" % self)
+        raise TypeError("cannot determine truth value of Relational")
 
     __bool__ = __nonzero__
 
@@ -354,7 +374,18 @@ class _Inequality(Relational):
             # class realizes the inequality cannot be evaluated further.
 
         # make a "non-evaluated" Expr for the inequality
-        return Relational.__new__(cls, lhs, rhs, **options)
+        rv = Relational.__new__(cls, lhs, rhs, **options)
+
+        # special-case floor and ceiling
+        from sympy import floor, ceiling
+        tf = None
+        if rv.rhs.func in (ceiling, floor):
+            tf = rv.reversed
+            tf = tf.func(*tf.args, evaluate=True)
+            if tf in (S.true, S.false):
+                return tf
+
+        return rv
 
 
 class _Greater(_Inequality):
@@ -632,9 +663,13 @@ class GreaterThan(_Greater):
        `Issue 6059 <https://github.com/sympy/sympy/issues/6059>`_
 
     """
+    __slots__ = ()
+
     rel_op = '>='
 
-    __slots__ = ()
+    @property
+    def reversed(self):
+        return _still_relational(Le(self.lts, self.gts, evaluate=False), self)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -650,6 +685,10 @@ class LessThan(_Less):
 
     rel_op = '<='
 
+    @property
+    def reversed(self):
+        return _still_relational(Ge(self.gts, self.lts, evaluate=False), self)
+
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
@@ -664,6 +703,10 @@ class StrictGreaterThan(_Greater):
 
     rel_op = '>'
 
+    @property
+    def reversed(self):
+        return _still_relational(Lt(self.lts, self.gts, evaluate=False), self)
+
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
@@ -677,6 +720,10 @@ class StrictLessThan(_Less):
     __slots__ = ()
 
     rel_op = '<'
+
+    @property
+    def reversed(self):
+        return _still_relational(Gt(self.gts, self.lts, evaluate=False), self)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):

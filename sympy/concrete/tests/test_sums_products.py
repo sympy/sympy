@@ -801,10 +801,8 @@ def test_issue_2787():
     binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
-    assert res == Piecewise((n*p, And(Or(-n + 1 < 0, S(0) <= -n + 1),
-        Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p*Abs(1/(p - 1)) <= 1)),
-        (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)), True))
-
+    assert res == Piecewise((n*p, And(Or(-n + 1 < 0, Ne(1, p/(p - 1))), p/Abs(p - 1) <= 1)),
+         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)), True))
 
 def test_issue_4668():
     assert summation(1/n, (n, 2, oo)) == oo

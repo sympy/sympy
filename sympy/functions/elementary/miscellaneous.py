@@ -374,12 +374,14 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        xy = x > y
-        yx = x < y
-        if (x == y) or xy == True or xy == False or yx == True or yx == False:
+        if x == y:
             return True
         if x.is_Number and y.is_Number:
             return True
+        xy = x >= y
+        yx = x <= y
+        if xy == True or xy == False or yx == True or yx == False:
+           return True
         return False
 
     @classmethod
@@ -387,8 +389,8 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y satisfy relation condition.
 
-        The relation condition for Max function is x > y,
-        for Min function is x < y. They are defined in children Max and Min
+        The relation condition for Max function is x >= y,
+        for Min function is x <= y. They are defined in children Max and Min
         classes through the method _rel(cls, x, y)
         """
         if (x == y):
@@ -503,7 +505,7 @@ class Max(MinMaxBase, Application):
 
     Assumption:
        - if A > B > C then A > C
-       - if A==B then B can be removed
+       - if A == B then B can be removed
 
     References
     ==========
@@ -522,30 +524,34 @@ class Max(MinMaxBase, Application):
     @classmethod
     def _rel(cls, x, y):
         """
-        Check if x > y.
+        Check if x >= y.
         """
-        return (x > y)
+        if (x >= y) == True:
+            return True
+        return y <= x
 
     @classmethod
     def _rel_inversed(cls, x, y):
         """
-        Check if x < y.
+        Check if x <= y.
         """
-        return (x < y)
+        if (x <= y) == True:
+            return True
+        return y >= x
 
     def fdiff( self, argindex ):
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return C.Heaviside( self.args[argindex] - self.args[1-argindex] )
+                return C.Heaviside(self.args[argindex] - self.args[1 - argindex])
             newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
-            return C.Heaviside( self.args[argindex] - Max(*newargs) )
+            return C.Heaviside(self.args[argindex] - Max(*newargs))
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return C.Add(*[j*C.Mul(*[C.Heaviside(j-i) for i in args if i!=j]) \
+        return C.Add(*[j*C.Mul(*[C.Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
 
@@ -587,16 +593,20 @@ class Min(MinMaxBase, Application):
     @classmethod
     def _rel(cls, x, y):
         """
-        Check if x < y.
+        Check if x <= y.
         """
-        return (x < y)
+        if (x <= y) == True:
+            return True
+        return y >= x
 
     @classmethod
     def _rel_inversed(cls, x, y):
         """
-        Check if x > y.
+        Check if x >= y.
         """
-        return (x > y)
+        if (x >= y) == True:
+            return True
+        return y <= x
 
     def fdiff( self, argindex ):
         n = len(self.args)

@@ -5,6 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.function import Function
 from sympy.core import Add
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.core.relational import Gt, Lt, Ge, Le, Eq
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
@@ -129,6 +130,16 @@ class floor(RoundFunction):
         else:
             return r
 
+    def __le__(self, other):
+        if self.args[0] == other:
+            return S.true
+        return Le(self, other, evaluate=False)
+
+    def __gt__(self, other):
+        if self.args[0] == other:
+            return S.false
+        return Gt(self, other, evaluate=False)
+
 
 class ceiling(RoundFunction):
     """
@@ -182,3 +193,13 @@ class ceiling(RoundFunction):
                 return r
         else:
             return r
+
+    def __lt__(self, other):
+        if self.args[0] == other:
+            return S.false
+        return Lt(self, other, evaluate=False)
+
+    def __ge__(self, other):
+        if self.args[0] == other:
+            return S.true
+        return Ge(self, other, evaluate=False)

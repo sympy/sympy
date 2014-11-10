@@ -1,5 +1,5 @@
 from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-    Float, I, sin, exp, log, factorial
+    Float, I, sin, exp, log, factorial, Gt, Lt, Ge, Le
 
 from sympy.utilities.pytest import XFAIL
 
@@ -223,3 +223,18 @@ def test_issue_4149():
     assert floor(3 + pi*I + y*I) == 3 + floor(pi + y)*I
     assert floor(3*I + pi*I + y*I) == floor(3 + pi + y)*I
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi + y)*I
+
+
+def test_issue_8413():
+    x = symbols('x')
+    assert x >= floor(x)
+    assert (x < floor(x)) == False
+    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
+    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
+    assert x <= ceiling(x)
+    assert (x > ceiling(x)) == False
+    assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
+    assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
+    i = symbols('i', integer=True)
+    assert (i > floor(i)) == False
+    assert (i < ceiling(i)) == False

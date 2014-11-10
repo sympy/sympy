@@ -5,6 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt, root, Min, Max, real_root
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.pytest import raises
@@ -96,9 +97,9 @@ def test_Min():
     raises(ValueError, lambda: Min(I, x))
     raises(ValueError, lambda: Min(S.ComplexInfinity, x))
 
-    assert Min(1,x).diff(x) == Heaviside(1-x)
-    assert Min(x,1).diff(x) == Heaviside(1-x)
-    assert Min(0,-x,1-2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
+    assert Min(1, x).diff(x) == Heaviside(1-x)
+    assert Min(x, 1).diff(x) == Heaviside(1-x)
+    assert Min(0, -x, 1 - 2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
         - 2*Heaviside(2*x + Min(0, -x) - 1)
 
     a, b = Symbol('a', real=True), Symbol('b', real=True)
@@ -155,10 +156,10 @@ def test_Max():
     # Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
     # False
 
-    assert Max(1,x).diff(x) == Heaviside(x-1)
-    assert Max(x,1).diff(x) == Heaviside(x-1)
-    assert Max(x**2, 1+x, 1).diff(x) == 2*x*Heaviside(x**2 - Max(1,x+1)) \
-        + Heaviside(x - Max(1,x**2) + 1)
+    assert Max(1, x).diff(x) == Heaviside(x-1)
+    assert Max(x, 1).diff(x) == Heaviside(x-1)
+    assert Max(x**2, 1 + x, 1).diff(x) == 2*x*Heaviside(x**2 - Max(1,x+1)) \
+        + Heaviside(x - Max(1, x**2) + 1)
 
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Max(a, b) should be real
@@ -168,6 +169,14 @@ def test_Max():
     e = Max(0, x)
     assert e.evalf == e.n
     assert e.n().args == (0, x)
+
+
+def test_issue_8413():
+    x = Symbol('x')
+    assert Min(floor(x), x) == floor(x)
+    assert Min(ceiling(x), x) == x
+    assert Max(floor(x), x) == x
+    assert Max(ceiling(x), x) == ceiling(x)
 
 
 def test_root():
