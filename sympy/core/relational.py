@@ -376,10 +376,10 @@ class _Inequality(Relational):
         # make a "non-evaluated" Expr for the inequality
         rv = Relational.__new__(cls, lhs, rhs, **options)
 
-        # special-case floor and ceiling
+        # special-case floor and ceiling and +/-infinity
         from sympy import floor, ceiling
         tf = None
-        if rv.rhs.func in (ceiling, floor):
+        if rv.rhs.func in (ceiling, floor) or rv.rhs in (S.Infinity, S.NegativeInfinity):
             tf = rv.reversed
             tf = tf.func(*tf.args, evaluate=True)
             if tf in (S.true, S.false):
