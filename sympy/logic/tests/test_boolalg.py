@@ -84,6 +84,7 @@ def test_Xor():
     assert isinstance(Xor(A, B), Xor)
     assert Xor(A, B, Xor(C, D)) == Xor(A, B, C, D)
     assert Xor(A, B, Xor(B, C)) == Xor(A, C)
+    assert Xor(A < 1, A >= 1, B) == Xor(0, 1, B) == Xor(1, 0, B)
 
 
 def test_Not():

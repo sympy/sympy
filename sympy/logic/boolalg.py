@@ -594,6 +594,25 @@ class Xor(BooleanFunction):
                 argset.remove(arg)
             else:
                 argset.add(arg)
+        rel = [(r, r.canonical, (~r).canonical) for r in argset if r.is_Relational]
+        odd = False  # is number of complimentary pairs odd? start 0 -> False
+        remove = []
+        for i, (r, c, nc) in enumerate(rel):
+            for j in range(i + 1, len(rel)):
+                rj, cj = rel[j][:2]
+                if cj == nc:
+                    odd = ~odd
+                    break
+                elif cj == c:
+                    break
+            else:
+                continue
+            remove.append((r, rj))
+        if odd:
+            argset.remove(true) if true in argset else argset.add(true)
+        for a, b in remove:
+            argset.remove(a)
+            argset.remove(b)
         if len(argset) == 0:
             return false
         elif len(argset) == 1:
