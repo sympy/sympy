@@ -312,10 +312,19 @@ class And(LatticeOp, BooleanFunction):
     @classmethod
     def _new_args_filter(cls, args):
         newargs = []
-        for x in args:
+        rel = []
+        for x in reversed(list(args)):
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
             else:
+                if x.is_Relational:
+                    c = x.canonical
+                    if c in rel:
+                        continue
+                    nc = (~c).canonical
+                    if any(r == nc for r in rel):
+                        return [S.false]
+                    rel.append(c)
                 newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
@@ -374,10 +383,19 @@ class Or(LatticeOp, BooleanFunction):
     @classmethod
     def _new_args_filter(cls, args):
         newargs = []
+        rel = []
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
             else:
+                if x.is_Relational:
+                    c = x.canonical
+                    if c in rel:
+                        continue
+                    nc = (~c).canonical
+                    if any(r == nc for r in rel):
+                        return [S.true]
+                    rel.append(c)
                 newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 

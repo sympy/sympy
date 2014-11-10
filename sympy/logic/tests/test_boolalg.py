@@ -42,6 +42,7 @@ def test_And():
     assert And(True, False, A) is false
     assert And(2, A) == A
     assert And(2, 3) is true
+    assert And(A < 1, A >= 1) is false
 
 
 def test_Or():
@@ -59,6 +60,7 @@ def test_Or():
     assert Or(True, False, A) is true
     assert Or(False, False, A) == A
     assert Or(2, A) is true
+    assert Or(A < 1, A >= 1) is true
 
 
 def test_Xor():
@@ -192,13 +194,13 @@ def test_simplification():
     assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
     assert simplify_logic(Equivalent(A, B)) == \
            Or(And(A, B), And(Not(A), Not(B)))
-    assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(A, 2), C)
-    assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(A, 2), A)
+    assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(2, A), C)
+    assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(2, A), A)
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
-           == And(Equality(A, 3), Or(B, C))
-    assert simplify_logic(And(A, x**2-x)) == And(A, x*(x-1))
-    assert simplify_logic(And(A, x**2-x), deep=False) == And(A, x**2-x)
+           == And(Equality(3, A), Or(B, C))
+    assert simplify_logic(And(A, x**2-x)) == And(A, x*(x - 1))
+    assert simplify_logic(And(A, x**2-x), deep=False) == And(A, x**2 - x)
 
     # check input
     ans = SOPform('xy', [[1, 0]])

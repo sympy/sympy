@@ -260,8 +260,7 @@ class AndOr_Base(Logic):
                 continue    # skip this argument
             bargs.append(a)
 
-        args = cls.flatten(bargs)
-        args = set(args)
+        args = sorted(set(cls.flatten(bargs)), key=hash)
 
         for a in args:
             if Not(a) in args:
@@ -272,7 +271,7 @@ class AndOr_Base(Logic):
         elif len(args) == 0:
             return not cls.op_x_notx
 
-        return Logic.__new__(cls, *sorted(args, key=hash))
+        return Logic.__new__(cls, *args)
 
     @classmethod
     def flatten(cls, args):
