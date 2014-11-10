@@ -179,7 +179,7 @@ class Integral(AddWithLimits):
         `u` has more than one free symbol then it should be sent as a tuple
         (`u`, `uvar`) where `uvar` identifies which variable is replacing
         the integration variable.
-        XXX can it contain another integration variable?
+        
 
         Examples
         ========
@@ -282,7 +282,8 @@ class Integral(AddWithLimits):
             raise ValueError('either x or u must be a symbol')
 
         if uvar == xvar:
-            return self.transform(x, u.subs(uvar, d)).xreplace({d: uvar})
+           #XXX can it contain another integration variable? return self.transform(x, u.subs(uvar, d)).xreplace({d: uvar})
+            return self.transform(x, (u.subs(uvar, d), d)).xreplace({d: uvar})
 
         if uvar in self.limits:
             raise ValueError(filldedent('''
