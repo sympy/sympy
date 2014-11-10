@@ -125,16 +125,13 @@ class BooleanAtom(Boolean):
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
-    SymPy version of True.
-
-    The instances of this class are singletonized and can be accessed via
-    S.true.
+    SymPy version of True, a singleton that can be accessed via S.true.
 
     This is the SymPy version of True, for use in the logic module. The
     primary advantage of using true instead of True is that shorthand boolean
     operations like ~ and >> will work as expected on this class, whereas with
     True they act bitwise on 1. Functions in the logic module will return this
-    class when they evaluate to true.
+    class when they are true.
 
     Examples
     ========
@@ -178,16 +175,13 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
 class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     """
-    SymPy version of False.
-
-    The instances of this class are singletonized and can be accessed via
-    S.false.
+    SymPy version of False, a singleton that can be accessed via S.false.
 
     This is the SymPy version of False, for use in the logic module. The
     primary advantage of using false instead of False is that shorthand boolean
     operations like ~ and >> will work as expected on this class, whereas with
     False they act bitwise on 0. Functions in the logic module will return this
-    class when they evaluate to false.
+    class when they are false.
 
     Examples
     ========
@@ -753,6 +747,15 @@ class Implies(BooleanFunction):
                 "(pairs are required): %s" % (len(args), str(args)))
         if A == True or A == False or B == True or B == False:
             return Or(Not(A), B)
+        elif A == B:
+            return S.true
+        elif A.is_Relational and B.is_Relational:
+            if A.canonical == B.canonical:
+                return S.true
+            nA = ~A
+            if nA.is_Relational:
+                if nA.canonical == B.canonical:
+                    return B
         else:
             return Basic.__new__(cls, *args)
 

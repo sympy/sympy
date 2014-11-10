@@ -139,6 +139,9 @@ def test_Implies():
     assert Implies(1, 1) is true
     assert Implies(1, 0) is false
     assert A >> B == B << A
+    assert (A < 1) >> (A >= 1) == (A >= 1)
+    assert (A < 1) >> (S(1) > A) is true
+    assert A >> A is true
 
 
 def test_Equivalent():
