@@ -805,6 +805,7 @@ class Equivalent(BooleanFunction):
     True
     """
     def __new__(cls, *args, **options):
+        from sympy.core.relational import Relational
         args = [_sympify(arg) for arg in args]
 
         argset = set(args)
@@ -812,6 +813,25 @@ class Equivalent(BooleanFunction):
             if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
                 argset.discard(x)
                 argset.add(True if x else False)
+        rel = []
+        for r in argset:
+            if isinstance(r, Relational):
+                nr = ~r
+                if nr.is_Relational:
+                    rel.append((r, r.canonical, nr.canonical))
+        remove = []
+        for i, (r, c, nc) in enumerate(rel):
+            for j in range(i + 1, len(rel)):
+                rj, cj = rel[j][:2]
+                if cj == nc:
+                    return false
+                elif cj == c:
+                    remove.append((r, rj))
+                    break
+        for a, b in remove:
+            argset.remove(a)
+            argset.remove(b)
+            argset.add(True)
         if len(argset) <= 1:
             return true
         if True in argset:

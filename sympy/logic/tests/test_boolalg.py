@@ -159,6 +159,10 @@ def test_Equivalent():
     assert Equivalent(1, A) == A
     assert Equivalent(0, A) == Not(A)
     assert Equivalent(A, Equivalent(B, C)) != Equivalent(Equivalent(A, B), C)
+    assert Equivalent(A < 1, A >= 1) is false
+    assert Equivalent(A < 1, A >= 1, 0) is false
+    assert Equivalent(A < 1, A >= 1, 1) is false
+    assert Equivalent(A < 1, S(1) > A) == Equivalent(1, 1) == Equivalent(0, 0)
 
 
 def test_equals():
