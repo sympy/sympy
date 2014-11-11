@@ -109,10 +109,8 @@ class Relational(Boolean, Expr, EvalfMixin):
         """If self is Gt/Ge, return equivalent Lt/Le instances,
         leave Lt/Le leave unchanged, else return self with ordered args."""
         r = self
-        if r.func is Gt:
-            r = Lt(r.lts, r.gts)
-        elif r.func is Ge:
-            r = Le(r.lts, r.gts)
+        if r.func in (Ge, Gt):
+            r = r.reversed
         elif r.func in (Lt, Le):
             pass
         else:
@@ -155,10 +153,14 @@ class Relational(Boolean, Expr, EvalfMixin):
                     # Always T/F (we never return an expression w/ the evalf)
                     r = r.func._eval_relation(dif, S.Zero)
 
-        if measure(r) < ratio*measure(self):
-            return r.canonical if r.is_Relational else r
-        else:
-            return self.canonical
+        if measure(r) >= ratio*measure(self):
+            r = self
+
+        if r.is_Relational:
+            r = r.canonical
+            if r.lhs.is_Number:
+                r = r.reversed
+        return r
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")

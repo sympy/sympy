@@ -474,6 +474,7 @@ def test_limit_subs():
             F(a, (a, c, 4))
         assert F(x, (x, 1, x + y)).subs(x, 1) == F(x, (x, 1, y + 1))
 
+
 def test_function_subs():
     f = Function("f")
     S = Sum(x*f(y),(x,0,oo),(y,0,oo))
@@ -485,6 +486,7 @@ def test_function_subs():
     f = Symbol('f')
     S = Sum(x*f(y),(x,0,oo),(y,0,oo))
     assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
+
 
 def test_equality():
     # if this fails remove special handling below
@@ -698,6 +700,7 @@ def test_simplify():
     assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
         Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
 
+
 def test_change_index():
     b, v = symbols('b, v', integer = True)
 
@@ -757,8 +760,10 @@ def test_reverse_order():
     assert Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
+
 def test_issue_7097():
     assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))
+
 
 def test_factor_expand_subs():
     # test factoring
@@ -801,8 +806,11 @@ def test_issue_2787():
     binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
-    assert res == Piecewise((n*p, And(Or(-n + 1 < 0, Ne(1, p/(p - 1))), p/Abs(p - 1) <= 1)),
-         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)), True))
+    assert res == Piecewise(
+        (n*p, And(Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p/Abs(p - 1) <= 1)),
+        (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
+        True))
+
 
 def test_issue_4668():
     assert summation(1/n, (n, 2, oo)) == oo

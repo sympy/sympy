@@ -202,13 +202,14 @@ def test_simplification():
     assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
     assert simplify_logic(Equivalent(A, B)) == \
            Or(And(A, B), And(Not(A), Not(B)))
-    assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(2, A), C)
-    assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(2, A), A)
+    assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(A, 2), C)
+    assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(A, 2), A)
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
-           == And(Equality(3, A), Or(B, C))
-    assert simplify_logic(And(A, x**2-x)) == And(A, x*(x - 1))
-    assert simplify_logic(And(A, x**2-x), deep=False) == And(A, x**2 - x)
+           == And(Equality(A, 3), Or(B, C))
+    e = And(A, x**2 - x)
+    assert simplify_logic(e) == And(A, x*(x - 1))
+    assert simplify_logic(e, deep=False) == e
 
     # check input
     ans = SOPform('xy', [[1, 0]])
