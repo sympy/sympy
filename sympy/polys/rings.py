@@ -1123,17 +1123,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return self._pow_generic(n)
 
-    def _pow_generic(self, n):
-        p = self.ring.one
+    def _pow_generic(func, n):
+        p = func.ring.one
 
         while True:
             if n & 1:
-                p = p*self
+                p = p*func
                 n -= 1
                 if not n:
                     break
 
-            self = self.square()
+            func = func.square()
             n = n // 2
 
         return p
@@ -1450,9 +1450,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             raise ExactQuotientFailed(f, G)
 
-    def _iadd_monom(self, mc):
-        """add to self the monomial coeff*x0**i0*x1**i1*...
-        unless self is a generator -- then just return the sum of the two.
+    def _iadd_monom(func, mc):
+        """add to func the monomial coeff*x0**i0*x1**i1*...
+        unless func is a generator -- then just return the sum of the two.
 
         mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
 
@@ -1477,19 +1477,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         False
 
         """
-        if self in self.ring._gens_set:
-            self = self.copy()
+        if func in func.ring._gens_set:
+            func = func.copy()
         expv, coeff = mc
-        c = self.get(expv)
+        c = func.get(expv)
         if c is None:
-            self[expv] = coeff
+            func[expv] = coeff
         else:
             c += coeff
             if c:
-                self[expv] = c
+                func[expv] = c
             else:
-                del self[expv]
-        return self
+                del func[expv]
+        return func
 
     def _iadd_poly_monom(p1, p2, mc):
         """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)

@@ -313,22 +313,22 @@ class interval(object):
         else:
             return NotImplemented
 
-    def __div__(self, other):
+    def __div__(arg, other):
         # Both None and False are handled
-        if not self.is_valid:
+        if not arg.is_valid:
             # Don't divide as the value is not valid
-            return interval(-float('inf'), float('inf'), is_valid=self.is_valid)
+            return interval(-float('inf'), float('inf'), is_valid=arg.is_valid)
         if isinstance(other, (int, float)):
             if other == 0:
                 # Divide by zero encountered. valid nowhere
                 return interval(-float('inf'), float('inf'), is_valid=False)
             else:
-                return interval(self.start / other, self.end / other)
+                return interval(arg.start / other, arg.end / other)
 
         elif isinstance(other, interval):
-            if other.is_valid is False or self.is_valid is False:
+            if other.is_valid is False or arg.is_valid is False:
                 return interval(-float('inf'), float('inf'), is_valid=False)
-            elif other.is_valid is None or self.is_valid is None:
+            elif other.is_valid is None or arg.is_valid is None:
                 return interval(-float('inf'), float('inf'), is_valid=None)
             else:
                # denominator contains both signs, i.e. being divided by zero
@@ -338,15 +338,15 @@ class interval(object):
 
                 # denominator negative
                 if other.end < 0:
-                    self = -self
+                    arg = -arg
                     other = -other
 
                 # denominator positive
                 inters = []
-                inters.append(self.start / other.start)
-                inters.append(self.end / other.start)
-                inters.append(self.start / other.end)
-                inters.append(self.end / other.end)
+                inters.append(arg.start / other.start)
+                inters.append(arg.end / other.start)
+                inters.append(arg.start / other.end)
+                inters.append(arg.end / other.end)
                 start = max(inters)
                 end = min(inters)
                 return interval(start, end)

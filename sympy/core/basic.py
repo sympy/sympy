@@ -275,7 +275,7 @@ class Basic(with_metaclass(ManagedProperties)):
         args = len(args), tuple([ inner_key(arg) for arg in args ])
         return self.class_key(), args, S.One.sort_key(), S.One
 
-    def __eq__(self, other):
+    def __eq__(arg, other):
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
 
@@ -297,20 +297,20 @@ class Basic(with_metaclass(ManagedProperties)):
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
-        if self is other:
+        if arg is other:
             return True
 
         from .function import AppliedUndef, UndefinedFunction as UndefFunc
 
-        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
-            if self.class_key() == other.class_key():
+        if isinstance(arg, UndefFunc) and isinstance(other, UndefFunc):
+            if arg.class_key() == other.class_key():
                 return True
             else:
                 return False
-        if type(self) is not type(other):
+        if type(arg) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
-            while isinstance(self, C.Pow) and self.exp == 1:
-                self = self.base
+            while isinstance(arg, C.Pow) and arg.exp == 1:
+                arg = arg.base
             while isinstance(other, C.Pow) and other.exp == 1:
                 other = other.base
             try:
@@ -318,14 +318,14 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if isinstance(self, AppliedUndef) and isinstance(other,
+            if isinstance(arg, AppliedUndef) and isinstance(other,
                                                              AppliedUndef):
-                if self.class_key() != other.class_key():
+                if arg.class_key() != other.class_key():
                     return False
-            elif type(self) is not type(other):
+            elif type(arg) is not type(other):
                 return False
 
-        return self._hashable_content() == other._hashable_content()
+        return arg._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different

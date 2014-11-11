@@ -2990,7 +2990,7 @@ class TensMul(TensExpr):
     def __rsub__(self, other):
         return TensAdd(other, -self)
 
-    def __mul__(self, other):
+    def __mul__(arg, other):
         """
         Multiply two tensors using Einstein summation convention.
 
@@ -3012,19 +3012,19 @@ class TensMul(TensExpr):
         """
         other = sympify(other)
         if not isinstance(other, TensExpr):
-            coeff = self._coeff*other
-            tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self._is_canon_bp)
-            tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
+            coeff = arg._coeff*other
+            tmul = TensMul.from_TIDS(coeff, arg._tids, is_canon_bp=arg._is_canon_bp)
+            tmul._matrix_behavior_kinds = arg._matrix_behavior_kinds
             return tmul
         if isinstance(other, TensAdd):
-            return TensAdd(*[self*x for x in other.args])
+            return TensAdd(*[arg*x for x in other.args])
 
         matrix_behavior_kinds = dict()
 
-        self_matrix_behavior_kinds = self._matrix_behavior_kinds
+        arg_matrix_behavior_kinds = arg._matrix_behavior_kinds
         other_matrix_behavior_kinds = other._matrix_behavior_kinds
 
-        for key, v1 in self_matrix_behavior_kinds.items():
+        for key, v1 in arg_matrix_behavior_kinds.items():
             if key in other_matrix_behavior_kinds:
                 v2 = other_matrix_behavior_kinds[key]
                 if len(v1) == 1:
@@ -3033,7 +3033,7 @@ class TensMul(TensExpr):
                         matrix_behavior_kinds[key] = (v2[1],)
                 elif len(v1) == 2:
                     auto_index = v1[1]._tensortype.auto_index
-                    self = self.substitute_indices((v1[1], -auto_index))
+                    arg = arg.substitute_indices((v1[1], -auto_index))
                     other = other.substitute_indices((v2[0], auto_index))
                     if len(v2) == 1:
                         matrix_behavior_kinds[key] = (v1[0],)
@@ -3043,12 +3043,12 @@ class TensMul(TensExpr):
                 matrix_behavior_kinds[key] = v1
 
         for key, v2 in other_matrix_behavior_kinds.items():
-            if key in self_matrix_behavior_kinds:
+            if key in arg_matrix_behavior_kinds:
                 continue
             matrix_behavior_kinds[key] = v2
 
-        new_tids = self._tids*other._tids
-        coeff = self._coeff*other._coeff
+        new_tids = arg._tids*other._tids
+        coeff = arg._coeff*other._coeff
         tmul = TensMul.from_TIDS(coeff, new_tids)
         if isinstance(tmul, TensExpr):
             tmul._matrix_behavior_kinds = matrix_behavior_kinds

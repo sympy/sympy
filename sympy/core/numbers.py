@@ -812,31 +812,31 @@ class Float(Number):
             return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
         return Number.__rmod__(self, other)
 
-    def _eval_power(self, expt):
+    def _eval_power(arg, expt):
         """
         expt is symbolic object but not equal to 0, 1
 
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
-        if self == 0:
+        if arg == 0:
             if expt.is_positive:
                 return S.Zero
             if expt.is_negative:
                 return Float('inf')
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
-                prec = self._prec
+                prec = arg._prec
                 return Float._new(
-                    mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
-            expt, prec = expt._as_mpf_op(self._prec)
-            self = self._mpf_
+                    mlib.mpf_pow_int(arg._mpf_, expt.p, prec, rnd), prec)
+            expt, prec = expt._as_mpf_op(arg._prec)
+            arg = arg._mpf_
             try:
-                y = mpf_pow(self, expt, prec, rnd)
+                y = mpf_pow(arg, expt, prec, rnd)
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow(
-                    (self, _mpf_zero), (expt, _mpf_zero), prec, rnd)
+                    (arg, _mpf_zero), (expt, _mpf_zero), prec, rnd)
                 return Float._new(re, prec) + \
                     Float._new(im, prec)*S.ImaginaryUnit
 

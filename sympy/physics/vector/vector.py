@@ -257,9 +257,9 @@ class Vector(object):
         class Fake(object):
             baseline = 0
 
-            def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
+            def render(arg, *args, **kwargs):
+                arg = e
+                ar = arg.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
                 ol = []  # output list, to be concatenated to a string

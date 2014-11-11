@@ -465,14 +465,14 @@ class Polygon(GeometryEntity):
 
         return True
 
-    def encloses_point(self, p):
+    def encloses_point(polygon, p):
         """
-        Return True if p is enclosed by (is inside of) self.
+        Return True if p is enclosed by (is inside of) polygon.
 
         Notes
         =====
 
-        Being on the border of self is considered False.
+        Being on the border of polygon is considered False.
 
         Parameters
         ==========
@@ -509,24 +509,24 @@ class Polygon(GeometryEntity):
 
         """
         p = Point(p)
-        if p in self.vertices or any(p in s for s in self.sides):
+        if p in arg.vertices or any(p in s for s in arg.sides):
             return False
 
         # move to p, checking that the result is numeric
         lit = []
-        for v in self.vertices:
+        for v in polygon.vertices:
             lit.append(v - p)  # the difference is simplified
             if lit[-1].free_symbols:
                 return None
-        self = Polygon(*lit)
+        polygon = Polygon(*lit)
 
         # polygon closure is assumed in the following test but Polygon removes duplicate pts so
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
-        args = self.args
+        args = polygon.args
         indices = range(-len(args), 1)
 
-        if self.is_convex():
+        if polygon.is_convex():
             orientation = None
             for i in indices:
                 a = args[i]

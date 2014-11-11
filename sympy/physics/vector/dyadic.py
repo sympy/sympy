@@ -195,9 +195,9 @@ class Dyadic(object):
         class Fake(object):
             baseline = 0
 
-            def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
+            def render(arg, *args, **kwargs):
+                arg = e
+                ar = arg.args  # just to shorten things
                 mpp = VectorPrettyPrinter()
                 if len(ar) == 0:
                     return unicode(0)

@@ -230,7 +230,7 @@ class MV(object):
 
     ######################Multivector Constructors######################
 
-    def __init__(self, base=None, mvtype=None, fct=False, blade_rep=False):
+    def __init__(arg, base=None, mvtype=None, fct=False, blade_rep=False):
 
         """
         Initialization of multivector X. Inputs are as follows
@@ -267,153 +267,153 @@ class MV(object):
                         'False' if 'MV' representation is a base expansion.
         """
 
-        def make_scalar(self, base):  # make a scalar (grade 0)
+        def make_scalar(arg, base):  # make a scalar (grade 0)
             if isinstance(base, str):
-                if self.fct:
-                    self.obj = Function(base)(*MV.coords) * MV.ONE
+                if arg.fct:
+                    arg.obj = Function(base)(*MV.coords) * MV.ONE
                 else:
-                    self.obj = make_coef(self, base) * MV.ONE
+                    arg.obj = make_coef(arg, base) * MV.ONE
             else:
-                self.obj = base * MV.ONE
-            self.igrade = 0
-            self.blade_rep = True
-            return self
+                arg.obj = base * MV.ONE
+            arg.igrade = 0
+            arg.blade_rep = True
+            return arg
 
-        def make_vector(self, base):  # make a vector (grade 1)
+        def make_vector(arg, base):  # make a vector (grade 1)
             if isinstance(base, str):
-                if self.fct:
+                if arg.fct:
                     base_lst = str_combinations(base, MV.coords, rank=1, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=1, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=1, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
             else:
                 result = S.Zero
                 for (coef, base) in zip(base, MV.blades[1]):
                     result += coef * base
-                self.obj = result
-            self.igrade = 1
-            self.blade_rep = True
-            return self
+                arg.obj = result
+            arg.igrade = 1
+            arg.blade_rep = True
+            return arg
 
-        def make_basisvector(self, base):
-            raise NotImplementedError("Don't know how to compute basis vectors of class %" % self.__class__)
+        def make_basisvector(arg, base):
+            raise NotImplementedError("Don't know how to compute basis vectors of class %" % arg.__class__)
 
-        def make_basisbivector(self, base):
-            raise NotImplementedError("Don't know how to compute basis bivectors of class %" % self.__class__)
+        def make_basisbivector(arg, base):
+            raise NotImplementedError("Don't know how to compute basis bivectors of class %" % arg.__class__)
 
-        def make_grade(self, base):  # if base is 'A,n' then make a grade n multivector
+        def make_grade(arg, base):  # if base is 'A,n' then make a grade n multivector
             if isinstance(base, str):
                 base_lst = base.split(',')
                 base = base_lst[0]
                 n = int(base_lst[1])
-                if self.fct:
+                if arg.fct:
                     base_lst = str_combinations(base, MV.coords, rank=n, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=n, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=n, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
             else:
                 raise TypeError('Cannot make_grade for base = %s' % base)
-            self.igrade = n
-            self.blade_rep = True
-            return self
+            arg.igrade = n
+            arg.blade_rep = True
+            return arg
 
-        def make_grade2(self, base):  # grade 2 multivector
+        def make_grade2(arg, base):  # grade 2 multivector
             if isinstance(base, str):
-                if self.fct:
+                if arg.fct:
                     base_lst = str_combinations(base, MV.coords, rank=2, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[2]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[2]))))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=2, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=2, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[2]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[2]))))
             else:
                 raise TypeError('!!!!Cannot make_grade2 for base = ' + str(base) + '!!!!\n')
-            self.igrade = 2
-            self.blade_rep = True
-            return self
+            arg.igrade = 2
+            arg.blade_rep = True
+            return arg
 
-        def make_pseudo(self, base):  # multivector of grade MV.dim
+        def make_pseudo(arg, base):  # multivector of grade MV.dim
             if isinstance(base, str):
-                if self.fct:
+                if arg.fct:
                     base_lst = str_combinations(base, MV.coords, rank=MV.dim, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[MV.dim]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[MV.dim]))))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=MV.dim, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=MV.dim, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[MV.dim]))))
+                    arg.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[MV.dim]))))
             else:
                 raise TypeError('!!!!Cannot make_pseudo for base = ' + str(base) + '!!!!\n')
-            self.igrade = MV.dim
-            self.blade_rep = True
-            return self
+            arg.igrade = MV.dim
+            arg.blade_rep = True
+            return arg
 
-        def make_spinor(self, base):  # multivector with all even grades
+        def make_spinor(arg, base):  # multivector with all even grades
             if isinstance(base, str):
-                if self.fct:
-                    self.obj = Function(base)(*MV.coords) * MV.ONE
+                if arg.fct:
+                    arg.obj = Function(base)(*MV.coords) * MV.ONE
                 else:
-                    self.obj = Symbol(base) * MV.ONE
+                    arg.obj = Symbol(base) * MV.ONE
                 for rank in range(2, MV.dim1, 2):
-                    if self.fct:
+                    if arg.fct:
                         base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, MV.coords)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        arg.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
                     else:
                         if MV.coords is not None:
                             base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         else:
                             base_lst = str_combinations(base, MV.subscripts, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, None)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        arg.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
             else:
                 raise TypeError('Cannot make_mv for base = %s' % base)
-            self.igrade = -1
-            self.blade_rep = True
-            return self
+            arg.igrade = -1
+            arg.blade_rep = True
+            return arg
 
-        def make_mv(self, base):
+        def make_mv(arg, base):
             if isinstance(base, str):
-                if self.fct:
-                    self.obj = Function(base)(*MV.coords) * MV.ONE
+                if arg.fct:
+                    arg.obj = Function(base)(*MV.coords) * MV.ONE
                 else:
-                    self.obj = Symbol(base) * MV.ONE
+                    arg.obj = Symbol(base) * MV.ONE
                 for rank in range(1, MV.dim1):
-                    if self.fct:
+                    if arg.fct:
                         base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, MV.coords)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        arg.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
                     else:
                         if MV.coords is not None:
                             base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         else:
                             base_lst = str_combinations(base, MV.subscripts, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, None)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        arg.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
             else:
                 raise TypeError('!!!!Cannot make_mv for base = ' + str(base) + '!!!!\n')
-            self.igrade = -1
-            self.blade_rep = True
-            return self
+            arg.igrade = -1
+            arg.blade_rep = True
+            return arg
 
         MVtypes = {'scalar': make_scalar,
                    'vector': make_vector,
@@ -426,72 +426,72 @@ class MV(object):
                    'spinor': make_spinor,
                    'mv': make_mv}
 
-        self.fct = fct
-        self.is_base = False
-        self.is_grad = False
-        self.print_blades = MV.print_blades
-        self.fmt = 1
+        arg.fct = fct
+        arg.is_base = False
+        arg.is_grad = False
+        arg.print_blades = MV.print_blades
+        arg.fmt = 1
 
         if mvtype is None:
             if base in (None, S.Zero):  # Default is zero multivector
-                self.blade_rep = True
-                self.obj = S.Zero
-                self.igrade = 0
+                arg.blade_rep = True
+                arg.obj = S.Zero
+                arg.igrade = 0
             elif isinstance(base, str):  # Base or blade basis multivector
-                self.is_base = True
+                arg.is_base = True
                 if '*' in base:
-                    self.blade_rep = False
-                    self.igrade = -1
+                    arg.blade_rep = False
+                    arg.igrade = -1
                 else:
                     if '^' in base:
-                        self.blade_rep = True
-                        self.igrade = base.count('^') + 1
+                        arg.blade_rep = True
+                        arg.igrade = base.count('^') + 1
                     else:
-                        self.blade_rep = blade_rep
-                        self.igrade = 1
-                self.obj = Symbol(base, commutative=False)
+                        arg.blade_rep = blade_rep
+                        arg.igrade = 1
+                arg.obj = Symbol(base, commutative=False)
             elif isinstance(base, MV):  # Copy constructor
-                self.blade_rep = base.blade_rep
-                self.obj = base.obj
-                self.igrade = base.igrade
-                self.fct = base.fct
-                self.is_base = base.is_base
-                self.is_grad = base.is_grad
+                arg.blade_rep = base.blade_rep
+                arg.obj = base.obj
+                arg.igrade = base.igrade
+                arg.fct = base.fct
+                arg.is_base = base.is_base
+                arg.is_grad = base.is_grad
             elif isinstance(base, (Expr, Symbol)):  # Gets properties of multivector from Expr
                 if base.is_commutative:
-                    self.obj = base * MV.ONE
-                    self.blade_rep = True
-                    self.igrade = 0
+                    arg.obj = base * MV.ONE
+                    arg.blade_rep = True
+                    arg.igrade = 0
                 else:
                     if isinstance(base, (Add, Mul)):  # Complex expression
-                        self = MV.characterize_expression(self, base)
+                        arg = MV.characterize_expression(arg, base)
                     elif isinstance(base, Symbol):
                         if not base.is_commutative:
                             if base == MV.ONE:
-                                self.obj = base
-                                self.blade_rep = True
-                                self.igrade = 0
+                                arg.obj = base
+                                arg.blade_rep = True
+                                arg.igrade = 0
                             elif base in MV.blades_flat:  # basis blade
-                                self.obj = base
-                                self.blade_rep = True
-                                self.igrade = MV.blade_grades[base]
+                                arg.obj = base
+                                arg.blade_rep = True
+                                arg.igrade = MV.blade_grades[base]
                             elif base in MV.bases_flat:  # basis base
-                                self.obj = base
-                                self.blade_rep = False
-                                self.igrade = -1
+                                arg.obj = base
+                                arg.blade_rep = False
+                                arg.igrade = -1
                             else:
                                 raise ValueError('MV(' + str(base) + ') is not allowed in constructor\n' +
                                                  'non-commutative argument is not a base\n')
                         else:  # scalar sympy symbol
-                            self.obj = base * MV.ONE
-                            self.igrade = 0
-                            self.blade_rep = True
+                            arg.obj = base * MV.ONE
+                            arg.igrade = 0
+                            arg.blade_rep = True
                     elif isinstance(base, Number):
-                        self.obj = base * MV.ONE
-                        self.igrade = 0
-                        self.blade_rep = True
+                        arg.obj = base * MV.ONE
+                        arg.igrade = 0
+                        arg.blade_rep = True
         else:  # Preconfigured multivector types
-            self = MVtypes[mvtype](self, base)
+            arg = MVtypes[mvtype](arg, base)
 
     def Fmt(self, fmt=1, title=None):
         self.fmt = fmt

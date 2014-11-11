@@ -401,8 +401,8 @@ class Expr(Basic, EvalfMixin):
         # never got any significance
         return None
 
-    def is_constant(self, *wrt, **flags):
-        """Return True if self is constant, False if not, or None if
+    def is_constant(arg, *wrt, **flags):
+        """Return True if arg is constant, False if not, or None if
         the constancy could not be determined conclusively.
 
         If an expression has no free symbols then it is a constant. If
@@ -412,7 +412,7 @@ class Expr(Basic, EvalfMixin):
 
         1) numerical evaluation at two random points. If two such evaluations
         give two different values and the values have a precision greater than
-        1 then self is not constant. If the evaluations agree or could not be
+        1 then arg is not constant. If the evaluations agree or could not be
         obtained with any precision, no decision is made. The numerical testing
         is done only if ``wrt`` is different than the free symbols.
 
@@ -420,7 +420,7 @@ class Expr(Basic, EvalfMixin):
         symbols if omitted) to see if the expression is constant or not. This
         will not always lead to an expression that is zero even though an
         expression is constant (see added test in test_expr.py). If
-        all derivatives are zero then self is constant with respect to the
+        all derivatives are zero then arg is constant with respect to the
         given symbols.
 
         If neither evaluation nor differentiation can prove the expression is
@@ -428,8 +428,8 @@ class Expr(Basic, EvalfMixin):
         the same and the flag ``failing_number`` is True -- in that case the
         numerical value will be returned.
 
-        If flag simplify=False is passed, self will not be simplified;
-        the default is True since self should be simplified before testing.
+        If flag simplify=False is passed, arg will not be simplified;
+        the default is True since arg should be simplified before testing.
 
         Examples
         ========
@@ -478,8 +478,8 @@ class Expr(Basic, EvalfMixin):
         # whereas free_symbols goes until all free symbols have been collected,
         # thus is_number should be faster. But a double check on free symbols
         # is made just in case there is a discrepancy between the two.
-        free = self.free_symbols
-        if self.is_number or not free:
+        free = arg.free_symbols
+        if arg.is_number or not free:
             # if the following assertion fails then that object's free_symbols
             # method needs attention: if an expression is a number it cannot
             # have free symbols
@@ -495,12 +495,12 @@ class Expr(Basic, EvalfMixin):
 
         # simplify unless this has already been done
         if simplify:
-            self = self.simplify()
+            arg = arg.simplify()
 
         # is_zero should be a quick assumptions check; it can be wrong for
         # numbers (see test_is_not_constant test), giving False when it
         # shouldn't, but hopefully it will never give True unless it is sure.
-        if self.is_zero:
+        if arg.is_zero:
             return True
 
         # try numerical evaluation to see if we get two different values
@@ -508,30 +508,30 @@ class Expr(Basic, EvalfMixin):
         if wrt == free:
             # try 0 (for a) and 1 (for b)
             try:
-                a = self.subs(list(zip(free, [0]*len(free))),
+                a = arg.subs(list(zip(free, [0]*len(free))),
                     simultaneous=True)
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
-                    a = self._random(None, 0, 0, 0, 0)
+                    a = arg._random(None, 0, 0, 0, 0)
             except ZeroDivisionError:
                 a = None
             if a is not None and a is not S.NaN:
                 try:
-                    b = self.subs(list(zip(free, [1]*len(free))),
+                    b = arg.subs(list(zip(free, [1]*len(free))),
                         simultaneous=True)
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
-                        b = self._random(None, 1, 0, 1, 0)
+                        b = arg._random(None, 1, 0, 1, 0)
                 except ZeroDivisionError:
                     b = None
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random real
-                b = self._random(None, -1, 0, 1, 0)
+                b = arg._random(None, -1, 0, 1, 0)
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random complex
-                b = self._random()
+                b = arg._random()
                 if b is not None and b is not S.NaN:
                     if b.equals(a) is False:
                         return False
@@ -542,7 +542,7 @@ class Expr(Basic, EvalfMixin):
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
         for w in wrt:
-            deriv = self.diff(w)
+            deriv = arg.diff(w)
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
