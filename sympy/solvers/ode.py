@@ -2245,7 +2245,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             else:
                 testnum += 1
                 continue
-            ss = simplify(s)
+            ss = s.rewrite(exp)
+            ss = simplify(ss)
             if ss:
                 # with the new numer_denom in power.py, if we do a simple
                 # expansion then testnum == 0 verifies all solutions.

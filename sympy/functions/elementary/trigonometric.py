@@ -754,7 +754,7 @@ class tan(TrigonometricFunction):
     >>> from sympy import tan
     >>> from sympy.abc import x
     >>> tan(x**2).diff(x)
-    2*x*(tan(x**2)**2 + 1)
+    2*x/cos(x**2)**2
     >>> tan(1).diff(x)
     0
 
