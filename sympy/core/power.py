@@ -1386,13 +1386,15 @@ class Pow(Expr):
         return S.One, self.func(b, e)
 
     def is_constant(self, *wrt, **flags):
+        # issue 8362 avoid assign to self, introduce a temp variable expr here
+        expr=self
         if flags.get('simplify', True):
-            self = self.simplify()
-        b, e = self.as_base_exp()
+            expr = self.simplify()
+        b, e = expr.as_base_exp()
         bz = b.equals(0)
         if bz:  # recalculate with assumptions in case it's unevaluated
             new = b**e
-            if new != self:
+            if new != expr:
                 return new.is_constant()
         econ = e.is_constant(*wrt)
         bcon = b.is_constant(*wrt)

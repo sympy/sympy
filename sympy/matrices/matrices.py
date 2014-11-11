@@ -1570,26 +1570,27 @@ class MatrixBase(object):
         QRsolve
         """
         cls = self.__class__
-        self = self.as_mutable()
+        # issue 8362 avoid assign to self, introduce a temp variable mat here
+        mat = self.as_mutable()
 
-        if not self.rows >= self.cols:
+        if not mat.rows >= mat.cols:
             raise MatrixError(
                 "The number of rows must be greater than columns")
-        n = self.rows
-        m = self.cols
+        n = mat.rows
+        m = mat.cols
         rank = n
-        row_reduced = self.rref()[0]
+        row_reduced = mat.rref()[0]
         for i in range(row_reduced.rows):
             if row_reduced.row(i).norm() == 0:
                 rank -= 1
-        if not rank == self.cols:
+        if not rank == mat.cols:
             raise MatrixError("The rank of the matrix must match the columns")
-        Q, R = self.zeros(n, m), self.zeros(m)
+        Q, R = mat.zeros(n, m), mat.zeros(m)
         for j in range(m):      # for each column vector
-            tmp = self[:, j]     # take original v
+            tmp = mat[:, j]     # take original v
             for i in range(j):
-                # subtract the project of self on new vector
-                tmp -= Q[:, i]*self[:, j].dot(Q[:, i])
+                # subtract the project of mat on new vector
+                tmp -= Q[:, i]*mat[:, j].dot(Q[:, i])
                 tmp.expand()
             # normalize it
             R[j, j] = tmp.norm()
@@ -1598,7 +1599,7 @@ class MatrixBase(object):
                 raise NotImplementedError(
                     "Could not normalize the vector %d." % j)
             for i in range(j):
-                R[i, j] = Q[:, i].dot(self[:, j])
+                R[i, j] = Q[:, i].dot(mat[:, j])
         return cls(Q), cls(R)
 
     def QRsolve(self, b):
@@ -1708,18 +1709,20 @@ class MatrixBase(object):
             else:
                 raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if self.cols == b.rows:
+        # issue 8362 avoid assign to self, introduce a temp variable mat here
+        mat = self 
+        if mat.cols == b.rows:
             if b.cols != 1:
-                self = self.T
+                mat = mat.T
                 b = b.T
-            prod = flatten((self*b).tolist())
+            prod = flatten((mat*b).tolist())
             if len(prod) == 1:
                 return prod[0]
             return prod
-        if self.cols == b.cols:
-            return self.dot(b.T)
-        elif self.rows == b.rows:
-            return self.T.dot(b)
+        if mat.cols == b.cols:
+            return mat.dot(b.T)
+        elif mat.rows == b.rows:
+            return mat.T.dot(b)
         else:
             raise ShapeError("Dimensions incorrect for dot product.")
 
@@ -2944,13 +2947,15 @@ class MatrixBase(object):
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+        # issue 8362 avoid assign to self, introduce a temp variable mat here
+        mat = self
         if flags.pop('rational', True):
-            if any(v.has(Float) for v in self):
-                self = self._new(self.rows, self.cols,
-                    [nsimplify(v, rational=True) for v in self])
+            if any(v.has(Float) for v in mat):
+                mat = mat._new(mat.rows, mat.cols,
+                    [nsimplify(v, rational=True) for v in mat])
 
         flags.pop('simplify', None)  # pop unsupported flag
-        return self.berkowitz_eigenvals(**flags)
+        return mat.berkowitz_eigenvals(**flags)
 
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
@@ -2977,19 +2982,21 @@ class MatrixBase(object):
 
         # roots doesn't like Floats, so replace them with Rationals
         float = False
+        # issue 8362 avoid assign to self, introduce a temp variable mat here
+        mat = self
         if any(v.has(Float) for v in self):
             float = True
-            self = self._new(self.rows, self.cols, [nsimplify(
-                v, rational=True) for v in self])
+            mat = mat._new(mat.rows, mat.cols, [nsimplify(
+                v, rational=True) for v in mat])
             flags['rational'] = False  # to tell eigenvals not to do this
 
-        out, vlist = [], self.eigenvals(**flags)
+        out, vlist = [], mat.eigenvals(**flags)
         vlist = list(vlist.items())
         vlist.sort(key=default_sort_key)
         flags.pop('rational', None)
 
         for r, k in vlist:
-            tmp = self.as_mutable() - eye(self.rows)*r
+            tmp = mat.as_mutable() - eye(mat.rows)*r
             basis = tmp.nullspace()
             # whether tmp.is_symbolic() is True or False, it is possible that
             # the basis will come back as [] in which case simplification is
@@ -3016,9 +3023,9 @@ class MatrixBase(object):
                     basis[0] *= l
             if float:
                 out.append((r.evalf(chop=chop), k, [
-                           self._new(b).evalf(chop=chop) for b in basis]))
+                           mat._new(b).evalf(chop=chop) for b in basis]))
             else:
-                out.append((r, k, [self._new(b) for b in basis]))
+                out.append((r, k, [mat._new(b) for b in basis]))
         return out
 
     def singular_values(self):
@@ -3038,9 +3045,10 @@ class MatrixBase(object):
 
         condition_number
         """
-        self = self.as_mutable()
+        # issue 8362 avoid assign to self, introduce a temp variable mat here
+        mat = self.as_mutable()
         # Compute eigenvalues of A.H A
-        valmultpairs = (self.H*self).eigenvals()
+        valmultpairs = (mat.H*mat).eigenvals()
 
         # Expands result from eigenvals into a simple list
         vals = []

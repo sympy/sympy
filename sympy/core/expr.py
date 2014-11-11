@@ -499,7 +499,7 @@ class Expr(Basic, EvalfMixin):
 
         # simplify unless this has already been done
         # issue 8362 avoid assign to self, introduce a temp variable expr here
-        this = self
+        expr = self
         if simplify:
             expr = self.simplify()
 

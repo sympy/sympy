@@ -1246,6 +1246,7 @@ class Mul(Expr, AssocOp):
 
         # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
+        # issue 8362 avoid assign to self, rv is used as temp variable 
         rv = None
         n, d = fraction(self)
         if d is not S.One:
@@ -1253,7 +1254,10 @@ class Mul(Expr, AssocOp):
             if not self2.is_Mul:
                 return self2._subs(old, new)
             if self2 != self:
-                self = rv = self2
+                rv = self2
+        
+        if rv == None:
+            rv = self
 
         # Now continue with regular substitution.
 
@@ -1261,7 +1265,7 @@ class Mul(Expr, AssocOp):
         # should even be started; we always know where to find the Rational
         # so it's a quick test
 
-        co_self = self.args[0]
+        co_self = rv.args[0]
         co_old = old.args[0]
         co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
@@ -1274,7 +1278,7 @@ class Mul(Expr, AssocOp):
 
         # break self and old into factors
 
-        (c, nc) = breakup(self)
+        (c, nc) = breakup(rv)
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
@@ -1440,7 +1444,7 @@ class Mul(Expr, AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return co_residual*self.func(*margs)*self.func(*nc)
+        return co_residual*rv.func(*margs)*rv.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
