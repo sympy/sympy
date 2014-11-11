@@ -402,7 +402,10 @@ def test_Pow():
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
-    assert str(x**-1.0) == '1/x'
+    # not the same as x**-1
+    assert str(x**-1.0) == 'x**(-1.0)'
+    # see issue #2860
+    assert str(S(2)**-1.0) == '2**(-1.0)'
 
 
 def test_sqrt():
@@ -562,14 +565,14 @@ def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
 
 
-def test_bug2():
+def test_issue_3101():
     e = x - y
     a = str(e)
     b = str(e)
     assert a == b
 
 
-def test_bug4():
+def test_issue_3103():
     e = -2*sqrt(x) - y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]
@@ -636,14 +639,14 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: x1 > 0"
+    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
 
     D = Die('d1', 6)
     assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a >= 0, b >= 0)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
 
 
 def test_FiniteSet():

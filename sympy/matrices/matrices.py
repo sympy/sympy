@@ -5,6 +5,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
+from sympy.core.logic import fuzzy_and
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
@@ -53,7 +54,7 @@ class DeferredVector(Symbol, NotIterable):
     >>> X
     X
     >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr, default_array=True )
+    >>> func = lambdify( X, expr)
     >>> func( [1, 2, 3] )
     (3, 6)
     """
@@ -606,12 +607,17 @@ class MatrixBase(object):
         """Return self + b """
         return self + b
 
-    def table(self, printer, rowsep='\n', colsep=', ', align='right'):
+    def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
+              colsep=', ', align='right'):
         r"""
         String form of Matrix as a table.
 
         ``printer`` is the printer to use for on the elements (generally
         something like StrPrinter())
+
+        ``rowstart`` is the string used to start each row (by default '[').
+
+        ``rowend`` is the string used to end each row (by default ']').
 
         ``rowsep`` is the string used to separate rows (by default a newline).
 
@@ -647,6 +653,9 @@ class MatrixBase(object):
         >>> print(M.table(printer, align='center'))
         [ 1 , 2]
         [-33, 4]
+        >>> print(M.table(printer, rowstart='{', rowend='}'))
+        {  1, 2}
+        {-33, 4}
         """
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
@@ -673,7 +682,7 @@ class MatrixBase(object):
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
                 row[j] = getattr(elem, align)(maxlen[j])
-            res[i] = "[" + colsep.join(row) + "]"
+            res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
     def _format_str(self, printer=None):
@@ -2122,6 +2131,45 @@ class MatrixBase(object):
         return all(self[i, j].is_zero
             for i in range(self.rows)
             for j in range(i + 1, self.cols))
+
+    @property
+    def is_hermitian(self):
+        """Checks if the matrix is Hermitian.
+
+        In a Hermitian matrix element i,j is the complex conjugate of
+        element j,i.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> a = Matrix([[1, I], [-I, 1]])
+        >>> a
+        Matrix([
+        [ 1, I],
+        [-I, 1]])
+        >>> a.is_hermitian
+        True
+        >>> a[0, 0] = 2*I
+        >>> a.is_hermitian
+        False
+        >>> a[0, 0] = x
+        >>> a.is_hermitian
+        >>> a[0, 1] = a[1, 0]*I
+        >>> a.is_hermitian
+        False
+        """
+        def cond():
+            yield self.is_square
+            yield fuzzy_and(
+                    self[i, i].is_real for i in range(self.rows))
+            yield fuzzy_and(
+                    (self[i, j] - self[j, i].conjugate()).is_zero
+                    for i in range(self.rows)
+                    for j in range(i + 1, self.cols))
+        return fuzzy_and(i for i in cond())
 
     @property
     def is_upper_hessenberg(self):

@@ -48,6 +48,7 @@ from sympy.utilities import group, sift, public
 
 import sympy.polys
 import sympy.mpmath
+from sympy.mpmath.libmp.libhyper import NoConvergence
 
 from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.constructor import construct_domain
@@ -3404,12 +3405,14 @@ class Poly(Expr):
             roots = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps,
                     cleanup=cleanup, error=False, extraprec=f.degree()*10)
 
-            # Mpmath puts real roots first, then complex ones. SymPy polynomial
-            # module orders roots by their real components (if they are equal,
-            # then by their imaginary components). So we reorder the roots here
-            # to conform to the SymPy ordering.
+            # Mpmath puts real roots first, then complex ones (as does all_roots)
+            # so we make sure this convention holds here, too.
             roots = list(map(sympify,
-                sorted(roots, key=lambda r: (r.real, r.imag))))
+                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, r.imag))))
+        except NoConvergence:
+            raise NoConvergence(
+                'convergence to root failed; try n < %s or maxsteps > %s' % (
+                n, maxsteps))
         finally:
             sympy.mpmath.mp.dps = dps
 
@@ -4896,28 +4899,41 @@ def gcd_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    if not gens and not args:
-        domain, numbers = construct_domain(seq)
+    def try_non_polynomial_gcd(seq):
+        if not gens and not args:
+            domain, numbers = construct_domain(seq)
 
-        if not numbers:
-            return domain.zero
-        elif domain.is_Numerical:
-            result, numbers = numbers[0], numbers[1:]
+            if not numbers:
+                return domain.zero
+            elif domain.is_Numerical:
+                result, numbers = numbers[0], numbers[1:]
 
-            for number in numbers:
-                result = domain.gcd(result, number)
+                for number in numbers:
+                    result = domain.gcd(result, number)
 
-                if domain.is_one(result):
-                    break
+                    if domain.is_one(result):
+                        break
 
-            return domain.to_sympy(result)
+                return domain.to_sympy(result)
+
+        return None
+
+    result = try_non_polynomial_gcd(seq)
+
+    if result is not None:
+        return result
 
     options.allowed_flags(args, ['polys'])
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed as exc:
-        raise ComputationFailed('gcd_list', len(seq), exc)
+        result = try_non_polynomial_gcd(exc.exprs)
+
+        if result is not None:
+            return result
+        else:
+            raise ComputationFailed('gcd_list', len(seq), exc)
 
     if not polys:
         if not opt.polys:
@@ -4999,25 +5015,38 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    if not gens and not args:
-        domain, numbers = construct_domain(seq)
+    def try_non_polynomial_lcm(seq):
+        if not gens and not args:
+            domain, numbers = construct_domain(seq)
 
-        if not numbers:
-            return domain.one
-        elif domain.is_Numerical:
-            result, numbers = numbers[0], numbers[1:]
+            if not numbers:
+                return domain.one
+            elif domain.is_Numerical:
+                result, numbers = numbers[0], numbers[1:]
 
-            for number in numbers:
-                result = domain.lcm(result, number)
+                for number in numbers:
+                    result = domain.lcm(result, number)
 
-            return domain.to_sympy(result)
+                return domain.to_sympy(result)
+
+        return None
+
+    result = try_non_polynomial_lcm(seq)
+
+    if result is not None:
+        return result
 
     options.allowed_flags(args, ['polys'])
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed as exc:
-        raise ComputationFailed('lcm_list', len(seq), exc)
+        result = try_non_polynomial_lcm(exc.exprs)
+
+        if result is not None:
+            return result
+        else:
+            raise ComputationFailed('lcm_list', len(seq), exc)
 
     if not polys:
         if not opt.polys:

@@ -1,7 +1,8 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi)
+    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
+    Eq, Pow, Contains)
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -383,28 +384,42 @@ def test_is_proper_superset():
     raises(ValueError, lambda: Interval(0, 1).is_proper_superset(0))
 
 def test_contains():
-    assert Interval(0, 2).contains(1) is True
-    assert Interval(0, 2).contains(3) is False
-    assert Interval(0, 2, True, False).contains(0) is False
-    assert Interval(0, 2, True, False).contains(2) is True
-    assert Interval(0, 2, False, True).contains(0) is True
-    assert Interval(0, 2, False, True).contains(2) is False
-    assert Interval(0, 2, True, True).contains(0) is False
-    assert Interval(0, 2, True, True).contains(2) is False
+    assert Interval(0, 2).contains(1) is S.true
+    assert Interval(0, 2).contains(3) is S.false
+    assert Interval(0, 2, True, False).contains(0) is S.false
+    assert Interval(0, 2, True, False).contains(2) is S.true
+    assert Interval(0, 2, False, True).contains(0) is S.true
+    assert Interval(0, 2, False, True).contains(2) is S.false
+    assert Interval(0, 2, True, True).contains(0) is S.false
+    assert Interval(0, 2, True, True).contains(2) is S.false
 
-    assert FiniteSet(1, 2, 3).contains(2)
-    assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x'))
+    assert FiniteSet(1, 2, 3).contains(2) is S.true
+    assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
+
+    # issue 8197
+    from sympy.abc import a, b
+    assert isinstance(FiniteSet(b).contains(-a), Contains)
+    assert isinstance(FiniteSet(b).contains(a), Contains)
+    assert isinstance(FiniteSet(a).contains(1), Contains)
+    raises(TypeError, lambda: 1 in FiniteSet(a))
+
+    # issue 8209
+    rad1 = Pow(Pow(2, S(1)/3) - 1, S(1)/3)
+    rad2 = Pow(S(1)/9, S(1)/3) - Pow(S(2)/9, S(1)/3) + Pow(S(4)/9, S(1)/3)
+    s1 = FiniteSet(rad1)
+    s2 = FiniteSet(rad2)
+    assert s1 - s2 == S.EmptySet
 
     items = [1, 2, S.Infinity, S('ham'), -1.1]
     fset = FiniteSet(*items)
     assert all(item in fset for item in items)
-    assert all(fset.contains(item) is True for item in items)
+    assert all(fset.contains(item) is S.true for item in items)
 
-    assert Union(Interval(0, 1), Interval(2, 5)).contains(3) is True
-    assert Union(Interval(0, 1), Interval(2, 5)).contains(6) is False
-    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is False
+    assert Union(Interval(0, 1), Interval(2, 5)).contains(3) is S.true
+    assert Union(Interval(0, 1), Interval(2, 5)).contains(6) is S.false
+    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
-    assert S.EmptySet.contains(1) is False
+    assert S.EmptySet.contains(1) is S.false
 
 
 def test_interval_symbolic():
@@ -464,13 +479,13 @@ def test_Interval_as_relational():
     assert Interval(-1, 2, True, True).as_relational(x) == \
         And(Lt(-1, x), Lt(x, 2))
 
-    assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
-    assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
+    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Le(x, 2), Lt(-oo, x))
+    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(x, 2), Lt(-oo, x))
 
-    assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
-    assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
+    assert Interval(-2, oo, left_open=False).as_relational(x) == And(Le(-2, x), Lt(x, oo))
+    assert Interval(-2, oo, left_open=True).as_relational(x) == And(Lt(-2, x), Lt(x, oo))
 
-    assert Interval(-oo, oo).as_relational(x) is S.true
+    assert Interval(-oo, oo).as_relational(x) == And(Lt(-oo, x), Lt(x, oo))
 
 
 def test_Finite_as_relational():
@@ -592,21 +607,21 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True)
+    x = Symbol('x', real=True, finite=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
-    A = FiniteSet(1, 2, 30, x, S.Pi, S.Infinity)
+    A = FiniteSet(1, 2, 30, x, S.Pi)
     B = FiniteSet(-4, 0)
-    C = FiniteSet(100, S.NegativeInfinity)
+    C = FiniteSet(100)
     D = FiniteSet('Ham', 'Eggs')
 
-    assert all(s.is_real for s in [I, J, A, B, C])
-    assert not D.is_real
-    assert all((a + b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
-    assert not any((a + D).is_real for a in [I, J, A, B, C, D])
+    assert all(s.is_subset(S.Reals) for s in [I, J, A, B, C])
+    assert not D.is_subset(S.Reals)
+    assert all((a + b).is_subset(S.Reals) for a in [I, J, A, B, C] for b in [I, J, A, B, C])
+    assert not any((a + D).is_subset(S.Reals) for a in [I, J, A, B, C, D])
 
-    assert not (I + A + D).is_real
+    assert not (I + A + D).is_subset(S.Reals)
 
 
 def test_supinf():
@@ -637,7 +652,7 @@ def test_universalset():
     assert U.intersect(Interval(2, 4)) == Interval(2, 4)
     assert U.measure == S.Infinity
     assert U.boundary == S.EmptySet
-    assert U.contains(0) is True
+    assert U.contains(0) is S.true
 
 
 def test_Union_of_ProductSets_shares():
@@ -710,7 +725,7 @@ def test_image_EmptySet():
 
 def test_issue_5724_7680():
     assert I not in S.Reals  # issue 7680
-    assert Interval(-oo,oo).contains(I) is False
+    assert Interval(-oo, oo).contains(I) is S.false
 
 
 def test_boundary():
@@ -781,3 +796,21 @@ def test_closure():
 
 def test_interior():
     assert Interval(0, 1, False, True).interior == Interval(0, 1, True, True)
+
+
+def test_issue_7841():
+    raises(TypeError, lambda: x in S.Reals)
+
+
+def test_Eq():
+    assert Eq(Interval(0, 1), Interval(0, 1))
+    assert Eq(Interval(0, 1), Interval(0, 2)) == False
+
+    s1 = FiniteSet(0, 1)
+    s2 = FiniteSet(1, 2)
+
+    assert Eq(s1, s1)
+    assert Eq(s1, s2) == False
+
+    assert Eq(s1*s2, s1*s2)
+    assert Eq(s1*s2, s2*s1) == False

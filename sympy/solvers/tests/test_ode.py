@@ -9,7 +9,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
     homogeneous_order, infinitesimals, checkinfsol, checksysodesol)
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow
+from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 x, y, z = symbols('x:z', real=True)
@@ -141,21 +141,21 @@ def test_linear_2eq_order2():
     assert dsolve(eq7) == sol7
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = ("[x(t) == sqrt(133)*(-(-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
-    "C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + O(t**6)) + (-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) + 4*C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) - "
-    "4*C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + 4*C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) - "
-    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192, y(t) == sqrt(133)*(C2*(133*t**8/24 - t**3/6 + "
-    "sqrt(133)*t**3/2 + 1) - C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) - "
+    sol8 = ("[x(t) == -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
+    "C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + O(t**6)) - (-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + "
+    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) - 4*C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
+    "4*C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - 4*C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
+    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192, y(t) == -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
+    "sqrt(133)*t**3/2 + 1) + C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
     "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266]")
     assert str(dsolve(eq8)) == sol8
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
-    sol9 = [Eq(x(t), sqrt(133)*(4*C1*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) + 4*C2 - \
-    4*C3*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) - 4*C4 - (-sqrt(133) - 1)*(C1*Integral(exp((-1 + \
-    sqrt(133))*Integral(t, t)), t) + C2) + (-1 + sqrt(133))*(C3*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + \
-    C4))/3192), Eq(y(t), sqrt(133)*(C1*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) + C2 - \
-    C3*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) - C4)/266)]
+    sol9 = [Eq(x(t), -sqrt(133)*(4*C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + 4*C2 - \
+    4*C3*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) - 4*C4 - (-1 + sqrt(133))*(C1*Integral(exp((-sqrt(133) - \
+    1)*Integral(t, t)), t) + C2) + (-sqrt(133) - 1)*(C3*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) + \
+    C4))/3192), Eq(y(t), -sqrt(133)*(C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + C2 - \
+    C3*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) - C4)/266)]
     assert dsolve(eq9) == sol9
 
     eq10 = (t**2*diff(x(t),t,t) + 3*t*diff(x(t),t) + 4*t*diff(y(t),t) + 12*x(t) + 9*y(t), \
@@ -924,6 +924,8 @@ def test_1st_exact2():
     equivalent, but it is so complex that checkodesol fails, and takes a long
     time to do so.
     """
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
           sqrt(x**2 + f(x)**2)))*f(x).diff(x))
     sol = dsolve(eq)

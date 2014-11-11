@@ -544,15 +544,25 @@ class PrettyPrinter(Printer):
         return prettyF
 
     def _print_Limit(self, l):
-        # XXX we do not print dir ...
         e, z, z0, dir = l.args
 
         E = self._print(e)
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
-        LimArg = prettyForm(*LimArg.right('->'))
+        if self._use_unicode:
+            LimArg = prettyForm(*LimArg.right(u('\u2500\u2192')))
+        else:
+            LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
+
+        if z0 in (S.Infinity, S.NegativeInfinity):
+            dir = ""
+        else:
+            if self._use_unicode:
+                dir = u('\u207A') if str(dir) == "+" else u('\u207B')
+
+        LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
         Lim = prettyForm(*Lim.below(LimArg))
         Lim = prettyForm(*Lim.right(E))
@@ -1222,7 +1232,8 @@ class PrettyPrinter(Printer):
 
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
-                pform = self._print(-term)
+                coeff, other = term.as_coeff_mul()
+                pform = self._print(C.Mul(-coeff, *other, evaluate=False))
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)
@@ -1272,7 +1283,10 @@ class PrettyPrinter(Printer):
         # Gather terms for numerator/denominator
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(C.Pow(item.base, -item.exp))
+                if item.exp != -1:
+                    b.append(C.Pow(item.base, -item.exp, evaluate=False))
+                else:
+                    b.append(C.Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append( C.Rational(item.p) )
@@ -1476,6 +1490,15 @@ class PrettyPrinter(Printer):
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
+
+    def _print_Contains(self, e):
+        var, set = e.args
+        if self._use_unicode:
+            el = u(" \u2208 ")
+            return prettyForm(*stringPict.next(self._print(var),
+                                               el, self._print(set)), binding=8)
+        else:
+            return prettyForm(sstr(e))
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):

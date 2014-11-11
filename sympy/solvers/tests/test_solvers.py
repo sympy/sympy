@@ -4,7 +4,7 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -15,8 +15,8 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import RootOf
 
-from sympy.utilities.pytest import slow, XFAIL, raises, skip
-from sympy.utilities.randtest import test_numerically as tn
+from sympy.utilities.pytest import slow, XFAIL, raises, skip, ON_TRAVIS
+from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
@@ -119,7 +119,7 @@ def test_solve_args():
     assert solve(a*x**2 + b*x + c -
                 ((x - h)**2 + 4*p*k)/4/p,
                 [h, p, k], exclude=[a, b, c], dict=True) == \
-        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
+        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
@@ -321,6 +321,8 @@ def test_linear_systemLU():
 
 
 def test_solve_transcendental():
+    from sympy.abc import a, b
+
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
     assert solve(cos(x) - y, x) == [-acos(y) + 2*pi, acos(y)]
@@ -404,6 +406,14 @@ def test_solve_transcendental():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
+
+    # issue 7245
+    assert solve(sin(sqrt(x))) == [0, pi**2]
+
+    # issue 7602
+    a, b = symbols('a, b', real=True, negative=False)
+    assert str(solve(Eq(a, 0.5 - cos(pi*b)/2), b)) == \
+        '[-0.318309886183791*acos(-2.0*a + 1.0) + 2.0, 0.318309886183791*acos(-2.0*a + 1.0)]'
 
 
 def test_solve_for_functions_derivatives():
@@ -506,17 +516,23 @@ def test_solve_undetermined_coeffs():
 
 
 def test_solve_inequalities():
+    x = Symbol('x')
     system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
 
     assert solve(system) == \
         And(Or(And(Lt(-sqrt(2), re(x)), Lt(re(x), -1)),
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
-    assert solve(system, assume=Q.real(x)) == \
+
+    x = Symbol('x', real=True)
+    system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
+
+    assert solve(system) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
     # issue 6627, 3448
-    assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
-    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
+    assert solve((x - 3)/(x - 2) < 0, x) == And(Lt(2, x), Lt(x, 3))
+    assert solve(x/(x + 1) > 1, x) == And(Lt(-oo, x), Lt(x, -1))
+
 
 def test_issue_4793():
     assert solve(1/x) == []
@@ -650,11 +666,9 @@ def test_issue_4671_4463_4467():
 def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
-        set([
-            (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),
-        -sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
-        (sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),
-        sqrt(r*tan(t)**2/(tan(t)**2 + 1)))])
+        set([(
+            -sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
+            (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))])
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -1164,8 +1178,8 @@ def test_exclude():
         {
             Rf: Ri*(C*R*s + 1)**2/(C*R*s),
             Vminus: Vplus,
-            V1: Vplus*(2*C*R*s + 1)/(C*R*s),
-            Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s)},
+            V1: 2*Vplus + Vplus/(C*R*s),
+            Vout: C*R*Vplus*s + 3*Vplus + Vplus/(C*R*s)},
         {
             Vplus: 0,
             Vminus: 0,
@@ -1216,6 +1230,8 @@ def test_real_roots():
 
 @slow
 def test_issue_6528():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
         895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
@@ -1504,3 +1520,21 @@ def test_issue_7547():
 def test_issue_7895():
     r = symbols('r', real=True)
     assert solve(sqrt(r) - 2) == [4]
+
+
+def test_issue_2777():
+    # the equations represent two circles
+    x, y = symbols('x y', real=True)
+    e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
+    a, b = 191/S(20), 3*sqrt(391)/20
+    ans = [(a, -b), (a, b)]
+    assert solve((e1, e2), (x, y)) == ans
+    assert solve((e1, e2/(x - a)), (x, y)) == []
+    # make the 2nd circle's radius be -3
+    e2 += 6
+    assert solve((e1, e2), (x, y)) == []
+    assert solve((e1, e2), (x, y), check=False) == ans
+
+def test_issue_7322():
+    number = 5.62527e-35
+    assert solve(x - number, x)[0] == number

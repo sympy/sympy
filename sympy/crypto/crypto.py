@@ -14,7 +14,7 @@ from sympy.core.numbers import igcdex
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, totient, primitive_root
 from sympy.polys.domains import FF
-from sympy.polys.polytools import gcd, Poly
+from sympy.polys.polytools import gcd, Poly, invert
 from sympy.utilities.iterables import flatten, uniq
 
 
@@ -944,7 +944,8 @@ def rsa_private_key(p, q, e):
     n = p*q
     phi = totient(n)
     if isprime(p) and isprime(q) and gcd(e, phi) == 1:
-        return n, pow(e, phi - 1, phi)
+        d = int(invert(e,phi))
+        return n, d
     return False
 
 

@@ -161,7 +161,7 @@ class AskBoundedHandler(CommonHandler):
 
         """
 
-        sign = -1  # sign of unknown or unbounded
+        sign = -1  # sign of unknown or infinite
         result = True
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)

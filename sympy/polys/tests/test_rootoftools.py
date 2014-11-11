@@ -14,9 +14,11 @@ from sympy import (
     S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan,
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, x, y, z, r
+
+import warnings
 
 
 def test_RootOf___new__():
@@ -187,6 +189,7 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("+1.272897223922499190910"))
     assert im.epsilon_eq(Float("+0.719798681483861386681"))
 
+
 def test_RootOf_evalf_caching_bug():
     r = RootOf(x**5 - 5*x + 12, 1)
     r.n()
@@ -195,6 +198,7 @@ def test_RootOf_evalf_caching_bug():
     r.n()
     b = r._get_interval()
     assert a == b
+
 
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
@@ -219,6 +223,7 @@ def test_RootOf_all_roots():
         RootOf(x**3 - x**2 + 1, 2),
     ]
 
+
 def test_RootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
     roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
@@ -234,6 +239,7 @@ def test_RootOf_eval_rational():
              "0.33998104358485626",
              "0.86113631159405258",
              ]
+
 
 def test_RootSum___new__():
     f = x**3 + x + 3
@@ -374,3 +380,10 @@ def test_issue_7876():
     l1 = Poly(x**6 - x + 1, x).all_roots()
     l2 = [RootOf(x**6 - x + 1, i) for i in range(6)]
     assert frozenset(l1) == frozenset(l2)
+
+
+def test_issue_8316():
+    f = Poly(7*x**8 - 9)
+    assert len(f.all_roots()) == 8
+    f = Poly(7*x**8 - 10)
+    assert len(f.all_roots()) == 8

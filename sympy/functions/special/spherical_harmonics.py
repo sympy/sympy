@@ -219,16 +219,14 @@ class Ynm(Function):
         # Note: works without this function by just calling
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.
-        from sympy.mpmath import mp
+        from sympy.mpmath import mp, workprec
         from sympy import Expr
         n = self.args[0]._to_mpmath(prec)
         m = self.args[1]._to_mpmath(prec)
         theta = self.args[2]._to_mpmath(prec)
         phi = self.args[3]._to_mpmath(prec)
-        oprec = mp.prec
-        mp.prec = prec
-        res = mp.spherharm(n, m, theta, phi)
-        mp.prec = oprec
+        with workprec(prec):
+            res = mp.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
 

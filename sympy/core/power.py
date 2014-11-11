@@ -7,13 +7,12 @@ from .cache import cacheit
 from .core import C
 from .singleton import S
 from .expr import Expr
-
-from sympy.core.evalf import PrecisionExhausted
-from sympy.core.function import (_coeff_isneg, expand_complex,
-    expand_multinomial, expand_mul)
-from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int, xrange
-from sympy.core.evaluate import global_evaluate
+from .evalf import PrecisionExhausted
+from .function import (_coeff_isneg, expand_complex, expand_multinomial,
+    expand_mul)
+from .logic import fuzzy_bool
+from .compatibility import as_int, xrange
+from .evaluate import global_evaluate
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -98,8 +97,8 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | (-1)**-1     | -1      |                                               |
     +--------------+---------+-----------------------------------------------+
-    | S.Zero**-1   | oo      | This is not strictly true, as 0**-1 may be    |
-    |              |         | undefined, but is convenient is some contexts |
+    | S.Zero**-1   | zoo     | This is not strictly true, as 0**-1 may be    |
+    |              |         | undefined, but is convenient in some contexts |
     |              |         | where the base is assumed to be positive.     |
     +--------------+---------+-----------------------------------------------+
     | 1**-1        | 1       |                                               |
@@ -109,7 +108,7 @@ class Pow(Expr):
     | 0**oo        | 0       | Because for all complex numbers z near        |
     |              |         | 0, z**oo -> 0.                                |
     +--------------+---------+-----------------------------------------------+
-    | 0**-oo       | oo      | This is not strictly true, as 0**oo may be    |
+    | 0**-oo       | zoo     | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |
     |              |         | values or rotating in the complex plane.      |
     |              |         | It is convenient, however, when the base      |
@@ -138,9 +137,9 @@ class Pow(Expr):
     See Also
     ========
 
-    Infinity
-    NegativeInfinity
-    NaN
+    sympy.core.numbers.Infinity
+    sympy.core.numbers.NegativeInfinity
+    sympy.core.numbers.NaN
 
     References
     ==========
@@ -293,7 +292,6 @@ class Pow(Expr):
         if s is not None:
             return s*Pow(b, e*other)
 
-
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even
@@ -330,7 +328,7 @@ class Pow(Expr):
             if self.exp.is_real:
                 return False
         elif self.base.is_nonnegative:
-            if self.exp.is_real:
+            if self.exp.is_nonnegative:
                 return False
         elif self.base.is_nonpositive:
             if self.exp.is_even:
@@ -338,6 +336,21 @@ class Pow(Expr):
         elif self.base.is_real:
             if self.exp.is_even:
                 return False
+
+    def _eval_is_zero(self):
+        if self.base.is_zero:
+            if self.exp.is_positive:
+                return True
+            elif self.exp.is_nonpositive:
+                return False
+        elif self.base.is_nonzero:
+            if self.exp.is_finite:
+                return False
+            elif self.exp.is_infinite:
+                if (1 - abs(self.base)).is_positive:
+                    return self.exp.is_positive
+                elif (1 - abs(self.base)).is_negative:
+                    return self.exp.is_negative
 
     def _eval_is_integer(self):
         b, e = self.args
@@ -354,7 +367,7 @@ class Pow(Expr):
                 return True
             if self.exp.is_negative:
                 return False
-        if c1 and e.is_negative and e.is_bounded:  # int**neg
+        if c1 and e.is_negative and e.is_finite:  # int**neg
             return False
         if b.is_Number and e.is_Number:
             # int**nonneg or rat**?
@@ -411,6 +424,14 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
+        if real_b is False:  # we already know it's not imag
+            i = C.arg(self.base)*self.exp/S.Pi
+            return i.is_integer
+
+    def _eval_is_complex(self):
+        if all(a.is_complex for a in self.args):
+            return True
+
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:
             if self.exp.is_integer:
@@ -428,16 +449,20 @@ class Pow(Expr):
             if self.base.is_positive:
                 return False
             else:
-                r = self.exp.is_rational
+                rat = self.exp.is_rational
+                if not rat:
+                    return rat
                 if self.exp.is_integer:
                     return False
                 else:
-                    r = (2*self.exp).is_integer
-                    if r:
+                    half = (2*self.exp).is_integer
+                    if half:
                         return self.base.is_negative
-                    else:
-                        return r
-                return r
+                    return half
+
+        if self.base.is_real is False:  # we already know it's not imag
+            i = C.arg(self.base)*self.exp/S.Pi
+            return (2*i).is_odd
 
     def _eval_is_odd(self):
         if self.exp.is_integer:
@@ -448,16 +473,16 @@ class Pow(Expr):
             elif self.base is S.NegativeOne:
                 return True
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         if self.exp.is_negative:
-            if self.base.is_infinitesimal:
+            if self.base.is_zero:
                 return False
-            if self.base.is_unbounded:
+            if self.base.is_infinite:
                 return True
-        c1 = self.base.is_bounded
+        c1 = self.base.is_finite
         if c1 is None:
             return
-        c2 = self.exp.is_bounded
+        c2 = self.exp.is_finite
         if c2 is None:
             return
         if c1 and c2:
@@ -550,7 +575,7 @@ class Pow(Expr):
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1:
+        if b.is_Rational and b.p == 1 and b.q != 1:
             return Integer(b.q), -e
         return b, e
 
@@ -947,6 +972,17 @@ class Pow(Expr):
         if e.is_integer:
             return b.is_rational
 
+    def _eval_is_algebraic(self):
+        if self.base.is_zero or (self.base - 1).is_zero:
+            return True
+        elif self.exp.is_rational:
+            return self.base.is_algebraic
+        elif self.base.is_algebraic and self.exp.is_algebraic:
+            if ((self.base.is_nonzero and (self.base - 1).is_nonzero)
+                or self.base.is_integer is False
+                or self.base.is_irrational):
+                return self.exp.is_rational
+
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):
             return False
@@ -1146,8 +1182,8 @@ class Pow(Expr):
             """return the integer value (if possible) of e and a
             flag indicating whether it is bounded or not."""
             n = e.limit(x, 0)
-            unbounded = n.is_unbounded
-            if not unbounded:
+            infinite = n.is_infinite
+            if not infinite:
                 # XXX was int or floor intended? int used to behave like floor
                 # so int(-Rational(1, 2)) returned -1 rather than int's 0
                 try:
@@ -1159,12 +1195,12 @@ class Pow(Expr):
                     except TypeError:
                         pass  # hope that base allows this to be resolved
                 n = _sympify(n)
-            return n, unbounded
+            return n, infinite
 
         order = O(x**n, x)
-        ei, unbounded = e2int(e)
+        ei, infinite = e2int(e)
         b0 = b.limit(x, 0)
-        if unbounded and (b0 is S.One or b0.has(Symbol)):
+        if infinite and (b0 is S.One or b0.has(Symbol)):
             # XXX what order
             if b0 is S.One:
                 resid = (b - 1)
@@ -1176,8 +1212,8 @@ class Pow(Expr):
 
             return b0**ei
 
-        if (b0 is S.Zero or b0.is_unbounded):
-            if unbounded is not False:
+        if (b0 is S.Zero or b0.is_infinite):
+            if infinite is not False:
                 return b0**e  # XXX what order
 
             if not ei.is_number:  # if not, how will we proceed?
@@ -1228,21 +1264,21 @@ class Pow(Expr):
                 rv += order
             return rv
 
-        # either b0 is bounded but neither 1 nor 0 or e is unbounded
+        # either b0 is bounded but neither 1 nor 0 or e is infinite
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
         o2 = order*(b0**-e)
         z = (b/b0 - 1)
         o = O(z, x)
         #r = self._compute_oseries3(z, o2, self.taylor_term)
         if o is S.Zero or o2 is S.Zero:
-            unbounded = True
+            infinite = True
         else:
             if o.expr.is_number:
                 e2 = log(o2.expr*x)/log(x)
             else:
                 e2 = log(o2.expr)/log(o.expr)
-            n, unbounded = e2int(e2)
-        if unbounded:
+            n, infinite = e2int(e2)
+        if infinite:
             # requested accuracy gives infinite series,
             # order is probably non-polynomial e.g. O(exp(-1/x), x).
             r = 1 + z

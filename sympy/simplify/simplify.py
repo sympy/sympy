@@ -14,7 +14,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
-from sympy.core.function import expand_log, count_ops
+from sympy.core.function import expand_log, count_ops, _mexpand
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
@@ -36,9 +36,6 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
 
 import sympy.mpmath as mpmath
 
-
-def _mexpand(expr):
-    return expand_mul(expand_multinomial(expr))
 
 
 def fraction(expr, exact=False):
@@ -2822,7 +2819,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # e.g., 2**(2*x) => 4**x
         for i in xrange(len(c_powers)):
             b, e = c_powers[i]
-            if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
+            if not (all(x.is_nonnegative for x in b.as_numer_denom()) or e.is_integer or force or b.is_polar):
                 continue
             exp_c, exp_t = e.as_coeff_Mul(rational=True)
             if exp_c is not S.One and exp_t is not S.One:
@@ -3801,7 +3798,9 @@ def _real_to_rational(expr, tolerance=None):
         else:
             r = nsimplify(float, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if not r.is_Rational:
+            if float and not r:
+                r = Rational(float)
+            elif not r.is_Rational:
                 if float < 0:
                     float = -float
                     d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
@@ -3906,7 +3905,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:

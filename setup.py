@@ -161,103 +161,42 @@ class run_benchmarks(Command):
         benchmarking.main(['sympy'])
 
 
-cmdclass = {'test': test_sympy,
-            'bench': run_benchmarks,
-            'clean': clean,
-            'audit': audit}
-
-# Check that this list is uptodate against the result of the command:
-# $ python bin/generate_test_list.py
-
-tests = [
-    'sympy.assumptions.tests',
-    'sympy.calculus.tests',
-    'sympy.categories.tests',
-    'sympy.combinatorics.tests',
-    'sympy.concrete.tests',
-    'sympy.core.tests',
-    'sympy.crypto.tests',
-    'sympy.diffgeom.tests',
-    'sympy.external.tests',
-    'sympy.functions.combinatorial.tests',
-    'sympy.functions.elementary.tests',
-    'sympy.functions.special.tests',
-    'sympy.galgebra.tests',
-    'sympy.geometry.tests',
-    'sympy.integrals.tests',
-    'sympy.interactive.tests',
-    'sympy.liealgebras.tests',
-    'sympy.logic.tests',
-    'sympy.matrices.expressions.tests',
-    'sympy.matrices.tests',
-    'sympy.mpmath.tests',
-    'sympy.ntheory.tests',
-    'sympy.parsing.tests',
-    'sympy.physics.hep.tests',
-    'sympy.physics.mechanics.tests',
-    'sympy.physics.optics.tests',
-    'sympy.physics.quantum.tests',
-    'sympy.physics.tests',
-    'sympy.physics.vector.tests',
-    'sympy.plotting.intervalmath.tests',
-    'sympy.plotting.pygletplot.tests',
-    'sympy.plotting.tests',
-    'sympy.polys.agca.tests',
-    'sympy.polys.domains.tests',
-    'sympy.polys.tests',
-    'sympy.printing.pretty.tests',
-    'sympy.printing.tests',
-    'sympy.series.tests',
-    'sympy.sets.tests',
-    'sympy.simplify.tests',
-    'sympy.solvers.tests',
-    'sympy.stats.tests',
-    'sympy.strategies.branch.tests',
-    'sympy.strategies.tests',
-    'sympy.tensor.tests',
-    'sympy.unify.tests',
-    'sympy.utilities.tests',
-    ]
-
-classifiers = [
-    'License :: OSI Approved :: BSD License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Scientific/Engineering :: Mathematics',
-    'Topic :: Scientific/Engineering :: Physics',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.2',
-    'Programming Language :: Python :: 3.3',
-]
-
-long_description = '''SymPy is a Python library for symbolic mathematics. It aims
-to become a full-featured computer algebra system (CAS) while keeping the code
-as simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external libraries.'''
-
+# read __version__ and __doc__ attributes:
 exec(open('sympy/release.py').read())
+with open('sympy/__init__.py') as f:
+    long_description = f.read().split('"""')[1]
 
-setup_args = {
-    "name": 'sympy',
-    "version": __version__,
-    "description": 'Computer algebra system (CAS) in Python',
-    "long_description": long_description,
-    "author": 'SymPy development team',
-    "author_email": 'sympy@googlegroups.com',
-    "license": 'BSD',
-    "keywords": "Math CAS",
-    "url": 'http://sympy.org',
-    "packages": find_packages(),
-    "scripts": ['bin/isympy'],
-    "ext_modules": [],
-    "package_data": { 'sympy.utilities.mathml': ['data/*.xsl'] },
-    "data_files": [('share/man/man1', ['doc/man/isympy.1'])],
-    "cmdclass": cmdclass,
-    "classifiers": classifiers,
-}
-
-setup(**setup_args)
+setup(name='sympy',
+      version=__version__,
+      description='Computer algebra system (CAS) in Python',
+      long_description=long_description,
+      author='SymPy development team',
+      author_email='sympy@googlegroups.com',
+      license='BSD',
+      keywords="Math CAS",
+      url='http://sympy.org',
+      packages=find_packages(),
+      scripts=['bin/isympy'],
+      ext_modules=[],
+      package_data={ 'sympy.utilities.mathml': ['data/*.xsl'] },
+      data_files=[('share/man/man1', ['doc/man/isympy.1'])],
+      cmdclass={'test': test_sympy,
+                'bench': run_benchmarks,
+                'clean': clean,
+                'audit': audit},
+      classifiers=[
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        ]
+      )

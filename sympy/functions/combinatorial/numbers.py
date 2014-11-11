@@ -21,7 +21,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 
-from sympy.mpmath import bernfrac
+from sympy.mpmath import bernfrac, workprec
 from sympy.mpmath.libmp import ifib as _ifib
 
 
@@ -675,7 +675,8 @@ class euler(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, euler
+    >>> from sympy import Symbol
+    >>> from sympy.functions import euler
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
     >>> n = Symbol("n")
@@ -727,10 +728,8 @@ class euler(Function):
             from sympy.mpmath import mp
             from sympy import Expr
             m = m._to_mpmath(prec)
-            oprec = mp.prec
-            mp.prec = prec
-            res = mp.eulernum(m)
-            mp.prec = oprec
+            with workprec(prec):
+                res = mp.eulernum(m)
             return Expr._from_mpmath(res, prec)
 
 #----------------------------------------------------------------------------#

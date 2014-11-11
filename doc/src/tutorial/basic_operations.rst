@@ -173,7 +173,7 @@ the given numerical library, usually NumPy.  For example
     >>> import numpy # doctest:+SKIP
     >>> a = numpy.arange(10) # doctest:+SKIP
     >>> expr = sin(x)
-    >>> f = lambdify(x, expr, "numpy", default_array=True) # doctest:+SKIP
+    >>> f = lambdify(x, expr, "numpy") # doctest:+SKIP
     >>> f(a) # doctest:+SKIP
     [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
      -0.2794155   0.6569866   0.98935825  0.41211849]
@@ -187,7 +187,7 @@ See issue `#7853 <https://github.com/sympy/sympy/issues/7853>`_ for more informa
 You can use other libraries than NumPy. For example, to use the standard
 library math module, use ``"math"``.
 
-    >>> f = lambdify(x, expr, "math", default_array=True)
+    >>> f = lambdify(x, expr, "math")
     >>> f(0.1)
     0.0998334166468
 
@@ -199,7 +199,7 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     ...     My sine. Not only accurate for small x.
     ...     """
     ...     return x
-    >>> f = lambdify(x, expr, {"sin":mysin}, default_array=True)
+    >>> f = lambdify(x, expr, {"sin":mysin})
     >>> f(0.1)
     0.1
 

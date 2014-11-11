@@ -32,6 +32,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.core.compatibility import xrange
 
+
 def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.
@@ -737,6 +738,12 @@ A3 = 'A3'  # Axis #3 (-0): re < 0 and im = 0
 A4 = 'A4'  # Axis #4 (0-): re = 0 and im < 0
 
 _rules_simple = {
+    # Q --> Q (same) => no change
+    (Q1, Q1): 0,
+    (Q2, Q2): 0,
+    (Q3, Q3): 0,
+    (Q4, Q4): 0,
+
     # A -- CCW --> Q => +1/4 (CCW)
     (A1, Q1): 1,
     (A2, Q2): 1,
@@ -913,6 +920,7 @@ _rules_ambiguous = {
 }
 
 _values = {
+    0: [( 0, 1)],
     1: [(+1, 4)],
     2: [(-1, 4)],
     3: [(+1, 4)],
@@ -1304,7 +1312,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L1_L.append(((a, b), indices, h))
-                else:
+                if a >= x:
                     I_L1_R.append(((a, b), indices, h))
 
     for I in I_L3:
@@ -1328,7 +1336,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L3_L.append(((b, a), indices, h))
-                else:
+                if a >= x:
                     I_L3_R.append(((b, a), indices, h))
 
     Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
@@ -1410,7 +1418,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L2_B.append(((a, b), indices, h))
-                else:
+                if a >= y:
                     I_L2_U.append(((a, b), indices, h))
 
     for I in I_L4:
@@ -1434,7 +1442,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L4_B.append(((b, a), indices, h))
-                else:
+                if a >= y:
                     I_L4_U.append(((b, a), indices, h))
 
     Q_L1_B = Q_L1
@@ -1752,11 +1760,13 @@ class RealInterval(object):
         return self._inner_refine()
 
 class ComplexInterval(object):
-    """A fully qualified representation of a complex isolation interval. """
+    """A fully qualified representation of a complex isolation interval.
+    The printed form is shown as (x1, y1) x (x2, y2): the southwest x northeast
+    coordinates of the interval's rectangle."""
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
         """Initialize new complex interval with complete information. """
-        self.a, self.b = a, b
+        self.a, self.b = a, b  # the southwest and northeast corner: (x1, y1), (x2, y2)
         self.I, self.Q = I, Q
 
         self.f1, self.F1 = f1, F1
@@ -1820,8 +1830,13 @@ class ComplexInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return ((self.conj != other.conj) or ((self.bx <= other.ax or other.bx <= self.ax) or
-                                              (self.by <= other.ay or other.by <= self.ay)))
+        if self.conj != other.conj:
+            return True
+        re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
+        if re_distinct:
+            return True
+        im_distinct = (self.by <= other.ay or other.by <= self.ay)
+        return im_distinct
 
     def _inner_refine(self):
         """Internal one step complex root refinement procedure. """

@@ -9,7 +9,7 @@ from sympy import (
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
-    sympify, tan, tanh, trigsimp, Wild, zoo, Sum)
+    sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
@@ -539,6 +539,10 @@ def test_simplify_measure():
     expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
     assert measure1(simplify(expr, measure=measure1)) <= measure1(expr)
     assert measure2(simplify(expr, measure=measure2)) <= measure2(expr)
+
+    expr2 = Eq(sin(x)**2 + cos(x)**2, 1)
+    assert measure1(simplify(expr2, measure=measure1)) <= measure1(expr2)
+    assert measure2(simplify(expr2, measure=measure2)) <= measure2(expr2)
 
 
 def test_simplify_issue_1308():
@@ -1093,6 +1097,8 @@ def test_nsimplify():
     assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
     # issue 7211, PR 4112
     assert nsimplify(S(2e-8)) == S(1)/50000000
+    # issue 7322 direct test
+    assert nsimplify(1e-42, rational=True) != 0
 
 
 def test_extract_minus_sign():
@@ -1827,7 +1833,7 @@ def test_issue_7001():
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.utilities.randtest import test_numerically as tn
+        from sympy.utilities.randtest import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True
@@ -1892,3 +1898,12 @@ def test_issue_2827_trigsimp_methods():
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+
+
+def test_inequality_no_auto_simplify():
+    # no simplify on creation but can be simplified
+    lhs = cos(x)**2 + sin(x)**2
+    rhs = 2;
+    e = Lt(lhs, rhs)
+    assert e == Lt(lhs, rhs, evaluate=False)
+    assert simplify(e)

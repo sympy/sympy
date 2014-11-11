@@ -11,7 +11,7 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Derivative, Expr, Integer, oo
+from sympy import Derivative, Expr, Integer, oo, Mul, expand, Add
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -298,6 +298,20 @@ class IdentityOperator(Operator):
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{I}}'
 
+    def __mul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(self, other)
+
+    def __rmul__(self, other):
+
+        if isinstance(other, Operator):
+            return other
+
+        return Mul(other, self)
+
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
@@ -376,21 +390,59 @@ class OuterProduct(Operator):
 
     def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
-        ket = args[0]
-        bra = args[1]
-        if not isinstance(ket, KetBase):
-            raise TypeError('KetBase subclass expected, got: %r' % ket)
-        if not isinstance(bra, BraBase):
-            raise TypeError('BraBase subclass expected, got: %r' % ket)
-        if not ket.dual_class() == bra.__class__:
+
+        if len(args) != 2:
+            raise ValueError('2 parameters expected, got %d' % len(args))
+
+        ket_expr = expand(args[0])
+        bra_expr = expand(args[1])
+
+        if (isinstance(ket_expr, (KetBase, Mul)) and
+                isinstance(bra_expr, (BraBase, Mul))):
+            ket_c, kets = ket_expr.args_cnc()
+            bra_c, bras = bra_expr.args_cnc()
+
+            if len(kets) != 1 or not isinstance(kets[0], KetBase):
+                raise TypeError('KetBase subclass expected'
+                                ', got: %r' % Mul(*kets))
+
+            if len(bras) != 1 or not isinstance(bras[0], BraBase):
+                raise TypeError('BraBase subclass expected'
+                                ', got: %r' % Mul(*bras))
+
+            if not kets[0].dual_class() == bras[0].__class__:
+                raise TypeError(
+                    'ket and bra are not dual classes: %r, %r' %
+                    (kets[0].__class__, bras[0].__class__)
+                    )
+
+            # TODO: make sure the hilbert spaces of the bra and ket are
+            # compatible
+            obj = Expr.__new__(cls, *(kets[0], bras[0]), **old_assumptions)
+            obj.hilbert_space = kets[0].hilbert_space
+            return Mul(*(ket_c + bra_c)) * obj
+
+        op_terms = []
+        if isinstance(ket_expr, Add) and isinstance(bra_expr, Add):
+            for ket_term in ket_expr.args:
+                for bra_term in bra_expr.args:
+                    op_terms.append(OuterProduct(ket_term, bra_term,
+                                                 **old_assumptions))
+        elif isinstance(ket_expr, Add):
+            for ket_term in ket_expr.args:
+                op_terms.append(OuterProduct(ket_term, bra_expr,
+                                             **old_assumptions))
+        elif isinstance(bra_expr, Add):
+            for bra_term in bra_expr.args:
+                op_terms.append(OuterProduct(ket_expr, bra_term,
+                                             **old_assumptions))
+        else:
             raise TypeError(
-                'ket and bra are not dual classes: %r, %r' %
-                (ket.__class__, bra.__class__)
-            )
-        # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args, **old_assumptions)
-        obj.hilbert_space = ket.hilbert_space
-        return obj
+                'Expected ket and bra expression, got: %r, %r' %
+                (ket_expr, bra_expr)
+                )
+
+        return Add(*op_terms)
 
     @property
     def ket(self):

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from .core import C
-from .sympify import sympify
+from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex
@@ -14,6 +14,20 @@ from collections import defaultdict
 
 
 class Expr(Basic, EvalfMixin):
+    """
+    Base class for algebraic expressions.
+
+    Everything that requires arithmetic operations to be defined
+    should subclass this class, instead of Basic (which should be
+    used only for argument storage and expression manipulation, i.e.
+    pattern matching, substitutions, etc).
+
+    See Also
+    ========
+
+    sympy.core.basic.Basic
+    """
+
     __slots__ = []
 
     @property
@@ -180,6 +194,8 @@ class Expr(Basic, EvalfMixin):
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
+        if r in (S.NaN, S.Infinity, S.NegativeInfinity):
+            raise TypeError("can't convert %s to int" % r)
         i = int(r)
         if not i:
             return 0
@@ -213,49 +229,65 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_nonnegative is not None and \
-                dif.is_nonnegative is not dif.is_negative:
-            return sympify(dif.is_nonnegative)
-        return C.GreaterThan(self, other)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_nonnegative is not None and \
+                    dif.is_nonnegative is not dif.is_negative:
+                return sympify(dif.is_nonnegative)
+        return C.GreaterThan(self, other, evaluate=False)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_nonpositive is not None and \
-                dif.is_nonpositive is not dif.is_positive:
-            return sympify(dif.is_nonpositive)
-        return C.LessThan(self, other)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_nonpositive is not None and \
+                    dif.is_nonpositive is not dif.is_positive:
+                return sympify(dif.is_nonpositive)
+        return C.LessThan(self, other, evaluate=False)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_positive is not None and \
-                dif.is_positive is not dif.is_nonpositive:
-            return sympify(dif.is_positive)
-        return C.StrictGreaterThan(self, other)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_positive is not None and \
+                    dif.is_positive is not dif.is_nonpositive:
+                return sympify(dif.is_positive)
+        return C.StrictGreaterThan(self, other, evaluate=False)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_negative is not None and \
-                dif.is_negative is not dif.is_nonnegative:
-            return sympify(dif.is_negative)
-        return C.StrictLessThan(self, other)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_negative is not None and \
+                    dif.is_negative is not dif.is_nonnegative:
+                return sympify(dif.is_negative)
+        return C.StrictLessThan(self, other, evaluate=False)
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -611,14 +643,14 @@ class Expr(Basic, EvalfMixin):
                         pass
 
                 # try to prove with minimal_polynomial but know when
-                # *not* to use this or else it can take a long time.
+                # *not* to use this or else it can take a long time. e.g. issue 8354
                 if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
                             return True
                         return False
-                    except NotAlgebraic:
+                    except (NotAlgebraic, NotImplementedError):
                         pass
 
         # diff has not simplified to zero; constant is either None, True
@@ -632,6 +664,8 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -642,20 +676,26 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
+                if n2 == S.NaN:
+                    raise AttributeError
             except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n > 0:
-                    return True
-                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n > 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_is_negative(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -666,18 +706,22 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
+                if n2 == S.NaN:
+                    raise AttributeError
             except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n < 0:
-                    return True
-                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n < 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_interval(self, x, a, b):
         """
@@ -691,7 +735,7 @@ class Expr(Basic, EvalfMixin):
         respectively.
 
         """
-        from sympy.series import limit
+        from sympy.series import limit, Limit
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
 
@@ -699,17 +743,21 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN) or A.has(S.Infinity):
+            if A.has(S.NaN) or A.has(S.Infinity) or A.has(S.NegativeInfinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
+                if isinstance(A, Limit):
+                    raise NotImplementedError("Could not compute limit")
 
         if b is None:
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN) or B.has(S.Infinity):
+            if B.has(S.NaN) or B.has(S.Infinity) or B.has(S.NegativeInfinity):
                 B = limit(self, x, b)
+                if isinstance(B, Limit):
+                    raise NotImplementedError("Could not compute limit")
 
         return B - A
 
@@ -2395,7 +2443,7 @@ class Expr(Basic, EvalfMixin):
 
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
-            xpos = C.Dummy('x', positive=True, bounded=True)
+            xpos = C.Dummy('x', positive=True, finite=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
@@ -3003,7 +3051,9 @@ class Expr(Basic, EvalfMixin):
         """
         x = self
         if not x.is_number:
-            raise TypeError('%s is not a number' % x)
+            raise TypeError('%s is not a number' % type(x))
+        if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            return x
         if not x.is_real:
             i, r = x.as_real_imag()
             return i.round(p) + S.ImaginaryUnit*r.round(p)
@@ -3032,6 +3082,8 @@ class Expr(Basic, EvalfMixin):
             # use str or else it won't be a float
             return C.Float(str(rv), digits_needed)
         else:
+            if not allow and rv > self:
+                allow += 1
             return C.Float(rv, allow)
 
 
@@ -3097,7 +3149,7 @@ def _mag(x):
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, expand_mul
+from .function import Derivative, expand_mul, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

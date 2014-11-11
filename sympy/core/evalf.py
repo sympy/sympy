@@ -7,7 +7,8 @@ from __future__ import print_function, division
 import math
 
 import sympy.mpmath.libmp as libmp
-from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
+from sympy.mpmath import (
+    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from sympy.mpmath import inf as mpmath_inf
 from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
         fnan, fnone, fone, fzero, mpf_abs, mpf_add,
@@ -393,7 +394,7 @@ def add_terms(terms, prec, target_prec):
     special = []
     for t in terms:
         arg = C.Float._new(t[0], 1)
-        if arg is S.NaN or arg.is_unbounded:
+        if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
         from sympy.core.add import Add
@@ -503,7 +504,7 @@ def evalf_mul(v, prec, options):
         if arg[0] is None:
             continue
         arg = C.Float._new(arg[0], 1)
-        if arg is S.NaN or arg.is_unbounded:
+        if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
         from sympy.core.mul import Mul
@@ -881,13 +882,11 @@ def do_integral(expr, prec, options):
             diff = xhigh - xlow
             if not diff.free_symbols:
                 xlow, xhigh = 0, diff
-    orig = mp.prec
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
-    try:
-        mp.prec = prec + 5
+    with workprec(prec + 5):
         xlow = as_mpmath(xlow, prec + 15, options)
         xhigh = as_mpmath(xhigh, prec + 15, options)
 
@@ -932,9 +931,7 @@ def do_integral(expr, prec, options):
             result, quadrature_error = quadts(f, [xlow, xhigh], error=1)
             quadrature_error = fastlog(quadrature_error._mpf_)
 
-    finally:
-        options['maxprec'] = oldmaxprec
-        mp.prec = orig
+    options['maxprec'] = oldmaxprec
 
     if have_part[0]:
         re = result.real._mpf_
@@ -1035,9 +1032,9 @@ def hypsum(expr, n, start, prec):
     polynomials.
     """
     from sympy import hypersimp, lambdify
-    # TODO: This should be removed for the release of 0.7.7, see issue #7853
-    from functools import partial
-    lambdify = partial(lambdify, default_array=True)
+
+    if prec == float('inf'):
+        raise NotImplementedError('does not support inf prec')
 
     if start:
         expr = expr.subs(n, n + start)
@@ -1054,9 +1051,12 @@ def hypsum(expr, n, start, prec):
     if h < 0:
         raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
+    term = expr.subs(n, 0)
+    if not term.is_Rational:
+        raise NotImplementedError("Non rational term functionality is not implemented.")
+
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
-        term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec) // term.q
         s = term
         k = 1
@@ -1076,7 +1076,6 @@ def hypsum(expr, n, start, prec):
         # Need to use at least quad precision because a lot of cancellation
         # might occur in the extrapolation process
         prec2 = 4*prec
-        term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec2) // term.q
 
         def summand(k, _term=[term]):
@@ -1086,12 +1085,9 @@ def hypsum(expr, n, start, prec):
                 _term[0] //= MPZ(func2(k - 1))
             return make_mpf(from_man_exp(_term[0], -prec2))
 
-        orig = mp.prec
-        try:
-            mp.prec = prec
+        with workprec(prec):
             v = nsum(summand, [0, mpmath_inf], method='richardson')
-        finally:
-            mp.prec = orig
+
         return v._mpf_
 
 

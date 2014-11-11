@@ -14,6 +14,7 @@ from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
 from sympy.matrices import eye
 
+
 class CustomKet(Ket):
     @classmethod
     def default_args(self):
@@ -85,10 +86,16 @@ def test_unitary():
 def test_identity():
     I = IdentityOperator()
     O = Operator('O')
+    x = Symbol("x")
 
     assert isinstance(I, IdentityOperator)
     assert isinstance(I, Operator)
 
+    assert I * O == O
+    assert O * I == O
+    assert isinstance(I * I, IdentityOperator)
+    assert isinstance(3 * I, Mul)
+    assert isinstance(I * x, Mul)
     assert I.inv() == I
     assert Dagger(I) == I
     assert qapply(I * O) == O
@@ -96,6 +103,7 @@ def test_identity():
 
     for n in [2, 3, 5]:
         assert represent(IdentityOperator(n)) == eye(n)
+
 
 def test_outer_product():
     k = Ket('k')
@@ -133,6 +141,23 @@ def test_outer_product():
 
     #test the _eval_trace
     assert Tr(OuterProduct(JzKet(1, 1), JzBra(1, 1))).doit() == 1
+
+    # test scaled kets and bras
+    assert OuterProduct(2 * k, b) == 2 * OuterProduct(k, b)
+    assert OuterProduct(k, 2 * b) == 2 * OuterProduct(k, b)
+
+    # test sums of kets and bras
+    k1, k2 = Ket('k1'), Ket('k2')
+    b1, b2 = Bra('b1'), Bra('b2')
+    assert (OuterProduct(k1 + k2, b1) ==
+            OuterProduct(k1, b1) + OuterProduct(k2, b1))
+    assert (OuterProduct(k1, b1 + b2) ==
+            OuterProduct(k1, b1) + OuterProduct(k1, b2))
+    assert (OuterProduct(1 * k1 + 2 * k2, 3 * b1 + 4 * b2) ==
+            3 * OuterProduct(k1, b1) +
+            4 * OuterProduct(k1, b2) +
+            6 * OuterProduct(k2, b1) +
+            8 * OuterProduct(k2, b2))
 
 
 def test_operator_dagger():

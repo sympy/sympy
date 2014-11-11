@@ -2256,16 +2256,22 @@ class TensExpr(Basic):
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> A = S2('A')
 
+        The tensor ``A`` is symmetric in its indices, as can be deduced by the
+        ``[1, 1]`` Young tableau when constructing `sym2`. One has to be
+        careful to assign symmetric component data to ``A``, as the symmetry
+        properties of data are currently not checked to be compatible with the
+        defined tensor symmetry.
+
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
         >>> Lorentz.data = [1, -1, -1, -1]
         >>> i0, i1 = tensor_indices('i0:2', Lorentz)
-        >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
+        >>> A.data = [[j+i for j in range(4)] for i in range(4)]
         >>> A(i0, i1).get_matrix()
-         Matrix([
+        Matrix([
         [0, 1, 2, 3],
+        [1, 2, 3, 4],
         [2, 3, 4, 5],
-        [4, 5, 6, 7],
-        [6, 7, 8, 9]])
+        [3, 4, 5, 6]])
 
         It is possible to perform usual operation on matrices, such as the
         matrix multiplication:
@@ -2273,9 +2279,9 @@ class TensExpr(Basic):
         >>> A(i0, i1).get_matrix()*ones(4, 1)
         Matrix([
         [ 6],
+        [10],
         [14],
-        [22],
-        [30]])
+        [18]])
         """
         if 0 < self.rank <= 2:
             rows = self.data.shape[0]

@@ -296,14 +296,12 @@ class lowergamma(Function):
                     return (cls(a + 1, x) + x**a * C.exp(-x))/a
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp
+        from sympy.mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)
-        oprec = mp.prec
-        mp.prec = prec
-        res = mp.gammainc(a, 0, z)
-        mp.prec = oprec
+        with workprec(prec):
+            res = mp.gammainc(a, 0, z)
         return Expr._from_mpmath(res, prec)
 
     def _eval_conjugate(self):
@@ -397,14 +395,12 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp
+        from sympy.mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)
-        oprec = mp.prec
-        mp.prec = prec
-        res = mp.gammainc(a, z, mp.inf)
-        mp.prec = oprec
+        with workprec(prec):
+            res = mp.gammainc(a, z, mp.inf)
         return Expr._from_mpmath(res, prec)
 
     @classmethod

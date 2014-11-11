@@ -70,47 +70,37 @@ class Relational(Boolean, Expr, EvalfMixin):
         """The right-hand side of the relation."""
         return self._args[1]
 
-    @classmethod
-    def _eval_sides(cls, lhs, rhs):
-        """Takes the difference between lhs and rhs, simplifies and evaluates.
-
-        If the difference can be simplified to a single real number, it will
-        be evaluated with ``cls._eval_relation``.  If the difference does not
-        simplify or cannot be calculated, None will be returned.
-
-        """
-        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
-            diff = lhs - rhs
-            if not diff.has(Symbol):
-                know = diff.equals(0)
-                if know == True:
-                    diff = S.Zero
-                elif know == False:
-                    diff = diff.evalf()
-            if diff.is_Number and diff.is_real:
-                return cls._eval_relation(diff, S.Zero)
-
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
-    def doit(self, **hints):
-        lhs = self.lhs
-        rhs = self.rhs
-        if hints.get('deep', True):
-            lhs = lhs.doit(**hints)
-            rhs = rhs.doit(**hints)
-        return self._eval_relation_doit(lhs, rhs)
-
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls(lhs, rhs)
-
     def _eval_simplify(self, ratio, measure):
-        return self.__class__(self.lhs.simplify(ratio=ratio),
-                              self.rhs.simplify(ratio=ratio))
+        r = self.func(self.lhs.simplify(ratio=ratio, measure=measure),
+                      self.rhs.simplify(ratio=ratio, measure=measure))
+        if r not in (S.true, S.false):
+            if isinstance(self.lhs, Expr) and isinstance(self.rhs, Expr):
+                dif = self.lhs - self.rhs
+                # We want a Number to compare with zero and be sure to get a
+                # True/False answer.  Check if we can deduce that dif is
+                # definitively zero or non-zero.  If non-zero, replace with an
+                # approximation.  If .equals(0) gives None, cannot be deduced.
+                if not dif.has(Symbol):
+                    know = dif.equals(0)
+                    if know == True:
+                        dif = S.Zero
+                    elif know == False:
+                        dif = dif.evalf()
+                # Can definitively compare a Number to zero, if appropriate.
+                if dif.is_Number and (dif.is_real or self.func in (Eq, Ne)):
+                    # Always T/F (we never return an expression w/ the evalf)
+                    r = self.func._eval_relation(dif, S.Zero)
+
+        if measure(r) < ratio*measure(self):
+            return r
+        else:
+            return self
 
     def __nonzero__(self):
-        raise TypeError("symbolic boolean expression has no truth value.")
+        raise TypeError("cannot determine truth value of\n%s" % self)
 
     __bool__ = __nonzero__
 
@@ -148,26 +138,42 @@ Rel = Relational
 class Equality(Relational):
     """An equal relation between two objects.
 
-    Represents that two objects are equal.  If they can be shown to be
-    definitively equal, this will reduce to True; if definitively unequal,
-    this will reduce to False.  Otherwise, the relation is maintained as an
-    Equality object.
+    Represents that two objects are equal.  If they can be easily shown
+    to be definitively equal (or unequal), this will reduce to True (or
+    False).  Otherwise, the relation is maintained as an unevaluated
+    Equality object.  Use the ``simplify`` function on this object for
+    more nontrivial evaluation of the equality relation.
+
+    As usual, the keyword argument ``evaluate=False`` can be used to
+    prevent any evaluation.
 
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
-    >>> Eq(y, x+x**2)
+    >>> Eq(y, x + x**2)
     y == x**2 + x
+    >>> Eq(2, 5)
+    False
+    >>> Eq(2, 5, evaluate=False)
+    2 == 5
+    >>> _.doit()
+    False
+    >>> Eq(exp(x), exp(x).rewrite(cos))
+    exp(x) == sinh(x) + cosh(x)
+    >>> simplify(_)
+    True
 
     See Also
     ========
+
     sympy.logic.boolalg.Equivalent : for representing equality between two
         boolean expressions
 
     Notes
     =====
+
     This class is not the same as the == operator.  The == operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
@@ -204,14 +210,13 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
-            # If one side is real and the other complex, they must be unequal.
-            elif (lhs.is_real != rhs.is_real and
-                  None not in (lhs.is_real, rhs.is_real)):
-                return S.false
-            # Otherwise, see if the difference can be evaluated.
-            r = cls._eval_sides(lhs, rhs)
-            if r is not None:
-                return r
+
+            # If appropriate, check if the difference evaluates.  Detect
+            # incompatibility such as lhs real and rhs not real.
+            if lhs.is_complex and rhs.is_complex:
+                r = (lhs - rhs).is_zero
+                if r is not None:
+                    return _sympify(r)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -292,16 +297,23 @@ class _Inequality(Relational):
         evaluate = options.pop('evaluate', global_evaluate[0])
 
         if evaluate:
-            # Try to evaluate the difference between sides.
-            r = cls._eval_sides(lhs, rhs)
+            # First we invoke the appropriate inequality method of `lhs`
+            # (e.g., `lhs.__lt__`).  That method will try to reduce to
+            # boolean or raise an exception.  It may keep calling
+            # superclasses until it reaches `Expr` (e.g., `Expr.__lt__`).
+            # In some cases, `Expr` will just invoke us again (if neither it
+            # nor a subclass was able to reduce to boolean or raise an
+            # exception).  In that case, it must call us with
+            # `evaluate=False` to prevent infinite recursion.
+            r = cls._eval_relation(lhs, rhs)
             if r is not None:
                 return r
+            # Note: not sure r could be None, perhaps we never take this
+            # path?  In principle, could use this to shortcut out if a
+            # class realizes the inequality cannot be evaluated further.
 
+        # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
-
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls._eval_relation(lhs, rhs)
 
 
 class _Greater(_Inequality):
@@ -585,7 +597,8 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs >= rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__ge__(rhs))
 
 Ge = GreaterThan
 
@@ -598,7 +611,8 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs <= rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__le__(rhs))
 
 Le = LessThan
 
@@ -611,7 +625,8 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs > rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__gt__(rhs))
 
 Gt = StrictGreaterThan
 
@@ -624,7 +639,8 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs < rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__lt__(rhs))
 
 Lt = StrictLessThan
 

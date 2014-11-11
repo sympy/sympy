@@ -5,6 +5,7 @@ from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
@@ -97,6 +98,13 @@ class re(Function):
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
                 * im(Derivative(self.args[0], x, evaluate=True))
+
+    def _eval_rewrite_as_im(self, arg):
+        return self.args[0] - im(self.args[0])
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.real_part(self.args[0]._sage_())
 
 
 class im(Function):
@@ -192,6 +200,13 @@ class im(Function):
             return -S.ImaginaryUnit \
                 * re(Derivative(self.args[0], x, evaluate=True))
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.imag_part(self.args[0]._sage_())
+
+    def _eval_rewrite_as_re(self, arg):
+        return self.args[0] - re(self.args[0])
+
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -199,20 +214,38 @@ class im(Function):
 
 class sign(Function):
     """
-    Returns the sign of an expression, that is:
+    Returns the complex sign of an expression:
 
-    * 1 if expression is positive
-    * 0 if expression is equal to zero
-    * -1 if expression is negative
+    If the expresssion is real the sign will be:
+
+        * 1 if expression is positive
+        * 0 if expression is equal to zero
+        * -1 if expression is negative
+
+    If the expresssion is imaginary the sign will be:
+
+        * I if im(expression) is positive
+        * -I if im(expression) is negative
+
+    Otherwise an unevaluated expression will be returned. When evaluated, the
+    result (in general) will be ``cos(arg(expr)) + I*sin(arg(expr))``.
 
     Examples
     ========
 
     >>> from sympy.functions import sign
+    >>> from sympy.core.numbers import I
+
     >>> sign(-1)
     -1
     >>> sign(0)
     0
+    >>> sign(-3*I)
+    -I
+    >>> sign(1 + I)
+    sign(1 + I)
+    >>> _.evalf()
+    0.707106781186548 + 0.707106781186548*I
 
     See Also
     ========
@@ -220,7 +253,7 @@ class sign(Function):
     Abs, conjugate
     """
 
-    is_bounded = True
+    is_finite = True
     is_complex = True
 
     def doit(self):
@@ -234,26 +267,25 @@ class sign(Function):
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
             unk = []
-            is_imag = c.is_imaginary
-            is_neg = c.is_negative
+            s = sign(c)
             for a in args:
                 if a.is_negative:
-                    is_neg = not is_neg
+                    s = -s
                 elif a.is_positive:
                     pass
                 else:
                     ai = im(a)
                     if a.is_imaginary and ai.is_comparable:  # i.e. a = I*real
-                        is_imag = not is_imag
+                        s *= S.ImaginaryUnit
                         if ai.is_negative:
-                            is_neg = not is_neg
+                            # can't use sign(ai) here since ai might not be
+                            # a Number
+                            s = -s
                     else:
                         unk.append(a)
             if c is S.One and len(unk) == len(args):
                 return None
-            return (S.NegativeOne if is_neg else S.One) \
-                * (S.ImaginaryUnit if is_imag else S.One) \
-                * cls(arg._new_rawargs(*unk))
+            return s * cls(arg._new_rawargs(*unk))
         if arg is S.NaN:
             return S.NaN
         if arg.is_zero:  # it may be an Expr that is zero
@@ -266,6 +298,10 @@ class sign(Function):
             if arg.func is sign:
                 return arg
         if arg.is_imaginary:
+            if arg.is_Pow and arg.exp is S.Half:
+                # we catch this because non-trivial sqrt args are not expanded
+                # e.g. sqrt(1-sqrt(2)) --x-->  to I*sqrt(sqrt(2) - 1)
+                return S.ImaginaryUnit
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_positive:
                 return S.ImaginaryUnit
@@ -288,6 +324,14 @@ class sign(Function):
             from sympy.functions.special.delta_functions import DiracDelta
             return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(-S.ImaginaryUnit * self.args[0])
+
+    def _eval_is_nonnegative(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_nonpositive(self):
+        if self.args[0].is_nonpositive:
+            return True
 
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
@@ -314,6 +358,10 @@ class sign(Function):
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
+
+    def _eval_rewrite_as_Heaviside(self, arg):
+        if arg.is_real:
+            return C.Heaviside(arg)*2-1
 
     def _eval_simplify(self, ratio, measure):
         return self.func(self.args[0].factor())
@@ -401,6 +449,22 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg.is_Pow:
+            base, exponent = arg.as_base_exp()
+            if base.is_real:
+                if exponent.is_integer:
+                    if exponent.is_even:
+                        return arg
+                    if base is S.NegativeOne:
+                        return S.One
+                    if base.func is cls and exponent is S.NegativeOne:
+                        return arg
+                    return Abs(base)**exponent
+                if base.is_positive == True:
+                    return base**re(exponent)
+                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
+        if isinstance(arg, C.exp):
+            return C.exp(re(arg.args[0]))
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_nonnegative:
@@ -418,12 +482,6 @@ class Abs(Function):
             if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
                 from sympy import expand_mul
                 return sqrt(expand_mul(arg * arg.conjugate()))
-        if arg.is_Pow:
-            base, exponent = arg.as_base_exp()
-            if exponent.is_even and base.is_real:
-                return arg
-            if exponent.is_integer and base is S.NegativeOne:
-                return S.One
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
@@ -431,13 +489,12 @@ class Abs(Function):
     def _eval_is_positive(self):
         return self.is_nonzero
 
-    def _eval_power(self, other):
-        if self.args[0].is_real and other.is_integer:
-            if other.is_even:
-                return self.args[0]**other
-            elif other is not S.NegativeOne and other.is_Integer:
-                e = other - sign(other)
-                return self.args[0]**e*self
+    def _eval_power(self, exponent):
+        if self.args[0].is_real and exponent.is_integer:
+            if exponent.is_even:
+                return self.args[0]**exponent
+            elif exponent is not S.NegativeOne and exponent.is_Integer:
+                return self.args[0]**(exponent - 1)*self
         return
 
     def _eval_nseries(self, x, n, logx):
@@ -471,12 +528,15 @@ class Abs(Function):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
+    def _eval_rewrite_as_sign(self, arg):
+        return arg/C.sign(arg)
+
 
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 
     is_real = True
-    is_bounded = True
+    is_finite = True
 
     @classmethod
     def eval(cls, arg):

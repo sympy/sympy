@@ -97,15 +97,15 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 12
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) == True
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) == False
 
     mpmath.mp.dps = 6
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) == True
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
@@ -225,7 +225,7 @@ def test_sage():
     assert hasattr(log(x), "_sage_")
 
 
-def test_bug496():
+def test_issue_3595():
     assert sympify("a_") == Symbol("a_")
     assert sympify("_a") == Symbol("_a")
 

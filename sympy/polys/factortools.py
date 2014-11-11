@@ -321,8 +321,8 @@ def dup_zz_zassenhaus(f, K):
                 for i in S:
                     G = dup_mul(G, g[i], K)
                 G = dup_trunc(G, pl, K)
-                G1 = dup_primitive(G, K)[1]
-                q = G1[-1]
+                G = dup_primitive(G, K)[1]
+                q = G[-1]
                 if q and fc % q != 0:
                     continue
 

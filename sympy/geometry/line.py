@@ -11,10 +11,13 @@ Segment
 from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, Dummy
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
 from sympy.core.logic import fuzzy_and
 from sympy.core.exprtools import factor_terms
+from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
+    sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -1007,8 +1010,8 @@ class Line(LinearEntity):
                 'If it was a slope, enter it with keyword "slope".')
         elif slope is not None and pt is None:
             slope = sympify(slope)
-            if slope.is_bounded is False:
-                # when unbounded slope, don't change x
+            if slope.is_finite is False:
+                # when infinite slope, don't change x
                 dx = 0
                 dy = 1
             else:
@@ -1257,9 +1260,13 @@ class Ray(LinearEntity):
                 if p2 is None:
                     c *= S.Pi
             else:
-                c = angle
+                c = angle % (2*S.Pi)
             if not p2:
-                p2 = p1 + Point(1, C.tan(c))
+                m = 2*c/S.Pi
+                left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
+                x = Piecewise((-1, left), (Piecewise((0, Eq(m % 1, 0)), (1, True)), True))
+                y = Piecewise((-C.tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (C.tan(c), True)), True))
+                p2 = p1 + Point(x, y)
         else:
             raise ValueError('A 2nd point or keyword "angle" must be used.')
 

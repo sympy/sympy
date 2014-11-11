@@ -70,6 +70,9 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
+    assert re(x).rewrite(im) == x - im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -129,6 +132,9 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
+    assert im(x).rewrite(re) == x - re(x)
+    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+
 
 def test_sign():
     assert sign(1.2) == 1
@@ -140,9 +146,11 @@ def test_sign():
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
+    assert sign(im(sqrt(1 - sqrt(3)))) == 1
+    assert sign(sqrt(1 - sqrt(3))) == I
 
     x = Symbol('x')
-    assert sign(x).is_bounded is True
+    assert sign(x).is_finite is True
     assert sign(x).is_complex is True
     assert sign(x).is_imaginary is None
     assert sign(x).is_integer is None
@@ -215,10 +223,20 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    assert sign(Symbol('x', nonnegative=True)).is_nonnegative
+    assert sign(Symbol('x', nonnegative=True)).is_nonpositive is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonnegative is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonpositive
+    assert sign(Symbol('x', real=True)).is_nonnegative is None
+    assert sign(Symbol('x', real=True)).is_nonpositive is None
+    assert sign(Symbol('x', real=True, zero=False)).is_nonpositive is None
+
     x, y = Symbol('x', real=True), Symbol('y')
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
@@ -260,6 +278,7 @@ def test_as_real_imag():
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
+
 
 @XFAIL
 def test_sign_issue_3068():
@@ -310,6 +329,8 @@ def test_Abs():
         Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
+    assert Abs(x)**-3 == Abs(x)/(x**4)
+    assert Abs(x**3) == x**2*Abs(x)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -325,6 +346,11 @@ def test_Abs():
     d = p - q
     assert abs(d).func is Abs or abs(d) == 0
 
+    assert Abs(4*exp(pi*I/4)) == 4
+    assert Abs(3**(2 + I)) == 9
+    assert Abs((-3)**(1 - I)) == 3*exp(pi)
+
+
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
     a = Abs(x).rewrite(Heaviside).expand()
@@ -337,6 +363,7 @@ def test_Abs_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
     assert Abs(y).rewrite(Piecewise) == Abs(y)
+    assert Abs(y).rewrite(sign) == y/sign(y)
 
 
 def test_Abs_real():
@@ -425,6 +452,7 @@ def test_arg_rewrite():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
+
 
 def test_adjoint():
     a = Symbol('a', antihermitian=True)

@@ -16,6 +16,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.symbol import Dummy
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1259,7 +1260,7 @@ def divisors(n, generator=False):
     primefactors, factorint, divisor_count
     """
 
-    n = int(abs(n))
+    n = as_int(abs(n))
     if isprime(n):
         return [1, n]
     if n == 1:
@@ -1303,6 +1304,89 @@ def divisor_count(n, modulus=1):
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
+def _antidivisors(n):
+    """Helper function for antidivisors which generates the antidivisors."""
+
+    for d in _divisors(n):
+        y = 2*d
+        if n > y and n % y:
+            yield y
+    for d in _divisors(2*n-1):
+        if n > d >= 2 and n % d:
+            yield d
+    for d in _divisors(2*n+1):
+        if n > d >= 2 and n % d:
+            yield d
+
+
+def antidivisors(n, generator=False):
+    r"""
+    Return all antidivisors of n sorted from 1..n by default.
+
+    Antidivisors [1]_ of n are numbers that do not divide n by the largest
+    possible margin.  If generator is True an unordered generator is returned.
+
+    References
+    ==========
+
+    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import antidivisors
+    >>> antidivisors(24)
+    [7, 16]
+
+    >>> sorted(antidivisors(128, generator=True))
+    [3, 5, 15, 17, 51, 85]
+
+    See Also
+    ========
+
+    primefactors, factorint, divisors, divisor_count, antidivisor_count
+    """
+
+    n = as_int(abs(n))
+    if n <= 2:
+        return []
+    rv = _antidivisors(n)
+    if not generator:
+        return sorted(rv)
+    return rv
+
+
+def antidivisor_count(n):
+    """
+    Return the number of antidivisors [1]_ of ``n``.
+
+    References
+    ==========
+
+    .. [1] formula from https://oeis.org/A066272
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import antidivisor_count
+    >>> antidivisor_count(13)
+    4
+    >>> antidivisor_count(27)
+    5
+
+    See Also
+    ========
+
+    factorint, divisors, antidivisors, divisor_count, totient
+    """
+
+    n = as_int(abs(n))
+    if n <= 2:
+        return 0
+    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+        divisor_count(n) - divisor_count(n, 2) - 5
+
+
 class totient(Function):
     """
     Calculate the Euler totient function phi(n)
@@ -1329,3 +1413,69 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+
+
+class divisor_sigma(Function):
+    """
+    Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
+        + p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
+        ``divisor_sigma(n, 1)`` is equal to ``sum(divisors(n))``
+
+        Default for k is 1.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Divisor_function
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import divisor_sigma
+    >>> divisor_sigma(18, 0)
+    6
+    >>> divisor_sigma(39, 1)
+    56
+    >>> divisor_sigma(12, 2)
+    210
+    >>> divisor_sigma(37)
+    38
+
+    See Also
+    ========
+
+    divisor_count, totient, divisors, factorint
+    """
+
+    @classmethod
+    def eval(cls, n, k=1):
+        n = sympify(n)
+        k = sympify(k)
+        if n.is_prime:
+            return 1 + n**k
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
+                           else e + 1 for p, e in factorint(n).items()])

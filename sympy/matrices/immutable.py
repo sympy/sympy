@@ -10,7 +10,7 @@ from sympy.matrices.expressions import MatrixExpr
 
 
 def sympify_matrix(arg):
-    return ImmutableMatrix(arg)
+    return arg.as_immutable()
 sympify_converter[MatrixBase] = sympify_matrix
 
 class ImmutableMatrix(MatrixExpr, DenseMatrix):

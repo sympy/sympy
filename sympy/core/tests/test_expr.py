@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff, O)
+    exp_polar, Lambda, expand, diff, O, Heaviside)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -161,6 +161,7 @@ def test_ibasic():
 
 
 def test_relational():
+    from sympy import Lt
     assert (pi < 3) is S.false
     assert (pi <= 3) is S.false
     assert (pi > 3) is S.true
@@ -169,7 +170,9 @@ def test_relational():
     assert (-pi <= 3) is S.true
     assert (-pi > 3) is S.false
     assert (-pi >= 3) is S.false
-    assert (x - 2 < x - 3) is S.false
+    r = Symbol('r', real=True)
+    assert (r - 2 < r - 3) is S.false
+    assert Lt(x + I, x + I + 2).func == Lt  # issue 8288
 
 
 def test_relational_assumptions():
@@ -198,10 +201,10 @@ def test_relational_assumptions():
     assert (m2 <= 0) is S.true
     assert (m3 > 0) is S.true
     assert (m4 >= 0) is S.true
-    m1 = Symbol("m1", negative=False)
-    m2 = Symbol("m2", nonpositive=False)
-    m3 = Symbol("m3", positive=False)
-    m4 = Symbol("m4", nonnegative=False)
+    m1 = Symbol("m1", negative=False, real=True)
+    m2 = Symbol("m2", nonpositive=False, real=True)
+    m3 = Symbol("m3", positive=False, real=True)
+    m4 = Symbol("m4", nonnegative=False, real=True)
     assert (m1 < 0) is S.false
     assert (m2 <= 0) is S.false
     assert (m3 > 0) is S.false
@@ -1385,6 +1388,9 @@ def test_issue_4199():
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
     raises(ValueError, lambda: x._eval_interval(x, None, None))
+    a = -y*Heaviside(x - y)
+    assert a._eval_interval(x, -oo, oo) == -y
+    assert a._eval_interval(x, oo, -oo) == y
 
 
 def test_primitive():
@@ -1594,6 +1600,27 @@ def test_round():
     # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
+    # issue 7961
+    assert str(S(0.006).round(2)) == '0.01'
+    assert str(S(0.00106).round(4)) == '0.0011'
+
+    # issue 8147
+    assert S.NaN.round() == S.NaN
+    assert S.Infinity.round() == S.Infinity
+    assert S.NegativeInfinity.round() == S.NegativeInfinity
+    assert S.ComplexInfinity.round() == S.ComplexInfinity
+
+def test_round_exception_nostr():
+    # Don't use the string form of the expression in the round exception, as
+    # it's too slow
+    s = Symbol('bad')
+    try:
+        s.round()
+    except TypeError as e:
+        assert 'bad' not in str(e)
+    else:
+        # Did not raise
+        raise AssertionError("Did not raise")
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
