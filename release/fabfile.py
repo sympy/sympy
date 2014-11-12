@@ -270,6 +270,7 @@ def release(branch=None, fork='sympy'):
     # This has to be run locally because it itself uses fabric. I split it out
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
+    test_sympy()
     source_tarball()
     build_docs()
     copy_release_files()
