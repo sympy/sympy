@@ -237,20 +237,21 @@ import sys
 
 timings = []
 
-for n, string in enumerate(bench):
-    #print string
-    clear_cache()
-    _t = time()
-    exec(string)
-    _t = time() - _t
-    timings += [(_t, string)]
-    sys.stdout.write('.')
-    sys.stdout.flush()
-    if n % (len(bench) // 10) == 0:
-        sys.stdout.write('%s' % (10*n // len(bench)))
-print()
+if __name__ == '__main__':
+    for n, string in enumerate(bench):
+        #print string
+        clear_cache()
+        _t = time()
+        exec(string)
+        _t = time() - _t
+        timings += [(_t, string)]
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        if n % (len(bench) // 10) == 0:
+            sys.stdout.write('%s' % (10*n // len(bench)))
+    print()
 
-timings.sort(key=lambda x: -x[0])
+    timings.sort(key=lambda x: -x[0])
 
-for t, string in timings:
-    print('%.2fs %s' % (t, string))
+    for t, string in timings:
+        print('%.2fs %s' % (t, string))
