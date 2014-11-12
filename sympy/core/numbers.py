@@ -812,25 +812,25 @@ class Float(Number):
             return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
         return Number.__rmod__(self, other)
 
-    def _eval_power(arg, expt):
+    def _eval_power(self, expt):
         """
         expt is symbolic object but not equal to 0, 1
 
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
-        if arg == 0:
+        if self == 0:
             if expt.is_positive:
                 return S.Zero
             if expt.is_negative:
                 return Float('inf')
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
-                prec = arg._prec
+                prec = self._prec
                 return Float._new(
-                    mlib.mpf_pow_int(arg._mpf_, expt.p, prec, rnd), prec)
-            expt, prec = expt._as_mpf_op(arg._prec)
-            arg = arg._mpf_
+                    mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
+            expt, prec = expt._as_mpf_op(self._prec)
+            arg = self._mpf_
             try:
                 y = mpf_pow(arg, expt, prec, rnd)
                 return Float._new(y, prec)

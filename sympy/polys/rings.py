@@ -1123,9 +1123,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return self._pow_generic(n)
 
-    def _pow_generic(func, n):
-        p = func.ring.one
+    def _pow_generic(self, n):
+        p = self.ring.one
 
+        func = self
         while True:
             if n & 1:
                 p = p*func
@@ -1450,9 +1451,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             raise ExactQuotientFailed(f, G)
 
-    def _iadd_monom(func, mc):
-        """add to func the monomial coeff*x0**i0*x1**i1*...
-        unless func is a generator -- then just return the sum of the two.
+    def _iadd_monom(self, mc):
+        """add to self the monomial coeff*x0**i0*x1**i1*...
+        unless self is a generator -- then just return the sum of the two.
 
         mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
 
@@ -1477,6 +1478,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         False
 
         """
+        func = self
         if func in func.ring._gens_set:
             func = func.copy()
         expv, coeff = mc

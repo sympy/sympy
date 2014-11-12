@@ -465,14 +465,14 @@ class Polygon(GeometryEntity):
 
         return True
 
-    def encloses_point(polygon, p):
+    def encloses_point(self, p):
         """
-        Return True if p is enclosed by (is inside of) polygon.
+        Return True if p is enclosed by (is inside of) self.
 
         Notes
         =====
 
-        Being on the border of polygon is considered False.
+        Being on the border of self is considered False.
 
         Parameters
         ==========
@@ -509,12 +509,12 @@ class Polygon(GeometryEntity):
 
         """
         p = Point(p)
-        if p in arg.vertices or any(p in s for s in arg.sides):
+        if p in self.vertices or any(p in s for s in self.sides):
             return False
 
         # move to p, checking that the result is numeric
         lit = []
-        for v in polygon.vertices:
+        for v in self.vertices:
             lit.append(v - p)  # the difference is simplified
             if lit[-1].free_symbols:
                 return None

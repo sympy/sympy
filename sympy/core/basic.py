@@ -275,7 +275,7 @@ class Basic(with_metaclass(ManagedProperties)):
         args = len(args), tuple([ inner_key(arg) for arg in args ])
         return self.class_key(), args, S.One.sort_key(), S.One
 
-    def __eq__(arg, other):
+    def __eq__(self, other):
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
 
@@ -297,16 +297,17 @@ class Basic(with_metaclass(ManagedProperties)):
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
-        if arg is other:
+        if self is other:
             return True
 
         from .function import AppliedUndef, UndefinedFunction as UndefFunc
 
-        if isinstance(arg, UndefFunc) and isinstance(other, UndefFunc):
-            if arg.class_key() == other.class_key():
+        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
+            if self.class_key() == other.class_key():
                 return True
             else:
                 return False
+        arg = self
         if type(arg) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
             while isinstance(arg, C.Pow) and arg.exp == 1:

@@ -1741,15 +1741,17 @@ class RealInterval(object):
 
         return self, other
 
-    def refine_size(arg, dx):
+    def refine_size(self, dx):
         """Refine an isolating interval until it is of sufficiently small size. """
+        arg = self
         while not (arg.dx < dx):
             arg = arg._inner_refine()
 
         return arg
 
-    def refine_step(arg, steps=1):
+    def refine_step(self, steps=1):
         """Perform several steps of real root refinement algorithm. """
+        arg = self
         for _ in xrange(steps):
             arg = arg._inner_refine()
 
@@ -1873,18 +1875,20 @@ class ComplexInterval(object):
 
         return self, other
 
-    def refine_size(arg, dx, dy=None):
+    def refine_size(self, dx, dy=None):
         """Refine an isolating interval until it is of sufficiently small size. """
         if dy is None:
             dy = dx
 
+        arg = self
         while not (arg.dx < dx and arg.dy < dy):
             arg = arg._inner_refine()
 
         return arg
 
-    def refine_step(arg, steps=1):
+    def refine_step(self, steps=1):
         """Perform several steps of complex root refinement algorithm. """
+        arg = self
         for _ in xrange(steps):
             arg = arg._inner_refine()
 

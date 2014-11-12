@@ -682,12 +682,12 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(expr, x):
+    def _eval_as_leading_term(self, x):
         from sympy import expand_mul, factor_terms
 
-        old = expr
+        old = self
 
-        expr = expand_mul(expr)
+        expr = expand_mul(self)
         if not expr.is_Add:
             return expr.as_leading_term(x)
 
@@ -701,7 +701,7 @@ class Add(Expr, AssocOp):
         elif expr is S.NaN:
             return old.func._from_args(infinite)
         elif not expr.is_Add:
-            return expr 
+            return expr
         else:
             plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)

@@ -763,7 +763,7 @@ class PrettyPrinter(Printer):
         class Fake(object):
             baseline = 0
 
-            def render(func, *args, **kwargs):
+            def render(self, *args, **kwargs):
                 func = e
                 if func == e.zero:
                     return e.zero._pretty_form

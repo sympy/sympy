@@ -1172,7 +1172,7 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
-    def _eval_subs(arg, old, new):
+    def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity
         from sympy.simplify.simplify import powdenest, fraction
@@ -1182,9 +1182,9 @@ class Mul(Expr, AssocOp):
 
         # try keep replacement literal so -2*x doesn't replace 4*x
         if old.args[0].is_Number and old.args[0] < 0:
-            if arg.args[0].is_Number:
-                if arg.args[0] < 0:
-                    return arg._subs(-old, -new)
+            if self.args[0].is_Number:
+                if self.args[0] < 0:
+                    return self._subs(-old, -new)
                 return None
 
         def base_exp(a):
@@ -1238,7 +1238,8 @@ class Mul(Expr, AssocOp):
         # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
         rv = None
-        n, d = fraction(arg)
+        n, d = fraction(self)
+        arg = self
         if d is not S.One:
             arg2 = n._subs(old, new)/d._subs(old, new)
             if not arg2.is_Mul:

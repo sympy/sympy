@@ -313,22 +313,22 @@ class interval(object):
         else:
             return NotImplemented
 
-    def __div__(arg, other):
+    def __div__(self, other):
         # Both None and False are handled
-        if not arg.is_valid:
+        if not self.is_valid:
             # Don't divide as the value is not valid
-            return interval(-float('inf'), float('inf'), is_valid=arg.is_valid)
+            return interval(-float('inf'), float('inf'), is_valid=self.is_valid)
         if isinstance(other, (int, float)):
             if other == 0:
                 # Divide by zero encountered. valid nowhere
                 return interval(-float('inf'), float('inf'), is_valid=False)
             else:
-                return interval(arg.start / other, arg.end / other)
+                return interval(self.start / other, self.end / other)
 
         elif isinstance(other, interval):
-            if other.is_valid is False or arg.is_valid is False:
+            if other.is_valid is False or self.is_valid is False:
                 return interval(-float('inf'), float('inf'), is_valid=False)
-            elif other.is_valid is None or arg.is_valid is None:
+            elif other.is_valid is None or self.is_valid is None:
                 return interval(-float('inf'), float('inf'), is_valid=None)
             else:
                # denominator contains both signs, i.e. being divided by zero
@@ -336,6 +336,7 @@ class interval(object):
                 if 0 in other:
                     return interval(-float('inf'), float('inf'), is_valid=None)
 
+                arg = self
                 # denominator negative
                 if other.end < 0:
                     arg = -arg

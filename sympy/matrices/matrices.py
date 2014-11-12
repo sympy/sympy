@@ -1522,7 +1522,7 @@ class MatrixBase(object):
         # computing the Jacobian is now easy:
         return self._new(m, n, lambda j, i: self[j].diff(X[i]))
 
-    def QRdecomposition(matrix):
+    def QRdecomposition(self):
         """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
 
         Examples
@@ -1569,8 +1569,8 @@ class MatrixBase(object):
         LUdecomposition
         QRsolve
         """
-        cls = matrix.__class__
-        matrix = matrix.as_mutable()
+        cls = self.__class__
+        matrix = self.as_mutable()
 
         if not matrix.rows >= matrix.cols:
             raise MatrixError(
@@ -1670,12 +1670,12 @@ class MatrixBase(object):
                 (self[2]*b[0] - self[0]*b[2]),
                 (self[0]*b[1] - self[1]*b[0])))
 
-    def dot(a, b):
-        """Return the dot product of Matrix a and b relaxing the condition
+    def dot(self, b):
+        """Return the dot product of Matrix self and b relaxing the condition
         of compatible dimensions: if either the number of rows or columns are
-        the same as the length of b then the dot product is returned. If a
+        the same as the length of b then the dot product is returned. If self
         is a row or column vector, a scalar is returned. Otherwise, a list
-        of results is returned (and in that case the number of columns in a
+        of results is returned (and in that case the number of columns in self
         must match the length of b).
 
         Examples
@@ -1702,12 +1702,13 @@ class MatrixBase(object):
 
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
-                if len(b) != a.cols and len(b) != a.rows:
+                if len(b) != self.cols and len(b) != self.rows:
                     raise ShapeError("Dimensions incorrect for dot product.")
-                return a.dot(Matrix(b))
+                return self.dot(Matrix(b))
             else:
                 raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
+        a = self
         if a.cols == b.rows:
             if b.cols != 1:
                 a = a.T
@@ -2934,7 +2935,7 @@ class MatrixBase(object):
         """
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
-    def eigenvals(matrix, **flags):
+    def eigenvals(self, **flags):
         """Return eigen values using the berkowitz_eigenvals routine.
 
         Since the roots routine doesn't always work well with Floats,
@@ -2944,6 +2945,7 @@ class MatrixBase(object):
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+        matrix = self
         if flags.pop('rational', True):
             if any(v.has(Float) for v in matrix):
                 matrix = matrix._new(matrix.rows, matrix.cols,
@@ -2952,7 +2954,7 @@ class MatrixBase(object):
         flags.pop('simplify', None)  # pop unsupported flag
         return matrix.berkowitz_eigenvals(**flags)
 
-    def eigenvects(matrix, **flags):
+    def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
         The flag ``simplify`` has two effects:
@@ -2977,6 +2979,7 @@ class MatrixBase(object):
 
         # roots doesn't like Floats, so replace them with Rationals
         float = False
+        matrix = self
         if any(v.has(Float) for v in matrix):
             float = True
             matrix = matrix._new(matrix.rows, matrix.cols, [nsimplify(
@@ -3021,7 +3024,7 @@ class MatrixBase(object):
                 out.append((r, k, [matrix._new(b) for b in basis]))
         return out
 
-    def singular_values(matrix):
+    def singular_values(self):
         """Compute the singular values of a Matrix
 
         Examples
@@ -3038,7 +3041,7 @@ class MatrixBase(object):
 
         condition_number
         """
-        matrix = matrix.as_mutable()
+        matrix = self.as_mutable()
         # Compute eigenvalues of A.H A
         valmultpairs = (matrix.H*matrix).eigenvals()
 
