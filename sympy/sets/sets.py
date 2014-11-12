@@ -1431,8 +1431,14 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.func(*[x for x in s
-                    if all(other.contains(x) == True for other in args)])
+                args = [a for a in args if a != s]
+                res = s.func(*[x for x in s
+                             if all(other.contains(x) == True for other in args)])
+                unk = [x for x in s
+                       if any(other.contains(x) not in (True, False) for other in args)]
+                if unk:
+                    res += Intersection(*([s.func(*unk)] + args), evaluate=False)
+                return res
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
