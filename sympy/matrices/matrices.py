@@ -1709,7 +1709,7 @@ class MatrixBase(object):
                 raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
 
-        mat = self 
+        mat = self
         if mat.cols == b.rows:
             if b.cols != 1:
                 mat = mat.T

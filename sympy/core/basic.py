@@ -307,12 +307,10 @@ class Basic(with_metaclass(ManagedProperties)):
                 return True
             else:
                 return False
-
-        this = self
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
-            while isinstance(this, C.Pow) and this.exp == 1:
-                this = this.base
+            while isinstance(self, C.Pow) and self.exp == 1:
+                self = self.base
             while isinstance(other, C.Pow) and other.exp == 1:
                 other = other.base
             try:
@@ -320,14 +318,14 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if isinstance(this, AppliedUndef) and isinstance(other,
+            if isinstance(self, AppliedUndef) and isinstance(other,
                                                              AppliedUndef):
-                if this.class_key() != other.class_key():
+                if self.class_key() != other.class_key():
                     return False
-            elif type(this) is not type(other):
+            elif type(self) is not type(other):
                 return False
 
-        return this._hashable_content() == other._hashable_content()
+        return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
