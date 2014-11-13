@@ -3030,7 +3030,6 @@ class TensMul(TensExpr):
         self_matrix_behavior_kinds = self._matrix_behavior_kinds
         other_matrix_behavior_kinds = other._matrix_behavior_kinds
 
-        tensor = self
         for key, v1 in self_matrix_behavior_kinds.items():
             if key in other_matrix_behavior_kinds:
                 v2 = other_matrix_behavior_kinds[key]
@@ -3040,7 +3039,7 @@ class TensMul(TensExpr):
                         matrix_behavior_kinds[key] = (v2[1],)
                 elif len(v1) == 2:
                     auto_index = v1[1]._tensortype.auto_index
-                    tensor = self.substitute_indices((v1[1], -auto_index))
+                    self = self.substitute_indices((v1[1], -auto_index))
                     other = other.substitute_indices((v2[0], auto_index))
                     if len(v2) == 1:
                         matrix_behavior_kinds[key] = (v1[0],)
@@ -3054,8 +3053,8 @@ class TensMul(TensExpr):
                 continue
             matrix_behavior_kinds[key] = v2
 
-        new_tids = tensor._tids*other._tids
-        coeff = tensor._coeff*other._coeff
+        new_tids = self._tids*other._tids
+        coeff = self._coeff*other._coeff
         tmul = TensMul.from_TIDS(coeff, new_tids)
         if isinstance(tmul, TensExpr):
             tmul._matrix_behavior_kinds = matrix_behavior_kinds
