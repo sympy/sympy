@@ -166,6 +166,9 @@ sup = {}    # symb -> superscript symbol
 # latin subscripts
 for l in 'aeioruvx':
     sub[l] = LSUB(l)
+# subscripts from ftp://ftp.unicode.org/Public/6.3.0/ucd/UnicodeData.txt
+for n, l in enumerate('hklmnpst'):
+    sub[l] = u('\u' + hex(int('2095', base = 16) + n).upper()[2:])
 
 for l in 'in':
     sup[l] = LSUP(l)
