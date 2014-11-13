@@ -17,16 +17,6 @@ __all__ = (
 )
 
 
-def _still_relational(r, self):
-    if not r.is_Relational:
-        from sympy.utilities.misc import filldedent
-        raise NotImplementedError(filldedent('''
-        The canonical form evaluated. This means that %s should
-        be special-cased in sympy.core.relational._Inequality (like
-        floor, ceiling and +/-oo) so the order of the args doesn't
-        affect evaluation.''' % self.rhs))
-    return r
-
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
@@ -114,8 +104,8 @@ class Relational(Boolean, Expr, EvalfMixin):
         elif r.func in (Lt, Le):
             pass
         else:
-            r = r.func(*ordered(r.args))
-        return _still_relational(r, self)
+            r = r.func(*ordered(r.args), evaluate=False)
+        return r
 
     def equals(self, other):
         if isinstance(other, Relational):
@@ -376,18 +366,7 @@ class _Inequality(Relational):
             # class realizes the inequality cannot be evaluated further.
 
         # make a "non-evaluated" Expr for the inequality
-        rv = Relational.__new__(cls, lhs, rhs, **options)
-
-        # special-case floor and ceiling and +/-infinity
-        from sympy import floor, ceiling
-        tf = None
-        if rv.rhs.func in (ceiling, floor) or rv.rhs in (S.Infinity, S.NegativeInfinity):
-            tf = rv.reversed
-            tf = tf.func(*tf.args, evaluate=True)
-            if tf in (S.true, S.false):
-                return tf
-
-        return rv
+        return Relational.__new__(cls, lhs, rhs, **options)
 
 
 class _Greater(_Inequality):
@@ -671,7 +650,7 @@ class GreaterThan(_Greater):
 
     @property
     def reversed(self):
-        return _still_relational(Le(self.lts, self.gts, evaluate=False), self)
+        return Le(self.lts, self.gts, evaluate=False)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -689,7 +668,7 @@ class LessThan(_Less):
 
     @property
     def reversed(self):
-        return _still_relational(Ge(self.gts, self.lts, evaluate=False), self)
+        return Ge(self.gts, self.lts, evaluate=False)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -707,7 +686,7 @@ class StrictGreaterThan(_Greater):
 
     @property
     def reversed(self):
-        return _still_relational(Lt(self.lts, self.gts, evaluate=False), self)
+        return Lt(self.lts, self.gts, evaluate=False)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -725,7 +704,7 @@ class StrictLessThan(_Less):
 
     @property
     def reversed(self):
-        return _still_relational(Gt(self.gts, self.lts, evaluate=False), self)
+        return Gt(self.gts, self.lts, evaluate=False)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
