@@ -42,7 +42,7 @@ leveraging a variety of numerical libraries.  It is used as follows:
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
-    >>> f = lambdify(x, expr, default_array=True)
+    >>> f = lambdify(x, expr)
     >>> f(3.14)
     0.000507214304614
 
@@ -55,17 +55,12 @@ difference between SymPy and raw Python.
 Lambdify can leverage a variety of numerical backends.  By default it uses the
 ``math`` library.  However it also supports ``mpmath`` and most notably,
 ``numpy``.  Using the ``numpy`` library gives the generated function access to
-powerful vectorized ufuncs that are backed by compiled C code. Previously
-``lambdify`` defaulted to expressing ``sympy.Matrix`` as ``numpy.Matrix``.
-This behavior is deprecated in favor of ``numpy.array``, and will be removed in
-the next release. For now, setting ``default_array=True`` will provide the
-new behavior, and avoid a ``SymPyDeprecationWarning``. See issue
-`#7853 <https://github.com/sympy/sympy/issues/7853>`_ for more information.
+powerful vectorized ufuncs that are backed by compiled C code.
 
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
-    >>> f = lambdify(x, expr, "numpy", default_array=True)
+    >>> f = lambdify(x, expr, "numpy")
 
     >>> import numpy
     >>> data = numpy.linspace(1, 10, 10000)
