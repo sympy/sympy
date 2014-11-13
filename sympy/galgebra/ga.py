@@ -432,66 +432,67 @@ class MV(object):
         self.print_blades = MV.print_blades
         self.fmt = 1
 
+        arg = self
         if mvtype is None:
             if base in (None, S.Zero):  # Default is zero multivector
-                self.blade_rep = True
-                self.obj = S.Zero
-                self.igrade = 0
+                arg.blade_rep = True
+                arg.obj = S.Zero
+                arg.igrade = 0
             elif isinstance(base, str):  # Base or blade basis multivector
-                self.is_base = True
+                arg.is_base = True
                 if '*' in base:
-                    self.blade_rep = False
-                    self.igrade = -1
+                    arg.blade_rep = False
+                    arg.igrade = -1
                 else:
                     if '^' in base:
-                        self.blade_rep = True
-                        self.igrade = base.count('^') + 1
+                        arg.blade_rep = True
+                        arg.igrade = base.count('^') + 1
                     else:
-                        self.blade_rep = blade_rep
-                        self.igrade = 1
-                self.obj = Symbol(base, commutative=False)
+                        arg.blade_rep = blade_rep
+                        arg.igrade = 1
+                arg.obj = Symbol(base, commutative=False)
             elif isinstance(base, MV):  # Copy constructor
-                self.blade_rep = base.blade_rep
-                self.obj = base.obj
-                self.igrade = base.igrade
-                self.fct = base.fct
-                self.is_base = base.is_base
-                self.is_grad = base.is_grad
+                arg.blade_rep = base.blade_rep
+                arg.obj = base.obj
+                arg.igrade = base.igrade
+                arg.fct = base.fct
+                arg.is_base = base.is_base
+                arg.is_grad = base.is_grad
             elif isinstance(base, (Expr, Symbol)):  # Gets properties of multivector from Expr
                 if base.is_commutative:
-                    self.obj = base * MV.ONE
-                    self.blade_rep = True
-                    self.igrade = 0
+                    arg.obj = base * MV.ONE
+                    arg.blade_rep = True
+                    arg.igrade = 0
                 else:
                     if isinstance(base, (Add, Mul)):  # Complex expression
-                        self = MV.characterize_expression(self, base)
+                        arg = MV.characterize_expression(arg, base)
                     elif isinstance(base, Symbol):
                         if not base.is_commutative:
                             if base == MV.ONE:
-                                self.obj = base
-                                self.blade_rep = True
-                                self.igrade = 0
+                                arg.obj = base
+                                arg.blade_rep = True
+                                arg.igrade = 0
                             elif base in MV.blades_flat:  # basis blade
-                                self.obj = base
-                                self.blade_rep = True
-                                self.igrade = MV.blade_grades[base]
+                                arg.obj = base
+                                arg.blade_rep = True
+                                arg.igrade = MV.blade_grades[base]
                             elif base in MV.bases_flat:  # basis base
-                                self.obj = base
-                                self.blade_rep = False
-                                self.igrade = -1
+                                arg.obj = base
+                                arg.blade_rep = False
+                                arg.igrade = -1
                             else:
                                 raise ValueError('MV(' + str(base) + ') is not allowed in constructor\n' +
                                                  'non-commutative argument is not a base\n')
                         else:  # scalar sympy symbol
-                            self.obj = base * MV.ONE
-                            self.igrade = 0
-                            self.blade_rep = True
+                            arg.obj = base * MV.ONE
+                            arg.igrade = 0
+                            arg.blade_rep = True
                     elif isinstance(base, Number):
-                        self.obj = base * MV.ONE
-                        self.igrade = 0
-                        self.blade_rep = True
+                        arg.obj = base * MV.ONE
+                        arg.igrade = 0
+                        arg.blade_rep = True
         else:  # Preconfigured multivector types
-            self = MVtypes[mvtype](self, base)
+            arg = MVtypes[mvtype](arg, base)
 
     def Fmt(self, fmt=1, title=None):
         self.fmt = fmt

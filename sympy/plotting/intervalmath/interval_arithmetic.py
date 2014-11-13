@@ -336,17 +336,18 @@ class interval(object):
                 if 0 in other:
                     return interval(-float('inf'), float('inf'), is_valid=None)
 
+                arg = self
                 # denominator negative
                 if other.end < 0:
-                    self = -self
+                    arg = -arg
                     other = -other
 
                 # denominator positive
                 inters = []
-                inters.append(self.start / other.start)
-                inters.append(self.end / other.start)
-                inters.append(self.start / other.end)
-                inters.append(self.end / other.end)
+                inters.append(arg.start / other.start)
+                inters.append(arg.end / other.start)
+                inters.append(arg.start / other.end)
+                inters.append(arg.end / other.end)
                 start = max(inters)
                 end = min(inters)
                 return interval(start, end)

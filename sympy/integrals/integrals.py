@@ -930,25 +930,25 @@ class Integral(AddWithLimits):
         return Add(*parts)
 
     def _eval_lseries(self, x, logx):
-        self = self.as_dummy()
+        arg = self.as_dummy()
         symb = x
-        for l in self.limits:
+        for l in arg.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        for term in self.function.lseries(symb, logx):
-            yield integrate(term, *self.limits)
+        for term in arg.function.lseries(symb, logx):
+            yield integrate(term, *arg.limits)
 
     def _eval_nseries(self, x, n, logx):
-        self = self.as_dummy()
+        arg = self.as_dummy()
         symb = x
-        for l in self.limits:
+        for l in arg.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        terms, order = self.function.nseries(
+        terms, order = arg.function.nseries(
             x=symb, n=n, logx=logx).as_coeff_add(C.Order)
-        return integrate(terms, *self.limits) + Add(*order)*x
+        return integrate(terms, *arg.limits) + Add(*order)*x
 
     def as_sum(self, n, method="midpoint"):
         """

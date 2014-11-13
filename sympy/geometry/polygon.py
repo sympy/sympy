@@ -518,15 +518,15 @@ class Polygon(GeometryEntity):
             lit.append(v - p)  # the difference is simplified
             if lit[-1].free_symbols:
                 return None
-        self = Polygon(*lit)
+        polygon = Polygon(*lit)
 
         # polygon closure is assumed in the following test but Polygon removes duplicate pts so
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
-        args = self.args
+        args = polygon.args
         indices = range(-len(args), 1)
 
-        if self.is_convex():
+        if polygon.is_convex():
             orientation = None
             for i in indices:
                 a = args[i]
