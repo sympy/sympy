@@ -775,22 +775,23 @@ class LinearEntity(GeometryEntity):
                     return True
 
             prec = (Line, Ray, Segment)
-            if prec.index(self.func) > prec.index(o.func):
-                self, o = o, self
+            e = self
+            if prec.index(e.func) > prec.index(o.func):
+                e, o = o, e
             rv = [inter]
-            if isinstance(self, Line):
+            if isinstance(e, Line):
                 if isinstance(o, Line):
                     return rv
                 elif isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Ray) and inray(self):
+            elif isinstance(e, Ray) and inray(e):
                 if isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Segment) and inseg(self):
+            elif isinstance(e, Segment) and inseg(e):
                 if isinstance(o, Segment) and inseg(o):
                     return rv
             return []
