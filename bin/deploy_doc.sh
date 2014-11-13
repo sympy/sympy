@@ -28,9 +28,7 @@ set -e
 # Don't use set -x as that would print the GH_TOKEN variable
 set +x
 
-GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
-if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
+if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
     cd ../
     echo -e "Setting git attributes"
     git config --global user.email "sympy@googlegroups.com"
@@ -56,8 +54,9 @@ if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
     git push -q origin gh-pages > /dev/null 2>&1
 fi
 
-if [ "$GIT_BRANCH" != "master" ]; then
+if [ "$TRAVIS_BRANCH" != "master" ]; then
     echo -e "The docs are only deployed from master"
+    echo -e "This is the $TRAVIS_BRANCH branch"
 fi
 
 if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
