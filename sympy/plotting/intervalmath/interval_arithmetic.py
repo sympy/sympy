@@ -337,7 +337,6 @@ class interval(object):
                     return interval(-float('inf'), float('inf'), is_valid=None)
 
                 # denominator negative
-                # issue 8362 avoid assign to self, introduce a temp variable this here
                 this = self
                 if other.end < 0:
                     this = -this

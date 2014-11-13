@@ -278,7 +278,6 @@ ivmpc.__truediv__ = ivmpc.__div__; ivmpc.__rtruediv__ = ivmpc.__rdiv__
 
 class ivmpf_constant(ivmpf):
     def __new__(cls, f):
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = new(cls)
         expr._f = f
         return expr

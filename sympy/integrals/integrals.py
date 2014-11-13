@@ -930,7 +930,6 @@ class Integral(AddWithLimits):
         return Add(*parts)
 
     def _eval_lseries(self, x, logx):
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -941,7 +940,6 @@ class Integral(AddWithLimits):
             yield integrate(term, *expr.limits)
 
     def _eval_nseries(self, x, n, logx):
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:

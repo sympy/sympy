@@ -308,7 +308,6 @@ class Basic(with_metaclass(ManagedProperties)):
             else:
                 return False
 
-        # issue 8362 avoid assign to self, introduce a temp variable this here
         this = self
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2

@@ -1369,7 +1369,6 @@ class ReduceOrder(Operator):
         if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
             return None
 
-        # issue 8362 avoid assign to self
         expr = Operator.__new__(cls)
 
         p = S(1)
@@ -1392,7 +1391,6 @@ class ReduceOrder(Operator):
         if n.is_negative or not n.is_Integer:
             return None
 
-        # issue 8362 avoid assign to self
         expr = Operator.__new__(cls)
 
         p = S(1)

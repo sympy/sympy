@@ -1570,7 +1570,6 @@ class MatrixBase(object):
         QRsolve
         """
         cls = self.__class__
-        # issue 8362 avoid assign to self, introduce a temp variable mat here
         mat = self.as_mutable()
 
         if not mat.rows >= mat.cols:
@@ -1709,7 +1708,7 @@ class MatrixBase(object):
             else:
                 raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        # issue 8362 avoid assign to self, introduce a temp variable mat here
+
         mat = self 
         if mat.cols == b.rows:
             if b.cols != 1:
@@ -2947,7 +2946,6 @@ class MatrixBase(object):
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
-        # issue 8362 avoid assign to self, introduce a temp variable mat here
         mat = self
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
@@ -2982,7 +2980,6 @@ class MatrixBase(object):
 
         # roots doesn't like Floats, so replace them with Rationals
         float = False
-        # issue 8362 avoid assign to self, introduce a temp variable mat here
         mat = self
         if any(v.has(Float) for v in self):
             float = True
@@ -3045,7 +3042,6 @@ class MatrixBase(object):
 
         condition_number
         """
-        # issue 8362 avoid assign to self, introduce a temp variable mat here
         mat = self.as_mutable()
         # Compute eigenvalues of A.H A
         valmultpairs = (mat.H*mat).eigenvals()

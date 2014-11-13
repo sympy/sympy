@@ -1743,7 +1743,6 @@ class RealInterval(object):
 
     def refine_size(self, dx):
         """Refine an isolating interval until it is of sufficiently small size. """
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self
         while not (expr.dx < dx):
             expr = expr._inner_refine()
@@ -1752,7 +1751,6 @@ class RealInterval(object):
 
     def refine_step(self, steps=1):
         """Perform several steps of real root refinement algorithm. """
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self
         for _ in xrange(steps):
             expr = expr._inner_refine()
@@ -1881,7 +1879,6 @@ class ComplexInterval(object):
         """Refine an isolating interval until it is of sufficiently small size. """
         if dy is None:
             dy = dx
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self
         while not (expr.dx < dx and expr.dy < dy):
             expr = expr._inner_refine()
@@ -1890,7 +1887,6 @@ class ComplexInterval(object):
 
     def refine_step(self, steps=1):
         """Perform several steps of complex root refinement algorithm. """
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self
         for _ in xrange(steps):
             expr = expr._inner_refine()

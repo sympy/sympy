@@ -1477,7 +1477,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         False
 
         """
-        # issue 8362 avoid assign to self, introduce a temp variable cpself here
         if self in self.ring._gens_set:
             cpself = self.copy()
         else:

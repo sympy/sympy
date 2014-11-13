@@ -519,7 +519,6 @@ class Polygon(GeometryEntity):
             if lit[-1].free_symbols:
                 return None
 
-        # issue 8362 avoid assign to self, introduce a temp variable poly here                
         poly = Polygon(*lit)
 
         # polygon closure is assumed in the following test but Polygon removes duplicate pts so

@@ -3030,7 +3030,6 @@ class TensMul(TensExpr):
         self_matrix_behavior_kinds = self._matrix_behavior_kinds
         other_matrix_behavior_kinds = other._matrix_behavior_kinds
 
-        # issue 8362 avoid assign to self, introduce a temp variable tensor here
         tensor = self
         for key, v1 in self_matrix_behavior_kinds.items():
             if key in other_matrix_behavior_kinds:
@@ -3055,7 +3054,6 @@ class TensMul(TensExpr):
                 continue
             matrix_behavior_kinds[key] = v2
 
-        # tensor is self here, a little strange.
         new_tids = tensor._tids*other._tids
         coeff = tensor._coeff*other._coeff
         tmul = TensMul.from_TIDS(coeff, new_tids)

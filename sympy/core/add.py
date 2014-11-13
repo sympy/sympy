@@ -687,7 +687,6 @@ class Add(Expr, AssocOp):
 
         old = self
 
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = expand_mul(self)
         if not expr.is_Add:
             return expr.as_leading_term(x)

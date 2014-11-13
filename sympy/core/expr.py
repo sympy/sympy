@@ -498,10 +498,9 @@ class Expr(Basic, EvalfMixin):
         wrt = wrt or free
 
         # simplify unless this has already been done
-        # issue 8362 avoid assign to self, introduce a temp variable expr here
         expr = self
         if simplify:
-            expr = self.simplify()
+            expr = expr.simplify()
 
         # is_zero should be a quick assumptions check; it can be wrong for
         # numbers (see test_is_not_constant test), giving False when it

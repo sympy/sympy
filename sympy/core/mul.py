@@ -1246,7 +1246,6 @@ class Mul(Expr, AssocOp):
 
         # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
-        # issue 8362 avoid assign to self, rv is used as temp variable 
         rv = None
         n, d = fraction(self)
         if d is not S.One:
