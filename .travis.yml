@@ -116,8 +116,8 @@ install:
     fi
 script:
   - bin/test_travis.sh
-  - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      bin/deploy_doc.sh;
-    fi
+#  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+#      bin/deploy_doc.sh;
+#    fi
 notifications:
   email: false
