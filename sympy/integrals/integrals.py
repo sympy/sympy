@@ -282,7 +282,7 @@ class Integral(AddWithLimits):
             raise ValueError('either x or u must be a symbol')
 
         if uvar == xvar:
-            return self.transform(x, (u.subs(uvar, d),d)).xreplace({d: uvar})
+            return self.transform(x, (u.subs(uvar, d), d)).xreplace({d: uvar})
 
         if uvar in self.limits:
             raise ValueError(filldedent('''
