@@ -336,8 +336,10 @@ def test_transform():
         Integral(-1/x**3, (x, -oo, -1/_3)).doit()
     assert Integral(x, (x, 0, _3)).transform(x, 1/y) == \
         Integral(y**(-3), (y, 1/_3, oo))
+    # issue 8400
     i = Integral(x + y, (x, 1, 2), (y, 1, 2))
-    assert i.transform(x,(x+2*y,x)).doit() == i.transform(x,(x+2*z,x)).doit() == 3
+    assert i.transform(x, (x + 2*y, x)).doit() == \
+        i.transform(x, (x + 2*z, x)).doit() == 3
 
 
 def test_issue_4052():
