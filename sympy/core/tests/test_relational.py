@@ -567,6 +567,35 @@ def test_equals():
     assert (y < x).equals(t < x) is False
 
 
+def test_reversed():
+    assert (x < y).reversed == (y > x)
+    assert (x <= y).reversed == (y >= x)
+    assert Eq(x, y, evaluate=False).reversed == Eq(y, x, evaluate=False)
+    assert Ne(x, y, evaluate=False).reversed == Ne(y, x, evaluate=False)
+    assert (x >= y).reversed == (y <= x)
+    assert (x > y).reversed == (y < x)
+
+
+def test_canonical():
+    y = S(1)
+
+    def unchanged(v):
+        c = v.canonical
+        return v.is_Relational and c.is_Relational and v == c
+
+    def reversed(v):
+        return v.canonical == v.reversed
+
+    assert unchanged(x < y)
+    assert unchanged(x <= y)
+    assert unchanged(Eq(y, x, evaluate=False))
+    assert reversed(Eq(x, y, evaluate=False))
+    assert unchanged(Ne(y, x, evaluate=False))
+    assert reversed(Ne(x, y, evaluate=False))
+    assert reversed(x >= y)
+    assert reversed(x > y)
+
+
 @XFAIL
 def test_issue_8444():
     x = symbols('x', real=True)

@@ -43,6 +43,8 @@ def test_And():
     assert And(2, A) == A
     assert And(2, 3) is true
     assert And(A < 1, A >= 1) is false
+    e = A > 1
+    assert And(e, e.canonical) == e.canonical
 
 
 def test_Or():
@@ -61,6 +63,8 @@ def test_Or():
     assert Or(False, False, A) == A
     assert Or(2, A) is true
     assert Or(A < 1, A >= 1) is true
+    e = A > 1
+    assert Or(e, e.canonical) == e
 
 
 def test_Xor():
@@ -85,6 +89,8 @@ def test_Xor():
     assert Xor(A, B, Xor(C, D)) == Xor(A, B, C, D)
     assert Xor(A, B, Xor(B, C)) == Xor(A, C)
     assert Xor(A < 1, A >= 1, B) == Xor(0, 1, B) == Xor(1, 0, B)
+    e = A > 1
+    assert Xor(e, e.canonical) == Xor(0, 0) == Xor(1, 1)
 
 
 def test_Not():
