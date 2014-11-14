@@ -585,11 +585,11 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
         rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-        cls = object.__new__(cls)
-        cls.rows = rows
-        cls.cols = cols
-        cls._mat = list(flat_list)  # create a shallow copy
-        return cls
+        obj = object.__new__(cls)
+        obj.rows = rows
+        obj.cols = cols
+        obj._mat = list(flat_list)  # create a shallow copy
+        return obj
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
