@@ -466,6 +466,7 @@ def test_is_literal():
     assert is_literal(Or(A, B)) is False
     assert is_literal(And(Q.zero(A), Q.zero(B))) is False
 
+
 def test_operators():
     # Mostly test __and__, __rand__, and so on
     assert True & A == A & True == A
@@ -483,6 +484,7 @@ def test_operators():
     assert True ^ A == A ^ True == ~A
     assert False ^ A == A ^ False == A
     assert A ^ B == Xor(A, B)
+
 
 def test_true_false():
     x = symbols('x')
@@ -635,3 +637,18 @@ def test_multivariate_bool_as_set():
     assert And(x >= 0, y >= 0).as_set() == Interval(0, oo)*Interval(0, oo)
     assert Or(x >= 0, y >= 0).as_set() == S.Reals*S.Reals - \
         Interval(-oo, 0, True, True)*Interval(-oo, 0, True, True)
+
+
+def test_all_or_nothing():
+    x = symbols('x', real=True)
+    args = x >=- oo, x <= oo
+    v = And(*args)
+    if v.func is And:
+        assert len(v.args) == len(args) - args.count(S.true)
+    else:
+        assert v == True
+    v = Or(*args)
+    if v.func is Or:
+        assert len(v.args) == 2
+    else:
+        assert v == True

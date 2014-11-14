@@ -312,22 +312,19 @@ class And(LatticeOp, BooleanFunction):
                 newargs.append(True if x else False)
                 continue
             if x.is_Relational:
-                nx = ~x
-                if nx.is_Relational:
-                    c = x.canonical
-                    if c in rel:
-                        continue
-                    nc = ~c
-                    if nc.is_Relational:
-                        nc = nc.canonical
-                        if any(r == nc for r in rel):
-                            return [S.false]
-                        rel.append(c)
-                    else:
-                        # ~c evaluated so update x value
-                        x = ~nc
+                c = x.canonical
+                if c in rel:
+                    continue
+                nc = ~c
+                if nc.is_Relational:
+                    nc = nc.canonical
+                    if any(r == nc for r in rel):
+                        return [S.false]
+                    rel.append(c)
                 else:
-                    x = ~nx
+                    # ~c evaluated but serendipitously, so don't update
+                    # the value of x here as ~nc
+                    pass
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
@@ -392,20 +389,19 @@ class Or(LatticeOp, BooleanFunction):
                 newargs.append(True if x else False)
                 continue
             if x.is_Relational:
-                nx = ~x
-                if nx.is_Relational:
-                    c = x.canonical
-                    if c in rel:
-                        continue
-                    nc = ~c
-                    if nc.is_Relational:
-                        nc = nc.canonical
-                        if any(r == nc for r in rel):
-                            return [S.true]
-                        rel.append(c)
-                    else:
-                        # ~c evaluated so update x value
-                        x = ~nc
+                c = x.canonical
+                if c in rel:
+                    continue
+                nc = ~c
+                if nc.is_Relational:
+                    nc = nc.canonical
+                    if any(r == nc for r in rel):
+                        return [S.true]
+                    rel.append(c)
+                else:
+                    # ~c evaluated but serendipitously, so don't update
+                    # the value of x here as ~nc
+                    pass
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
