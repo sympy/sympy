@@ -310,16 +310,25 @@ class And(LatticeOp, BooleanFunction):
         for x in reversed(list(args)):
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
-            else:
-                if x.is_Relational:
+                continue
+            if x.is_Relational:
+                nx = ~x
+                if nx.is_Relational:
                     c = x.canonical
                     if c in rel:
                         continue
-                    nc = (~c).canonical
-                    if any(r == nc for r in rel):
-                        return [S.false]
-                    rel.append(c)
-                newargs.append(x)
+                    nc = ~c
+                    if nc.is_Relational:
+                        nc = nc.canonical
+                        if any(r == nc for r in rel):
+                            return [S.false]
+                        rel.append(c)
+                    else:
+                        # ~c evaluated so update x value
+                        x = ~nc
+                else:
+                    x = ~nx
+            newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
     def as_set(self):
@@ -381,16 +390,23 @@ class Or(LatticeOp, BooleanFunction):
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
-            else:
-                if x.is_Relational:
+                continue
+            if x.is_Relational:
+                nx = ~x
+                if nx.is_Relational:
                     c = x.canonical
                     if c in rel:
                         continue
-                    nc = (~c).canonical
-                    if any(r == nc for r in rel):
-                        return [S.true]
-                    rel.append(c)
-                newargs.append(x)
+                    nc = ~c
+                    if nc.is_Relational:
+                        nc = nc.canonical
+                        if any(r == nc for r in rel):
+                            return [S.true]
+                        rel.append(c)
+                    else:
+                        # ~c evaluated so update x value
+                        x = ~nc
+            newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
     def as_set(self):
