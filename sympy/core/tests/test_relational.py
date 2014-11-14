@@ -577,7 +577,7 @@ def test_reversed():
 
 
 def test_canonical():
-    y = S(1)
+    one = S(1)
 
     def unchanged(v):
         c = v.canonical
@@ -586,14 +586,24 @@ def test_canonical():
     def reversed(v):
         return v.canonical == v.reversed
 
+    assert unchanged(x < one)
+    assert unchanged(x <= one)
+    assert reversed(Eq(one, x, evaluate=False))
+    assert unchanged(Eq(x, one, evaluate=False))
+    assert reversed(Ne(one, x, evaluate=False))
+    assert unchanged(Ne(x, one, evaluate=False))
+    assert unchanged(x >= one)
+    assert unchanged(x > one)
+
     assert unchanged(x < y)
     assert unchanged(x <= y)
-    assert unchanged(Eq(y, x, evaluate=False))
-    assert reversed(Eq(x, y, evaluate=False))
-    assert unchanged(Ne(y, x, evaluate=False))
-    assert reversed(Ne(x, y, evaluate=False))
+    assert reversed(Eq(y, x, evaluate=False))
+    assert unchanged(Eq(x, y, evaluate=False))
+    assert reversed(Ne(y, x, evaluate=False))
+    assert unchanged(Ne(x, y, evaluate=False))
     assert reversed(x >= y)
     assert reversed(x > y)
+
 
 
 @XFAIL
