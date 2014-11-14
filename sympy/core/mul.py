@@ -645,7 +645,8 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
+        rational = kwargs.pop('rational', True)
         if deps:
             l1 = []
             l2 = []
@@ -656,7 +657,7 @@ class Mul(Expr, AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
-        if args[0].is_Rational:
+        if args[0].is_Number and not (rational and not args[0].is_Rational):
             return args[0], args[1:]
         elif args[0] is S.NegativeInfinity:
             return S.NegativeOne, (-args[0],) + args[1:]
