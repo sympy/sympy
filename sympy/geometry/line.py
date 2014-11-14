@@ -774,23 +774,24 @@ class LinearEntity(GeometryEntity):
                         sray.ydirection == self.ydirection:
                     return True
 
+            p = self
             prec = (Line, Ray, Segment)
-            if prec.index(self.func) > prec.index(o.func):
-                self, o = o, self
+            if prec.index(p.func) > prec.index(o.func):
+                p, o = o, p
             rv = [inter]
-            if isinstance(self, Line):
+            if isinstance(p, Line):
                 if isinstance(o, Line):
                     return rv
                 elif isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Ray) and inray(self):
+            elif isinstance(p, Ray) and inray(p):
                 if isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Segment) and inseg(self):
+            elif isinstance(p, Segment) and inseg(p):
                 if isinstance(o, Segment) and inseg(o):
                     return rv
             return []

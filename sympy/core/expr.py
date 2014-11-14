@@ -2029,18 +2029,19 @@ class Expr(Basic, EvalfMixin):
             return (xa0 + (diff.extract_additively(c) or diff)) or None
         # term-wise
         coeffs = []
+        terms = self
         for a in Add.make_args(c):
             ac, at = a.as_coeff_Mul()
-            co = self.coeff(at)
+            co = terms.coeff(at)
             if not co:
                 return None
             coc, cot = co.as_coeff_Add()
             xa = coc.extract_additively(ac)
             if xa is None:
                 return None
-            self -= co*at
+            terms -= co*at
             coeffs.append((cot + xa)*at)
-        coeffs.append(self)
+        coeffs.append(terms)
         return Add(*coeffs)
 
     def could_extract_minus_sign(self):

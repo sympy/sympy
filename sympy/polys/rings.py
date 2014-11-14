@@ -1126,14 +1126,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def _pow_generic(self, n):
         p = self.ring.one
 
+        expr = self
         while True:
             if n & 1:
-                p = p*self
+                p = p*expr
                 n -= 1
                 if not n:
                     break
 
-            self = self.square()
+            expr = expr.square()
             n = n // 2
 
         return p
