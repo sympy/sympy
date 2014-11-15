@@ -1084,6 +1084,7 @@ def test_sec():
     assert sec(pi/3) == 2
     assert sec(5*pi/2) == zoo
     assert sec(9*pi/7) == -sec(2*pi/7)
+    assert sec(3*pi/4) == -sqrt(2)  # issue 8421
     assert sec(I) == 1/cosh(1)
     assert sec(x*I) == 1/cosh(x)
     assert sec(-x) == sec(x)
@@ -1160,6 +1161,7 @@ def test_csc():
     assert csc(pi/3) == 2*sqrt(3)/3
     assert csc(5*pi/2) == 1
     assert csc(9*pi/7) == -csc(2*pi/7)
+    assert csc(3*pi/4) == sqrt(2)  # issue 8421
     assert csc(I) == -I/sinh(1)
     assert csc(x*I) == -I/sinh(x)
     assert csc(-x) == -csc(x)

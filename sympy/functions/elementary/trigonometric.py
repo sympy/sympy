@@ -1247,7 +1247,11 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
                     return -cls(narg)
                 if 2*p > q:
                     narg = (1 - pi_coeff)*S.Pi
-                    return -cls(narg)
+                    if cls._is_odd:
+                        return cls(narg)
+                    elif cls._is_even:
+                        return -cls(narg)
+
         t = cls._reciprocal_of.eval(arg)
         if hasattr(arg, 'inverse') and arg.inverse() == cls:
             return arg.args[0]
