@@ -1736,10 +1736,11 @@ class RealInterval(object):
 
     def refine_disjoint(self, other):
         """Refine an isolating interval until it is disjoint with another one. """
-        while not self.is_disjoint(other):
-            self, other = self._inner_refine(), other._inner_refine()
+        expr = self
+        while not expr.is_disjoint(other):
+            expr, other = expr._inner_refine(), other._inner_refine()
 
-        return self, other
+        return expr, other
 
     def refine_size(self, dx):
         """Refine an isolating interval until it is of sufficiently small size. """
@@ -1870,10 +1871,11 @@ class ComplexInterval(object):
 
     def refine_disjoint(self, other):
         """Refine an isolating interval until it is disjoint with another one. """
-        while not self.is_disjoint(other):
-            self, other = self._inner_refine(), other._inner_refine()
+        expr = self
+        while not expr.is_disjoint(other):
+            expr, other = expr._inner_refine(), other._inner_refine()
 
-        return self, other
+        return expr, other
 
     def refine_size(self, dx, dy=None):
         """Refine an isolating interval until it is of sufficiently small size. """

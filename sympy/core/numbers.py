@@ -1349,6 +1349,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
+        expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q > self.q*other.p))
@@ -1358,8 +1359,8 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__le__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__gt__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__gt__(expr, other)
 
     def __ge__(self, other):
         try:
@@ -1368,6 +1369,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
+        expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
                  return _sympify(bool(self.p*other.q >= self.q*other.p))
@@ -1377,8 +1379,8 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__lt__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__ge__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__ge__(expr, other)
 
     def __lt__(self, other):
         try:
@@ -1387,6 +1389,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
+        expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q < self.q*other.p))
@@ -1396,14 +1399,15 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__ge__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__lt__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__lt__(expr, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
+        expr = self
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         elif isinstance(other, Number):
@@ -1415,8 +1419,8 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__gt__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__le__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__le__(expr, other)
 
     def __hash__(self):
         return super(Rational, self).__hash__()
