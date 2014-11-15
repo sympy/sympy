@@ -170,7 +170,7 @@ class sinh(HyperbolicFunction):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return S.One
+            return arg
         else:
             return self.func(arg)
 
@@ -455,7 +455,7 @@ class tanh(HyperbolicFunction):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return S.One
+            return arg
         else:
             return self.func(arg)
 
@@ -587,7 +587,7 @@ class coth(HyperbolicFunction):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return S.One
+            return 1/arg
         else:
             return self.func(arg)
 
