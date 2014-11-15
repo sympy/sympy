@@ -1478,18 +1478,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         if self in self.ring._gens_set:
-            self = self.copy()
+            cpself = self.copy()
+        else:
+            cpself = self
         expv, coeff = mc
-        c = self.get(expv)
+        c = cpself.get(expv)
         if c is None:
-            self[expv] = coeff
+            cpself[expv] = coeff
         else:
             c += coeff
             if c:
-                self[expv] = c
+                cpself[expv] = c
             else:
-                del self[expv]
-        return self
+                del cpself[expv]
+        return cpself
 
     def _iadd_poly_monom(p1, p2, mc):
         """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)

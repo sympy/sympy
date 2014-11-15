@@ -278,9 +278,9 @@ ivmpc.__truediv__ = ivmpc.__div__; ivmpc.__rtruediv__ = ivmpc.__rdiv__
 
 class ivmpf_constant(ivmpf):
     def __new__(cls, f):
-        self = new(cls)
-        self._f = f
-        return self
+        expr = new(cls)
+        expr._f = f
+        return expr
     def _get_mpi_(self):
         prec = self.ctx._prec[0]
         a = self._f(prec, round_floor)
