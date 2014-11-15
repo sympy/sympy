@@ -45,6 +45,8 @@ def test_And():
     assert And(A < 1, A >= 1) is false
     e = A > 1
     assert And(e, e.canonical) == e.canonical
+    g, l, ge, le = A > B, B < A, A >= B, B <= A
+    assert And(g, l, ge, le) == And(l, le)
 
 
 def test_Or():
@@ -65,6 +67,8 @@ def test_Or():
     assert Or(A < 1, A >= 1) is true
     e = A > 1
     assert Or(e, e.canonical) == e
+    g, l, ge, le = A > B, B < A, A >= B, B <= A
+    assert Or(g, l, ge, le) == Or(g, ge)
 
 
 def test_Xor():
@@ -232,7 +236,7 @@ def test_simplification():
     assert POSform('x', [[0]], [[1]]) is true
     assert POSform('x', [], []) is false
 
-    #check working of simplify
+    # check working of simplify
     assert simplify('(A & B) | (A & C)') == sympify('And(A, Or(B, C))')
     assert simplify(And(x, Not(x))) == False
     assert simplify(Or(x, Not(x))) == True

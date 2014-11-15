@@ -4,6 +4,7 @@ from .basic import S
 from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
+from .function import _coeff_isneg
 from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
@@ -149,10 +150,14 @@ class Relational(Boolean, Expr, EvalfMixin):
                     # Always T/F (we never return an expression w/ the evalf)
                     r = r.func._eval_relation(dif, S.Zero)
 
+        if r.is_Relational:
+            r = r.canonical
+            if _coeff_isneg(r.lhs):
+                r = r.reversed.func(*[-i for i in r.args], evaluate=False)
         if measure(r) < ratio*measure(self):
-            return r.canonical if r.is_Relational else r
+            return r
         else:
-            return self.canonical
+            return self
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")

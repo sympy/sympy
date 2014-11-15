@@ -549,15 +549,7 @@ def test_issue_8449():
 
 
 def test_simplify():
-    g, l, ge, le = x > y, y < x, x >= y, y <= x
-    assert g.simplify() == l
-    assert ge.simplify() == le
-    assert simplify(And(g, l, ge, le)) == And(l, le)
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    assert simplify(Eq(1, x)) == Eq(x, 1)
-    assert simplify(Ne(1, x)) == Ne(x, 1)
-    assert simplify(x > 1) == (x > 1)
-    assert simplify(x > y) == (y < x)
 
 
 def test_equals():
