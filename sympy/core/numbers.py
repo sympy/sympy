@@ -2412,6 +2412,8 @@ class Infinity(with_metaclass(Singleton, Number)):
         if other.is_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.false
+            elif other.is_nonpositive:
+                return S.false
             elif other is S.Infinity:
                 return S.true
         return Expr.__le__(self, other)
@@ -2423,6 +2425,8 @@ class Infinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if other.is_real:
             if other.is_finite or other is S.NegativeInfinity:
+                return S.true
+            elif other.is_nonpositive:
                 return S.true
             elif other is S.Infinity:
                 return S.false
@@ -2610,6 +2614,8 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if other.is_real:
             if other.is_finite or other is S.Infinity:
                 return S.true
+            elif other.is_nonnegative:
+                return S.true
             elif other is S.NegativeInfinity:
                 return S.false
         return Expr.__lt__(self, other)
@@ -2639,6 +2645,8 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if other.is_real:
             if other.is_finite or other is S.Infinity:
+                return S.false
+            elif other.is_nonnegative:
                 return S.false
             elif other is S.NegativeInfinity:
                 return S.true
