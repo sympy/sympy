@@ -835,13 +835,13 @@ class Float(Number):
                 return Float._new(
                     mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
             expt, prec = expt._as_mpf_op(self._prec)
-            self = self._mpf_
+            mpfself = self._mpf_
             try:
-                y = mpf_pow(self, expt, prec, rnd)
+                y = mpf_pow(mpfself, expt, prec, rnd)
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow(
-                    (self, _mpf_zero), (expt, _mpf_zero), prec, rnd)
+                    (mpfself, _mpf_zero), (expt, _mpf_zero), prec, rnd)
                 return Float._new(re, prec) + \
                     Float._new(im, prec)*S.ImaginaryUnit
 
@@ -1358,7 +1358,7 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__le__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
+            return Expr.__gt__(Integer(self.p), self.q*other)
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1377,7 +1377,7 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__lt__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
+            return Expr.__ge__(Integer(self.p), self.q*other)
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1396,7 +1396,7 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__ge__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
+            return Expr.__lt__(Integer(self.p), self.q*other)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1415,7 +1415,7 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__gt__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
+            return Expr.__lt__(Integer(self.p), self.q*other)
         return Expr.__le__(self, other)
 
     def __hash__(self):

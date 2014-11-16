@@ -1369,17 +1369,17 @@ class ReduceOrder(Operator):
         if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
             return None
 
-        self = Operator.__new__(cls)
+        expr = Operator.__new__(cls)
 
         p = S(1)
         for k in xrange(n):
             p *= (_x + bj + k)/(bj + k)
 
-        self._poly = Poly(p, _x)
-        self._a = ai
-        self._b = bj
+        expr._poly = Poly(p, _x)
+        expr._a = ai
+        expr._b = bj
 
-        return self
+        return expr
 
     @classmethod
     def _meijer(cls, b, a, sign):
@@ -1391,21 +1391,21 @@ class ReduceOrder(Operator):
         if n.is_negative or not n.is_Integer:
             return None
 
-        self = Operator.__new__(cls)
+        expr = Operator.__new__(cls)
 
         p = S(1)
         for k in xrange(n):
             p *= (sign*_x + a + k)
 
-        self._poly = Poly(p, _x)
+        expr._poly = Poly(p, _x)
         if sign == -1:
-            self._a = b
-            self._b = a
+            expr._a = b
+            expr._b = a
         else:
-            self._b = Add(1, a - 1, evaluate=False)
-            self._a = Add(1, b - 1, evaluate=False)
+            expr._b = Add(1, a - 1, evaluate=False)
+            expr._a = Add(1, b - 1, evaluate=False)
 
-        return self
+        return expr
 
     @classmethod
     def meijer_minus(cls, b, a):

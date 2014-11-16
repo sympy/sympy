@@ -498,13 +498,14 @@ class Expr(Basic, EvalfMixin):
         wrt = wrt or free
 
         # simplify unless this has already been done
+        expr = self
         if simplify:
-            self = self.simplify()
+            expr = expr.simplify()
 
         # is_zero should be a quick assumptions check; it can be wrong for
         # numbers (see test_is_not_constant test), giving False when it
         # shouldn't, but hopefully it will never give True unless it is sure.
-        if self.is_zero:
+        if expr.is_zero:
             return True
 
         # try numerical evaluation to see if we get two different values
@@ -512,30 +513,30 @@ class Expr(Basic, EvalfMixin):
         if wrt == free:
             # try 0 (for a) and 1 (for b)
             try:
-                a = self.subs(list(zip(free, [0]*len(free))),
+                a = expr.subs(list(zip(free, [0]*len(free))),
                     simultaneous=True)
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
-                    a = self._random(None, 0, 0, 0, 0)
+                    a = expr._random(None, 0, 0, 0, 0)
             except ZeroDivisionError:
                 a = None
             if a is not None and a is not S.NaN:
                 try:
-                    b = self.subs(list(zip(free, [1]*len(free))),
+                    b = expr.subs(list(zip(free, [1]*len(free))),
                         simultaneous=True)
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
-                        b = self._random(None, 1, 0, 1, 0)
+                        b = expr._random(None, 1, 0, 1, 0)
                 except ZeroDivisionError:
                     b = None
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random real
-                b = self._random(None, -1, 0, 1, 0)
+                b = expr._random(None, -1, 0, 1, 0)
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random complex
-                b = self._random()
+                b = expr._random()
                 if b is not None and b is not S.NaN:
                     if b.equals(a) is False:
                         return False
@@ -546,7 +547,7 @@ class Expr(Basic, EvalfMixin):
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
         for w in wrt:
-            deriv = self.diff(w)
+            deriv = expr.diff(w)
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
@@ -2028,18 +2029,19 @@ class Expr(Basic, EvalfMixin):
             return (xa0 + (diff.extract_additively(c) or diff)) or None
         # term-wise
         coeffs = []
+        terms = self
         for a in Add.make_args(c):
             ac, at = a.as_coeff_Mul()
-            co = self.coeff(at)
+            co = terms.coeff(at)
             if not co:
                 return None
             coc, cot = co.as_coeff_Add()
             xa = coc.extract_additively(ac)
             if xa is None:
                 return None
-            self -= co*at
+            terms -= co*at
             coeffs.append((cot + xa)*at)
-        coeffs.append(self)
+        coeffs.append(terms)
         return Add(*coeffs)
 
     def could_extract_minus_sign(self):

@@ -1253,7 +1253,7 @@ class Mul(Expr, AssocOp):
             if not self2.is_Mul:
                 return self2._subs(old, new)
             if self2 != self:
-                self = rv = self2
+                rv = self2
 
         # Now continue with regular substitution.
 
