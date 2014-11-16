@@ -418,13 +418,13 @@ class LatticeOp(AssocOp):
     @classmethod
     def _new_args_filter(cls, arg_sequence, call_cls=None):
         """Generator filtering args"""
-        cls = call_cls or cls
+        ncls = call_cls or cls
         for arg in arg_sequence:
-            if arg == cls.zero:
+            if arg == ncls.zero:
                 raise ShortCircuit(arg)
-            elif arg == cls.identity:
+            elif arg == ncls.identity:
                 continue
-            elif arg.func == cls:
+            elif arg.func == ncls:
                 for x in arg.args:
                     yield x
             else:
