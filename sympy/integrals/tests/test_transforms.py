@@ -483,7 +483,9 @@ def test_laplace_transform():
         exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2), -a, True)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
         ((a + s)/(b**2 + (a + s)**2), -a, True)
-    # TODO sinh, cosh have delicate cancellation
+        
+    assert LT(cosh(t), t, s, noconds = True) == s/(s**2 - 1)
+    assert LT(sinh(t), t, s, noconds = True) == 1/(s**2 - 1)
 
     assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
     assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
