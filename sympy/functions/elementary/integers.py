@@ -131,12 +131,12 @@ class floor(RoundFunction):
             return r
 
     def __le__(self, other):
-        if self.args[0] == other:
+        if self.args[0] == other and other.is_real:
             return S.true
         return Le(self, other, evaluate=False)
 
     def __gt__(self, other):
-        if self.args[0] == other:
+        if self.args[0] == other and other.is_real:
             return S.false
         return Gt(self, other, evaluate=False)
 
@@ -195,11 +195,11 @@ class ceiling(RoundFunction):
             return r
 
     def __lt__(self, other):
-        if self.args[0] == other:
+        if self.args[0] == other and other.is_real:
             return S.false
         return Lt(self, other, evaluate=False)
 
     def __ge__(self, other):
-        if self.args[0] == other:
+        if self.args[0] == other and other.is_real:
             return S.true
         return Ge(self, other, evaluate=False)
