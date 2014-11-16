@@ -12,7 +12,7 @@ from sympy import (
     cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    combsimp, trigsimp)
+    combsimp, trigsimp, cosh, sinh)
 from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
