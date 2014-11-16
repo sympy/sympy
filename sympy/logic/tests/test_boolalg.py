@@ -662,3 +662,8 @@ def test_all_or_nothing():
         assert len(v.args) == 2
     else:
         assert v == True
+
+
+def test_canonical_atoms():
+    assert true.canonical == true
+    assert false.canonical == false

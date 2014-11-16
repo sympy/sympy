@@ -90,16 +90,22 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> _.reversed
         1 > x
         """
-        return self.func(self.rhs, self.lhs)
+        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        a, b = self.args
+        return ops.get(self.func, self.func)(b, a, evaluate=False)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
     @property
     def canonical(self):
-        """Return a canonical form of the relational, in this order of priority:
-        1) Number on right if left is not Number; 2) Gt/Ge changed to Lt/Le;
-        3) Lt/Le are unchanged; and 4) Eq and Ne get ordered args.
+        """Return a canonical form of the relational.
+
+        The rules for the canonical form, in order of decreasing priority are:
+            1) Number on right if left is not a Number;
+            2) Gt/Ge changed to Lt/Le;
+            3) Lt/Le are unchanged;
+            4) Eq and Ne get ordered args.
         """
         r = self
         if r.func in (Ge, Gt):
@@ -112,21 +118,54 @@ class Relational(Boolean, Expr, EvalfMixin):
             raise NotImplemented
         if r.lhs.is_Number and not r.rhs.is_Number:
             r = r.reversed
+        if _coeff_isneg(r.lhs):
+            r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
         return r
 
-    def equals(self, other):
+    def equals(self, other, failing_expression=False):
+        """Return True if the sides of the relationship are mathematically
+        identical and the type of relationship is the same.
+        If failing_expression is True, return the expression whose truth value
+        was unknown."""
         if isinstance(other, Relational):
             if self == other or self.reversed == other:
                 return True
-            a, b = self.canonical, other.canonical
-            if a.lhs == b.lhs:
-                if a.rhs == b.rhs and a.func != b.func:
+            a, b = self, other
+            if a.func in (Eq, Ne) or b.func in (Eq, Ne):
+                if a.func != b.func:
                     return False
-                if a.func == b.func and a.rhs != b.rhs:
+                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
+                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
+                if l is True:
+                    return r
+                if r is True:
+                    return l
+                lr = a.lhs.equals(b.rhs, failing_expression=failing_expression)
+                rl = a.rhs.equals(b.lhs, failing_expression=failing_expression)
+                if lr is True:
+                    return rl
+                if rl is True:
+                    return lr
+                e = (l, r, lr, rl)
+                if all(i is False for i in e):
                     return False
-            if a.rhs == b.rhs:
-                if a.func == b.func and a.lhs != b.lhs:
+                for i in e:
+                    if i not in (True, False):
+                        return i
+            else:
+                if b.func != a.func:
+                    b = b.reversed
+                if a.func != b.func:
                     return False
+                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
+                if l is False:
+                    return False
+                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
+                if r is False:
+                    return False
+                if l is True:
+                    return r
+                return l
 
     def _eval_simplify(self, ratio, measure):
         r = self
@@ -150,10 +189,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                     # Always T/F (we never return an expression w/ the evalf)
                     r = r.func._eval_relation(dif, S.Zero)
 
-        if r.is_Relational:
-            r = r.canonical
-            if _coeff_isneg(r.lhs):
-                r = r.reversed.func(*[-i for i in r.args], evaluate=False)
+        r = r.canonical
         if measure(r) < ratio*measure(self):
             return r
         else:
@@ -655,10 +691,6 @@ class GreaterThan(_Greater):
 
     rel_op = '>='
 
-    @property
-    def reversed(self):
-        return Le(self.lts, self.gts, evaluate=False)
-
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
@@ -672,10 +704,6 @@ class LessThan(_Less):
     __slots__ = ()
 
     rel_op = '<='
-
-    @property
-    def reversed(self):
-        return Ge(self.gts, self.lts, evaluate=False)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -691,10 +719,6 @@ class StrictGreaterThan(_Greater):
 
     rel_op = '>'
 
-    @property
-    def reversed(self):
-        return Lt(self.lts, self.gts, evaluate=False)
-
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
@@ -708,10 +732,6 @@ class StrictLessThan(_Less):
     __slots__ = ()
 
     rel_op = '<'
-
-    @property
-    def reversed(self):
-        return Gt(self.gts, self.lts, evaluate=False)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):

@@ -122,6 +122,9 @@ class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
     """
+    @property
+    def canonical(self):
+        return self
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
@@ -131,7 +134,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     primary advantage of using true instead of True is that shorthand boolean
     operations like ~ and >> will work as expected on this class, whereas with
     True they act bitwise on 1. Functions in the logic module will return this
-    class when they are true.
+    class when they evaluate to true.
 
     Examples
     ========
@@ -181,7 +184,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     primary advantage of using false instead of False is that shorthand boolean
     operations like ~ and >> will work as expected on this class, whereas with
     False they act bitwise on 0. Functions in the logic module will return this
-    class when they are false.
+    class when they evaluate to false.
 
     Examples
     ========
@@ -315,16 +318,10 @@ class And(LatticeOp, BooleanFunction):
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = ~c
-                if nc.is_Relational:
-                    nc = nc.canonical
-                    if any(r == nc for r in rel):
-                        return [S.false]
-                    rel.append(c)
-                else:
-                    # ~c evaluated but serendipitously, so don't update
-                    # the value of x here as ~nc
-                    pass
+                nc = (~c).canonical
+                if any(r == nc for r in rel):
+                    return [S.false]
+                rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
@@ -392,16 +389,10 @@ class Or(LatticeOp, BooleanFunction):
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = ~c
-                if nc.is_Relational:
-                    nc = nc.canonical
-                    if any(r == nc for r in rel):
-                        return [S.true]
-                    rel.append(c)
-                else:
-                    # ~c evaluated but serendipitously, so don't update
-                    # the value of x here as ~nc
-                    pass
+                nc = (~c).canonical
+                if any(r == nc for r in rel):
+                    return [S.true]
+                rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
@@ -783,10 +774,8 @@ class Implies(BooleanFunction):
         elif A.is_Relational and B.is_Relational:
             if A.canonical == B.canonical:
                 return S.true
-            nA = ~A
-            if nA.is_Relational:
-                if nA.canonical == B.canonical:
-                    return B
+            if (~A).canonical == B.canonical:
+                return B
         else:
             return Basic.__new__(cls, *args)
 
@@ -828,9 +817,7 @@ class Equivalent(BooleanFunction):
         rel = []
         for r in argset:
             if isinstance(r, Relational):
-                nr = ~r
-                if nr.is_Relational:
-                    rel.append((r, r.canonical, nr.canonical))
+                rel.append((r, r.canonical, (~r).canonical))
         remove = []
         for i, (r, c, nc) in enumerate(rel):
             for j in range(i + 1, len(rel)):
