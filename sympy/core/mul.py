@@ -657,10 +657,11 @@ class Mul(Expr, AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
-        if args[0].is_Number and (not rational or args[0].is_Rational):
-            return args[0], args[1:]
-        elif args[0] is S.NegativeInfinity:
-            return S.NegativeOne, (-args[0],) + args[1:]
+        if args[0].is_Number:
+            if (not rational or args[0].is_Rational):
+                return args[0], args[1:]
+            elif args[0].is_negative:
+                return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
     def as_coeff_Mul(self, rational=False):
