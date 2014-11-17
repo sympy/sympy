@@ -94,7 +94,14 @@ class Piecewise(Function):
         # (Try to) sympify args first
         newargs = []
         for ec in args:
-            pair = ExprCondPair(*ec)
+            print("Debug: ec is type: " + str(type(ec)))
+            print("  Debug: isinstance: " + str(isinstance(ec, ExprCondPair)))
+            if isinstance(ec, ExprCondPair):
+                print('  Debug: already an ExprCondPair')
+                pair = ec
+            else:
+                print('  Debug: converting tuple to ExprCondPair')
+                pair = ExprCondPair(*ec)
             cond = pair.cond
             if cond == false:
                 continue
