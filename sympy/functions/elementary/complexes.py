@@ -428,7 +428,6 @@ class Abs(Function):
 
     def piecewise_rewrite(self):
         return self._eval_rewrite_as_Piecewise(self.args[0])
-        
 
     @classmethod
     def eval(cls, arg):
@@ -942,8 +941,8 @@ def rewrite_abs(expr):
         return (expr.func(*new_args)).piecewise_rewrite()
     else:
         return expr.func(*new_args)
-    
-    
+
+
 # /cyclic/
 from sympy.core import basic as _
 _.abs_ = Abs
