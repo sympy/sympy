@@ -68,6 +68,17 @@ def test_roots_quadratic():
         assert roots == _nsort(roots)
 
 
+def test_issue_8438():
+    p = Poly([1, y, -2, -3], x).as_expr()
+    roots = roots_cubic(Poly(p, x), x)
+    z = -S(3)/2 - 7*I/2  # this will fail in code given in commit msg
+    post = [r.subs(y, z) for r in roots]
+    assert set(post) == \
+    set(roots_cubic(Poly(p.subs(y, z), x)))
+    # /!\ if p is not made an expression, this is *very* slow
+    assert all(p.subs({y: z, x: i}).n(2, chop=True) == 0 for i in post)
+
+
 def test_issue_8285():
     roots = (Poly(4*x**8 - 1, x)*Poly(x**2 + 1)).all_roots()
     assert roots == _nsort(roots)
@@ -304,7 +315,7 @@ def test_roots_preprocessing():
     assert preprocess_roots(f) == (x, g)
 
 
-def test_roots():
+def test_roots0():
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
@@ -363,17 +374,18 @@ def test_roots():
     assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
         {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
-    r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r)
-        for r in ((1, 2), (1, 3), (1, 9), (4, 9), (19, 27)) ]
+    r1_2, r1_3 = Rational(1, 2), Rational(1, 3)
 
-    U = -r1_2 - r1_2*I*3**r1_2
-    V = -r1_2 + r1_2*I*3**r1_2
-    W = (r19_27 + r1_9*33**r1_2)**r1_3
-
+    x0 = (3*sqrt(33) + 19)**r1_3
+    x1 = 4/x0/3
+    x2 = x0/3
+    x3 = sqrt(3)*I/2
+    x4 = x3 - r1_2
+    x5 = -x3 - r1_2
     assert roots(x**3 + x**2 - x + 1, x, cubics=True) == {
-        -r1_3 - U*W - r4_9*(U*W)**(-1): 1,
-        -r1_3 - V*W - r4_9*(V*W)**(-1): 1,
-        -r1_3 - W - r4_9*(  W)**(-1): 1,
+        -x1 - x2 - r1_3: 1,
+        -x1/x4 - x2*x4 - r1_3: 1,
+        -x1/x5 - x2*x5 - r1_3: 1,
     }
 
     f = (x**2 + 2*x + 3).subs(x, 2*x**2 + 3*x).subs(x, 5*x - 4)
@@ -449,8 +461,8 @@ def test_roots():
 
     r = roots(x**3 + 40*x + 64)
     real_root = [rx for rx in r if rx.is_real][0]
-    cr = 4 + 2*sqrt(1074)/9
-    assert real_root == -2*root(cr, 3) + 20/(3*root(cr, 3))
+    cr = 108 + 6*sqrt(1074)
+    assert real_root == -2*root(cr, 3)/3 + 20/root(cr, 3)
 
     eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
     assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
