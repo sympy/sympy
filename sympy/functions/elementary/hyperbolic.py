@@ -784,7 +784,7 @@ class acosh(Function):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return arg
+            return S.ImaginaryUnit*S.Pi/2
         else:
             return self.func(arg)
 
@@ -935,7 +935,7 @@ class acoth(Function):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return arg
+            return S.ImaginaryUnit*S.Pi/2
         else:
             return self.func(arg)
 
