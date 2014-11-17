@@ -940,6 +940,7 @@ def test_as_coeff_mul():
     assert e.as_coeff_mul(y) == (1, (e,))
     assert (1.1*x).as_coeff_mul(rational=False) == (1.1, (x,))
     assert (1.1*x).as_coeff_mul() == (1, (1.1, x))
+    assert (-oo*x).as_coeff_mul(rational=True) == (-1, (oo, x))
 
 
 def test_as_coeff_exponent():
@@ -1262,6 +1263,7 @@ def test_as_coeff_Mul():
 
     assert (x).as_coeff_Mul() == (S.One, x)
     assert (x*y).as_coeff_Mul() == (S.One, x*y)
+    assert (-oo*x).as_coeff_Mul(rational=True) == (-1, oo*x)
 
 
 def test_as_coeff_Add():

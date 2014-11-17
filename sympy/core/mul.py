@@ -657,7 +657,7 @@ class Mul(Expr, AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
-        if args[0].is_Number and not (rational and not args[0].is_Rational):
+        if args[0].is_Number and (not rational or args[0].is_Rational):
             return args[0], args[1:]
         elif args[0] is S.NegativeInfinity:
             return S.NegativeOne, (-args[0],) + args[1:]
@@ -667,11 +667,13 @@ class Mul(Expr, AssocOp):
         """Efficiently extract the coefficient of a product. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number and not (rational and not coeff.is_Rational):
+        if coeff.is_Number and (not rational or coeff.is_Rational):
             if len(args) == 1:
                 return coeff, args[0]
             else:
                 return coeff, self._new_rawargs(*args)
+        elif coeff is S.NegativeInfinity:
+            return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         else:
             return S.One, self
 
