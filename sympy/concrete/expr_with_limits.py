@@ -10,6 +10,7 @@ from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.complexes import rewrite_abs
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
@@ -344,6 +345,7 @@ class AddWithLimits(ExprWithLimits):
             rhs = function.rhs
             return C.Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
+        function = rewrite_abs(function)
         function = piecewise_fold(function)
 
         if function is S.NaN:

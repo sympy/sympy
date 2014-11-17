@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core import Basic, S, C
 from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
@@ -426,6 +426,10 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def piecewise_rewrite(self):
+        return self._eval_rewrite_as_Piecewise(self.args[0])
+        
+
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
@@ -525,7 +529,8 @@ class Abs(Function):
             return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
 
     def _eval_rewrite_as_Piecewise(self, arg):
-        if arg.is_real:
+        # assume real unless argument explicitly says otherwise
+        if not (arg.is_real == False):
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg):
@@ -923,6 +928,22 @@ class principal_branch(Function):
             return self  # Cannot evalf for this argument.
         return (abs(z)*exp(I*p))._eval_evalf(prec)
 
+def rewrite_abs(expr):
+    """
+    Take an expression and convert all instances of Abs objects to Piecewise
+    objects. The current main use of this is to deal with integrations
+    involving absolute values: currently sympy has good support for
+    integrating Piecewise objects, but none for Abs objects.
+    """
+    if not isinstance(expr,Basic) or not expr.has(Abs):
+        return expr
+    new_args = list(map(rewrite_abs, expr.args))
+    if isinstance(expr,Abs):
+        return (expr.func(*new_args)).piecewise_rewrite()
+    else:
+        return expr.func(*new_args)
+    
+    
 # /cyclic/
 from sympy.core import basic as _
 _.abs_ = Abs
