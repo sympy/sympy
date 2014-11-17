@@ -938,6 +938,12 @@ def test_issue_1888():
     f = Function('f')
     assert integrate(f(x).diff(x)**2, x).has(Integral)
 
+def test_issue_8430():
+    assert integrate(Abs(x),(x,0,1)) == S(1)/2
+    assert integrate(Abs(x),(x,-1,1)) == 1
+    assert integrate(Abs(x+1),(x,0,1)) == S(3)/2
+    assert integrate(Abs(x+1),(x,-1,1)) == 2
+
 # The following tests work using meijerint.
 
 

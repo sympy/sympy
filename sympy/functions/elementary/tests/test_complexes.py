@@ -360,9 +360,10 @@ def test_Abs_rewrite():
     y = Symbol('y')
     assert Abs(y).rewrite(Heaviside) == Abs(y)
 
-    x, y = Symbol('x', real=True), Symbol('y')
+    x, y, z = Symbol('x', real=True), Symbol('y'), Symbol('z',real=False)
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
-    assert Abs(y).rewrite(Piecewise) == Abs(y)
+    assert Abs(y).rewrite(Piecewise) == Piecewise((y, y >= 0), (-y, True))
+    assert Abs(z).rewrite(Piecewise) == Abs(z)
     assert Abs(y).rewrite(sign) == y/sign(y)
 
 

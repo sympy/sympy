@@ -426,9 +426,6 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def piecewise_rewrite(self):
-        return self._eval_rewrite_as_Piecewise(self.args[0])
-
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
@@ -938,7 +935,7 @@ def rewrite_abs(expr):
         return expr
     new_args = list(map(rewrite_abs, expr.args))
     if isinstance(expr,Abs):
-        return (expr.func(*new_args)).piecewise_rewrite()
+        return (Abs(*new_args)).rewrite(Piecewise)
     else:
         return expr.func(*new_args)
 
