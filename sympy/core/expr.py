@@ -1666,7 +1666,7 @@ class Expr(Basic, EvalfMixin):
         # a -> b ** e
         return self, S.One
 
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
         c should be a Rational multiplied by any terms of the Mul that are
