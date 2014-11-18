@@ -72,8 +72,11 @@ class Boolean(Basic):
         >>> Not(And(A, Not(A))).equals(Or(B, Not(B)))
         False
         """
-
         from sympy.logic.inference import satisfiable
+        from sympy.core.relational import Relational
+
+        if self.has(Relational) or other.has(Relational):
+            raise NotImplementedError('handling of relationals')
         return self.atoms() == other.atoms() and \
                 not satisfiable(Not(Equivalent(self, other)))
 
@@ -119,13 +122,13 @@ class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
     """
+    @property
+    def canonical(self):
+        return self
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
-    SymPy version of True.
-
-    The instances of this class are singletonized and can be accessed via
-    S.true.
+    SymPy version of True, a singleton that can be accessed via S.true.
 
     This is the SymPy version of True, for use in the logic module. The
     primary advantage of using true instead of True is that shorthand boolean
@@ -175,10 +178,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
 class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     """
-    SymPy version of False.
-
-    The instances of this class are singletonized and can be accessed via
-    S.false.
+    SymPy version of False, a singleton that can be accessed via S.false.
 
     This is the SymPy version of False, for use in the logic module. The
     primary advantage of using false instead of False is that shorthand boolean
@@ -309,11 +309,20 @@ class And(LatticeOp, BooleanFunction):
     @classmethod
     def _new_args_filter(cls, args):
         newargs = []
-        for x in args:
+        rel = []
+        for x in reversed(list(args)):
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
-            else:
-                newargs.append(x)
+                continue
+            if x.is_Relational:
+                c = x.canonical
+                if c in rel:
+                    continue
+                nc = (~c).canonical
+                if any(r == nc for r in rel):
+                    return [S.false]
+                rel.append(c)
+            newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
     def as_set(self):
@@ -371,11 +380,20 @@ class Or(LatticeOp, BooleanFunction):
     @classmethod
     def _new_args_filter(cls, args):
         newargs = []
+        rel = []
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
-            else:
-                newargs.append(x)
+                continue
+            if x.is_Relational:
+                c = x.canonical
+                if c in rel:
+                    continue
+                nc = (~c).canonical
+                if any(r == nc for r in rel):
+                    return [S.true]
+                rel.append(c)
+            newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
     def as_set(self):
@@ -579,6 +597,25 @@ class Xor(BooleanFunction):
                 argset.remove(arg)
             else:
                 argset.add(arg)
+        rel = [(r, r.canonical, (~r).canonical) for r in argset if r.is_Relational]
+        odd = False  # is number of complimentary pairs odd? start 0 -> False
+        remove = []
+        for i, (r, c, nc) in enumerate(rel):
+            for j in range(i + 1, len(rel)):
+                rj, cj = rel[j][:2]
+                if cj == nc:
+                    odd = ~odd
+                    break
+                elif cj == c:
+                    break
+            else:
+                continue
+            remove.append((r, rj))
+        if odd:
+            argset.remove(true) if true in argset else argset.add(true)
+        for a, b in remove:
+            argset.remove(a)
+            argset.remove(b)
         if len(argset) == 0:
             return false
         elif len(argset) == 1:
@@ -732,6 +769,13 @@ class Implies(BooleanFunction):
                 "(pairs are required): %s" % (len(args), str(args)))
         if A == True or A == False or B == True or B == False:
             return Or(Not(A), B)
+        elif A == B:
+            return S.true
+        elif A.is_Relational and B.is_Relational:
+            if A.canonical == B.canonical:
+                return S.true
+            if (~A).canonical == B.canonical:
+                return B
         else:
             return Basic.__new__(cls, *args)
 
@@ -762,6 +806,7 @@ class Equivalent(BooleanFunction):
     True
     """
     def __new__(cls, *args, **options):
+        from sympy.core.relational import Relational
         args = [_sympify(arg) for arg in args]
 
         argset = set(args)
@@ -769,6 +814,23 @@ class Equivalent(BooleanFunction):
             if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
                 argset.discard(x)
                 argset.add(True if x else False)
+        rel = []
+        for r in argset:
+            if isinstance(r, Relational):
+                rel.append((r, r.canonical, (~r).canonical))
+        remove = []
+        for i, (r, c, nc) in enumerate(rel):
+            for j in range(i + 1, len(rel)):
+                rj, cj = rel[j][:2]
+                if cj == nc:
+                    return false
+                elif cj == c:
+                    remove.append((r, rj))
+                    break
+        for a, b in remove:
+            argset.remove(a)
+            argset.remove(b)
+            argset.add(True)
         if len(argset) <= 1:
             return true
         if True in argset:

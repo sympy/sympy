@@ -594,8 +594,8 @@ def test_messy():
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
-        (Piecewise((0, 1 < 4*abs(pi**2*s**2)),
-                   (2*sqrt(-4*pi**2*s**2 + 1), True)), 0 < s)
+        (Piecewise((0, 4*abs(pi**2*s**2) > 1),
+                   (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
     #                       - folding could be better
 

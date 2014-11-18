@@ -495,7 +495,7 @@ def test_simplify_other():
     assert simplify(gamma(x + 1)/gamma(x)) == x
     assert simplify(sin(x)**2 + cos(x)**2 + factorial(x)/gamma(x)) == 1 + x
     assert simplify(
-        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
+        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(x, 1)
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
     # issue 6123

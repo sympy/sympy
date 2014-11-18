@@ -42,6 +42,11 @@ def test_And():
     assert And(True, False, A) is false
     assert And(2, A) == A
     assert And(2, 3) is true
+    assert And(A < 1, A >= 1) is false
+    e = A > 1
+    assert And(e, e.canonical) == e.canonical
+    g, l, ge, le = A > B, B < A, A >= B, B <= A
+    assert And(g, l, ge, le) == And(l, le)
 
 
 def test_Or():
@@ -59,6 +64,11 @@ def test_Or():
     assert Or(True, False, A) is true
     assert Or(False, False, A) == A
     assert Or(2, A) is true
+    assert Or(A < 1, A >= 1) is true
+    e = A > 1
+    assert Or(e, e.canonical) == e
+    g, l, ge, le = A > B, B < A, A >= B, B <= A
+    assert Or(g, l, ge, le) == Or(g, ge)
 
 
 def test_Xor():
@@ -82,6 +92,9 @@ def test_Xor():
     assert isinstance(Xor(A, B), Xor)
     assert Xor(A, B, Xor(C, D)) == Xor(A, B, C, D)
     assert Xor(A, B, Xor(B, C)) == Xor(A, C)
+    assert Xor(A < 1, A >= 1, B) == Xor(0, 1, B) == Xor(1, 0, B)
+    e = A > 1
+    assert Xor(e, e.canonical) == Xor(0, 0) == Xor(1, 1)
 
 
 def test_Not():
@@ -137,6 +150,9 @@ def test_Implies():
     assert Implies(1, 1) is true
     assert Implies(1, 0) is false
     assert A >> B == B << A
+    assert (A < 1) >> (A >= 1) == (A >= 1)
+    assert (A < 1) >> (S(1) > A) is true
+    assert A >> A is true
 
 
 def test_Equivalent():
@@ -153,14 +169,19 @@ def test_Equivalent():
     assert Equivalent(1, A) == A
     assert Equivalent(0, A) == Not(A)
     assert Equivalent(A, Equivalent(B, C)) != Equivalent(Equivalent(A, B), C)
+    assert Equivalent(A < 1, A >= 1) is false
+    assert Equivalent(A < 1, A >= 1, 0) is false
+    assert Equivalent(A < 1, A >= 1, 1) is false
+    assert Equivalent(A < 1, S(1) > A) == Equivalent(1, 1) == Equivalent(0, 0)
 
 
-def test_equal():
+def test_equals():
     assert Not(Or(A, B)).equals( And(Not(A), Not(B)) ) is True
     assert Equivalent(A, B).equals((A >> B) & (B >> A)) is True
     assert ((A | ~B) & (~A | B)).equals((~A & ~B) | (A & B)) is True
     assert (A >> B).equals(~A >> ~B) is False
     assert (A >> (B >> A)).equals(A >> (C >> A)) is False
+    raises(NotImplementedError, lambda: And(A, A < B).equals(And(A, B > A)))
 
 
 def test_simplification():
@@ -196,8 +217,9 @@ def test_simplification():
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
            == And(Equality(A, 3), Or(B, C))
-    assert simplify_logic(And(A, x**2-x)) == And(A, x*(x-1))
-    assert simplify_logic(And(A, x**2-x), deep=False) == And(A, x**2-x)
+    e = And(A, x**2 - x)
+    assert simplify_logic(e) == And(A, x*(x - 1))
+    assert simplify_logic(e, deep=False) == e
 
     # check input
     ans = SOPform('xy', [[1, 0]])
@@ -214,7 +236,7 @@ def test_simplification():
     assert POSform('x', [[0]], [[1]]) is true
     assert POSform('x', [], []) is false
 
-    #check working of simplify
+    # check working of simplify
     assert simplify('(A & B) | (A & C)') == sympify('And(A, Or(B, C))')
     assert simplify(And(x, Not(x))) == False
     assert simplify(Or(x, Not(x))) == True
@@ -454,6 +476,7 @@ def test_is_literal():
     assert is_literal(Or(A, B)) is False
     assert is_literal(And(Q.zero(A), Q.zero(B))) is False
 
+
 def test_operators():
     # Mostly test __and__, __rand__, and so on
     assert True & A == A & True == A
@@ -471,6 +494,7 @@ def test_operators():
     assert True ^ A == A ^ True == ~A
     assert False ^ A == A ^ False == A
     assert A ^ B == Xor(A, B)
+
 
 def test_true_false():
     x = symbols('x')
@@ -623,3 +647,23 @@ def test_multivariate_bool_as_set():
     assert And(x >= 0, y >= 0).as_set() == Interval(0, oo)*Interval(0, oo)
     assert Or(x >= 0, y >= 0).as_set() == S.Reals*S.Reals - \
         Interval(-oo, 0, True, True)*Interval(-oo, 0, True, True)
+
+
+def test_all_or_nothing():
+    x = symbols('x', real=True)
+    args = x >=- oo, x <= oo
+    v = And(*args)
+    if v.func is And:
+        assert len(v.args) == len(args) - args.count(S.true)
+    else:
+        assert v == True
+    v = Or(*args)
+    if v.func is Or:
+        assert len(v.args) == 2
+    else:
+        assert v == True
+
+
+def test_canonical_atoms():
+    assert true.canonical == true
+    assert false.canonical == false
