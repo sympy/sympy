@@ -645,7 +645,8 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
+        rational = kwargs.pop('rational', True)
         if deps:
             l1 = []
             l2 = []
@@ -656,21 +657,24 @@ class Mul(Expr, AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
-        if args[0].is_Rational:
-            return args[0], args[1:]
-        elif args[0] is S.NegativeInfinity:
-            return S.NegativeOne, (-args[0],) + args[1:]
+        if args[0].is_Number:
+            if (not rational or args[0].is_Rational):
+                return args[0], args[1:]
+            elif args[0].is_negative:
+                return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number and not (rational and not coeff.is_Rational):
+        if coeff.is_Number and (not rational or coeff.is_Rational):
             if len(args) == 1:
                 return coeff, args[0]
             else:
                 return coeff, self._new_rawargs(*args)
+        elif coeff is S.NegativeInfinity:
+            return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         else:
             return S.One, self
 

@@ -415,9 +415,9 @@ class Number(AtomicExpr):
     def is_constant(self, *wrt, **flags):
         return True
 
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
         # a -> c*t
-        if self.is_Rational:
+        if self.is_Rational or not kwargs.pop('rational', True):
             return self, tuple()
         elif self.is_negative:
             return S.NegativeOne, (-self,)
