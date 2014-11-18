@@ -658,7 +658,7 @@ class Mul(Expr, AssocOp):
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
         if args[0].is_Number:
-            if (not rational or args[0].is_Rational):
+            if not rational or args[0].is_Rational:
                 return args[0], args[1:]
             elif args[0].is_negative:
                 return S.NegativeOne, (-args[0],) + args[1:]
@@ -668,15 +668,15 @@ class Mul(Expr, AssocOp):
         """Efficiently extract the coefficient of a product. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number and (not rational or coeff.is_Rational):
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        elif coeff is S.NegativeInfinity:
-            return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
-        else:
-            return S.One, self
+        if coeff.is_Number:
+            if not rational or coeff.is_Rational:
+                if len(args) == 1:
+                    return coeff, args[0]
+                else:
+                    return coeff, self._new_rawargs(*args)
+            elif coeff.is_negative:
+                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
+        return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import expand_mul
