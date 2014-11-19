@@ -5,7 +5,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field)
+    is_log_deriv_k_t_radical_in_field, real_imag)
 
 from sympy.abc import x, t, n
 
@@ -28,6 +28,17 @@ def test_prde_normal_denom():
         Poly(1, t)), (Poly(x*t, t), Poly(1, t)), (Poly(x*t**2, t),
         Poly(1, t))], Poly(t + 1, t))
 
+
+def test_real_imag():
+    assert real_imag(Poly(t**3 + 4*I*t**2 + 3*t, t), Poly(4*I*t + I), t) == (Poly(-2, t), Poly(8, t), Poly(17, t))
+    assert real_imag(Poly(t**3 + 4*I*t**2 + 3*t, t), Poly(4*I*t + I), x) == (Poly(16*t**3 + 4*t**2, x),
+        Poly(-4*t**4 - t**3 - 12*t**2 - 3*t, x), Poly(16*t**2 + 8*t + 1, x))
+    assert real_imag(Poly(I*t**3 + I*t + 4*t, t), Poly(6*I*t + 1), x) == (Poly(6*t**4 + 6*t**2 + 4*t, x),
+        Poly(t**3 - 24*t**2 + t, x), Poly(36*t**2 + 1, x))
+    assert real_imag(Poly(I*t**3 + I*t + 4*t, t), Poly(5*I*t + I + 1), x) == (Poly(5*t**4 + t**3 + 5*t**2 + 5*t, x),
+        Poly(t**3 - 20*t**2 - 3*t, x), Poly(25*t**2 + 10*t + 2, x))
+    assert real_imag(Poly(I*t**3 + 4*t, t), Poly(5*I*t + I + t**3 + 2*t), x) == (Poly(9*t**4 + t**3 + 8*t**2, x),
+        Poly(t**6 + 2*t**4 - 20*t**2 - 4*t, x), Poly(t**6 + 4*t**4 + 29*t**2 + 10*t + 1, x))
 
 def test_prde_special_denom():
     a = Poly(t + 1, t)

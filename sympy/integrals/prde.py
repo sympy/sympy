@@ -72,18 +72,44 @@ def real_imag(ba, bd, gen):
     of the rational function.
     """
     bd = bd.as_poly(gen).as_dict()
-    ba = ba.as_poly(gen).as_dict()
+    # Separates the real and imag
+    # on the basis of the power of the variable
+    # from the denominator
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
     denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
-    bd_real = sum(r for r in denom_real)
-    bd_imag = sum(r for r in denom_imag)
+    bd_real = Poly(sum(r for r in denom_real), gen)
+    bd_imag = Poly(sum(r for r in denom_imag), gen)
+
+    # Checks for the imaginary cofficients in the denominator
+    bd_r, bd_i = bd_real.as_poly(sqrt(-1)).as_dict(), bd_imag.as_poly(sqrt(-1)).as_dict()
+    not_real = [value if key[0] % 2 == 1 else 0 for key, value in bd_r.items()]
+    not_imag = [value if key[0] % 2 == 1 else 0 for key, value in bd_i.items()]
+    imag = Poly(sum(r for r in not_real), gen)
+    real = Poly(sum(r for r in not_imag), gen)
+    bd_r = bd_real - imag*sqrt(-1) - real
+    bd_i = bd_imag - real*sqrt(-1) + imag
+    # Separates the imaginary and real part
+    # and rewrites a new denom which is real
+    bd = (bd_r*bd_r + bd_i*bd_i).as_poly(gen)
+
+    # Separates the real and imag
+    # on the basis of the power of the variable
+    # from the numerator
+    ba = ba.as_poly(gen).as_dict()
     num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
     num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
-    ba_real = sum(r for r in num_real)
-    ba_imag = sum(r for r in num_imag)
-    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
-    return (ba[0], ba[1], bd)
+    ba_real = Poly(sum(r for r in num_real), gen)
+    ba_imag = Poly(sum(r for r in num_imag), gen)
+    ba_r, ba_i = ba_real.as_poly(sqrt(-1)).as_dict(), ba_imag.as_poly(sqrt(-1)).as_dict()
+    not_real = [value if key[0] % 2 == 1 else 0 for key, value in ba_r.items()]
+    not_imag = [value if key[0] % 2 == 1 else 0 for key, value in ba_i.items()]
+    imag = Poly(sum(r for r in not_real), gen)
+    real = Poly(sum(r for r in not_imag), gen)
+    # Separates the imaginary and real part
+    # In the numerator
+    ba_r, ba_i = (ba_real - imag*sqrt(-1) - Poly(real, gen), ba_imag - Poly(real*sqrt(-1), gen) + Poly(imag, gen))
+    ba_real, ba_imag = (ba_r*bd_r + ba_i*bd_i, ba_i*bd_r - ba_r*bd_i)
+    return (ba_real, ba_imag, bd)
 
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
@@ -314,7 +340,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
         dc = -1
         M = zeros(0, 2)
     else:
-        dc = max([qi.degree(t) for qi in Q])
+        dc = max([qi.degree(DE.t) for qi in Q])
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
     A, u = constant_system(M, zeros(dc + 1, 1), DE)
     c = eye(m)
@@ -534,7 +560,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     l = fd.monic().lcm(wd.monic())*Poly(c, DE.t)
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
-
     if not z.has(DE.t):
         raise NotImplementedError("parametric_log_deriv_heu() "
             "heuristic failed: z in k.")
@@ -568,14 +593,16 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     # TODO: Write the full algorithm using the structure theorems.
-#    try:
-    A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
-#    except NotImplementedError:
-        # Heuristic failed, we have to use the full method.
+    try:
+        return parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+    except NotImplementedError:
+        A = is_log_deriv_k_t_radical(fa, fd, DE, Df=True)
+        if A:
+            (ans, u, n, const) = A
+            return (n, 0, Poly(u + const, DE.t))
         # TODO: This could be implemented more efficiently.
         # It isn't too worrisome, because the heuristic handles most difficult
         # cases.
-    return A
 
 
 def is_deriv_k(fa, fd, DE):
@@ -633,7 +660,6 @@ def is_deriv_k(fa, fd, DE):
     # Compute Df/f
     dfa, dfd = fd*(fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd**2*fa
     dfa, dfd = dfa.cancel(dfd, include=True)
-
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
@@ -737,7 +763,6 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             include=True)
     else:
         dfa, dfd = fa, fd
-
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \

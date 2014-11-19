@@ -113,7 +113,8 @@ def test_bound_degree():
 
 def test_spde():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
-    raises(NonElementaryIntegralException, lambda: spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), 0, DE))
+    raises(NonElementaryIntegralException, lambda: spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), t),
+        Poly(1, t), 0, DE))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert spde(Poly(t**2 + x*t*2 + x**2, t), Poly(t**2/x**2 + (2/x - 1)*t, t),
     Poly(t**2/x**2 + (2/x - 1)*t, t), 0, DE) == \
@@ -130,8 +131,8 @@ def test_spde():
     assert spde(Poly(x**2 + x + 1, x), Poly(-2*x - 1, x), Poly(x**5/2 +
     3*x**4/4 + x**3 - x**2 + 1, x), n, DE) == \
         (Poly(0, x), Poly(x/2 - S(1)/4, x), -2 + n, Poly(x**2 + x + 1, x), Poly(5*x/4, x))
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    raises(NonElementaryIntegralException, lambda: spde(Poly((t - 1)*(t**2 + 1)**2, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), 0, DE))
+    raises(NonElementaryIntegralException, lambda: spde(Poly((x - 1)*(x**2 + 1)**2, x),
+        Poly((x - 1)*(x**2 + 1), x), Poly(1, x), 0, DE))
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large

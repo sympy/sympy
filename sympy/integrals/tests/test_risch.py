@@ -5,13 +5,17 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential_polynomial,
-    integrate_hyperexponential, integrate_hypertangent_polynomial,
-    integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
-    risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series)
+    integrate_hyperexponential, integrate_hypertangent,
+    integrate_hypertangent_polynomial, integrate_hypertangent_reduced,
+    integrate_nonlinear_no_specials, integer_powers,
+    DifferentialExtension, risch_integrate, DecrementLevel,
+    NonElementaryIntegral, is_deriv, laurent_series, recognize_derivative,
+    recognize_log_derivative)
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
+
+from sympy.utilities.pytest import raises, XFAIL
 t0, t1, t2 = symbols('t:3')
 i = Symbol('i')
 
@@ -156,20 +160,20 @@ def test_polynomial_reduce():
 
 
 def test_laurent_series():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    a = Poly(36, t)
-    d = Poly((t - 2)*(t**2 - 1)**2, t)
-    F = Poly(t**2 - 1, t)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    a = Poly(36, x)
+    d = Poly((x - 2)*(x**2 - 1)**2, x)
+    F = Poly(x**2 - 1, x)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
-        [Poly(-3*t**3 - 6*t**2, t), Poly(2*t**6 + 6*t**5 - 8*t**3, t)])
+        (Poly(-3*x**3 + 3*x**2 - 6*x - 8, x), Poly(x**5 + x**4 - 2*x**3 - 2*x**2 + x + 1, x),
+        [Poly(-3*x**3 - 6*x**2, x), Poly(2*x**6 + 6*x**5 - 8*x**3, x)])
 
 
 def test_recognize_derivative():
-    DE = DifferentialExtension(extension={'D': [Poly(1, t)]})
-    a = Poly(36, t)
-    d = Poly((t - 2)*(t**2 - 1)**2, t)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    a = Poly(36, x)
+    d = Poly((x - 2)*(x**2 - 1)**2, x)
     assert recognize_derivative(a, d, DE) == False
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     a = Poly(2, t)
@@ -378,6 +382,7 @@ def test_integrate_primitive():
     4*x**2*t0 + x**2, t0), DE) == \
         (-1/(log(x) + 1), NonElementaryIntegral(1/(log(x) + 1), x), False)
 
+
 def test_integrate_hypertangent_polynomial():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert integrate_hypertangent_polynomial(Poly(t**2 + x*t + 1, t), DE) == \
@@ -399,6 +404,85 @@ def test_integrate_nonlinear_no_specials():
         (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), DE) == \
         (0, False)
+
+
+def test_integrate_hypertangent_reduced():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)],
+        'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [], 'E_args' : [],
+        'T_args': [x] , 'Tfuncs': [tan], 'Tfuncs': [Lambda(x, tan(x/2))]})
+    # test from Manuel Bronstien Page 170
+    raises(NotImplementedError, lambda: (integrate_hypertangent_reduced(Poly(2*t, t),
+        Poly((t**2*x + x), t), DE)))
+    assert integrate_hypertangent_reduced(Poly(t**4 + 2*t**2 + 1), Poly(1, t), DE) == \
+        (Poly(0, t, domain='ZZ'), Poly(1, t, domain='ZZ'), True)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
+        'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [], 'E_args' : [],
+        'T_args': [x] , 'Tfuncs': [tan], 'Tfuncs': [Lambda(x, tan(x))]})
+    raises(NotImplementedError, lambda: (integrate_hypertangent_reduced(Poly(t**5 + t**3 + x**2*t + 1, t),
+        Poly((t**2 + 1)**3, t), DE)))
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t1), Poly((t2**2 + 1)/x, t2)],
+        'Tfuncs':[log, Lambda(x, tan(log(x)))], 'L_K':[1], 'L_args':[x], 'E_K':[],
+        'E_args':[], 'T_K':[2], 'T_args':[t1]})
+    assert integrate_hypertangent(Poly(0, t2), Poly(x**3*t2**2, t2), DE) == (0, True)
+
+def test_integrate_hypertangent():
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly((t**2 + 1)*2*x, t)],
+        'Tfuncs':[tan], 'L_K':[], 'E_K':[], 'T_K' : [1], 'AT_K':[], 'L_args':[],
+        'E_args':[], 'T_args':[x**2], 'AT_args':[]})
+    assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == (log(tan(x)**2 + 1)/4, True)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
+        'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [],
+        'E_args' : [], 'T_args': [x] , 'Tfuncs': [tan]})
+    assert integrate_hypertangent(Poly(t**2 + 1, t), Poly(1, t), DE) == (tan(x), True)
+    assert integrate_hypertangent(Poly(t, t), Poly(1, t), DE) == (log(tan(x)**2 + 1)/2 , True)
+    assert integrate_hypertangent(Poly(x*t**2 + x*t + t**2 + 1, t), Poly(t + 1, t), DE) == \
+        (log(tan(x) + 1), False)
+    assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == (0, False)
+    raises(NotImplementedError, lambda: (integrate_hypertangent(Poly(t**2 - 1, t), Poly(t**2 + 1, t), DE)))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)],
+        'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [], 'E_args' : [],
+        'T_args': [x/2], 'Tfuncs': [Lambda(x, tan(x/2))]})
+    assert integrate_hypertangent(Poly(t, t), Poly(t**2*x - x, t), DE) == (0, False)
+    assert integrate_hypertangent(Poly(x*t**2 - 1, t), Poly(t, t), DE, z) == \
+        (-2*log(tan(x/2)), False)
+    # cos(x)/(1-cos(4*x))
+    assert (integrate_hypertangent(Poly(-t**6 - 3*t**4 - 3*t**2 - 1, t),
+        Poly(32*t**4 - 32*t**2, t), DE) ==
+        # 1/8*(-csc(x) - log(cos(x/2) - sin(x/2)) + log(cos(x/2) + sin(x/2)))
+        (-log(tan(x/2) - 1)/8 + log(tan(x/2) + 1)/8 - tan(x/2)/16 -
+            1/(16*tan(x/2)), True))
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t1), Poly((t2**2 + 1)/x, t2)],
+        'Tfuncs':[log, Lambda(x, tan(log(x)))], 'L_K':[1], 'L_args':[x], 'E_K':[],
+        'E_args':[], 'T_K':[2], 'T_args':[t1]})
+    assert integrate_hypertangent(Poly(t2**2 + 1, t2), Poly(t2*x, t2), DE) == (log(tan(log(x))), True)
+    assert integrate_hypertangent(Poly(0, t2), Poly(x**3*t2**2, t2), DE) == (0, True)
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly((t1**2 + 1)/2, t1)],
+        'Tfuncs':[Lambda(x, tan(x/2))], 'L_K':[], 'E_K':[], 'T_K':[1], 'L_args':[],
+         'E_args':[], 'T_args':[x/2]})
+    expr = (cos(x)/(1-cos(4*x)))
+    pa, pd = map(lambda i: Poly(i, t1), expr.rewrite(tan).subs(tan(2*x),
+        2*tan(x)/(1 - tan(x)**2)).subs(tan(x), 2*tan(x/2)/(1 - tan(x/2)**2)).cancel().subs(tan(x/2), t1).as_numer_denom())
+    assert integrate_hypertangent(pa, pd, DE) == (-log(tan(x/2) - 1)/8 + log(tan(x/2) + 1)/8 - tan(x/2)/16 - 1/(16*tan(x/2)), True)
+
+
+def test_is_deriv():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'Tfuncs': [log]})
+    assert is_deriv(Poly(t**2, t), Poly(1, t), DE) == (x*t**2 - 2*x*t, 2)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2*(t**2 + 1)*x, t)],
+        'Tfuncs': [tan]})
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z) == (log(t**2 + 1)/4, 0)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [tan]})
+    assert is_deriv(Poly(x*t**2 - t**3 + x, t), Poly(1, t), DE, z) == (-t**2/2 + t*x, x)
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z) == (0, 0)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)], 'Tfuncs': [exp]})
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z)  == ((x - 1)*t, 0)
+    assert is_deriv(Poly(x*t**3 + 1, t), Poly(1, t), DE, z) == ((3*x - 1)*t**3/9, 1)
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t1), Poly((t2**2 + 1)/x, t2)],
+        'Tfuncs':[log, Lambda(x, tan(log(x)))], 'L_K':[1], 'L_args':[x], 'E_K':[],
+        'E_args':[], 'T_K':[2], 'T_args':[t1]})
+    assert is_deriv(Poly(t2**2 + 1, t2), Poly(t2*x, t2), DE) == (log(t2), 0)
+    assert is_deriv(Poly(0, t2), Poly(x**3*t2**2, t2), DE) == (0, 0)
 
 
 def test_integer_powers():
