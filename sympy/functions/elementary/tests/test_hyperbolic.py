@@ -478,9 +478,11 @@ def test_inverses():
 
 def test_leading_term():
     x = Symbol('x')
-    for func in [sinh, cosh, tanh, coth]:
-        assert func(x).as_leading_term(x) == 1
-    for func in [asinh, acosh, atanh, acoth]:
+    assert cosh(x).as_leading_term(x) == 1
+    assert coth(x).as_leading_term(x) == 1/x
+    assert acosh(x).as_leading_term(x) == I*pi/2
+    assert acoth(x).as_leading_term(x) == I*pi/2
+    for func in [sinh, tanh, asinh, atanh]:
         assert func(x).as_leading_term(x) == x
     for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:
         for arg in (1/x, S.Half):
