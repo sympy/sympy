@@ -179,18 +179,18 @@ class Logic(object):
         else:
             return a.args != b.args
 
-    def __lt__(cls, other):
-        if cls.__cmp__(other) == -1:
+    def __lt__(self, other):
+        if self.__cmp__(other) == -1:
             return True
         return False
 
-    def __cmp__(a, b):
-        if type(a) is not type(b):
-            a = str(type(a))
-            b = str(type(b))
+    def __cmp__(self, other):
+        if type(self) is not type(other):
+            a = str(type(self))
+            b = str(type(other))
         else:
-            a = a.args
-            b = b.args
+            a = self.args
+            b = other.args
         return (a > b) - (a < b)
 
     def __str__(self):

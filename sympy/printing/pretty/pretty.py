@@ -764,15 +764,14 @@ class PrettyPrinter(Printer):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                self = e
-                if self == e.zero:
+                if e == e.zero:
                     return e.zero._pretty_form
                 o1 = []
                 vectstrs = []
-                if isinstance(self, Vector):
-                    items = self.separate().items()
+                if isinstance(e, Vector):
+                    items = e.separate().items()
                 else:
-                    items = [(0, self)]
+                    items = [(0, e)]
                 for system, vect in items:
                     inneritems = list(vect.components.items())
                     inneritems.sort(key = lambda x: x[0].__str__())
