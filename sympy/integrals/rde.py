@@ -384,12 +384,11 @@ def spde(a, b, c, n, DE):
 
     alpha = Poly(1, DE.t)
     beta = Poly(0, DE.t)
-    pow_a = 0
 
     while True:
+        if c.is_zero:
+            return (zero, zero, 0, zero, beta)  # -1 is more to the point
         if (n < 0) is True:
-            if c.is_zero:
-                return (zero, zero, 0, zero, beta)
             raise NonElementaryIntegralException
 
         g = a.gcd(b)
@@ -407,9 +406,9 @@ def spde(a, b, c, n, DE):
         b += derivation(a, DE)
         c = z - derivation(r, DE)
         n -= a.degree(DE.t)
+
+        beta += alpha * r
         alpha *= a
-        beta += (a**pow_a)*r
-        pow_a += 1
 
 def no_cancel_b_large(b, c, n, DE):
     """
@@ -755,6 +754,9 @@ def rischDE(fa, fd, ga, gd, DE):
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, DE)
-    y = solve_poly_rde(B, C, m, DE)
+    if C.is_zero:
+        y = C
+    else:
+        y = solve_poly_rde(B, C, m, DE)
 
     return (alpha*y + beta, hn*hs)
