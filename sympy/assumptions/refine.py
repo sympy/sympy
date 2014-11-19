@@ -192,6 +192,7 @@ def refine_exp(expr, assumptions):
                 elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
 
+
 def refine_atan2(expr, assumptions):
     """
     Handler for the atan2 function
@@ -240,10 +241,10 @@ handlers_dict = {
     'Pow': refine_Pow,
     'exp': refine_exp,
     'atan2': refine_atan2,
-    'Equality' : refine_Relational,
-    'Unequality' : refine_Relational,
-    'GreaterThan' : refine_Relational,
-    'LessThan' : refine_Relational,
-    'StrictGreaterThan' : refine_Relational,
-    'StrictLessThan' : refine_Relational
+    'Equality': refine_Relational,
+    'Unequality': refine_Relational,
+    'GreaterThan': refine_Relational,
+    'LessThan': refine_Relational,
+    'StrictGreaterThan': refine_Relational,
+    'StrictLessThan': refine_Relational
 }
