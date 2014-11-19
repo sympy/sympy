@@ -723,6 +723,14 @@ def test_atan2():
     reps = ((r, 2), (i, I))
     assert eq.subs(reps) == ans.subs(reps)
 
+    x = Symbol('x', negative=True)
+    y = Symbol('y', negative=True)
+    assert atan2(y, x) == atan(y/x) - pi
+    y = Symbol('y', nonnegative=True)
+    assert atan2(y, x) == atan(y/x) + pi
+    y = Symbol('y')
+    assert atan2(y, x) == atan2(y, x, evaluate=False)
+
     u = Symbol("u", positive=True)
     assert atan2(0, u) == 0
     u = Symbol("u", negative=True)

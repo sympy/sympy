@@ -2382,7 +2382,7 @@ class atan2(InverseTrigonometricFunction):
             elif x.is_negative:
                 if y.is_negative:
                     return atan(y / x) - S.Pi
-                else:
+                elif y.is_nonnegative:
                     return atan(y / x) + S.Pi
             elif x.is_zero:
                 if y.is_positive:
