@@ -267,6 +267,9 @@ def test_evalf_sum():
     assert Sum(E/factorial(n), (n, 0, oo)).evalf() == (E*E).evalf()
     # issue 8254
     assert Sum(2**n*n/factorial(n), (n, 0, oo)).evalf() == (2*E*E).evalf()
+    # issue 8411
+    s = Sum(1/x**2, (x, 100, oo))
+    assert s.n() == s.doit().n()
 
 
 def test_evalf_divergent_series():
