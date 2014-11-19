@@ -203,25 +203,22 @@ def refine_atan2(expr, assumptions):
     >>> from sympy import Symbol, Q, refine, atan2
     >>> from sympy.assumptions.refine import refine_atan2
     >>> from sympy.abc import x, y
-    >>> refine_atan2(atan2(x,y), Q.real(x) & Q.positive(y))
+    >>> refine_atan2(atan2(y, x), Q.real(x) & Q.positive(y))
     atan(x/y)
-    >>> refine_atan2(atan2(x,y), Q.negative(x) & Q.negative(y))
+    >>> refine_atan2(atan2(y, x), Q.negative(x) & Q.negative(y))
     atan(x/y) - pi
-    >>> refine_atan2(atan2(x,y), Q.positive(x) & Q.negative(y))
+    >>> refine_atan2(atan2(y, x), Q.positive(x) & Q.negative(y))
     atan(x/y) + pi
     """
     from sympy.functions.elementary.complexes import atan
-    from sympy import pi
-    arg0 = expr.args[0]
-    arg1 = expr.args[1]
-    if ask(Q.real(arg0), assumptions) and ask(Q.positive(arg1), assumptions):
-        return atan(arg0 / arg1)
-    elif ask(Q.negative(arg0), assumptions) and \
-            ask(Q.negative(arg1), assumptions):
-        return atan(arg0 / arg1) - pi
-    elif ask(Q.positive(arg0), assumptions) and \
-            ask(Q.negative(arg1), assumptions):
-        return atan(arg0 / arg1) + pi
+    from sympy.core import S
+    args = expr.args
+    if ask(Q.real(args[0]) & Q.positive(args[1]), assumptions):
+        return atan(args[0] / args[1])
+    elif ask(Q.negative(args[0]) & Q.negative(args[1]), assumptions):
+        return atan(args[0] / args[1]) - S.Pi
+    elif ask(Q.positive(args[0]) & Q.negative(args[1]), assumptions):
+        return atan(args[0] / args[1]) + S.Pi
     else:
         return expr
 
