@@ -192,6 +192,37 @@ def refine_exp(expr, assumptions):
                 elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
 
+
+def refine_atan2(expr, assumptions):
+    """
+    Handler for the atan2 function
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy.assumptions.refine import refine_atan2
+    >>> from sympy.abc import x, y
+    >>> refine_atan2(atan2(y, x), Q.real(x) & Q.positive(y))
+    atan(x/y)
+    >>> refine_atan2(atan2(y, x), Q.negative(x) & Q.negative(y))
+    atan(x/y) - pi
+    >>> refine_atan2(atan2(y, x), Q.positive(x) & Q.negative(y))
+    atan(x/y) + pi
+    """
+    from sympy.functions.elementary.complexes import atan
+    from sympy.core import S
+    args = expr.args
+    if ask(Q.real(args[0]) & Q.positive(args[1]), assumptions):
+        return atan(args[0] / args[1])
+    elif ask(Q.negative(args[0]) & Q.negative(args[1]), assumptions):
+        return atan(args[0] / args[1]) - S.Pi
+    elif ask(Q.positive(args[0]) & Q.negative(args[1]), assumptions):
+        return atan(args[0] / args[1]) + S.Pi
+    else:
+        return expr
+
+
 def refine_Relational(expr, assumptions):
     """
     Handler for Relational
@@ -209,10 +240,11 @@ handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'exp': refine_exp,
-    'Equality' : refine_Relational,
-    'Unequality' : refine_Relational,
-    'GreaterThan' : refine_Relational,
-    'LessThan' : refine_Relational,
-    'StrictGreaterThan' : refine_Relational,
-    'StrictLessThan' : refine_Relational
+    'atan2': refine_atan2,
+    'Equality': refine_Relational,
+    'Unequality': refine_Relational,
+    'GreaterThan': refine_Relational,
+    'LessThan': refine_Relational,
+    'StrictGreaterThan': refine_Relational,
+    'StrictLessThan': refine_Relational
 }
