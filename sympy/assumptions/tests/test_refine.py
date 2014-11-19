@@ -116,12 +116,6 @@ def test_atan2():
     assert refine(atan2(x, y), Q.negative(x) & Q.positive(y)) == atan(x/y)
     assert refine(atan2(x, y), Q.negative(x) & Q.negative(y)) == atan(x/y) - pi
     assert refine(atan2(x, y), Q.positive(x) & Q.negative(y)) == atan(x/y) + pi
-    assert refine(0, Q.positive(x) & Q.negative(y)) == 0
-    assert refine(0, Q.positive(x) & Q.positive(y)) == 0
-    assert refine(atan2(x, x + y), Q.real(x) & Q.positive(x + y)) ==\
-        atan(x / (x + y))
-    assert refine(1 + atan2(x, x + y), Q.real(x) & Q.positive(x + y)) ==\
-        1 + atan(x / (x + y))
 
 
 def test_func_args():
