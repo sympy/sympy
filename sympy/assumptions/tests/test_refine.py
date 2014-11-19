@@ -83,32 +83,32 @@ def test_Relational():
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(x < 0)) == 1
     assert refine(Piecewise((1, x < 0), (3, True)), ~Q.is_true(x < 0)) == 3
-    assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(y < 0)) ==\
+    assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(y < 0)) == \
         Piecewise((1, x < 0), (3, True))
     assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(x > 0)) == 1
     assert refine(Piecewise((1, x > 0), (3, True)), ~Q.is_true(x > 0)) == 3
-    assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(y > 0)) ==\
+    assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(y > 0)) == \
         Piecewise((1, x > 0), (3, True))
     assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(x <= 0)) == 1
     assert refine(Piecewise((1, x <= 0), (3, True)), ~Q.is_true(x <= 0)) == 3
-    assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(y <= 0)) ==\
+    assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(y <= 0)) == \
         Piecewise((1, x <= 0), (3, True))
     assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(x >= 0)) == 1
     assert refine(Piecewise((1, x >= 0), (3, True)), ~Q.is_true(x >= 0)) == 3
-    assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(y >= 0)) ==\
+    assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(y >= 0)) == \
         Piecewise((1, x >= 0), (3, True))
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(x, 0)))\
         == 1
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(x, 0)))\
         == 3
-    assert refine(Piecewise((1, Eq(x, 0)), (3, True)),  Q.is_true(Eq(y, 0))) ==\
-        Piecewise((1, Eq(x, 0)), (3, True))
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)),  Q.is_true(Eq(y, 0)))\
+        == Piecewise((1, Eq(x, 0)), (3, True))
     assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(x, 0)))\
         == 1
     assert refine(Piecewise((1, Ne(x, 0)), (3, True)), ~Q.is_true(Ne(x, 0)))\
         == 3
-    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(y, 0))) ==\
-        Piecewise((1, Ne(x, 0)), (3, True))
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(y, 0)))\
+        == Piecewise((1, Ne(x, 0)), (3, True))
 
 
 def test_atan2():
