@@ -49,8 +49,7 @@ def bench_R5():
             L.append( (L[i] + L[i + 1]) * L[i + 2] )
 
     def uniq(x):
-        v = list(set(x))
-        v.sort()
+        v = set(x)
         return v
     L = [x, y, z]
     blowup(L, 8)
@@ -104,7 +103,6 @@ def bench_R10():
 def bench_R11():
     "a = [random() + random()*I for w in [0..1000]]"
     a = [random() + random()*I for w in range(1000)]
-    a.sort()
 
 
 def bench_S1():
