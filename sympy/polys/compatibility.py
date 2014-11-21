@@ -574,11 +574,11 @@ class IPolys(object):
         return list(map(self.from_dense, prs))
 
     def dup_inner_subresultants(self, f, g):
-        prs, beta, delta = dup_inner_subresultants(self.to_dense(f), self.to_dense(g), self.domain)
-        return (list(map(self.from_dense, prs)), beta, delta)
+        prs, sres = dup_inner_subresultants(self.to_dense(f), self.to_dense(g), self.domain)
+        return (list(map(self.from_dense, prs)), sres)
     def dmp_inner_subresultants(self, f, g):
-        prs, beta, delta = dmp_inner_subresultants(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
-        return (list(map(self.from_dense, prs)), beta, delta)
+        prs, sres  = dmp_inner_subresultants(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
+        return (list(map(self.from_dense, prs)), sres)
 
     def dup_subresultants(self, f, g):
         prs = dup_subresultants(self.to_dense(f), self.to_dense(g), self.domain)
