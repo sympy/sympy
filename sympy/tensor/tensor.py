@@ -2256,16 +2256,22 @@ class TensExpr(Basic):
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> A = S2('A')
 
+        The tensor ``A`` is symmetric in its indices, as can be deduced by the
+        ``[1, 1]`` Young tableau when constructing `sym2`. One has to be
+        careful to assign symmetric component data to ``A``, as the symmetry
+        properties of data are currently not checked to be compatible with the
+        defined tensor symmetry.
+
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
         >>> Lorentz.data = [1, -1, -1, -1]
         >>> i0, i1 = tensor_indices('i0:2', Lorentz)
-        >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
+        >>> A.data = [[j+i for j in range(4)] for i in range(4)]
         >>> A(i0, i1).get_matrix()
-         Matrix([
+        Matrix([
         [0, 1, 2, 3],
+        [1, 2, 3, 4],
         [2, 3, 4, 5],
-        [4, 5, 6, 7],
-        [6, 7, 8, 9]])
+        [3, 4, 5, 6]])
 
         It is possible to perform usual operation on matrices, such as the
         matrix multiplication:
@@ -2273,9 +2279,9 @@ class TensExpr(Basic):
         >>> A(i0, i1).get_matrix()*ones(4, 1)
         Matrix([
         [ 6],
+        [10],
         [14],
-        [22],
-        [30]])
+        [18]])
         """
         if 0 < self.rank <= 2:
             rows = self.data.shape[0]
@@ -3023,6 +3029,7 @@ class TensMul(TensExpr):
 
         self_matrix_behavior_kinds = self._matrix_behavior_kinds
         other_matrix_behavior_kinds = other._matrix_behavior_kinds
+        self2 = self
 
         for key, v1 in self_matrix_behavior_kinds.items():
             if key in other_matrix_behavior_kinds:
@@ -3033,7 +3040,7 @@ class TensMul(TensExpr):
                         matrix_behavior_kinds[key] = (v2[1],)
                 elif len(v1) == 2:
                     auto_index = v1[1]._tensortype.auto_index
-                    self = self.substitute_indices((v1[1], -auto_index))
+                    self2 = self2.substitute_indices((v1[1], -auto_index))
                     other = other.substitute_indices((v2[0], auto_index))
                     if len(v2) == 1:
                         matrix_behavior_kinds[key] = (v1[0],)
@@ -3047,8 +3054,8 @@ class TensMul(TensExpr):
                 continue
             matrix_behavior_kinds[key] = v2
 
-        new_tids = self._tids*other._tids
-        coeff = self._coeff*other._coeff
+        new_tids = self2._tids*other._tids
+        coeff = self2._coeff*other._coeff
         tmul = TensMul.from_TIDS(coeff, new_tids)
         if isinstance(tmul, TensExpr):
             tmul._matrix_behavior_kinds = matrix_behavior_kinds

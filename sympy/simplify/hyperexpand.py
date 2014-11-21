@@ -404,7 +404,7 @@ def add_meijerg_formulae(formulae):
         if not _mod1((x - y).simplify()):
             swapped = True
             (y, z) = (z, y)
-        if _mod1((x - z).simplify()) or x > z:
+        if _mod1((x - z).simplify()) or x - z > 0:
             return None
         l = [y, x]
         if swapped:
@@ -438,7 +438,7 @@ def add_meijerg_formulae(formulae):
         if (_mod1((x - x1).simplify()) != 0 or
             _mod1((x - x2).simplify()) != 0 or
             _mod1((x - y).simplify()) != S(1)/2 or
-                x > x1 or x > x2):
+                x - x1 > 0 or x - x2 > 0):
             return
 
         return {a: x}, G_Function([x], [], [x - S(1)/2 + t for t in sig], [])
@@ -1369,17 +1369,17 @@ class ReduceOrder(Operator):
         if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
             return None
 
-        self = Operator.__new__(cls)
+        expr = Operator.__new__(cls)
 
         p = S(1)
         for k in xrange(n):
             p *= (_x + bj + k)/(bj + k)
 
-        self._poly = Poly(p, _x)
-        self._a = ai
-        self._b = bj
+        expr._poly = Poly(p, _x)
+        expr._a = ai
+        expr._b = bj
 
-        return self
+        return expr
 
     @classmethod
     def _meijer(cls, b, a, sign):
@@ -1391,21 +1391,21 @@ class ReduceOrder(Operator):
         if n.is_negative or not n.is_Integer:
             return None
 
-        self = Operator.__new__(cls)
+        expr = Operator.__new__(cls)
 
         p = S(1)
         for k in xrange(n):
             p *= (sign*_x + a + k)
 
-        self._poly = Poly(p, _x)
+        expr._poly = Poly(p, _x)
         if sign == -1:
-            self._a = b
-            self._b = a
+            expr._a = b
+            expr._b = a
         else:
-            self._b = Add(1, a - 1, evaluate=False)
-            self._a = Add(1, b - 1, evaluate=False)
+            expr._b = Add(1, a - 1, evaluate=False)
+            expr._a = Add(1, b - 1, evaluate=False)
 
-        return self
+        return expr
 
     @classmethod
     def meijer_minus(cls, b, a):
@@ -1636,10 +1636,10 @@ def devise_plan(target, origin, z):
             namax = nal[-1]
             amax = al[-1]
 
-            if nbk[0] <= namax or bk[0] <= amax:
+            if nbk[0] - namax <= 0 or bk[0] - amax <= 0:
                 raise ValueError('Non-suitable parameters.')
 
-            if namax > amax:
+            if namax - amax > 0:
                 # we are going to shift down - first do the as, then the bs
                 ops += do_shifts_a(nal, nbk, al, aother, bother)
                 ops += do_shifts_b(al, nbk, bk, aother, bother)

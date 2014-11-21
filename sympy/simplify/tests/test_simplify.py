@@ -9,7 +9,7 @@ from sympy import (
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
-    sympify, tan, tanh, trigsimp, Wild, zoo, Sum)
+    sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
@@ -495,7 +495,7 @@ def test_simplify_other():
     assert simplify(gamma(x + 1)/gamma(x)) == x
     assert simplify(sin(x)**2 + cos(x)**2 + factorial(x)/gamma(x)) == 1 + x
     assert simplify(
-        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
+        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(x, 1)
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
     # issue 6123
@@ -1898,3 +1898,12 @@ def test_issue_2827_trigsimp_methods():
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+
+
+def test_inequality_no_auto_simplify():
+    # no simplify on creation but can be simplified
+    lhs = cos(x)**2 + sin(x)**2
+    rhs = 2;
+    e = Lt(lhs, rhs)
+    assert e == Lt(lhs, rhs, evaluate=False)
+    assert simplify(e)

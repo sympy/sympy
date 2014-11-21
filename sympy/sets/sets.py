@@ -11,6 +11,7 @@ from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
+from sympy.core.relational import Eq
 from sympy.sets.contains import Contains
 
 from sympy.mpmath import mpi, mpf
@@ -202,9 +203,7 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if el not in self])
-
-        return None
+            return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     @property
     def inf(self):
@@ -563,6 +562,15 @@ class ProductSet(Set):
             return sets[0]
 
         return Basic.__new__(cls, *sets, **assumptions)
+
+    def _eval_Eq(self, other):
+        if not other.is_ProductSet:
+            return
+
+        if len(self.args) != len(other.args):
+            return false
+
+        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
 
     def _contains(self, element):
         """
@@ -1023,6 +1031,19 @@ class Interval(Set, EvalfMixin):
             left = self.start <= other
         return And(left, right)
 
+    def _eval_Eq(self, other):
+        if not other.is_Interval:
+            if (other.is_Union or other.is_Complement or
+                other.is_Intersection or other.is_ProductSet):
+                return
+
+            return false
+
+        return And(Eq(self.left, other.left),
+                   Eq(self.right, other.right),
+                   self.left_open == other.left_open,
+                   self.right_open == other.right_open)
+
 
 class Union(Set, EvalfMixin):
     """
@@ -1223,8 +1244,24 @@ class Union(Set, EvalfMixin):
 
     def __iter__(self):
         import itertools
+
+        # roundrobin recipe taken from itertools documentation:
+        # https://docs.python.org/2/library/itertools.html#recipes
+        def roundrobin(*iterables):
+            "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
+            # Recipe credited to George Sakkis
+            pending = len(iterables)
+            nexts = itertools.cycle(iter(it).next for it in iterables)
+            while pending:
+                try:
+                    for next in nexts:
+                        yield next()
+                except StopIteration:
+                    pending -= 1
+                    nexts = itertools.cycle(itertools.islice(nexts, pending))
+
         if all(set.is_iterable for set in self.args):
-            return itertools.chain(*(iter(arg) for arg in self.args))
+            return roundrobin(*(iter(arg) for arg in self.args))
         else:
             raise TypeError("Not all constituent sets are iterable")
 
@@ -1593,6 +1630,19 @@ class FiniteSet(Set, EvalfMixin):
         obj._elements = frozenset(args)
         return obj
 
+    def _eval_Eq(self, other):
+        if not other.is_FiniteSet:
+            if (other.is_Union or other.is_Complement or
+                other.is_Intersection or other.is_ProductSet):
+                return
+
+            return false
+
+        if len(self) != len(other):
+            return false
+
+        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+
     def __iter__(self):
         return iter(self.args)
 
@@ -1661,13 +1711,16 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        if other in self._elements:
-            return true
-        else:
-            if not other.free_symbols:
-                return false
-            elif all(e.is_Symbol for e in self._elements):
-                return false
+        r = false
+        for e in self._elements:
+            t = Eq(e, other, evaluate=True)
+            if isinstance(t, Eq):
+                t = t.simplify()
+            if t == true:
+                return t
+            elif t != false:
+                r = None
+        return r
 
     def _eval_imageset(self, f):
         return FiniteSet(*map(f, self))

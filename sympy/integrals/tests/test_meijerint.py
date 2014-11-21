@@ -73,6 +73,13 @@ def test_meijerint_indefinite_numerically():
     t(3*x**S('3/2'), 4*x**S('7/3'))
 
 
+def test_meijerint_definite():
+    v, b = meijerint_definite(x, x, 0, 0)
+    assert v.is_zero and b is True
+    v, b = meijerint_definite(x, x, oo, oo)
+    assert v.is_zero and b is True
+
+
 def test_inflate():
     subs = {a: randcplx()/10, b: randcplx()/10 + I, c: randcplx(),
             d: randcplx(), y: randcplx()/10}
@@ -587,8 +594,8 @@ def test_messy():
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
-        (Piecewise((0, 1 < 4*abs(pi**2*s**2)),
-                   (2*sqrt(-4*pi**2*s**2 + 1), True)), 0 < s)
+        (Piecewise((0, 4*abs(pi**2*s**2) > 1),
+                   (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
     #                       - folding could be better
 

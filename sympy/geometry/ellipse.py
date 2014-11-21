@@ -256,10 +256,16 @@ class Ellipse(GeometryEntity):
         m
 
         """
-        rv = Min(*self.args[1:3])
-        if rv.func is Min:
-            return self.vradius
-        return rv
+        ab = self.args[1:3]
+        if len(ab) == 1:
+            return ab[0]
+        a, b = ab
+        o = a - b < 0
+        if o == True:
+            return a
+        elif o == False:
+            return b
+        return self.vradius
 
     @property
     def major(self):
@@ -297,10 +303,16 @@ class Ellipse(GeometryEntity):
         m + 1
 
         """
-        rv = Max(*self.args[1:3])
-        if rv.func is Max:
-            return self.hradius
-        return rv
+        ab = self.args[1:3]
+        if len(ab) == 1:
+            return ab[0]
+        a, b = ab
+        o = b - a < 0
+        if o == True:
+            return a
+        elif o == False:
+            return b
+        return self.hradius
 
     @property
     def area(self):

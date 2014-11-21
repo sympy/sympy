@@ -8,7 +8,6 @@ set -x
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     cd doc
     make html-errors
-    make clean
     make man
     make latex
     cd _build/latex

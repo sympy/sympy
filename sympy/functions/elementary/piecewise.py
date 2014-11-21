@@ -94,7 +94,8 @@ class Piecewise(Function):
         # (Try to) sympify args first
         newargs = []
         for ec in args:
-            pair = ExprCondPair(*ec)
+            # ec could be a ExprCondPair or a tuple
+            pair = ExprCondPair(*getattr(ec, 'args', ec))
             cond = pair.cond
             if cond == false:
                 continue

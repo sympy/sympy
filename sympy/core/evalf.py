@@ -18,7 +18,7 @@ from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
 from sympy.mpmath.libmp import bitcount as mpmath_bitcount
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
-from sympy.mpmath.libmp.libmpf import dps_to_prec
+from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
 from .compatibility import SYMPY_INTS
@@ -1033,6 +1033,9 @@ def hypsum(expr, n, start, prec):
     """
     from sympy import hypersimp, lambdify
 
+    if prec == float('inf'):
+        raise NotImplementedError('does not support inf prec')
+
     if start:
         expr = expr.subs(n, n + start)
     hs = hypersimp(expr, n)
@@ -1048,9 +1051,12 @@ def hypsum(expr, n, start, prec):
     if h < 0:
         raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
+    term = expr.subs(n, 0)
+    if not term.is_Rational:
+        raise NotImplementedError("Non rational term functionality is not implemented.")
+
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
-        term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec) // term.q
         s = term
         k = 1
@@ -1067,21 +1073,29 @@ def hypsum(expr, n, start, prec):
         if p < 1 or (p == 1 and not alt):
             raise ValueError("Sum diverges like n^%i" % (-p))
         # We have polynomial convergence: use Richardson extrapolation
-        # Need to use at least quad precision because a lot of cancellation
-        # might occur in the extrapolation process
-        prec2 = 4*prec
-        term = expr.subs(n, 0)
-        term = (MPZ(term.p) << prec2) // term.q
+        vold = None
+        ndig = prec_to_dps(prec)
+        while True:
+            # Need to use at least quad precision because a lot of cancellation
+            # might occur in the extrapolation process; we check the answer to
+            # make sure that the desired precision has been reached, too.
+            prec2 = 4*prec
+            term0 = (MPZ(term.p) << prec2) // term.q
 
-        def summand(k, _term=[term]):
-            if k:
-                k = int(k)
-                _term[0] *= MPZ(func1(k - 1))
-                _term[0] //= MPZ(func2(k - 1))
-            return make_mpf(from_man_exp(_term[0], -prec2))
+            def summand(k, _term=[term0]):
+                if k:
+                    k = int(k)
+                    _term[0] *= MPZ(func1(k - 1))
+                    _term[0] //= MPZ(func2(k - 1))
+                return make_mpf(from_man_exp(_term[0], -prec2))
 
-        with workprec(prec):
-            v = nsum(summand, [0, mpmath_inf], method='richardson')
+            with workprec(prec):
+                v = nsum(summand, [0, mpmath_inf], method='richardson')
+            vf = C.Float(v, ndig)
+            if vold is not None and vold == vf:
+                break
+            prec += prec  # double precision each time
+            vold = vf
 
         return v._mpf_
 

@@ -97,8 +97,8 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | (-1)**-1     | -1      |                                               |
     +--------------+---------+-----------------------------------------------+
-    | S.Zero**-1   | oo      | This is not strictly true, as 0**-1 may be    |
-    |              |         | undefined, but is convenient is some contexts |
+    | S.Zero**-1   | zoo     | This is not strictly true, as 0**-1 may be    |
+    |              |         | undefined, but is convenient in some contexts |
     |              |         | where the base is assumed to be positive.     |
     +--------------+---------+-----------------------------------------------+
     | 1**-1        | 1       |                                               |
@@ -108,7 +108,7 @@ class Pow(Expr):
     | 0**oo        | 0       | Because for all complex numbers z near        |
     |              |         | 0, z**oo -> 0.                                |
     +--------------+---------+-----------------------------------------------+
-    | 0**-oo       | oo      | This is not strictly true, as 0**oo may be    |
+    | 0**-oo       | zoo     | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |
     |              |         | values or rotating in the complex plane.      |
     |              |         | It is convenient, however, when the base      |
@@ -137,9 +137,9 @@ class Pow(Expr):
     See Also
     ========
 
-    Infinity
-    NegativeInfinity
-    NaN
+    sympy.core.numbers.Infinity
+    sympy.core.numbers.NegativeInfinity
+    sympy.core.numbers.NaN
 
     References
     ==========
@@ -328,7 +328,7 @@ class Pow(Expr):
             if self.exp.is_real:
                 return False
         elif self.base.is_nonnegative:
-            if self.exp.is_real:
+            if self.exp.is_nonnegative:
                 return False
         elif self.base.is_nonpositive:
             if self.exp.is_even:
@@ -336,6 +336,21 @@ class Pow(Expr):
         elif self.base.is_real:
             if self.exp.is_even:
                 return False
+
+    def _eval_is_zero(self):
+        if self.base.is_zero:
+            if self.exp.is_positive:
+                return True
+            elif self.exp.is_nonpositive:
+                return False
+        elif self.base.is_nonzero:
+            if self.exp.is_finite:
+                return False
+            elif self.exp.is_infinite:
+                if (1 - abs(self.base)).is_positive:
+                    return self.exp.is_positive
+                elif (1 - abs(self.base)).is_negative:
+                    return self.exp.is_negative
 
     def _eval_is_integer(self):
         b, e = self.args
@@ -1371,13 +1386,14 @@ class Pow(Expr):
         return S.One, self.func(b, e)
 
     def is_constant(self, *wrt, **flags):
+        expr = self
         if flags.get('simplify', True):
-            self = self.simplify()
-        b, e = self.as_base_exp()
+            expr = expr.simplify()
+        b, e = expr.as_base_exp()
         bz = b.equals(0)
         if bz:  # recalculate with assumptions in case it's unevaluated
             new = b**e
-            if new != self:
+            if new != expr:
                 return new.is_constant()
         econ = e.is_constant(*wrt)
         bcon = b.is_constant(*wrt)

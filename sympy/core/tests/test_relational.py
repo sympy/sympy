@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational)
+                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -538,3 +538,93 @@ def test_issue_8245():
     assert (r < a) == True
     assert (r >= a) == False
     assert (r <= a) == True
+
+
+def test_issue_8449():
+    p = Symbol('p', nonnegative=True)
+    assert Lt(-oo, p)
+    assert Ge(-oo, p) is S.false
+    assert Gt(oo, -p)
+    assert Le(oo, -p) is S.false
+
+
+def test_simplify():
+    assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
+    assert simplify(S(1) < -x) == (x < -1)
+
+
+def test_equals():
+    w, x, y, z = symbols('w:z')
+    f = Function('f')
+    assert Eq(x, 1).equals(Eq(x*(y + 1) - x*y - x + 1, x))
+    assert Eq(x, y).equals(x < y, True) == False
+    assert Eq(x, f(1)).equals(Eq(x, f(2)), True) == f(1) - f(2)
+    assert Eq(f(1), y).equals(Eq(f(2), y), True) == f(1) - f(2)
+    assert Eq(x, f(1)).equals(Eq(f(2), x), True) == f(1) - f(2)
+    assert Eq(f(1), x).equals(Eq(x, f(2)), True) == f(1) - f(2)
+    assert Eq(w, x).equals(Eq(y, z), True) == False
+    assert Eq(f(1), f(2)).equals(Eq(f(3), f(4)), True) == f(1) - f(3)
+    assert (x < y).equals(y > x, True) == True
+    assert (x < y).equals(y >= x, True) == False
+    assert (x < y).equals(z < y, True) == False
+    assert (x < y).equals(x < z, True) == False
+    assert (x < f(1)).equals(x < f(2), True) == f(1) - f(2)
+    assert (f(1) < x).equals(f(2) < x, True) == f(1) - f(2)
+
+
+def test_reversed():
+    assert (x < y).reversed == (y > x)
+    assert (x <= y).reversed == (y >= x)
+    assert Eq(x, y, evaluate=False).reversed == Eq(y, x, evaluate=False)
+    assert Ne(x, y, evaluate=False).reversed == Ne(y, x, evaluate=False)
+    assert (x >= y).reversed == (y <= x)
+    assert (x > y).reversed == (y < x)
+
+
+def test_canonical():
+    one = S(1)
+
+    def unchanged(v):
+        c = v.canonical
+        return v.is_Relational and c.is_Relational and v == c
+
+    def reversed(v):
+        return v.canonical == v.reversed
+
+    assert unchanged(x < one)
+    assert unchanged(x <= one)
+    assert reversed(Eq(one, x, evaluate=False))
+    assert unchanged(Eq(x, one, evaluate=False))
+    assert reversed(Ne(one, x, evaluate=False))
+    assert unchanged(Ne(x, one, evaluate=False))
+    assert unchanged(x >= one)
+    assert unchanged(x > one)
+
+    assert unchanged(x < y)
+    assert unchanged(x <= y)
+    assert reversed(Eq(y, x, evaluate=False))
+    assert unchanged(Eq(x, y, evaluate=False))
+    assert reversed(Ne(y, x, evaluate=False))
+    assert unchanged(Ne(x, y, evaluate=False))
+    assert reversed(x >= y)
+    assert reversed(x > y)
+    assert (-x < 1).canonical == (x > -1)
+
+
+@XFAIL
+def test_issue_8444():
+    x = symbols('x', real=True)
+    assert (x <= oo) == (x >= -oo) == True
+
+    x = symbols('x')
+    assert x >= floor(x)
+    assert (x < floor(x)) == False
+    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
+    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
+    assert x <= ceiling(x)
+    assert (x > ceiling(x)) == False
+    assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
+    assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
+    i = symbols('i', integer=True)
+    assert (i > floor(i)) == False
+    assert (i < ceiling(i)) == False

@@ -1,7 +1,8 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi)
+    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
+    Eq, Pow, Contains)
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -395,6 +396,20 @@ def test_contains():
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
+    # issue 8197
+    from sympy.abc import a, b
+    assert isinstance(FiniteSet(b).contains(-a), Contains)
+    assert isinstance(FiniteSet(b).contains(a), Contains)
+    assert isinstance(FiniteSet(a).contains(1), Contains)
+    raises(TypeError, lambda: 1 in FiniteSet(a))
+
+    # issue 8209
+    rad1 = Pow(Pow(2, S(1)/3) - 1, S(1)/3)
+    rad2 = Pow(S(1)/9, S(1)/3) - Pow(S(2)/9, S(1)/3) + Pow(S(4)/9, S(1)/3)
+    s1 = FiniteSet(rad1)
+    s2 = FiniteSet(rad2)
+    assert s1 - s2 == S.EmptySet
+
     items = [1, 2, S.Infinity, S('ham'), -1.1]
     fset = FiniteSet(*items)
     assert all(item in fset for item in items)
@@ -785,3 +800,17 @@ def test_interior():
 
 def test_issue_7841():
     raises(TypeError, lambda: x in S.Reals)
+
+
+def test_Eq():
+    assert Eq(Interval(0, 1), Interval(0, 1))
+    assert Eq(Interval(0, 1), Interval(0, 2)) == False
+
+    s1 = FiniteSet(0, 1)
+    s2 = FiniteSet(1, 2)
+
+    assert Eq(s1, s1)
+    assert Eq(s1, s2) == False
+
+    assert Eq(s1*s2, s1*s2)
+    assert Eq(s1*s2, s2*s1) == False

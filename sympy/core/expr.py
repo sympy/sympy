@@ -237,10 +237,11 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_nonnegative is not None and \
-                dif.is_nonnegative is not dif.is_negative:
-            return sympify(dif.is_nonnegative)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_nonnegative is not None and \
+                    dif.is_nonnegative is not dif.is_negative:
+                return sympify(dif.is_nonnegative)
         return C.GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -251,10 +252,11 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_nonpositive is not None and \
-                dif.is_nonpositive is not dif.is_positive:
-            return sympify(dif.is_nonpositive)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_nonpositive is not None and \
+                    dif.is_nonpositive is not dif.is_positive:
+                return sympify(dif.is_nonpositive)
         return C.LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -265,10 +267,11 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_positive is not None and \
-                dif.is_positive is not dif.is_nonpositive:
-            return sympify(dif.is_positive)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_positive is not None and \
+                    dif.is_positive is not dif.is_nonpositive:
+                return sympify(dif.is_positive)
         return C.StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -279,10 +282,11 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        dif = self - other
-        if dif.is_negative is not None and \
-                dif.is_negative is not dif.is_nonnegative:
-            return sympify(dif.is_negative)
+        if self.is_real and other.is_real:
+            dif = self - other
+            if dif.is_negative is not None and \
+                    dif.is_negative is not dif.is_nonnegative:
+                return sympify(dif.is_negative)
         return C.StrictLessThan(self, other, evaluate=False)
 
     @staticmethod
@@ -494,13 +498,14 @@ class Expr(Basic, EvalfMixin):
         wrt = wrt or free
 
         # simplify unless this has already been done
+        expr = self
         if simplify:
-            self = self.simplify()
+            expr = expr.simplify()
 
         # is_zero should be a quick assumptions check; it can be wrong for
         # numbers (see test_is_not_constant test), giving False when it
         # shouldn't, but hopefully it will never give True unless it is sure.
-        if self.is_zero:
+        if expr.is_zero:
             return True
 
         # try numerical evaluation to see if we get two different values
@@ -508,30 +513,30 @@ class Expr(Basic, EvalfMixin):
         if wrt == free:
             # try 0 (for a) and 1 (for b)
             try:
-                a = self.subs(list(zip(free, [0]*len(free))),
+                a = expr.subs(list(zip(free, [0]*len(free))),
                     simultaneous=True)
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
-                    a = self._random(None, 0, 0, 0, 0)
+                    a = expr._random(None, 0, 0, 0, 0)
             except ZeroDivisionError:
                 a = None
             if a is not None and a is not S.NaN:
                 try:
-                    b = self.subs(list(zip(free, [1]*len(free))),
+                    b = expr.subs(list(zip(free, [1]*len(free))),
                         simultaneous=True)
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
-                        b = self._random(None, 1, 0, 1, 0)
+                        b = expr._random(None, 1, 0, 1, 0)
                 except ZeroDivisionError:
                     b = None
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random real
-                b = self._random(None, -1, 0, 1, 0)
+                b = expr._random(None, -1, 0, 1, 0)
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random complex
-                b = self._random()
+                b = expr._random()
                 if b is not None and b is not S.NaN:
                     if b.equals(a) is False:
                         return False
@@ -542,7 +547,7 @@ class Expr(Basic, EvalfMixin):
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
         for w in wrt:
-            deriv = self.diff(w)
+            deriv = expr.diff(w)
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
@@ -639,14 +644,14 @@ class Expr(Basic, EvalfMixin):
                         pass
 
                 # try to prove with minimal_polynomial but know when
-                # *not* to use this or else it can take a long time.
+                # *not* to use this or else it can take a long time. e.g. issue 8354
                 if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
                             return True
                         return False
-                    except NotAlgebraic:
+                    except (NotAlgebraic, NotImplementedError):
                         pass
 
         # diff has not simplified to zero; constant is either None, True
@@ -660,6 +665,8 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -677,15 +684,19 @@ class Expr(Basic, EvalfMixin):
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n > 0:
-                    return True
-                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n > 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_is_negative(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
             if self.is_real is False:
                 return False
@@ -703,13 +714,15 @@ class Expr(Basic, EvalfMixin):
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n < 0:
-                    return True
-                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n < 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_interval(self, x, a, b):
         """
@@ -1654,7 +1667,7 @@ class Expr(Basic, EvalfMixin):
         # a -> b ** e
         return self, S.One
 
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
         c should be a Rational multiplied by any terms of the Mul that are
@@ -3137,7 +3150,7 @@ def _mag(x):
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, expand_mul
+from .function import Derivative, expand_mul, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

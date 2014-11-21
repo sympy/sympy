@@ -202,7 +202,8 @@ class Dyadic(object):
                 if printer:
                     use_unicode = printer._use_unicode
                 else:
-                    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
+                    from sympy.printing.pretty.pretty_symbology import (
+                        pretty_use_unicode)
                     use_unicode = pretty_use_unicode()
                 mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:

@@ -161,6 +161,7 @@ def test_ibasic():
 
 
 def test_relational():
+    from sympy import Lt
     assert (pi < 3) is S.false
     assert (pi <= 3) is S.false
     assert (pi > 3) is S.true
@@ -169,7 +170,9 @@ def test_relational():
     assert (-pi <= 3) is S.true
     assert (-pi > 3) is S.false
     assert (-pi >= 3) is S.false
-    assert (x - 2 < x - 3) is S.false
+    r = Symbol('r', real=True)
+    assert (r - 2 < r - 3) is S.false
+    assert Lt(x + I, x + I + 2).func == Lt  # issue 8288
 
 
 def test_relational_assumptions():
@@ -198,10 +201,10 @@ def test_relational_assumptions():
     assert (m2 <= 0) is S.true
     assert (m3 > 0) is S.true
     assert (m4 >= 0) is S.true
-    m1 = Symbol("m1", negative=False)
-    m2 = Symbol("m2", nonpositive=False)
-    m3 = Symbol("m3", positive=False)
-    m4 = Symbol("m4", nonnegative=False)
+    m1 = Symbol("m1", negative=False, real=True)
+    m2 = Symbol("m2", nonpositive=False, real=True)
+    m3 = Symbol("m3", positive=False, real=True)
+    m4 = Symbol("m4", nonnegative=False, real=True)
     assert (m1 < 0) is S.false
     assert (m2 <= 0) is S.false
     assert (m3 > 0) is S.false
@@ -925,16 +928,21 @@ def test_as_coeff_mul():
     assert S(2).as_coeff_mul() == (2, ())
     assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
     assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
+    assert S(-3.0).as_coeff_mul(rational=False) == (-S(3.0), ())
     assert x.as_coeff_mul() == (1, (x,))
     assert (-x).as_coeff_mul() == (-1, (x,))
     assert (2*x).as_coeff_mul() == (2, (x,))
     assert (x*y).as_coeff_mul(y) == (x, (y,))
+    assert (3 + x).as_coeff_mul() == (1, (3 + x,))
     assert (3 + x).as_coeff_mul(y) == (3 + x, ())
     # don't do expansion
     e = exp(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
     e = 2**(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
+    assert (1.1*x).as_coeff_mul(rational=False) == (1.1, (x,))
+    assert (1.1*x).as_coeff_mul() == (1, (1.1, x))
+    assert (-oo*x).as_coeff_mul(rational=True) == (-1, (oo, x))
 
 
 def test_as_coeff_exponent():
@@ -1257,6 +1265,7 @@ def test_as_coeff_Mul():
 
     assert (x).as_coeff_Mul() == (S.One, x)
     assert (x*y).as_coeff_Mul() == (S.One, x*y)
+    assert (-oo*x).as_coeff_Mul(rational=True) == (-1, oo*x)
 
 
 def test_as_coeff_Add():

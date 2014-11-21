@@ -1297,3 +1297,13 @@ def test_Pow():
 def test_issue_7180():
     assert latex(Equivalent(x, y)) == r"x \equiv y"
     assert latex(Not(Equivalent(x, y))) == r"x \not\equiv y"
+
+
+def test_issue_8409():
+    assert latex(S.Half**n) == r"\left(\frac{1}{2}\right)^{n}"
+
+
+def test_issue_8470():
+    from sympy.parsing.sympy_parser import parse_expr
+    e = parse_expr("-B*A", evaluate=False)
+    assert latex(e) == r"A \left(- B\right)"

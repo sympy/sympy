@@ -645,7 +645,8 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
+        rational = kwargs.pop('rational', True)
         if deps:
             l1 = []
             l2 = []
@@ -656,23 +657,26 @@ class Mul(Expr, AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
-        if args[0].is_Rational:
-            return args[0], args[1:]
-        elif args[0] is S.NegativeInfinity:
-            return S.NegativeOne, (-args[0],) + args[1:]
+        if args[0].is_Number:
+            if not rational or args[0].is_Rational:
+                return args[0], args[1:]
+            elif args[0].is_negative:
+                return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number and not (rational and not coeff.is_Rational):
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        else:
-            return S.One, self
+        if coeff.is_Number:
+            if not rational or coeff.is_Rational:
+                if len(args) == 1:
+                    return coeff, args[0]
+                else:
+                    return coeff, self._new_rawargs(*args)
+            elif coeff.is_negative:
+                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
+        return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import expand_mul
@@ -977,6 +981,7 @@ class Mul(Expr, AssocOp):
             return r
         elif r is False:
             return self.is_zero
+        return _fuzzy_group((a.is_integer for a in self.args), quick_exit=True)
 
     def _eval_is_algebraic(self):
         r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
@@ -1247,12 +1252,13 @@ class Mul(Expr, AssocOp):
         # rv will be the default return value
         rv = None
         n, d = fraction(self)
+        self2 = self
         if d is not S.One:
             self2 = n._subs(old, new)/d._subs(old, new)
             if not self2.is_Mul:
                 return self2._subs(old, new)
             if self2 != self:
-                self = rv = self2
+                rv = self2
 
         # Now continue with regular substitution.
 
@@ -1260,7 +1266,7 @@ class Mul(Expr, AssocOp):
         # should even be started; we always know where to find the Rational
         # so it's a quick test
 
-        co_self = self.args[0]
+        co_self = self2.args[0]
         co_old = old.args[0]
         co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
@@ -1273,7 +1279,7 @@ class Mul(Expr, AssocOp):
 
         # break self and old into factors
 
-        (c, nc) = breakup(self)
+        (c, nc) = breakup(self2)
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
@@ -1439,7 +1445,7 @@ class Mul(Expr, AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return co_residual*self.func(*margs)*self.func(*nc)
+        return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp

@@ -265,11 +265,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             offset = 25
 
+            config = gl.Config(double_buffer=False)
             win = window.Window(
                 width=img.width + 2*offset,
                 height=img.height + 2*offset,
                 caption="sympy",
-                resizable=False
+                resizable=False,
+                config=config
             )
 
             win.set_vsync(False)

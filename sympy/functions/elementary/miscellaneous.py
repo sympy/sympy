@@ -360,11 +360,13 @@ class MinMaxBase(Expr, LatticeOp):
             for z in localzeros_:
                 if id(v) == id(z):
                     is_newzero = False
-                elif cls._is_connected(v, z):
-                    is_newzero = False
-                    if cls._is_asneeded(v, z):
-                        localzeros.remove(z)
-                        localzeros.update([v])
+                else:
+                    con = cls._is_connected(v, z)
+                    if con:
+                        is_newzero = False
+                        if con is True or con == cls:
+                            localzeros.remove(z)
+                            localzeros.update([v])
             if is_newzero:
                 localzeros.update([v])
         return localzeros
@@ -374,34 +376,23 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        xy = x > y
-        yx = x < y
-        if (x == y) or xy == True or xy == False or yx == True or yx == False:
+        def hit(v, t, f):
+            if not v.is_Relational:
+                return t if v else f
+        if x == y:
             return True
-        if x.is_Number and y.is_Number:
-            return True
-        return False
-
-    @classmethod
-    def _is_asneeded(cls, x, y):
-        """
-        Check if x and y satisfy relation condition.
-
-        The relation condition for Max function is x > y,
-        for Min function is x < y. They are defined in children Max and Min
-        classes through the method _rel(cls, x, y)
-        """
-        if (x == y):
-            return False
-        if x.is_Number and y.is_Number:
-            if cls._rel(x, y):
-                return True
-        xy = cls._rel(x, y)
-        if xy == True or xy == False:
-            return bool(xy)
-        yx = cls._rel_inversed(x, y)
-        if yx == True or yx == False:
-            return not bool(yx)
+        r = hit(x >= y, Max, Min)
+        if r is not None:
+            return r
+        r = hit(y <= x, Max, Min)
+        if r is not None:
+            return r
+        r = hit(x <= y, Min, Max)
+        if r is not None:
+            return r
+        r = hit(y >= x, Min, Max)
+        if r is not None:
+            return r
         return False
 
     def _eval_derivative(self, s):
@@ -503,7 +494,7 @@ class Max(MinMaxBase, Application):
 
     Assumption:
        - if A > B > C then A > C
-       - if A==B then B can be removed
+       - if A == B then B can be removed
 
     References
     ==========
@@ -519,33 +510,19 @@ class Max(MinMaxBase, Application):
     zero = S.Infinity
     identity = S.NegativeInfinity
 
-    @classmethod
-    def _rel(cls, x, y):
-        """
-        Check if x > y.
-        """
-        return (x > y)
-
-    @classmethod
-    def _rel_inversed(cls, x, y):
-        """
-        Check if x < y.
-        """
-        return (x < y)
-
     def fdiff( self, argindex ):
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return C.Heaviside( self.args[argindex] - self.args[1-argindex] )
+                return C.Heaviside(self.args[argindex] - self.args[1 - argindex])
             newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
-            return C.Heaviside( self.args[argindex] - Max(*newargs) )
+            return C.Heaviside(self.args[argindex] - Max(*newargs))
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return C.Add(*[j*C.Mul(*[C.Heaviside(j-i) for i in args if i!=j]) \
+        return C.Add(*[j*C.Mul(*[C.Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
 
@@ -583,20 +560,6 @@ class Min(MinMaxBase, Application):
     """
     zero = S.NegativeInfinity
     identity = S.Infinity
-
-    @classmethod
-    def _rel(cls, x, y):
-        """
-        Check if x < y.
-        """
-        return (x < y)
-
-    @classmethod
-    def _rel_inversed(cls, x, y):
-        """
-        Check if x > y.
-        """
-        return (x > y)
 
     def fdiff( self, argindex ):
         n = len(self.args)

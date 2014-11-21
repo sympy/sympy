@@ -2063,7 +2063,7 @@ class Poly(Expr):
 
         return f.rep.dom.to_sympy(result)
 
-    def clear_denoms(f, convert=False):
+    def clear_denoms(self, convert=False):
         """
         Clear denominators, but keep the ground domain.
 
@@ -2081,6 +2081,8 @@ class Poly(Expr):
         (6, Poly(3*x + 2, x, domain='ZZ'))
 
         """
+        f = self
+
         if not f.rep.dom.has_Field:
             return S.One, f
 
@@ -2100,7 +2102,7 @@ class Poly(Expr):
         else:
             return coeff, f.to_ring()
 
-    def rat_clear_denoms(f, g):
+    def rat_clear_denoms(self, g):
         """
         Clear denominators in a rational function ``f/g``.
 
@@ -2121,6 +2123,8 @@ class Poly(Expr):
         Poly(y*x**3 + y**2, x, domain='ZZ[y]')
 
         """
+        f = self
+
         dom, per, f, g = f._unify(g)
 
         f = per(f)
@@ -2137,7 +2141,7 @@ class Poly(Expr):
 
         return f, g
 
-    def integrate(f, *specs, **args):
+    def integrate(self, *specs, **args):
         """
         Computes indefinite integral of ``f``.
 
@@ -2154,6 +2158,8 @@ class Poly(Expr):
         Poly(1/2*x**2*y**2 + 1/2*x**2, x, y, domain='QQ')
 
         """
+        f = self
+
         if args.get('auto', True) and f.rep.dom.has_Ring:
             f = f.to_field()
 
@@ -2210,7 +2216,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'diff')
 
-    def eval(f, x, a=None, auto=True):
+    def eval(self, x, a=None, auto=True):
         """
         Evaluate ``f`` at ``a`` in the given variable.
 
@@ -2241,6 +2247,8 @@ class Poly(Expr):
         Poly(2*z + 31, z, domain='ZZ')
 
         """
+        f = self
+
         if a is None:
             if isinstance(x, dict):
                 mapping = x
@@ -2740,7 +2748,7 @@ class Poly(Expr):
 
         return f.per(result)
 
-    def monic(f, auto=True):
+    def monic(self, auto=True):
         """
         Divides all coefficients by ``LC(f)``.
 
@@ -2757,6 +2765,8 @@ class Poly(Expr):
         Poly(x**2 + 4/3*x + 2/3, x, domain='QQ')
 
         """
+        f = self
+
         if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
@@ -2874,7 +2884,7 @@ class Poly(Expr):
 
         return f.per(result)
 
-    def sturm(f, auto=True):
+    def sturm(self, auto=True):
         """
         Computes the Sturm sequence of ``f``.
 
@@ -2891,6 +2901,8 @@ class Poly(Expr):
          Poly(-2079/4, x, domain='QQ')]
 
         """
+        f = self
+
         if auto and f.rep.dom.has_Ring:
             f = f.to_field()
 
@@ -3934,8 +3946,10 @@ class Poly(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    @_sympifyit('g', NotImplemented)
-    def __eq__(f, g):
+    @_sympifyit('other', NotImplemented)
+    def __eq__(self, other):
+        f, g = self, other
+
         if not g.is_Poly:
             try:
                 g = f.__class__(g, f.gens, domain=f.get_domain())
@@ -4010,8 +4024,10 @@ class PurePoly(Poly):
         """
         return self.free_symbols_in_domain
 
-    @_sympifyit('g', NotImplemented)
-    def __eq__(f, g):
+    @_sympifyit('other', NotImplemented)
+    def __eq__(self, other):
+        f, g = self, other
+
         if not g.is_Poly:
             try:
                 g = f.__class__(g, f.gens, domain=f.get_domain())
@@ -4899,28 +4915,41 @@ def gcd_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    if not gens and not args:
-        domain, numbers = construct_domain(seq)
+    def try_non_polynomial_gcd(seq):
+        if not gens and not args:
+            domain, numbers = construct_domain(seq)
 
-        if not numbers:
-            return domain.zero
-        elif domain.is_Numerical:
-            result, numbers = numbers[0], numbers[1:]
+            if not numbers:
+                return domain.zero
+            elif domain.is_Numerical:
+                result, numbers = numbers[0], numbers[1:]
 
-            for number in numbers:
-                result = domain.gcd(result, number)
+                for number in numbers:
+                    result = domain.gcd(result, number)
 
-                if domain.is_one(result):
-                    break
+                    if domain.is_one(result):
+                        break
 
-            return domain.to_sympy(result)
+                return domain.to_sympy(result)
+
+        return None
+
+    result = try_non_polynomial_gcd(seq)
+
+    if result is not None:
+        return result
 
     options.allowed_flags(args, ['polys'])
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed as exc:
-        raise ComputationFailed('gcd_list', len(seq), exc)
+        result = try_non_polynomial_gcd(exc.exprs)
+
+        if result is not None:
+            return result
+        else:
+            raise ComputationFailed('gcd_list', len(seq), exc)
 
     if not polys:
         if not opt.polys:
@@ -5002,25 +5031,38 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    if not gens and not args:
-        domain, numbers = construct_domain(seq)
+    def try_non_polynomial_lcm(seq):
+        if not gens and not args:
+            domain, numbers = construct_domain(seq)
 
-        if not numbers:
-            return domain.one
-        elif domain.is_Numerical:
-            result, numbers = numbers[0], numbers[1:]
+            if not numbers:
+                return domain.one
+            elif domain.is_Numerical:
+                result, numbers = numbers[0], numbers[1:]
 
-            for number in numbers:
-                result = domain.lcm(result, number)
+                for number in numbers:
+                    result = domain.lcm(result, number)
 
-            return domain.to_sympy(result)
+                return domain.to_sympy(result)
+
+        return None
+
+    result = try_non_polynomial_lcm(seq)
+
+    if result is not None:
+        return result
 
     options.allowed_flags(args, ['polys'])
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed as exc:
-        raise ComputationFailed('lcm_list', len(seq), exc)
+        result = try_non_polynomial_lcm(exc.exprs)
+
+        if result is not None:
+            return result
+        else:
+            raise ComputationFailed('lcm_list', len(seq), exc)
 
     if not polys:
         if not opt.polys:

@@ -415,9 +415,9 @@ class Number(AtomicExpr):
     def is_constant(self, *wrt, **flags):
         return True
 
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
         # a -> c*t
-        if self.is_Rational:
+        if self.is_Rational or not kwargs.pop('rational', True):
             return self, tuple()
         elif self.is_negative:
             return S.NegativeOne, (-self,)
@@ -835,13 +835,13 @@ class Float(Number):
                 return Float._new(
                     mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
             expt, prec = expt._as_mpf_op(self._prec)
-            self = self._mpf_
+            mpfself = self._mpf_
             try:
-                y = mpf_pow(self, expt, prec, rnd)
+                y = mpf_pow(mpfself, expt, prec, rnd)
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow(
-                    (self, _mpf_zero), (expt, _mpf_zero), prec, rnd)
+                    (mpfself, _mpf_zero), (expt, _mpf_zero), prec, rnd)
                 return Float._new(re, prec) + \
                     Float._new(im, prec)*S.ImaginaryUnit
 
@@ -1349,6 +1349,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
+        expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q > self.q*other.p))
@@ -1358,8 +1359,8 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__le__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__gt__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__gt__(expr, other)
 
     def __ge__(self, other):
         try:
@@ -1368,6 +1369,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
+        expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
                  return _sympify(bool(self.p*other.q >= self.q*other.p))
@@ -1377,8 +1379,8 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__lt__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__ge__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__ge__(expr, other)
 
     def __lt__(self, other):
         try:
@@ -1387,6 +1389,7 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
+        expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
                 return _sympify(bool(self.p*other.q < self.q*other.p))
@@ -1396,14 +1399,15 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__ge__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__lt__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__lt__(expr, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
+        expr = self
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         elif isinstance(other, Number):
@@ -1415,8 +1419,8 @@ class Rational(Number):
             if other is S.NaN:
                 return other.__gt__(self)
         elif other.is_number and other.is_real:
-            self, other = Integer(self.p), self.q*other
-        return Expr.__le__(self, other)
+            expr, other = Integer(self.p), self.q*other
+        return Expr.__le__(expr, other)
 
     def __hash__(self):
         return super(Rational, self).__hash__()
@@ -1990,6 +1994,16 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.polys import RootOf, minpoly
+
+        for r in [r for r in self.minpoly.all_roots() if r.func != RootOf]:
+            if minpoly(self.root - r).is_Symbol:
+                # use the matching root if it's simpler
+                if measure(r) < ratio*measure(self.root):
+                    return AlgebraicNumber(r)
+        return self
+
 
 class RationalConstant(Rational):
     """
@@ -2390,54 +2404,46 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             return S.false
-        return C.StrictLessThan(self, other, evaluate=False)
+        return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.false
+            elif other.is_nonpositive:
+                return S.false
             elif other is S.Infinity:
                 return S.true
-        return C.LessThan(self, other, evaluate=False)
+        return Expr.__le__(self, other)
 
     def __gt__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.true
+            elif other.is_nonpositive:
+                return S.true
             elif other is S.Infinity:
                 return S.false
-        return C.StrictGreaterThan(self, other, evaluate=False)
+        return Expr.__gt__(self, other)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             return S.true
-        return C.GreaterThan(self, other, evaluate=False)
+        return Expr.__ge__(self, other)
 
     def __mod__(self, other):
         return S.NaN
@@ -2609,54 +2615,46 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             if other.is_finite or other is S.Infinity:
                 return S.true
+            elif other.is_nonnegative:
+                return S.true
             elif other is S.NegativeInfinity:
                 return S.false
-        return C.StrictLessThan(self, other, evaluate=False)
+        return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             return S.true
-        return C.LessThan(self, other, evaluate=False)
+        return Expr.__le__(self, other)
 
     def __gt__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             return S.false
-        return C.StrictGreaterThan(self, other, evaluate=False)
+        return Expr.__gt__(self, other)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_complex and other.is_real is False:
-            raise TypeError("Invalid complex comparison: %s and %s" %
-                            (self, other))
         if other.is_real:
             if other.is_finite or other is S.Infinity:
                 return S.false
+            elif other.is_nonnegative:
+                return S.false
             elif other is S.NegativeInfinity:
                 return S.true
-        return C.GreaterThan(self, other, evaluate=False)
+        return Expr.__ge__(self, other)
 
     def __mod__(self, other):
         return S.NaN

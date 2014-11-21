@@ -464,7 +464,7 @@ class MV(object):
                     self.igrade = 0
                 else:
                     if isinstance(base, (Add, Mul)):  # Complex expression
-                        self = MV.characterize_expression(self, base)
+                        MV.characterize_expression(self, base)
                     elif isinstance(base, Symbol):
                         if not base.is_commutative:
                             if base == MV.ONE:
@@ -491,7 +491,7 @@ class MV(object):
                         self.igrade = 0
                         self.blade_rep = True
         else:  # Preconfigured multivector types
-            self = MVtypes[mvtype](self, base)
+            MVtypes[mvtype](self, base)
 
     def Fmt(self, fmt=1, title=None):
         self.fmt = fmt

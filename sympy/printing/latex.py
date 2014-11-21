@@ -168,7 +168,8 @@ class LatexPrinter(Printer):
         10 => False; -10 => True.
         """
         return not ((expr.is_Integer and expr.is_nonnegative)
-                or (expr.is_Atom and expr is not S.NegativeOne))
+                    or (expr.is_Atom and (expr is not S.NegativeOne
+                                          and expr.is_Rational is False)))
 
     def _needs_function_brackets(self, expr):
         """
@@ -193,17 +194,30 @@ class LatexPrinter(Printer):
             else:
                 return False
 
-    def _needs_mul_brackets(self, expr, last=False):
+    def _needs_mul_brackets(self, expr, first=False, last=False):
         """
         Returns True if the expression needs to be wrapped in brackets when
         printed as part of a Mul, False otherwise. This is True for Add,
         but also for some container objects that would not need brackets
         when appearing last in a Mul, e.g. an Integral. ``last=True``
         specifies that this expr is the last to appear in a Mul.
+        ``first=True`` specifies that this expr is the first to appear in a Mul.
         """
         from sympy import Integral, Piecewise, Product, Sum
-        return expr.is_Add or (not last and
-            any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)]))
+
+        res = False
+
+        if expr.is_Add:
+            return True
+        elif expr.is_Mul:
+            if not first and _coeff_isneg(expr):
+                return True
+
+        if (not last and
+            any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
+            return True
+
+        return res
 
     def _mul_is_clean(self, expr):
         for arg in expr.args:
@@ -268,13 +282,11 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, _ = expr.as_coeff_Mul()
-
-        if not coeff.is_negative:
-            tex = ""
-        else:
+        if _coeff_isneg(expr):
             expr = -expr
             tex = "- "
+        else:
+            tex = ""
 
         from sympy.simplify import fraction
         numer, denom = fraction(expr, exact=True)
@@ -295,7 +307,8 @@ class LatexPrinter(Printer):
                 for i, term in enumerate(args):
                     term_tex = self._print(term)
 
-                    if self._needs_mul_brackets(term, last=(i == len(args) - 1)):
+                    if self._needs_mul_brackets(term, first=(i == 0),
+                                                last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     if re.search("[0-9][} ]*$", last_term_tex) and \

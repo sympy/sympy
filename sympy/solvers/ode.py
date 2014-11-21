@@ -237,7 +237,7 @@ from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand, expand_mul, Subs)
+    expand, expand_mul, Subs, _mexpand)
 from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import Rational, NaN, zoo, I
 from sympy.core.relational import Equality, Eq
@@ -256,7 +256,7 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify, cse
-from sympy.simplify.simplify import _mexpand, collect_const, powdenest
+from sympy.simplify.simplify import collect_const, powdenest
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -3529,7 +3529,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
-    n = Dummy("n")
+    n = Dummy("n", integer=True)
     s = Wild("s")
     k = Wild("k", exclude=[x])
     x0 = match.get('x0')
