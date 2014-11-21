@@ -1834,9 +1834,11 @@ class PyTestReporter(Reporter):
                         columns = match.group('columns')
 
                         try:
-                            return int(columns)
+                            width = int(columns)
                         except ValueError:
                             pass
+                        if width != 0:
+                            return width
 
             return self._default_width
 
