@@ -185,3 +185,22 @@ def test_subfactorial():
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     raises(ValueError, lambda: subfactorial(0.1))
     raises(ValueError, lambda: subfactorial(-2))
+
+    tt = Symbol('tt', integer=True, nonnegative=True)
+    tf = Symbol('tf', integer=True, nonnegative=False)
+    tn = Symbol('tf', integer=True)
+    ft = Symbol('ft', integer=False, nonnegative=True)
+    ff = Symbol('ff', integer=False, nonnegative=False)
+    fn = Symbol('ff', integer=False)
+    nt = Symbol('nt', nonnegative=True)
+    nf = Symbol('nf', nonnegative=False)
+    nn = Symbol('nf')
+    assert subfactorial(tt).is_integer
+    assert subfactorial(tf).is_integer is False
+    assert subfactorial(tn).is_integer is None
+    assert subfactorial(ft).is_integer is False
+    assert subfactorial(ff).is_integer is False
+    assert subfactorial(fn).is_integer is False
+    assert subfactorial(nt).is_integer is None
+    assert subfactorial(nf).is_integer is False
+    assert subfactorial(nn).is_integer is None
