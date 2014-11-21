@@ -1523,12 +1523,15 @@ def tseitin_transformation(expr, dummy=True):
 
         if isinstance(clause, Not):
             clauses.append(Or(Not(s), Not(arg)))
+            clauses.append(Or(s, arg))
 
         elif isinstance(clause, And):
+            clauses.append(Or(s, *[Not(x) for x in args]))
             clauses.extend([Or(Not(s), arg) for arg in args])
 
         elif isinstance(clause, Or):
             clauses.append(Or(Not(s), *args))
+            clauses.extend([Or(s, Not(arg)) for arg in args])
 
         else:
             raise ValueError("Illegal operator " + str(expr))
