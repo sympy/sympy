@@ -89,6 +89,7 @@ def test_RootOf___new__():
     raises(IndexError, lambda: RootOf(x**2 - 1, -3))
     raises(IndexError, lambda: RootOf(x**2 - 1, 2))
     raises(IndexError, lambda: RootOf(x**2 - 1, 3))
+    raises(ValueError, lambda: RootOf(x**2 - 1, x))
 
     assert RootOf(Poly(x - y, x), 0) == y
 

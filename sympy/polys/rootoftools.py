@@ -59,10 +59,10 @@ class RootOf(Expr):
         else:
             index = sympify(index)
 
-        if index.is_Integer:
+        if index is not None and index.is_Integer:
             index = int(index)
         else:
-            raise ValueError("expected an integer root index, got %d" % index)
+            raise ValueError("expected an integer root index, got %s" % index)
 
         poly = PurePoly(f, x, greedy=False, expand=expand)
 
