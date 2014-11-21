@@ -1,4 +1,5 @@
-from sympy import Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt
+from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
+                   atan, atan2)
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -59,45 +60,62 @@ def test_exp():
 
 
 def test_Relational():
-    assert refine(x < 0, ~Q.is_true(x < 0)) == False
-    assert refine(x < 0, Q.is_true(x < 0)) == True
+    assert not refine(x < 0, ~Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(x < 0))
     assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
-    assert refine(x <= 0, ~Q.is_true(x <= 0)) == False
-    assert refine(x <= 0,  Q.is_true(x <= 0)) == True
+    assert not refine(x <= 0, ~Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(x <= 0))
     assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
-    assert refine(x > 0, ~Q.is_true(x > 0)) == False
-    assert refine(x > 0,  Q.is_true(x > 0)) == True
+    assert not refine(x > 0, ~Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(x > 0))
     assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
-    assert refine(x >= 0, ~Q.is_true(x >= 0)) == False
-    assert refine(x >= 0,  Q.is_true(x >= 0)) == True
+    assert not refine(x >= 0, ~Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(x >= 0))
     assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
-    assert refine(Eq(x, 0), ~Q.is_true(Eq(x, 0))) == False
-    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0))) == True
+    assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
     assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
-    assert refine(Ne(x, 0), ~Q.is_true(Ne(x, 0))) == False
-    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0))) == True
+    assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
     assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
 
 
 def test_Piecewise():
-   assert refine(Piecewise((1, x < 0), (3, True)),  Q.is_true(x < 0)) == 1
-   assert refine(Piecewise((1, x < 0), (3, True)), ~Q.is_true(x < 0)) == 3
-   assert refine(Piecewise((1, x < 0), (3, True)),  Q.is_true(y < 0)) == Piecewise((1, x < 0), (3, True))
-   assert refine(Piecewise((1, x > 0), (3, True)),  Q.is_true(x > 0)) == 1
-   assert refine(Piecewise((1, x > 0), (3, True)), ~Q.is_true(x > 0)) == 3
-   assert refine(Piecewise((1, x > 0), (3, True)),  Q.is_true(y > 0)) == Piecewise((1, x > 0), (3, True))
-   assert refine(Piecewise((1, x <= 0), (3, True)),  Q.is_true(x <= 0)) == 1
-   assert refine(Piecewise((1, x <= 0), (3, True)), ~Q.is_true(x <= 0)) == 3
-   assert refine(Piecewise((1, x <= 0), (3, True)),  Q.is_true(y <= 0)) == Piecewise((1, x <= 0), (3, True))
-   assert refine(Piecewise((1, x >= 0), (3, True)),  Q.is_true(x >= 0)) == 1
-   assert refine(Piecewise((1, x >= 0), (3, True)), ~Q.is_true(x >= 0)) == 3
-   assert refine(Piecewise((1, x >= 0), (3, True)),  Q.is_true(y >= 0)) == Piecewise((1, x >= 0), (3, True))
-   assert refine(Piecewise((1, Eq(x, 0)), (3, True)),  Q.is_true(Eq(x, 0))) == 1
-   assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(x, 0))) == 3
-   assert refine(Piecewise((1, Eq(x, 0)), (3, True)),  Q.is_true(Eq(y, 0))) == Piecewise((1, Eq(x, 0)), (3, True))
-   assert refine(Piecewise((1, Ne(x, 0)), (3, True)),  Q.is_true(Ne(x, 0))) == 1
-   assert refine(Piecewise((1, Ne(x, 0)), (3, True)), ~Q.is_true(Ne(x, 0))) == 3
-   assert refine(Piecewise((1, Ne(x, 0)), (3, True)),  Q.is_true(Ne(y, 0))) == Piecewise((1, Ne(x, 0)), (3, True))
+    assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(x < 0)) == 1
+    assert refine(Piecewise((1, x < 0), (3, True)), ~Q.is_true(x < 0)) == 3
+    assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(y < 0)) == \
+        Piecewise((1, x < 0), (3, True))
+    assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(x > 0)) == 1
+    assert refine(Piecewise((1, x > 0), (3, True)), ~Q.is_true(x > 0)) == 3
+    assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(y > 0)) == \
+        Piecewise((1, x > 0), (3, True))
+    assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(x <= 0)) == 1
+    assert refine(Piecewise((1, x <= 0), (3, True)), ~Q.is_true(x <= 0)) == 3
+    assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(y <= 0)) == \
+        Piecewise((1, x <= 0), (3, True))
+    assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(x >= 0)) == 1
+    assert refine(Piecewise((1, x >= 0), (3, True)), ~Q.is_true(x >= 0)) == 3
+    assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(y >= 0)) == \
+        Piecewise((1, x >= 0), (3, True))
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(x, 0)))\
+        == 1
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(x, 0)))\
+        == 3
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(y, 0)))\
+        == Piecewise((1, Eq(x, 0)), (3, True))
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(x, 0)))\
+        == 1
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), ~Q.is_true(Ne(x, 0)))\
+        == 3
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(y, 0)))\
+        == Piecewise((1, Ne(x, 0)), (3, True))
+
+
+def test_atan2():
+    assert refine(atan2(y, x), Q.real(y) & Q.positive(x)) == atan(y/x)
+    assert refine(atan2(y, x), Q.negative(y) & Q.positive(x)) == atan(y/x)
+    assert refine(atan2(y, x), Q.negative(y) & Q.negative(x)) == atan(y/x) - pi
+    assert refine(atan2(y, x), Q.positive(y) & Q.negative(x)) == atan(y/x) + pi
 
 
 def test_func_args():
