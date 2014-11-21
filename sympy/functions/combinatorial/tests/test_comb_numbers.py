@@ -436,3 +436,11 @@ def test_nC_nP_nT():
     t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
     assert sum(_AOP_product(t)[i] for i in range(55)) == 58212000
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
+
+
+def test_issue_8496():
+    n = Symbol("n")
+    k = Symbol("k")
+
+    raises(TypeError, lambda: catalan(n, k))
+    raises(TypeError, lambda: euler(n, k))
