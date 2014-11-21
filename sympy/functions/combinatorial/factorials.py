@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.logic import fuzzy_and
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
@@ -264,6 +265,10 @@ class factorial2(CombinatorialFunction):
             if arg == S.Zero or arg == S.NegativeOne:
                 return S.One
             return factorial2(arg - 2)*arg
+
+    def _eval_is_integer(self):
+        return fuzzy_and((self.args[0].is_integer,
+                          (self.args[0] + 1).is_nonnegative))
 
 
 ###############################################################################
