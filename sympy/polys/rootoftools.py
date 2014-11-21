@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
         sympify, Rational)
 from sympy.core.cache import cacheit
+from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
 
 from sympy.polys.polytools import Poly, PurePoly, factor
@@ -608,6 +609,47 @@ class RootOf(Expr):
         a = Rational(str(interval.a))
         b = Rational(str(interval.b))
         return bisect(func, a, b, tol)
+
+    def _eval_Eq(self, other):
+        # RootOf represents a Root, so if other is that root, it should set
+        # the expression to zero *and* it should be in the interval of the
+        # RootOf instance. It must also be a number that agrees with the
+        # is_real value of the RootOf instance.
+        if type(self) == type(other):
+            return sympify(self.__eq__(other))
+        if not (other.is_number and not other.has(AppliedUndef)):
+            return S.false
+        if not other.is_finite:
+            return S.false
+        z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
+        if z is False:
+            return S.false
+        o = other.is_real, other.is_imaginary
+        s = self.is_real, self.is_imaginary
+        if o != s and None not in o and None not in s:
+            return S.false
+        if z:
+            i = self._get_interval()
+            was = i.a, i.b
+            need = [1, 1]
+            # make sure it would be distinct from others
+            while any(need):
+                i = i.refine()
+                a, b = i.a, i.b
+                if need[0] and a != was[0]:
+                    need[0] = 0
+                if need[1] and b != was[1]:
+                    need[1] = 0
+            if self.is_real:
+                a, b = [Rational(str(i)) for i in (a, b)]
+                return sympify(a < other and other < b)
+            re, im = other.as_real_imag()
+            z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
+                i.ax, i.bx, i.ay, i.by)]
+            return sympify((
+                r1 < re and re < r2) and (
+                i1 < im and im < i2))
+
 
 @public
 class RootSum(Expr):
