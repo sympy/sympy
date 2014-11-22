@@ -111,6 +111,13 @@ def test_Piecewise():
         == Piecewise((1, Ne(x, 0)), (3, True))
 
 
+def test_atan2():
+    assert refine(atan2(y, x), Q.real(y) & Q.positive(x)) == atan(y/x)
+    assert refine(atan2(y, x), Q.negative(y) & Q.positive(x)) == atan(y/x)
+    assert refine(atan2(y, x), Q.negative(y) & Q.negative(x)) == atan(y/x) - pi
+    assert refine(atan2(y, x), Q.positive(y) & Q.negative(x)) == atan(y/x) + pi
+
+
 def test_func_args():
     class MyClass(Expr):
         # A class with nontrivial .func
