@@ -638,12 +638,11 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1):
-        from sympy.functions.special.gamma_functions import polygamma
-        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+        return self.rewrite(C.polygamma).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
-        from sympy.functions.special.gamma_functions import polygamma
-        return self.rewrite(polygamma).evalf(n=prec)
+        if all(i.is_number for i in self.args):
+            return self.rewrite(C.polygamma)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#
@@ -835,7 +834,8 @@ class catalan(Function):
         return C.hyper([1 - n, -n], [2], 1)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(C.gamma).evalf(prec)
+        if self.args[0].is_number:
+            return self.rewrite(C.gamma)._eval_evalf(prec)
 
 #######################################################################
 ###
