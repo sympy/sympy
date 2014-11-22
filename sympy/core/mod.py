@@ -130,3 +130,8 @@ class Mod(Function):
             p = G.args[0]*p
             G = Mul._from_args(G.args[1:])
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
+
+    def _eval_is_integer(self):
+        from sympy.core.logic import fuzzy_and
+        p, q = self.args
+        return fuzzy_and([p.is_integer, q.is_integer, q.is_nonzero])
