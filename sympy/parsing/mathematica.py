@@ -13,15 +13,10 @@ def parse(s):
 
     # Begin rules
     rules = (
-        # Arithmetic operation between a constant and a function
-        (r"\A(\d+)([*/+-^])(\w+\[[^\]]+[^\[]*\])\Z",
-        lambda m: m.group(
-            1) + translateFunction(m.group(2)) + parse(m.group(3))),
-
-        # Arithmetic operation between two functions
-        (r"\A(\w+\[[^\]]+[^\[]*\])([*/+-^])(\w+\[[^\]]+[^\[]*\])\Z",
-        lambda m: parse(m.group(1)) + translateFunction(
-            m.group(2)) + parse(m.group(3))),
+	# Arithmetic operation between two functions
+	(r"\A(\w+\[[^\]]+[^\[]*\])([*/+-^])(\w+\[[^\]]+[^\[]*\])\Z",
+	lambda m: parse(m.group(1)) + translateFunction(
+	    m.group(2)) + parse(m.group(3))),
 
         (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z",  # Function call
         lambda m: translateFunction(
@@ -41,8 +36,20 @@ def parse(s):
 
         (r"\A(-? *[\d\.]+)([a-zA-Z].*)\Z",  # Implied multiplication - 2a
         lambda m: parse(m.group(1)) + "*" + parse(m.group(2))),
+	
+	#Arithematic operation of a function with a variable or constant
+	#with function on right side
+	(r"\A(.+)([*/+-^])(\w+\[[^\]]+[^\[]*\])\Z",
+	lambda m: parse(m.group(1)) + translateFunction(
+            m.group(2)) + parse(m.group(3))),
+	
+	#Arithematic operation of a function with a variable or constant
+	#with function on left side
+	(r"\A(\w+\[[^\]]+[^\[]*\])([*/+-^])(.+)\Z",
+        lambda m: parse(m.group(1)) + translateFunction(
+            m.group(2)) + parse(m.group(3))),
 
-        (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z",  # Infix operator
+	(r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z",  # Infix operator
         lambda m: parse(m.group(1)) + translateOperator(m.group(2)) + parse(m.group(3))))
     # End rules
 
