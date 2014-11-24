@@ -743,6 +743,18 @@ def test_Mul_is_infinite():
     assert Mul(0, i, evaluate=False).is_infinite is S.NaN.is_infinite
 
 
+def test_Mul_is_prime():
+    k = Symbol('k', integer=True)
+    r = Symbol('r', rational=True)
+    x = Symbol('x')
+    from sympy import Mul
+    assert (9*k).is_prime is False
+    assert (3*r).is_prime is None
+    assert (3*x).is_prime is None
+    assert Mul(4, S.Half, evaluate=False).is_prime is True
+    assert Mul(3, S.One, evaluate=False).is_prime is True
+
+
 def test_special_is_rational():
     i = Symbol('i', integer=True)
     r = Symbol('r', rational=True)
