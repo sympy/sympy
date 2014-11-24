@@ -196,8 +196,7 @@ class Dyadic(object):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
+                ar = e.args  # just to shorten things
                 settings = printer._settings if printer else {}
                 if printer:
                     use_unicode = printer._use_unicode
