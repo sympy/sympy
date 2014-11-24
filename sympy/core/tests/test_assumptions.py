@@ -754,6 +754,7 @@ def test_Mul_is_prime():
     assert (3*x).is_prime is None
     assert (k*r).is_prime is None
     assert Mul(4, S.Half, evaluate=False).is_prime is True
+    assert Mul(5, S.Half, evaluate=False).is_prime is False
     assert Mul(3, S.One, evaluate=False).is_prime is True
     assert Mul(-1, k, evaluate=False).is_prime is False
     assert Mul(0, k, evaluate=False).is_prime is False
