@@ -749,10 +749,15 @@ def test_Mul_is_prime():
     x = Symbol('x')
     from sympy import Mul
     assert (9*k).is_prime is False
+    assert (-1*k).is_prime is False
     assert (3*r).is_prime is None
     assert (3*x).is_prime is None
+    assert (k*r).is_prime is None
     assert Mul(4, S.Half, evaluate=False).is_prime is True
     assert Mul(3, S.One, evaluate=False).is_prime is True
+    assert Mul(-1, k, evaluate=False).is_prime is False
+    assert Mul(0, k, evaluate=False).is_prime is False
+    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
 
 
 def test_special_is_rational():
