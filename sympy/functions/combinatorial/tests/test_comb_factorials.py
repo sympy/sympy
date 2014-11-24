@@ -33,6 +33,16 @@ def test_rf_eval_apply():
 
     assert rf(1, 100) == factorial(100)
 
+    n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
+    assert rf(x, m).is_integer is None
+    assert rf(n, k).is_integer is None
+    assert rf(n, m).is_integer is True
+    assert rf(n, k + pi).is_integer is False
+    assert rf(n, m + pi).is_integer is False
+    assert rf(pi, m).is_integer is False
+
 
 def test_ff_eval_apply():
     x, y = symbols('x,y')
@@ -61,6 +71,16 @@ def test_ff_eval_apply():
     assert ff(x, -3) == 1/((x + 1)*(x + 2)*(x + 3))
 
     assert ff(100, 100) == factorial(100)
+
+    n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
+    assert ff(x, m).is_integer is None
+    assert ff(n, k).is_integer is None
+    assert ff(n, m).is_integer is True
+    assert ff(n, k + pi).is_integer is False
+    assert ff(n, m + pi).is_integer is False
+    assert ff(pi, m).is_integer is False
 
 
 def test_factorial():
@@ -143,6 +163,8 @@ def test_binomial():
     assert binomial(n, n + v) == 0
 
     assert expand_func(binomial(n, n-3)) == n*(n - 2)*(n - 1)/6
+
+    assert binomial(n, k).is_integer
 
 
 def test_binomial_diff():
