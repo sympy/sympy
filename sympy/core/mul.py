@@ -1185,6 +1185,11 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
+    def _eval_is_prime(self):
+        for t in self.args:
+            if t.is_integer:
+                return False
+
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity
