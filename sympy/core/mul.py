@@ -1187,8 +1187,12 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_prime(self):
         for t in self.args:
-            if t.is_integer:
-                return False
+            if t.is_number is False:
+                if t.is_integer:
+                    return False
+                return None
+
+        return self.simplify().is_prime
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
