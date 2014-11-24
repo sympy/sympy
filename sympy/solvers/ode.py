@@ -3728,7 +3728,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
             # Only one series solution exists in this case.
             m1 = m2 = sollist.pop()
             if terms-m1-1 <= 0:
-              return Eq(f(x), Order(terms))
+                return Eq(f(x), Order(terms))
             serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
 
         else:
@@ -5590,16 +5590,16 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                     " the given ODE")
 
             elif hint not in lie_heuristics:
-                 raise ValueError("Heuristic not recognized: " + hint)
+                raise ValueError("Heuristic not recognized: " + hint)
 
             else:
-                 function = globals()['lie_heuristic_' + hint]
-                 xieta = function(match, comp=True)
-                 if xieta:
-                     return xieta
-                 else:
-                     raise ValueError("Infinitesimals could not be found using the"
-                         " given heuristic")
+                function = globals()['lie_heuristic_' + hint]
+                xieta = function(match, comp=True)
+                if xieta:
+                    return xieta
+                else:
+                    raise ValueError("Infinitesimals could not be found using the"
+                                     " given heuristic")
 
 
 def lie_heuristic_abaco1_simple(match, comp=False):

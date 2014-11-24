@@ -118,7 +118,7 @@ class erf(Function):
                 return S.Zero
 
         if arg.func is erfinv:
-             return arg.args[0]
+            return arg.args[0]
 
         if arg.func is erfcinv:
             return S.One - arg.args[0]
@@ -775,7 +775,7 @@ class erfinv(Function):
             return -nz.args[0]
 
     def _eval_rewrite_as_erfcinv(self, z):
-       return erfcinv(1-z)
+        return erfcinv(1-z)
 
 class erfcinv (Function):
     r"""

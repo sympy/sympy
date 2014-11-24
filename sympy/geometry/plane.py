@@ -299,12 +299,12 @@ class Plane(GeometryEntity):
             else:
                 return False
         elif isinstance(l, Plane):
-           a = Matrix(l.normal_vector)
-           b = Matrix(self.normal_vector)
-           if a.dot(b) == 0:
-               return True
-           else:
-               return False
+            a = Matrix(l.normal_vector)
+            b = Matrix(self.normal_vector)
+            if a.dot(b) == 0:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -348,12 +348,12 @@ class Plane(GeometryEntity):
             return S.Zero
 
         if isinstance(o, Point3D):
-           x, y, z = map(Dummy, 'xyz')
-           k = self.equation(x, y, z)
-           a, b, c = [k.coeff(i) for i in (x, y, z)]
-           d = k.xreplace({x: o.args[0], y: o.args[1], z: o.args[2]})
-           t = abs(d/sqrt(a**2 + b**2 + c**2))
-           return t
+            x, y, z = map(Dummy, 'xyz')
+            k = self.equation(x, y, z)
+            a, b, c = [k.coeff(i) for i in (x, y, z)]
+            d = k.xreplace({x: o.args[0], y: o.args[1], z: o.args[2]})
+            t = abs(d/sqrt(a**2 + b**2 + c**2))
+            return t
         if isinstance(o, LinearEntity3D):
             a, b = o.p1, self.p1
             c = Matrix(a.direction_ratio(b))

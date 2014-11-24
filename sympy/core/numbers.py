@@ -1372,7 +1372,7 @@ class Rational(Number):
         expr = self
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                 return _sympify(bool(self.p*other.q >= self.q*other.p))
+                return _sympify(bool(self.p*other.q >= self.q*other.p))
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_)))
@@ -3147,7 +3147,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
         return 1
 
     def _as_mpf_val(self, prec):
-         # XXX track down why this has to be increased
+        # XXX track down why this has to be increased
         rv = mlib.from_man_exp(phi_fixed(prec + 10), -prec - 10)
         return mpf_norm(rv, prec)
 
@@ -3210,7 +3210,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
         return 0
 
     def _as_mpf_val(self, prec):
-         # XXX track down why this has to be increased
+        # XXX track down why this has to be increased
         v = mlib.libhyper.euler_fixed(prec + 10)
         rv = mlib.from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)

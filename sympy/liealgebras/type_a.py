@@ -97,8 +97,8 @@ class TypeA(Standard_Cartan):
         k = 0
         for i in range(0, n):
             for j in range(i+1, n+1):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
+                k += 1
+                posroots[k] = self.basic_root(i, j)
         return posroots
 
     def highest_root(self):

@@ -148,7 +148,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                     if A is not None and B is not None:
                         a, s, z = A
                         if a == 1:
-                             n = min(n, s/2)
+                            n = min(n, s/2)
 
     N = max(0, -nb)
     pN = p**N
