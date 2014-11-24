@@ -108,8 +108,9 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types, NotIterable
+from sympy.core import AtomicExpr, Expr, Tuple, Symbol, sympify, S
+from sympy.core.compatibility import (is_sequence, string_types,
+    NotIterable, reduce)
 
 
 class IndexException(Exception):
@@ -134,7 +135,7 @@ class Indexed(Expr):
     """
     is_commutative = True
 
-    def __new__(cls, base, *args, **kw_args):
+    def __new__(cls, base, *args):
         from sympy.utilities.misc import filldedent
 
         if not args:
@@ -145,7 +146,7 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol or IndexedBase as base."""))
         args = list(map(sympify, args))
-        return Expr.__new__(cls, base, *args, **kw_args)
+        return Expr.__new__(cls, base, *args)
 
     @property
     def base(self):
@@ -272,7 +273,7 @@ class Indexed(Expr):
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
-class IndexedBase(Expr, NotIterable):
+class IndexedBase(AtomicExpr, NotIterable):
     """Represent the base or stem of an indexed object
 
     The IndexedBase class represent an array that contains elements. The main purpose
@@ -325,7 +326,7 @@ class IndexedBase(Expr, NotIterable):
     """
     is_commutative = True
 
-    def __new__(cls, label, shape=None, **kw_args):
+    def __new__(cls, label, shape=None):
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
@@ -333,44 +334,31 @@ class IndexedBase(Expr, NotIterable):
         else:
             raise TypeError("Base label should be a string or Symbol.")
 
-        obj = Expr.__new__(cls, label, **kw_args)
+        label = Symbol(label) if not isinstance(label, Symbol) else label
         if is_sequence(shape):
-            obj._shape = Tuple(*shape)
+            shape = Tuple(*shape)
         else:
-            obj._shape = sympify(shape)
-        return obj
+            shape = sympify(shape)
+        return AtomicExpr.__new__(cls, label, shape)
 
-    @property
-    def args(self):
-        """Returns the arguments used to create this IndexedBase object.
-
-        Examples
-        ========
-
-        >>> from sympy import IndexedBase
-        >>> from sympy.abc import x, y
-        >>> IndexedBase('A', shape=(x, y)).args
-        (A, (x, y))
-
-        """
-        if self._shape:
-            return self._args + (self._shape,)
-        else:
-            return self._args
-
-    def _hashable_content(self):
-        return Expr._hashable_content(self) + (self._shape,)
-
-    def __getitem__(self, indices, **kw_args):
+    def __getitem__(self, indices):
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch.")
-            return Indexed(self, *indices, **kw_args)
+            return Indexed(self, *indices)
         else:
             if self.shape and len(self.shape) != 1:
                 raise IndexException("Rank mismatch.")
-            return Indexed(self, indices, **kw_args)
+            return Indexed(self, indices)
+
+    @property
+    def free_symbols(self):
+        if self.shape is None:
+            return self.label.free_symbols
+        else:
+            union = set.union
+            return reduce(union, [arg.free_symbols for arg in self.args], set())
 
     @property
     def shape(self):
@@ -397,7 +385,8 @@ class IndexedBase(Expr, NotIterable):
         (2, 1)
 
         """
-        return self._shape
+        return self._args[1]
+
 
     @property
     def label(self):
@@ -412,7 +401,7 @@ class IndexedBase(Expr, NotIterable):
         A
 
         """
-        return self.args[0]
+        return self._args[0]
 
     def _sympystr(self, p):
         return p.doprint(self.label)
@@ -487,7 +476,7 @@ class Idx(Expr):
 
     is_integer = True
 
-    def __new__(cls, label, range=None, **kw_args):
+    def __new__(cls, label, range=None):
         from sympy.utilities.misc import filldedent
 
         if isinstance(label, string_types):
@@ -516,7 +505,7 @@ class Idx(Expr):
         else:
             args = label,
 
-        obj = Expr.__new__(cls, *args, **kw_args)
+        obj = Expr.__new__(cls, *args)
         return obj
 
     @property
@@ -539,6 +528,23 @@ class Idx(Expr):
         return self.args[0]
 
     @property
+    def range(self):
+        """Returns the range of the Idx object.
+
+        Examples
+        ========
+
+        >>> from sympy import Idx
+        >>> Idx('j', 2).range
+        (0, 1)
+
+        """
+        try:
+            return self.args[1]
+        except IndexError:
+            return (None, None)
+
+    @property
     def lower(self):
         """Returns the lower bound of the Index.
 
@@ -554,10 +560,7 @@ class Idx(Expr):
         True
 
         """
-        try:
-            return self.args[1][0]
-        except IndexError:
-            return
+        return self.range[0]
 
     @property
     def upper(self):
@@ -575,10 +578,7 @@ class Idx(Expr):
         True
 
         """
-        try:
-            return self.args[1][1]
-        except IndexError:
-            return
+        return self.range[1]
 
     def _sympystr(self, p):
         return p.doprint(self.label)

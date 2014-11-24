@@ -12,6 +12,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, xrange
 from sympy.utilities.iterables import filter_symbols, \
     numbered_symbols, sift, topological_sort, ordered
+from sympy.tensor import Idx
 
 from . import cse_opts
 
@@ -294,7 +295,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     seen_subexp = set()
 
     def _find_repeated(expr):
-        if expr.is_Atom or expr.is_Order:
+        if expr.is_Atom or expr.is_Order or isinstance(expr, Idx):
             return
 
         if iterable(expr):

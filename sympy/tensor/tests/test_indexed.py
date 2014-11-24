@@ -30,8 +30,10 @@ def test_Idx_properties():
 
 def test_Idx_bounds():
     i, a, b = symbols('i a b', integer=True)
+    assert Idx(i).range == (None, None)
     assert Idx(i).lower is None
     assert Idx(i).upper is None
+    assert Idx(i, a).range == (0, a - 1)
     assert Idx(i, a).lower == 0
     assert Idx(i, a).upper == a - 1
     assert Idx(i, 5).lower == 0
@@ -191,3 +193,17 @@ def test_Indexed_coeff():
     a = (1/y[i+1]*y[i]).coeff(y[i])
     b = (y[i]/y[i+1]).coeff(y[i])
     assert a == b
+
+
+def test_Indexed_free_symbols():
+    # Added in PR 7347: free_symbols method was added
+    # to make solve() work after modifications to Indexed.
+    N = Symbol('N', integer=True)
+    len_y = N
+    i = Idx('i', len_y-1)
+    y = IndexedBase('y', shape=(len_y,))
+    assert y[i].free_symbols == set([N, y.label, i.label])
+
+    z = IndexedBase('z')
+    j = Idx('j')
+    assert z[j].free_symbols == set([z.label, j.label])
