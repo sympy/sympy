@@ -385,7 +385,7 @@ class Set(Basic):
         >>> A.powerset()
         {EmptySet()}
         >>> A = FiniteSet(1, 2)
-        >>>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
+        >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
         >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
         True
 
