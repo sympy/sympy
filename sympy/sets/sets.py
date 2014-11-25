@@ -993,10 +993,12 @@ class Interval(Set, EvalfMixin):
         return self.end - self.start
 
     def to_mpi(self, prec=53):
-        return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
+        return mpi(mpf(self.start._eval_evalf(prec)),
+            mpf(self.end._eval_evalf(prec)))
 
     def _eval_evalf(self, prec):
-        return Interval(self.left.evalf(), self.right.evalf(),
+        return Interval(self.left._eval_evalf(prec),
+            self.right._eval_evalf(prec),
                         left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
@@ -1242,7 +1244,7 @@ class Union(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         try:
-            return Union(set.evalf() for set in self.args)
+            return Union(set._eval_evalf(prec) for set in self.args)
         except Exception:
             raise TypeError("Not all sets are evalf-able")
 
@@ -1764,7 +1766,7 @@ class FiniteSet(Set, EvalfMixin):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem.evalf(prec) for elem in self])
+        return FiniteSet(*[elem._eval_evalf(prec) for elem in self])
 
     def _hashable_content(self):
         return (self._elements,)
