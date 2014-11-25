@@ -326,7 +326,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
 
     def _rebuild(expr):
 
-        if expr.is_Atom:
+        if not expr.args:
             return expr
 
         if iterable(expr):
