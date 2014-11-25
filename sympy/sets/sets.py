@@ -263,8 +263,11 @@ class Set(Basic):
         True
 
         """
-        ret = self._contains(sympify(other, strict=True))
+        other = sympify(other, strict=True)
+        ret = self._contains(other)
         if ret is None:
+            if all(Eq(i, other) == False for i in self):
+                return False
             ret = Contains(other, self, evaluate=False)
         return ret
 
