@@ -1019,22 +1019,17 @@ class Interval(Set, EvalfMixin):
         """Return ``True`` if the right endpoint is positive infinity. """
         return self.right is S.Infinity or self.right == Float("+inf")
 
-    def as_relational(self, symbol):
-        """Rewrite an interval in terms of inequalities and logic operators. """
-        other = sympify(symbol)
+    def as_relational(self, x):
+        """Rewrite an interval in terms of inequalities and logic operators."""
+        x = sympify(x)
         if self.right_open:
-            right = other < self.end
+            right = x < self.end
         else:
-            right = other <= self.end
-        if right == True:
-            if self.left_open:
-                return other > self.start
-            else:
-                return other >= self.start
+            right = x <= self.end
         if self.left_open:
-            left = self.start < other
+            left = self.start < x
         else:
-            left = self.start <= other
+            left = self.start <= x
         return And(left, right)
 
     def _eval_Eq(self, other):
