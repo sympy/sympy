@@ -718,13 +718,14 @@ class Interval(Set, EvalfMixin):
 
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
-        if not (start.is_real or start in inftys) or not (end.is_real or end in inftys):
-            raise ValueError("Only real intervals are supported")
+        if not all(i.is_real is not False or i in inftys for i in (start, end)):
+            raise ValueError("Non-real intervals are not supported")
 
-        # Make sure that the created interval will be valid.
-        if end.is_comparable and start.is_comparable:
-            if end < start:
-                return S.EmptySet
+        # evaluate if possible
+        if (end < start) == True:
+            return S.EmptySet
+        elif (end - start).is_negative:
+            return S.EmptySet
 
         if end == start and (left_open or right_open):
             return S.EmptySet
