@@ -23,12 +23,12 @@ class Set(Basic):
     """
     The base class for any kind of set.
 
-    This is not meant to be used directly as a container of items.
-    It does not behave like the builtin ``set``; see :class:`FiniteSet` for that.
+    This is not meant to be used directly as a container of items. It does not
+    behave like the builtin ``set``; see :class:`FiniteSet` for that.
 
-    Real intervals are represented by the :class:`Interval` class and unions of sets
-    by the :class:`Union` class. The empty set is represented by the :class:`EmptySet` class
-    and available as a singleton as ``S.EmptySet``.
+    Real intervals are represented by the :class:`Interval` class and unions of
+    sets by the :class:`Union` class. The empty set is represented by the
+    :class:`EmptySet` class and available as a singleton as ``S.EmptySet``.
     """
     is_number = False
     is_iterable = False
@@ -178,7 +178,8 @@ class Set(Basic):
             # For each set consider it or it's complement
             # We need at least one of the sets to be complemented
             # Consider all 2^n combinations.
-            # We can conveniently represent these options easily using a ProductSet
+            # We can conveniently represent these options easily using a
+            # ProductSet
 
             # XXX: this doesn't work if the dimentions of the sets isn't same.
             # A - B is essentially same as A if B has a different
@@ -384,7 +385,8 @@ class Set(Basic):
         >>> A.powerset()
         {EmptySet()}
         >>> A = FiniteSet(1, 2)
-        >>> A.powerset() == FiniteSet(FiniteSet(1), FiniteSet(2), FiniteSet(1, 2), EmptySet())
+        >>>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
+        >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
         True
 
         References
@@ -596,7 +598,8 @@ class ProductSet(Set):
                 return false
         except TypeError:  # maybe element isn't an iterable
             return false
-        return And(*[set.contains(item) for set, item in zip(self.sets, element)])
+        return And(*
+            [set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
         """
@@ -711,7 +714,8 @@ class Interval(Set, EvalfMixin):
         left_open = _sympify(left_open)
         right_open = _sympify(right_open)
 
-        if not all(isinstance(a, (type(true), type(false))) for a in [left_open, right_open]):
+        if not all(isinstance(a, (type(true), type(false)))
+            for a in [left_open, right_open]):
             raise NotImplementedError(
                 "left_open and right_open can have only true/false values, "
                 "got %s and %s" % (left_open, right_open))
@@ -945,7 +949,8 @@ class Interval(Set, EvalfMixin):
             return
 
         try:
-            sing = [x for x in singularities(expr, var) if x.is_real and x in self]
+            sing = [x for x in singularities(expr, var)
+                if x.is_real and x in self]
         except NotImplementedError:
             return
 
@@ -1378,7 +1383,7 @@ class Intersection(Set):
         for s in args:
             if s.is_FiniteSet:
                 return s.func(*[x for x in s
-                                if all(other.contains(x) == True for other in args)])
+                    if all(other.contains(x) == True for other in args)])
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1428,8 +1433,8 @@ class Intersection(Set):
 
 
 class Complement(Set, EvalfMixin):
-    """
-    Represents the set difference or relative complement of a set with another set.
+    """Represents the set difference or relative complement of a set with
+    another set.
 
     `A - B = \{x \in A| x \\notin B\}`
 
@@ -1667,11 +1672,12 @@ class FiniteSet(Set, EvalfMixin):
             if nums != []:
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
                 for a, b in zip(nums[:-1], nums[1:]):
-                    intervals.append(Interval(a, b, True, True))  # open intervals
+                    intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
             if syms != []:
-                return Complement(Union(intervals, evaluate=False), FiniteSet(*syms), evaluate=False)
+                return Complement(Union(intervals, evaluate=False),
+                    FiniteSet(*syms), evaluate=False)
             else:
                 return Union(intervals, evaluate=False)
 
