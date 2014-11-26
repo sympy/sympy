@@ -228,6 +228,10 @@ class subfactorial(CombinatorialFunction):
             if sympify(arg).is_Number:
                 raise ValueError("argument must be a nonnegative integer")
 
+    def _eval_is_integer(self):
+        return fuzzy_and((self.args[0].is_integer,
+                          self.args[0].is_nonnegative))
+
 
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
