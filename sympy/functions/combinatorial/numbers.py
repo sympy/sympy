@@ -45,12 +45,16 @@ _symbols = Function('x')
 #----------------------------------------------------------------------------#
 
 class fibonacci(Function):
-    """
+    r"""
     Fibonacci numbers / Fibonacci polynomials
 
     The Fibonacci numbers are the integer sequence defined by the
     initial terms F_0 = 0, F_1 = 1 and the two-term recurrence
-    relation F_n = F_{n-1} + F_{n-2}.
+    relation F_n = F_{n-1} + F_{n-2}.  This definition
+    extended to arbitrary real and complex arguments using
+    the formula
+
+    .. math :: F_z = \frac{\phi^z - \cos(\pi z) \phi^{-z}}{\sqrt 5}
 
     The Fibonacci polynomials are defined by F_1(x) = 1,
     F_2(x) = x, and F_n(x) = x*F_{n-1}(x) + F_{n-2}(x) for n > 2.
