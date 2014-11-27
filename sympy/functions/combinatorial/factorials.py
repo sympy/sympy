@@ -270,6 +270,10 @@ class factorial2(CombinatorialFunction):
                 return S.One
             return factorial2(arg - 2)*arg
 
+    def _eval_is_integer(self):
+        return fuzzy_and((self.args[0].is_integer,
+                          (self.args[0] + 1).is_nonnegative))
+
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################

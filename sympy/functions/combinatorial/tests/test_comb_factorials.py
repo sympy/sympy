@@ -131,6 +131,26 @@ def test_factorial2():
     assert factorial2(8) == 384
     assert factorial2(n).func == factorial2
 
+    # The following is exhaustive
+    tt = Symbol('tt', integer=True, nonnegative=True)
+    tf = Symbol('tf', integer=True, nonnegative=False)
+    ft = Symbol('ft', integer=False, nonnegative=True)
+    ff = Symbol('ff', integer=False, nonnegative=False)
+    fn = Symbol('fn', integer=False)
+    nt = Symbol('nt', nonnegative=True)
+    nf = Symbol('nf', nonnegative=False)
+    nn = Symbol('nn')
+
+    assert factorial2(tt - 1).is_integer
+    assert factorial2(tf - 1).is_integer is False
+    assert factorial2(n).is_integer is None
+    assert factorial2(ft - 1).is_integer is False
+    assert factorial2(ff - 1).is_integer is False
+    assert factorial2(fn).is_integer is False
+    assert factorial2(nt - 1).is_integer is None
+    assert factorial2(nf - 1).is_integer is False
+    assert factorial2(nn).is_integer is None
+
 
 def test_binomial():
     n = Symbol('n', integer=True)
