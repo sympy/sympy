@@ -758,20 +758,22 @@ class PrettyPrinter(Printer):
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
-        e = expr
 
+        if not self._use_unicode:
+            raise NotImplementedError("ASCII pretty printing of BasisDependent is not implemented")
         class Fake(object):
             baseline = 0
 
-            def render(self, *args, **kwargs):
-                if e == e.zero:
-                    return e.zero._pretty_form
+            # slf to distinguish from self from _print_BasisDependent
+            def render(slf, *args, **kwargs):
+                if expr == expr.zero:
+                    return expr.zero._pretty_form
                 o1 = []
                 vectstrs = []
-                if isinstance(e, Vector):
-                    items = e.separate().items()
+                if isinstance(expr, Vector):
+                    items = expr.separate().items()
                 else:
-                    items = [(0, e)]
+                    items = [(0, expr)]
                 for system, vect in items:
                     inneritems = list(vect.components.items())
                     inneritems.sort(key = lambda x: x[0].__str__())
@@ -788,8 +790,8 @@ class PrettyPrinter(Printer):
                         #For a general expr
                         else:
                             #We always wrap the measure numbers in
-                            #parantheses
-                            arg_str = PrettyPrinter()._print(
+                            #parentheses
+                            arg_str = self._print(
                                 v).parens()[0]
 
                             o1.append(arg_str + ' ' + k._pretty_form)
@@ -804,6 +806,7 @@ class PrettyPrinter(Printer):
                 lengths = []
                 strs = ['']
                 for i, partstr in enumerate(o1):
+                    # XXX: What is this hack?
                     if '\n' in partstr:
                         tempstr = partstr
                         tempstr = tempstr.replace(vectstrs[i], '')
