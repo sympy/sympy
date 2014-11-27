@@ -150,6 +150,15 @@ def test_factorial2():
     assert factorial2(nt - 1).is_integer is None
     assert factorial2(nf - 1).is_integer is False
     assert factorial2(nn).is_integer is None
+    assert factorial2(tt - 1).is_positive
+    assert factorial2(tf - 1).is_positive is False
+    assert factorial2(n).is_positive is None
+    assert factorial2(ft - 1).is_positive is False
+    assert factorial2(ff - 1).is_positive is False
+    assert factorial2(fn).is_positive is False
+    assert factorial2(nt - 1).is_positive is None
+    assert factorial2(nf - 1).is_positive is False
+    assert factorial2(nn).is_positive is None
 
 
 def test_binomial():
