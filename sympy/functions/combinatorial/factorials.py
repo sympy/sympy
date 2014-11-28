@@ -275,6 +275,10 @@ class factorial2(CombinatorialFunction):
         return fuzzy_and((self.args[0].is_integer,
                           (self.args[0] + 1).is_nonnegative))
 
+    def _eval_is_positive(self):
+        return fuzzy_and((self.args[0].is_integer,
+                          (self.args[0] + 1).is_nonnegative))
+
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
