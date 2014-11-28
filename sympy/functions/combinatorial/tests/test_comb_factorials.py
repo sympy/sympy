@@ -84,8 +84,10 @@ def test_ff_eval_apply():
 
 
 def test_factorial():
+    x = Symbol('x')
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, positive=True)
+    r = Symbol('r', integer=False)
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
@@ -93,7 +95,10 @@ def test_factorial():
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
+    assert factorial(x).is_integer is None
     assert factorial(n).is_integer
+    assert factorial(r).is_integer is None
+
     assert factorial(n).is_positive is None
     assert factorial(k).is_positive
 
