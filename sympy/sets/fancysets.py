@@ -274,6 +274,25 @@ class ImageSet(Set):
                 # since 'a' < 'b'
                 return imageset(Lambda(t, f.subs(a, solns[0][0])), S.Integers)
 
+        if other == S.Reals:
+            from sympy.solvers.solveset import solveset_real
+            from sympy.core.function import expand_complex
+            if len(self.lamda.variables) > 1:
+                return None
+
+            f = self.lamda.expr
+            n = self.lamda.variables[0]
+
+            n_ = Dummy(n.name, real=True)
+            f_ = f.subs(n, n_)
+
+            re, im = f_.as_real_imag()
+            im = expand_complex(im)
+
+            return imageset(Lambda(n_, re),
+                            self.base_set.intersect(
+                                solveset_real(im, n_)))
+
 
 @deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
 def TransformationSet(*args, **kwargs):
