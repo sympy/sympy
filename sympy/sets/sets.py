@@ -1319,11 +1319,11 @@ class Intersection(Set):
         if len(args) == 0:
             raise TypeError("Intersection expected at least one argument")
 
+        args = list(ordered(args, Set._infimum_key))
+
         # Reduce sets using known rules
         if evaluate:
             return Intersection.reduce(args)
-
-        args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
 
@@ -1376,8 +1376,14 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.func(*[x for x in s
-                                if all(other.contains(x) == True for other in args)])
+                args = [a for a in args if a != s]
+                res = s.func(*[x for x in s
+                             if all(other.contains(x) == True for other in args)])
+                unk = [x for x in s
+                      if any(other.contains(x) not in (True, False) for other in args)]
+                if unk:
+                    res += Intersection(*([s.func(*unk)] + args), evaluate=False)
+                return res
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
