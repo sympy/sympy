@@ -11,7 +11,8 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan,
+    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
+    solve
 )
 
 from sympy.utilities.pytest import raises, XFAIL
@@ -89,6 +90,7 @@ def test_RootOf___new__():
     raises(IndexError, lambda: RootOf(x**2 - 1, -3))
     raises(IndexError, lambda: RootOf(x**2 - 1, 2))
     raises(IndexError, lambda: RootOf(x**2 - 1, 3))
+    raises(ValueError, lambda: RootOf(x**2 - 1, x))
 
     assert RootOf(Poly(x - y, x), 0) == y
 
@@ -125,6 +127,28 @@ def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 1)) is True
     assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 2)) is False
     assert (RootOf(x**3 + x + 3, 2) == RootOf(y**3 + y + 3, 2)) is True
+
+
+def test_RootOf___eval_Eq__():
+    f = Function('f')
+    r = RootOf(x**3 + x + 3, 2)
+    r1 = RootOf(x**3 + x + 3, 1)
+    assert Eq(r, r1) is S.false
+    assert Eq(r, r) is S.true
+    assert Eq(r, x) is S.false
+    assert Eq(r, 0) is S.false
+    assert Eq(r, S.Infinity) is S.false
+    assert Eq(r, I) is S.false
+    assert Eq(r, f(0)) is S.false
+    assert Eq(r, f(0)) is S.false
+    sol = solve(r.expr)
+    for s in sol:
+        if s.is_real:
+            assert Eq(r, s) is S.false
+    r = RootOf(r.expr, 0)
+    for s in sol:
+        if s.is_real:
+            assert Eq(r, s) is S.true
 
 
 def test_RootOf_is_real():

@@ -2,7 +2,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains)
+    Eq, Pow, Contains, Sum, RootOf)
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -16,8 +16,11 @@ def test_interval_arguments():
     assert Interval(0, oo).right_open is true
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
     assert Interval(-oo, 0).left_open is true
+    assert Interval(oo, -oo) == S.EmptySet
 
     assert isinstance(Interval(1, 1), FiniteSet)
+    e = Sum(x, (x, 1, 3))
+    assert isinstance(Interval(e, e), FiniteSet)
 
     assert Interval(1, 0) == S.EmptySet
     assert Interval(1, 1).measure == 0
@@ -26,13 +29,16 @@ def test_interval_arguments():
     assert Interval(1, 1, True, False) == S.EmptySet
     assert Interval(1, 1, True, True) == S.EmptySet
 
+
+    assert isinstance(Interval(0, Symbol('a')), Interval)
+    assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
-    raises(ValueError, lambda: Interval(0, Symbol('z')))
+    raises(ValueError, lambda: Interval(0, Symbol('z', real=False)))
+
     raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, z, And(x, y)))
 
-    assert isinstance(Interval(1, Symbol('a', real=True)), Interval)
 
 
 def test_interval_symbolic_end_points():
@@ -420,6 +426,7 @@ def test_contains():
     assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
     assert S.EmptySet.contains(1) is S.false
+    assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
 
 
 def test_interval_symbolic():
@@ -479,13 +486,17 @@ def test_Interval_as_relational():
     assert Interval(-1, 2, True, True).as_relational(x) == \
         And(Lt(-1, x), Lt(x, 2))
 
-    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Le(x, 2), Lt(-oo, x))
-    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(x, 2), Lt(-oo, x))
+    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Lt(-oo, x), Le(x, 2))
+    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(-oo, x), Lt(x, 2))
 
     assert Interval(-2, oo, left_open=False).as_relational(x) == And(Le(-2, x), Lt(x, oo))
     assert Interval(-2, oo, left_open=True).as_relational(x) == And(Lt(-2, x), Lt(x, oo))
 
     assert Interval(-oo, oo).as_relational(x) == And(Lt(-oo, x), Lt(x, oo))
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert Interval(x, y).as_relational(x) == (x <= y)
+    assert Interval(y, x).as_relational(x) == (y <= x)
 
 
 def test_Finite_as_relational():
