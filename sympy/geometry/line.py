@@ -375,6 +375,7 @@ class LinearEntity(GeometryEntity):
 
         """
         d = self.p1 - self.p2
+        p = Point(p)
         return Line(p, p + d)
 
     def perpendicular_line(self, p):
@@ -409,6 +410,7 @@ class LinearEntity(GeometryEntity):
         True
 
         """
+        p = Point(p)
         d1, d2 = (self.p1 - self.p2).args
         if d2 == 0:  # If a horizontal line
             if p.y == self.p1.y:  # if p is on this linear entity
@@ -462,6 +464,7 @@ class LinearEntity(GeometryEntity):
         Segment(Point(2, 2), Point(4, 0))
 
         """
+        p = Point(p)
         if p in self:
             return p
         a, b, c = self.coefficients
@@ -1619,7 +1622,7 @@ class Segment(LinearEntity):
 
         """
         l = LinearEntity.perpendicular_line(self, self.midpoint)
-        if p is None or p not in l:
+        if p is None or Point(p) not in l:
             return l
         else:
             return Segment(self.midpoint, p)
