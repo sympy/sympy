@@ -662,7 +662,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u('\u2020'))
+            pform = pform**prettyForm(u('\N{DAGGER}'))
         else:
             pform = pform**prettyForm('+')
         return pform

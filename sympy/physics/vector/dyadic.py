@@ -207,7 +207,7 @@ class Dyadic(object):
                 mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u("\u2297") if use_unicode else "|"
+                bar = u("\N{CIRCLED TIMES}") if use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1

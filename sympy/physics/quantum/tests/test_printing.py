@@ -879,5 +879,5 @@ u("""\
 
 def _test_sho1d():
     ad = RaisingOp('a')
-    assert pretty(ad) == u(' \u2020\na ')
+    assert pretty(ad) == u(' \N{DAGGER}\na ')
     assert latex(ad) == 'a^{\\dag}'

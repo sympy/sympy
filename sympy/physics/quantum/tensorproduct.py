@@ -201,7 +201,7 @@ class TensorProduct(Expr):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u('\u2a02') + u(' ')))
+                    pform = prettyForm(*pform.right(u('\N{N-ARY CIRCLED TIMES OPERATOR}') + u(' ')))
                 else:
                     pform = prettyForm(*pform.right('x' + ' '))
         return pform
