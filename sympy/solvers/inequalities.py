@@ -226,13 +226,15 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                     expr, rel = expr, '=='
 
             if expr is S.true:
-                continue
+                numer, denom, rel = S.Zero, S.One, '=='
             elif expr is S.false:
-                return S.EmptySet if not relational else expr
+                numer, denom, rel = S.One, S.One, '=='
+            else:
+                numer, denom = expr.together().as_numer_denom()
 
             try:
                 (numer, denom), opt = parallel_poly_from_expr(
-                    expr.together().as_numer_denom(), gen)
+                    (numer, denom), gen)
             except PolynomialError:
                 raise PolynomialError("only polynomials and "
                     "rational functions are supported in this context")

@@ -6,7 +6,8 @@ from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve)
+                                        solve_univariate_inequality as isolve,
+                                        reduce_abs_inequality)
 from sympy.utilities.pytest import raises
 from sympy.polys.rootoftools import RootOf
 from sympy.solvers.solvers import solve
@@ -299,3 +300,9 @@ def test_solve_univariate_inequality():
     # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
+
+
+def test_issue_8545():
+    x = Symbol('x', real=True)
+    eq = 1 - x - sqrt((1 - x)**2)
+    assert reduce_abs_inequality(eq, '<', x) == And(Lt(1, x), Lt(x, oo))
