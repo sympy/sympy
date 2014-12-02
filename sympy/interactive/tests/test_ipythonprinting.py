@@ -69,8 +69,10 @@ def test_print_builtin_option():
     # Note : In Python 3 the text is unicode, but in 2 it is a string.
     # XXX: How can we make this ignore the terminal width? This test fails if
     # the terminal is too narrow.
-    assert text in ("{pi: 3.14, n_i: 3}", u('{n\N{GREEK SMALL LETTER I}: 3, \N{GREEK SMALL LETTER PI}: 3.14}'),
-        "{n_i: 3, pi: 3.14}", u('{\N{GREEK SMALL LETTER PI}: 3.14, n\N{GREEK SMALL LETTER I}: 3}'))
+    assert text in ("{pi: 3.14, n_i: 3}",
+                    u('{n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3, \N{GREEK SMALL LETTER PI}: 3.14}'),
+                    "{n_i: 3, pi: 3.14}",
+                    u('{\N{GREEK SMALL LETTER PI}: 3.14, n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3}'))
 
     # If we enable the default printing, then the dictionary's should render
     # as a LaTeX version of the whole dict: ${\pi: 3.14, n_i: 3}$
@@ -84,8 +86,10 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         latex = app.user_ns['a'][0]['text/latex']
-    assert text in ("{pi: 3.14, n_i: 3}", u('{n\N{GREEK SMALL LETTER I}: 3, \N{GREEK SMALL LETTER PI}: 3.14}'),
-        "{n_i: 3, pi: 3.14}", u('{\N{GREEK SMALL LETTER PI}: 3.14, n\N{GREEK SMALL LETTER I}: 3}'))
+    assert text in ("{pi: 3.14, n_i: 3}",
+                    u('{n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3, \N{GREEK SMALL LETTER PI}: 3.14}'),
+                    "{n_i: 3, pi: 3.14}",
+                    u('{\N{GREEK SMALL LETTER PI}: 3.14, n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3}'))
     assert latex == r'$$\left \{ n_{i} : 3, \quad \pi : 3.14\right \}$$'
 
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
