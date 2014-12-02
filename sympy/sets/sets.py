@@ -1154,7 +1154,7 @@ class Union(Set, EvalfMixin):
         else:
             return Union(args, evaluate=False)
 
-    def complement(self, universe):
+    def _complement(self, universe):
         # DeMorgan's Law
         return Intersection(s.complement(universe) for s in self.args)
 
@@ -1547,6 +1547,9 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _boundary(self):
         return self
 
+    def _complement(self, other):
+        return other
+
 
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
@@ -1579,7 +1582,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     def _intersect(self, other):
         return other
 
-    def complement(self, universal_set):
+    def _complement(self, other):
         return S.EmptySet
 
     @property
