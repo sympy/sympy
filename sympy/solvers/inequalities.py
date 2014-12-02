@@ -273,7 +273,7 @@ def reduce_abs_inequality(expr, rel, gen):
     Examples
     ========
 
-    >>> from sympy import Q, Abs, Symbol
+    >>> from sympy import Abs, Symbol
     >>> from sympy.solvers.inequalities import reduce_abs_inequality
     >>> x = Symbol('x', real=True)
 
@@ -296,7 +296,7 @@ def reduce_abs_inequality(expr, rel, gen):
         exprs = []
 
         if expr.is_Add or expr.is_Mul:
-            op = expr.__class__
+            op = expr.func
 
             for arg in expr.args:
                 _exprs = _bottom_up_scan(arg)
@@ -355,7 +355,7 @@ def reduce_abs_inequalities(exprs, gen):
     Examples
     ========
 
-    >>> from sympy import Q, Abs, Symbol
+    >>> from sympy import Abs, Symbol
     >>> from sympy.abc import x
     >>> from sympy.solvers.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', real=True)
@@ -455,7 +455,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import Q, sympify as S, Symbol
+    >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
