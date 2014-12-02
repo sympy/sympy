@@ -2,8 +2,9 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
                    Or, Q, re, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Float)
+                   Function, Float, Poly)
 from sympy.solvers.inequalities import (reduce_inequalities,
+                                        solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve)
 from sympy.utilities.pytest import raises
@@ -11,6 +12,13 @@ from sympy.polys.rootoftools import RootOf
 from sympy.solvers.solvers import solve
 
 inf = oo.evalf()
+
+
+def test_solve_poly_inequality():
+    x = Symbol('x', real=True)
+
+    assert psolve(Poly(0, x), '==') == [S.Reals]
+    assert psolve(Poly(1, x), '==') == [S.EmptySet]
 
 
 def test_reduce_poly_inequalities_real_interval():
@@ -63,7 +71,6 @@ def test_reduce_poly_inequalities_real_interval():
     assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, False), Interval(1, s, False, True))
     assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(1, s, True, True))
     assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(-1, 1, True, True), Interval(1, s, True, True))
-
 
 
 def test_reduce_poly_inequalities_real_relational():

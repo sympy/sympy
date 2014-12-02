@@ -37,7 +37,18 @@ def solve_poly_inequality(poly, rel):
     ========
     solve_poly_inequalities
     """
-    reals, intervals = poly.real_roots(multiple=False), []
+    expr = poly.as_expr()
+
+    if not expr.free_symbols:
+        t = Relational(expr, 0, rel)
+        if t is S.true:
+            return [S.Reals]
+        elif t is S.false:
+            return [S.EmptySet]
+        else:
+            raise NotImplementedError
+    else:
+        reals, intervals = poly.real_roots(multiple=False), []
 
     if rel == '==':
         for root, _ in reals:
