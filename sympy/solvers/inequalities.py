@@ -155,19 +155,16 @@ def solve_rational_inequalities(eqs):
             numer_intervals = solve_poly_inequality(numer*denom, rel)
             denom_intervals = solve_poly_inequality(denom, '==')
 
-            if global_intervals is None:
-                global_intervals = numer_intervals
-            else:
-                intervals = []
+            intervals = []
 
-                for numer_interval in numer_intervals:
-                    for global_interval in global_intervals:
-                        interval = numer_interval.intersect(global_interval)
+            for numer_interval in numer_intervals:
+                for global_interval in global_intervals:
+                    interval = numer_interval.intersect(global_interval)
 
-                        if interval is not S.EmptySet:
-                            intervals.append(interval)
+                    if interval is not S.EmptySet:
+                        intervals.append(interval)
 
-                global_intervals = intervals
+            global_intervals = intervals
 
             intervals = []
 
