@@ -280,7 +280,7 @@ class LinearEntity3D(GeometryEntity):
 
         """
         if l1 == l2:
-            return False
+            return True
         a = l1.direction_cosine
         b = l2.direction_cosine
         # lines are parallel if the direction_cosines are the same or

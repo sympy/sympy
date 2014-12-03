@@ -554,8 +554,9 @@ def test_line3d():
         Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
     raises(TypeError, lambda: Line3D((1, 1), 1))
     assert Line3D(p1, p2) != Line3D(p2, p1)
-    assert l1 != l2
     assert l1 != l3
+    assert l1.is_parallel(l1)  # same as in 2D
+    assert l1 != l2
     assert l1.direction_ratio == [1, 1, 1]
     assert l1.length == oo
     assert l1.equation() == (x, y, z, k)
