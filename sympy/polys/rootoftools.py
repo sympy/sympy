@@ -8,7 +8,7 @@ from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
 
-from sympy.polys.polytools import Poly, PurePoly, factor, reduced
+from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.polyfuncs import symmetrize, viete
 
@@ -142,16 +142,15 @@ class RootOf(Expr):
         """Use modular exponentiation to reduce high powers of the root."""
         if exponent >= self.poly.degree():
             exponent = int(exponent)
-            result = Poly(1, self.poly.gen)
-            base = Poly(self.poly.gen, self.poly.gen)
-            modulus = self.poly
+            result = PurePoly(1, self.poly.gen)
+            base = PurePoly(self.poly.gen, self.poly.gen)
             while exponent > 0:
                 if (exponent % 2):
-                    result = reduced(result*base, [modulus])[1]
+                    result = (result*base) % self.poly
                 exponent >>= 1
-                base = reduced(base*base, [modulus])[1]
+                base = (base*base) % self.poly
             return result.subs(self.poly.gen, self).as_expr()
-        return Expr._eval_power(self, exponent)
+        return super(RootOf, self)._eval_power(exponent)
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
