@@ -55,6 +55,12 @@ class Boolean(Basic):
 
     __rxor__ = __xor__
 
+    def __add__(self, other):
+        raise TypeError('Cannot add Booleans')
+
+    def __mul__(self, other):
+        raise TypeError('Cannot multiply Booleans')
+
     def equals(self, other):
         """
         Returns if the given formulas have the same truth table.
