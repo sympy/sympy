@@ -579,7 +579,7 @@ class log(Function):
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
-        elif arg.is_Pow:
+        elif arg.is_Pow or isinstance(arg, exp):
             if force or (arg.exp.is_real and arg.base.is_positive) or \
                     arg.base.is_polar:
                 b = arg.base

@@ -320,6 +320,7 @@ def test_log_expand():
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
+    assert log(exp(x)).expand(force=True) == x
 
     # there's generally no need to expand out logs since this requires
     # factoring and if simplification is sought, it's cheaper to put
