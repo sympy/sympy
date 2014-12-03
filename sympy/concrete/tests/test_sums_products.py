@@ -348,6 +348,7 @@ def test_euler_maclaurin():
     check_exact(k**4 + k**2, a, b, 1, 5)
     check_exact(k**5, 2, 6, 1, 2)
     check_exact(k**5, 2, 6, 1, 3)
+    assert Sum(x-1, (x, 0, 2)).euler_maclaurin(m=30, n=30, eps=2**-15) == (0, 0)
     # Not exact
     assert Sum(k**6, (k, a, b)).euler_maclaurin(0, 2)[1] != 0
     # Numerical test
