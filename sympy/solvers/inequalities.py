@@ -37,7 +37,18 @@ def solve_poly_inequality(poly, rel):
     ========
     solve_poly_inequalities
     """
-    reals, intervals = poly.real_roots(multiple=False), []
+    expr = poly.as_expr()
+
+    if not expr.free_symbols:
+        t = Relational(expr, 0, rel)
+        if t is S.true:
+            return [S.Reals]
+        elif t is S.false:
+            return [S.EmptySet]
+        else:
+            raise NotImplementedError
+    else:
+        reals, intervals = poly.real_roots(multiple=False), []
 
     if rel == '==':
         for root, _ in reals:
@@ -144,19 +155,16 @@ def solve_rational_inequalities(eqs):
             numer_intervals = solve_poly_inequality(numer*denom, rel)
             denom_intervals = solve_poly_inequality(denom, '==')
 
-            if global_intervals is None:
-                global_intervals = numer_intervals
-            else:
-                intervals = []
+            intervals = []
 
-                for numer_interval in numer_intervals:
-                    for global_interval in global_intervals:
-                        interval = numer_interval.intersect(global_interval)
+            for numer_interval in numer_intervals:
+                for global_interval in global_intervals:
+                    interval = numer_interval.intersect(global_interval)
 
-                        if interval is not S.EmptySet:
-                            intervals.append(interval)
+                    if interval is not S.EmptySet:
+                        intervals.append(interval)
 
-                global_intervals = intervals
+            global_intervals = intervals
 
             intervals = []
 
@@ -215,13 +223,15 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                     expr, rel = expr, '=='
 
             if expr is S.true:
-                continue
+                numer, denom, rel = S.Zero, S.One, '=='
             elif expr is S.false:
-                return S.EmptySet if not relational else expr
+                numer, denom, rel = S.One, S.One, '=='
+            else:
+                numer, denom = expr.together().as_numer_denom()
 
             try:
                 (numer, denom), opt = parallel_poly_from_expr(
-                    expr.together().as_numer_denom(), gen)
+                    (numer, denom), gen)
             except PolynomialError:
                 raise PolynomialError("only polynomials and "
                     "rational functions are supported in this context")
@@ -263,7 +273,7 @@ def reduce_abs_inequality(expr, rel, gen):
     Examples
     ========
 
-    >>> from sympy import Q, Abs, Symbol
+    >>> from sympy import Abs, Symbol
     >>> from sympy.solvers.inequalities import reduce_abs_inequality
     >>> x = Symbol('x', real=True)
 
@@ -286,7 +296,7 @@ def reduce_abs_inequality(expr, rel, gen):
         exprs = []
 
         if expr.is_Add or expr.is_Mul:
-            op = expr.__class__
+            op = expr.func
 
             for arg in expr.args:
                 _exprs = _bottom_up_scan(arg)
@@ -345,7 +355,7 @@ def reduce_abs_inequalities(exprs, gen):
     Examples
     ========
 
-    >>> from sympy import Q, Abs, Symbol
+    >>> from sympy import Abs, Symbol
     >>> from sympy.abc import x
     >>> from sympy.solvers.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', real=True)
@@ -445,7 +455,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import Q, sympify as S, Symbol
+    >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 

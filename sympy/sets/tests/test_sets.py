@@ -173,6 +173,8 @@ def test_complement():
     assert S.UniversalSet.complement(S.Reals) == S.EmptySet
     assert S.UniversalSet.complement(S.UniversalSet) == S.EmptySet
 
+    assert S.EmptySet.complement(S.Reals) == S.Reals
+
     assert Union(Interval(0, 1), Interval(2, 3)).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
               Interval(3, oo, True, True))

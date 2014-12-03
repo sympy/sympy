@@ -2,15 +2,24 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
                    Or, Q, re, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Float)
+                   Function, Float, Poly)
 from sympy.solvers.inequalities import (reduce_inequalities,
+                                        solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve)
+                                        solve_univariate_inequality as isolve,
+                                        reduce_abs_inequality)
 from sympy.utilities.pytest import raises
 from sympy.polys.rootoftools import RootOf
 from sympy.solvers.solvers import solve
 
 inf = oo.evalf()
+
+
+def test_solve_poly_inequality():
+    x = Symbol('x', real=True)
+
+    assert psolve(Poly(0, x), '==') == [S.Reals]
+    assert psolve(Poly(1, x), '==') == [S.EmptySet]
 
 
 def test_reduce_poly_inequalities_real_interval():
@@ -63,7 +72,6 @@ def test_reduce_poly_inequalities_real_interval():
     assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, False), Interval(1, s, False, True))
     assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(1, s, True, True))
     assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(-1, 1, True, True), Interval(1, s, True, True))
-
 
 
 def test_reduce_poly_inequalities_real_relational():
@@ -292,3 +300,9 @@ def test_solve_univariate_inequality():
     # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
+
+
+def test_issue_8545():
+    x = Symbol('x', real=True)
+    eq = 1 - x - sqrt((1 - x)**2)
+    assert reduce_abs_inequality(eq, '<', x) == And(Lt(1, x), Lt(x, oo))
