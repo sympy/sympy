@@ -214,7 +214,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-
+    solution = S.EmptySet
     for _exprs in exprs:
         _eqs = []
 
@@ -238,8 +238,9 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                 (numer, denom), opt = parallel_poly_from_expr(
                     (numer, denom), gen)
             except PolynomialError:
-                raise PolynomialError("only polynomials and "
-                    "rational functions are supported in this context")
+                raise PolynomialError(filldedent('''
+                    only polynomials and
+                    rational functions are supported in this context'''))
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -247,29 +248,23 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             domain = opt.domain.get_exact()
 
             if not (domain.is_ZZ or domain.is_QQ):
-                raise NotImplementedError(
-                    "inequality solving is not supported over %s" % opt.domain)
-
-            _eqs.append(((numer, denom), rel))
+                expr = numer/denom
+                expr = Relational(expr, 0, rel)
+                solution = Union(solution, solve_univariate_inequality(expr, gen, relational=False))
+            else:
+                _eqs.append(((numer, denom), rel))
 
         eqs.append(_eqs)
 
-    solution = solve_rational_inequalities(eqs)
+    solution = Union(solution, solve_rational_inequalities(eqs))
 
     if not exact:
         solution = solution.evalf()
 
-    if not relational:
-        return solution
+    if relational:
+        solution = solution.as_relational(gen)
 
-    real = gen.is_real
-
-    if not real:
-        result = And(solution.as_relational(re(gen)), Eq(im(gen), 0))
-    else:
-        result = solution.as_relational(gen)
-
-    return result
+    return solution
 
 
 def reduce_abs_inequality(expr, rel, gen):
