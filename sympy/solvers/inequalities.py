@@ -151,6 +151,9 @@ def solve_rational_inequalities(eqs):
     result = S.EmptySet
 
     for _eqs in eqs:
+        if not _eqs:
+            continue
+
         global_intervals = [Interval(S.NegativeInfinity, S.Infinity)]
 
         for (numer, denom), rel in _eqs:
