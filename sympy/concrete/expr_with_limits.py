@@ -25,7 +25,7 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, Symbol):
+        if isinstance(V, (Symbol, Dummy)):
             limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):

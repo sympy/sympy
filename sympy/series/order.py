@@ -147,7 +147,7 @@ class Order(Expr):
                 variables = list(map(sympify, args))
                 point = [S.Zero]*len(variables)
 
-        if not all(isinstance(v, Symbol) for v in variables):
+        if not all(isinstance(v, (Dummy, Symbol)) for v in variables):
             raise TypeError('Variables are not symbols, got %s' % variables)
 
         if len(list(uniq(variables))) != len(variables):
