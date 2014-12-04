@@ -1,9 +1,10 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi, Eq, Integral
+from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi, Eq, Integral, exp
 from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
+    _nsort,
     _sort_gens,
     _unify_gens,
     _analyze_gens,
@@ -26,6 +27,31 @@ from sympy.polys.domains import ZZ, QQ, EX
 
 x, y, z, p, q, r, s, t, u, v, w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 A, B = symbols('A,B', commutative=False)
+
+
+def test__nsort():
+    # issue 6137
+    r = S('''[3/2 + sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) - 4/sqrt(-7/3 +
+    61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3)) -
+    61/(18*(-415/216 + 13*I/12)**(1/3)))/2 - sqrt(-7/3 + 61/(18*(-415/216
+    + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3))/2, 3/2 - sqrt(-7/3
+    + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3))/2 - sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) -
+    4/sqrt(-7/3 + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3)) - 61/(18*(-415/216 + 13*I/12)**(1/3)))/2, 3/2 +
+    sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) + 4/sqrt(-7/3 +
+    61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3)) -
+    61/(18*(-415/216 + 13*I/12)**(1/3)))/2 + sqrt(-7/3 + 61/(18*(-415/216
+    + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3))/2, 3/2 + sqrt(-7/3
+    + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3))/2 - sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) +
+    4/sqrt(-7/3 + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3)) - 61/(18*(-415/216 + 13*I/12)**(1/3)))/2]''')
+    ans = [r[1], r[0], r[-1], r[-2]]
+    assert _nsort(r) == ans
+    assert len(_nsort(r, separated=True)[0]) == 0
+    b, c, a = exp(-1000), exp(-999), exp(-1001)
+    assert _nsort((b, c, a)) == [a, b, c]
 
 
 def test__sort_gens():
