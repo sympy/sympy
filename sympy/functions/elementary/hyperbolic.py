@@ -654,24 +654,17 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+        re_part, im_part = self.as_real_imag(deep=True, **hints)
+        return re_part + S.ImaginaryUnit*im_part
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return S.One
-        else:
-            return self.func(arg)
+        return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self._reciprocal_of(args[0]).is_real
 
     def _eval_is_finite(self):
-        arg = self.args[0]
-        if arg.is_imaginary:
-            return True
+        return (1/self._reciprocal_of(args[0])).is_finite
 
 
 class csch(ReciprocalHyperbolicFunction):
@@ -698,12 +691,7 @@ class csch(ReciprocalHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    """def inverse(self, argindex=1):
-
-        #Returns the inverse of this function
-
-        return acsch
-    """
+    #TODO Inverse
 
     @staticmethod
     @cacheit

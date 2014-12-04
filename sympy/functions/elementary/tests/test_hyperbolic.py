@@ -620,11 +620,13 @@ def test_leading_term():
     assert acoth(x).as_leading_term(x) == I*pi/2
     for func in [sinh, tanh, asinh, atanh]:
         assert func(x).as_leading_term(x) == x
-    for func in [sinh, cosh, tanh, coth, csch, sech, asinh, acosh, atanh, acoth]:
+    for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:
         for arg in (1/x, S.Half):
             eq = func(arg)
             assert eq.as_leading_term(x) == eq
-
+    for func in [csch, sech]:
+        eq = func(S.Half)
+        assert func(S.Half) == eq
 
 def test_complex():
     a, b = symbols('a,b', real=True)
@@ -640,11 +642,12 @@ def test_complex():
             a)/(cos(b)**2 + sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2 + sinh(a)**2)
         assert coth(z).expand(complex=True, deep=deep) == sinh(a)*cosh(
             a)/(sin(b)**2 + sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2 + sinh(a)**2)
-        assert csch(z).expand(complex=True, deep=deep) == (sinh(a)*cos(b) / (sinh(a)**2*cos(b)**2 \
-            + cosh(a)**2*sin(b)**2)) - (I*cosh(a)*sin(b) / (sinh(a)**2*cos(b)**2 + cosh(a)**2*sin(b)**2))
-        assert sech(z).expand(complex=True, deep=deep) == (cosh(a)*cos(b) / (cosh(a)**2 \
-            *cos(b)**2 + sinh(a)**2*sin(b)**2)) - (I*sinh(a)*sin(b) / (cosh(a)**2*cos(b)**2 \
-            + sinh(a)**2*sin(b)**2))
+        assert csch(z).expand(complex=True, deep=deep) == cos(b) * sinh(a) / (sin(b)**2\
+            *cosh(a)**2 + cos(b)**2 * sinh(a)**2) - I*sin(b) * cosh(a) / (sin(b)**2\
+            *cosh(a)**2 + cos(b)**2 * sinh(a)**2)
+        assert sech(z).expand(complex=True, deep=deep) == cos(b) * cosh(a) / (sin(b)**2\
+            *sinh(a)**2 + cos(b)**2 * cosh(a)**2) - I*sin(b) * sinh(a) / (sin(b)**2\
+            *sinh(a)**2 + cos(b)**2 * cosh(a)**2)
 
 
 def test_complex_2899():
