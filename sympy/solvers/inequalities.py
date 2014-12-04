@@ -288,9 +288,10 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
-    if not gen.is_real:
-        raise NotImplementedError("can't solve inequalities with absolute "
-                                  "values of a complex variable")
+    if gen.is_real is False:
+         raise TypeError(filldedent('''
+            can't solve inequalities with absolute
+            values containing non-real variables'''))
 
     def _bottom_up_scan(expr):
         exprs = []
