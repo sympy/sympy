@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Symbol
+from sympy.core import Symbol, Dummy
+from sympy.core.compatibility import iterable, reduce
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
@@ -11,8 +12,9 @@ from sympy.core.singleton import S
 from sympy.functions import re, im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
+from sympy.polys.polyutils import _nsort
 from sympy.simplify import simplify
-
+from sympy.utilities.misc import filldedent
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
@@ -37,18 +39,18 @@ def solve_poly_inequality(poly, rel):
     ========
     solve_poly_inequalities
     """
-    expr = poly.as_expr()
-
-    if not expr.free_symbols:
-        t = Relational(expr, 0, rel)
+    assert isinstance(poly, Poly)
+    if poly.is_number:
+        t = Relational(poly.as_expr(), 0, rel)
         if t is S.true:
             return [S.Reals]
         elif t is S.false:
             return [S.EmptySet]
         else:
-            raise NotImplementedError
-    else:
-        reals, intervals = poly.real_roots(multiple=False), []
+            raise NotImplementedError(
+                "could not determine truth value of %s" % t)
+
+    reals, intervals = poly.real_roots(multiple=False), []
 
     if rel == '==':
         for root, _ in reals:
