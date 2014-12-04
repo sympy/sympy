@@ -312,7 +312,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
                 s += term
                 for k in range(1, m):
                     term = f.subs(i, a + k)
-                    if abs(term.evalf(3)) < eps:
+                    if abs(term.evalf(3)) < eps and term != 0:
                         return s, abs(term)
                     s += term
             if b - a + 1 == m:
