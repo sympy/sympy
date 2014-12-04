@@ -395,30 +395,51 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     """
 
-    # Implementation for continous functions
-
     from sympy.solvers.solvers import solve
 
-    solns = solve(expr.lhs - expr.rhs, gen)
-    oo = S.Infinity
+    e = expr.lhs - expr.rhs
+    # eventually this should call solveset_real (or equivalent):
+    # something that guarantees that the set returned is complete.
+    # For now we just test for conditions under which solve gives
+    # a complete solution.
+    parts = n, d = e.as_numer_denom()
+    if not all(i.is_polynomial(gen) for i in parts):
+        raise NotImplementedError(filldedent('''
+            handling of non-polynomial expressions'''))
+    solns = solve(n, gen, check=False, simplify=False)
+    singularities = solve(d, gen, check=False, simplify=False)
 
-    start = -oo
+    include_x = expr.func(0, 0)
+    def valid(x):
+        v = e.subs(gen, x)
+        r = expr.func(v, 0)
+        if r in (S.true, S.false):
+            return r
+        if v.is_real is False:
+            return S.false
+        else:
+            v = v.n(2)
+            if v.is_comparable:
+                return expr.func(v, 0)
+            return S.false
 
+    start = S.NegativeInfinity
     sol_sets = [S.EmptySet]
-
-    for x in sorted(s for s in solns if s.is_real):
+    for x in _nsort(set(solns + singularities), separated=True)[0]:
         end = x
-        if simplify(expr.subs(gen, (start + end)/2 if start != -oo else end - 1)):
+        if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
             sol_sets.append(Interval(start, end, True, True))
 
-        if simplify(expr.subs(gen, x)):
+        if x in singularities:
+            singularities.remove(x)
+        elif include_x:
             sol_sets.append(FiniteSet(x))
 
         start = end
 
-    end = oo
+    end = S.Infinity
 
-    if simplify(expr.subs(gen, start + 1)):
+    if valid(start + 1):
         sol_sets.append(Interval(start, end, True, True))
 
     rv = Union(*sol_sets)
