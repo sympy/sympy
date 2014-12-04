@@ -628,6 +628,7 @@ def test_leading_term():
         eq = func(S.Half)
         assert func(S.Half) == eq
 
+
 def test_complex():
     a, b = symbols('a,b', real=True)
     z = a + b*I

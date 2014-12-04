@@ -647,6 +647,12 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     def _eval_rewrite_as_tractable(self, arg):
         return self._rewrite_reciprocal("_eval_rewrite_as_tractable", arg)
 
+    def _eval_rewrite_as_tanh(self, arg):
+        return self._rewrite_reciprocal("_eval_rewrite_as_tanh", arg)
+
+    def _eval_rewrite_as_coth(self, arg):
+        return self._rewrite_reciprocal("_eval_rewrite_as_coth", arg)
+
     def as_real_imag(self, deep = True, **hints):
         return (1 / self._reciprocal_of(self.args[0])).as_real_imag(deep, **hints)
 
@@ -712,15 +718,7 @@ class csch(ReciprocalHyperbolicFunction):
             return 2 * (1 - 2**n) * B/F * x**n
 
     def _eval_rewrite_as_cosh(self, arg):
-        return S.ImaginaryUnit / cosh(arg + S.Pi*S.ImaginaryUnit/2)
-
-    def _eval_rewrite_as_tanh(self, arg):
-        tanh_half = tanh(S.Half*arg)
-        return (1 - tanh_half**2)/(2*tanh_half)
-
-    def _eval_rewrite_as_coth(self, arg):
-        coth_half = coth(S.Half*arg)
-        return (coth_half**2 - 1)/(2*coth_half)
+        return S.ImaginaryUnit / cosh(arg + S.ImaginaryUnit * S.Pi / 2)
 
     def _sage_(self):
         import sage.all as sage
@@ -760,15 +758,7 @@ class sech(ReciprocalHyperbolicFunction):
             return C.euler(n) / C.factorial(n) * x**(n)
 
     def _eval_rewrite_as_sinh(self, arg):
-        return  S.ImaginaryUnit / sinh(arg + S.Pi*S.ImaginaryUnit/2)
-
-    def _eval_rewrite_as_tanh(self, arg):
-        tanh_half = tanh(S.Half*arg)**2
-        return (1 - tanh_half)/(1 + tanh_half)
-
-    def _eval_rewrite_as_coth(self, arg):
-        coth_half = coth(S.Half*arg)**2
-        return (coth_half - 1)/(coth_half + 1)
+        return S.ImaginaryUnit / sinh(arg + S.ImaginaryUnit * S.Pi /2)
 
     def _sage_(self):
         import sage.all as sage
