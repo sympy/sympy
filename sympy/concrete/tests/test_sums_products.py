@@ -102,6 +102,10 @@ def test_karr_convention():
 
     assert Sz == 0
 
+    assert Sum( k - 1, (k, 0, 2)).evalf() == 0
+
+    assert Sum( k - 2, (k, 2, 3)).evalf() == 1
+
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
