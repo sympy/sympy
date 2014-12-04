@@ -471,7 +471,7 @@ def _solve_inequality(ie, s):
         raise NotImplementedError
 
 
-def reduce_inequalities(inequalities, symbols=[]):
+def reduce_inequalities(inequalities, symbols=[], _first=True):
     """Reduce a system of inequalities with rational coefficients.
 
     Examples
@@ -481,62 +481,83 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
-    >>> x = Symbol('x', real=True)
     >>> reduce_inequalities(S(0) <= x + 3, [])
     And(-3 <= x, x < oo)
 
-    >>> x = Symbol('x')
     >>> reduce_inequalities(S(0) <= x + y*2 - 1, [x])
     -2*y + 1 <= x
     """
-    if not hasattr(inequalities, '__iter__'):
-        inequalities = [inequalities]
+    if _first:
+        if not iterable(inequalities):
+            inequalities = [inequalities]
 
-    if len(inequalities) == 1 and len(symbols) == 1 \
-            and inequalities[0].is_Relational:
-        try:
-            return _solve_inequality(inequalities[0], symbols[0])
-        except NotImplementedError:
-            pass
+        # prefilter
+        keep = []
+        for i in inequalities:
+            if isinstance(i, Relational):
+                i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
+            elif i not in (True, False):
+                i = Eq(i, 0)
+            if i == True:
+                continue
+            elif i == False:
+                return S.false
+            if i.lhs.is_number:
+                raise NotImplementedError(
+                    "could not determine truth value of %s" % i)
+            keep.append(i)
+        inequalities = keep
+        del keep
+
+        gens = reduce(set.union, [i.free_symbols for i in inequalities], set())
+
+        if not iterable(symbols):
+            symbols = [symbols]
+        symbols = set(symbols) or gens
+        recast = dict([(i, Dummy(i.name, real=True))
+            for i in symbols if i.is_real is None])
+        if recast:
+            inequalities = [i.xreplace(recast) for i in inequalities]
+            symbols = set([i.xreplace(recast) for i in symbols])
+            rv = reduce_inequalities(inequalities, symbols, _first=False)
+            return rv.xreplace(dict([(v, k) for k, v in recast.items()]))
 
     poly_part, abs_part = {}, {}
+    nonuni = []
 
     for inequality in inequalities:
-        if inequality == True:
-            continue
-        elif inequality == False:
-            return False
 
-        if inequality.is_Relational:
-            expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
-        else:
-            expr, rel = inequality, '=='
+        expr, rel = inequality.lhs, inequality.rel_op  # rhs is 0
 
-        gens = expr.free_symbols
+        # check for gens using atoms which is more strict than free_symbols to
+        # guard against EX domain which won't be handled by
+        #reduce_rational_inequalities
+        gens = expr.atoms(Symbol)
 
-        if not gens:
-            return False
-        elif len(gens) == 1:
+        if len(gens) == 1:
             gen = gens.pop()
         else:
-            raise NotImplementedError(
-                "only univariate inequalities are supported")
+            common = expr.free_symbols & symbols
+            if len(common) == 1:
+                gen = common.pop()
+                nonuni.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                continue
+            else:
+                raise NotImplementedError(filldedent('''
+                    inequality has more than one
+                    symbol of interest'''))
 
         components = expr.find(lambda u: u.is_Function)
 
         if not components:
-            if gen in poly_part:
-                poly_part[gen].append((expr, rel))
-            else:
-                poly_part[gen] = [(expr, rel)]
+            poly_part.setdefault(gen, []).append((expr, rel))
         else:
             if all(isinstance(comp, Abs) for comp in components):
-                if gen in abs_part:
-                    abs_part[gen].append((expr, rel))
-                else:
-                    abs_part[gen] = [(expr, rel)]
+                abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                raise NotImplementedError("can't reduce %s" % inequalities)
+                raise NotImplementedError(filldedent('''
+                    solving of inequalities with functions
+                    other than abs'''))
 
     poly_reduced = []
     abs_reduced = []
@@ -547,4 +568,4 @@ def reduce_inequalities(inequalities, symbols=[]):
     for gen, exprs in abs_part.items():
         abs_reduced.append(reduce_abs_inequalities(exprs, gen))
 
-    return And(*(poly_reduced + abs_reduced))
+    return And(*(poly_reduced + abs_reduced + nonuni))
