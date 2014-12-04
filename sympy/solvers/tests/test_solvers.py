@@ -520,8 +520,8 @@ def test_solve_inequalities():
     system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
 
     assert solve(system) == \
-        And(Or(And(Lt(-sqrt(2), re(x)), Lt(re(x), -1)),
-               And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
+        And(Or(And(Lt(-sqrt(2), x), Lt(x, -1)),
+               And(Lt(1, x), Lt(x, sqrt(2)))), Eq(0, 0))
 
     x = Symbol('x', real=True)
     system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
