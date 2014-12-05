@@ -533,6 +533,8 @@ def test_solve_inequalities():
     assert solve((x - 3)/(x - 2) < 0, x) == And(Lt(2, x), Lt(x, 3))
     assert solve(x/(x + 1) > 1, x) == And(Lt(-oo, x), Lt(x, -1))
 
+    assert solve(sin(x) > S.Half) == And(pi/6 < x, x < 5*pi/6)
+
 
 def test_issue_4793():
     assert solve(1/x) == []
