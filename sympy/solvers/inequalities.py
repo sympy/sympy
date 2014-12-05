@@ -395,19 +395,18 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     """
 
-    from sympy.solvers.solvers import solve
+    from sympy.solvers.solvers import solve, denoms
 
     e = expr.lhs - expr.rhs
-    # eventually this should call solveset_real (or equivalent):
-    # something that guarantees that the set returned is complete.
-    # For now we just test for conditions under which solve gives
-    # a complete solution.
     parts = n, d = e.as_numer_denom()
-    if not all(i.is_polynomial(gen) for i in parts):
-        raise NotImplementedError(filldedent('''
-            handling of non-polynomial expressions'''))
-    solns = solve(n, gen, check=False, simplify=False)
-    singularities = solve(d, gen, check=False, simplify=False)
+    if all(i.is_polynomial(gen) for i in parts):
+        solns = solve(n, gen, check=False)
+        singularities = solve(d, gen, check=False)
+    else:
+        solns = solve(e, gen, check=False)
+        singularities = []
+        for d in denoms(e):
+            singularities.extend(solve(d, gen))
 
     include_x = expr.func(0, 0)
     def valid(x):
@@ -425,7 +424,11 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     start = S.NegativeInfinity
     sol_sets = [S.EmptySet]
-    for x in _nsort(set(solns + singularities), separated=True)[0]:
+    try:
+        reals = _nsort(set(solns + singularities), separated=True)[0]
+    except NotImplementedError:
+        raise NotImplementedError('sorting of these roots is not supported')
+    for x in reals:
         end = x
         if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
             sol_sets.append(Interval(start, end, True, True))
@@ -515,7 +518,7 @@ def reduce_inequalities(inequalities, symbols=[], _first=True):
             symbols = [symbols]
         symbols = set(symbols) or gens
         recast = dict([(i, Dummy(i.name, real=True))
-            for i in symbols if i.is_real is None])
+            for i in gens if i.is_real is None])
         if recast:
             inequalities = [i.xreplace(recast) for i in inequalities]
             symbols = set([i.xreplace(recast) for i in symbols])
@@ -523,7 +526,7 @@ def reduce_inequalities(inequalities, symbols=[], _first=True):
             return rv.xreplace(dict([(v, k) for k, v in recast.items()]))
 
     poly_part, abs_part = {}, {}
-    nonuni = []
+    other = []
 
     for inequality in inequalities:
 
@@ -540,24 +543,23 @@ def reduce_inequalities(inequalities, symbols=[], _first=True):
             common = expr.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                nonuni.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
                     inequality has more than one
                     symbol of interest'''))
 
-        components = expr.find(lambda u: u.is_Function)
-
-        if not components:
+        if expr.is_polynomial(gen):
             poly_part.setdefault(gen, []).append((expr, rel))
         else:
-            if all(isinstance(comp, Abs) for comp in components):
+            components = expr.find(lambda u:
+                u.has(gen) and (
+                u.is_Function or u.is_Pow and not u.exp.is_Integer))
+            if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                raise NotImplementedError(filldedent('''
-                    solving of inequalities with functions
-                    other than abs'''))
+                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
 
     poly_reduced = []
     abs_reduced = []
@@ -568,4 +570,4 @@ def reduce_inequalities(inequalities, symbols=[], _first=True):
     for gen, exprs in abs_part.items():
         abs_reduced.append(reduce_abs_inequalities(exprs, gen))
 
-    return And(*(poly_reduced + abs_reduced + nonuni))
+    return And(*(poly_reduced + abs_reduced + other))

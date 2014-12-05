@@ -2,16 +2,17 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
                    Or, Q, re, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Float, Poly, PurePoly)
+                   Function, Float, Poly, PurePoly, pi, root)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality)
-from sympy.utilities.pytest import raises
 from sympy.polys.rootoftools import RootOf
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
+
+from sympy.utilities.pytest import raises, slow
 
 
 inf = oo.evalf()
@@ -272,7 +273,10 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
 
-    raises(NotImplementedError, lambda: isolve(sin(x) < S.Half, x))
+    # XXX should be limited in domain, e.g. between 0 and 2*pi
+    assert isolve(sin(x) < S.Half, x) == \
+        Or(And(-oo < x, x < pi/6), And(5*pi/6 < x, x < oo))
+    assert isolve(sin(x) > S.Half, x) == And(pi/6 < x, x < 5*pi/6)
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
@@ -285,6 +289,13 @@ def test_solve_univariate_inequality():
     den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
+
+
+@slow
+def test_slow_general_univariate():
+    r = RootOf(x**5 - x**2 + 1, 0)
+    assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
+        Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
 
 
 def test_issue_8545():
