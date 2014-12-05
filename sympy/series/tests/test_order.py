@@ -334,6 +334,10 @@ def test_issue_6753():
     assert (1 + x**2)**10000*O(x) == O(x)
 
 
+def test_issue_7872():
+    assert Order(x**3).subs(x, exp(-x**2)) == O(exp(-3*x**2), (x, -oo))
+
+
 def test_order_at_infinity():
     assert Order(1 + x, (x, oo)) == Order(x, (x, oo))
     assert Order(3*x, (x, oo)) == Order(x, (x, oo))
