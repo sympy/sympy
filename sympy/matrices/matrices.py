@@ -1142,7 +1142,7 @@ class MatrixBase(object):
         set([x])
         """
 
-        return set.union(*[i.free_symbols for i in self])
+        return set().union(*[i.free_symbols for i in self])
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.

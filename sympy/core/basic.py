@@ -5,7 +5,7 @@ from .assumptions import ManagedProperties
 from .cache import cacheit
 from .core import BasicType, C
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import (reduce, iterable, Iterator, ordered,
+from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest)
 from .decorators import deprecated
 from .singleton import S
@@ -491,7 +491,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Any other method that uses bound variables should implement a symbols
         method."""
-        return reduce(set.union, [a.free_symbols for a in self.args], set())
+        return set().union(*[a.free_symbols for a in self.args])
 
     @property
     def canonical_variables(self):

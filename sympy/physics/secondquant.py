@@ -11,11 +11,10 @@ from collections import defaultdict
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
-from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import xrange
 from sympy.utilities.iterables import has_dups
 from sympy.utilities import default_sort_key
 
@@ -2584,7 +2583,7 @@ def _get_ordered_dummies(mul, verbose=False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = reduce(set.union, list(fac_dum.values()), set())
+    all_dums = set().union(*fac_dum.values())
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2597,8 +2596,7 @@ def _get_ordered_dummies(mul, verbose=False):
 
     def _key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(
-            set.union, [ fac_dum[fac] for fac in dumstruct ], set())
+        other_dums = set().union(*[fac_dum[fac] for fac in dumstruct])
         fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()

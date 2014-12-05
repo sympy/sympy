@@ -624,7 +624,7 @@ class Commutator(Expr):
                 'Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()
-        coord_sys = set.union(*[v.atoms(CoordSystem) for v in (v1, v2)])
+        coord_sys = set().union(*[v.atoms(CoordSystem) for v in (v1, v2)])
         if len(coord_sys) == 1:
             # Only one coordinate systems is used, hence it is easy enough to
             # actually evaluate the commutator.
