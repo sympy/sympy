@@ -39,7 +39,9 @@ def solve_poly_inequality(poly, rel):
     ========
     solve_poly_inequalities
     """
-    assert isinstance(poly, Poly)
+    if not isinstance(poly, Poly):
+        raise ValueError(
+            'For efficiency reasons, `poly` should be a Poly instance')
     if poly.is_number:
         t = Relational(poly.as_expr(), 0, rel)
         if t is S.true:
