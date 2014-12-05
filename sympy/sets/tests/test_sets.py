@@ -259,6 +259,7 @@ def test_intersection():
 
     # Singleton special cases
     assert Intersection(Interval(0, 1), S.EmptySet) == S.EmptySet
+    assert Intersection(Interval(-oo, oo), Interval(-oo, x)) == Interval(-oo, x)
 
     # Products
     line = Interval(0, 5)
