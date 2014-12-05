@@ -86,7 +86,7 @@ def test_ff_eval_apply():
 def test_factorial():
     x = Symbol('x')
     n = Symbol('n', integer=True)
-    k = Symbol('k', integer=True, positive=True)
+    k = Symbol('k', integer=True, nonnegative=True)
     r = Symbol('r', integer=False)
 
     assert factorial(-2) == zoo

@@ -169,7 +169,7 @@ class factorial(CombinatorialFunction):
             return True
 
     def _eval_is_positive(self):
-        if self.args[0].is_integer and self.args[0].is_positive:
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
 
