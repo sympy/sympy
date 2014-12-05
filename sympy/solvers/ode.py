@@ -2195,7 +2195,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
-            funcs = set.union(*funcs)
+            funcs = set().union(*funcs)
             if len(funcs) != 1:
                 raise ValueError(
                     'must pass func arg to checkodesol for this case.')
