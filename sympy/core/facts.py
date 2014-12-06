@@ -82,7 +82,7 @@ def transitive_closure(implications):
     http://chuck.ferzle.com/Notes/Notes/DiscreteMath/Warshall.pdf.
     """
     full_implications = set(implications)
-    literals = set().union(*map(set, implications))
+    literals = set().union(*map(set, full_implications))
 
     for k in literals:
         for i in literals:

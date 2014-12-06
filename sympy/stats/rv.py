@@ -435,7 +435,7 @@ def sumsets(sets):
     """
     Union of sets
     """
-    return frozenset().union(sets)
+    return frozenset().union(*sets)
 
 
 def rs_swap(a, b):
