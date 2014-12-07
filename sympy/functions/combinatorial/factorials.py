@@ -172,6 +172,9 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.factorial(self.args[0]._sage_())
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -602,3 +605,7 @@ class binomial(CombinatorialFunction):
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.binomial(self.args[0]._sage_(), self.args[1]._sage_())

@@ -140,6 +140,9 @@ class floor(RoundFunction):
             return S.false
         return Gt(self, other, evaluate=False)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.floor(self.args[0]._sage_())
 
 class ceiling(RoundFunction):
     """
@@ -203,3 +206,7 @@ class ceiling(RoundFunction):
         if self.args[0] == other and other.is_real:
             return S.true
         return Ge(self, other, evaluate=False)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.ceil(self.args[0]._sage_())

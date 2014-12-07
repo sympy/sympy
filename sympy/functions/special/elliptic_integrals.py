@@ -80,6 +80,10 @@ class elliptic_k(Function):
     def _eval_rewrite_as_meijerg(self, z):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_kc(self.args[0]._sage_())
+
 
 class elliptic_f(Function):
     r"""
@@ -142,6 +146,10 @@ class elliptic_f(Function):
         z, m = self.args
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_f(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class elliptic_e(Function):
@@ -248,6 +256,10 @@ class elliptic_e(Function):
             z = args[0]
             return -meijerg(((S.Half, S(3)/2), []), \
                             ((S.Zero,), (S.Zero,)), -z)/4
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_e(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class elliptic_pi(Function):
@@ -358,3 +370,9 @@ class elliptic_pi(Function):
             elif argindex == 2:
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_pi(self.args[0]._sage_(),
+                                self.args[1]._sage_(),
+                                self.args[2]._sage_())

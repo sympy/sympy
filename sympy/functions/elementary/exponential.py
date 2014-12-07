@@ -820,5 +820,12 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
+    def _sage_(self):
+        import sage.all as sage
+        if len(self.args) == 1:
+            return sage.lambert_w(self.args[0]._sage_())
+        else:
+            return sage.lambert_w(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 from sympy.core.function import _coeff_isneg
