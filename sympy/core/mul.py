@@ -177,6 +177,8 @@ class Mul(Expr, AssocOp):
         rv = None
         if len(seq) == 2:
             a, b = seq
+            if a in [True, False] or b in [True, False]:
+                raise TypeError('Cannot multiply sympy booleans')
             if b.is_Rational:
                 a, b = b, a
             assert not a is S.One
