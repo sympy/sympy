@@ -4593,7 +4593,7 @@ def trigsimp_old(expr, **opts):
         if not expr.has(*_trigs):
             return expr
 
-        trigsyms = set.union(*[t.free_symbols for t in expr.atoms(*_trigs)])
+        trigsyms = set().union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
             d = separatevars(expr)
             if d.is_Mul:

@@ -15,7 +15,7 @@ This module contain solvers for all kinds of equations:
 from __future__ import print_function, division
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, reduce, xrange)
+    default_sort_key, xrange)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
@@ -713,8 +713,7 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     if not symbols:
         # get symbols from equations
-        symbols = reduce(set.union, [fi.free_symbols
-                                     for fi in f], set())
+        symbols = set().union(*[fi.free_symbols for fi in f])
         if len(symbols) < len(f):
             for fi in f:
                 pot = preorder_traversal(fi)
@@ -738,7 +737,7 @@ def solve(f, *symbols, **flags):
     if exclude:
         if isinstance(exclude, Expr):
             exclude = [exclude]
-        exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
+        exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
     # real/imag handling -----------------------------
@@ -1494,7 +1493,7 @@ def _solve_system(exprs, symbols, **flags):
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
 
-                free = set.union(*[p.free_symbols for p in polys])
+                free = set().union(*[p.free_symbols for p in polys])
                 free = list(free.intersection(symbols))
                 free.sort(key=default_sort_key)
                 got_s = set([])

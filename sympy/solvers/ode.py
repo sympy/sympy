@@ -372,7 +372,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     elif not is_iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
-    atom_set = set.union(*[i.free_symbols for i in eq])
+    atom_set = set().union(*[i.free_symbols for i in eq])
     ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
     Cs = [next(ncs) for i in xrange(num)]
     return (Cs[0] if num == 1 else tuple(Cs))
@@ -1354,7 +1354,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
         funcs = []
         for eqs in eq:
             derivs = eqs.atoms(Derivative)
-            func = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 order[func_] = 0
                 funcs.append(func_)
@@ -1917,7 +1917,7 @@ def checksysodesol(eqs, sols, func=None):
         funcs = []
         for eq in eqs:
             derivs = eq.atoms(Derivative)
-            func = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 funcs.append(func_)
         funcs = list(set(funcs))
@@ -2195,7 +2195,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
-            funcs = reduce(set.union, funcs, set())
+            funcs = set().union(*funcs)
             if len(funcs) != 1:
                 raise ValueError(
                     'must pass func arg to checkodesol for this case.')

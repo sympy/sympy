@@ -71,7 +71,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
 
     derivs = expr.atoms(Derivative)
     if not func:
-        funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+        funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError('The function cannot be '
                 'automatically detected for %s.' % expr)
