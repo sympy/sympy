@@ -501,7 +501,7 @@ class Rotation(UnitaryOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u('\u211B') + u(' '))
+            return prettyForm(u('\N{SCRIPT CAPITAL R}') + u(' '))
         else:
             return prettyForm("R ")
 

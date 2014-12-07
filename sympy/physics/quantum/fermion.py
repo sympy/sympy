@@ -109,7 +109,7 @@ class FermionOp(Operator):
         if self.is_annihilation:
             return pform
         else:
-            return pform**prettyForm(u('\u2020'))
+            return pform**prettyForm(u('\N{DAGGER}'))
 
 
 class FermionFockKet(Ket):
