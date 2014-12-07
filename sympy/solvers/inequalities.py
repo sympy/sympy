@@ -476,56 +476,8 @@ def _solve_inequality(ie, s):
         raise NotImplementedError
 
 
-def reduce_inequalities(inequalities, symbols=[], _first=True):
-    """Reduce a system of inequalities with rational coefficients.
-
-    Examples
-    ========
-
-    >>> from sympy import sympify as S, Symbol
-    >>> from sympy.abc import x, y
-    >>> from sympy.solvers.inequalities import reduce_inequalities
-
-    >>> reduce_inequalities(S(0) <= x + 3, [])
-    And(-3 <= x, x < oo)
-
-    >>> reduce_inequalities(S(0) <= x + y*2 - 1, [x])
-    -2*y + 1 <= x
-    """
-    if _first:
-        if not iterable(inequalities):
-            inequalities = [inequalities]
-
-        # prefilter
-        keep = []
-        for i in inequalities:
-            if isinstance(i, Relational):
-                i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
-            elif i not in (True, False):
-                i = Eq(i, 0)
-            if i == True:
-                continue
-            elif i == False:
-                return S.false
-            if i.lhs.is_number:
-                raise NotImplementedError(
-                    "could not determine truth value of %s" % i)
-            keep.append(i)
-        inequalities = keep
-        del keep
-
-        gens = reduce(set.union, [i.free_symbols for i in inequalities], set())
-
-        if not iterable(symbols):
-            symbols = [symbols]
-        symbols = set(symbols) or gens
-        recast = dict([(i, Dummy(i.name, real=True))
-            for i in gens if i.is_real is None])
-        if recast:
-            inequalities = [i.xreplace(recast) for i in inequalities]
-            symbols = set([i.xreplace(recast) for i in symbols])
-            rv = reduce_inequalities(inequalities, symbols, _first=False)
-            return rv.xreplace(dict([(v, k) for k, v in recast.items()]))
+def _reduce_inequalities(inequalities, symbols):
+    # helper for reduce_inequalities
 
     poly_part, abs_part = {}, {}
     other = []
@@ -536,7 +488,7 @@ def reduce_inequalities(inequalities, symbols=[], _first=True):
 
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
-        #reduce_rational_inequalities
+        # reduce_rational_inequalities
         gens = expr.atoms(Symbol)
 
         if len(gens) == 1:
@@ -573,3 +525,59 @@ def reduce_inequalities(inequalities, symbols=[], _first=True):
         abs_reduced.append(reduce_abs_inequalities(exprs, gen))
 
     return And(*(poly_reduced + abs_reduced + other))
+
+
+def reduce_inequalities(inequalities, symbols=[]):
+    """Reduce a system of inequalities with rational coefficients.
+
+    Examples
+    ========
+
+    >>> from sympy import sympify as S, Symbol
+    >>> from sympy.abc import x, y
+    >>> from sympy.solvers.inequalities import reduce_inequalities
+
+    >>> reduce_inequalities(S(0) <= x + 3, [])
+    And(-3 <= x, x < oo)
+
+    >>> reduce_inequalities(S(0) <= x + y*2 - 1, [x])
+    -2*y + 1 <= x
+    """
+    if not iterable(inequalities):
+        inequalities = [inequalities]
+
+    # prefilter
+    keep = []
+    for i in inequalities:
+        if isinstance(i, Relational):
+            i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
+        elif i not in (True, False):
+            i = Eq(i, 0)
+        if i == True:
+            continue
+        elif i == False:
+            return S.false
+        if i.lhs.is_number:
+            raise NotImplementedError(
+                "could not determine truth value of %s" % i)
+        keep.append(i)
+    inequalities = keep
+    del keep
+
+    gens = reduce(set.union, [i.free_symbols for i in inequalities], set())
+
+    if not iterable(symbols):
+        symbols = [symbols]
+    symbols = set(symbols) or gens
+
+    # make vanilla symbol real
+    recast = dict([(i, Dummy(i.name, real=True))
+        for i in gens if i.is_real is None])
+    inequalities = [i.xreplace(recast) for i in inequalities]
+    symbols = set([i.xreplace(recast) for i in symbols])
+
+    # solve system
+    rv = _reduce_inequalities(inequalities, symbols)
+
+    # restore original symbols and return
+    return rv.xreplace(dict([(v, k) for k, v in recast.items()]))
