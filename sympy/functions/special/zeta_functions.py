@@ -297,6 +297,10 @@ class polylog(Function):
             return expand_mul(start).subs(u, z)
         return polylog(s, z)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.polylog(self.args[0]._sage_(), self.args[1]._sage_())
+
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################
@@ -469,6 +473,14 @@ class zeta(Function):
             return -s*zeta(s + 1, a)
         else:
             raise ArgumentIndexError
+
+    def _sage_(self):
+        import sage.all as sage
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            s, a = self.args + (1,)
+        return sage.zeta(s._sage_(), a._sage_())
 
 
 class dirichlet_eta(Function):

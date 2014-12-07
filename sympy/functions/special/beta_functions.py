@@ -109,3 +109,7 @@ class beta(Function):
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.beta(self.args[0]._sage_(), self.args[1]._sage_())

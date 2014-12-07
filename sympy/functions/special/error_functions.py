@@ -209,6 +209,10 @@ class erf(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.erf(self.args[0]._sage_())
+
 class erfc(Function):
     r"""
     Complementary Error Function. The function is defined as:
@@ -1092,6 +1096,9 @@ class Ei(Function):
             return f._eval_nseries(x, n, logx)
         return super(Ei, self)._eval_nseries(x, n, logx)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.Ei(self.args[0]._sage_())
 
 class expint(Function):
     r"""
@@ -1266,6 +1273,10 @@ class expint(Function):
                 return f._eval_nseries(x, n, logx)
         return super(expint, self)._eval_nseries(x, n, logx)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.exp_integral_e(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 def E1(z):
     """
@@ -1433,6 +1444,10 @@ class li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return z * _eis(C.log(z))
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.li(self.args[0]._sage_())
+
 
 class Li(Function):
     r"""
@@ -1517,6 +1532,10 @@ class Li(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return self.rewrite(li).rewrite("tractable", deep=True)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.Li(self.args[0]._sage_())
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
@@ -1661,6 +1680,9 @@ class Si(TrigonometricIntegral):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sin_integral(self.args[0]._sage_())
 
 class Ci(TrigonometricIntegral):
     r"""
@@ -1754,6 +1776,10 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cos_integral(self.args[0]._sage_())
+
 
 class Shi(TrigonometricIntegral):
     r"""
@@ -1832,6 +1858,10 @@ class Shi(TrigonometricIntegral):
         from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sinh_integral(self.args[0]._sage_())
 
 
 class Chi(TrigonometricIntegral):
@@ -1935,6 +1965,11 @@ class Chi(TrigonometricIntegral):
     @staticmethod
     def _latex_no_arg(printer):
         return r'\operatorname{Chi}'
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cosh_integral(self.args[0]._sage_())
+
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################

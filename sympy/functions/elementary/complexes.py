@@ -564,6 +564,10 @@ class arg(Function):
         x, y = re(self.args[0]), im(self.args[0])
         return atan2(y, x)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.arg(self.args[0]._sage_())
+
 class conjugate(Function):
     """
     Changes the sign of the imaginary part of a complex number.
@@ -606,6 +610,9 @@ class conjugate(Function):
     def _eval_transpose(self):
         return adjoint(self.args[0])
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.conjugate(self.args[0]._sage_())
 
 class transpose(Function):
     """

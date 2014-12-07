@@ -182,6 +182,10 @@ class gamma(Function):
     def _latex_no_arg(printer):
         return r'\Gamma'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_())
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -916,6 +920,10 @@ class loggamma(Function):
             return polygamma(0, self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.log_gamma(self.args[0]._sage_())
 
 
 def digamma(x):
