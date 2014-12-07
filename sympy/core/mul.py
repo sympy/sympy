@@ -11,6 +11,7 @@ from sympy.core.cache import cacheit
 from sympy.core.logic import fuzzy_not
 from sympy.core.compatibility import cmp_to_key, reduce, xrange
 from sympy.core.expr import Expr
+from sympy.core.singleton import S
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -177,7 +178,7 @@ class Mul(Expr, AssocOp):
         rv = None
         if len(seq) == 2:
             a, b = seq
-            if a in [True, False] or b in [True, False]:
+            if a in [S.true, S.false] or b in [S.true, S.false]:
                 raise TypeError('Cannot multiply sympy booleans')
             if b.is_Rational:
                 a, b = b, a
