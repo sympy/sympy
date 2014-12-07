@@ -124,7 +124,7 @@ def _uniquely_named_symbol(xname, *exprs):
     """
     prefix = '%s'
     x = prefix % xname
-    syms = set.union(*[e.free_symbols for e in exprs])
+    syms = set().union(*[e.free_symbols for e in exprs])
     while any(x == str(s) for s in syms):
         prefix = '_' + prefix
         x = prefix % xname
