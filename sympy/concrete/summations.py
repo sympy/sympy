@@ -297,7 +297,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         if m:
             if b.is_Integer and a.is_Integer:
                 m = min(m, b - a + 1)
-            if not eps:
+            if not eps or f.is_polynomial(i):
                 for k in range(m):
                     s += f.subs(i, a + k)
             else:
