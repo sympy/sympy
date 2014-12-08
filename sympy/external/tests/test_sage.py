@@ -132,6 +132,9 @@ def test_GoldenRation():
 
 
 def test_functions():
+    # Test at least one Function without own _sage_ method
+    assert not "_sage_" in sympy.factorial.__dict__
+    check_expression("factorial(x)", "x")
     check_expression("sin(x)", "x")
     check_expression("cos(x)", "x")
     check_expression("tan(x)", "x")
@@ -183,5 +186,5 @@ TESTS::
     sage: test_GoldenRation()
     sage: test_functions()
     sage: test_issue_4023()
-
+    
 """

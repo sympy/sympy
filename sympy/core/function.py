@@ -673,6 +673,13 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
+    def _sage_(self):
+        import sage.all as sage
+        fname = self.func.__name__
+        func = getattr(sage, fname)
+        args = [arg._sage_() for arg in self.args]
+        return func(*args)
+
 
 class AppliedUndef(Function):
     """
