@@ -45,18 +45,28 @@ def check_expression(expr, var_symbols):
     # safety checks...
     a.update(sage.__dict__)
     assert "sin" in a
-    e_sage = eval(expr, a)
-    assert not isinstance(e_sage, sympy.Basic)
+    is_different = False
+    try:
+        e_sage = eval(expr, a)
+        assert not isinstance(e_sage, sympy.Basic)
+    except (NameError, TypeError):
+        is_different = True
+        pass
 
     # evaluate the expression in the context of SymPy:
     if var_symbols:
-        sympy.var(var_symbols)
+        sympy_vars = sympy.var(var_symbols)
     b = globals().copy()
     b.update(sympy.__dict__)
     assert "sin" in b
     b.update(sympy.__dict__)
     e_sympy = eval(expr, b)
     assert isinstance(e_sympy, sympy.Basic)
+
+    # Sympy func may have specific _sage_ method
+    if is_different:
+        _sage_method = getattr(e_sympy.func, "_sage_")
+        e_sage = _sage_method(sympy.S(e_sympy))
 
     # Do the actual checks:
     assert sympy.S(e_sage) == e_sympy
@@ -151,6 +161,10 @@ def test_functions():
     check_expression("log(x)", "x")
     check_expression("re(x)", "x")
     check_expression("im(x)", "x")
+    check_expression("sign(x)", "x")
+    check_expression("abs(x)", "x")
+    check_expression("arg(x)", "x")
+    check_expression("conjugate(x)", "x")
 
 
 def test_issue_4023():
@@ -182,4 +196,10 @@ TESTS::
     sage: test_functions()
     sage: test_issue_4023()
 
+Hell freezes over before Sage has a symbolic Lucas function::
+
+    sage: check_expression("lucas(x)", "x")
+    Traceback (most recent call last):
+    ...
+    AttributeError: 'module' object has no attribute 'lucas'
 """
