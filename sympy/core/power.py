@@ -365,10 +365,9 @@ class Pow(Expr):
                 return True
             if e.is_nonnegative or e.is_positive:
                 return True
-            if self.exp.is_negative:
+        if c1 and e.is_negative and (e.is_finite or e.is_integer):  # int**neg
+            if (b - 1).is_nonzero and (b + 1).is_nonzero:
                 return False
-        if c1 and e.is_negative and e.is_finite:  # int**neg
-            return False
         if b.is_Number and e.is_Number:
             # int**nonneg or rat**?
             check = self.func(*self.args)
