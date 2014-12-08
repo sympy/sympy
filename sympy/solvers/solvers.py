@@ -397,12 +397,8 @@ def solve(f, *symbols, **flags):
             function which should be zero
         'force=True (default is False)'
             make positive all symbols without assumptions regarding sign.
-        'rational=True (default)'
-            recast Floats as Rational; if this option is not used, the
-            system containing floats may fail to solve because of issues
-            with polys. If rational=None, Floats will be recast as
-            rationals but the answer will be recast as Floats. If the
-            flag is False then nothing will be done to the Floats.
+        'rational=False (default)'
+        
         'manual=True (default is False)'
             do not use the polys/matrix method to solve a system of
             equations, solve them one at a time as you might "manually".
@@ -885,11 +881,11 @@ def solve(f, *symbols, **flags):
 
     # rationalize Floats
     floats = False
-    if flags.get('rational', True) is not False:
+    if flags.get('rational', True) is not True:
         for i, fi in enumerate(f):
             if fi.has(Float):
                 floats = True
-                f[i] = nsimplify(fi, rational=True)
+                f[i] = nsimplify(fi, rational=False)
 
     # Any embedded piecewise functions need to be brought out to the
     # top level so that the appropriate strategy gets selected.
