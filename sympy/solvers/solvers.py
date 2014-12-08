@@ -877,9 +877,7 @@ def solve(f, *symbols, **flags):
     non_inverts = dict(list(zip(non_inverts, [Dummy() for d in non_inverts])))
     f = [fi.subs(non_inverts) for fi in f]
 
-    non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.items()]
-
-    # rationalize Floats
+    non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.
     floats = False
     if flags.get('rational', True) is not True:
         for i, fi in enumerate(f):
