@@ -8,6 +8,7 @@ from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
+from sympy.core.mod import Mod
 
 n = Symbol('n', integer=True)
 
@@ -102,9 +103,9 @@ def test_karr_convention():
 
     assert Sz == 0
 
-    assert Sum( k - 1, (k, 0, 2)).evalf() == 0
-
-    assert Sum( k - 2, (k, 2, 3)).evalf() == 1
+    e = Piecewise((exp(-i), Mod(i, 2) > 0), (0, True))
+    s = Sum(e, (i, 0, 11))
+    assert s.n(3) == s.doit().n(3)
 
 
 def test_karr_proposition_2a():
