@@ -43,7 +43,6 @@ def check_expression(expr, var_symbols):
         sage.var(var_symbols)
     a = globals().copy()
     # safety checks...
-    assert not "sin" in a
     a.update(sage.__dict__)
     assert "sin" in a
     e_sage = eval(expr, a)
@@ -53,7 +52,6 @@ def check_expression(expr, var_symbols):
     if var_symbols:
         sympy.var(var_symbols)
     b = globals().copy()
-    assert not "sin" in b
     b.update(sympy.__dict__)
     assert "sin" in b
     b.update(sympy.__dict__)
