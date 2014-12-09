@@ -205,8 +205,6 @@ class LatexPrinter(Printer):
         """
         from sympy import Integral, Piecewise, Product, Sum
 
-        res = False
-
         if expr.is_Add:
             return True
         elif expr.is_Mul:
@@ -217,7 +215,7 @@ class LatexPrinter(Printer):
             any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
             return True
 
-        return res
+        return False
 
     def _mul_is_clean(self, expr):
         for arg in expr.args:
