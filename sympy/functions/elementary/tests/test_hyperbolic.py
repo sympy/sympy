@@ -292,16 +292,10 @@ def test_csch():
 
     assert csch(0) == zoo
 
-    assert csch(1) == csch(1)
     assert csch(-1) == -csch(1)
 
-    assert csch(x) == csch(x)
     assert csch(-x) == -csch(x)
-
-    assert csch(pi) == csch(pi)
     assert csch(-pi) == -csch(pi)
-
-    assert csch(2**1024 * E) == csch(2**1024 * E)
     assert csch(-2**1024 * E) == -csch(2**1024 * E)
 
     assert csch(pi*I) == zoo
@@ -333,8 +327,6 @@ def test_csch():
     assert csch(pi*I/105) == -1/sin(pi/105)*I
     assert csch(-pi*I/105) == 1/sin(pi/105)*I
 
-    assert csch(2 + 3*I) == csch(2 + 3*I)
-
     assert csch(x*I) == -1/sin(x)*I
 
     assert csch(k*pi*I) == zoo
@@ -363,16 +355,12 @@ def test_sech():
 
     assert sech(0) == 1
 
-    assert sech(1) == sech(1)
     assert sech(-1) == sech(1)
-
-    assert sech(x) == sech(x)
     assert sech(-x) == sech(x)
 
     assert sech(pi*I) == sec(pi)
-    assert sech(-pi*I) == sec(pi)
 
-    assert sech(2**1024 * E) == sech(2**1024 * E)
+    assert sech(-pi*I) == sec(pi)
     assert sech(-2**1024 * E) == sech(2**1024 * E)
 
     assert sech(pi*I/2) == zoo
@@ -401,14 +389,10 @@ def test_sech():
     assert sech(pi*I/105) == 1/cos(pi/105)
     assert sech(-pi*I/105) == 1/cos(pi/105)
 
-    assert sech(2 + 3*I) == sech(2 + 3*I)
-
     assert sech(x*I) == 1/cos(x)
 
     assert sech(k*pi*I) == 1/cos(k*pi)
     assert sech(17*k*pi*I) == 1/cos(17*k*pi)
-
-    assert sech(k*pi) == sech(k*pi)
 
 
 def test_sech_series():
@@ -603,7 +587,7 @@ def test_acoth_series():
 def test_inverses():
     x = Symbol('x')
     assert sinh(x).inverse() == asinh
-    assert cosh(x).inverse() == acosh
+    raises(AttributeError, lambda: cosh(x).inverse())
     assert tanh(x).inverse() == atanh
     assert coth(x).inverse() == acoth
     assert asinh(x).inverse() == sinh
@@ -626,7 +610,7 @@ def test_leading_term():
             assert eq.as_leading_term(x) == eq
     for func in [csch, sech]:
         eq = func(S.Half)
-        assert func(S.Half) == eq
+        assert eq.as_leading_term(x) == eq
 
 
 def test_complex():

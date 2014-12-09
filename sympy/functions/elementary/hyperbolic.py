@@ -205,12 +205,6 @@ class cosh(HyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return acosh
-
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
@@ -675,7 +669,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
 class csch(ReciprocalHyperbolicFunction):
     r"""
-    The hyperbolic cosecant function, `\frac{2}{e^x - e^{-x}`
+    The hyperbolic cosecant function, `\frac{2}{e^x - e^{-x}}`
 
     * csch(x) -> Returns the hyperbolic cosecant of x
 
@@ -696,8 +690,6 @@ class csch(ReciprocalHyperbolicFunction):
             return -coth(self.args[0]) * csch(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    #TODO Inverse
 
     @staticmethod
     @cacheit
@@ -745,8 +737,6 @@ class sech(ReciprocalHyperbolicFunction):
             return - tanh(self.args[0])*sech(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-  # TODO Inverse function
 
     @staticmethod
     @cacheit

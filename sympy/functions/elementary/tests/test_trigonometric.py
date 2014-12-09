@@ -1168,7 +1168,6 @@ def test_csc():
     assert csc(pi/6) == 2
     assert csc(pi/3) == 2*sqrt(3)/3
     assert csc(5*pi/2) == 1
-    assert csc(3*pi/4) == sqrt(2)  # issue 8421
     assert csc(9*pi/7) == -csc(2*pi/7)
     assert csc(3*pi/4) == sqrt(2)  # issue 8421
     assert csc(I) == -I/sinh(1)
