@@ -1071,7 +1071,7 @@ class Integral(AddWithLimits):
         return result*dx
 
     def _sage_(self, ):
-        import sage.all as sage
+        from sage.symbolic.integration.integral import definite_integral, indefinite_integral
         f, limits = self.function, list(self.limits)
         limit = limits.pop(-1)
         if len(limit) >= 2:
@@ -1080,16 +1080,16 @@ class Integral(AddWithLimits):
                 a = None
             else:
                 x, a, b = limit
-            return sage.symbolic.integration.integral.definite_integral(f._sage_(),
-                                                                          x._sage_(),
-                                                                          a._sage_(),
-                                                                          b._sage_(),
-                                                                          hold=True)
+            return definite_integral(f._sage_(),
+                                        x._sage_(),
+                                        a._sage_(),
+                                        b._sage_(),
+                                        hold=True)
         else:
             x = limit[0]
-            return sage.symbolic.integration.integral.indefinite_integral(f._sage_(),
-                                                                          x._sage_(),
-                                                                          hold=True)
+            return indefinite_integral(f._sage_(),
+                                       x._sage_(),
+                                       hold=True)
 
 
 @xthreaded

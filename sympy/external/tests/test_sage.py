@@ -176,8 +176,6 @@ def test_functions():
     check_expression("besselk(y, x)", "x, y")
     check_expression("DiracDelta(x)", "x")
     check_expression("KroneckerDelta(x, y)", "x, y")
-    check_expression("Heaviside(x)", "x")
-    check_expression("elliptic_k(x)", "x")
     check_expression("expint(y, x)", "x, y")
     check_expression("Si(x)", "x")
     check_expression("Ci(x)", "x")
@@ -186,6 +184,9 @@ def test_functions():
     check_expression("loggamma(x)", "x")
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
 
+    #missing bindings in Sage
+    #check_expression("Heaviside(x)", "x")
+    #check_expression("elliptic_k(x)", "x")
 
 def test_issue_4023():
     sage.var("a x")
