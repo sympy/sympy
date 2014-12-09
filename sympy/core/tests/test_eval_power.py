@@ -218,6 +218,10 @@ def test_zero():
     i = Symbol('i', imaginary=True)
     assert 0**i == nan
 
+def test_issue8582():
+    assert 1**zoo == nan
+    assert 1**(oo+I) == nan
+    assert 1**(1+I*oo) == nan
 
 def test_pow_as_base_exp():
     x = Symbol('x')
