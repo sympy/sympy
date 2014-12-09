@@ -168,6 +168,23 @@ def test_functions():
     check_expression("abs(x)", "x")
     check_expression("arg(x)", "x")
     check_expression("conjugate(x)", "x")
+    
+    # The following tests differently named functions
+    check_expression("besselj(y, x)", "x, y")
+    check_expression("bessely(y, x)", "x, y")
+    check_expression("besseli(y, x)", "x, y")
+    check_expression("besselk(y, x)", "x, y")
+    check_expression("DiracDelta(x)", "x")
+    check_expression("KroneckerDelta(x, y)", "x, y")
+    check_expression("Heaviside(x)", "x")
+    check_expression("elliptic_k(x)", "x")
+    check_expression("expint(y, x)", "x, y")
+    check_expression("Si(x)", "x")
+    check_expression("Ci(x)", "x")
+    check_expression("Shi(x)", "x")
+    check_expression("Chi(x)", "x")
+    check_expression("loggamma(x)", "x")
+    check_expression("Ynm(n,m,x,y)", "n, m, x, y")
 
 
 def test_issue_4023():

@@ -917,6 +917,10 @@ class loggamma(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.log_gamma(self.args[0]._sage_())
+
 
 def digamma(x):
     r"""
