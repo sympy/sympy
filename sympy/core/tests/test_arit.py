@@ -895,7 +895,9 @@ def test_Pow_is_integer():
     m = Symbol('m', integer=True, positive=True)
 
     assert (k**2).is_integer is True
-    assert (k**(-2)).is_integer is False
+    assert (k**(-2)).is_integer is None
+    assert ((m + 1)**(-2)).is_integer is False
+    assert (m**(-1)).is_integer is None  # issue 8580
 
     assert (2**k).is_integer is None
     assert (2**(-k)).is_integer is None
