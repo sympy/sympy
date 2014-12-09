@@ -91,7 +91,7 @@ def denoms(eq, symbols=None):
     pot = preorder_traversal(eq)
     dens = set()
     for p in pot:
-        den =  denom(p)
+        den = denom(p)
         if den is S.One:
             continue
         for d in Mul.make_args(den):
@@ -431,7 +431,7 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(-oo < re(x), im(x) == 0, re(x) < 3)
+        And(-oo < x, x < 3)
 
     * to always get a list of solution mappings, use flag dict=True
 
@@ -578,7 +578,7 @@ def solve(f, *symbols, **flags):
         * involving relationals or bools
 
             >>> solve([x < 3, x - 2])
-            And(im(x) == 0, re(x) == 2)
+            x == 2
             >>> solve([x > 3, x - 2])
             False
 

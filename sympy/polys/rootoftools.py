@@ -50,6 +50,7 @@ class RootOf(Expr):
 
     __slots__ = ['poly', 'index']
     is_complex = True
+    is_number = True
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """

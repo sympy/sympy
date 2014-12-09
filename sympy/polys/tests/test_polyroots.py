@@ -12,6 +12,7 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_binomial, preprocess_roots, roots)
 
 from sympy.polys.orthopolys import legendre_poly
+from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises, XFAIL
@@ -20,14 +21,6 @@ import sympy
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
-
-
-def _nsort(roots):
-    key = [r.n(2) for r in roots]
-    key = [(1 if not r.is_real else 0, re(r), im(r))
-        for r in key]
-    _, roots = zip(*sorted(zip(key, roots)))
-    return list(roots)
 
 
 def test_roots_linear():

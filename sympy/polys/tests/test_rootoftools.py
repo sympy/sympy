@@ -105,8 +105,10 @@ def test_RootOf___new__():
     assert RootOf(x**3 + x + 1, 0).is_commutative is True
 
 
-def test_RootOf_free_symbols():
-    assert RootOf(x**3 + x + 3, 0).free_symbols == set()
+def test_RootOf_attributes():
+    r = RootOf(x**3 + x + 3, 0)
+    assert r.is_number
+    assert r.free_symbols == set()
     # if the following assertion fails then multivariate polynomials
     # are apparently supported and the RootOf.free_symbols routine
     # should be changed to return whatever symbols would not be

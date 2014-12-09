@@ -1057,7 +1057,7 @@ def root_factors(f, *gens, **args):
         return [f]
 
     if F.is_multivariate:
-        raise ValueError('multivariate polynomials not supported')
+        raise ValueError('multivariate polynomials are not supported')
 
     x = F.gens[0]
 
