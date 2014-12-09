@@ -1,7 +1,7 @@
 from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial, FiniteSet,
-    Float, FourierTransform, Function, IndexedBase, Integral, Interval,
-    InverseCosineTransform, InverseFourierTransform,
+    Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
+    Interval, InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
@@ -1319,3 +1319,14 @@ def test_issue_8470():
     from sympy.parsing.sympy_parser import parse_expr
     e = parse_expr("-B*A", evaluate=False)
     assert latex(e) == r"A \left(- B\right)"
+
+
+def test_issue_7117():
+    # See also issue #5031 (hence the evaluate=False in these).
+    e = Eq(x + 1, 2*x)
+    q = Mul(2, e, evaluate=False)
+    assert latex(q) == r"2 \left(x + 1 = 2 x\right)"
+    q = Add(6, e, evaluate=False)
+    assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
+    q = Pow(e, 2, evaluate=False)
+    assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
