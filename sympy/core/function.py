@@ -1307,6 +1307,11 @@ class Derivative(Expr):
 
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
+    
+    def _sage_(self):
+        import sage.all as sage
+        args = [arg._sage_() for arg in self.args]
+        return sage.derivative(*args)
 
 
 class Lambda(Expr):

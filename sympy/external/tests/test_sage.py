@@ -183,8 +183,9 @@ def test_functions():
     check_expression("Chi(x)", "x")
     check_expression("loggamma(x)", "x")
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
+    check_expression("hyper((n,m),(m,n),x)", "n, m, x")
 
-    #missing bindings in Sage
+    #missing bindings in Sage (ticket 17475 opened)
     #check_expression("Heaviside(x)", "x")
     #check_expression("elliptic_k(x)", "x")
 
