@@ -2437,8 +2437,43 @@ def nsolve(*args, **kwargs):
     3.14159265358979
 
     mpmath.findroot is used, you can find there more extensive documentation,
-    especially concerning keyword parameters and available solvers.
+    especially concerning keyword parameters and available solvers. Note,
+    however, that this routine works only with the numerator of the function
+    in the one-dimensional case, and for very steep functions near the root
+    this may lead to a failure in the verification of the root. In this case
+    you should use the flag `verify=False` and independently verify the
+    solution.
+
+    >>> from sympy import cos, cosh
+    >>> from sympy.abc import i
+    >>> f = cos(x)*cosh(x) - 1
+    >>> nsolve(f, 3.14*100)
+    Traceback (most recent call last):
+    ...
+    ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-19)
+    >>> ans = nsolve(f, 3.14*100, verify=False); ans
+    312.588469032184
+    >>> f.subs(x, ans).n(2)
+    2.1e+121
+    >>> (f/f.diff(x)).subs(x, ans).n(2)
+    7.4e-15
+
+    One might safely skip the verification if bounds of the root are known
+    and a bisection method is used:
+
+    >>> bounds = lambda i: (3.14*i, 3.14*(i + 1))
+    >>> nsolve(f, bounds(100), solver='bisect', verify=False)
+    315.730061685774
     """
+    # there are several other SymPy functions that use method= so
+    # guard against that here
+    if 'method' in kwargs:
+        raise ValueError(filldedent('''
+            Keyword "method" should not be used in this context.  When using
+            some mpmath solvers directly, the keyword "method" is
+            used, but when using nsolve (and findroot) the keyword to use is
+            "solver".'''))
+
     # interpret arguments
     if len(args) == 3:
         f = args[0]
@@ -2478,6 +2513,7 @@ def nsolve(*args, **kwargs):
 
         f = lambdify(fargs, f, modules)
         return findroot(f, x0, **kwargs)
+
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
             need at least as many equations as variables'''))
