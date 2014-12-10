@@ -7,6 +7,7 @@ from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.series.order import O
 
 
+
 def test_rational():
     a = Rational(1, 5)
 
@@ -217,10 +218,6 @@ def test_zero():
     assert 0**I == nan
     i = Symbol('i', imaginary=True)
     assert 0**i == nan
-
-def test_issue8582():
-    assert 1**(oo+I) == nan
-    assert 1**(1+I*oo) == nan
 
 def test_pow_as_base_exp():
     x = Symbol('x')
