@@ -889,7 +889,7 @@ class CreateFermion(FermionicOperator, Creator):
         return "CreateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a^\\dagger_{%s}" % self.state.name
+        return "a^{\\dag}_{%s}" % self.state.name
 
 Fd = CreateFermion
 F = AnnihilateFermion
