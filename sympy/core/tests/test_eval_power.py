@@ -219,7 +219,6 @@ def test_zero():
     assert 0**i == nan
 
 def test_issue8582():
-    assert 1**zoo == nan
     assert 1**(oo+I) == nan
     assert 1**(1+I*oo) == nan
 
