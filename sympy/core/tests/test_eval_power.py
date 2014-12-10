@@ -229,7 +229,7 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
-def test_issue8582():
+def test_issue_8582():
     assert 1**S.ComplexInfinity == nan
     assert 1**(S.Infinity+S.I) == nan
     assert 1**(1+S.I*S.Infinity) == nan
