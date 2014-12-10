@@ -16,6 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
 from sympy.polys import Poly, PolynomialError, DomainError
+from sympy.polys.polyutils import _nsort
 from sympy.solvers import solve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import uniq
@@ -24,7 +25,6 @@ from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
-from sympy.mpmath import findroot as nroot
 
 
 import random
@@ -860,14 +860,11 @@ class Ellipse(GeometryEntity):
             yis = solve(seq, y)[0]
             xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
             try:
-                iv = list(zip(*Poly(xeq, x).intervals()))[0]
-                # bisection is safest here since other methods may miss root
-                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson"))
-                    for i in iv]
+                xsol = Poly(xeq, x).real_roots()
                 points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec)
                     for i in xsol]
-            except (DomainError, PolynomialError):
-                xvals = solve(xeq, x)
+            except (DomainError, PolynomialError, NotImplementedError):
+                xvals = _nsort(solve(xeq, x), separated=True)[0]
                 points = [Point(xis, yis.xreplace({x: xis})) for xis in xvals]
         points = [pt.n(prec) if prec is not None else pt for pt in points]
         slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]

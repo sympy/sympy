@@ -1017,9 +1017,9 @@ def test_ellipse_geom():
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
-    assert e.normal_lines(p, 1) == \
-        [Line(Point(7/4, 1/2), Point(11/4, 3/2)),
-        Line(Point(-2, -26/337), Point(-1, 1/8))]
+    assert e.normal_lines(p, 1) == [
+        Line(Point(-2, -26/337), Point(-1, 1/8)),
+        Line(Point(7/4, 1/2), Point(11/4, 3/2)),]
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
     assert e.normal_lines((1, 1), 1) == \

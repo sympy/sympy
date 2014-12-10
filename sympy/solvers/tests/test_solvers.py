@@ -269,7 +269,8 @@ def test_solve_rational():
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
-    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [
+        {y: -sqrt(x**2*exp(x))}, {y: sqrt(x**2*exp(x))}]
 
 
 def test_issue_7228():
@@ -578,7 +579,7 @@ def test_PR1964():
     # issue 4497
     assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
 
-    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
+    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [(-sqrt(17) + 1)**4/16]
     assert set(solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4))) in \
         [
             set([2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]),
@@ -913,19 +914,36 @@ def test_unrad():
     assert unrad(eq - r + r2, all=True) == ans
 
 
-@slow
 def test_unrad_slow():
     ans = solve(sqrt(x) + sqrt(x + 1) -
                 sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
+
     # the fence optimization problem
     # https://github.com/sympy/sympy/issues/4793#issuecomment-36994519
     F = Symbol('F')
     eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
-    X = solve(eq, x, hint='minimal')[0]
-    Y = solve((x*y).subs(x, X).diff(y), y, simplify=False, minimal=True)
     ans = 2*F/7 - sqrt(2)*F/14
-    assert any((a - ans).expand().is_zero for a in Y)
+    X = solve(eq, x, check=False)
+    for xi in reversed(X):  # reverse since currently, ans is the 2nd one
+        Y = solve((x*y).subs(x, xi).diff(y), y, simplify=False, check=False)
+        if any((a - ans).expand().is_zero for a in Y):
+            break
+    else:
+        assert None  # no answer was found
+
+    assert solve(sqrt(x + 1) + root(x, 3) - 2) == S('''
+        [(-11/(9*(47/54 + sqrt(93)/6)**(1/3)) + 1/3 + (47/54 +
+        sqrt(93)/6)**(1/3))**3]''')
+    assert solve(sqrt(sqrt(x + 1)) + x**Rational(1, 3) - 2) == S('''
+        [(-sqrt(-2*(-1/16 + sqrt(6913)/16)**(1/3) + 6/(-1/16 +
+        sqrt(6913)/16)**(1/3) + 17/2 + 121/(4*sqrt(-6/(-1/16 +
+        sqrt(6913)/16)**(1/3) + 2*(-1/16 + sqrt(6913)/16)**(1/3) + 17/4)))/2 +
+        sqrt(-6/(-1/16 + sqrt(6913)/16)**(1/3) + 2*(-1/16 +
+        sqrt(6913)/16)**(1/3) + 17/4)/2 + 9/4)**3]''')
+    assert solve(sqrt(x) + root(sqrt(x) + 1, 3) - 2) == S('''
+        [((-12**(1/3)*(27 + sqrt(741))**(2/3) + 2*18**(1/3))**3 + 5832 +
+        216*sqrt(741))**2/(46656*(27 + sqrt(741))**2)]''')
 
     eq = S('''
         -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
@@ -1429,8 +1447,8 @@ def test_uselogcombine():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solve(eq, x, force=True) == [-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z)))]
     assert solve(log(x + 3) + log(1 + 3/x) - 3) == [
-        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2]
+        -3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
+        -sqrt(-36 + (-exp(3) + 6)**2)/2 - 3 + exp(3)/2]
 
 
 def test_atan2():
