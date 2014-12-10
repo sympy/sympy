@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from itertools import permutations
 
 from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add
+from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
@@ -179,11 +179,15 @@ class CoordSystem(Basic):
         name = sympify(name)
         # names is not in args because it is related only to printing, not to
         # identifying the CoordSystem instance.
-        obj = Basic.__new__(cls, name, patch)
-        obj.name = name
         if not names:
             names = ['%s_%d' % (name, i) for i in range(patch.dim)]
-        obj._names = names
+        if isinstance(names, Tuple):
+            obj = Basic.__new__(cls, name, patch, names)
+        else:
+            names = Tuple(*symbols(names))
+            obj = Basic.__new__(cls, name, patch, names)
+        obj.name = name
+        obj._names = [str(i) for i in names.args]
         obj.patch = patch
         obj.patch.coord_systems.append(obj)
         obj.transforms = {}
@@ -942,7 +946,7 @@ class LieDerivative(Expr):
     >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
     >>> LieDerivative(R2.e_x, tp).doit()
-    LieDerivative(e_rectangular_0, TensorProduct(dx, dy))
+    LieDerivative(e_x, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
