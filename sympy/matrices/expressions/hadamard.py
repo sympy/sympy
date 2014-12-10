@@ -4,6 +4,7 @@ from sympy.core import Mul, Basic, sympify
 from sympy.strategies import unpack, flatten, sort, condition, exhaust, do_one
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+from sympy.matrices import matrix_multiply_elementwise
 
 def hadamard_product(*matrices):
     """
@@ -24,11 +25,7 @@ def hadamard_product(*matrices):
     if not matrices:
         raise TypeError("Empty Hadamard product is undefined")
     validate(*matrices)
-    if len(matrices) == 1:
-        return matrices[0]
-    else:
-        return HadamardProduct(*matrices).doit()
-
+    return HadamardProduct(*matrices).doit()
 
 class HadamardProduct(MatrixExpr):
     """
@@ -65,7 +62,25 @@ class HadamardProduct(MatrixExpr):
         return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
-        return canonicalize(self)
+        from sympy.matrices import ImmutableMatrix
+        matrices = sorted(self.args, key=lambda args: type(args))
+        ans = matrices[0]
+        index = 0
+        if isinstance(ans, ImmutableMatrix):
+            for index in range(1, len(matrices)):
+                if not isinstance(matrices[index], ImmutableMatrix):
+                    break
+                else:
+                    ans = matrix_multiply_elementwise(ans, matrices[index])
+        if index == 0 and isinstance(matrices[0], ImmutableMatrix):
+            return HadamardProduct(ans)
+        elif index == 0:
+            return canonicalize(self)
+        elif index == len(matrices)-1 and isinstance(matrices[-1], ImmutableMatrix):
+            return HadamardProduct(ans)
+        else:
+            matrices = tuple([ans] + matrices[index:])
+            return HadamardProduct(*matrices)
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
