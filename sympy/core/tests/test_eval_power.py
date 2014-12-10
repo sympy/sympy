@@ -229,9 +229,9 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 def test_issue8582():
-    assert 1**zoo == nan
-    assert 1**(oo+I) == nan
-    assert 1**(1+I*oo) == nan
+    assert 1**S.ComplexInfinity == nan
+    assert 1**(S.Infinity+S.I) == nan
+    assert 1**(1+S.I*S.Infinity) == nan
 
 def test_issue_6100():
     x = Symbol('x')

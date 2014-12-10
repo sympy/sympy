@@ -172,7 +172,7 @@ class Pow(Expr):
                 elif e.is_odd:
                     return -Pow(-b, e)
             if b is S.One:
-                if e is S.NaN or e.is_finite is False: 
+                if e is S.NaN or e.is_infinite: 
                     return S.NaN                           
                 return S.One                             
             elif S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
