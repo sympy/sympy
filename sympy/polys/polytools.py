@@ -5740,7 +5740,7 @@ def to_rational_coeffs(f):
     """
     from sympy.simplify.simplify import simplify
 
-    def _try_rescale(f):
+    def _try_rescale(f, f1=None):
         """
         try rescaling ``x -> alpha*x`` to convert f to a polynomial
         with rational coefficients.
@@ -5753,9 +5753,10 @@ def to_rational_coeffs(f):
             return None, f
         n = f.degree()
         lc = f.LC()
-        coeffs = f.monic().all_coeffs()[1:]
+        f1 = f1 or f1.monic()
+        coeffs = f1.all_coeffs()[1:]
         coeffs = [simplify(coeffx) for coeffx in coeffs]
-        if coeffs[-2] and not all(coeffx.is_rational for coeffx in coeffs):
+        if coeffs[-2]:
             rescale1_x = simplify(coeffs[-2]/coeffs[-1])
             coeffs1 = []
             for i in range(len(coeffs)):
@@ -5774,7 +5775,7 @@ def to_rational_coeffs(f):
                 return lc, rescale_x, f
         return None
 
-    def _try_translate(f):
+    def _try_translate(f, f1=None):
         """
         try translating ``x -> x + alpha`` to convert f to a polynomial
         with rational coefficients.
@@ -5786,7 +5787,7 @@ def to_rational_coeffs(f):
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
-        f1 = f.monic()
+        f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
         if c and not c.is_rational:
@@ -5813,7 +5814,8 @@ def to_rational_coeffs(f):
         for y in coeffs:
             for x in Add.make_args(y):
                 f = Factors(x).factors
-                r = [wx.q for wx in f.values() if wx.is_Rational and wx.q >= 2]
+                r = [wx.q for b, wx in f.items() if
+                    b.is_number and wx.is_Rational and wx.q >= 2]
                 if not r:
                     continue
                 if min(r) == 2:
@@ -5823,11 +5825,12 @@ def to_rational_coeffs(f):
         return has_sq
 
     if f.get_domain().is_EX and _has_square_roots(f):
-        r = _try_rescale(f)
+        f1 = f.monic()
+        r = _try_rescale(f, f1)
         if r:
             return r[0], r[1], None, r[2]
         else:
-            r = _try_translate(f)
+            r = _try_translate(f, f1)
             if r:
                 return None, None, r[0], r[1]
     return None
