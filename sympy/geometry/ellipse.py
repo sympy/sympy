@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
 from sympy.polys import Poly, PolynomialError, DomainError
-from sympy.polys.polyutils import _nsort
+from sympy.polys.polyutils import _nsort, _not_a_coeff
 from sympy.solvers import solve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import uniq
@@ -855,22 +855,22 @@ class Ellipse(GeometryEntity):
         norm = -1/dydx
         slope = Line(p, (x, y)).slope
         seq = slope - norm
-        points = []
-        if prec is not None:
-            yis = solve(seq, y)[0]
-            xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+        yis = solve(seq, y)[0]
+        xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+        if len(xeq.free_symbols) == 1:
             try:
+                # this is so much faster, it's worth a try
                 xsol = Poly(xeq, x).real_roots()
-                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec)
-                    for i in xsol]
             except (DomainError, PolynomialError, NotImplementedError):
-                xvals = _nsort(solve(xeq, x), separated=True)[0]
-                points = [Point(xis, yis.xreplace({x: xis})) for xis in xvals]
-        points = [pt.n(prec) if prec is not None else pt for pt in points]
+                xsol = _nsort(solve(xeq, x), separated=True)[0]
+            points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
+        else:
+            raise NotImplementedError(
+                'intersections for the general ellipse are not supported')
         slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
         if prec is not None:
-            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i
-                for i in slopes]
+            points = [pt.n(prec) for pt in points]
+            slopes = [i if _not_a_coeff(i) else i.n(prec) for i in slopes]
         return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
 
 
