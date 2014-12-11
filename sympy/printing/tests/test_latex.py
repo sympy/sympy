@@ -1,7 +1,7 @@
 from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial, FiniteSet,
-    Float, FourierTransform, Function, IndexedBase, Integral, Interval,
-    InverseCosineTransform, InverseFourierTransform,
+    Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
+    Interval, InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
@@ -435,6 +435,7 @@ def test_latex_derivatives():
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int_{0}^{\infty} e^{- x y}\, dx"
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (
@@ -890,12 +891,14 @@ def test_matMul():
     assert l._print_MatMul(-2*A*(A + 2*B)) in [r'-2 A \left(A + 2 B\right)',
         r'-2 A \left(2 B + A\right)']
 
+
 def test_latex_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
             r'X\left[:5, 1:9:2\right]'
     assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
             r'X\left[5, :5:2\right]'
+
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
@@ -1090,7 +1093,6 @@ def test_boolean_args_order():
     assert latex(expr) == 'a \\veebar b \\veebar c \\veebar d \\veebar e \\veebar f'
 
 
-
 def test_imaginary():
     i = sqrt(-1)
     assert latex(i) == r'i'
@@ -1103,6 +1105,7 @@ def test_builtins_without_args():
     assert latex(log) == r'\log'
     assert latex(Ei) == r'\operatorname{Ei}'
     assert latex(zeta) == r'\zeta'
+
 
 def test_latex_greek_functions():
     # bug because capital greeks that have roman equivalents should not use
@@ -1126,6 +1129,7 @@ def test_latex_greek_functions():
     assert latex(c(x)) == r'\chi{\left (x \right )}'
     assert latex(c) == r'\chi'
 
+
 def test_translate():
     s = 'Alpha'
     assert translate(s) == 'A'
@@ -1142,10 +1146,12 @@ def test_translate():
     s = 'LamdaHatDOT'
     assert translate(s) == r'\dot{\hat{\Lambda}}'
 
+
 def test_other_symbols():
     from sympy.printing.latex import other_symbols
     for s in other_symbols:
         assert latex(symbols(s)) == "\\"+s
+
 
 def test_modifiers():
     # Test each modifier individually in the simplest case (with funny capitalizations)
@@ -1198,6 +1204,7 @@ def test_modifiers():
     # Check a couple big, ugly combinations
     assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left\lvert{\breve{z}}\right\rvert}_{{\check{y}}'}"
     assert latex(symbols('alphadothat_nVECDOT__tTildePrime')) == r"\hat{\dot{\alpha}}^{{\tilde{t}}'}_{\dot{\vec{n}}}"
+
 
 def test_greek_symbols():
     assert latex(Symbol('alpha'))   == r'\alpha'
@@ -1258,9 +1265,11 @@ def test_greek_symbols():
     assert latex(Symbol('varsigma')) == r'\varsigma'
     assert latex(Symbol('vartheta')) == r'\vartheta'
 
+
 @XFAIL
 def test_builtin_without_args_mismatched_names():
     assert latex(CosineTransform) == r'\mathcal{COS}'
+
 
 def test_builtin_no_args():
     assert latex(Chi) == r'\operatorname{Chi}'
@@ -1269,9 +1278,11 @@ def test_builtin_no_args():
     assert latex(DiracDelta) == r'\delta'
     assert latex(lowergamma) == r'\gamma'
 
+
 def test_issue_6853():
     p = Function('Pi')
     assert latex(p(x)) == r"\Pi{\left (x \right )}"
+
 
 def test_Mul():
     e = Mul(-2, x + 1, evaluate=False)
@@ -1288,6 +1299,7 @@ def test_Mul():
     assert latex(e)  == r'- 2 x - 2'
     e = Mul(2, x + 1)
     assert latex(e)  == r'2 x + 2'
+
 
 def test_Pow():
     e = Pow(2, 2, evaluate=False)
@@ -1307,3 +1319,14 @@ def test_issue_8470():
     from sympy.parsing.sympy_parser import parse_expr
     e = parse_expr("-B*A", evaluate=False)
     assert latex(e) == r"A \left(- B\right)"
+
+
+def test_issue_7117():
+    # See also issue #5031 (hence the evaluate=False in these).
+    e = Eq(x + 1, 2*x)
+    q = Mul(2, e, evaluate=False)
+    assert latex(q) == r"2 \left(x + 1 = 2 x\right)"
+    q = Add(6, e, evaluate=False)
+    assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
+    q = Pow(e, 2, evaluate=False)
+    assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"

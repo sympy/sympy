@@ -1243,6 +1243,8 @@ class PrettyPrinter(Printer):
             elif term.is_Number and term < 0:
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
+            elif term.is_Relational:
+                pforms.append(prettyForm(*self._print(term).parens()))
             else:
                 pforms.append(self._print(term))
 
@@ -1304,6 +1306,8 @@ class PrettyPrinter(Printer):
         for i in xrange(0, len(a)):
             if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
                     isinstance(a[i], (Integral, Piecewise, Product, Sum))):
+                a[i] = prettyForm(*self._print(a[i]).parens())
+            elif a[i].is_Relational:
                 a[i] = prettyForm(*self._print(a[i]).parens())
             else:
                 a[i] = self._print(a[i])
@@ -1373,6 +1377,9 @@ class PrettyPrinter(Printer):
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
+
+        if b.is_Relational:
+            return prettyForm(*self._print(b).parens()).__pow__(self._print(e))
 
         return self._print(b)**self._print(e)
 

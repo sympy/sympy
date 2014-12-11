@@ -205,9 +205,9 @@ class LatexPrinter(Printer):
         """
         from sympy import Integral, Piecewise, Product, Sum
 
-        res = False
-
         if expr.is_Add:
+            return True
+        elif expr.is_Relational:
             return True
         elif expr.is_Mul:
             if not first and _coeff_isneg(expr):
@@ -217,7 +217,19 @@ class LatexPrinter(Printer):
             any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
             return True
 
-        return res
+        return False
+
+
+    def _needs_add_brackets(self, expr):
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        printed as part of an Add, False otherwise.  This is False for most
+        things.
+        """
+        if expr.is_Relational:
+            return True
+        return False
+
 
     def _mul_is_clean(self, expr):
         for arg in expr.args:
@@ -243,20 +255,29 @@ class LatexPrinter(Printer):
     def _print_NoneType(self, e):
         return r"\mathrm{%s}" % e
 
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
         else:
             terms = self._as_ordered_terms(expr, order=order)
-        tex = self._print(terms[0])
 
-        for term in terms[1:]:
-            if not _coeff_isneg(term):
-                tex += " + " + self._print(term)
+        tex = ""
+        for i, term in enumerate(terms):
+            if i == 0:
+                pass
+            elif _coeff_isneg(term):
+                tex += " - "
+                term = -term
             else:
-                tex += " - " + self._print(-term)
+                tex += " + "
+            term_tex = self._print(term)
+            if self._needs_add_brackets(term):
+                term_tex = r"\left(%s\right)" % term_tex
+            tex += term_tex
 
         return tex
+
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
