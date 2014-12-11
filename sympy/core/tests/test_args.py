@@ -3131,19 +3131,16 @@ def test_sympy__geometry__entity__GeometryEntity():
     assert _test_args(GeometryEntity(Point(1, 0), 1, [1, 2]))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__Manifold():
     from sympy.diffgeom import Manifold
     assert _test_args(Manifold('name', 3))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__Patch():
     from sympy.diffgeom import Manifold, Patch
     assert _test_args(Patch('name', Manifold('name', 3)))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__CoordSystem():
     from sympy.diffgeom import Manifold, Patch, CoordSystem
     assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
@@ -3156,14 +3153,12 @@ def test_sympy__diffgeom__diffgeom__Point():
         CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__BaseScalarField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     assert _test_args(BaseScalarField(cs, 0))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__BaseVectorField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))

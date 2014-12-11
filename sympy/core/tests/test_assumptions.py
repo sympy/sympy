@@ -746,6 +746,7 @@ def test_Mul_is_infinite():
 def test_special_is_rational():
     i = Symbol('i', integer=True)
     r = Symbol('r', rational=True)
+    nr = Symbol('nr', irrational=True)
     x = Symbol('x')
     assert sqrt(3).is_rational is False
     assert (3 + sqrt(3)).is_rational is False
@@ -767,6 +768,8 @@ def test_special_is_rational():
     assert (r**i).is_rational is True
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
+    assert (nr**i).is_rational is None  # issue 8598
+    assert (nr**Symbol('z', zero=True)).is_rational
     assert sin(1).is_rational is False
     assert sin(i).is_rational is False
     assert sin(r).is_rational is False

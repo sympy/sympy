@@ -964,7 +964,10 @@ class Pow(Expr):
             # because Rational**Integer autosimplifies
             return False
         if e.is_integer:
-            return b.is_rational
+            if b.is_rational:
+                return True
+            elif b.is_irrational:
+                return e.is_zero
 
     def _eval_is_algebraic(self):
         if self.base.is_zero or (self.base - 1).is_zero:
