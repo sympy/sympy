@@ -403,7 +403,8 @@ def test_solve_transcendental():
 
     # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
     # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
-    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
+    raises(NotImplementedError, lambda:
+        solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3))
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
@@ -889,6 +890,8 @@ def test_unrad():
     assert solve(sqrt(x) + x**Rational(1, 3) - 2) == [1]
     raises(NotImplementedError, lambda:
         solve(sqrt(x) + root(x, 3) + root(x + 1, 5) - 2))
+    # fails through a different code path
+    raises(NotImplementedError, lambda: solve(-sqrt(2) + cosh(x)/x))
 
 
 def test_unrad_slow():
