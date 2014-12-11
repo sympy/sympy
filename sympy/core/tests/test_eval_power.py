@@ -7,6 +7,7 @@ from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.series.order import O
 
 
+
 def test_rational():
     a = Rational(1, 5)
 
@@ -218,7 +219,6 @@ def test_zero():
     i = Symbol('i', imaginary=True)
     assert 0**i == nan
 
-
 def test_pow_as_base_exp():
     x = Symbol('x')
     assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
@@ -227,6 +227,12 @@ def test_pow_as_base_exp():
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
+
+
+def test_issue_8582():
+    assert 1**S.ComplexInfinity == nan
+    assert 1**(S.Infinity + S.I) == nan
+    assert 1**(1 + S.I*S.Infinity) == nan
 
 
 def test_issue_6100():
