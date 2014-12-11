@@ -483,11 +483,19 @@ class Abs(Function):
                 from sympy import expand_mul
                 return sqrt(expand_mul(arg * arg.conjugate()))
 
+    def _eval_is_integer(self):
+        if self.args[0].is_real:
+            return self.args[0].is_integer
+
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
 
     def _eval_is_positive(self):
         return self.is_nonzero
+
+    def _eval_is_rational(self):
+        if self.args[0].is_real:
+            return self.args[0].is_rational
 
     def _eval_power(self, exponent):
         if self.args[0].is_real and exponent.is_integer:
