@@ -2710,10 +2710,11 @@ def unrad(eq, *syms, **flags):
             A set containing all denominators encountered while removing
             radicals. This may be of interest since any solution obtained in
             the modified expression should not set any denominator to zero.
-        ``syms``
-            an iterable of symbols which, if provided, will limit the focus of
-            radical removal: only radicals with one or more of the symbols of
-            interest will be cleared.
+
+    ``syms``
+        an iterable of symbols which, if provided, will limit the focus of
+        radical removal: only radicals with one or more of the symbols of
+        interest will be cleared.
 
     ``flags`` are used internally for communication during recursive calls.
     Two options are also recognized::
@@ -2734,15 +2735,15 @@ def unrad(eq, *syms, **flags):
     Examples
     ========
 
-        >>> from sympy.solvers.solvers import unrad
-        >>> from sympy.abc import x
-        >>> from sympy import sqrt, Rational
-        >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
-        (x**5 - 64, [], [])
-        >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
-        (x**3 - x**2 - 2*x - 1, [], [])
-        >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
-        (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
+    >>> from sympy.solvers.solvers import unrad
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, Rational
+    >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
+    (x**5 - 64, [], [])
+    >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
+    (x**3 - x**2 - 2*x - 1, [], [])
+    >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
+    (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
 
     """
     def _canonical(eq):
