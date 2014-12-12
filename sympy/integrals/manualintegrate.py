@@ -227,11 +227,11 @@ def power_rule(integral):
     integrand, symbol = integral
     base, exp = integrand.as_base_exp()
 
-    if symbol not in exp.free_symbols and isinstance(base, sympy.Symbol):
+    if symbol not in exp.free_symbols and isinstance(base, (sympy.Symbol, sympy.Dummy)):
         if sympy.simplify(exp + 1) == 0:
             return ReciprocalRule(base, integrand, symbol)
         return PowerRule(base, exp, integrand, symbol)
-    elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
+    elif symbol not in base.free_symbols and isinstance(exp, (sympy.Symbol, sympy.Dummy)):
         rule = ExpRule(base, exp, integrand, symbol)
 
         if sympy.log(base).is_nonzero:
@@ -246,7 +246,7 @@ def power_rule(integral):
 
 def exp_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand.args[0], sympy.Symbol):
+    if isinstance(integrand.args[0], (sympy.Symbol, sympy.Dummy)):
         return ExpRule(sympy.E, integrand.args[0], integrand, symbol)
 
 def inverse_trig_rule(integral):
@@ -454,7 +454,7 @@ def trig_rule(integral):
     if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
         arg = integrand.args[0]
 
-        if not isinstance(arg, sympy.Symbol):
+        if not isinstance(arg, (sympy.Symbol, sympy.Dummy)):
             return  # perhaps a substitution can deal with it
 
         if isinstance(integrand, sympy.sin):
