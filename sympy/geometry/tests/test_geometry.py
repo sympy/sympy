@@ -1011,20 +1011,25 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(1, 0))]
     assert e.normal_lines((0, 1)) == \
         [Line(Point(0, 0), Point(0, 1))]
-    assert e.normal_lines(Point(1, 1), 1) == \
-        [Line(Point(-2, -1/5), Point(-1, 1/5)),
-         Line(Point(1, -9/10), Point(2, -43/11))]
+    assert e.normal_lines(Point(1, 1), 2) == [
+        Line(Point(-51/26, -1/5), Point(-25/26, 17/83)),
+        Line(Point(28/29, -7/8), Point(57/29, -9/2))]
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
-    assert e.normal_lines(p, 1) == \
-        [Line(Point(7/4, 1/2), Point(11/4, 3/2)),
-        Line(Point(-2, -26/337), Point(-1, 1/8))]
+    assert e.normal_lines(p, 2) == [
+        Line(Point(-341/171, -1/13), Point(-170/171, 5/64)),
+        Line(Point(26/15, -1/2), Point(41/15, -43/26))]
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
-    assert e.normal_lines((1, 1), 1) == \
-        [Line(Point(-2, -1/3), Point(-1, 1/6)),
+    assert e.normal_lines((1, 1), 2) == [
+        Line(Point(-64/33, -20/71), Point(-31/33, 2/13)),
         Line(Point(1, -1), Point(2, -4))]
+    # general ellipse fails except under certain conditions
+    e = Ellipse((0, 0), x, 1)
+    assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
+    raises(NotImplementedError, lambda: e.normal_lines((x + 1, 1)))
+
 
     # Properties
     major = 3
