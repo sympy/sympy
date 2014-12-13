@@ -678,7 +678,7 @@ def test_issue_6274():
 
 
 def test_simplify():
-    y, t = symbols('y, t')
+    y, t, v = symbols('y, t, v')
 
     assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
         Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
@@ -705,6 +705,10 @@ def test_simplify():
         simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
     assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
         Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
+    assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b))) \
+        == Sum(x + y + z, (t, a, b))          # issue 8596
+    assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b)) + \
+        Sum(v, (t, a, b))) == Sum(x + y + z + v, (t, a, b))  # issue 8596
 
 
 def test_change_index():

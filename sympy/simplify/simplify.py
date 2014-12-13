@@ -4422,8 +4422,10 @@ def sum_simplify(s):
             if not used[i]:
                 for j, s_term2 in enumerate(s_t):
                     if not used[j] and i != j:
-                        if isinstance(sum_add(s_term1, s_term2, method), Sum):
-                            s_t[i] = sum_add(s_term1, s_term2, method)
+                        temp = sum_add(s_term1, s_term2, method)
+                        if isinstance(temp, Sum):
+                            s_t[i] = temp
+                            s_term1 = s_t[i]
                             used[j] = True
 
     result = Add(*o_t)
