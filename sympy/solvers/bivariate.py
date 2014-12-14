@@ -264,7 +264,7 @@ def _solve_lambert(f, symbol, gens):
                 # move all but mainexp-containing term to rhs
                 other = lhs.subs(mainexp, 0)
                 mainterm = lhs - other
-                rhs=rhs - other
+                rhs = rhs - other
                 if (mainterm.could_extract_minus_sign() and
                     rhs.could_extract_minus_sign()):
                     mainterm *= -1

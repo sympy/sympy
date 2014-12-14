@@ -2379,6 +2379,8 @@ def _tsolve(eq, sym, **flags):
                                 for i in inversion for s in sol])))
                     except NotImplementedError:
                         pass
+                else:
+                    pass
 
     if flags.pop('force', True):
         flags['force'] = False
@@ -2388,11 +2390,16 @@ def _tsolve(eq, sym, **flags):
                 break
         else:
             u = sym
-        try:
-            soln = _solve(pos, u, **flags)
-        except NotImplementedError:
-            return
-        return list(ordered([s.subs(reps) for s in soln]))
+        if pos.has(u):
+            try:
+                soln = _solve(pos, u, **flags)
+                return list(ordered([s.subs(reps) for s in soln]))
+            except NotImplementedError:
+                pass
+        else:
+            pass  # here for coverage
+
+    return  # here for coverage
 
 
 # TODO: option for calculating J numerically
