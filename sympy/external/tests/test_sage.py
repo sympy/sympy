@@ -122,7 +122,8 @@ def test_oo():
     assert sage.oo == sage.SR(sympy.oo)
     assert sympy.sympify(-sage.oo) == -sympy.oo
     assert -sage.oo == sage.SR(-sympy.oo)
-
+    #assert sympy.sympify(sage.UnsignedInfinityRing.gen()) == sympy.zoo
+    #assert sage.UnsignedInfinityRing.gen() == sage.SR(sympy.zoo)
 
 def test_NaN():
     assert sympy.sympify(sage.NaN) == sympy.nan
