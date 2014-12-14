@@ -189,6 +189,8 @@ def test_functions():
     #missing bindings in Sage (ticket 17475 opened)
     #check_expression("Heaviside(x)", "x")
     #check_expression("elliptic_k(x)", "x")
+    #check_expression("rising_factorial(x,y)", "x,y")
+    #check_expression("falling_factorial(x,y)", "x,y")
 
 def test_issue_4023():
     sage.var("a x")
