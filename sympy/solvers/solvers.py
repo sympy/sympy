@@ -2740,8 +2740,6 @@ def unrad(eq, *syms, **flags):
 
         ``take``, when defined, is interpreted as a single-argument function
         that returns True if a given Pow should be handled.
-        ``all``, when True, will signify that an attempt should be made to
-        remove all radicals. ``take``, if present, has priority over ``all``.
 
     Radicals can be removed from an expression if::
 
@@ -2790,22 +2788,6 @@ def unrad(eq, *syms, **flags):
 
     if flags.get('take', None):
         _take = flags.pop('take')
-    elif flags.pop('all', None):
-        _rad = lambda w: w.is_Pow and w.exp.is_Rational and w.exp.q != 1
-        def _take(d):
-            return _rad(d) or any(_rad(i) for i in d.atoms(Pow))
-        if eq.has(S.ImaginaryUnit):
-            i = Dummy()
-            flags['take'] = _take
-            try:
-                rv = unrad(eq.xreplace({S.ImaginaryUnit: sqrt(i)}), *syms, **flags)
-                rep = {i: S.NegativeOne}
-                rv = (_canonical(rv[0].xreplace(rep)),
-                      [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
-                      [i.xreplace(rep) for i in rv[2]])
-                return rv
-            except ValueError as msg:
-                raise msg
     else:
         def _take(d):
             # see if this is a term that has symbols of interest

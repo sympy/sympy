@@ -874,17 +874,6 @@ def test_unrad():
     assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
 
-    eq = sqrt(2 + I) + 2*I
-    assert unrad(eq - x, x, all=True) == (x**4 + 4*x**2 + 8*x + 37, [], [])
-    ans = (81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 -
-        31608*x**2 - 189648*x + 141358, [], [])
-    r = sqrt(sqrt(2)/3 + 7)
-    eq = sqrt(r) + r - x
-    assert unrad(eq, all=1)
-    r2 = sqrt(sqrt(2) + 21)/sqrt(3)
-    assert r != r2 and r.equals(r2)
-    assert unrad(eq - r + r2, all=True) == ans
-
     # for coverage
     assert solve(sqrt(x) + x**Rational(1, 3) - 2) == [1]
     raises(NotImplementedError, lambda:
