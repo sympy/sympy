@@ -36,7 +36,9 @@ from sympy.utilities.pytest import XFAIL
 
 
 def check_expression(expr, var_symbols):
-    """Does eval(expr) both in Sage and SymPy and does other checks."""
+    """
+    Does eval(expr) both in Sage and SymPy and does other checks.
+    """
 
     # evaluate the expression in the context of Sage:
     if var_symbols:
@@ -169,7 +171,7 @@ def test_functions():
     check_expression("abs(x)", "x")
     check_expression("arg(x)", "x")
     check_expression("conjugate(x)", "x")
-    
+
     # The following tests differently named functions
     check_expression("besselj(y, x)", "x, y")
     check_expression("bessely(y, x)", "x, y")
@@ -186,11 +188,13 @@ def test_functions():
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
     check_expression("hyper((n,m),(m,n),x)", "n, m, x")
 
+@XFAIL
+def check_expression_failing():
     #missing bindings in Sage (ticket 17475 opened)
-    #check_expression("Heaviside(x)", "x")
-    #check_expression("elliptic_k(x)", "x")
-    #check_expression("rising_factorial(x,y)", "x,y")
-    #check_expression("falling_factorial(x,y)", "x,y")
+    check_expression("Heaviside(x)", "x")
+    check_expression("elliptic_k(x)", "x")
+    check_expression("rising_factorial(x,y)", "x,y")
+    check_expression("falling_factorial(x,y)", "x,y")
 
 def test_issue_4023():
     sage.var("a x")
@@ -199,6 +203,11 @@ def test_issue_4023():
     i2 = sympy.simplify(i)
     s = sage.SR(i2)
     assert s == (a*log(1 + a) - a*log(a) + log(1 + a) - 1)/a
+
+def test_integral():
+#    In [18]: sympy.sympify(sage.integral(x*y,x,hold=True))
+#Out[18]: Integral(x*y, x)
+
 
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
