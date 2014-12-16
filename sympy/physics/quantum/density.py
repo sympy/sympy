@@ -2,11 +2,13 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
+from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt, Rational
 from sympy.core.trace import Tr
+from sympy.core.compatibility import u
+from sympy.mpmath import acos, pi
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import HermitianOperator
+from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
@@ -320,3 +322,68 @@ def fidelity(state1, state2):
 
     sqrt_state1 = state1**Rational(1, 2)
     return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
+
+
+def bures_angle(state1, state2):
+    """ Computes the Bures angle [1], [2] between two quantum states
+
+    The arguments provided to this function should be a square matrix or a
+    Density object. If it is a square matrix, it is assumed to be diagonalizable.
+
+    Parameters:
+    ==========
+
+    state1, state2 : a density matrix or Matrix
+
+
+    Examples:
+    =========
+
+    >>> from sympy.physics.quantum import TensorProduct, Ket, Dagger
+    >>> from sympy.physics.quantum.density import bures_metric
+    >>> from sympy import Matrix
+    >>> from math import sqrt
+
+    >>> # define qubits |0>, |1>, |00>, and |11>
+    >>> q0 = Matrix([1,0])
+    >>> q1 = Matrix([0,1])
+    >>> q00 = TensorProduct(q0,q0)
+    >>> q11 = TensorProduct(q1,q1)
+
+    >>> # create set of maximally entangled Bell states 
+    >>> phip = 1/sqrt(2) * ( q00 + q11 )
+    >>> phim = 1/sqrt(2) * ( q00 - q11 )
+
+    >>> # create the corresponding density matrices for the Bell states
+    >>> phip_dm = phip * Dagger(phip)
+    >>> phim_dm = phim * Dagger(phim)
+
+    >>> # calculates the Bures angle between two orthogonal states (yields: 0)
+    >>> print bures_angle(phip_dm, phim_dm)
+    0
+    >>> # calculates the Bures angle between two identitcal states (yields: 1)
+    >>> print bures_angle(phip_dm, phip_dm)
+    1
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Bures_metric
+    .. [2] Quantum Computation and Quantum Information. M. Nielsen, I. Chuang, 
+           Cambridge University Press, (2001) (Eq. 9.82, pg 413). 
+    """
+    state1 = represent(state1) if isinstance(state1, Density) else state1
+    state2 = represent(state2) if isinstance(state2, Density) else state2
+
+    if (not isinstance(state1, Matrix) or
+            not isinstance(state2, Matrix)):
+        raise ValueError("state1 and state2 must be of type Density or Matrix "
+                         "received type=%s for state1 and type=%s for state2" %
+                         (type(state1), type(state2)))
+
+    if ( state1.shape != state2.shape and state1.is_square):
+        raise ValueError("The dimensions of both args should be equal and the "
+                         "matrix obtained should be a square matrix")
+
+    # the pi/2 is for normalization
+    return acos( fidelity(state1, state2) ) / (pi/2)
