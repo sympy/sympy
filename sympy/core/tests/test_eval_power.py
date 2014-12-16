@@ -1,5 +1,5 @@
 from sympy.core import (Rational, Symbol, S, Float, Integer, Number, Pow,
-Basic, I, nan, pi, symbols)
+Basic, I, nan, pi, symbols, oo, zoo)
 from sympy.core.tests.test_evalf import NS
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
@@ -334,3 +334,9 @@ def test_issue_7638():
     assert sqrt(e**5) == e**(5*S.Half)
     assert sqrt(e**6) == e**3
     assert sqrt((1 + I*r)**6) != (1 + I*r)**3
+
+
+def test_issue_8582():
+    assert 1**zoo == nan
+    assert 1**(oo + I) == nan
+    assert 1**(1 + I*oo) == nan
