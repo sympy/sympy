@@ -35,7 +35,7 @@ import sympy
 from sympy.utilities.pytest import XFAIL
 
 
-def check_expression(expr, var_symbols):
+def check_expression(expr, var_symbols, only_from_sympy=False):
     """
     Does eval(expr) both in Sage and SymPy and does other checks.
     """
@@ -71,7 +71,8 @@ def check_expression(expr, var_symbols):
         e_sage = _sage_method(sympy.S(e_sympy))
 
     # Do the actual checks:
-    assert sympy.S(e_sage) == e_sympy
+    if not only_from_sympy:
+        assert sympy.S(e_sage) == e_sympy
     assert e_sage == sage.SR(e_sympy)
 
 
@@ -188,13 +189,10 @@ def test_functions():
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
     check_expression("hyper((n,m),(m,n),x)", "n, m, x")
 
-@XFAIL
-def check_expression_failing():
+def test_functions_only_from_sympy():
     #missing bindings in Sage (ticket 17475 opened)
-    check_expression("Heaviside(x)", "x")
-    check_expression("elliptic_k(x)", "x")
-    check_expression("rising_factorial(x,y)", "x,y")
-    check_expression("falling_factorial(x,y)", "x,y")
+    check_expression("Heaviside(x)", "x", only_from_sympy=True)
+    check_expression("elliptic_k(x)", "x", only_from_sympy=True)
 
 def test_issue_4023():
     sage.var("a x")
@@ -205,9 +203,20 @@ def test_issue_4023():
     assert s == (a*log(1 + a) - a*log(a) + log(1 + a) - 1)/a
 
 def test_integral():
-#    In [18]: sympy.sympify(sage.integral(x*y,x,hold=True))
-#Out[18]: Integral(x*y, x)
+    #test Sympy-->Sage
+    check_expression("Integral(x, (x,))", "x", only_from_sympy=True)
+    check_expression("Integral(x, (x, 0, 1))", "x", only_from_sympy=True)
+    check_expression("Integral(x*y, (x,), (y, ))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x,), (y, 0, 1))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x, 0, 1), (y,))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x, 0, 1), (y, 0, 1))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y*z, (x, 0, 1), (y, 0, 1), (z, 0, 1))", "x,y,z", only_from_sympy=True)
 
+@XFAIL
+def test_integral_failing():
+    check_expression("Integral(x, (x, 0))", "x", only_from_sympy=True)
+    check_expression("Integral(x*y, (x,), (y, 0))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x, 0, 1), (y, 0))", "x,y", only_from_sympy=True)
 
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
@@ -229,8 +238,11 @@ TESTS::
     sage: test_GoldenRation()
     sage: test_functions()
     sage: test_issue_4023()
+    sage: test_functions_only_from_sympy()
+    sage: test_integral()
+    sage: test_integral_failing()
 
-Hell freezes over before Sage has a symbolic Lucas function::
+Sage has no symbolic Lucas function at the moment::
 
     sage: check_expression("lucas(x)", "x")
     Traceback (most recent call last):
