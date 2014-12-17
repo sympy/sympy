@@ -183,12 +183,14 @@ def test_Lambda_equality():
 @XFAIL
 def test_Lambda_equality_no_capture():
     # Issue 8619 - make sure equality test doesn't capture free variables
-    assert Lambda(x,x+x) != Lambda(y,x+y)
+    assert Lambda(x, x + x) != Lambda(y, x + y)
+
 
 @XFAIL
 def test_nested_Lambda_equality():
     # Issue 8619 - make sure equality test does properly work with nested lambdas
-    assert Lambda(x,Lambda(y,x)) == Lambda(y,Lambda(x,y))
+    assert Lambda(x, Lambda(y, x)) == Lambda(y, Lambda(x, y))
+
 
 def test_Subs():
     assert Subs(x, x, 0) == Subs(y, y, 0)
