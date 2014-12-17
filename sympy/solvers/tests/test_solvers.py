@@ -911,6 +911,8 @@ def test_unrad():
     r2 = sqrt(sqrt(2) + 21)/sqrt(3)
     assert r != r2 and r.equals(r2)
     assert unrad(eq - r + r2, all=True) == ans
+    #issue 8622
+    assert unrad((root(x + 1, 5) - root(x, 3))) == (    x**5 - x**3 - 3*x**2 - 3*x - 1, [])
 
 
 @slow
