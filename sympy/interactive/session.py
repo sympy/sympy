@@ -17,7 +17,7 @@ init_printing()
 verbose_message = """\
 These commands were executed:
 %(source)s
-Documentation can be found at http://www.sympy.org
+Documentation can be found at http://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\
@@ -69,7 +69,14 @@ def _make_message(ipython=True, quiet=False, source=None):
             else:
                 _source += '>>> ' + line + '\n'
 
-        message += '\n' + verbose_message % {'source': _source}
+        doc_version = sympy_version
+        if doc_version.find('-git') >= 0:
+            doc_version = "dev"
+        else:
+            doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
+
+        message += '\n' + verbose_message % {'source': _source,
+                                             'version': doc_version}
 
     return message
 

@@ -350,6 +350,11 @@ def test_Abs():
     assert Abs(3**(2 + I)) == 9
     assert Abs((-3)**(1 - I)) == 3*exp(pi)
 
+    assert Abs(oo) is oo
+    assert Abs(-oo) is oo
+    assert Abs(oo + I) is oo
+    assert Abs(oo + I*oo) is oo
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)

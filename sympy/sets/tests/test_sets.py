@@ -431,6 +431,9 @@ def test_contains():
     assert S.EmptySet.contains(1) is S.false
     assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
 
+    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
+    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+
 
 def test_interval_symbolic():
     x = Symbol('x')
