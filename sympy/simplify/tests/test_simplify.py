@@ -7,10 +7,11 @@ from sympy import (
     hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
     Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
-    ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
-    signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
-    sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
+    ratsimpmodprime, rcollect, RisingFactorial, root, rootofsimp, S,
+    separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
+    Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
+from sympy.polys.rootoftools import RootOf
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
 from sympy.utilities.pytest import XFAIL, slow
@@ -82,6 +83,38 @@ def test_ratsimpmodprime():
     # Test a bug where denominators would be dropped
     assert ratsimpmodprime(x, [y - 2*x], order='lex') == \
         y/2
+
+
+def test_rootofsimp():
+    r = RootOf(x**5 - 5*x + 12, 0)
+    s = RootOf(x**4 - x**2 + 1, 0)
+
+    f, g = r**5, 5*r - 12
+
+    assert f != g and rootofsimp(f) == g
+
+    f, g = r**10, 25*r**2 - 120*r + 144
+
+    assert f != g and rootofsimp(f) == g
+
+    f, g = r**4*(1 + r), r**4 + 5*r - 12
+
+    assert f != g and rootofsimp(f) == g
+
+    # test modular inversion
+    f, g = 1/r, -r**4/12 + 5/12
+
+    assert f != g and rootofsimp(f) == g
+
+    f, g = -r**4/12 + 5/12, r
+
+    assert f*g != 1 and rootofsimp(f*g) == 1
+
+    # test multiple roots in expression
+
+    f, g = r**5 * s**4, expand((5*r - 12)*(s**2 - 1))
+
+    assert f != g and rootofsimp(f).expand() == g
 
 
 def test_trigsimp1():

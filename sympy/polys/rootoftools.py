@@ -138,20 +138,6 @@ class RootOf(Expr):
         """Return ``True`` if the root is real. """
         return self.index < len(_reals_cache[self.poly])
 
-    def _eval_power(self, exponent):
-        """Use modular exponentiation to reduce high powers of the root."""
-        if exponent >= self.poly.degree():
-            exponent = int(exponent)
-            result = PurePoly(1, self.poly.gen)
-            base = PurePoly(self.poly.gen, self.poly.gen)
-            while exponent > 0:
-                if (exponent % 2):
-                    result = (result*base) % self.poly
-                exponent >>= 1
-                base = (base*base) % self.poly
-            return result.subs(self.poly.gen, self).as_expr()
-        return super(RootOf, self)._eval_power(exponent)
-
     @classmethod
     def real_roots(cls, poly, radicals=True):
         """Get real roots of a polynomial. """

@@ -931,6 +931,51 @@ def ratsimpmodprime(expr, G, *gens, **args):
     return (c*r.q)/(d*r.p)
 
 
+def rootofsimp(expr):
+    """
+    Reduce expressions containing ``RootOf`` types modulo their defining
+    polynomials.
+
+    A root `r` of a polynomial `p(x) = a_n x^n + ... + a_0` satisfies
+    `p(r) = 0` by definition. Therefore, any power of `r` greater than
+    `n` can be rewritten in terms of smaller powers. In general, any
+    polynomial or rational expression of `r` can be reduced modulo its
+    defining polynomial `p`.
+
+    ``rootofsimp`` rewrites the expression as a numerator-denominator
+    pair, computes the modular inverse of the denominator, and returns
+    the product of this inverse with the numerator modulo the defining
+    polynomial of the root. This is done for each ``RootOf`` appearing
+    in the expression.
+
+    Examples
+    ========
+
+    >>> from sympy import rootofsimp, RootOf
+    >>> from sympy.abc import x,y
+    >>> r = RootOf(x**4 - x - 1, 0)
+    >>> rootofsimp(r**4)
+    RootOf(x**4 - x - 1, 0) + 1
+    >>> rootofsimp(r**8)
+    RootOf(x**4 - x - 1, 0)**2 + 2*RootOf(x**4 - x - 1, 0) + 1
+    >>> rootofsimp(1/r)
+    RootOf(x**4 - x - 1, 0)**3 - 1
+
+    """
+    from sympy.polys.rootoftools import RootOf
+    if not expr.has(RootOf):
+        return expr
+
+    for root in expr.find(RootOf):
+        # rewrite the defining polynomial in terms of the root, itself
+        modulus = root.poly.xreplace({root.poly.gen:root})
+
+        numer,denom = cancel(expr).as_numer_denom()
+        denom = denom.as_poly(root).invert(modulus)
+        expr = numer.as_poly(root) * denom % modulus
+    return expr.as_expr()
+
+
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
     """

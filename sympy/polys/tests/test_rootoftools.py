@@ -264,16 +264,6 @@ def test_RootOf_eval_rational():
              "0.86113631159405258",
              ]
 
-
-def test_RootOf_eval_power():
-    r = RootOf(x**5 - 5*x + 12, 0)
-    assert r**2 == RootOf(x**5 - 5*x + 12, 0)**2
-    assert r**5 == 5*r - 12
-    assert r**6 == 5*r**2 - 12*r
-    assert r**10 == 25*r**2 - 120*r + 144
-    assert (r**4*(1+r)).expand() == r**4 + 5*r - 12
-
-
 def test_RootSum___new__():
     f = x**3 + x + 3
 
