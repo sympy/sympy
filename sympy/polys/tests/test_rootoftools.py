@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve
+    solve, legendre_poly
 )
 
 from sympy.utilities.pytest import raises, XFAIL
@@ -214,6 +214,15 @@ def test_RootOf_evalf():
     re, im = RootOf(x**5 - 5*x + 12, 4).evalf(n=20).as_real_imag()
     assert re.epsilon_eq(Float("+1.272897223922499190910"))
     assert im.epsilon_eq(Float("+0.719798681483861386681"))
+
+    # issue 6393
+    assert str(RootOf(x**5 + 2*x**4 + x**3 - 68719476736, 0).n(3)) == '147.'
+    # issue 6451
+    r = RootOf(legendre_poly(64, x), 7)
+    assert r.n(2) == r.n(100).n(2)
+    # issue 8617
+    ans = [w.n(2) for w in solve(x**3 - x - 4)]
+    assert RootOf(exp(x)**3 - exp(x) - 4, 0).n(2) in ans
 
 
 def test_RootOf_evalf_caching_bug():
