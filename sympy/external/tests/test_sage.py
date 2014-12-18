@@ -218,6 +218,14 @@ def test_integral_failing():
     check_expression("Integral(x*y, (x,), (y, 0))", "x,y", only_from_sympy=True)
     check_expression("Integral(x*y, (x, 0, 1), (y, 0))", "x,y", only_from_sympy=True)
 
+def test_undefined_function():
+    f = sympy.Function('f')
+    sf = sage.function('f')
+    x = sympy.symbols('x')
+    sx = sage.var('x')
+    assert bool(sf(sx) == f(x)._sage_())
+    #assert bool(f == sympy.sympify(sf))
+
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
 """
@@ -240,7 +248,7 @@ TESTS::
     sage: test_issue_4023()
     sage: test_functions_only_from_sympy()
     sage: test_integral()
-    sage: test_integral_failing()
+    sage: test_undefined_function()
 
 Sage has no symbolic Lucas function at the moment::
 

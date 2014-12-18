@@ -695,6 +695,12 @@ class AppliedUndef(Function):
     def _eval_as_leading_term(self, x):
         return self
 
+    def _sage_(self):
+        import sage.all as sage
+        fname = str(self.func)
+        args = [arg._sage_() for arg in self.args]
+        func = sage.function(fname, *args)
+        return func
 
 class UndefinedFunction(FunctionClass):
     """
