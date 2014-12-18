@@ -419,6 +419,18 @@ def test_Abs_properties():
     assert Abs(i).is_positive is None
     assert Abs(i).is_nonnegative is True
 
+    e = Symbol('n', even=True)
+    ne = Symbol('ne', real=True, even=False)
+    assert Abs(e).is_even
+    assert Abs(ne).is_even is False
+    assert Abs(i).is_even is None
+
+    o = Symbol('n', odd=True)
+    no = Symbol('no', real=True, odd=False)
+    assert Abs(o).is_odd
+    assert Abs(no).is_odd is False
+    assert Abs(i).is_odd is None
+
 
 def test_abs():
     # this tests that abs calls Abs; don't rename to
