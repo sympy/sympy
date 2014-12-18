@@ -860,6 +860,7 @@ def test_issue_7899():
     assert ((x - I)*(x - 1)).is_real is None
 
 
+@XFAIL
 def test_issue_7993():
     x = Dummy(integer=True)
     y = Dummy(noninteger=True)
@@ -869,3 +870,8 @@ def test_issue_7993():
 def test_issue_8075():
     raises(InconsistentAssumptions, lambda: Dummy(zero=True, finite=False))
     raises(InconsistentAssumptions, lambda: Dummy(zero=True, infinite=True))
+
+
+def test_issue_8642():
+    x = Symbol('x', real=True, integer=False)
+    assert (x*2).is_integer is None
