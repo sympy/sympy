@@ -297,7 +297,10 @@ class Pow(Expr):
             return self.base.is_even
 
     def _eval_is_positive(self):
-        if self.base.is_positive:
+        if self.base == self.exp:
+            if self.base.is_nonnegative:
+                return True
+        elif self.base.is_positive:
             if self.exp.is_real:
                 return True
         elif self.base.is_negative:
