@@ -314,6 +314,10 @@ class Pow(Expr):
                     return False
             if self.exp.is_imaginary:
                 return C.log(self.base).is_imaginary
+        elif self.base.is_nonnegative and self.exp.is_nonnegative:
+            if self.base is 0 and self.exp is not 0:
+                return False
+            return True
 
     def _eval_is_negative(self):
         if self.base.is_negative:

@@ -344,3 +344,8 @@ def test_issue_7638():
     assert sqrt(e**5) == e**(5*S.Half)
     assert sqrt(e**6) == e**3
     assert sqrt((1 + I*r)**6) != (1 + I*r)**3
+
+
+def test_issue_8650():
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert (n**n).is_positive == True
