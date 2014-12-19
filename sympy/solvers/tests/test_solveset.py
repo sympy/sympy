@@ -355,26 +355,25 @@ def test_solveset_sqrt_2():
         FiniteSet(-295244/S(59049))
 
 
-@XFAIL
 def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solveset_complex(eq, R)
 
-    assert sol == FiniteSet(*[(S(5)/3 + 40/(3*(251 + 3*sqrt(111)*I)**(S(1)/3)) +
-                       (251 + 3*sqrt(111)*I)**(S(1)/3)/3,), ((-160 + (1 +
-                       sqrt(3)*I)*(10 - (1 + sqrt(3)*I)*(251 +
-                       3*sqrt(111)*I)**(S(1)/3))*(251 +
-                       3*sqrt(111)*I)**(S(1)/3))/Mul(6, (1 +
-                       sqrt(3)*I), (251 + 3*sqrt(111)*I)**(S(1)/3),
-                       evaluate=False),)])
+    assert sol == FiniteSet(*[S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
+        -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 + 40*re(1/((-S(1)/2 -
+        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 +
+        sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + S(5)/3 +
+        I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
+        sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 + 40*im(1/((-S(1)/2 -
+        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9)])
 
+    # the number of real roots will depend on the value of m: for m=1 there are 4
+    # and for m=-1 there are none.
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    assert solveset_real(eq, q) == FiniteSet(
-        m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4,
-        m**2/2 + sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)
+    raises(NotImplementedError, lambda: solveset_real(eq, q))
 
 
 def test_solve_polynomial_symbolic_param():
@@ -621,10 +620,11 @@ def test_solve_complex_log():
         FiniteSet(-sqrt(-a/4 + E/4), sqrt(-a/4 + E/4))
 
 
-@XFAIL
 def test_solve_complex_sqrt():
     assert solveset_complex(sqrt(5*x + 6) - 2 - x, x) == \
         FiniteSet(-S(1), S(2))
+    assert solveset_complex(sqrt(5*x + 6) - (2 + 2*I) - x, x) == \
+        FiniteSet(-S(2), 3 - 4*I)
     assert solveset_complex(4*x*(1 - a * sqrt(x)), x) == \
         FiniteSet(S(0), 1 / a ** 2)
 
