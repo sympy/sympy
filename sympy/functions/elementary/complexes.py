@@ -501,6 +501,14 @@ class Abs(Function):
         if self.args[0].is_real:
             return self.args[0].is_rational
 
+    def _eval_is_even(self):
+        if self.args[0].is_real:
+            return self.args[0].is_even
+
+    def _eval_is_odd(self):
+        if self.args[0].is_real:
+            return self.args[0].is_odd
+
     def _eval_power(self, exponent):
         if self.args[0].is_real and exponent.is_integer:
             if exponent.is_even:
