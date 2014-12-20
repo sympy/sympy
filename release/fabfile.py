@@ -551,8 +551,7 @@ def table():
             name = get_tarball_name(key)
             with tag('tr'):
                 with tag('td'):
-                    # code renders better than tt or pre
-                    with tag('code'):
+                    with tag('b'):
                         table.append(name)
                 with tag('td'):
                     table.append(descriptions[key].format(**tarball_formatter_dict))
@@ -959,7 +958,7 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 
 {htmltable}
 
-**Note**: Do not download the `Source code (zip)` or the `Source code (tar.gz)`
+**Note**: Do not download the **Source code (zip)** or the **Source code (tar.gz)**
 files below.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
