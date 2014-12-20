@@ -419,6 +419,15 @@ class MinMaxBase(Expr, LatticeOp):
     def is_real(self):
         return fuzzy_and(arg.is_real for arg in self.args)
 
+    @property
+    def is_even(self):
+        return fuzzy_and(arg.is_even for arg in self.args)
+
+    @property
+    def is_odd(self):
+        return fuzzy_and(arg.is_odd for arg in self.args)
+
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.

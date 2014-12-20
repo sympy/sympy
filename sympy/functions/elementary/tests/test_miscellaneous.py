@@ -107,6 +107,16 @@ def test_Min():
     # a and b are both real, Min(a, b) should be real
     assert Min(a, b).is_real
 
+    pe = Symbol('pe', positive=True, even=True)
+    pe_ = Symbol('pe_', positive=True, even=True)
+    # pe, pe_ are both even. Hence Min(pe, pe_) should be even
+    assert Min(pe, pe_).is_even
+
+    po = Symbol('po', positive=True, odd=True)
+    po_ = Symbol('po_', positive=True, odd=True)
+    # po and po_ are both odd. Hence Min(po, po_) should be odd
+    assert Min(po, po_).is_odd
+
     # issue 7619
     f = Function('f')
     assert Min(1, 2*Min(f(1), 2))  # doesn't fail
@@ -166,6 +176,16 @@ def test_Max():
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Max(a, b) should be real
     assert Max(a, b).is_real
+
+    pe = Symbol('pe', positive=True, even=True)
+    pe_ = Symbol('pe_', positive=True, even=True)
+    # pe, pe_ are both even. Hence Max(pe, pe_) should be even
+    assert Max(pe, pe_).is_even
+
+    po = Symbol('po', positive=True, odd=True)
+    po_ = Symbol('po_', positive=True, odd=True)
+    # po and po_ are both odd. Hence Max(po, po_) should be odd
+    assert Max(po, po_).is_odd
 
     # issue 7233
     e = Max(0, x)
