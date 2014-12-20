@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff, O, Heaviside)
+    exp_polar, Lambda, expand, diff, O, Heaviside, Si)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -1398,6 +1398,9 @@ def test_issue_4199():
     assert a._eval_interval(x, -oo, oo) == -y
     assert a._eval_interval(x, oo, -oo) == y
 
+def test_eval_interval_zoo():
+    # Test that limit is used when zoo is returned
+    assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)

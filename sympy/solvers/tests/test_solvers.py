@@ -402,7 +402,8 @@ def test_solve_transcendental():
 
     # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
     # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
-    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
+    raises(NotImplementedError, lambda:
+        solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3))
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
@@ -816,39 +817,11 @@ def test_unrad():
     assert set(solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x)))) == \
         set([S.Zero, S(9)/16])
 
-    '''NOTE
-    real_root changes the value of the result if the solution is
-    simplified; `a` in the text below is the root that is not 4/5:
-    >>> eq
-    sqrt(x) + sqrt(-x + 1) + sqrt(x + 1) - 6*sqrt(5)/5
-    >>> eq.subs(x, a).n()
-    -0.e-123 + 0.e-127*I
-    >>> real_root(eq.subs(x, a)).n()
-    -0.e-123 + 0.e-127*I
-    >>> (eq.subs(x,simplify(a))).n()
-    -0.e-126
-    >>> real_root(eq.subs(x, simplify(a))).n()
-    0.194825975605452 + 2.15093623885838*I
-
-    >>> sqrt(x).subs(x, real_root(a)).n()
-    0.809823827278194 - 0.e-25*I
-    >>> sqrt(x).subs(x, (a)).n()
-    0.809823827278194 - 0.e-25*I
-    >>> sqrt(x).subs(x, simplify(a)).n()
-    0.809823827278194 - 5.32999467690853e-25*I
-    >>> sqrt(x).subs(x, real_root(simplify(a))).n()
-    0.49864610868139 + 1.44572604257047*I
-    '''
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
-    ra = S('''-1484/375 - 4*(-1/2 + sqrt(3)*I/2)*(-12459439/52734375 +
-    114*sqrt(12657)/78125)**(1/3) - 172564/(140625*(-1/2 +
-    sqrt(3)*I/2)*(-12459439/52734375 + 114*sqrt(12657)/78125)**(1/3))''')
-    rb = S(4)/5
-    ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
-    assert all(abs(eq.subs(x, i).n()) < 1e-10 for i in (ra, rb)) and \
-        len(ans) == 2 and \
-        set([i.n(chop=True) for i in ans]) == \
-        set([i.n(chop=True) for i in (ra, rb)])
+    ans = [S(4)/5,
+        -S(1484)/375 + S(172564)/(375*(76950*sqrt(12657) +
+        12459439)**(S(1)/3)) + 4*(76950*sqrt(12657) + 12459439)**(S(1)/3)/375]
+    assert solve(eq) == ans
 
     raises(ValueError, lambda:
         unrad(-root(x,3)**2 + 2**pi*root(x,3) - x + 2**pi))
@@ -901,16 +874,12 @@ def test_unrad():
     assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
 
-    eq = sqrt(2 + I) + 2*I
-    assert unrad(eq - x, x, all=True) == (x**4 + 4*x**2 + 8*x + 37, [], [])
-    ans = (81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 -
-        31608*x**2 - 189648*x + 141358, [], [])
-    r = sqrt(sqrt(2)/3 + 7)
-    eq = sqrt(r) + r - x
-    assert unrad(eq, all=1)
-    r2 = sqrt(sqrt(2) + 21)/sqrt(3)
-    assert r != r2 and r.equals(r2)
-    assert unrad(eq - r + r2, all=True) == ans
+    # for coverage
+    assert solve(sqrt(x) + x**Rational(1, 3) - 2) == [1]
+    raises(NotImplementedError, lambda:
+        solve(sqrt(x) + root(x, 3) + root(x + 1, 5) - 2))
+    # fails through a different code path
+    raises(NotImplementedError, lambda: solve(-sqrt(2) + cosh(x)/x))
 
 
 @slow
@@ -1537,6 +1506,11 @@ def test_issue_2777():
     assert solve((e1, e2), (x, y)) == []
     assert solve((e1, e2), (x, y), check=False) == ans
 
+
 def test_issue_7322():
     number = 5.62527e-35
     assert solve(x - number, x)[0] == number
+
+
+def test_nsolve():
+    raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
