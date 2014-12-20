@@ -236,6 +236,10 @@ def refine_Relational(expr, assumptions):
     return ask(Q.is_true(expr), assumptions)
 
 
+def refine_Qualify(expr, assumptions):
+    return expr.refine(assumptions)
+
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -246,5 +250,6 @@ handlers_dict = {
     'GreaterThan': refine_Relational,
     'LessThan': refine_Relational,
     'StrictGreaterThan': refine_Relational,
-    'StrictLessThan': refine_Relational
+    'StrictLessThan': refine_Relational,
+    'Qualified': refine_Qualify
 }
