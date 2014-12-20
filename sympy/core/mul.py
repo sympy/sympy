@@ -981,7 +981,6 @@ class Mul(Expr, AssocOp):
             return r
         elif r is False:
             return self.is_zero
-        return _fuzzy_group((a.is_integer for a in self.args), quick_exit=True)
 
     def _eval_is_algebraic(self):
         r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
