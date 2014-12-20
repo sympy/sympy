@@ -8,14 +8,18 @@ class ContradictionError(Exception):
         super().__init__(*args, **kwargs)
         self.contradiction = contradiction
 
-def qualified(value,axiom=True):
-    return Qualified(value,axiom)
+
+def qualified(value, axiom=True):
+    return Qualified(value, axiom)
+
 
 def unqualified(value):
     return Qualified(value).unqualified
 
+
 Basic.qualified = property(qualified)
 Basic.unqualified = property(unqualified)
+
 
 class Qualified(Expr, Boolean):
     def __new__(cls, term, axiom=True):

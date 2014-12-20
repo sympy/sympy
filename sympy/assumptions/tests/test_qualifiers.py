@@ -17,11 +17,13 @@ def test_nontrivial_axioms():
     assert p2 == p2
     assert p1 != p2
 
+
 def test_two():
-    two_a=Qualified(2,sympify("2==2"))
-    two_b=Qualified(2,sympify("2!=3"))
-    c = two_a+two_b
-    assert (two_a+two_b).unqualified == 4
+    two_a = Qualified(2, sympify("2==2"))
+    two_b = Qualified(2, sympify("2!=3"))
+    c = two_a + two_b
+    assert (two_a + two_b).unqualified == 4
+
 
 def test_large_2():
     raises(ContradictionError, lambda: Qualified("2+2", sympify("2+2==5")))
