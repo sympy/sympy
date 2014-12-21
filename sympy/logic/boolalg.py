@@ -20,6 +20,7 @@ from sympy.core.singleton import Singleton, S
 
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
+    is_Boolean = True
 
     __slots__ = []
 
@@ -241,7 +242,6 @@ class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
     """
-    is_Boolean = True
 
     def __call__(self, *args):
         return self.func(*[arg(*args) for arg in self.args])
