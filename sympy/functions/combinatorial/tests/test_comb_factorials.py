@@ -88,7 +88,7 @@ def test_factorial():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, nonnegative=True)
     r = Symbol('r', integer=False)
-    q = Symbol('q', integer=False, negative=True)
+    q = Symbol('q', real=True, integer=False, negative=True)
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
