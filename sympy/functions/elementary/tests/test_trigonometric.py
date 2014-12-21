@@ -102,6 +102,9 @@ def test_sin():
     assert sin(na).is_algebraic is False
     q = Symbol('q', rational=True)
     assert sin(pi*q).is_algebraic
+    qn = Symbol('qn', rational=True, nonzero=True)
+    assert sin(qn).is_rational is False
+    assert sin(q).is_rational is None  # issue 8653
 
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
@@ -1263,3 +1266,10 @@ def test_csc_rewrite_failing():
     # https://github.com/sympy/sympy/issues/7171
     assert csc(x).rewrite(pow) == csc(x)
     assert csc(x).rewrite(sqrt) == csc(x)
+
+
+def test_issue_8653():
+    n = Symbol('n', integer=True)
+    assert sin(n).is_irrational is None
+    assert cos(n).is_irrational is None
+    assert tan(n).is_irrational is None

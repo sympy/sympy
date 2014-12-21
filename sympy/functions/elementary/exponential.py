@@ -90,7 +90,7 @@ class ExpBase(Function):
         if s.func == self.func:
             if s.exp is S.Zero:
                 return True
-            elif s.exp.is_rational:
+            elif s.exp.is_rational and s.exp.is_nonzero:
                 return False
         else:
             return s.is_rational
@@ -638,7 +638,7 @@ class log(Function):
         if s.func == self.func:
             if (self.args[0] - 1).is_zero:
                 return True
-            if s.args[0].is_rational:
+            if s.args[0].is_rational and (self.args[0] - 1).is_nonzero:
                 return False
         else:
             return s.is_rational
