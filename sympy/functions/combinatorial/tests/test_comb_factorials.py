@@ -88,6 +88,7 @@ def test_factorial():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, nonnegative=True)
     r = Symbol('r', integer=False)
+    q = Symbol('q', integer=False, nonnegative=False)
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
@@ -95,12 +96,23 @@ def test_factorial():
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
+    assert factorial(x).is_real is None
+    assert factorial(n).is_real is None
+    assert factorial(r).is_real is None
+    assert factorial(k).is_real is True
+    assert factorial(q).is_real is True
+
     assert factorial(x).is_integer is None
-    assert factorial(n).is_integer
+    assert factorial(n).is_integer is None
     assert factorial(r).is_integer is None
+    assert factorial(k).is_integer is True
+    assert factorial(q).is_integer is False
 
     assert factorial(n).is_positive is None
-    assert factorial(k).is_positive
+    assert factorial(k).is_positive is True
+    assert factorial(r).is_positive is None
+    assert factorial(k).is_positive is True
+    assert factorial(q).is_positive is None
 
     assert factorial(oo) == oo
 
