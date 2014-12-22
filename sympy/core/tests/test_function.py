@@ -180,6 +180,7 @@ def test_Lambda_equality():
     assert Lambda(x, 2 * x) != Lambda((x, y), 2 * x)
     assert Lambda(x, 2 * x) != 2 * x
 
+
 @XFAIL
 def test_Lambda_equality_no_capture():
     # Issue 8619 - make sure equality test doesn't capture free variables
