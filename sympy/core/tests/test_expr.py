@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff, O, Heaviside, Si)
+    exp_polar, Lambda, expand, diff, O, Heaviside, Si, Max)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -1530,6 +1530,9 @@ def test_random():
     from sympy import posify, lucas
     assert posify(x)[0]._random() is not None
     assert lucas(n)._random(2, -2, 0, -1, 1) is None
+
+    # issue 8662
+    assert Piecewise((Max(x, y), z))._random() is None
 
 
 def test_round():

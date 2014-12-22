@@ -369,7 +369,7 @@ class Expr(Basic, EvalfMixin):
                            for zi in free])))
             try:
                 nmag = abs(self.evalf(2, subs=reps))
-            except TypeError:
+            except (ValueError, TypeError):
                 # if an out of range value resulted in evalf problems
                 # then return None -- XXX is there a way to know how to
                 # select a good random number for a given expression?
