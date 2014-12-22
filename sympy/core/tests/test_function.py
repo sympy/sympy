@@ -112,7 +112,6 @@ def test_Function():
     assert myfunc.nargs == S.Naturals0
     assert myfunc(x).nargs == S.Naturals0
 
-
 def test_nargs():
     f = Function('f')
     assert f.nargs == S.Naturals0
@@ -180,7 +179,6 @@ def test_Lambda_equality():
     assert Lambda((x, y), 2 * x) == Lambda((x, y), 2 * x)
     assert Lambda(x, 2 * x) != Lambda((x, y), 2 * x)
     assert Lambda(x, 2 * x) != 2 * x
-
 
 @XFAIL
 def test_Lambda_equality_no_capture():
@@ -328,7 +326,6 @@ def test_suppressed_evaluation():
 def test_function_evalf():
     def eq(a, b, eps):
         return abs(a - b) < eps
-
     assert eq(sin(1).evalf(15), Float("0.841470984807897"), 1e-13)
     assert eq(
         sin(2).evalf(25), Float("0.9092974268256816953960199", 25), 1e-23)
@@ -348,7 +345,6 @@ def test_extensibility_eval():
         @classmethod
         def eval(cls, *args):
             return (0, 0, 0)
-
     assert MyFunc(0) == (0, 0, 0)
 
 
@@ -409,7 +405,6 @@ def test_doit():
 
 def test_evalf_default():
     from sympy.functions.special.gamma_functions import polygamma
-
     assert type(sin(4.0)) == Float
     assert type(re(sin(I + 1.0))) == Float
     assert type(im(sin(I + 1.0))) == Float
@@ -435,7 +430,6 @@ def test_issue_5399():
                     for i in s_at if i + 1 < len(a)) and
                 all(a[i + 1].is_Symbol
                     for i in n_at if i + 1 < len(a)))
-
     eq = x ** 10 * y ** 8
     for a in subsets(args):
         for v in variations(a, len(a)):
@@ -447,7 +441,6 @@ def test_issue_5399():
 
 def test_derivative_numerically():
     from random import random
-
     z0 = random() + I * random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
 
@@ -460,7 +453,6 @@ def test_fdiff_argument_index_error():
 
         def fdiff(self, idx):
             raise ArgumentIndexError
-
     mf = myfunc(x)
     assert mf.diff(x) == Derivative(mf, x)
     raises(TypeError, lambda: myfunc(x, x))
@@ -642,7 +634,6 @@ def test_nfloat():
 
 def test_issue_7068():
     from sympy.abc import a, b, f
-
     y1 = Dummy('y')
     y2 = Dummy('y')
     func1 = f(a + y1 * b)
@@ -657,7 +648,6 @@ def test_issue_7068():
 
 def test_issue_7231():
     from sympy.abc import a
-
     ans1 = f(x).series(x, a)
     _xi_1 = ans1.atoms(Dummy).pop()
     res = (f(a) + (-a + x) * Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
@@ -676,7 +666,6 @@ def test_issue_7231():
 def test_issue_7687():
     from sympy.core.function import Function
     from sympy.abc import x
-
     f = Function('f')(x)
     ff = Function('f')(x)
     match_with_cache = ff.matches(f)
@@ -693,17 +682,14 @@ def test_issue_7688():
 
     f = Function('f')  # actually an UndefinedFunction
     clear_cache()
-
     class A(UndefinedFunction):
         pass
-
     a = A('f')
     assert isinstance(a, type(f))
 
 
 def test_mexpand():
     from sympy.abc import x
-
     assert _mexpand(None) is None
     assert _mexpand(1) is S.One
     assert _mexpand(x * (x + 1) ** 2) == (x * (x + 1) ** 2).expand()
