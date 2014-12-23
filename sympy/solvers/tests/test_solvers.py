@@ -1514,3 +1514,7 @@ def test_issue_7322():
 
 def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
+
+def test_issue_8587():
+    f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
+    assert solve(f-1) == [1/sqrt(2)]
