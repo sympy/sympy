@@ -2856,7 +2856,7 @@ def unrad(eq, *syms, **flags):
         eq = rterms[0]**lcm - (-args)**lcm
 
     elif len(rterms) == 2 and not args:
-        eq = rterms[0]**lcm - rterms[1]**lcm
+        eq = rterms[0]**lcm - (-rterms[1])**lcm
 
     elif log(lcm, 2).is_Integer and (not args and
             len(rterms) == 4 or len(rterms) < 4):

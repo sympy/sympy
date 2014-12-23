@@ -816,6 +816,8 @@ def test_unrad():
     # but this one really does have those solutions
     assert set(solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x)))) == \
         set([S.Zero, S(9)/16])
+    # issue 8622 Sign Error in unrad
+    assert unrad((root(x + 1, 5) - root(x, 3))) == (x**5 - x**3 - 3*x**2 - 3*x - 1, [], [])
 
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
     ans = [S(4)/5,
