@@ -272,6 +272,12 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
 
 
+def test_issue_8666():
+    x = symbols('x')
+    assert solve(Eq(x**2 - 1/(x**2 - 4), 4 - 1/(x**2 - 4)), x) == []
+    assert solve(Eq(x + 1/x, 1/x), x) == []
+
+
 def test_issue_7228():
     assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
 

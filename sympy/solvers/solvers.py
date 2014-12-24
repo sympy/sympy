@@ -685,7 +685,10 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     for i, fi in enumerate(f):
         if isinstance(fi, Equality):
-            f[i] = fi.lhs - fi.rhs
+            if type(f[i].lhs).__name__ == 'ImmutableMatrix':
+                f[i] = fi.lhs - fi.rhs
+            else:
+                f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
         elif isinstance(fi, (bool, C.BooleanAtom)) or fi.is_Relational:
