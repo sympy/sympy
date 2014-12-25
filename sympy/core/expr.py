@@ -593,7 +593,7 @@ class Expr(Basic, EvalfMixin):
         if not diff:
             return True
 
-        if not diff.has(Add):
+        if not diff.has(Add, Mod):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False

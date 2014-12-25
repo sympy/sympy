@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan, cbrt, Dummy
+        sign, im, nan, cbrt, Dummy, factorial
 )
 from sympy.core.evalf import PrecisionExhausted
 from sympy.core.tests.test_evalf import NS
@@ -1543,6 +1543,10 @@ def test_Mod():
     i = Symbol('i', integer=True)
     assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
     assert Mod(4*i, 4) == 0
+
+    # issue 8677
+    n = Symbol('n', integer=True, positive=True)
+    assert (factorial(n) % n).equals(0) is not False
 
 
 def test_Mod_is_integer():
