@@ -377,6 +377,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sunny Aggarwal: fix Integral.transform method
 #. Akshat Jain: nsimplify returns ints quickly
 #. Cody Herbst: modified Euler-MacLaurin to not exit when term == 0
+#. AMiT Kumar: fix sign error in unrad
+#. Nishith Shah: fix solving of Piecewise functions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
