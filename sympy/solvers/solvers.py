@@ -1215,7 +1215,6 @@ def _solve(f, *symbols, **flags):
 
         result = False  # no solution was obtained
         msg = ''  # there is no failure message
-        dens = denoms(f, symbols)  # store these for checking later
 
         # Poly is generally robust enough to convert anything to
         # a polynomial and tell us the different generators that it
@@ -1235,8 +1234,7 @@ def _solve(f, *symbols, **flags):
                     u = None  # hope for best with original equation
             if u:
                 flags['unrad'] = False  # don't unrad next time
-                eq, cov, dens2 = u
-                dens.update(dens2)
+                eq, cov, _ = u
                 if cov:
                     if len(cov) > 1:
                         raise NotImplementedError('Not sure how to handle this.')
@@ -1435,7 +1433,7 @@ def _solve(f, *symbols, **flags):
         # if in doubt, keep it
         result = [s for s in result if isinstance(s, RootOf) or
                   all(not checksol(den, {symbol: s}, **flags)
-                    for den in dens)]
+                    for den in denoms(f, symbols))]
         # keep only results if the check is not False
         result = [r for r in result if isinstance(r, RootOf) or
                   checksol(f_num, {symbol: r}, **flags) is not False]
