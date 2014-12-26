@@ -102,6 +102,9 @@ class re(Function):
     def _eval_rewrite_as_im(self, arg):
         return self.args[0] - im(self.args[0])
 
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
+
     def _sage_(self):
         import sage.all as sage
         return sage.real_part(self.args[0]._sage_())
@@ -206,6 +209,9 @@ class im(Function):
 
     def _eval_rewrite_as_re(self, arg):
         return self.args[0] - re(self.args[0])
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
 
 ###############################################################################
@@ -509,6 +515,9 @@ class Abs(Function):
         if self.args[0].is_real:
             return self.args[0].is_odd
 
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
+
     def _eval_power(self, exponent):
         if self.args[0].is_real and exponent.is_integer:
             if exponent.is_even:
@@ -625,6 +634,9 @@ class conjugate(Function):
 
     def _eval_transpose(self):
         return adjoint(self.args[0])
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
 
 class transpose(Function):
