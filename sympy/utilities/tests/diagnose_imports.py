@@ -8,9 +8,17 @@ from __future__ import print_function
 
 if __name__ == "__main__":
 
+    # Running as main program without the standard SymPy import path, so we
+    # cannot import anything from sympy.*
+
     import sys
     import inspect
-    from sympy.core.compatibility import builtins
+
+    # Duplicate of sympy.core.compatibility what we need
+    if sys.version_info[0] < 3:
+        import __builtin__ as builtins
+    else:
+        import builtins
 
     import optparse
 
