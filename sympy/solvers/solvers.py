@@ -685,7 +685,7 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     for i, fi in enumerate(f):
         if isinstance(fi, Equality):
-            if type(f[i].lhs).__name__ == 'ImmutableMatrix':
+            if 'ImmutableMatrix' in [type(a).__name__ for a in fi.args]:
                 f[i] = fi.lhs - fi.rhs
             else:
                 f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
