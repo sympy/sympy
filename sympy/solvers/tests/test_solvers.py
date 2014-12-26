@@ -1133,7 +1133,7 @@ def test_issue_6060():
     y = Symbol('y')
     assert solve(absxm3 - y, x) == [
         Piecewise((-y + 3, y > 0), (S.NaN, True)),
-        Piecewise((y + 3, S(0) <= y), (S.NaN, True))
+        Piecewise((y + 3, 0 <= y), (S.NaN, True))
     ]
     y = Symbol('y', positive=True)
     assert solve(absxm3 - y, x) == [-y + 3, y + 3]
@@ -1262,12 +1262,16 @@ def test_issue_6792():
     RootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248():
+def test_issues_6819_6820_6821_6248_8692():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
     assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
+
+    # issue 8692
+    assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
+        -S(1)/2 + sqrt(61)/2, -sqrt(69)/2 + S(1)/2]
 
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]

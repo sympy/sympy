@@ -1170,12 +1170,14 @@ def _solve(f, *symbols, **flags):
         result = set()
         for n, (expr, cond) in enumerate(f.args):
             candidates = _solve(expr, *symbols, **flags)
-
             for candidate in candidates:
                 if candidate in result:
                     continue
-                conds = (cond == True) or cond.subs(symbol, candidate)
-                if conds != False:
+                try:
+                    v = (cond == True) or cond.subs(symbol, candidate)
+                except:
+                    v = False
+                if v != False:
                     # Only include solutions that do not match the condition
                     # of any previous pieces.
                     matches_other_piece = False
@@ -1184,12 +1186,18 @@ def _solve(f, *symbols, **flags):
                             break
                         if other_cond == False:
                             continue
-                        if other_cond.subs(symbol, candidate) == True:
-                            matches_other_piece = True
-                            break
+                        try:
+                            if other_cond.subs(symbol, candidate) == True:
+                                matches_other_piece = True
+                                break
+                        except:
+                            pass
                     if not matches_other_piece:
+                        v = v == True or v.doit()
+                        if isinstance(v, Relational):
+                            v = v.canonical
                         result.add(Piecewise(
-                            (candidate, conds == True or conds.doit()),
+                            (candidate, v),
                             (S.NaN, True)
                         ))
         check = False
