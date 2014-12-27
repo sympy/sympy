@@ -312,6 +312,10 @@ def test_solveset_sqrt_2():
     eq = sqrt(x - 3) + sqrt(x) - 3
     assert solveset_real(eq, x) == FiniteSet(4)
 
+    eq = sqrt(2*x**2 - 7) - (3 - x)
+    assert solveset_real(eq, x) == FiniteSet(-S(8), S(2))
+
+    # others
     eq = sqrt(9*x**2 + 4) - (3*x + 2)
     assert solveset_real(eq, x) == FiniteSet(0)
 
@@ -322,9 +326,6 @@ def test_solveset_sqrt_2():
 
     assert solveset_real(sqrt(x) + sqrt(sqrt(x)) - 4, x) == \
         FiniteSet(-9*sqrt(17)/2 + 49*S.Half)
-
-    eq = sqrt(2*x**2 - 7) - (3 - x)
-    assert solveset_real(eq, x) == FiniteSet(-S(8), S(2))
 
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
