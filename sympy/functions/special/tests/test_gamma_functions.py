@@ -55,7 +55,6 @@ def test_gamma():
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
 
     assert conjugate(gamma(x)) == gamma(conjugate(x))
-    assert gamma(w).is_real is True
 
     assert expand_func(gamma(x + Rational(3, 2))) == \
         (x + Rational(1, 2))*gamma(x + Rational(1, 2))
@@ -389,3 +388,15 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+
+
+def test_issue_8657():
+    n = Symbol('n', negative=True, integer=True)
+    m = Symbol('m', integer=True)
+    o = Symbol('o', positive=True)
+    p = Symbol('p', negative=True, integer=False)
+    assert gamma(n).is_real is None
+    assert gamma(m).is_real is None
+    assert gamma(o).is_real is True
+    assert gamma(p).is_real is True
+    assert gamma(w).is_real is None
