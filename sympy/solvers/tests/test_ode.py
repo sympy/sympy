@@ -273,24 +273,36 @@ def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
     eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
-    sol1 = [Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))), Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+    sol1 = [
+        Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4))),
+        Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4))),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4))),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
     assert dsolve(eq1) == sol1
 
     eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
-    sol2 = [Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+    sol2 = [
+        Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
+        Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
     assert dsolve(eq2) == sol2
 
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
-    sol3 = [Eq(x(t), 6**(S(2)/3)/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3))), \
-    Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3), \
-    Eq(x(t), 6**(S(2)/3)/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3))), \
-    Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3)]
+    tt = S(2)/3
+    sol3 = [
+        Eq(x(t), 6**tt/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3),
+        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3)]
     assert dsolve(eq3) == sol3
 
     eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
@@ -302,10 +314,15 @@ def test_nonlinear_2eq_order1():
     assert dsolve(eq5) == sol5
 
     eq6 = (Eq(diff(x(t),t),x(t)**2*y(t)**3), Eq(diff(y(t),t),y(t)**5))
-    sol6 = [Eq(x(t), 1/(C1 - 1/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), 1/(C1 + (-1/(4*C2 + 4*t))**(-S(1)/4))), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), 1/(C1 + I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), 1/(C1 - I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+    sol6 = [
+        Eq(x(t), 1/(C1 - 1/(-1/(4*C2 + 4*t))**(S(1)/4))),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), 1/(C1 + (-1/(4*C2 + 4*t))**(-S(1)/4))),
+        Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), 1/(C1 + I/(-1/(4*C2 + 4*t))**(S(1)/4))),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
+        Eq(x(t), 1/(C1 - I/(-1/(4*C2 + 4*t))**(S(1)/4))),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
     assert dsolve(eq6) == sol6
 
 
@@ -1830,7 +1847,8 @@ def test_Liouville_ODE():
     sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2 = sol1
     sol3 = set(
-        [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
+        [Eq(f(x), -sqrt(C1 + C2*log(x))),
+        Eq(f(x), sqrt(C1 + C2*log(x)))])
     sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
                 Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
     sol5 = Eq(f(x), log(C1 + C2/x))
@@ -2091,7 +2109,7 @@ def test_almost_linear():
     d = f(x).diff(x)
     eq = x**2*f(x)**2*d + f(x)**3 + 1
     sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == (C1*exp(3/x) - 1)**(1/3)
+    assert sol[0].rhs == (C1*exp(3/x) - 1)**(S(1)/3)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*f(x)*d + 2*x*f(x)**2 + 1
@@ -2230,7 +2248,7 @@ def test_constantsimp_take_problem():
 def test_issue_6879():
     f = Function('f')
     eq = Eq(Derivative(f(x), x, 2) - 2*Derivative(f(x), x) + f(x), sin(x))
-    sol = (C1 + C2*x)*exp(x) + cos(x)/S(2)
+    sol = (C1 + C2*x)*exp(x) + cos(x)/2
     assert dsolve(eq).rhs == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
@@ -2410,11 +2428,11 @@ def test_series():
     C1 = Symbol("C1")
     eq = f(x).diff(x) - f(x)
     assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
-        C1 + C1*x + C1*x**2/S(2) + C1*x**3/S(6) + C1*x**4/S(24) +
-        C1*x**5/S(120) + O(x**6))
+        C1 + C1*x + C1*x**2/2 + C1*x**3/6 + C1*x**4/24 +
+        C1*x**5/120 + O(x**6))
     eq = f(x).diff(x) - x*f(x)
     assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
-        C1*x**4/S(8) + C1*x**2/S(2) + C1 + O(x**6))
+        C1*x**4/8 + C1*x**2/2 + C1 + O(x**6))
     eq = f(x).diff(x) - sin(x*f(x))
     sol = Eq(f(x), (x - 2)**2*(1+ sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3))
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
@@ -2430,7 +2448,7 @@ def test_lie_group():
 
     eq = Eq(f(x).diff(x), x**2*f(x))
     sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), C1*exp(x**3)**(1/S(3)))
+    assert sol == Eq(f(x), C1*exp(x**3)**(1/3))
     assert checkodesol(eq, sol)[0]
 
     eq = f(x).diff(x) + a*f(x) - c*exp(b*x)
@@ -2439,7 +2457,7 @@ def test_lie_group():
 
     eq = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
     sol = dsolve(eq, f(x), hint='lie_group')
-    actual_sol = Eq(f(x), (C1 + x**2/S(2))*exp(-x**2))
+    actual_sol = Eq(f(x), (C1 + x**2/2)*exp(-x**2))
     errstr = str(eq)+' : '+str(sol)+' == '+str(actual_sol)
     assert sol == actual_sol, errstr
     assert checkodesol(eq, sol)[0]
@@ -2481,58 +2499,58 @@ def test_2nd_power_series_ordinary():
     eq = f(x).diff(x, 2) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x),
-        C2*(x**3/S(6) + 1) + C1*x*(x**3/S(12) + 1) + O(x**6))
+        C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
     assert dsolve(eq, x0=-2) == Eq(f(x),
-        C2*((x + 2)**4/S(6) + (x + 2)**3/S(6) - (x + 2)**2 + 1)
-        + C1*(x + (x + 2)**4/S(12) - (x + 2)**3/3 + S(2))
+        C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
         + O(x**6))
     assert dsolve(eq, n=2) == Eq(f(x), C2*x + C1 + O(x**2))
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(-x**4/S(3) + x**2 + 1) + C1*x
+    assert dsolve(eq) == Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x
         + O(x**6))
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x), C2*(
-        x**4/S(8) - x**2/S(2) + 1) + C1*x*(-x**2/S(3) + 1) + O(x**6))
+        x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
 
     eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x), C2*(
-        -x**4/S(24) + x**3/S(6) + 1) + C1*x*(x**3/S(24) + x**2/S(6) - x/S(2)
+        -x**4/24 + x**3/6 + 1) + C1*x*(x**3/24 + x**2/6 - x/2
         + 1) + O(x**6))
 
     eq = f(x).diff(x, 2) + x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq, n=7) == Eq(f(x), C2*(
-        x**6/S(180) - x**3/S(6) + 1) + C1*x*(-x**3/S(12) + 1) + O(x**7))
+        x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
 
 
 def test_2nd_power_series_regular():
     C1, C2 = symbols("C1 C2")
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*x**2*(-16*x**3/S(9) +
+    assert dsolve(eq) == Eq(f(x), C1*x**2*(-16*x**3/9 +
         4*x**2 - 4*x + 1) + O(x**6))
 
     eq = 4*x**2*(f(x).diff(x, 2)) -8*x**2*(f(x).diff(x)) + (4*x**2 +
         1)*f(x)
     assert dsolve(eq) == Eq(f(x), C1*sqrt(x)*(
-        x**4/S(24) + x**3/S(6) + x**2/S(2) + x + 1) + O(x**6))
+        x**4/24 + x**3/6 + x**2/2 + x + 1) + O(x**6))
 
     eq = x**2*(f(x).diff(x, 2)) - x**2*(f(x).diff(x)) + (
         x**2 - 2)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(-x**6/S(720) - 3*x**5/S(80) - x**4/S(8) +
-        x**2/S(2) + x/S(2) + 1)/x + C2*x**2*(-x**3/S(60) + x**2/S(20) + x/S(2) + 1)
+    assert dsolve(eq) == Eq(f(x), C1*(-x**6/720 - 3*x**5/80 - x**4/8 +
+        x**2/2 + x/2 + 1)/x + C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1)
         + O(x**6))
 
-    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 1/S(4))*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(x**4/S(24) - x**2/S(2) + 1)/sqrt(x) +
-        C2*sqrt(x)*(x**4/S(120) - x**2/S(6) + 1) + O(x**6))
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
+        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
 
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
-    assert dsolve(eq) == Eq(f(x), C2*(-x**4/S(2) + 1) + C1*x**2 + O(x**6))
+    assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
