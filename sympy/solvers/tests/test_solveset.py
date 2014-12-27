@@ -292,10 +292,11 @@ def test_solveset_sqrt_2():
         FiniteSet(S(5), S(13))
     assert solveset_real(sqrt(x + 7) + 2 - sqrt(3 - x), x) == \
         FiniteSet(-6)
+
+    # http://www.purplemath.com/modules/solverad.htm
     assert solveset_real(sqrt(17*x - sqrt(x**2 - 5)) - 7, x) == \
         FiniteSet(3)
 
-    # http://www.purplemath.com/modules/solverad.htm
     eq = x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4)
     assert solveset_real(eq, x) == FiniteSet(-S(1)/2, -S(1)/3)
 
@@ -315,9 +316,6 @@ def test_solveset_sqrt_2():
     assert solveset_real(eq, x) == FiniteSet(0)
 
     assert solveset_real(sqrt(x - 3) - sqrt(x) - 3, x) == FiniteSet()
-
-    eq = (x**3 - 3*x**2)**Rational(1, 3) + 1 - x
-    assert solveset_real(eq, x) == FiniteSet()
 
     eq = (2*x - 5)**Rational(1, 3) - 3
     assert solveset_real(eq, x) == FiniteSet(16)
@@ -353,6 +351,14 @@ def test_solveset_sqrt_2():
     # issue 4497
     assert solveset_real(1/(5 + x)**(S(1)/5) - 9, x) == \
         FiniteSet(-295244/S(59049))
+
+
+@XFAIL
+def test_solve_sqrt_fail():
+    # this only works if we check real_root(eq.subs(x, S(1)/3))
+    # but checksol doesn't work like that
+    eq = (x**3 - 3*x**2)**Rational(1, 3) + 1 - x
+    assert solveset_real(eq, x) == FiniteSet(S(1)/3)
 
 
 def test_solve_sqrt_3():

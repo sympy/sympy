@@ -858,7 +858,6 @@ def test_unrad():
     assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
     # http://www.purplemath.com/modules/solverad.htm
     assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
-    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == []
     assert set(solve(x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4))) == \
         set([-S(1)/2, -S(1)/3])
     assert set(solve(sqrt(2*x**2 - 7) - (3 - x))) == set([-S(8), S(2)])
@@ -888,6 +887,13 @@ def test_unrad():
         solve(sqrt(x) + root(x, 3) + root(x + 1, 5) - 2))
     # fails through a different code path
     raises(NotImplementedError, lambda: solve(-sqrt(2) + cosh(x)/x))
+
+
+@XFAIL
+def test_unrad_fail():
+    # this only works if we check real_root(eq.subs(x, S(1)/3))
+    # but checksol doesn't work like that
+    assert solve((x**3 - 3*x**2)**Rational(1, 3) + 1 - x) == [S(1)/3]
 
 
 @slow
