@@ -324,9 +324,16 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)
+    positive_range = Tuple(0, 5)
+    negative_range = Tuple(-5, 0)
     def _range_tuple(s):
         if isinstance(s, Symbol):
-            return Tuple(s) + default_range
+            if s.is_positive:
+                return Tuple(s) + positive_range
+            elif s.is_negative:
+                return Tuple(s) + negative_range
+            else:
+                return Tuple(s) + default_range
         if len(s) == 3:
             return Tuple(*s)
         raise ValueError('symbol or `(symbol, min, max)` expected but got %s' % s)

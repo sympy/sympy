@@ -1732,6 +1732,9 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     >>> check_arguments([x, x**2], 1, 1)
         [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
+    default_range = Tuple(-10, 10)
+    positive_range = Tuple(0, 10)
+    negative_range = Tuple(-10, 0)
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is
@@ -1750,10 +1753,14 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
         else:
-            default_range = Tuple(-10, 10)
             ranges = []
             for symbol in free_symbols:
-                ranges.append(Tuple(symbol) + default_range)
+                if symbol.is_positive:
+                    ranges.append(Tuple(symbol) + positive_range)
+                elif symbol.is_negative:
+                    ranges.append(Tuple(symbol) + negative_range)
+                else:
+                    ranges.append(Tuple(symbol) + default_range)
 
             for i in range(len(free_symbols) - nb_of_free_symbols):
                 ranges.append(Tuple(Dummy()) + default_range)
@@ -1789,10 +1796,14 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             return plots
         else:
             #Use default ranges.
-            default_range = Tuple(-10, 10)
             ranges = []
             for symbol in free_symbols:
-                ranges.append(Tuple(symbol) + default_range)
+                if symbol.is_positive:
+                    ranges.append(Tuple(symbol) + positive_range)
+                elif symbol.is_negative:
+                    ranges.append(Tuple(symbol) + negative_range)
+                else:
+                    ranges.append(Tuple(symbol) + default_range)
 
             for i in range(len(free_symbols) - nb_of_free_symbols):
                 ranges.append(Tuple(Dummy()) + default_range)
