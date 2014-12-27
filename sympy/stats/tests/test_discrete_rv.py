@@ -4,12 +4,14 @@ from sympy.abc import x
 from sympy import S, Sum
 from sympy.stats import E, variance, density
 
+
 def test_PoissonDistribution():
     l = 3
     p = PoissonDistribution(l)
     assert abs(p.cdf(10).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
+
 
 def test_Poisson():
     l = 3
@@ -19,6 +21,7 @@ def test_Poisson():
     assert density(x) == PoissonDistribution(l)
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
+
 
 def test_GeometricDistribution():
     p = S.One / 5

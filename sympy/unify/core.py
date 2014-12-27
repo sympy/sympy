@@ -20,6 +20,7 @@ from __future__ import print_function, division
 
 from sympy.utilities.iterables import kbins
 
+
 class Compound(object):
     """ A little class to represent an interior node in the tree
 
@@ -39,6 +40,7 @@ class Compound(object):
     def __str__(self):
         return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
 
+
 class Variable(object):
     """ A Wild token """
     def __init__(self, arg):
@@ -52,6 +54,7 @@ class Variable(object):
 
     def __str__(self):
         return "Variable(%s)" % str(self.arg)
+
 
 class CondVariable(object):
     """ A wild token that matches conditionally
@@ -73,6 +76,7 @@ class CondVariable(object):
 
     def __str__(self):
         return "CondVariable(%s)" % str(self.arg)
+
 
 def unify(x, y, s=None, **fns):
     """ Unify two expressions
@@ -129,6 +133,7 @@ def unify(x, y, s=None, **fns):
                 for match in unify(x[1:], y[1:], shead, **fns):
                     yield match
 
+
 def unify_var(var, x, s, **fns):
     if var in s:
         for match in unify(s[var], x, s, **fns):
@@ -140,6 +145,7 @@ def unify_var(var, x, s, **fns):
     elif isinstance(var, Variable):
         yield assoc(s, var, x)
 
+
 def occur_check(var, x):
     """ var occurs in subtree owned by x? """
     if var == x:
@@ -150,21 +156,25 @@ def occur_check(var, x):
         if any(occur_check(var, xi) for xi in x): return True
     return False
 
+
 def assoc(d, key, val):
     """ Return copy of d with key associated to val """
     d = d.copy()
     d[key] = val
     return d
 
+
 def is_args(x):
     """ Is x a traditional iterable? """
     return type(x) in (tuple, list, set)
+
 
 def unpack(x):
     if isinstance(x, Compound) and len(x.args) == 1:
         return x.args[0]
     else:
         return x
+
 
 def allcombinations(A, B, ordered):
     """
@@ -206,6 +216,7 @@ def allcombinations(A, B, ordered):
         else:
             yield partition(A, part), tuple((b,) for b in B)
 
+
 def partition(it, part):
     """ Partition a tuple/list into pieces defined by indices
 
@@ -214,6 +225,7 @@ def partition(it, part):
     ((10, 20, 30), (40,))
     """
     return type(it)([index(it, ind) for ind in part])
+
 
 def index(it, ind):
     """ Fancy indexing into an indexable iterable (tuple, list)

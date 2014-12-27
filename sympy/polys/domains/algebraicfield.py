@@ -11,6 +11,7 @@ from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, Is
 
 from sympy.utilities import public
 
+
 @public
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     """A class for representing algebraic number fields. """

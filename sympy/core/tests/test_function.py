@@ -112,6 +112,7 @@ def test_Function():
     assert myfunc.nargs == S.Naturals0
     assert myfunc(x).nargs == S.Naturals0
 
+
 def test_nargs():
     f = Function('f')
     assert f.nargs == S.Naturals0
@@ -674,6 +675,7 @@ def test_issue_7688():
 
     f = Function('f')  # actually an UndefinedFunction
     clear_cache()
+
     class A(UndefinedFunction):
         pass
     a = A('f')

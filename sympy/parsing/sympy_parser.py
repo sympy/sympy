@@ -18,6 +18,7 @@ from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
+
 def _token_splittable(token):
     """
     Predicate for whether a token name can be split into multiple tokens.

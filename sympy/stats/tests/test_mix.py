@@ -3,6 +3,7 @@ from sympy.stats.rv import pspace, ProductPSpace, density
 from sympy.stats.drv_types import PoissonDistribution
 from sympy import Symbol, Eq
 
+
 def test_density():
     x = Symbol('x')
     l = Symbol('l', positive=True)

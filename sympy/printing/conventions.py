@@ -61,6 +61,7 @@ def split_super_sub(text):
 
     return name, supers, subs
 
+
 def requires_partial(expr):
     """Return whether a partial derivative symbol is required for printing
 

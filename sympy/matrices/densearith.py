@@ -6,6 +6,7 @@ as a list of lists.
 
 from sympy.core.compatibility import xrange
 
+
 def add(matlist1, matlist2, K):
     """
     Adds matrices row-wise.
@@ -35,6 +36,7 @@ def add(matlist1, matlist2, K):
     addrow
     """
     return [addrow(row1, row2, K) for row1, row2 in zip(matlist1, matlist2)]
+
 
 def addrow(row1, row2, K):
     """

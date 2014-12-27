@@ -5,6 +5,7 @@ from sympy.core.containers import Tuple
 x, y, z = symbols('x,y,z')
 a, b, c = symbols('a,b,c')
 
+
 def test_count_ops_non_visual():
     def count(val):
         return count_ops(val, visual=False)
@@ -25,6 +26,7 @@ def test_count_ops_non_visual():
     assert count(Equivalent(x,y)) == 1
     assert count(ITE(x,y,z)) == 1
     assert count(ITE(True,x,y)) == 0
+
 
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(

@@ -2,6 +2,7 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
 from sympy.polys.heuristicgcd import heugcd
 
+
 def test_heugcd_univariate_integers():
     R, x = ring("x", ZZ)
 
@@ -59,6 +60,7 @@ def test_heugcd_univariate_integers():
     cfg = 1
 
     assert heugcd(f, g) == (h, cff, cfg)
+
 
 def test_heugcd_multivariate_integers():
     R, x, y = ring("x,y", ZZ)

@@ -12,6 +12,7 @@ from sympy.core.compatibility import integer_types
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 
+
 @public
 class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     """

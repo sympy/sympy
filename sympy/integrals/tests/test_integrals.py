@@ -256,6 +256,7 @@ def test_issue_3686():  # remove this when fresnel itegrals are implemented
     assert expand_func(integrate(sin(x**2), x)) == \
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
+
 def test_integrate_units():
     m = units.m
     s = units.s
@@ -559,9 +560,11 @@ def test_subs7():
     assert e.subs(sin(x), 1) == Integral(sin(x) + sin(y), (x, 1, sin(y)),
                                          (y, 1, 2))
 
+
 def test_expand():
     e = Integral(f(x)+f(x**2), (x, 1, y))
     assert e.expand() == Integral(f(x), (x, 1, y)) + Integral(f(x**2), (x, 1, y))
+
 
 def test_integration_variable():
     raises(ValueError, lambda: Integral(exp(-x**2), 3))
@@ -838,6 +841,7 @@ def test_issue_4527():
         (m*sin(k*x)*cos(m*x)/(k**2 - m**2) -
          k*sin(m*x)*cos(k*x)/(k**2 - m**2), True))
 
+
 def test_issue_4199():
     ypos = Symbol('y', positive=True)
     # TODO: Remove conds='none' below, let the assumption take care of it.
@@ -1018,6 +1022,7 @@ def test_risch_option():
     assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
     # TODO: How to test risch=False?
 
+
 def test_issue_6828():
     # TODO: Currently `h' is the result (all three are equivalent). Improve
     # simplify() to find the form with simplest real coefficients.
@@ -1025,6 +1030,7 @@ def test_issue_6828():
     g = 300.0/(324.0*x**2 - 1290.0)
     h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
     assert integrate(f, x).diff(x).simplify().equals(f) is True
+
 
 @XFAIL
 def test_integrate_Piecewise_rational_over_reals():

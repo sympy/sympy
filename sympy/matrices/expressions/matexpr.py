@@ -62,7 +62,6 @@ class MatrixExpr(Basic):
 
     is_commutative = False
 
-
     def __new__(cls, *args, **kwargs):
         args = map(sympify, args)
         return Basic.__new__(cls, *args, **kwargs)
@@ -379,6 +378,7 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
 
@@ -447,7 +447,6 @@ class ZeroMatrix(MatrixExpr):
     @property
     def shape(self):
         return (self.args[0], self.args[1])
-
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')

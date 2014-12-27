@@ -69,6 +69,7 @@ class LambdaPrinter(StrPrinter):
     def _print_BooleanFalse(self, expr):
         return "False"
 
+
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
 class NumExprPrinter(LambdaPrinter):
@@ -150,6 +151,7 @@ class NumExprPrinter(LambdaPrinter):
     def doprint(self, expr):
         lstr = super(NumExprPrinter, self).doprint(expr)
         return "evaluate('%s')" % lstr
+
 
 def lambdarepr(expr, **settings):
     """

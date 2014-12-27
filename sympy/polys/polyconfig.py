@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 from contextlib import contextmanager
 
+
 _default_config = {
     'USE_COLLINS_RESULTANT':      False,
     'USE_SIMPLIFY_GCD':           True,
@@ -25,6 +26,7 @@ _default_config = {
 
 _current_config = {}
 
+
 @contextmanager
 def using(**kwargs):
     for k, v in kwargs.items():
@@ -34,6 +36,7 @@ def using(**kwargs):
 
     for k in kwargs.keys():
         setup(k)
+
 
 def setup(key, value=None):
     """Assign a value to (or reset) a configuration item. """

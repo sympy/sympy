@@ -44,24 +44,29 @@ def test_factor_in_front():
     assert factor_in_front(MatMul(A, 2, B, evaluate=False)) ==\
                            MatMul(2, A, B, evaluate=False)
 
+
 def test_remove_ids():
     assert remove_ids(MatMul(A, Identity(m), B, evaluate=False)) == \
                       MatMul(A, B, evaluate=False)
     assert null_safe(remove_ids)(MatMul(Identity(n), evaluate=False)) == \
                                  MatMul(Identity(n), evaluate=False)
 
+
 def test_xxinv():
     assert xxinv(MatMul(D, Inverse(D), D, evaluate=False)) == \
                  MatMul(Identity(n), D, evaluate=False)
+
 
 def test_any_zeros():
     assert any_zeros(MatMul(A, ZeroMatrix(m, k), evaluate=False)) == \
                      ZeroMatrix(n, k)
 
+
 def test_unpack():
     assert unpack(MatMul(A, evaluate=False)) == A
     x = MatMul(A, B)
     assert unpack(x) == x
+
 
 def test_only_squares():
     A = MatrixSymbol('A', n, m)
@@ -72,6 +77,7 @@ def test_only_squares():
     assert only_squares(C, D) == [C, D]
     assert only_squares(C, A, A.T, D) == [C, A*A.T, D]
 
+
 def test_determinant():
     A = MatrixSymbol('A', n, m)
     C = MatrixSymbol('C', n, n)
@@ -80,6 +86,7 @@ def test_determinant():
     assert det(2*C) == 2**n*det(C)
     assert det(2*C*D) == 2**n*det(C)*det(D)
     assert det(3*C*A*A.T*D) == 3**n*det(C)*det(A*A.T)*det(D)
+
 
 def test_doit():
     C = MatrixSymbol('C', n, n)

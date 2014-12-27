@@ -414,6 +414,7 @@ _lang_lookup = {'CYTHON': ('C',),
                 'NUMPY': ('C',),
                 'DUMMY': ('F95',)}     # Dummy here just for testing
 
+
 def _infer_language(backend):
     """For a given backend, return the top choice of language"""
     langs = _lang_lookup.get(backend.upper(), False)

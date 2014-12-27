@@ -186,6 +186,7 @@ class ReprPrinter(Printer):
         denom = self._print(denom_terms)
         return "%s(%s, %s, %s)" % (frac.__class__.__name__, self._print(frac.field), numer, denom)
 
+
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

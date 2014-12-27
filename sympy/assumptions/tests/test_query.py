@@ -1622,10 +1622,12 @@ def test_zero():
     assert ask(Q.zero(x), Q.even(x)) is None
     assert ask(Q.zero(x), Q.odd(x)) is False
 
+
 @XFAIL
 def test_zero_doesnt_work():
     # This requires moving logic from the handler to the deduction system
     assert ask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
+
 
 def test_odd():
     assert ask(Q.odd(x)) is None
@@ -1780,6 +1782,7 @@ def test_nonpositive():
     assert ask(Q.nonpositive(sqrt(-1))) is False
     assert ask(Q.nonpositive(x), Q.imaginary(x)) is False
 
+
 def test_nonnegative():
     assert ask(Q.nonnegative(-1)) is False
     assert ask(Q.nonnegative(0))
@@ -1788,6 +1791,7 @@ def test_nonnegative():
     assert ask(Q.nonnegative(x), Q.negative(x)) is False
     assert ask(Q.nonnegative(sqrt(-1))) is False
     assert ask(Q.nonnegative(x), Q.imaginary(x)) is False
+
 
 def test_real():
     assert ask(Q.real(0**I)) is False

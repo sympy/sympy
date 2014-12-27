@@ -5,6 +5,7 @@ from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
 
+
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
@@ -82,8 +83,10 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
+
 class SingleDiscreteDomain(SingleDomain):
     pass
+
 
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """

@@ -10,6 +10,7 @@ from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import public
 
+
 @public
 def itermonomials(variables, degree):
     r"""
@@ -57,6 +58,7 @@ def itermonomials(variables, degree):
 
         return monoms
 
+
 def monomial_count(V, N):
     r"""
     Computes the number of monomials.
@@ -89,6 +91,7 @@ def monomial_count(V, N):
     """
     return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
 
+
 def monomial_mul(A, B):
     """
     Multiplication of tuples representing monomials.
@@ -104,6 +107,7 @@ def monomial_mul(A, B):
 
     """
     return tuple([ a + b for a, b in zip(A, B) ])
+
 
 def monomial_div(A, B):
     """
@@ -131,6 +135,7 @@ def monomial_div(A, B):
     else:
         return None
 
+
 def monomial_ldiv(A, B):
     """
     Division of tuples representing monomials.
@@ -152,9 +157,11 @@ def monomial_ldiv(A, B):
     """
     return tuple([ a - b for a, b in zip(A, B) ])
 
+
 def monomial_pow(A, n):
     """Return the n-th pow of the monomial. """
     return tuple([ a*n for a in A ])
+
 
 def monomial_gcd(A, B):
     """
@@ -172,6 +179,7 @@ def monomial_gcd(A, B):
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
 
+
 def monomial_lcm(A, B):
     """
     Least common multiple of tuples representing monomials.
@@ -188,6 +196,7 @@ def monomial_lcm(A, B):
     """
     return tuple([ max(a, b) for a, b in zip(A, B) ])
 
+
 def monomial_divides(A, B):
     """
     Does there exist a monomial X such that XA == B?
@@ -199,6 +208,7 @@ def monomial_divides(A, B):
     False
     """
     return all(a <= b for a, b in zip(A, B))
+
 
 def monomial_max(*monoms):
     """
@@ -222,6 +232,7 @@ def monomial_max(*monoms):
 
     return tuple(M)
 
+
 def monomial_min(*monoms):
     """
     Returns minimal degree for each variable in a set of monomials.
@@ -244,6 +255,7 @@ def monomial_min(*monoms):
 
     return tuple(M)
 
+
 def monomial_deg(M):
     """
     Returns the total degree of a monomial.
@@ -255,6 +267,7 @@ def monomial_deg(M):
     3
     """
     return sum(M)
+
 
 def term_div(a, b, domain):
     """Division of two terms in over a ring/field. """
@@ -273,6 +286,7 @@ def term_div(a, b, domain):
             return monom, domain.quo(a_lc, b_lc)
         else:
             return None
+
 
 class MonomialOps(object):
     """Code generator of fast monomial arithmetic functions. """
@@ -385,6 +399,7 @@ class MonomialOps(object):
         AB = [ "%s if %s <= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
         return self._build(code, name)
+
 
 @public
 class Monomial(PicklableWithSlots):

@@ -41,6 +41,7 @@ H_rep = represent(H, basis=N, ndim=4, format='sympy')
 k3_rep = represent(k3, basis=N, ndim=4, format='sympy')
 b3_rep = represent(b3, basis=N, ndim=4, format='sympy')
 
+
 def test_RaisingOp():
     assert Dagger(ad) == a
     assert Commutator(ad, a).doit() == Integer(-1)
@@ -75,6 +76,7 @@ def test_RaisingOp():
     assert ad_rep_numpy.dtype == 'float64'
     assert ad_rep_scipy.dtype == 'float64'
 
+
 def test_LoweringOp():
     assert Dagger(a) == ad
     assert Commutator(a, ad).doit() == Integer(1)
@@ -86,6 +88,7 @@ def test_LoweringOp():
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
     for i in range(ndim - 1):
         assert a_rep[i,i + 1] == sqrt(i + 1)
+
 
 def test_NumberOp():
     assert Commutator(N, ad).doit() == ad
@@ -100,6 +103,7 @@ def test_NumberOp():
         assert N_rep[i,i] == i
     assert N_rep == ad_rep_sympy*a_rep
 
+
 def test_Hamiltonian():
     assert Commutator(H, N).doit() == Integer(0)
     assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k).expand()
@@ -109,6 +113,7 @@ def test_Hamiltonian():
     assert H.rewrite('N').doit() == hbar*omega*(N + Integer(1)/Integer(2))
     for i in range(ndim):
         assert H_rep[i,i] == hbar*omega*(i + Integer(1)/Integer(2))
+
 
 def test_SHOKet():
     assert SHOKet('k').dual_class() == SHOBra

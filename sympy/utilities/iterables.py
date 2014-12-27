@@ -551,6 +551,7 @@ def filter_symbols(iterator, exclude):
         if s not in exclude:
             yield s
 
+
 def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and

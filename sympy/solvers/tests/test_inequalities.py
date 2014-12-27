@@ -140,8 +140,10 @@ def test_reduce_poly_inequalities_complex_relational():
 def test_reduce_rational_inequalities_real_relational():
     def OpenInterval(a, b):
         return Interval(a, b, True, True)
+
     def LeftOpenInterval(a, b):
         return Interval(a, b, True, False)
+
     def RightOpenInterval(a, b):
         return Interval(a, b, False, True)
 

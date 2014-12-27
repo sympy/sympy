@@ -11,7 +11,6 @@ __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
         'moment', 'cmoment', 'sampling_density']
 
 
-
 def moment(X, n, c=0, condition=None, **kwargs):
     """
     Return the nth moment of a random expression about c i.e. E((X-c)**n)
@@ -183,6 +182,7 @@ def smoment(X, n, condition=None, **kwargs):
     """
     sigma = std(X, condition, **kwargs)
     return (1/sigma)**n*cmoment(X, n, condition, **kwargs)
+
 
 def skewness(X, condition=None, **kwargs):
     """

@@ -808,6 +808,7 @@ def test_Add_is_negative_positive():
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_zero
 
+
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
@@ -1777,7 +1778,6 @@ def test_mul_zero_detection():
                     assert e.is_zero is None
                 else:
                     assert e.is_zero is False
-
 
     for iz, ib in cartes(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz)

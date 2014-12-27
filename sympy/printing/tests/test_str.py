@@ -227,6 +227,7 @@ def test_NaN():
 def test_NegativeInfinity():
     assert str(-oo) == "-oo"
 
+
 def test_Order():
     assert str(O(x)) == "O(x)"
     assert str(O(x**2)) == "O(x**2)"
@@ -511,6 +512,7 @@ def test_GroebnerBasis():
     assert str(groebner(F, order='lex')) == \
         "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
+
 def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
@@ -544,6 +546,7 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
+
 
 def test_Unit():
     assert str(second) == "s"
@@ -696,20 +699,25 @@ def test_MatMul_MatAdd():
     assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
         "2*(X + Y)"
 
+
 def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
     assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
 
+
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "True"
     assert str(false) == repr(false) == sstr(false) == "False"
 
+
 def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
+
 def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'

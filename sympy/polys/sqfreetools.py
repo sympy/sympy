@@ -36,6 +36,7 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
 
+
 def dup_sqf_p(f, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.

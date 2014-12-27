@@ -4,20 +4,24 @@ from sympy import Symbol, MatrixSymbol, ask, Q
 n = Symbol('n')
 X = MatrixSymbol('X', n, n)
 
+
 def test_LU():
     L, U = lu(X)
     assert L.shape == U.shape == X.shape
     assert ask(Q.lower_triangular(L))
     assert ask(Q.upper_triangular(U))
 
+
 def test_Cholesky():
     L = LofCholesky(X)
+
 
 def test_QR():
     Q_, R = qr(X)
     assert Q_.shape == R.shape == X.shape
     assert ask(Q.orthogonal(Q_))
     assert ask(Q.upper_triangular(R))
+
 
 def test_svd():
     U, S, V = svd(X)

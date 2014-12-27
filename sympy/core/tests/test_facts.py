@@ -47,7 +47,6 @@ def test_deduce_alpha_implications():
     'c']), Not('c'): set([Not('a'), 'b']),}
     assert P == {'a': set(['b', 'c']), 'b': set(['a', 'c']), 'c': set(['a', 'b'])}
 
-
     # Long deductions
     I, P = D([('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'e')])
     assert I == {'a': set(['b', 'c', 'd', 'e']), 'b': set(['c', 'd', 'e']),

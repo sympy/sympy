@@ -17,7 +17,6 @@ def test_aux_dep():
     #, seen in  the generalized dependent coordinates q[3], and depend speeds
     # u[3], u[4] and u[5].
 
-
     # First, mannual derivation of Fr, Fr_star, Fr_star_steady.
 
     # Symbols for time and constant parameters.
@@ -157,7 +156,6 @@ def test_aux_dep():
     Fr_star_steady = Fr_star_c.subs(ud_zero).subs(u_dep_dict)\
             .subs(steady_conditions).subs({q[3]: -r*cos(q[1])}).expand()
 
-
     # Second, using KaneMethod in mechanics for fr, frstar and frstar_steady.
 
     # Rigid Bodies: disc, with inertia I_C_O.
@@ -288,6 +286,7 @@ def test_non_central_inertia():
     fr2, fr_star2 = km.kanes_equations(forces, bodies2)
     assert (trigsimp(fr_star2.subs(vc_map).subs(u3, 0)).doit().expand() ==
             fr_star_expected.expand())
+
 
 def test_sub_qdot():
     # This test solves exercises 8.12, 8.17 from Kane 1985 and defines

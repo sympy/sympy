@@ -98,7 +98,6 @@ class erf(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -208,6 +207,7 @@ class erf(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                     self.func(x + x*sqrt(sq)))
         return (re, im)
+
 
 class erfc(Function):
     r"""
@@ -395,6 +395,7 @@ class erfc(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
+
 class erfi(Function):
     r"""
     Imaginary error function. The function erfi is defined as:
@@ -563,6 +564,7 @@ class erfi(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
+
 class erf2(Function):
     r"""
     Two-argument error function. This function is defined as:
@@ -625,7 +627,6 @@ class erf2(Function):
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
     """
-
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -693,6 +694,7 @@ class erf2(Function):
     def _eval_rewrite_as_expint(self, x, y):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
+
 class erfinv(Function):
     r"""
     Inverse Error Function. The erfinv function is defined as:
@@ -742,7 +744,6 @@ class erfinv(Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
     """
 
-
     def fdiff(self, argindex =1):
         if argindex == 1:
             return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
@@ -776,6 +777,7 @@ class erfinv(Function):
 
     def _eval_rewrite_as_erfcinv(self, z):
        return erfcinv(1-z)
+
 
 class erfcinv (Function):
     r"""
@@ -820,7 +822,6 @@ class erfcinv (Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
     """
 
-
     def fdiff(self, argindex =1):
         if argindex == 1:
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
@@ -846,6 +847,7 @@ class erfcinv (Function):
 
     def _eval_rewrite_as_erfinv(self, z):
         return erfinv(1-z)
+
 
 class erf2inv(Function):
     r"""
@@ -896,7 +898,6 @@ class erf2inv(Function):
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
     """
-
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -1034,7 +1035,6 @@ class Ei(Function):
     .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
-
 
     @classmethod
     def eval(cls, z):
@@ -1192,7 +1192,6 @@ class expint(Function):
     .. [3] http://en.wikipedia.org/wiki/Exponential_integral
 
     """
-
 
     @classmethod
     def eval(cls, nu, z):
@@ -1377,7 +1376,6 @@ class li(Function):
     .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
     """
 
-
     @classmethod
     def eval(cls, z):
         if z is S.Zero:
@@ -1494,7 +1492,6 @@ class Li(Function):
     .. [3] http://dlmf.nist.gov/6
     """
 
-
     @classmethod
     def eval(cls, z):
         if z is S.Infinity:
@@ -1518,13 +1515,14 @@ class Li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return self.rewrite(li).rewrite("tractable", deep=True)
 
+
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
 
+
 class TrigonometricIntegral(Function):
     """ Base class for trigonometric integrals. """
-
 
     @classmethod
     def eval(cls, z):
@@ -1936,9 +1934,11 @@ class Chi(TrigonometricIntegral):
     def _latex_no_arg(printer):
         return r'\operatorname{Chi}'
 
+
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
 ###############################################################################
+
 
 class FresnelIntegral(Function):
     """ Base class for the Fresnel integrals."""
@@ -2292,7 +2292,6 @@ class _erfs(Function):
     tractable for the Gruntz algorithm.
     """
 
-
     def _eval_aseries(self, n, args0, x, logx):
         point = args0[0]
 
@@ -2336,7 +2335,6 @@ class _eis(Function):
     tractable for the Gruntz algorithm.
     """
 
-
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != S.Infinity:
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
@@ -2346,7 +2344,6 @@ class _eis(Function):
         o = C.Order(1/z**(n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o
-
 
     def fdiff(self, argindex=1):
         if argindex == 1:

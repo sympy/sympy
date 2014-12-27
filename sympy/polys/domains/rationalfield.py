@@ -8,6 +8,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.utilities import public
 
+
 @public
 class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """

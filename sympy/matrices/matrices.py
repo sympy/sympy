@@ -4126,6 +4126,7 @@ class MatrixBase(object):
             arbitrary_matrix = self.__class__(cols, rows, w).T
         return A_pinv * B + (eye(A.cols) - A_pinv*A) * arbitrary_matrix
 
+
 def classof(A, B):
     """
     Get the type of the result when combining matrices of different types.

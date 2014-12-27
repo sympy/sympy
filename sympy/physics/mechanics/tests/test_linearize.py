@@ -4,6 +4,7 @@ from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
 
+
 def test_linearize_rolling_disc_kane():
     # Symbols for time and constant parameters
     t, r, m, g, v = symbols('t r m g v')
@@ -125,6 +126,7 @@ def test_linearize_rolling_disc_kane():
     # Check eigenvalues at critical speed are all zero:
     assert A.subs(upright_nominal).subs(q3d, 1/sqrt(3)).eigenvals() == {0: 8}
 
+
 def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     u1 = dynamicsymbols('u1')                     # Angular velocity
@@ -161,6 +163,7 @@ def test_linearize_pendulum_kane_minimal():
 
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
+
 
 def test_linearize_pendulum_kane_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
@@ -226,6 +229,7 @@ def test_linearize_pendulum_kane_nonminimal():
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
+
 def test_linearize_pendulum_lagrange_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
@@ -256,6 +260,7 @@ def test_linearize_pendulum_lagrange_minimal():
 
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
+
 
 def test_linearize_pendulum_lagrange_nonminimal():
     q1, q2 = dynamicsymbols('q1:3')
@@ -289,6 +294,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
             op_point=op_point, A_and_B=True)
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
+
 
 def test_linearize_rolling_disc_lagrange():
     q1, q2, q3 = q = dynamicsymbols('q1 q2 q3')

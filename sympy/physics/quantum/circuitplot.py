@@ -160,6 +160,7 @@ else:
                                 lw=self.linewidth
                                 )
                             self._axes.add_line(line)
+
         def _gates(self):
             """Create a list of all gates in the circuit plot."""
             gates = []
@@ -306,6 +307,7 @@ else:
         """
         return CircuitPlot(c, nqubits, **kwargs)
 
+
 def render_label(label, inits={}):
     """Slightly more flexible way to render labels.
 
@@ -319,6 +321,7 @@ def render_label(label, inits={}):
     if init:
         return r'$|%s\rangle=|%s\rangle$' % (label, init)
     return r'$|%s\rangle$' % label
+
 
 def labeller(n, symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
@@ -338,6 +341,7 @@ def labeller(n, symbol='q'):
     """
     return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
 
+
 class Mz(OneQubitGate):
     """Mock-up of a z measurement gate.
 
@@ -347,6 +351,7 @@ class Mz(OneQubitGate):
     measurement = True
     gate_name='Mz'
     gate_name_latex=u('M_z')
+
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate.
@@ -358,6 +363,7 @@ class Mx(OneQubitGate):
     gate_name='Mx'
     gate_name_latex=u('M_x')
 
+
 class CreateOneQubitGate(ManagedProperties):
     def __new__(mcl, name, latexname=None):
         if not latexname:
@@ -365,12 +371,14 @@ class CreateOneQubitGate(ManagedProperties):
         return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
                                  {'gate_name': name, 'gate_name_latex': latexname})
 
+
 def CreateCGate(name, latexname=None):
     """Use a lexical closure to make a controlled gate.
     """
     if not latexname:
         latexname = name
     onequbitgate = CreateOneQubitGate(name, latexname)
+
     def ControlledGate(ctrls,target):
         return CGate(tuple(ctrls),onequbitgate(target))
     return ControlledGate

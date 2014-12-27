@@ -476,6 +476,7 @@ def test_roots0():
          -sqrt(2) - root(7, 3)/2 + sqrt(3)*root(7, 3)*I/2: 1,
          -sqrt(2) + root(7, 3): 1}
 
+
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """
     a, b, c, d, x = symbols("a,b,c,d,x")
@@ -586,6 +587,7 @@ def test_root_factors():
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
 
+
 def test_nroots1():
     n = 64
     p = legendre_poly(n, x, polys=True)
@@ -606,6 +608,7 @@ def test_nroots1():
             '0.531', '0.572', '0.611', '0.649', '0.685', '0.720', '0.753',
             '0.784', '0.813', '0.841', '0.866', '0.889', '0.911', '0.930',
             '0.946', '0.961', '0.973', '0.983', '0.991', '0.996', '0.999']
+
 
 def test_nroots2():
     p = Poly(x**5 + 3*x + 1, x)

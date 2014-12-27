@@ -187,6 +187,7 @@ class Predicate(Boolean):
                 break
         return res
 
+
 @contextmanager
 def assuming(*assumptions):
     """ Context manager for assumptions

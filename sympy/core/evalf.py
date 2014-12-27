@@ -29,8 +29,12 @@ from .containers import Tuple
 
 from sympy.utilities.iterables import is_sequence
 
+
 LG10 = math.log(10, 2)
+
+
 rnd = round_nearest
+
 
 def bitcount(n):
     return mpmath_bitcount(int(n))

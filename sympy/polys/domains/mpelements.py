@@ -12,6 +12,7 @@ from mpmath.rational import mpq
 
 from sympy.utilities import public
 
+
 @public
 class RealElement(_mpf, DomainElement):
     """An element of a real domain. """
@@ -31,6 +32,7 @@ class RealElement(_mpf, DomainElement):
 
     def parent(self):
         return self.context._parent
+
 
 @public
 class ComplexElement(_mpc, DomainElement):
@@ -60,6 +62,7 @@ class ComplexElement(_mpc, DomainElement):
         return self.context._parent
 
 new = object.__new__
+
 
 @public
 class MPContext(PythonMPContext):

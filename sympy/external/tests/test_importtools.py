@@ -1,5 +1,6 @@
 from sympy.external import import_module
 
+
 # fixes issue that arose in addressing issue 6533
 def test_no_stdlib_collections():
     '''
@@ -13,6 +14,7 @@ def test_no_stdlib_collections():
     if matplotlib:
         assert collections != matplotlib.collections
 
+
 def test_no_stdlib_collections2():
     '''
     make sure we get the right collections when it is not part of a
@@ -24,6 +26,7 @@ def test_no_stdlib_collections2():
         min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         assert collections != matplotlib.collections
+
 
 def test_no_stdlib_collections3():
     '''make sure we get the right collections with no catch'''

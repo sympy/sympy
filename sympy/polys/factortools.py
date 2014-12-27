@@ -251,12 +251,14 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
 
+
 def _test_pl(fc, q, pl):
     if q > pl // 2:
         q = q - pl
     if not q:
         return True
     return fc % q == 0
+
 
 def dup_zz_zassenhaus(f, K):
     """Factor primitive square-free polynomials in `Z[x]`. """

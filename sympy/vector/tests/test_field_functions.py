@@ -17,6 +17,7 @@ x, y, z = C.base_scalars()
 delop = C.delop
 a, b, c, q = symbols('a b c q')
 
+
 def test_del_operator():
 
     #Tests for curl

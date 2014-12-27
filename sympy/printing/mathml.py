@@ -270,6 +270,7 @@ class MathMLPrinter(Printer):
 
         # translate name, supers and subs to unicode characters
         greek_letters = set(greeks) # make a copy
+
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)

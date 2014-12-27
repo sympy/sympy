@@ -165,6 +165,7 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
+
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
@@ -178,6 +179,7 @@ def test_coset_rank():
         i += 1
     assert G.coset_unrank(48) == None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
+
 
 def test_coset_factor():
     a = Permutation([0, 2, 1])
@@ -205,6 +207,7 @@ def test_coset_factor():
     G = PermutationGroup([Permutation([2,1,0])])
     p = Permutation([1,0,2])
     assert G.coset_factor(p) == []
+
 
 def test_orbits():
     a = Permutation([2, 0, 1])
@@ -318,6 +321,7 @@ def test_rubik1():
 
     G = RubikGroup(2)
     assert G.order() == 3674160
+
 
 @XFAIL
 def test_rubik():
@@ -470,6 +474,7 @@ def test_schreier_sims_random():
                   Permutation([0, 2, 1])]
     assert D.schreier_sims_random([], D.generators, 2,
            _random_prec=_random_prec) == (base, strong_gens)
+
 
 def test_baseswap():
     S = SymmetricGroup(4)

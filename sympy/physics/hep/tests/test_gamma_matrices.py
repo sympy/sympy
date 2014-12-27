@@ -3,12 +3,14 @@ from sympy import simplify, trace
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, GammaMatrixHead, DiracSpinorIndex
 from sympy.utilities.pytest import XFAIL, raises
 
+
 def _is_tensor_eq(arg1, arg2):
     if isinstance(arg1, TensExpr):
         return arg1.equals(arg2)
     elif isinstance(arg2, TensExpr):
         return arg2.equals(arg1)
     return arg1 == arg2
+
 
 def execute_gamma_simplify_tests_for_function(tfunc, D):
     """
@@ -187,6 +189,7 @@ def test_kahane_algorithm():
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
 
+
 def test_kahane_simplify1():
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15 = tensor_indices('i0:16', G.LorentzIndex)
     mu, nu, rho, sigma = tensor_indices("mu, nu, rho, sigma", G.LorentzIndex)
@@ -277,6 +280,7 @@ def test_gamma_matrix_class():
     assert _is_tensor_eq(ts, A(k)*G(i)*G(j))
 
     execute_gamma_simplify_tests_for_function(simplify, D=4)
+
 
 def test_gamma_matrix_trace():
     gamma_trace = G.gamma_trace
@@ -397,6 +401,7 @@ def test_gamma_matrix_trace():
     r = gamma_trace(t)
     assert r.equals(4*p2*p2*p2*p2)
 
+
 def test_simple_trace_cases_symbolic_dim():
     from sympy import symbols
     D = symbols('D')
@@ -413,6 +418,7 @@ def test_simple_trace_cases_symbolic_dim():
     t1 = G._trace_single_line(t)
     t2 = -4*g(m0, m2)*g(m1, m3) + 4*g(m0, m1)*g(m2, m3) + 4*g(m0, m3)*g(m1, m2)
     assert _is_tensor_eq(t1, t2)
+
 
 def test_get_lines():
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13 = \
@@ -447,6 +453,7 @@ def test_get_lines():
         G(i2,s2,-s3)*G(i12,s13,-s14)*G(i3,s3,-s4)*G(i5,s6,-s7)
     r = get_lines(t, DiracSpinorIndex)
     assert r == ([[4, 6, 11, 3], [5, 10, 12, 2]], [[1, 7], [0, 13, 8, 9]], [])
+
 
 def test_simplify_lines():
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12 = tensor_indices('i0:13', G.LorentzIndex)

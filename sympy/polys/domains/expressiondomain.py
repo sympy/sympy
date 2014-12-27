@@ -11,6 +11,7 @@ from sympy.utilities import public
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import DomainError
 
+
 @public
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     """A class for arbitrary expressions. """

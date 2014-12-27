@@ -760,6 +760,7 @@ def test_powsimp_nc():
     assert powsimp(B**x*A**x*C**x, combine='base') == (B*A*C)**x
     assert powsimp(B**x*A**x*C**x, combine='exp') == B**x*A**x*C**x
 
+
 def test_nthroot():
     assert nthroot(90 + 34*sqrt(7), 3) == sqrt(7) + 3
     q = 1 + sqrt(2) - 2*sqrt(3) + sqrt(6) + sqrt(7)
@@ -776,6 +777,7 @@ def test_nthroot():
     assert nthroot(expand_multinomial(q**3), 3) == q
     assert nthroot(expand_multinomial(q**6), 6) == q
 
+
 @slow
 def test_nthroot1():
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**20
@@ -784,6 +786,7 @@ def test_nthroot1():
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**30
     p = expand_multinomial(q**5)
     assert nthroot(p, 5) == p**Rational(1, 5)
+
 
 def test_collect_1():
     """Collect with respect to a Symbol"""

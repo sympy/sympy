@@ -338,7 +338,9 @@ def test_G2():
 def test_G3():
     raise NotImplementedError("(a+b)**p mod p == a**p + b**p mod p; p prime")
 
+
 # ... G14 Modular equations are not implemented.
+
 
 def test_G15():
     assert Rational(sqrt(3).evalf()).limit_denominator(15) == Rational(26, 15)
@@ -1100,6 +1102,7 @@ def test_M38():
     }
     assert solve_lin_sys(system, variabes) == solution
 
+
 def test_M39():
     x, y, z = symbols('x y z', complex=True)
     assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) ==\
@@ -1108,6 +1111,7 @@ def test_M39():
              {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: sqrt(-1 - sqrt(2)*I)},\
              {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: -sqrt(-1 + sqrt(2)*I)},\
              {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: sqrt(-1 + sqrt(2)*I)}]
+
 
 # N. Inequalities
 
@@ -1127,6 +1131,7 @@ def test_N2():
 def test_N3():
     x = symbols('x', real=True)
     assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))
+
 
 @XFAIL
 def test_N4():
@@ -1426,6 +1431,7 @@ def test_P16():
     M = Matrix([[2*sqrt(2), 8],
                 [6*sqrt(6), 24*sqrt(3)]])
     assert M.rank() == 1
+
 
 @XFAIL
 def test_P17():
@@ -1829,6 +1835,7 @@ def test_R7():
     n, k = symbols('n k', integer=True, positive=True)
     T = Sum(k**3,(k,1,n)).doit()
     assert T.factor() == n**2*(n + 1)**2/4
+
 
 @XFAIL
 def test_R8():
@@ -2554,6 +2561,7 @@ def test_W23():
     a, b = symbols('a b', real=True, positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
     assert r1.simplify() == pi*(-a + b)
+
 
 @SKIP("integrate raises RuntimeError: maximum recursion depth exceeded")
 @slow

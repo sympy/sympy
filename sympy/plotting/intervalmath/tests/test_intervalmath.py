@@ -193,6 +193,7 @@ def test_interval_div():
     a = interval(-5, 5, is_valid=False) / 2
     assert a.is_valid is False
 
+
 def test_hashable():
     '''
     test that interval objects are hashable.

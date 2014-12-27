@@ -362,6 +362,7 @@ def test_test_duplicate_defs():
         "def test_1():\ndef  test_1():\n",
     ]
     ok = (None, 'check')
+
     def check(file):
         tests = 0
         test_set = set()

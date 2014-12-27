@@ -9,6 +9,7 @@ import re
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
+
 def process_split(session, config, items):
     split = config.getoption("--split")
     if not split:
@@ -64,6 +65,7 @@ def pytest_collection_modifyitems(session, config, items):
 @pytest.fixture(autouse=True, scope='module')
 def file_clear_cache():
     clear_cache()
+
 
 @pytest.fixture(autouse=True, scope='module')
 def check_disabled(request):

@@ -9,6 +9,7 @@ import inspect
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
 
+
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
@@ -143,6 +144,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
             fn._doctest_depdends_on = no_attrs_in_subclass(fn, fn._doctest_depends_on)
         return fn
     return depends_on_deco
+
 
 def public(obj):
     """

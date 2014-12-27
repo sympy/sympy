@@ -25,7 +25,6 @@ class TypeF(Standard_Cartan):
 
         return 4
 
-
     def basic_root(self, i, j):
         """
         This is a method just to generate roots
@@ -120,7 +119,6 @@ class TypeF(Standard_Cartan):
         posroots[k+4] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]
 
         return posroots
-
 
     def roots(self):
         """

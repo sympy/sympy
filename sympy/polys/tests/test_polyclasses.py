@@ -16,6 +16,7 @@ from sympy.utilities.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
+
 def test_DMP___init__():
     f = DMP([[0], [], [0, 1, 2], [3]], ZZ)
 

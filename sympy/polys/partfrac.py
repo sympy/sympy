@@ -12,6 +12,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.utilities import numbered_symbols, take, xthreaded, public
 from sympy.core.compatibility import xrange
 
+
 @xthreaded
 @public
 def apart(f, x=None, full=False, **options):

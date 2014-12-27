@@ -12,6 +12,7 @@ from .singleton import S
 
 from inspect import getmro
 
+
 class Basic(with_metaclass(ManagedProperties)):
     """
     Base class for all objects in SymPy.
@@ -518,7 +519,6 @@ class Basic(with_metaclass(ManagedProperties)):
         V = self.variables
         return dict(list(zip(V, [C.Symbol(name % i, **v.assumptions0)
             for i, v in enumerate(V)])))
-
 
     def rcall(self, *args):
         """Apply on the argument recursively through the expression tree.
@@ -1330,6 +1330,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         mapping = {}  # changes that took place
         mask = []  # the dummies that were used as change placeholders
+
         def rec_replace(expr):
             result = _query(expr)
             if result or result == {}:

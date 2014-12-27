@@ -1,6 +1,7 @@
 """ Caching facility for SymPy """
 from __future__ import print_function, division
 
+
 class _cache(list):
     """ List of cached functions """
 

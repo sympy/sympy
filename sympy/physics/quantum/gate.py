@@ -483,6 +483,7 @@ class CGate(Gate):
         else:
             return Gate._eval_power(self, exp)
 
+
 class CGateS(CGate):
     """Version of CGate that allows gate simplifications.
     I.e. cnot looks like an oplus, cphase has dots, etc.
@@ -1029,6 +1030,8 @@ class SwapGate(TwoQubitGate):
 # Aliases for gate names.
 CNOT = CNotGate
 SWAP = SwapGate
+
+
 def CPHASE(a,b): return CGateS((a,),Z(b))
 
 

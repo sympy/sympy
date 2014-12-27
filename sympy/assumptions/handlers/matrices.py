@@ -18,6 +18,7 @@ def _Factorization(predicate, expr, assumptions):
     if predicate in expr.predicates:
         return True
 
+
 class AskSquareHandler(CommonHandler):
     """
     Handler for key 'square'
@@ -112,6 +113,7 @@ class AskInvertibleHandler(CommonHandler):
         else:
             return ask(Q.invertible(expr.parent), assumptions)
 
+
 class AskOrthogonalHandler(CommonHandler):
     """
     Handler for key 'orthogonal'
@@ -160,6 +162,7 @@ class AskOrthogonalHandler(CommonHandler):
 
     Factorization = staticmethod(partial(_Factorization, Q.orthogonal))
 
+
 class AskUnitaryHandler(CommonHandler):
     """
     Handler for key 'unitary'
@@ -206,6 +209,7 @@ class AskUnitaryHandler(CommonHandler):
 
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
+
 class AskFullRankHandler(CommonHandler):
     """
     Handler for key 'fullrank'
@@ -230,6 +234,7 @@ class AskFullRankHandler(CommonHandler):
     def MatrixSlice(expr, assumptions):
         if ask(Q.orthogonal(expr.parent), assumptions):
             return True
+
 
 class AskPositiveDefiniteHandler(CommonHandler):
     """
@@ -278,6 +283,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
         else:
             return ask(Q.positive_definite(expr.parent), assumptions)
 
+
 class AskUpperTriangularHandler(CommonHandler):
     """
     Handler for key 'upper_triangular'
@@ -318,6 +324,7 @@ class AskUpperTriangularHandler(CommonHandler):
 
     Factorization = staticmethod(partial(_Factorization, Q.upper_triangular))
 
+
 class AskLowerTriangularHandler(CommonHandler):
     """
     Handler for key 'lower_triangular'
@@ -357,6 +364,7 @@ class AskLowerTriangularHandler(CommonHandler):
             return ask(Q.lower_triangular(expr.parent), assumptions)
 
     Factorization = staticmethod(partial(_Factorization, Q.lower_triangular))
+
 
 class AskDiagonalHandler(CommonHandler):
     """
@@ -407,9 +415,11 @@ def BM_elements(predicate, expr, assumptions):
     """ Block Matrix elements """
     return all(ask(predicate(b), assumptions) for b in expr.blocks)
 
+
 def MS_elements(predicate, expr, assumptions):
     """ Matrix Slice elements """
     return ask(predicate(expr.parent), assumptions)
+
 
 def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
     d = sift(expr.args, lambda x: isinstance(x, MatrixExpr))
@@ -417,6 +427,7 @@ def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
     return fuzzy_and([
         test_closed_group(Basic(*factors), assumptions, scalar_predicate),
         test_closed_group(Basic(*matrices), assumptions, matrix_predicate)])
+
 
 class AskIntegerElementsHandler(CommonHandler):
     @staticmethod
@@ -431,6 +442,7 @@ class AskIntegerElementsHandler(CommonHandler):
                                                    Q.integer))
     MatrixSlice = staticmethod(partial(MS_elements, Q.integer_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.integer_elements))
+
 
 class AskRealElementsHandler(CommonHandler):
     @staticmethod

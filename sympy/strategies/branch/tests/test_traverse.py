@@ -2,9 +2,11 @@ from sympy import Basic, symbols, Symbol, S
 from sympy.strategies.branch.traverse import top_down, sall
 from sympy.strategies.branch.core import do_one, identity
 
+
 def inc(x):
     if isinstance(x, int):
         yield x + 1
+
 
 def test_top_down_easy():
     expr     = Basic(1, 2)
@@ -13,12 +15,14 @@ def test_top_down_easy():
 
     assert set(brl(expr)) == set([expected])
 
+
 def test_top_down_big_tree():
     expr     = Basic(1, Basic(2), Basic(3, Basic(4), 5))
     expected = Basic(2, Basic(3), Basic(4, Basic(5), 6))
     brl = top_down(inc)
 
     assert set(brl(expr)) == set([expected])
+
 
 def test_top_down_harder_function():
     def split5(x):
@@ -31,6 +35,7 @@ def test_top_down_harder_function():
     brl = top_down(split5)
 
     assert set(brl(expr)) == expected
+
 
 def test_sall():
     expr     = Basic(1, 2)

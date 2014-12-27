@@ -108,6 +108,7 @@ def test_print_builtin_option():
     # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'
     assert text in ("{pi: 3.14, n_i: 3}", "{n_i: 3, pi: 3.14}")
 
+
 def test_matplotlib_bad_latex():
     # Initialize and setup IPython session
     app = init_ipython_session()

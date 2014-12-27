@@ -4,6 +4,7 @@ from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
                                         gauss_chebyshev_t, gauss_chebyshev_u,
                                         gauss_jacobi)
 
+
 def test_legendre():
     x, w = gauss_legendre(1, 17)
     assert [str(r) for r in x] == ['0']
@@ -28,6 +29,7 @@ def test_legendre():
             '0.65214515486254614', '0.65214515486254614',
             '0.34785484513745386']
 
+
 def test_legendre_precise():
     x, w = gauss_legendre(3, 40)
     assert [str(r) for r in x] == \
@@ -37,6 +39,7 @@ def test_legendre_precise():
             ['0.5555555555555555555555555555555555555556',
                     '0.8888888888888888888888888888888888888889',
                     '0.5555555555555555555555555555555555555556']
+
 
 def test_laguerre():
     x, w = gauss_laguerre(1, 17)
@@ -75,6 +78,7 @@ def test_laguerre():
             '0.39866681108317593', '0.075942449681707595',
             '0.0036117586799220485', '2.3369972385776228e-5']
 
+
 def test_laguerre_precise():
     x, w = gauss_laguerre(3, 40)
     assert [str(r) for r in x] == \
@@ -85,6 +89,7 @@ def test_laguerre_precise():
             ['0.7110930099291730154495901911425944313094',
                     '0.2785177335692408488014448884567264810349',
                     '0.01038925650158613574896492040067908765572']
+
 
 def test_hermite():
     x, w = gauss_hermite(1, 17)
@@ -138,6 +143,7 @@ def test_hermite():
         '0.019953242059045913'
         ]
 
+
 def test_hermite_precise():
     x, w = gauss_hermite(3, 40)
     assert [str(r) for r in x] == [
@@ -150,6 +156,7 @@ def test_hermite_precise():
         '1.181635900603677351532111655560763455198',
         '0.2954089751509193378830279138901908637996'
         ]
+
 
 def test_gen_laguerre():
     x, w = gauss_gen_laguerre(1, -S.Half, 17)
@@ -232,6 +239,7 @@ def test_gen_laguerre():
                                    '0.028564233532974658',
                                    '0.00026271280578124935']
 
+
 def test_gen_laguerre_precise():
     x, w = gauss_gen_laguerre(3, -S.Half, 40)
     assert [str(r) for r in x] ==['0.1901635091934881328718554276203028970878',
@@ -248,6 +256,7 @@ def test_gen_laguerre_precise():
     assert [str(r) for r in w] ==['1.037494961490425285817554606541269153041',
                                   '0.9057500047030653669269785048806009945254',
                                   '0.05675503380650934725546688857812985243312']
+
 
 def test_chebyshev_t():
     x, w = gauss_chebyshev_t(1, 17)
@@ -292,6 +301,7 @@ def test_chebyshev_t():
                                    '0.62831853071795865',
                                    '0.62831853071795865']
 
+
 def test_chebyshev_t_precise():
     x, w = gauss_chebyshev_t(3, 40)
     assert [str(r) for r in x] == [
@@ -302,6 +312,7 @@ def test_chebyshev_t_precise():
         '1.047197551196597746154214461093167628066',
         '1.047197551196597746154214461093167628066',
         '1.047197551196597746154214461093167628066']
+
 
 def test_chebyshev_u():
     x, w = gauss_chebyshev_u(1, 17)
@@ -344,6 +355,7 @@ def test_chebyshev_u():
                                    '0.39269908169872415',
                                    '0.13089969389957472']
 
+
 def test_chebyshev_u_precise():
     x, w = gauss_chebyshev_u(3, 40)
     assert [str(r) for r in x] == [
@@ -354,6 +366,7 @@ def test_chebyshev_u_precise():
         '0.3926990816987241548078304229099378605246',
         '0.7853981633974483096156608458198757210493',
         '0.3926990816987241548078304229099378605246']
+
 
 def test_jacobi():
     x, w = gauss_jacobi(1, -S.Half, S.Half, 17)
@@ -435,6 +448,7 @@ def test_jacobi():
                                   '0.43908437944395081',
                                   '0.32220656547221822',
                                   '0.065047683080512268']
+
 
 def test_jacobi_precise():
     x, w = gauss_jacobi(3, -S.Half, S.Half, 40)

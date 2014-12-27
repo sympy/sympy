@@ -38,6 +38,7 @@ from sympy.utilities.iterables import capture
 from sympy.utilities.randtest import random_complex_number
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
 
+
 def test_trailing():
     assert trailing(0) == 0
     assert trailing(1) == 0
@@ -357,6 +358,7 @@ def test_factorint():
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
 
+
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
@@ -377,9 +379,11 @@ def test_divisors_and_divisor_count():
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
 
+
 def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == set([1,2,4])
+
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
@@ -476,7 +480,6 @@ def test_residue():
            [0, 1, 2, 4, 7, 8, 9, 11]
     raises(ValueError, lambda: is_quad_residue(1.1, 2))
     raises(ValueError, lambda: is_quad_residue(2, 0))
-
 
     assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]

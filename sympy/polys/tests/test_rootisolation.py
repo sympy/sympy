@@ -5,6 +5,7 @@ from sympy.polys.domains import ZZ, QQ, EX
 from sympy.polys.polyerrors import DomainError, RefinementFailed
 from sympy.utilities.pytest import raises
 
+
 def test_dup_sturm():
     R, x = ring("x", QQ)
 
@@ -257,6 +258,7 @@ def test_dup_isolate_real_roots_sqf():
     R, x = ring("x", EX)
     raises(DomainError, lambda: R.dup_isolate_real_roots_sqf(x + 3))
 
+
 def test_dup_isolate_real_roots():
     R, x = ring("x", ZZ)
 
@@ -441,6 +443,7 @@ def test_dup_count_real_roots():
 # parameters for test_dup_count_complex_roots_n(): n = 1..8
 a, b = (-QQ(1), -QQ(1)), (QQ(1), QQ(1))
 c, d = ( QQ(0),  QQ(0)), (QQ(1), QQ(1))
+
 
 def test_dup_count_complex_roots_1():
     R, x = ring("x", ZZ)

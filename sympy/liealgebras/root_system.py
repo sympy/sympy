@@ -2,6 +2,7 @@
 from .cartan_type import CartanType
 from sympy.core import Basic
 
+
 class RootSystem(Basic):
     """
 
@@ -67,7 +68,6 @@ class RootSystem(Basic):
             root = self.cartan_type.simple_root(i)
             roots[i] = root
         return roots
-
 
     def all_roots(self):
         """
@@ -162,7 +162,6 @@ class RootSystem(Basic):
             return newroot
         else:
             return "The sum of these two roots is not a root"
-
 
     def cartan_matrix(self):
         """

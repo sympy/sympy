@@ -167,6 +167,7 @@ def test_point():
     assert p.translate(y=1) == Point(1, 2)
     assert p.translate(*p.args) == Point(2, 2)
 
+
 def test_point3D():
     p1 = Point3D(x1, x2, x3)
     p2 = Point3D(y1, y2, y3)
@@ -205,7 +206,6 @@ def test_point3D():
     assert p3.intersection(Point3D(0, 0, 0)) == [p3]
     assert p3.intersection(p4) == []
 
-
     assert p4 * 5 == Point3D(5, 5, 5)
     assert p4 / 5 == Point3D(0.2, 0.2, 0.2)
 
@@ -227,6 +227,7 @@ def test_point3D():
     assert p.translate(1) == Point3D(2, 1, 1)
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
+
 
 def test_line_geom():
     p1 = Point(0, 0)
@@ -457,7 +458,6 @@ def test_line_geom():
     r1 = Ray((2, 2), (3, 5))
     assert r.contains(r1) is False
 
-
     # Special cases of projection and intersection
     r1 = Ray(Point(1, 1), Point(2, 2))
     r2 = Ray(Point(2, 2), Point(0, 0))
@@ -525,6 +525,7 @@ def test_line_geom():
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
     assert Ray((0, 0), angle=pi/4).plot_interval() == \
         [t, 0, 10]
+
 
 def test_line3d():
     p1 = Point3D(0, 0, 0)
@@ -690,7 +691,6 @@ def test_line3d():
     assert Ray3D((1, 1, 1), (2, 2, 2)).distance(Point3D(1.5, 3, 1)) == \
         sqrt(17)/2
 
-
     # Special cases of projection and intersection
     r1 = Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
     r2 = Ray3D(Point3D(2, 2, 2), Point3D(0, 0, 0))
@@ -790,7 +790,6 @@ def test_plane():
     assert pl6.projection_line(Ray(Point(1, 0), Point(1, 1))) == \
                Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
     assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)
-
 
     assert pl3.is_parallel(pl6) is False
     assert pl4.is_parallel(pl6)
@@ -1030,7 +1029,6 @@ def test_ellipse_geom():
     assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
     raises(NotImplementedError, lambda: e.normal_lines((x + 1, 1)))
 
-
     # Properties
     major = 3
     minor = 1
@@ -1175,7 +1173,6 @@ def test_polygon():
         Point(-42/5, -15), Point(-2, -15), Point(7, -15), Point(15, -15),
         Point(15, -3), Point(15, 10), Point(15, 15)) == \
         Polygon(Point(-15,-15), Point(15,-15), Point(15,15), Point(-15,15))
-
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),

@@ -119,8 +119,10 @@ def _separate_sq(p):
 
     """
     from sympy.utilities.iterables import sift
+
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
+
     # p = c1*sqrt(q1) + ... + cn*sqrt(qn) -> a = [(c1, q1), .., (cn, qn)]
     a = []
     for y in p.args:
@@ -156,6 +158,7 @@ def _separate_sq(p):
     p2 = Add(*a2)
     p = _mexpand(p1**2) - _mexpand(p2**2)
     return p
+
 
 def _minimal_polynomial_sq(p, n, x):
     """
@@ -213,6 +216,7 @@ def _minimal_polynomial_sq(p, n, x):
 
     result = _choose_factor(factors, x, pn)
     return result
+
 
 def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     """
@@ -812,6 +816,7 @@ def _minpoly_groebner(ex, x, cls):
 
 minpoly = minimal_polynomial
 __all__.append('minpoly')
+
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """

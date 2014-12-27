@@ -13,6 +13,7 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 
 import math
 
+
 @public
 class ComplexField(Field, CharacteristicZero, SimpleDomain):
     """Complex numbers up to the given precision. """

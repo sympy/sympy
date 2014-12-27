@@ -341,6 +341,7 @@ class GeometryEntity(Basic):
                 new = Point(new)
             return  self._subs(old, new)
 
+
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""
     rv = eye(3)

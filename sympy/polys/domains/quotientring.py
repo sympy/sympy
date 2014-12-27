@@ -13,6 +13,7 @@ from sympy.utilities import public
 # - poly rings over quotients?
 # - division by non-units in integral domains?
 
+
 @public
 class QuotientRingElement(object):
     """

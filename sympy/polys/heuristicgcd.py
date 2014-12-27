@@ -6,6 +6,7 @@ from .polyerrors import HeuristicGCDFailed
 
 HEU_GCD_MAX = 6
 
+
 def heugcd(f, g):
     """
     Heuristic polynomial GCD in ``Z[X]``.
@@ -118,6 +119,7 @@ def heugcd(f, g):
         x = 73794*x * domain.sqrt(domain.sqrt(x)) // 27011
 
     raise HeuristicGCDFailed('no luck')
+
 
 def _gcd_interpolate(h, x, ring):
     """Interpolate polynomial GCD from integer GCD. """

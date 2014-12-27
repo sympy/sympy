@@ -39,7 +39,6 @@ def test_mulmatmat():
     assert mulmatmat(b, d, ZZ) == [[ZZ(20)], [ZZ(98)]]
 
 
-
 def test_mulmatscaler():
     a = eye(3, ZZ)
     b = [[ZZ(3), ZZ(7), ZZ(4)], [ZZ(2), ZZ(4), ZZ(5)], [ZZ(6), ZZ(2), ZZ(3)]]

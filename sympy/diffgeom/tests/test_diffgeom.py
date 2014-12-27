@@ -185,6 +185,7 @@ def test_correct_arguments():
     raises(ValueError, lambda: contravariant_order(R2.e_x*R2.e_y))
     raises(ValueError, lambda: covariant_order(R2.dx*R2.dy))
 
+
 def test_simplify():
     x, y = R2_r.coord_functions()
     dx, dy = R2_r.base_oneforms()

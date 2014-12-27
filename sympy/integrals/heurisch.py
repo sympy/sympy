@@ -380,6 +380,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         return None
 
     numers = [ cancel(denom*g) for g in diffs ]
+
     def _derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 

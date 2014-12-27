@@ -38,6 +38,7 @@ class Determinant(Expr):
         except (AttributeError, NotImplementedError):
             return self
 
+
 def det(matexpr):
     """ Matrix Determinant
 

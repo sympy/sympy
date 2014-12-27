@@ -3,6 +3,7 @@ from sympy.liealgebras.type_a import TypeA
 from sympy.liealgebras.type_b import TypeB
 from sympy.matrices import Matrix
 
+
 def test_weyl_group():
     c = WeylGroup("A3")
     assert c.matrix_form('r1*r2') == Matrix([[0, 0, 1, 0], [1, 0, 0, 0],

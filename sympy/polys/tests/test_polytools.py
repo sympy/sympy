@@ -511,6 +511,7 @@ def test_Poly__eq__():
 
     assert (f == g) is True
 
+
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
     assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) is True
@@ -1479,6 +1480,7 @@ def test_Poly_eval():
 
     g = Poly(x**2 + (alpha - 1)*x - alpha + 1, x, y, domain='ZZ[alpha]')
     assert g.eval((z + 1)/(z - 1)) == Poly(result, y, domain='ZZ(alpha,z)')
+
 
 def test_Poly___call__():
     f = Poly(2*x*y + 3*x + y + 2*z)
@@ -2754,6 +2756,7 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+
 def test_torational_factor_list():
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     assert _torational_factor_list(p, x) == (-2, [
@@ -2761,9 +2764,9 @@ def test_torational_factor_list():
         (-x*(1 + sqrt(2)) - 1, 1),
         (-x*(1 + sqrt(2)) + 1, 1)])
 
-
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
     assert _torational_factor_list(p, x) is None
+
 
 def test_cancel():
     assert cancel(0) == 0

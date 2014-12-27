@@ -106,6 +106,7 @@ def test_TR8():
         cos(14)/16 + cos(20)/16 + cos(12)/16 + S(1)/16 + cos(6)/8
     assert TR8(sin(3*pi/7)**2*cos(3*pi/7)**2/(16*sin(pi/7)**2)) == S(1)/64
 
+
 def test_TR9():
     a = S(1)/2
     b = 3*a
@@ -176,7 +177,6 @@ def test_TR10i():
     assert TR10i(sqrt(2)*cos(x)*A + sqrt(6)*sin(x)*A) == \
         2*sqrt(2)*sin(x + pi/6)*A
 
-
     c = cos(x)
     s = sin(x)
     h = sin(y)
@@ -244,7 +244,6 @@ def test_fu():
 
     assert fu(sin(50)**2 + cos(50)**2 + sin(pi/6)) == S(3)/2
     assert fu(sqrt(6)*cos(x) + sqrt(2)*sin(x)) == 2*sqrt(2)*sin(x + pi/3)
-
 
     eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
     assert fu(eq) == cos(x)**4 - 2*cos(y)**2 + 2

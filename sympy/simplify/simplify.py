@@ -38,7 +38,6 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
 import mpmath
 
 
-
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
@@ -1640,12 +1639,14 @@ def _split_gcd(*a):
             b1.append(x)
     return g, b1, b2
 
+
 def _is_sum_surds(p):
     args = p.args if p.is_Add else [p]
     for y in args:
         if not ((y**2).is_Rational and y.is_real):
             return False
     return True
+
 
 def _nthroot_solve(p, n, prec):
     """
@@ -1670,6 +1671,7 @@ def _nthroot_solve(p, n, prec):
             sol = sqrtdenest(sol)
             if _mexpand(sol**n) == p:
                 return sol
+
 
 def nthroot(expr, n, max_len=4, prec=15):
     """
@@ -1874,6 +1876,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     from sympy.core.exprtools import Factors
 
     syms = symbols("a:d A:D")
+
     def _num(rterms):
         # return the multiplier that will simplify the expression described
         # by rterms [(sqrt arg, coeff), ... ]
@@ -2974,7 +2977,9 @@ def hypersimilar(f, g, k):
 
     return h.is_rational_function(k)
 
+
 from sympy.utilities.timeutils import timethis
+
 
 class _rf(Function):
     @classmethod
@@ -3013,7 +3018,6 @@ class _rf(Function):
                         return _rf(_a, b)*_rf(_a + b, c)/_rf(_a, c)
                     elif c < 0:
                         return _rf(_a, b)*_rf(_a + c, -c)/_rf(_a + b + c, -c)
-
 
 
 @timethis('combsimp')
@@ -3075,7 +3079,6 @@ def combsimp(expr):
     # as a rule of thumb, if the expression contained gammas initially, it
     # probably makes sense to retain them
     as_gamma = not expr.has(factorial, binomial)
-
 
     expr = expr.replace(binomial,
         lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
@@ -3198,6 +3201,7 @@ def combsimp(expr):
         denom_gammas = []
         numer_others = []
         denom_others = []
+
         def explicate(p):
             if p is S.One:
                 return None, []
@@ -4182,6 +4186,7 @@ def besselsimp(expr):
 
     return expr
 
+
 def exptrigsimp(expr, simplify=True):
     """
     Simplifies exponential / trigonometric / hyperbolic functions.
@@ -4676,6 +4681,8 @@ def _dotrig(a, b):
 
 
 _trigpat = None
+
+
 def _trigpats():
     global _trigpat
     a, b, c = symbols('a b c', cls=Wild)
@@ -4807,6 +4814,7 @@ def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
 _idn = lambda x: x
 _midn = lambda x: -x
 _one = lambda x: S.One
+
 
 def _match_div_rewrite(expr, i):
     """helper for __trigsimp"""

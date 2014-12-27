@@ -7,6 +7,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
 
+
 @public
 def together(expr, deep=False):
     """

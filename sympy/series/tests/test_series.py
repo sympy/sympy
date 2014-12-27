@@ -78,6 +78,7 @@ def test_issue_5223():
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
+
 def test_issue_3978():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \

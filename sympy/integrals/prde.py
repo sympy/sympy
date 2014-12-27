@@ -61,6 +61,7 @@ def prde_normal_denom(fa, fd, G, DE):
 
     return (a, (ba, bd), G, h)
 
+
 def real_imag(ba, bd, gen):
     """
     Helper function, to get the real and imaginary part of a rational function

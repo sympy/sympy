@@ -48,6 +48,7 @@ from sympy import oo
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
+
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
     assert dup_LC([2, 3, 4, 5], ZZ) == 2

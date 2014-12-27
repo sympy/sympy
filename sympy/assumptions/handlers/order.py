@@ -137,6 +137,7 @@ class AskNonZeroHandler(CommonHandler):
         if expr.is_number:
             # if there are no symbols just evalf
             i = expr.evalf(2)
+
             def nonz(i):
                 if i._prec != 1:
                     return i != 0
@@ -167,6 +168,7 @@ class AskNonZeroHandler(CommonHandler):
     def Abs(expr, assumptions):
         return ask(Q.nonzero(expr.args[0]), assumptions)
 
+
 class AskZeroHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
@@ -178,6 +180,7 @@ class AskZeroHandler(CommonHandler):
         # TODO: This should be deducible from the nonzero handler
         return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
+
 class AskNonPositiveHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
@@ -187,6 +190,7 @@ class AskNonPositiveHandler(CommonHandler):
                 return ask(Q.real(expr), assumptions)
             else:
                 return notpositive
+
 
 class AskPositiveHandler(CommonHandler):
     """

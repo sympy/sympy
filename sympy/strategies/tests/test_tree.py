@@ -3,6 +3,7 @@ from sympy.strategies.tree import (treeapply, treeapply, greedy, allresults,
 from sympy.core.compatibility import reduce
 from functools import partial
 
+
 def test_treeapply():
     tree = ([3, 3], [4, 1], 2)
     assert treeapply(tree, {list: min, tuple: max}) == 3
@@ -11,12 +12,14 @@ def test_treeapply():
     mul = lambda *args: reduce(lambda a, b: a*b, args, 1)
     assert treeapply(tree, {list: add, tuple: mul}) == 60
 
+
 def test_treeapply_leaf():
     assert treeapply(3, {}, leaf=lambda x: x**2) == 9
     tree = ([3, 3], [4, 1], 2)
     treep1 = ([4, 4], [5, 2], 3)
     assert treeapply(tree, {list: min, tuple: max}, leaf=lambda x: x+1) == \
            treeapply(treep1, {list: min, tuple: max})
+
 
 def test_treeapply_strategies():
     from sympy.strategies import chain, minimize
@@ -38,6 +41,7 @@ def test_treeapply_strategies():
     assert fn(4) == 6  # highest value comes from the dec then double
     assert fn(1) == 2  # highest value comes from the inc
 
+
 def test_greedy():
     inc = lambda x: x + 1
     dec = lambda x: x - 1
@@ -55,6 +59,7 @@ def test_greedy():
     highest = greedy(tree, objective=lambda x: -x)
     assert highest(10) == 12
 
+
 def test_allresults():
     inc = lambda x: x+1
     dec = lambda x: x-1
@@ -65,6 +70,7 @@ def test_allresults():
     assert set(allresults([inc, dec])(3)) == set([2, 4])
     assert set(allresults((inc, dec))(3)) == set([3])
     assert set(allresults([inc, (dec, double)])(4)) == set([5, 6])
+
 
 def test_brute():
     inc = lambda x: x+1

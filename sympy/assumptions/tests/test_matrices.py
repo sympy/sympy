@@ -9,10 +9,12 @@ X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
 Z = MatrixSymbol('Z', 2, 2)
 
+
 def test_square():
     assert ask(Q.square(X))
     assert not ask(Q.square(Y))
     assert ask(Q.square(Y*Y.T))
+
 
 def test_invertible():
     assert ask(Q.invertible(X), Q.invertible(X))
@@ -27,10 +29,12 @@ def test_invertible():
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
     assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
 
+
 def test_singular():
     assert ask(Q.singular(X)) is None
     assert ask(Q.singular(X), Q.invertible(X)) is False
     assert ask(Q.singular(X), ~Q.invertible(X)) is True
+
 
 @XFAIL
 def test_invertible_fullrank():
@@ -61,12 +65,15 @@ def _test_orthogonal_unitary(predicate):
     assert ask(Q.invertible(X), predicate(X))
     assert not ask(predicate(X + Z), predicate(X) & predicate(Z))
 
+
 def test_orthogonal():
     _test_orthogonal_unitary(Q.orthogonal)
+
 
 def test_unitary():
     _test_orthogonal_unitary(Q.unitary)
     assert ask(Q.unitary(X), Q.orthogonal(X))
+
 
 def test_fullrank():
     assert ask(Q.fullrank(X), Q.fullrank(X))
@@ -98,6 +105,7 @@ def test_positive_definite():
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
     assert ask(Q.positive(X[1, 1]), Q.positive_definite(X))
 
+
 def test_triangular():
     assert ask(Q.upper_triangular(X + Z.T + Identity(2)), Q.upper_triangular(X) &
             Q.lower_triangular(Z)) is True
@@ -121,6 +129,7 @@ def test_diagonal():
 def test_non_atoms():
     assert ask(Q.real(Trace(X)), Q.positive(Trace(X)))
 
+
 @XFAIL
 def test_non_trivial_implies():
     X = MatrixSymbol('X', 3, 3)
@@ -130,6 +139,7 @@ def test_non_trivial_implies():
     assert ask(Q.triangular(X), Q.lower_triangular(X))
     assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
                Q.lower_triangular(Y))
+
 
 def test_MatrixSlice():
     X = MatrixSymbol('X', 4, 4)
@@ -147,10 +157,12 @@ def test_MatrixSlice():
     assert not ask(Q.orthogonal(C), Q.orthogonal(X))
     assert not ask(Q.upper_triangular(C), Q.upper_triangular(X))
 
+
 def test_det_trace_positive():
     X = MatrixSymbol('X', 4, 4)
     assert ask(Q.positive(Trace(X)), Q.positive_definite(X))
     assert ask(Q.positive(Determinant(X)), Q.positive_definite(X))
+
 
 def test_field_assumptions():
     X = MatrixSymbol('X', 4, 4)
@@ -174,6 +186,7 @@ def test_field_assumptions():
     assert ask(Q.real_elements(alpha*X), Q.real_elements(X) & Q.real(alpha))
     assert ask(Q.real_elements(LofLU(X)), Q.real_elements(X))
 
+
 def test_matrix_element_sets():
     X = MatrixSymbol('X', 4, 4)
     assert ask(Q.real(X[1, 2]), Q.real_elements(X))
@@ -191,6 +204,7 @@ def test_matrix_element_sets_slices_blocks():
     assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
     assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),
                         Q.integer_elements(X))
+
 
 def test_matrix_element_sets_determinant_trace():
     assert ask(Q.integer(Determinant(X)), Q.integer_elements(X))

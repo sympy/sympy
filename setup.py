@@ -126,6 +126,7 @@ modules = [
     'sympy.vector',
 ]
 
+
 class audit(Command):
     """Audits SymPy's source code for following issues:
         - Names which are used but not defined or used before they are defined.

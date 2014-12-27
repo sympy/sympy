@@ -6,7 +6,6 @@ from sympy.core.compatibility import reduce
 """ The module contains implemented functions for interval arithmetic."""
 
 
-
 def Abs(x):
     if isinstance(x, (int, float)):
         return interval(abs(x))

@@ -26,6 +26,7 @@ from sympy.geometry.entity import GeometryEntity
 
 from sympy.utilities.decorator import doctest_depends_on
 
+
 @doctest_depends_on(modules=('pyglet',))
 class PygletPlot(object):
     """
@@ -401,6 +402,7 @@ class PygletPlot(object):
             while a() or b():
                 sleep(0)
         self._render_lock.release()
+
 
 class ScreenShot:
     def __init__(self, plot):

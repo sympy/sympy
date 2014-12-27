@@ -138,6 +138,7 @@ def test_multiple_expressions():
     assert cse([x*y, z + x*y, x*y*z + 3]) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
+
 @XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
@@ -145,6 +146,7 @@ def test_non_commutative_cse():
     assert cse(l) == ([], l)
     l = [A*B*C, A*B]
     assert cse(l) == ([(x0, A*B)], [x0*C, x0])
+
 
 # Test if CSE of non-commutative Mul terms is disabled
 def test_bypass_non_commutatives():
@@ -156,12 +158,14 @@ def test_bypass_non_commutatives():
     l = [B*C, A*B*C]
     assert cse(l) == ([], l)
 
+
 @XFAIL # CSE fails when replacing non-commutative sub-expressions
 def test_non_commutative_order():
     A, B, C = symbols('A B C', commutative=False)
     x0 = symbols('x0', commutative=False)
     l = [B+C, A*(B+C)]
     assert cse(l) == ([(x0, B+C)], [x0, A*x0])
+
 
 @XFAIL
 def test_powers():
@@ -269,6 +273,7 @@ def test_issue_6169():
     # mechanism
     assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y
 
+
 def test_cse_Indexed():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
@@ -281,6 +286,7 @@ def test_cse_Indexed():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
+
 @XFAIL
 def test_cse_MatrixSymbol():
     from sympy import MatrixSymbol
@@ -292,15 +298,18 @@ def test_cse_MatrixSymbol():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
+
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
     actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
+
 def test_ignore_order_terms():
     eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
     assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+
 
 def test_name_conflict():
     z1 = x0 + y
@@ -309,6 +318,7 @@ def test_name_conflict():
     substs, reduced = cse(l)
     assert [e.subs(reversed(substs)) for e in reduced] == l
 
+
 def test_name_conflict_cust_symbols():
     z1 = x0 + y
     z2 = x2 + x3
@@ -316,11 +326,13 @@ def test_name_conflict_cust_symbols():
     substs, reduced = cse(l, symbols("x:10"))
     assert [e.subs(reversed(substs)) for e in reduced] == l
 
+
 def test_symbols_exhausted_error():
     l = cos(x+y)+x+y+cos(w+y)+sin(w+y)
     sym = [x, y, z]
     with raises(ValueError) as excinfo:
         cse(l, symbols=sym)
+
 
 def test_issue_7840():
     # daveknippers' example

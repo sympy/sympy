@@ -24,6 +24,7 @@ class SympifyError(ValueError):
 
 converter = {}  # See sympify docstring.
 
+
 class CantSympify(object):
     """
     Mix in this trait to a class to disallow sympification of its instances.
@@ -49,6 +50,7 @@ class CantSympify(object):
 
     """
     pass
+
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
@@ -433,6 +435,7 @@ def kernS(s):
         return expr
 
     rep = {Symbol(kern): 1}
+
     def _clear(expr):
         if isinstance(expr, (list, tuple, set)):
             return type(expr)([_clear(e) for e in expr])

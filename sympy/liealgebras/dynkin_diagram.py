@@ -1,7 +1,6 @@
 from .cartan_type import CartanType
 
 
-
 def DynkinDiagram(t):
     """
     Method for displaying the Dynkin diagram

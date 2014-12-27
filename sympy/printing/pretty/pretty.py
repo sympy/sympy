@@ -645,7 +645,6 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
-
     def _print_MatrixElement(self, expr):
         from sympy.matrices import MatrixSymbol
         from sympy import Symbol
@@ -666,11 +665,11 @@ class PrettyPrinter(Printer):
 
             return pform
 
-
     def _print_MatrixSlice(self, m):
         # XXX works only for applied functions
 
         prettyFunc = self._print(m.parent)
+
         def ppslice(x):
             x = list(x)
             if x[2] == 1:
@@ -680,6 +679,7 @@ class PrettyPrinter(Printer):
             if x[0] == 0:
                 x[0] = ''
             return prettyForm(*self._print_seq(x, delimiter=':'))
+
         prettyArgs = self._print_seq((ppslice(m.rowslice),
             ppslice(m.colslice)), delimiter=', ').parens(left='[', right=']')[0]
 
@@ -761,6 +761,7 @@ class PrettyPrinter(Printer):
 
         if not self._use_unicode:
             raise NotImplementedError("ASCII pretty printing of BasisDependent is not implemented")
+
         class Fake(object):
             baseline = 0
 
@@ -1486,7 +1487,6 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
                                or set.is_Union)
-
 
     def _print_ImageSet(self, ts):
         if self._use_unicode:

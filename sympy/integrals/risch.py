@@ -47,6 +47,7 @@ from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, Do
 
 from sympy.utilities.iterables import numbered_symbols
 
+
 def integer_powers(exprs):
     """
     Rewrites a list of expressions as integer multiples of each other.
@@ -1109,6 +1110,7 @@ def recognize_derivative(a, d, DE, z=None):
        j = j + 1
     return flag
 
+
 def recognize_log_derivative(a, d, DE, z=None):
     """
     There exists a v in K(x)* such that f = dv/v
@@ -1138,6 +1140,7 @@ def recognize_log_derivative(a, d, DE, z=None):
         if any(not j.is_Integer for j in a):
             return False
     return True
+
 
 def residue_reduce(a, d, DE, z=None, invert=True):
     """

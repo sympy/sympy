@@ -16,6 +16,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
+
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
 
@@ -411,6 +412,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
             singularities.extend(solve(d, gen))
 
     include_x = expr.func(0, 0)
+
     def valid(x):
         v = e.subs(gen, x)
         r = expr.func(v, 0)

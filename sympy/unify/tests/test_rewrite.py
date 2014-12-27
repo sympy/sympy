@@ -6,6 +6,7 @@ from sympy.assumptions import Q
 
 p, q = Symbol('p'), Symbol('q')
 
+
 def test_simple():
     rl = rewriterule(Basic(p, 1), Basic(p, 2), variables=(p,))
     assert list(rl(Basic(3, 1))) == [Basic(3, 2)]
@@ -17,12 +18,14 @@ def test_simple():
     expr = x**2
     assert list(rl(expr)) == [x**3]
 
+
 def test_simple_variables():
     rl = rewriterule(Basic(x, 1), Basic(x, 2), variables=(x,))
     assert list(rl(Basic(3, 1))) == [Basic(3, 2)]
 
     rl = rewriterule(x**2, x**3, variables=(x,))
     assert list(rl(y**2)) == [y**3]
+
 
 def test_moderate():
     p1 = p**2 + q**3
@@ -32,6 +35,7 @@ def test_moderate():
     expr = x**2 + y**3
     assert list(rl(expr)) == [(x*y)**4]
 
+
 def test_sincos():
     p1 = sin(p)**2 + sin(p)**2
     p2 = 1
@@ -40,10 +44,12 @@ def test_sincos():
     assert list(rl(sin(x)**2 + sin(x)**2)) == [1]
     assert list(rl(sin(y)**2 + sin(y)**2)) == [1]
 
+
 def test_Exprs_ok():
     rl = rewriterule(p+q, q+p, (p, q))
     next(rl(x+y)).is_commutative
     str(next(rl(x+y)))
+
 
 def test_condition_simple():
     rl = rewriterule(x, x+1, [x], lambda x: x < 10)
@@ -62,6 +68,7 @@ def test_condition_multiple():
     c = Symbol('c', integer=True)
     d = Symbol('d', integer=True)
     assert set(rl(c + d)) == set([c**d, d**c])
+
 
 def test_assumptions():
     rl = rewriterule(x + y, x**y, [x, y], assume=Q.integer(x))

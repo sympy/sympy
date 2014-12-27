@@ -23,6 +23,7 @@ from .point3d import Point3D
 from .util import _symbol
 from sympy.core.compatibility import is_sequence
 
+
 class LinearEntity3D(GeometryEntity):
     """An base class for all linear entities (line, ray and segment)
     in a 3-dimensional Euclidean space.
@@ -804,6 +805,7 @@ class LinearEntity3D(GeometryEntity):
             None if a determination cannot be made."""
         raise NotImplementedError()
 
+
 class Line3D(LinearEntity3D):
     """An infinite 3D line in space.
 
@@ -991,6 +993,7 @@ class Line3D(LinearEntity3D):
         if not isinstance(other, Line3D):
             return False
         return Point3D.are_collinear(self.p1, other.p1, self.p2, other.p2)
+
 
 class Ray3D(LinearEntity3D):
     """
@@ -1286,6 +1289,7 @@ class Ray3D(LinearEntity3D):
         if not isinstance(other, Ray3D):
             return False
         return self.source == other.source and other.p2 in self
+
 
 class Segment3D(LinearEntity3D):
     """A undirected line segment in a 3D space.

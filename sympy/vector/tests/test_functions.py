@@ -116,7 +116,6 @@ def test_express():
         sin(q2)*cos(q1)*B.k), N).simplify()
     assert N.k == express((sin(q2)*B.j + cos(q2)*B.k), N).simplify()
 
-
     assert A.i == express((cos(q1)*N.i + sin(q1)*N.j), A).simplify()
     assert A.j == express((-sin(q1)*N.i + cos(q1)*N.j), A).simplify()
 

@@ -18,17 +18,20 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
 
+
 @public
 def field(symbols, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
     _field = FracField(symbols, domain, order)
     return (_field,) + _field.gens
 
+
 @public
 def xfield(symbols, domain, order=lex):
     """Construct new rational function field returning (field, (x1, ..., xn)). """
     _field = FracField(symbols, domain, order)
     return (_field, _field.gens)
+
 
 @public
 def vfield(symbols, domain, order=lex):
@@ -37,12 +40,15 @@ def vfield(symbols, domain, order=lex):
     pollute([ sym.name for sym in _field.symbols ], _field.gens)
     return _field
 
+
 @public
 def sfield(exprs, *symbols, **options):
     """Construct a field deriving generators and domain from options and input expressions. """
     raise NotImplementedError
 
+
 _field_cache = {}
+
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
@@ -102,6 +108,7 @@ class FracField(DefaultPrinting):
 
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
+
     def new(self, numer, denom=None):
         if denom is None: denom = self.ring.one
         numer, denom = numer.cancel(denom)
@@ -191,6 +198,7 @@ class FracField(DefaultPrinting):
         from sympy.polys.rings import PolyRing
         return PolyRing(self.symbols, self.domain, self.order)
 
+
 class FracElement(DomainElement, DefaultPrinting, CantSympify):
     """Element of multivariate distributed rational function field. """
 
@@ -205,6 +213,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def raw_new(f, numer, denom):
         return f.__class__(numer, denom)
+
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 
@@ -267,10 +276,13 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def __lt__(f1, f2):
         return f1._cmp(f2, lt)
+
     def __le__(f1, f2):
         return f1._cmp(f2, le)
+
     def __gt__(f1, f2):
         return f1._cmp(f2, gt)
+
     def __ge__(f1, f2):
         return f1._cmp(f2, ge)
 

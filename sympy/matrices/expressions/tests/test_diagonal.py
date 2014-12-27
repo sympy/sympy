@@ -8,13 +8,16 @@ X = MatrixSymbol('X', n, n)
 D = DiagonalMatrix(x)
 d = DiagonalOf(X)
 
+
 def test_DiagonalMatrix():
     assert D.shape == (n, n)
     assert D[1, 2] == 0
     assert D[1, 1] == x[1, 0]
 
+
 def test_DiagonalMatrix_Assumptions():
     assert ask(Q.diagonal(D))
+
 
 def test_DiagonalOf():
     assert d.shape == (n, 1)

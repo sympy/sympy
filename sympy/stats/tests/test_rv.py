@@ -119,7 +119,6 @@ def test_Sample():
     # Make sure this doesn't raise an error
     E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
 
-
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
 
@@ -171,6 +170,7 @@ def test_Density():
     d = Density(X)
     assert d.doit() == density(X)
 
+
 def test_NamedArgsMixin():
     class Foo(Basic, NamedArgsMixin):
         _argnames = 'foo', 'bar'
@@ -187,9 +187,11 @@ def test_NamedArgsMixin():
 
     raises(AttributeError, lambda: Bar(1, 2).foo)
 
+
 def test_density_constant():
     assert density(3)(2) == 0
     assert density(3)(3) == DiracDelta(0)
+
 
 def test_real():
     x = Normal('x', 0, 1)

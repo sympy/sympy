@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.matrices.expressions import MatrixExpr
 from sympy import S, I, sqrt, exp
 
+
 class DFT(MatrixExpr):
     """ Discrete Fourier Transform """
     n = property(lambda self: self.args[0])
@@ -14,6 +15,7 @@ class DFT(MatrixExpr):
 
     def _eval_inverse(self):
         return IDFT(self.n)
+
 
 class IDFT(DFT):
     """ Inverse Discrete Fourier Transform """

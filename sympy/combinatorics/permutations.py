@@ -165,6 +165,7 @@ def _af_invert(a):
         inv_form[ai] = i
     return inv_form
 
+
 def _af_pow(a, n):
     """
     Routine for finding powers of a permutation.
@@ -208,6 +209,7 @@ def _af_pow(a, n):
                 a = [a[i] for i in a]
                 n = n // 2
     return b
+
 
 def _af_commutes_with(a, b):
     """
@@ -431,6 +433,7 @@ class Cycle(dict):
 
     def copy(self):
         return Cycle(self)
+
 
 class Permutation(Basic):
     """
@@ -848,7 +851,6 @@ class Permutation(Basic):
         if not ok:
             raise ValueError("Permutation argument must be a list of ints, "
                              "a list of lists, Permutation or Cycle.")
-
 
         # safe to assume args are valid; this also makes a copy
         # of the args

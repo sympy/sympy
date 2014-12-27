@@ -23,9 +23,11 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Symbol, Integer,
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
         'Binomial', 'Hypergeometric']
 
+
 def rv(name, cls, *args):
     density = cls(*args)
     return SingleFinitePSpace(name, density).value
+
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
     @property
@@ -35,6 +37,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
     def __new__(cls, density):
         density = Dict(density)
         return Basic.__new__(cls, density)
+
 
 def FiniteRV(name, density):
     """
@@ -53,6 +56,7 @@ def FiniteRV(name, density):
     0.700000000000000
     """
     return rv(name, FiniteDistributionHandmade, density)
+
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property

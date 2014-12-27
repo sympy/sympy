@@ -999,6 +999,7 @@ def test_int():
     assert int(E) == 2
     assert int(GoldenRatio) == 1
 
+
 def test_long():
     a = Rational(5)
     assert long(a) == 5
@@ -1009,6 +1010,7 @@ def test_long():
     assert long(pi) == 3
     assert long(E) == 2
     assert long(GoldenRatio) == 1
+
 
 def test_real_bug():
     x = Symbol("x")
@@ -1412,9 +1414,11 @@ def test_issue_6349():
     assert Float('23000', '')._prec == 20
     assert Float('-23000', '')._prec == 20
 
+
 def test_mpf_norm():
     assert mpf_norm((1, 0, 1, 0), 10) == mpf('0')._mpf_
     assert Float._new((1, 0, 1, 0), 10)._mpf_ == mpf('0')._mpf_
+
 
 def test_latex():
     assert latex(pi) == r"\pi"

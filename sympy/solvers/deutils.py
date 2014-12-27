@@ -14,6 +14,7 @@ from sympy.core.function import Function, Derivative, AppliedUndef
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Wild
 
+
 def _preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
@@ -84,6 +85,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     eq = expr.subs(reps)
     return eq, func
 
+
 def ode_order(expr, func):
     """
     Returns the order of a given differential
@@ -124,6 +126,7 @@ def ode_order(expr, func):
         for arg in expr.args:
             order = max(order, ode_order(arg, func))
         return order
+
 
 def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode

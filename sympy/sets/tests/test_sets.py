@@ -29,7 +29,6 @@ def test_interval_arguments():
     assert Interval(1, 1, True, False) == S.EmptySet
     assert Interval(1, 1, True, True) == S.EmptySet
 
-
     assert isinstance(Interval(0, Symbol('a')), Interval)
     assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
@@ -38,7 +37,6 @@ def test_interval_arguments():
     raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, z, And(x, y)))
-
 
 
 def test_interval_symbolic_end_points():
@@ -245,6 +243,7 @@ def test_intersect():
     assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
         Union(Interval(1, 1), Interval(2, 2))
 
+
 def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1, 2, 3), Interval(2, 5), evaluate=False)
@@ -271,7 +270,6 @@ def test_intersection():
     assert Intersection(Intersection(S.Integers, S.Naturals, evaluate=False),
                         S.Reals, evaluate=False) == \
             Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
-
 
 
 def test_is_disjoint():
@@ -391,6 +389,7 @@ def test_is_proper_superset():
     assert FiniteSet(1, 2, 3).is_proper_superset(S.EmptySet) is True
 
     raises(ValueError, lambda: Interval(0, 1).is_proper_superset(0))
+
 
 def test_contains():
     assert Interval(0, 2).contains(1) is S.true
@@ -728,6 +727,7 @@ def test_image_Intersection():
 def test_image_FiniteSet():
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
+
 
 def test_image_Union():
     x = Symbol('x', real=True)

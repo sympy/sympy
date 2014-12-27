@@ -178,6 +178,7 @@ def _distribute_gens_by_base(base, gens):
         stabs[i].append(_af_new(list(range(degree))))
     return stabs
 
+
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
                              basic_orbits=None, strong_gens_distr=None):
     """
@@ -381,6 +382,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                     res.remove(gen)
     return res
 
+
 def _strip(g, base, orbits, transversals):
     """
     Attempt to decompose a permutation using a (possibly partial) BSGS
@@ -458,6 +460,7 @@ def _strip(g, base, orbits, transversals):
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
 
+
 def _strip_af(h, base, orbits, transversals, j):
     """
     optimized _strip, with h, transversals and result in array form
@@ -477,6 +480,7 @@ def _strip_af(h, base, orbits, transversals, j):
             return False, base_len + 1
         h = _af_rmul(_af_invert(u), h)
     return h, base_len + 1
+
 
 def _strong_gens_from_distr(strong_gens_distr):
     """

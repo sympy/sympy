@@ -10,7 +10,9 @@ from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 
+
 _x = Dummy("x")
+
 
 class Ynm(Function):
     r"""

@@ -11,6 +11,7 @@ from sympy.core.compatibility import xrange
 
 import random
 
+
 def poly_LC(f, K):
     """
     Return leading coefficient of ``f``.

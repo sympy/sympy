@@ -14,7 +14,9 @@ from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.matrixutils import matrix_zeros
 from sympy.physics.quantum.represent import represent
 
+
 #------------------------------------------------------------------------------
+
 
 class SHOOp(Operator):
     """A base class for the SHO Operators.
@@ -34,6 +36,7 @@ class SHOOp(Operator):
     @classmethod
     def _eval_hilbert_space(cls, label):
         return ComplexSpace(S.Infinity)
+
 
 class RaisingOp(SHOOp):
     """The Raising Operator or a^dagger.
@@ -163,6 +166,7 @@ class RaisingOp(SHOOp):
     def _print_contents_latex(self, printer, *args):
         arg = printer._print(self.args[0])
         return '%s^{\\dag}' % arg
+
 
 class LoweringOp(SHOOp):
     """The Lowering Operator or 'a'.
@@ -516,7 +520,9 @@ class Hamiltonian(SHOOp):
             matrix = matrix.tocsr()
         return hbar*omega*matrix
 
+
 #------------------------------------------------------------------------------
+
 
 class SHOState(State):
     """State class for SHO states"""

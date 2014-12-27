@@ -60,6 +60,7 @@ def test_ZeroMatrix():
     with raises(ShapeError):
         Z**2
 
+
 def test_ZeroMatrix_doit():
     Znn = ZeroMatrix(Add(n, n, evaluate=False), n)
     assert isinstance(Znn.rows, Add)
@@ -78,6 +79,7 @@ def test_Identity():
     assert transpose(In) == In
     assert In.inverse() == In
     assert In.conjugate() == In
+
 
 def test_Identity_doit():
     Inn = Identity(Add(n, n, evaluate=False))
@@ -177,6 +179,7 @@ def test_matmul_simplify():
     assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
         MatMul(A, ImmutableMatrix([[1]]))
 
+
 def test_invariants():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
@@ -186,6 +189,7 @@ def test_invariants():
             MatPow(X, 0)]
     for obj in objs:
         assert obj == obj.__class__(*obj.args)
+
 
 def test_indexing():
     A = MatrixSymbol('A', n, m)

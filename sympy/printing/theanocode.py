@@ -62,6 +62,7 @@ if theano:
             sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
     }
 
+
 class TheanoPrinter(Printer):
     """ Code printer for Theano computations """
     printmethod = "_theano"
@@ -92,7 +93,6 @@ class TheanoPrinter(Printer):
             value = tt.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
             self.cache[key] = value
             return value
-
 
     def _print_Basic(self, expr, **kwargs):
         op = mapping[type(expr)]
@@ -144,7 +144,6 @@ class TheanoPrinter(Printer):
                         for r in range(nrows)]
         return tt.join(0, *[tt.join(1, *row) for row in blocks])
 
-
     def _print_slice(self, expr, **kwargs):
         return slice(*[self._print(i, **kwargs)
                         if isinstance(i, sympy.Basic) else i
@@ -188,7 +187,9 @@ class TheanoPrinter(Printer):
         """Returns printer's representation for expr (as a string)"""
         return self._print(expr, **kwargs)
 
+
 global_cache = {}
+
 
 def theano_code(expr, cache=global_cache, **kwargs):
     return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)

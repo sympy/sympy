@@ -10,6 +10,7 @@ from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.utilities import public
 
+
 @public
 class ModularInteger(PicklableWithSlots, DomainElement):
     """A class representing a modular integer. """
@@ -177,6 +178,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return self.__class__(self._invert(self.val))
 
 _modular_integer_cache = {}
+
 
 def ModularIntegerFactory(_mod, _dom, _sym, parent):
     """Create custom class for specific integer modulus."""

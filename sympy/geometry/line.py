@@ -948,6 +948,7 @@ class LinearEntity(GeometryEntity):
             None if a determination cannot be made."""
         raise NotImplementedError()
 
+
 class Line(LinearEntity):
     """An infinite line in space.
 
@@ -1174,6 +1175,7 @@ class Line(LinearEntity):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
 
+
 class Ray(LinearEntity):
     """
     A Ray is a semi-line in the space with a source point and a direction.
@@ -1361,7 +1363,6 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
-
     def distance(self, o):
         """
         Finds the shortest distance between the ray and a point.
@@ -1396,7 +1397,6 @@ class Ray(LinearEntity):
                 return Line(self).distance(o)  # = s.length but simpler
         # the following applies when neither of the above apply
         return self.source.distance(o)
-
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray. Gives

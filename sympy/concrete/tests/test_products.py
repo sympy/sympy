@@ -6,6 +6,7 @@ from sympy import simplify
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
 
+
 def test_karr_convention():
     # Test the Karr product convention that we want to hold.
     # See his paper "Summation in Finite Terms" for a detailed

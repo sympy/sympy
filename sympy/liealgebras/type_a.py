@@ -18,7 +18,6 @@ class TypeA(Standard_Cartan):
             raise ValueError("n can not be less than 1")
         return Standard_Cartan.__new__(cls, "A", n)
 
-
     def dimension(self):
         """
         Return the dimension of the vector space
@@ -31,7 +30,6 @@ class TypeA(Standard_Cartan):
         5
         """
         return self.n+1
-
 
     def basic_root(self, i, j):
         """

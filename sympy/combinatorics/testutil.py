@@ -76,6 +76,7 @@ def _naive_list_centralizer(self, other, af=False):
     elif hasattr(other, 'array_form'):
         return _naive_list_centralizer(self, PermutationGroup([other]), af)
 
+
 def _verify_bsgs(group, base, gens):
     """
     Verify the correctness of a base and strong generating set.
@@ -190,6 +191,7 @@ def _verify_normal_closure(group, arg, closure=None):
     naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
 
+
 def canonicalize_naive(g, dummies, sym, *v):
     """
     canonicalize tensor formed by tensors of the different types
@@ -258,6 +260,7 @@ def canonicalize_naive(g, dummies, sym, *v):
                 return 0
         prev = h
     return list(a[0])
+
 
 def graph_certificate(gr):
     """

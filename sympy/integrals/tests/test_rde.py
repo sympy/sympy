@@ -35,6 +35,7 @@ def test_order_at():
         order_at_oo(Poly(t - 1, t), Poly(1, t), t) == -1
     assert order_at_oo(Poly(0, t), Poly(1, t), t) == oo
 
+
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)
     d = Poly(t**4 - 3*t**2 + 2, t)
@@ -136,6 +137,7 @@ def test_spde():
     assert spde(Poly(x**2 - x, x), Poly(1, x), Poly(9*x**4 - 10*x**3 + 2*x**2, x), 4, DE) == (Poly(0, x), Poly(0, x), 0, Poly(0, x), Poly(3*x**3 - 2*x**2, x))
     assert spde(Poly(x**2 - x, x), Poly(x**2 - 5*x + 3, x), Poly(x**7 - x**6 - 2*x**4 + 3*x**3 - x**2, x), 5, DE) == \
         (Poly(1, x), Poly(x + 1, x), 1, Poly(x**4 - x**3, x), Poly(x**3 - x**2, x))
+
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large

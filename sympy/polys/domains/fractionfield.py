@@ -8,6 +8,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
 
+
 @public
 class FractionField(Field, CompositeDomain):
     """A class for representing multivariate rational function fields. """

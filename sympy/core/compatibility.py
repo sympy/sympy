@@ -73,8 +73,10 @@ if PY3:
     # String / unicode compatibility
     unicode = str
     unichr = chr
+
     def u(x):
         return x
+
     def u_decode(x):
         return x
 
@@ -105,8 +107,10 @@ else:
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
+
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
+
     def u_decode(x):
         return x.decode('utf-8')
 
@@ -137,6 +141,7 @@ else:
         exec("exec _code_ in _globs_, _locs_")
 
     xrange = xrange
+
 
 def with_metaclass(meta, *bases):
     """
@@ -176,6 +181,7 @@ def with_metaclass(meta, *bases):
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
+
         def __new__(cls, name, this_bases, d):
             if this_bases is None:
                 return type.__new__(cls, name, (), d)
@@ -195,6 +201,7 @@ class NotIterable:
     when calling e.g. list() on the instance
     """
     pass
+
 
 def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
@@ -682,6 +689,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 # Minimum version of gmpy changed to 1.13 to allow a single code base to also
 # work with gmpy2.
 
+
 def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
@@ -734,6 +742,7 @@ try:
         from subprocess import check_output
     except ImportError: # <= Python 2.6
         from subprocess import CalledProcessError, check_call
+
         def check_output(*args, **kwargs):
             with open(os.devnull, 'w') as fh:
                 kwargs['stdout'] = fh
@@ -756,6 +765,7 @@ from threading import RLock
 
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 
+
 class _HashedSeq(list):
     __slots__ = 'hashvalue'
 
@@ -765,6 +775,7 @@ class _HashedSeq(list):
 
     def __hash__(self):
         return self.hashvalue
+
 
 def _make_key(args, kwds, typed,
              kwd_mark = (object(),),
@@ -784,6 +795,7 @@ def _make_key(args, kwds, typed,
     elif len(key) == 1 and type(key[0]) in fasttypes:
         return key[0]
     return _HashedSeq(key)
+
 
 def lru_cache(maxsize=100, typed=False):
     """Least-recently-used cache decorator.

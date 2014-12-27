@@ -26,6 +26,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
 
+
 @public
 def ring(symbols, domain, order=lex):
     """Construct a polynomial ring returning ``(ring, x_1, ..., x_n)``.
@@ -53,6 +54,7 @@ def ring(symbols, domain, order=lex):
     """
     _ring = PolyRing(symbols, domain, order)
     return (_ring,) + _ring.gens
+
 
 @public
 def xring(symbols, domain, order=lex):
@@ -82,6 +84,7 @@ def xring(symbols, domain, order=lex):
     _ring = PolyRing(symbols, domain, order)
     return (_ring, _ring.gens)
 
+
 @public
 def vring(symbols, domain, order=lex):
     """Construct a polynomial ring and inject ``x_1, ..., x_n`` into the global namespace.
@@ -109,6 +112,7 @@ def vring(symbols, domain, order=lex):
     _ring = PolyRing(symbols, domain, order)
     pollute([ sym.name for sym in _ring.symbols ], _ring.gens)
     return _ring
+
 
 @public
 def sring(exprs, *symbols, **options):
@@ -162,6 +166,7 @@ def sring(exprs, *symbols, **options):
     else:
         return (_ring, polys)
 
+
 def _parse_symbols(symbols):
     if not symbols:
         raise GeneratorsNeeded("generators weren't specified")
@@ -178,7 +183,9 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
+
 _ring_cache = {}
+
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
@@ -663,10 +670,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def __lt__(p1, p2):
         return p1._cmp(p2, lt)
+
     def __le__(p1, p2):
         return p1._cmp(p2, le)
+
     def __gt__(p1, p2):
         return p1._cmp(p2, gt)
+
     def __ge__(p1, p2):
         return p1._cmp(p2, ge)
 

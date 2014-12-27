@@ -2,6 +2,7 @@ from sympy.matrices.densesolve import rref, LU_solve, rref_solve, cholesky_solve
 from sympy import Dummy
 from sympy import QQ
 
+
 def test_LU_solve():
     x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
 

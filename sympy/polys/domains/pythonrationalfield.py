@@ -8,6 +8,7 @@ from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPy
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
+
 @public
 class PythonRationalField(RationalField):
     """Rational field based on Python rational number type. """

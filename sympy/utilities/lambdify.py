@@ -384,6 +384,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                     "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
 
+
 def _issue_7853_dep_check(namespaces, namespace, expr):
     """Used for checking things passed into modules kwarg for deprecation
     issue #7853. This function and the call to it in lambdify should be
@@ -407,6 +408,7 @@ def _issue_7853_dep_check(namespaces, namespace, expr):
                 "The old behavior can be retained in future versions by "
                 "supplying `modules=[{'ImmutableMatrix': numpy.matrix}, "
                 "'numpy']`.", issue=7853).warn()
+
 
 def _get_namespace(m):
     """

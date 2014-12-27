@@ -14,8 +14,6 @@ from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
 
-
-
 def _process_limits(*symbols):
     """Process the list of symbols and convert them to canonical limits,
     storing them as Tuple(symbol, lower, upper). The orientation of
@@ -57,6 +55,7 @@ def _process_limits(*symbols):
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
     return limits, orientation
+
 
 class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
@@ -325,6 +324,7 @@ class ExprWithLimits(Expr):
         limits.reverse()
 
         return self.func(func, *limits)
+
 
 class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.

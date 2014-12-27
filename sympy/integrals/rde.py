@@ -410,6 +410,7 @@ def spde(a, b, c, n, DE):
         beta += alpha * r
         alpha *= a
 
+
 def no_cancel_b_large(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) large enough.

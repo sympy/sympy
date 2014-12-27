@@ -5,6 +5,7 @@ from sympy import Basic
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)
 
+
 def test_sort_key():
     assert MatAdd(Y, X).doit().args == (X, Y)
 

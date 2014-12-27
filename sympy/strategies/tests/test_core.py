@@ -3,6 +3,7 @@ from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
 from sympy.core.compatibility import get_function_name
 from functools import partial
 
+
 def test_null_safe():
     def rl(expr):
         if expr == 1:
@@ -13,15 +14,19 @@ def test_null_safe():
     assert      rl(3) == None
     assert safe_rl(3) == 3
 
+
 def posdec(x):
     if x > 0:
         return x-1
     else:
         return x
+
+
 def test_exhaust():
     sink = exhaust(posdec)
     assert sink(5) == 0
     assert sink(10) == 0
+
 
 def test_memoize():
     rl = memoize(posdec)
@@ -29,21 +34,25 @@ def test_memoize():
     assert rl(5) == posdec(5)
     assert rl(-2) == posdec(-2)
 
+
 def test_condition():
     rl = condition(lambda x: x%2 == 0, posdec)
     assert rl(5) == 5
     assert rl(4) == 3
+
 
 def test_chain():
     rl = chain(posdec, posdec)
     assert rl(5) == 3
     assert rl(1) == 0
 
+
 def test_tryit():
     def rl(expr):
         assert False
     safe_rl = tryit(rl)
     assert safe_rl(1) == 1
+
 
 def test_do_one():
     rl = do_one(posdec, posdec)
@@ -55,6 +64,7 @@ def test_do_one():
     rule = do_one(rl1, rl2)
     assert rule(1) == 2
     assert rule(rule(1)) == 3
+
 
 def test_debug():
     from sympy.core.compatibility import StringIO
@@ -68,6 +78,7 @@ def test_debug():
     assert '5' in log
     assert '4' in log
 
+
 def test_switch():
     inc = lambda x: x + 1
     dec = lambda x: x - 1
@@ -77,6 +88,7 @@ def test_switch():
     assert rl(3) == 4
     assert rl(4) == 3
     assert rl(5) == 5
+
 
 def test_minimize():
     inc = lambda x: x + 1

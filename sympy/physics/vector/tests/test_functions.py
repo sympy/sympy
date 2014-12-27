@@ -91,6 +91,7 @@ def test_cross_different_frames():
     assert cross(C.y, A.x) == sin(q3)*C.x - cos(q3)*C.z
     assert cross(C.z, A.x) == cos(q3)*C.y
 
+
 def test_operator_match():
     """Test that the output of dot, cross, outer functions match
     operator behavior.

@@ -126,6 +126,7 @@ class BooleanAtom(Boolean):
     def canonical(self):
         return self
 
+
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
     SymPy version of True, a singleton that can be accessed via S.true.
@@ -236,6 +237,7 @@ S.true = true
 S.false = false
 
 converter[bool] = lambda x: S.true if x else S.false
+
 
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space

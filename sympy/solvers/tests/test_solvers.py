@@ -24,6 +24,7 @@ from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
+
 def test_swap_back():
     f, g = map(Function, 'fg')
     fx, gx = f(x), g(x)
@@ -235,7 +236,6 @@ def test_quintics_1():
     # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
     assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) == \
         RootOf(x**5 + 3*x**3 + 7, 0).n()
-
 
 
 def test_highorder_poly():
@@ -1423,6 +1423,7 @@ def test_uselogcombine():
 def test_atan2():
     assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
 
+
 def test_errorinverses():
     assert solve(erf(x)-y,x)==[erfinv(y)]
     assert solve(erfinv(x)-y,x)==[erf(y)]
@@ -1532,6 +1533,7 @@ def test_issue_7322():
 
 def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
+
 
 def test_issue_8587():
     f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))

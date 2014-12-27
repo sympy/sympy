@@ -600,6 +600,7 @@ def test_issue_3539():
     assert (6/x).match(a*x) is None
     assert (6/x**2).match(a/x) == {a: 6/x}
 
+
 def test_gh_issue_2711():
     x = Symbol('x')
     f = meijerg(((), ()), ((0,), ()), x)

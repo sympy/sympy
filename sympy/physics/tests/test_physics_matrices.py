@@ -68,6 +68,7 @@ def test_Dirac():
     assert mgamma(5, True) == \
         mgamma(0, True)*mgamma(1, True)*mgamma(2, True)*mgamma(3, True)*I
 
+
 def test_mdft():
     assert mdft(1) == Matrix([[1]])
     assert mdft(2) == 1/sqrt(2)*Matrix([[1,1],[1,-1]])

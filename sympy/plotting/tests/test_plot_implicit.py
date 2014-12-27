@@ -57,6 +57,7 @@ def plot_and_save(name):
         assert issubclass(w[-1].category, UserWarning)
         assert 'No labeled objects found' in str(w[0].message)
 
+
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:

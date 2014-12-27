@@ -6,6 +6,7 @@ from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy import S, sqrt, sin
 from sympy.abc import x, y
 
+
 def test_construct_domain():
     assert construct_domain([1, 2, 3]) == (ZZ, [ZZ(1), ZZ(2), ZZ(3)])
     assert construct_domain([1, 2, 3], field=True) == (QQ, [QQ(1), QQ(2), QQ(3)])
@@ -88,6 +89,7 @@ def test_construct_domain():
     assert construct_domain(S(2)/3) == (QQ, QQ(2, 3))
 
     assert construct_domain({}) == (ZZ, {})
+
 
 def test_composite_option():
     assert construct_domain({(1,): sin(y)}, composite=False) == \

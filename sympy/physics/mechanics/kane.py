@@ -14,6 +14,7 @@ from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 
+
 class KanesMethod(object):
     """Kane's method object.
 

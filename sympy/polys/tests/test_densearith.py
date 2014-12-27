@@ -46,6 +46,7 @@ from sympy.utilities.pytest import raises
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
 
+
 def test_dup_add_term():
     f = dup_normal([], ZZ)
 

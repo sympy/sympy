@@ -459,6 +459,7 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+
             def bad(m):
                 from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
@@ -703,6 +704,7 @@ class UndefinedFunction(FunctionClass):
 
 UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
                                          (s.class_key() == o.class_key()))
+
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -1481,9 +1483,11 @@ class Subs(Expr):
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
         from sympy.printing import StrPrinter
+
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
                 return str(expr) + str(expr.dummy_index)
+
         def mystr(expr, **settings):
             p = CustomStrPrinter(settings)
             return p.doprint(expr)
@@ -1965,7 +1969,9 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     hints['basic'] = basic
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
+
 # This is a special application of two hints
+
 
 def _mexpand(expr, recursive=False):
     # expand multinomials and then expand products; this may not always

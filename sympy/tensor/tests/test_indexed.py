@@ -95,6 +95,7 @@ def test_IndexedBase_sugar():
     assert A1 == A2[Tuple(i, j)]
     assert all(a.is_Integer for a in A2[1, 0].args[1:])
 
+
 def test_IndexedBase_subs():
     i, j, k = symbols('i j k', integer=True)
     a, b = symbols('a b')
@@ -176,6 +177,7 @@ def test_complex_indices():
     A = Indexed('A', i, i + j)
     assert A.rank == 2
     assert A.indices == (i, i + j)
+
 
 def test_not_interable():
     i, j = symbols('i j', integer=True)

@@ -21,6 +21,7 @@ from sympy.utilities import public
 
 # XXX why does this derive from CharacteristicZero???
 
+
 @public
 class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     """

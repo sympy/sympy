@@ -5,6 +5,7 @@ from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
 from sympy.utilities.pytest import XFAIL, raises
 import itertools
 
+
 x = Symbol('x')
 
 
@@ -26,11 +27,13 @@ def test_naturals():
     assert N.inf == 1
     assert N.sup == oo
 
+
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
     assert -1 not in N
     assert next(iter(N)) == 0
+
 
 def test_integers():
     Z = S.Integers
@@ -70,6 +73,7 @@ def test_ImageSet():
     assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
+
 
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)

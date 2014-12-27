@@ -195,6 +195,7 @@ def test_propKB_tolerant():
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
 
+
 def test_satisfiable_non_symbols():
     x, y = symbols('x y')
     assumptions = Q.zero(x*y)
@@ -210,6 +211,7 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+
 
 def test_satisfiable_bool():
     from sympy.core.singleton import S

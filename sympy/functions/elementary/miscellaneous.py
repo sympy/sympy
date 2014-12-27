@@ -112,7 +112,6 @@ def sqrt(arg):
     return C.Pow(arg, S.Half)
 
 
-
 def cbrt(arg):
     """This function computes the principial cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
@@ -418,6 +417,7 @@ class MinMaxBase(Expr, LatticeOp):
     @property
     def is_real(self):
         return fuzzy_and(arg.is_real for arg in self.args)
+
 
 class Max(MinMaxBase, Application):
     """

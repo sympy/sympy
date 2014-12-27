@@ -166,6 +166,7 @@ def roots_cubic(f, trig=False):
 
     return soln
 
+
 def _roots_quartic_euler(p, q, r, a):
     """
     Descartes-Euler solution of the quartic equation

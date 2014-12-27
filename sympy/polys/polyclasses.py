@@ -9,6 +9,7 @@ from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
 from sympy import oo
 
+
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
 

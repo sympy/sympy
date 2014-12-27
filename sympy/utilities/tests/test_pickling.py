@@ -319,8 +319,12 @@ def test_plotting2():
     check(Plot(1, visible=False))
     check(PlotAxes())
 
+
 #================== polys =======================
+
+
 from sympy import Poly, ZZ, QQ, lex
+
 
 def test_pickling_polys_polytools():
     from sympy.polys.polytools import Poly, PurePoly, GroebnerBasis
@@ -336,6 +340,7 @@ def test_pickling_polys_polytools():
     # for c in (GroebnerBasis, GroebnerBasis([x**2 - 1], x, order=lex)):
     #     check(c)
 
+
 def test_pickling_polys_polyclasses():
     from sympy.polys.polyclasses import DMP, DMF, ANP
 
@@ -345,6 +350,7 @@ def test_pickling_polys_polyclasses():
         check(c)
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
+
 
 @XFAIL
 def test_pickling_polys_rings():
@@ -361,6 +367,7 @@ def test_pickling_polys_rings():
     for c in (ring.dtype, ring.one):
         check(c, exclude=[0, 1], check_attr=False) # TODO: Py3k
 
+
 def test_pickling_polys_fields():
     # NOTE: can't use protocols < 2 because we have to execute __new__ to
     # make sure caching of fields works properly.
@@ -376,6 +383,7 @@ def test_pickling_polys_fields():
     # TODO: AssertionError: assert id(obj) not in self.memo
     # for c in (field.dtype, field.one):
     #     check(c, exclude=[0, 1])
+
 
 def test_pickling_polys_elements():
     from sympy.polys.domains.pythonrational import PythonRational
@@ -400,6 +408,7 @@ def test_pickling_polys_elements():
     # TODO: fix pickling of ComplexElement
     # for c in (mp.mpc, mp.mpc(1.0, -1.5)):
     #     check(c)
+
 
 def test_pickling_polys_domains():
     from sympy.polys.domains.pythonfinitefield import PythonFiniteField
@@ -460,11 +469,13 @@ def test_pickling_polys_domains():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
+
 def test_pickling_polys_numberfields():
     from sympy.polys.numberfields import AlgebraicNumber
 
     for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
         check(c)
+
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,
@@ -489,6 +500,7 @@ def test_pickling_polys_orderings():
     for c in (InverseOrder, InverseOrder(LexOrder())):
         check(c)
 
+
 def test_pickling_polys_monomials():
     from sympy.polys.monomials import MonomialOps, Monomial
     x, y, z = symbols("x,y,z")
@@ -498,6 +510,7 @@ def test_pickling_polys_monomials():
 
     for c in (Monomial, Monomial((1, 2, 3), (x, y, z))):
         check(c)
+
 
 def test_pickling_polys_errors():
     from sympy.polys.polyerrors import (ExactQuotientFailed, OperationNotSupported,
@@ -582,6 +595,7 @@ def test_pickling_polys_errors():
     for c in (FlagError, FlagError()):
         check(c)
 
+
 def test_pickling_polys_options():
     from sympy.polys.polyoptions import Options
 
@@ -589,9 +603,11 @@ def test_pickling_polys_options():
     # for c in (Options, Options((), dict(domain='ZZ', polys=False))):
     #    check(c)
 
+
 # TODO: def test_pickling_polys_rootisolation():
 #    RealInterval
 #    ComplexInterval
+
 
 def test_pickling_polys_rootoftools():
     from sympy.polys.rootoftools import RootOf, RootSum
@@ -605,7 +621,10 @@ def test_pickling_polys_rootoftools():
     for c in (RootSum, RootSum(f, exp)):
         check(c)
 
+
 #================== printing ====================
+
+
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.mathml import MathMLPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
@@ -630,7 +649,10 @@ def test_printing1():
 def test_printing2():
     check(PrettyPrinter())
 
+
 #================== series ======================
+
+
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 
@@ -641,7 +663,10 @@ def test_series():
     for c in (Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
+
 #================== concrete ==================
+
+
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 

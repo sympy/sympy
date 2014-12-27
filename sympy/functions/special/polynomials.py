@@ -26,6 +26,7 @@ from sympy.polys.orthopolys import (
     legendre_poly
 )
 
+
 _x = C.Dummy('x')
 
 
@@ -40,6 +41,7 @@ class OrthogonalPolynomial(Function):
 
     def _eval_conjugate(self):
         return self.func(self.args[0], self.args[1].conjugate())
+
 
 #----------------------------------------------------------------------------
 # Jacobi polynomials
@@ -700,13 +702,13 @@ class chebyshevu_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-
     @classmethod
     def eval(cls, n, k):
         if not ((0 <= k) and (k < n)):
             raise ValueError("must have 0 <= k < n, "
                 "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))
+
 
 #----------------------------------------------------------------------------
 # Legendre polynomials and Associated Legendre polynomials

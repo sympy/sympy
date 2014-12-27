@@ -56,6 +56,7 @@ class MatAdd(MatrixExpr):
     def doit(self, **ignored):
         return canonicalize(self)
 
+
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
@@ -65,8 +66,13 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
+
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
+
+
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
+
+
 def combine(cnt, mat):
     from .matmul import MatMul
     if cnt == 1:

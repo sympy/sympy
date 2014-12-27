@@ -508,6 +508,7 @@ def _smart_subs(expr, sub_dict):
         If so, attempt to simplify it out. Then if node is in sub_dict,
         sub in the corresponding value."""
     expr = _crawl(expr, _tan_repl_func)
+
     def _recurser(expr, sub_dict):
         # Decompose the expression into num, den
         num, den = _fraction_decomp(expr)

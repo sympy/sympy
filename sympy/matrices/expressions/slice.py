@@ -5,6 +5,7 @@ from sympy import Tuple, Basic
 from sympy.functions.elementary.integers import floor
 from sympy.assumptions import Q, ask
 
+
 def normalize(i, parentsize):
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
@@ -29,6 +30,7 @@ def normalize(i, parentsize):
         raise IndexError()
 
     return (start, stop, step)
+
 
 class MatrixSlice(MatrixExpr):
     """ A MatrixSlice of a Matrix Expression

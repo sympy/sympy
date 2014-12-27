@@ -242,11 +242,13 @@ def test_lfsr_connection_polynomial():
     s = lfsr_sequence([F(1), F(1)], [F(0), F(1)], 5)
     assert lfsr_connection_polynomial(s) == x**2 + x + 1
 
+
 def test_elgamal_private_key():
     a, b, _ = elgamal_private_key(digit=100)
     assert isprime(a)
     assert is_primitive_root(b, a)
     assert len(bin(a)) >= 102
+
 
 def test_elgamal():
     dk = elgamal_private_key(20)

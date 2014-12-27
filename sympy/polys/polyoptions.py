@@ -14,6 +14,7 @@ import sympy.polys
 
 import re
 
+
 class Option(object):
     """Base class for all kinds of options. """
 

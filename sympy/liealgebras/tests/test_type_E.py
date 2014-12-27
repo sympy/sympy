@@ -1,6 +1,7 @@
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
 
+
 def test_type_E():
     c = CartanType("E6")
     m = Matrix(6, 6, [2, 0, -1, 0, 0, 0, 0, 2, 0, -1, 0, 0,

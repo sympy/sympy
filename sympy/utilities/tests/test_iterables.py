@@ -165,10 +165,12 @@ def test_cartes():
     assert list(cartes('a', repeat=2)) == [('a', 'a')]
     assert list(cartes(list(range(2)))) == [(0,), (1,)]
 
+
 def test_filter_symbols():
     s = numbered_symbols()
     filtered = filter_symbols(s, symbols("x0 x2 x3"))
     assert take(filtered, 3) == list(symbols("x1 x4 x5"))
+
 
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
@@ -315,6 +317,7 @@ def test_multiset_partitions():
     assert list(factoring_visitor(p, [2,3]) for
                 p in multiset_partitions_taocp([3, 1])) == factorings
 
+
 def test_multiset_combinations():
     ans = ['iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',
            'iss', 'mpp', 'mps', 'mss', 'pps', 'pss', 'sss']
@@ -424,6 +427,7 @@ def test_partitions():
             i = i+1
         assert i == RGS_enum(n)
 
+
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1],
         [4, 4, 2], [4, 4, 1, 1], [4, 2, 2, 2], [4, 2, 2, 1, 1],
@@ -488,6 +492,7 @@ def test_necklaces():
         [5,   8,   8,  39],
         [6,  14,  13,  92],
         [7,  20,  18, 198]])
+
 
 def test_bracelets():
     bc = [i for i in bracelets(2, 4)]

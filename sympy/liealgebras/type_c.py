@@ -3,13 +3,13 @@ from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
+
 class TypeC(Standard_Cartan):
 
     def __new__(cls, n):
         if n < 3:
             raise ValueError("n can not be less than 3")
         return Standard_Cartan.__new__(cls, "C", n)
-
 
     def dimension(self):
         """
@@ -71,7 +71,6 @@ class TypeC(Standard_Cartan):
             root = [0]*self.n
             root[n-1] = 2
             return root
-
 
     def positive_roots(self):
         """
@@ -148,7 +147,6 @@ class TypeC(Standard_Cartan):
         m[0,1] = -1
         m[n-1, n-2] = -2
         return m
-
 
     def basis(self):
         """

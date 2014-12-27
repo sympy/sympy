@@ -18,6 +18,7 @@ from sympy.polys.domains import ZZ, QQ
 from sympy.utilities.pytest import raises, slow
 from sympy.polys import polyconfig as config
 
+
 def _do_test_groebner():
     R, x,y = ring("x,y", QQ, lex)
     f = x**2 + 2*x*y**2
@@ -124,13 +125,16 @@ def _do_test_groebner():
         y**8 - 2*y**6 + QQ(3,2)*y**4 - QQ(1,2)*y**2 + QQ(1,16),
     ]
 
+
 def test_groebner_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_groebner()
 
+
 def test_groebner_f5b():
     with config.using(groebner='f5b'):
         _do_test_groebner()
+
 
 def _do_test_benchmark_minpoly():
     R, x,y,z = ring("x,y,z", QQ, lex)
@@ -142,13 +146,16 @@ def _do_test_benchmark_minpoly():
 
     assert groebner(F, R) == G
 
+
 def test_benchmark_minpoly_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_benchmark_minpoly()
 
+
 def test_benchmark_minpoly_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_minpoly()
+
 
 @slow
 def test_benchmark_coloring():
@@ -207,13 +214,16 @@ def _do_test_benchmark_katsura_3():
         -1 + x0 + 2*x1 + 2*x2,
     ]
 
+
 def test_benchmark_katsura3_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_benchmark_katsura_3()
 
+
 def test_benchmark_katsura3_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_katsura_3()
+
 
 def _do_test_benchmark_katsura_4():
     R, x0,x1,x2,x3 = ring("x:4", ZZ, lex)
@@ -244,13 +254,16 @@ def _do_test_benchmark_katsura_4():
         x0 + 2*x1 + 2*x2 + 2*x3 - 1,
     ]
 
+
 def test_benchmark_kastura_4_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_benchmark_katsura_4()
 
+
 def test_benchmark_kastura_4_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_katsura_4()
+
 
 def _do_test_benchmark_czichowski():
     R, x,t = ring("x,t", ZZ, lex)
@@ -320,16 +333,19 @@ def _do_test_benchmark_czichowski():
         4716885828494075789338754454248931750698880,
     ]
 
+
 # NOTE: This is very slow (> 2 minutes on 3.4 GHz) without GMPY
 @slow
 def test_benchmark_czichowski_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_benchmark_czichowski()
 
+
 @slow
 def test_benchmark_czichowski_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_czichowski()
+
 
 def _do_test_benchmark_cyclic_4():
     R, a,b,c,d = ring("a,b,c,d", ZZ, lex)
@@ -360,13 +376,16 @@ def _do_test_benchmark_cyclic_4():
         a + b + c + d
     ]
 
+
 def test_benchmark_cyclic_4_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_benchmark_cyclic_4()
 
+
 def test_benchmark_cyclic_4_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_cyclic_4()
+
 
 def test_sig_key():
     s1 = sig((0,) * 3, 2)
@@ -406,6 +425,7 @@ def test_critical_pair():
         ((0, 0, 4, 2), 2), ((0, 0, 2, 0), QQ(1, 1)), (((0, 0, 2, 2), 2), y*z + z*t**5 + z*t + t**6, 13),
         ((0, 0, 0, 5), 3), ((0, 0, 0, 3), QQ(1, 1)), (((0, 0, 0, 2), 3), z**3*t**2 + z**2*t**3 - z - t, 5)
     )
+
 
 def test_cp_key():
     # from cyclic4 with grlex
@@ -480,6 +500,7 @@ def test_representing_matrices():
          [QQ(0, 1), QQ(2, 1), QQ(0, 1), QQ(3, 1)],
          [QQ(0, 1), QQ(0, 1), QQ(1, 1),-QQ(1, 1)]]]
 
+
 def test_groebner_lcm():
     R, x,y,z = ring("x,y,z", ZZ)
 
@@ -506,6 +527,7 @@ def test_groebner_lcm():
     h = x**5 + x**4*y - 18*x**3*y**2 - 50*x**2*y**3 - 47*x*y**4 - 15*y**5
 
     assert groebner_lcm(f, g) == h
+
 
 def test_groebner_gcd():
     R, x,y,z = ring("x,y,z", ZZ)

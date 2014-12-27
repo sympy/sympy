@@ -17,6 +17,7 @@ def test_printing():
         'Matrix([[0]]) : QQ[x]**1 -> QQ[x]**1/<[x]>'
     assert str(R.free_module(0).identity_hom()) == 'Matrix(0, 0, []) : QQ[x]**0 -> QQ[x]**0'
 
+
 def test_operations():
     F = QQ.old_poly_ring(x).free_module(2)
     G = QQ.old_poly_ring(x).free_module(3)

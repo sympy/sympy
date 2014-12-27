@@ -972,6 +972,7 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
             a[i, j] = m[i, j]
     return a
 
+
 @doctest_depends_on(modules=('numpy',))
 def symarray(prefix, shape):  # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
@@ -1242,6 +1243,7 @@ def eye(n, cls=None):
     if cls is None:
         from sympy.matrices import Matrix as cls
     return cls.eye(n)
+
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.

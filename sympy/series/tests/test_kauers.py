@@ -16,6 +16,7 @@ def test_finite_diff():
     assert finite_diff(x**2 - 2*x + 3, x, 2) == 4*x
     assert finite_diff(n**2 - 2*n + 3, n, 3) == 6*n + 3
 
+
 def test_finite_diff_kauers():
     assert finite_diff_kauers(Sum(x**2, (x, 1, n))) == (n + 1)**2
     assert finite_diff_kauers(Sum(y, (y, 1, m))) == (m + 1)

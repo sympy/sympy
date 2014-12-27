@@ -54,6 +54,7 @@ def test_constant_mul():
     assert constant_renumber(
         constantsimp(C1*x*2**x, [C1]), 'C', 1, 1) == C1*x*2**x
 
+
 def test_constant_add():
     assert constant_renumber(constantsimp(C1 + C1, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1 + 2, [C1]), 'C', 1, 1) == C1
@@ -130,8 +131,10 @@ def test_constant_multiple():
         constantsimp(sin(2*C1) + x + sqrt(2), [C1]), 'C', 1, 1) == C1 + x
     assert constant_renumber(constantsimp(2*C1 + C2, [C1, C2]), 'C', 1, 2) == C1
 
+
 def test_constant_repeated():
     assert C1 + C1*x == constant_renumber( C1 + C1*x, 'C', 1, 3)
+
 
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests

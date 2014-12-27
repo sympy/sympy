@@ -5,6 +5,7 @@ from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
+
 class TypeB(Standard_Cartan):
 
     def __new__(cls, n):

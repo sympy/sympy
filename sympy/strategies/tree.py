@@ -7,6 +7,7 @@ from sympy.strategies.branch import yieldify
 
 identity = lambda x: x
 
+
 def treeapply(tree, join, leaf=identity):
     """ Apply functions onto recursive containers (tree)
 
@@ -37,6 +38,7 @@ def treeapply(tree, join, leaf=identity):
             return join[typ](*map(partial(treeapply, join=join, leaf=leaf),
                                   tree))
     return leaf(tree)
+
 
 def greedy(tree, objective=identity, **kwargs):
     """ Execute a strategic tree.  Select alternatives greedily
@@ -107,6 +109,7 @@ def greedy(tree, objective=identity, **kwargs):
     optimize = partial(minimize, objective=objective)
     return treeapply(tree, {list: optimize, tuple: chain}, **kwargs)
 
+
 def allresults(tree, leaf=yieldify):
     """ Execute a strategic tree.  Return all possibilities.
 
@@ -129,6 +132,7 @@ def allresults(tree, leaf=yieldify):
     """
     return treeapply(tree, {list: branch.multiplex, tuple: branch.chain},
                      leaf=leaf)
+
 
 def brute(tree, objective=identity, **kwargs):
     return lambda expr: min(tuple(allresults(tree, **kwargs)(expr)),

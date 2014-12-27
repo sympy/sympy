@@ -161,7 +161,6 @@ class Del(Basic):
     _sympystr = __str__
 
 
-
 def _diff_conditional(expr, base_scalar):
     """
     First re-expresses expr in the system that base_scalar belongs to.

@@ -13,6 +13,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.ntheory import factorint
 
+
 def gf_crt(U, M, K=None):
     """
     Chinese Remainder Theorem.
@@ -872,6 +873,7 @@ def gf_pow(f, n, p, K):
 
     return h
 
+
 def gf_frobenius_monomial_base(g, p, K):
     """
     return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
@@ -903,6 +905,7 @@ def gf_frobenius_monomial_base(g, p, K):
             b[i] = gf_rem(b[i], g, p, K)
 
     return b
+
 
 def gf_frobenius_map(f, g, b, p, K):
     """
@@ -941,6 +944,7 @@ def gf_frobenius_map(f, g, b, p, K):
         sf = gf_add(sf, v, p, K)
     return sf
 
+
 def _gf_pow_pnm1d2(f, n, g, b, p, K):
     """
     utility function for ``gf_edf_zassenhaus``
@@ -957,6 +961,7 @@ def _gf_pow_pnm1d2(f, n, g, b, p, K):
 
     res = gf_pow_mod(r, (p - 1)//2, g, p, K)
     return res
+
 
 def gf_pow_mod(f, n, g, p, K):
     """
@@ -1345,6 +1350,7 @@ def gf_trace_map(a, b, c, n, f, p, K):
         n >>= 1
 
     return gf_compose_mod(a, V, f, p, K), U
+
 
 def _gf_trace_map(f, n, g, b, p, K):
     """
@@ -1984,6 +1990,7 @@ def gf_ddf_shoup(f, p, K):
         factors.append((f, gf_degree(f)))
 
     return factors
+
 
 def gf_edf_shoup(f, n, p, K):
     """

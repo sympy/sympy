@@ -7,6 +7,7 @@ from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
 
+
 def test_components():
     assert components(x*y, x) == set([x])
     assert components(1/(x + y), x) == set([x])
@@ -171,8 +172,10 @@ def test_heurisch_hacking():
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
         asinh(2*x/3)/2
 
+
 def test_heurisch_function():
     assert heurisch(f(x), x) is None
+
 
 @XFAIL
 def test_heurisch_function_derivative():
@@ -185,6 +188,7 @@ def test_heurisch_function_derivative():
     assert heurisch(f(x)*df, x) == f(x)**2/2
     assert heurisch(f(x)**2*df, x) == f(x)**3/3
     assert heurisch(df/f(x), x) == log(f(x))
+
 
 def test_heurisch_wrapper():
     f = 1/(y + x)
@@ -199,12 +203,15 @@ def test_heurisch_wrapper():
     assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
         - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
 
+
 def test_issue_3609():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
         I*log(log(x) - I)/2
 
+
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
+
 
 def test_pmint_rat():
     # TODO: heurisch() is off by a constant: -3/4. Possibly different permutation
@@ -221,11 +228,13 @@ def test_pmint_rat():
 
     assert drop_const(ratsimp(heurisch(f, x)), x) == g
 
+
 def test_pmint_trig():
     f = (x - tan(x)) / tan(x)**2 + tan(x)
     g = -x**2/2 - x/tan(x) + log(tan(x)**2 + 1)/2
 
     assert heurisch(f, x) == g
+
 
 @slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
@@ -237,6 +246,7 @@ def test_pmint_logexp():
 
     assert ratsimp(heurisch(f, x)) == g
 
+
 @slow # 8 seconds on 3.4 GHz
 @XFAIL  # there's a hash dependent failure lurking here
 def test_pmint_erf():
@@ -245,11 +255,13 @@ def test_pmint_erf():
 
     assert ratsimp(heurisch(f, x)) == g
 
+
 def test_pmint_LambertW():
     f = LambertW(x)
     g = x*LambertW(x) - x + x/LambertW(x)
 
     assert heurisch(f, x) == g
+
 
 @XFAIL
 def test_pmint_besselj():
@@ -265,10 +277,12 @@ def test_pmint_besselj():
 
     assert heurisch(f, x) == g
 
+
 @slow # 110 seconds on 3.4 GHz
 def test_pmint_WrightOmega():
     if ON_TRAVIS:
         skip("Too slow for travis.")
+
     def omega(x):
         return LambertW(exp(x))
 
@@ -276,6 +290,7 @@ def test_pmint_WrightOmega():
     g = log(x + LambertW(exp(x))) + sin(LambertW(exp(x)))
 
     assert heurisch(f, x) == g
+
 
 # TODO: convert the rest of PMINT tests:
 # Airy functions

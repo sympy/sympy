@@ -27,6 +27,8 @@ class NC_Marker:
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
+
+
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -1606,6 +1608,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up
+
     def do(e):
         if e.is_Mul:
             c, r = e.as_coeff_Mul()

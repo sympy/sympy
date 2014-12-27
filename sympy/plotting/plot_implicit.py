@@ -324,6 +324,7 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)
+
     def _range_tuple(s):
         if isinstance(s, Symbol):
             return Tuple(s) + default_range

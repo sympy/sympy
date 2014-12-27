@@ -92,6 +92,7 @@ time that would be spent skipping over zeros.
 
 """
 
+
 class PartComponent(object):
     """Internal class used in support of the multiset partitions
     enumerators and the associated visitor functions.

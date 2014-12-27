@@ -114,6 +114,7 @@ class MatMul(MatrixExpr):
             args = self.args
         return canonicalize(MatMul(*args))
 
+
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):
@@ -129,12 +130,14 @@ def newmul(*args):
         args = args[1:]
     return new(MatMul, *args)
 
+
 def any_zeros(mul):
     if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
                        for arg in mul.args]):
         matrices = [arg for arg in mul.args if arg.is_Matrix]
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
+
 
 def merge_explicit(matmul):
     """ Merge explicit MatrixBase arguments
@@ -178,6 +181,7 @@ def merge_explicit(matmul):
 
     return MatMul(*newargs)
 
+
 def xxinv(mul):
     """ Y * X * X.I -> Y """
     from sympy.matrices.expressions import Inverse
@@ -191,6 +195,7 @@ def xxinv(mul):
             pass
 
     return mul
+
 
 def remove_ids(mul):
     """ Remove Identities from a MatMul
@@ -212,6 +217,7 @@ def remove_ids(mul):
     else:
         return mul
 
+
 def factor_in_front(mul):
     factor, matrices = mul.as_coeff_matrices()
     if factor != 1:
@@ -222,6 +228,7 @@ rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
          merge_explicit, factor_in_front, flatten)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
+
 
 def only_squares(*matrices):
     """ factor matrices only if they are square """

@@ -37,12 +37,15 @@ from sympy.utilities import lambdify, public
 from sympy.core.compatibility import xrange
 
 from math import log as mathlog
+
+
 def _ispow2(i):
     v = mathlog(i, 2)
     return v == int(v)
 
 _reals_cache = {}
 _complexes_cache = {}
+
 
 @public
 class RootOf(Expr):
@@ -222,6 +225,7 @@ class RootOf(Expr):
     @classmethod
     def _separate_imaginary_from_complex(cls, complexes):
         from sympy.utilities.iterables import sift
+
         def is_imag(c):
             '''
             return True if all roots are imaginary (ax**2 + b)
@@ -236,6 +240,7 @@ class RootOf(Expr):
                     if f.LC()*f.TC() < 0:
                         return None # 2 are imag
             return False  # none are imag
+
         # separate according to the function
         sifted = sift(complexes, lambda c: c[1])
         del complexes
@@ -867,6 +872,7 @@ class RootSum(Expr):
         var, expr = self.fun.args
         func = Lambda(var, expr.diff(x))
         return self.new(self.poly, func, self.auto)
+
 
 def bisect(f, a, b, tol):
     """

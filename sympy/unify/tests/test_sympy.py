@@ -5,6 +5,7 @@ from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
 from sympy.abc import w, x, y, z, n, m, k
 from sympy.utilities.pytest import XFAIL
 
+
 def test_deconstruct():
     expr     = Basic(1, 2, 3)
     expected = Compound(Basic, (1, 2, 3))
@@ -17,16 +18,19 @@ def test_deconstruct():
     assert deconstruct(Add(1, x, evaluate=False), variables=(x,)) == \
               Compound(Add, (1, Variable(x)))
 
+
 def test_construct():
     expr     = Compound(Basic, (1, 2, 3))
     expected = Basic(1, 2, 3)
     assert construct(expr) == expected
+
 
 def test_nested():
     expr = Basic(1, Basic(2), 3)
     cmpd = Compound(Basic, (1, Compound(Basic, (2,)), 3))
     assert deconstruct(expr) == cmpd
     assert construct(cmpd) == expr
+
 
 def test_unify():
     expr = Basic(1, 2, 3)
@@ -36,8 +40,10 @@ def test_unify():
     assert list(unify(expr, pattern, variables=(a, b, c))) == \
             [{a: 1, b: 2, c: 3}]
 
+
 def test_unify_variables():
     assert list(unify(Basic(1, 2), Basic(1, x), {}, variables=(x,))) == [{x: 2}]
+
 
 def test_s_input():
     expr = Basic(1, 2)
@@ -46,10 +52,12 @@ def test_s_input():
     assert list(unify(expr, pattern, {}, (a, b))) == [{a: 1, b: 2}]
     assert list(unify(expr, pattern, {a: 5}, (a, b))) == []
 
+
 def iterdicteq(a, b):
     a = tuple(a)
     b = tuple(b)
     return len(a) == len(b) and all(x in b for x in a)
+
 
 def test_unify_commutative():
     expr = Add(1, 2, 3, evaluate=False)
@@ -65,6 +73,7 @@ def test_unify_commutative():
                 {a: 3, b: 2, c: 1})
 
     assert iterdicteq(result, expected)
+
 
 def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
@@ -89,12 +98,14 @@ def test_unify_iter():
 
     assert iterdicteq(result, expected)
 
+
 def test_hard_match():
     from sympy import sin, cos
     expr = sin(x) + cos(x)**2
     p, q = map(Symbol, 'pq')
     pattern = sin(p) + cos(p)**2
     assert list(unify(expr, pattern, {}, (p, q))) == [{p: x}]
+
 
 def test_matrix():
     from sympy import MatrixSymbol
@@ -103,6 +114,7 @@ def test_matrix():
     Z = MatrixSymbol('Z', 2, 3)
     assert list(unify(X, Y, {}, variables=[n, 'X'])) == [{'X': 'Y', n: 2}]
     assert list(unify(X, Z, {}, variables=[n, 'X'])) == []
+
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
@@ -113,6 +125,7 @@ def test_non_frankenAdds():
     str(rebuilt)
     rebuilt.is_commutative
 
+
 def test_FiniteSet_commutivity():
     from sympy import FiniteSet
     a, b, c, x, y = symbols('a,b,c,x,y')
@@ -120,6 +133,7 @@ def test_FiniteSet_commutivity():
     t = FiniteSet(x, y)
     variables = (x, y)
     assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, t, variables=variables))
+
 
 def test_FiniteSet_complex():
     from sympy import FiniteSet
@@ -131,10 +145,12 @@ def test_FiniteSet_complex():
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
+
 @XFAIL
 def test_and():
     variables = x, y
     str(list(unify((x>0) & (z<3), pattern, variables=variables)))
+
 
 def test_Union():
     from sympy import Interval
@@ -142,10 +158,12 @@ def test_Union():
                       Interval(0, 1) + Interval(12, 13),
                       variables=(Interval(12, 13),)))
 
+
 def test_is_commutative():
     assert is_commutative(deconstruct(x+y))
     assert is_commutative(deconstruct(x*y))
     assert not is_commutative(deconstruct(x**y))
+
 
 def test_commutative_in_commutative():
     from sympy.abc import a,b,c,d

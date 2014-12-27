@@ -4,6 +4,7 @@ from sympy import expand
 from sympy import diff
 from sympy import Sum
 
+
 def finite_diff(expression, variable, increment=1):
     """
     Takes as input a polynomial expression and the variable used to construct
@@ -30,6 +31,7 @@ def finite_diff(expression, variable, increment=1):
     expression2 = expression.subs(variable, variable + increment)
     expression2 = expression2.expand()
     return expression2 - expression
+
 
 def finite_diff_kauers(sum):
     """

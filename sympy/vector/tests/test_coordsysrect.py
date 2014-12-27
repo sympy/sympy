@@ -230,6 +230,7 @@ def test_vector():
     assert C.j.cross(A.i) == (sin(q2))*A.j + (-cos(q2))*A.k
     assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
 
+
 def test_orient_new_methods():
     N = CoordSysCartesian('N')
     orienter1 = AxisOrienter(q4, N.j)

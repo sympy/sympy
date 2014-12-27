@@ -43,6 +43,7 @@ def test_Trace():
 
     assert str(trace(A)) == str(Trace(A).doit(deep=True))
 
+
 @XFAIL
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)

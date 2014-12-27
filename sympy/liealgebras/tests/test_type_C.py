@@ -1,6 +1,7 @@
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
 
+
 def test_type_C():
     c = CartanType("C4")
     m = Matrix(4, 4, [2, -1, 0, 0, -1, 2, -1, 0, 0, -1, 2, -1, 0, 0, -2, 2])

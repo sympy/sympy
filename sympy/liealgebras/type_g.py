@@ -5,13 +5,13 @@ from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
+
 class TypeG(Standard_Cartan):
 
     def __new__(cls, n):
         if n != 2:
             raise ValueError("n should be 2")
         return Standard_Cartan.__new__(cls, "G", 2)
-
 
     def dimension(self):
         """

@@ -48,7 +48,6 @@ def test_piecewise():
     assert p3.subs(x, 0.0) == 1
     assert p4.subs(x, 0.0) == 1
 
-
     f, g, h = symbols('f,g,h', cls=Function)
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
     pg = Piecewise((g(x), x < -1), (g(x) + h(x) + 2, x <= 1))

@@ -11,6 +11,7 @@ from sympy.core.mul import Mul
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 
+
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
@@ -172,7 +173,6 @@ class hyper(TupleParametersBase):
            Volume 1
     .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
-
 
     def __new__(cls, ap, bq, z):
         # TODO should we check convergence conditions?
@@ -429,7 +429,6 @@ class meijerg(TupleParametersBase):
     .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
 
     """
-
 
     def __new__(cls, *args):
         if len(args) == 5:
@@ -702,7 +701,6 @@ class HyperRep(Function):
     This base class contains the core logic, concrete derived classes only
     supply the actual functions.
     """
-
 
     @classmethod
     def eval(cls, *args):

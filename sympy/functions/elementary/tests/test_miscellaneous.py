@@ -11,6 +11,7 @@ from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.pytest import raises
 
+
 def test_Min():
     from sympy.abc import x, y, z
     n = Symbol('n', negative=True)
@@ -220,6 +221,7 @@ def test_real_root():
     assert real_root(root(-2, 3)) == -root(2, 3)
 
 
+
 def test_rewrite_MaxMin_as_Heaviside():
     from sympy.abc import x, y, z
     assert Max(0, x).rewrite(Heaviside) == x*Heaviside(x)
@@ -228,7 +230,6 @@ def test_rewrite_MaxMin_as_Heaviside():
     assert Max(0, x+2, 2*x).rewrite(Heaviside) == \
         2*x*Heaviside(2*x)*Heaviside(x - 2) + \
         (x + 2)*Heaviside(-x + 2)*Heaviside(x + 2)
-
 
     assert Min(0, x).rewrite(Heaviside) == x*Heaviside(-x)
     assert Min(3, x).rewrite(Heaviside) == x*Heaviside(-x + 3) + \

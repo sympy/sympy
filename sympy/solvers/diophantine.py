@@ -639,7 +639,6 @@ def _diop_quadratic(var, coeff, t):
             c = C // g
             e = sign(B/A)
 
-
             if e*sqrt(c)*D - sqrt(a)*E == 0:
                 z = symbols("z", real=True)
                 roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
@@ -694,7 +693,6 @@ def _diop_quadratic(var, coeff, t):
             while len(s) > 0:
                 sol = s.pop()
                 l.add((sol[1], sol[0]))
-
 
     # (5) B**2 - 4*A*C > 0 and B**2 - 4*A*C not a square or B**2 - 4*A*C < 0
 
@@ -770,7 +768,6 @@ def _diop_quadratic(var, coeff, t):
                         if is_solution_quad(var, coeff, x, y):
                             done = True
 
-
                             x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ 2
                             y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ (2*sqrt(D))
 
@@ -781,7 +778,6 @@ def _diop_quadratic(var, coeff, t):
 
                         if done:
                             break
-
 
     return l
 
@@ -1157,7 +1153,6 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     u = a[0][0]
     v = a[0][1]
 
-
     if abs(N) == 1:
         return diop_DN(D, N)
 
@@ -1179,7 +1174,6 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
                 return [(sqrt(D)*t, t), (-sqrt(D)*t, t)]
             else:
                 return [(S.Zero, S.Zero)]
-
 
     for y in xrange(L1, L2):
         if isinstance(sqrt(N + D*y**2), Integer):
@@ -1361,7 +1355,6 @@ def transformation_to_DN(eq):
            John P.Robertson, May 8, 2003, Page 7 - 11.
            http://www.jpr2718.org/ax2p.pdf
     """
-
 
     var, coeff, diop_type = classify_diop(eq)
     if diop_type == "binary_quadratic":
@@ -1854,7 +1847,6 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
     eq_1 = _mexpand(eq_1)
     A, B = eq_1.as_independent(r, as_Add=True)
-
 
     x = A*x_0
     y = (A*y_0 - _mexpand(B/r*p))

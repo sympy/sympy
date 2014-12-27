@@ -553,6 +553,7 @@ def test_sparse_solve():
     s = A.solve_least_squares(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
 
+
 def test_hermitian():
     x = Symbol('x')
     a = SparseMatrix([[0, I], [-I, 0]])

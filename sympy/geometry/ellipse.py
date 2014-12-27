@@ -530,7 +530,6 @@ class Ellipse(GeometryEntity):
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
         raise NotImplementedError('Only rotations of pi/2 are currently supported for Ellipse.')
 
-
     def scale(self, x=1, y=1, pt=None):
         """Override GeometryEntity.scale since it is the major and minor
         axes which must be scaled and they are not GeometryEntities.
@@ -873,7 +872,6 @@ class Ellipse(GeometryEntity):
             slopes = [i if _not_a_coeff(i) else i.n(prec) for i in slopes]
         return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
 
-
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the ellipse.
 
@@ -1108,7 +1106,6 @@ class Ellipse(GeometryEntity):
         oeq = o.equation(x, y)
         result = solve([seq, oeq], [x, y])
         return [Point(*r) for r in list(uniq(result))]
-
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity

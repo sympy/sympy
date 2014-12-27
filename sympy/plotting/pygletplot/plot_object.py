@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+
 class PlotObject(object):
     """
     Base class for objects which can be displayed in

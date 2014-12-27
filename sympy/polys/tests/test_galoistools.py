@@ -517,6 +517,7 @@ def test_gf_squarefree():
              ([1, 1], 3),
              ([1, 2], 6)])
 
+
 def test_gf_frobenius_map():
     f = ZZ.map([2, 0, 1, 0, 2, 2, 0, 2, 2, 2])
     g = ZZ.map([1,1,0,2,0,1,0,2,0,1])

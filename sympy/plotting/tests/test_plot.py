@@ -19,6 +19,7 @@ class MockPrint(object):
     def write(self, s):
         pass
 
+
 def disable_print(func, *args, **kwargs):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -45,6 +46,7 @@ class TmpFileManager:
     @classmethod
     def cleanup(cls):
         map(os.remove, cls.tmp_files)
+
 
 def plot_and_save(name):
 
@@ -229,6 +231,7 @@ def plot_and_save(name):
             + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
                 5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
 
+
 def test_matplotlib():
 
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
@@ -240,6 +243,7 @@ def test_matplotlib():
             TmpFileManager.cleanup()
     else:
         skip("Matplotlib not the default backend")
+
 
 # Tests for exception handling in experimental_lambdify
 def test_experimental_lambify():
@@ -254,6 +258,7 @@ def test_experimental_lambify():
     x = Symbol('x-3')
     f = lambdify([x], x + 1)
     assert f(1) == 2
+
 
 @disable_print
 def test_append_issue_7140():

@@ -623,6 +623,7 @@ def test_numbersymbol_f_code():
     )
     assert source == expected
 
+
 def test_erf_f_code():
     x = symbols('x')
     routine = make_routine("test", erf(x) - erf(-2 * x))
@@ -636,6 +637,7 @@ def test_erf_f_code():
         "end function\n"
     )
     assert source == expected, source
+
 
 def test_f_code_argument_order():
     x, y, z = symbols('x,y,z')

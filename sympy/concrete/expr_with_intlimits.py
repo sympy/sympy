@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.concrete.expr_with_limits import ExprWithLimits
 from sympy.core.singleton import S
 
-
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
@@ -14,6 +13,7 @@ from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities import flatten
 
+
 class ReorderError(NotImplementedError):
     """
     Exception raised when trying to reorder dependent limits.
@@ -21,6 +21,7 @@ class ReorderError(NotImplementedError):
     def __init__(self, expr, msg):
         super(ReorderError, self).__init__(
             "%s could not be reordered: %s." % (expr, msg))
+
 
 class ExprWithIntLimits(ExprWithLimits):
     def change_index(self, var, trafo, newvar=None):
@@ -140,7 +141,6 @@ class ExprWithIntLimits(ExprWithLimits):
 
         return self.func(function, *limits)
 
-
     def index(expr, x):
         """
         Return the index of a dummy variable in the list of limits.
@@ -240,7 +240,6 @@ class ExprWithIntLimits(ExprWithLimits):
             new_expr = new_expr.reorder_limit(index1, index2)
 
         return new_expr
-
 
     def reorder_limit(expr, x, y):
         """

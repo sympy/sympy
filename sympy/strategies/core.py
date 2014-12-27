@@ -6,6 +6,7 @@ from sympy.core.compatibility import get_function_name
 
 identity = lambda x: x
 
+
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
     def exhaustive_rl(expr):
@@ -15,9 +16,11 @@ def exhaust(rule):
         return new
     return exhaustive_rl
 
+
 def memoize(rule):
     """ Memoized version of a rule """
     cache = {}
+
     def memoized_rl(expr):
         if expr in cache:
             return cache[expr]
@@ -27,6 +30,7 @@ def memoize(rule):
             return result
     return memoized_rl
 
+
 def condition(cond, rule):
     """ Only apply rule if condition is true """
     def conditioned_rl(expr):
@@ -35,6 +39,7 @@ def condition(cond, rule):
         else:
             return      expr
     return conditioned_rl
+
 
 def chain(*rules):
     """
@@ -46,11 +51,13 @@ def chain(*rules):
         return expr
     return chain_rl
 
+
 def debug(rule, file=None):
     """ Print out before and after expressions each time rule is used """
     if file is None:
         from sys import stdout
         file = stdout
+
     def debug_rl(*args, **kwargs):
         expr = args[0]
         result = rule(*args, **kwargs)
@@ -59,6 +66,7 @@ def debug(rule, file=None):
             file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
         return result
     return debug_rl
+
 
 def null_safe(rule):
     """ Return original expr if rule returns None """
@@ -70,6 +78,7 @@ def null_safe(rule):
             return result
     return null_safe_rl
 
+
 def tryit(rule):
     """ Return original expr if rule raises exception """
     def try_rl(expr):
@@ -78,6 +87,7 @@ def tryit(rule):
         except Exception:
             return expr
     return try_rl
+
 
 def do_one(*rules):
     """ Try each of the rules until one works. Then stop. """
@@ -89,6 +99,7 @@ def do_one(*rules):
         return expr
     return do_one_rl
 
+
 def switch(key, ruledict):
     """ Select a rule based on the result of key called on the function """
     def switch_rl(expr):
@@ -97,6 +108,7 @@ def switch(key, ruledict):
     return switch_rl
 
 identity = lambda x: x
+
 
 def minimize(*rules, **kwargs):
     """ Select result of rules that minimizes objective
@@ -114,6 +126,7 @@ def minimize(*rules, **kwargs):
     """
 
     objective = kwargs.get('objective', identity)
+
     def minrule(expr):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule

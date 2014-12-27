@@ -10,6 +10,7 @@ from sympy.utilities import public
 
 import math
 
+
 @public
 class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     """General class for integer rings. """

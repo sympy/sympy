@@ -148,6 +148,7 @@ def test_sorted_args():
     assert b21._sorted_args == b21.args
     raises(AttributeError, lambda: x._sorted_args)
 
+
 def test_call():
     x, y = symbols('x y')
     # See the long history of this in issues 5026 and 5105.
@@ -168,6 +169,7 @@ def test_call():
     #assert (2*f)(x) == 2*f(x)
 
     assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
+
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral

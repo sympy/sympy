@@ -23,6 +23,7 @@ import inspect
 
 from sympy.utilities.pytest import XFAIL
 
+
 @XFAIL
 def test_module_imports_are_direct():
     my_filename = abspath(inspect.getfile(inspect.currentframe()))

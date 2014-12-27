@@ -477,6 +477,7 @@ def test_expand():
         [0, 0, 1]]
     )
 
+
 def test_random():
     M = randMatrix(3, 3)
     M = randMatrix(3, 3, seed=3)
@@ -1002,6 +1003,7 @@ def test_zip_row_op():
         assert M == cls([[2, -1, 0],
                          [4,  0, 0],
                          [0,  0, 2]])
+
 
 def test_issue_3950():
     m = Matrix([1, 2, 3])
@@ -2027,11 +2029,14 @@ def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
 
+
 def test_DeferredVector_not_iterable():
     assert not iterable(DeferredVector('X'))
 
+
 def test_DeferredVector_Matrix():
     raises(TypeError, lambda: Matrix(DeferredVector("V")))
+
 
 def test_GramSchmidt():
     R = Rational
@@ -2262,10 +2267,12 @@ def test_adjoint():
     for cls in classes:
         assert ans == cls(dat).adjoint()
 
+
 def test_simplify_immutable():
     from sympy import simplify, sin, cos
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
+
 
 def test_rank():
     from sympy.abc import x
@@ -2276,6 +2283,7 @@ def test_rank():
     p = zeros(3)
     assert p.rank() == 0
 
+
 def test_replace():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
@@ -2283,6 +2291,7 @@ def test_replace():
     M = Matrix(2, 2, lambda i, j: F(i+j))
     N = M.replace(F, G)
     assert N == K
+
 
 def test_replace_map():
     from sympy import symbols, Function, Matrix
@@ -2293,11 +2302,13 @@ def test_replace_map():
     N = M.replace(F, G, True)
     assert N == K
 
+
 def test_atoms():
     from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.atoms() == set([S(1),S(2),S(-1), x])
     assert m.atoms(Symbol) == set([x])
+
 
 @slow
 def test_pinv():
@@ -2317,6 +2328,7 @@ def test_pinv():
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
@@ -2351,6 +2363,7 @@ def test_pinv_solve():
     # Proof the solution is not exact.
     assert A * A.pinv() * B != B
 
+
 @XFAIL
 def test_pinv_rank_deficient():
     # Test the four properties of the pseudoinverse for various matrices.
@@ -2381,13 +2394,16 @@ def test_pinv_rank_deficient():
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
 
+
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])
 
+
 def test_free_symbols():
     for M in ImmutableMatrix, ImmutableSparseMatrix, Matrix, SparseMatrix:
         assert M([[x], [0]]).free_symbols == set([x])
+
 
 def test_from_ndarray():
     """See issue 7465."""
@@ -2403,6 +2419,7 @@ def test_from_ndarray():
     assert Matrix(array([x, y, z])) == Matrix([x, y, z])
     raises(NotImplementedError, lambda: Matrix(array([[
         [1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+
 
 def test_hermitian():
     a = Matrix([[1, I], [-I, 1]])

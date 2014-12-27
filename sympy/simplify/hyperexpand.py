@@ -79,6 +79,7 @@ from sympy.simplify import powdenest, simplify, polarify, unpolarify
 from sympy.polys import poly, Poly
 from sympy.series import residue
 
+
 # function to define "buckets"
 def _mod1(x):
     # TODO see if this can work as Mod(x, 1); this will require
@@ -660,6 +661,7 @@ class G_Function(Expr):
 # Dummy variable.
 _x = Dummy('x')
 
+
 class Formula(object):
     """
     This class represents hypergeometric formulae.
@@ -787,8 +789,6 @@ class Formula(object):
                     values.append([a0 + n for n in range(min_, max_ + 1)])
                 result.extend(dict(list(zip(self.symbols, l))) for l in product(*values))
         return result
-
-
 
 
 class FormulaCollection(object):

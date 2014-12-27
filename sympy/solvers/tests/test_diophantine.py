@@ -9,10 +9,13 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.utilities import default_sort_key
 
+
 x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", integer=True)
+
 
 def test_input_format():
     raises(TypeError, lambda: diophantine(sin(x)))
+
 
 def test_univariate():
 
@@ -547,7 +550,6 @@ def test_assumptions():
     a, b = symbols('a b', integer=True, positive=False)
     diof = diophantine(a*b + 2*a + 3*b - 6)
     assert diof == set([(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)])
-
 
 
 def check_solutions(eq):

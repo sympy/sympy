@@ -1,5 +1,6 @@
 from .cartan_type import CartanType
 
+
 def CartanMatrix(ct):
     """
     This is a method that allows a user to access

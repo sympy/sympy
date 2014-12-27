@@ -3,8 +3,10 @@ from __future__ import print_function, division
 
 from sympy.core.compatibility import get_function_name
 
+
 def identity(x):
     yield x
+
 
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
@@ -19,6 +21,7 @@ def exhaust(brule):
             yield expr
     return exhaust_brl
 
+
 def onaction(brule, fn):
     def onaction_brl(expr):
         for result in brule(expr):
@@ -26,6 +29,7 @@ def onaction(brule, fn):
                 fn(brule, expr, result)
             yield result
     return onaction_brl
+
 
 def debug(brule, file=None):
     """ Print the input and output expressions at each rule application """
@@ -39,6 +43,7 @@ def debug(brule, file=None):
 
     return onaction(brule, write)
 
+
 def multiplex(*brules):
     """ Multiplex many branching rules into one """
     def multiplex_brl(expr):
@@ -50,6 +55,7 @@ def multiplex(*brules):
                     yield nexpr
     return multiplex_brl
 
+
 def condition(cond, brule):
     """ Only apply branching rule if condition is true """
     def conditioned_brl(expr):
@@ -59,12 +65,14 @@ def condition(cond, brule):
             pass
     return conditioned_brl
 
+
 def sfilter(pred, brule):
     """ Yield only those results which satisfy the predicate """
     def filtered_brl(expr):
         for x in filter(pred, brule(expr)):
             yield x
     return filtered_brl
+
 
 def notempty(brule):
     def notempty_brl(expr):
@@ -75,6 +83,7 @@ def notempty(brule):
         if not yielded:
             yield expr
     return notempty_brl
+
 
 def do_one(*brules):
     """ Execute one of the branching rules """
@@ -87,6 +96,7 @@ def do_one(*brules):
             if yielded:
                 raise StopIteration()
     return do_one_brl
+
 
 def chain(*brules):
     """
@@ -103,6 +113,7 @@ def chain(*brules):
                 yield nnexpr
 
     return chain_brl
+
 
 def yieldify(rl):
     """ Turn a rule into a branching rule """

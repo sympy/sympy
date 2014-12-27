@@ -3,6 +3,7 @@ from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot)
 from sympy.utilities.pytest import slow, ON_TRAVIS, skip
 
+
 @slow
 def test_bicycle():
     if ON_TRAVIS:
@@ -123,7 +124,6 @@ def test_bicycle():
     BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
     BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
 
-
     # The kinematic differential equations; they are defined quite simply. Each
     # entry in this list is equal to zero.
     kd = [q1d - u1, q2d - u2, q4d - u4, q5d - u5]
@@ -156,7 +156,6 @@ def test_bicycle():
         (WF_mc, -mwf * g * Y.z),
         (WR_mc, -mwr * g * Y.z)]
     BL = [BodyFrame, BodyFork, BodyWR, BodyWF]
-
 
     # The N frame is the inertial frame, coordinates are supplied in the order
     # of independent, dependent coordinates, as are the speeds. The kinematic
@@ -263,7 +262,6 @@ def test_bicycle():
     MM_full_s = MM_full.subs(val_dict)
     forcing_lin_s = forcing_lin.subs(KM.kindiffdict()).subs(val_dict)
 
-
     MM_full_s = MM_full_s.evalf()
     forcing_lin_s = forcing_lin_s.evalf()
 
@@ -280,7 +278,6 @@ def test_bicycle():
                   [               0,                                           0,                    0,                  1.0],
                   [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v],
                   [11.7194768719633,   -1.97171508499972*v**2 + 30.9087533932407,   3.67680523332152*v,  -3.08486552743311*v]])
-
 
     # Actual eigenvalue comparison
     eps = 1.e-12

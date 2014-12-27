@@ -378,6 +378,7 @@ def test_basic_multivector_operations():
 
     return
 
+
 def test_check_generalized_BAC_CAB_formulas():
     with GA_Printer():
         (a, b, c, d, e) = MV.setup('a b c d e')
@@ -394,6 +395,7 @@ def test_check_generalized_BAC_CAB_formulas():
         assert str((a | (b ^ c)) | (d ^ e)) == '(-(a.b)*(c.e) + (a.c)*(b.e))*d + ((a.b)*(c.d) - (a.c)*(b.d))*e'
 
     return
+
 
 def test_derivatives_in_rectangular_coordinates():
     with GA_Printer():
@@ -428,6 +430,7 @@ def test_derivatives_in_rectangular_coordinates():
 
     return
 
+
 def test_derivatives_in_spherical_coordinates():
     with GA_Printer():
         X = (r, th, phi) = symbols('r theta phi')
@@ -449,6 +452,7 @@ def test_derivatives_in_spherical_coordinates():
 
     return
 
+
 def test_rounding_numerical_components():
     with GA_Printer():
         (ex, ey, ez) = MV.setup('e_x e_y e_z', metric='[1,1,1]')
@@ -462,6 +466,7 @@ def test_rounding_numerical_components():
         assert str(Nga(X*Y, 2)) == '13. + 4.0*e_x^e_y + 6.2*e_x^e_z + 10.*e_y^e_z'
 
     return
+
 
 def test_noneuclidian_distance_calculation():
     from sympy import solve, sqrt
@@ -557,6 +562,7 @@ def test_noneuclidian_distance_calculation():
 
     return
 
+
 def test_conformal_representations_of_circles_lines_spheres_and_planes():
     global n, nbar
     with GA_Printer():
@@ -591,6 +597,7 @@ def test_conformal_representations_of_circles_lines_spheres_and_planes():
 
     return
 
+
 def test_properties_of_geometric_objects():
     with GA_Printer():
         metric = '# # # 0 0,' + \
@@ -615,6 +622,7 @@ def test_properties_of_geometric_objects():
         assert str((p2 - p1) ^ (p3 - p1)) == 'p1^p2 - p1^p3 + p2^p3'
 
     return
+
 
 def test_extracting_vectors_from_conformal_2_blade():
     with GA_Printer():
@@ -643,6 +651,7 @@ def test_extracting_vectors_from_conformal_2_blade():
         assert str(aB) == '-(P2.a)*P1 + (P1.a)*P2'
 
     return
+
 
 def test_reciprocal_frame_test():
     with GA_Printer():

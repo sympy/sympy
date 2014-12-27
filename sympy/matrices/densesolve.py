@@ -14,6 +14,7 @@ from sympy.core.compatibility import xrange
 from sympy import QQ
 import copy
 
+
 def row_echelon(matlist, K):
     """
     Returns the row echelon form of a matrix with diagonal elements

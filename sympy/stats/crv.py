@@ -214,6 +214,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         integral = Integral(expr * self.pdf(var), (var, self.set), **kwargs)
         return integral.doit() if evaluate else integral
 
+
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
@@ -400,6 +401,7 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def pdf(self):
         p = Mul(*[space.pdf for space in self.spaces])
         return p.subs(dict((rv, rv.symbol) for rv in self.values))
+
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

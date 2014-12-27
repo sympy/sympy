@@ -12,6 +12,7 @@ from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorde
 
 from sympy.utilities import public
 
+
 @public
 class FractionField(Field, CharacteristicZero, CompositeDomain):
     """A class for representing rational function fields. """

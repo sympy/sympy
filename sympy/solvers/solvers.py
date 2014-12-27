@@ -183,7 +183,6 @@ def checksol(f, symbol, sol=None, **flags):
     elif isinstance(f, Equality):
         f = f.lhs - f.rhs
 
-
     if not f:
         return True
 
@@ -1405,7 +1404,6 @@ def _solve(f, *symbols, **flags):
                                         inversion for s in soln])))
                         result = soln
 
-
     # fallback if above fails
     if result is False:
 
@@ -1824,6 +1822,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         # We just solve the system and try to heuristically find a nice
         # solution.
         s = solve_linear_system(system, *symbols)
+
         def update(determined, solution):
             delete = []
             for k, v in solution.items():
@@ -1833,6 +1832,7 @@ def minsolve_linear_system(system, *symbols, **flags):
                     determined[k] = solution[k]
             for k in delete:
                 del solution[k]
+
         determined = {}
         update(determined, s)
         while s:

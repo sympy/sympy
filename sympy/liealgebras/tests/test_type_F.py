@@ -2,6 +2,7 @@ from __future__ import division
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
 
+
 def test_type_F():
     c = CartanType("F4")
     m = Matrix(4, 4, [2, -1, 0, 0, -1, 2, -2, 0, 0, -1, 2, -1, 0, 0, -1, 2])

@@ -5,6 +5,7 @@ from sympy.physics.optics import Medium
 from sympy.abc import epsilon, mu
 from sympy.physics.units import c, u0, e0, m, kg, s, A
 
+
 def test_medium():
     m1 = Medium('m1')
     assert m1.intrinsic_impedance == sqrt(u0/e0)

@@ -7,6 +7,7 @@ from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
 
+
 rmul = Perm.rmul
 
 

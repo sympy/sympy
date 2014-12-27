@@ -632,5 +632,6 @@ def test_fresnel():
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
+
 def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None

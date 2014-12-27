@@ -22,17 +22,21 @@ __all__ = [
 from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS, SWAP, S, T,CPHASE
 from sympy.physics.quantum.circuitplot import Mz
 
+
 def read_qasm(lines):
     return Qasm(*lines.splitlines())
 
+
 def read_qasm_file(filename):
     return Qasm(*open(filename).readlines())
+
 
 def prod(c):
     p = 1
     for ci in c:
         p *= ci
     return p
+
 
 def flip_index(i, n):
     """Reorder qubit indices from largest to smallest.
@@ -44,6 +48,7 @@ def flip_index(i, n):
     0
     """
     return n-i-1
+
 
 def trim(line):
     """Remove everything following comment # characters in line.
@@ -58,6 +63,7 @@ def trim(line):
         return line
     return line.split('#')[0]
 
+
 def get_index(target, labels):
     """Get qubit labels from the rest of the line,and return indices
 
@@ -70,8 +76,10 @@ def get_index(target, labels):
     nq = len(labels)
     return flip_index(labels.index(target), nq)
 
+
 def get_indices(targets, labels):
     return [get_index(t, labels) for t in targets]
+
 
 def nonblank(args):
     for line in args:
@@ -81,10 +89,12 @@ def nonblank(args):
         yield line
     return
 
+
 def fullsplit(line):
     words = line.split()
     rest = ' '.join(words[1:])
     return fixcommand(words[0]), [s.strip() for s in rest.split(',')]
+
 
 def fixcommand(c):
     """Fix Qasm command names.
@@ -100,6 +110,7 @@ def fixcommand(c):
         return 'qdef'
     return c
 
+
 def stripquotes(s):
     """Replace explicit quotes in a string.
 
@@ -114,6 +125,7 @@ def stripquotes(s):
     s = s.replace('"', '') # Remove second set of quotes?
     s = s.replace("'", '')
     return s
+
 
 class Qasm(object):
     """Class to form objects from Qasm lines

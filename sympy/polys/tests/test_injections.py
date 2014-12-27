@@ -7,16 +7,20 @@ from sympy.utilities.pytest import raises
 
 # make r1 with call-depth = 1
 
+
 def _make_r1():
     return vring("r1", QQ)
 
 # make r2 with call-depth = 2
 
+
 def __make_r2():
     return vring("r2", QQ)
 
+
 def _make_r2():
     return __make_r2()
+
 
 def test_vring():
     R = vring("r", QQ)
@@ -43,18 +47,22 @@ def test_vring():
     R = _make_r2()
     assert r2 == R.gens[0]
 
+
 # make f1 with call-depth = 1
 
 def _make_f1():
     return vfield("f1", QQ)
+
 
 # make f2 with call-depth = 2
 
 def __make_f2():
     return vfield("f2", QQ)
 
+
 def _make_f2():
     return __make_f2()
+
 
 def test_vfield():
     F = vfield("f", QQ)

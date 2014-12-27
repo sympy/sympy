@@ -8,6 +8,7 @@ from sympy.polys.polyerrors import GeneratorsError
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
 
+
 @public
 class CompositeDomain(Domain):
     """Base class for composite domains, e.g. ZZ[x], ZZ(X). """

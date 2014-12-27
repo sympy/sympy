@@ -30,6 +30,7 @@ def test_super_sub():
     assert split_super_sub("alpha_11") == ("alpha", [], ["11"])
     assert split_super_sub("alpha_11_11") == ("alpha", [], ["11", "11"])
 
+
 def test_requires_partial():
     x, y, z, t, nu = symbols('x y z t nu')
     n = symbols('n', integer=True)

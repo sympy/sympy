@@ -7,6 +7,7 @@ from sympy.polys.domains.pythonintegerring import PythonIntegerRing
 
 from sympy.utilities import public
 
+
 @public
 class PythonFiniteField(FiniteField):
     """Finite field based on Python's integers. """

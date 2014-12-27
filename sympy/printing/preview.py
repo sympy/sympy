@@ -17,6 +17,7 @@ from .latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 
+
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
@@ -154,7 +155,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                                  "compatible object if viewer=\"BytesIO\"")
         elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
-
 
     if preamble is None:
         actual_packages = packages + ("amsmath", "amsfonts")

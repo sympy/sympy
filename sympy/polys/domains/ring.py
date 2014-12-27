@@ -7,6 +7,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotRevers
 
 from sympy.utilities import public
 
+
 @public
 class Ring(Domain):
     """Represents a ring domain. """

@@ -31,7 +31,9 @@ def test_unexpected_exception_is_passed_through_callable():
     except ValueError as e:
         assert str(e) == "some error message"
 
+
 # Test with statement
+
 
 def test_expected_exception_is_silent_with():
     with raises(ValueError):

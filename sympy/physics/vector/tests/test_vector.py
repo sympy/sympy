@@ -54,6 +54,7 @@ def test_Vector():
     assert v1.separate() == {A: v1}
     assert v5.separate() == {A: x*A.x + y*A.y, B: z*B.z}
 
+
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4', 1)

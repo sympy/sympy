@@ -314,6 +314,7 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
+
 def symbols(names, **args):
     """
     Transform strings into instances of :class:`Symbol` class.
@@ -444,6 +445,7 @@ def symbols(names, **args):
                 marker += 1
                 names = names.replace(lit, lit_char)
                 literals.append((lit_char, lit[1:]))
+
         def literal(s):
             if literals:
                 for c, l in literals:

@@ -15,6 +15,7 @@ from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
 i = Symbol('i')
 
+
 def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
     Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
@@ -295,6 +296,7 @@ def test_integrate_hyperexponential():
     assert factor(elem) == -((x - 1)*log(x)/((x + exp(x**2))*(2*x**2 - 1)))
     assert (nonelem, b) == (NonElementaryIntegral(exp(x**2)/(exp(x**2) + 1), x), False)
 
+
 def test_integrate_hyperexponential_polynomial():
     # Without proper cancellation within integrate_hyperexponential_polynomial(),
     # this will take a long time to complete, and will return a complicated
@@ -354,6 +356,7 @@ def test_integrate_hyperexponential_returns_piecewise():
     # TODO: Add a test where two different parts of the extension use a
     # Piecewise, like y**x + z**x.
 
+
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
         'Tfuncs': [log]})
@@ -377,6 +380,7 @@ def test_integrate_primitive():
     + 2*x)*t0 + x**2 + x, t0), Poly(x**2*t0**4 + 4*x**2*t0**3 + 6*x**2*t0**2 +
     4*x**2*t0 + x**2, t0), DE) == \
         (-1/(log(x) + 1), NonElementaryIntegral(1/(log(x) + 1), x), False)
+
 
 def test_integrate_hypertangent_polynomial():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
@@ -640,7 +644,6 @@ def test_risch_integrate():
     assert risch_integrate((1 + 2*x**2 + x**4 + 2*x**3*exp(2*x**2))/
     (x**4*exp(x**2) + 2*x**2*exp(x**2) + exp(x**2)), x) == \
         NonElementaryIntegral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
-
 
     assert risch_integrate(0, x) == 0
 

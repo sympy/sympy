@@ -13,6 +13,7 @@ from sympy.polys.polyutils import _unify_gens
 
 from sympy.utilities import default_sort_key, public
 
+
 @public
 class Domain(object):
     """Represents an abstract domain. """

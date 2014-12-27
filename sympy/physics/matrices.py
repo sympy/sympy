@@ -154,6 +154,7 @@ minkowski_tensor = Matrix( (
     (0, 0, 0, -1)
 ))
 
+
 def mdft(n):
     r"""
     Returns an expression of a discrete Fourier transform as a matrix multiplication.

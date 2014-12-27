@@ -138,7 +138,6 @@ def test_harmonic_rational():
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
              + 11818877030/S(4286604231) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(-sqrt(5)/2 + 1/S(2)) )
 
-
     Heoo = harmonic(ne + po/qo)
     Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
              + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
@@ -200,12 +199,14 @@ def test_harmonic_rewrite_polygamma():
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
 
+
 @XFAIL
 def test_harmonic_limit_fail():
     n = Symbol("n")
     m = Symbol("m")
     # For m > 1:
     assert limit(harmonic(n, m), n, oo) == zeta(m)
+
 
 @XFAIL
 def test_harmonic_rewrite_sum_fail():
@@ -284,6 +285,7 @@ def test_catalan():
     assert str(c) == '0.848826363156775'
     c = catalan(I).evalf(3)
     assert str((re(c), im(c))) == '(0.398, -0.0209)'
+
 
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (

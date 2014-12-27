@@ -118,12 +118,14 @@ def test_matrix_zeros_sympy():
     sym = matrix_zeros(4, 4, format='sympy')
     assert isinstance(sym, Matrix)
 
+
 def test_matrix_zeros_numpy():
     if not np:
         skip("numpy not installed.")
 
     num = matrix_zeros(4, 4, format='numpy')
     assert isinstance(num, numpy_ndarray)
+
 
 def test_matrix_zeros_scipy():
     if not np:

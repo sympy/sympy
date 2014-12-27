@@ -9,6 +9,7 @@ from sympy.polys.orthopolys import legendre_poly, laguerre_poly, hermite_poly, j
 from sympy.polys.rootoftools import RootOf
 from sympy.core.compatibility import xrange
 
+
 def gauss_legendre(n, n_digits):
     r"""
     Computes the Gauss-Legendre quadrature [1]_ points and weights.
@@ -75,6 +76,7 @@ def gauss_legendre(n, n_digits):
         xi.append(r.n(n_digits))
         w.append((2/((1-r**2) * pd.subs(x, r)**2)).n(n_digits))
     return xi, w
+
 
 def gauss_laguerre(n, n_digits):
     r"""
@@ -144,6 +146,7 @@ def gauss_laguerre(n, n_digits):
         w.append((r/((n+1)**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
 
+
 def gauss_hermite(n, n_digits):
     r"""
     Computes the Gauss-Hermite quadrature [1]_ points and weights.
@@ -212,6 +215,7 @@ def gauss_hermite(n, n_digits):
         xi.append(r.n(n_digits))
         w.append(((2**(n-1) * factorial(n) * sqrt(pi))/(n**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
+
 
 def gauss_gen_laguerre(n, alpha, n_digits):
     r"""
@@ -285,6 +289,7 @@ def gauss_gen_laguerre(n, alpha, n_digits):
         w.append((gamma(alpha+n)/(n*gamma(n)*p1.subs(x, r)*p2.subs(x, r))).n(n_digits))
     return xi, w
 
+
 def gauss_chebyshev_t(n, n_digits):
     r"""
     Computes the Gauss-Chebyshev quadrature [1]_ points and weights of
@@ -351,6 +356,7 @@ def gauss_chebyshev_t(n, n_digits):
         w.append((S.Pi/n).n(n_digits))
     return xi, w
 
+
 def gauss_chebyshev_u(n, n_digits):
     r"""
     Computes the Gauss-Chebyshev quadrature [1]_ points and weights of
@@ -416,6 +422,7 @@ def gauss_chebyshev_u(n, n_digits):
         xi.append((cos(i/(n+S.One)*S.Pi)).n(n_digits))
         w.append((S.Pi/(n+S.One)*sin(i*S.Pi/(n+S.One))**2).n(n_digits))
     return xi, w
+
 
 def gauss_jacobi(n, alpha, beta, n_digits):
     r"""

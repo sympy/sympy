@@ -20,6 +20,7 @@ from sympy.utilities import public
 
 x = Symbol('x')
 
+
 @public
 class PolyQuintic(object):
     """Special functions for solvable quintics"""

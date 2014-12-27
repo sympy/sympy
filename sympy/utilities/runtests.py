@@ -49,6 +49,7 @@ import __future__
 # add more flags ??
 future_flags = __future__.division.compiler_flag
 
+
 def _indent(s, indent=4):
     """
     Add the given number of space characters to the beginning of
@@ -477,7 +478,6 @@ def _test(*paths, **kwargs):
         force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed)
 
-
     # Disable warnings for external modules
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
@@ -784,6 +784,7 @@ def _doctest(*paths, **kwargs):
     return int(failed)
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+
 
 def split_list(l, split):
     """
@@ -1374,6 +1375,7 @@ class SymPyDocTests(object):
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
+
             class DummyWindow(object):
                 def __init__(self, *args, **kwargs):
                     self.has_exit=True
@@ -1395,6 +1397,7 @@ class SymPyDocTests(object):
             pyglet.window.Window = DummyWindow
 
         return True
+
 
 class SymPyDocTestFinder(DocTestFinder):
     """

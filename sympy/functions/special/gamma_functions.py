@@ -192,6 +192,7 @@ class gamma(Function):
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
+
 class lowergamma(Function):
     r"""
     The lower incomplete gamma function.
@@ -241,7 +242,6 @@ class lowergamma(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
     .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
     """
-
 
     def fdiff(self, argindex=2):
         from sympy import meijerg, unpolarify
@@ -327,6 +327,7 @@ class lowergamma(Function):
     def _latex_no_arg(printer):
         return r'\gamma'
 
+
 class uppergamma(Function):
     r"""
     The upper incomplete gamma function.
@@ -386,7 +387,6 @@ class uppergamma(Function):
     .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
     .. [6] http://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
     """
-
 
     def fdiff(self, argindex=2):
         from sympy import meijerg, unpolarify
@@ -465,6 +465,7 @@ class uppergamma(Function):
 ###############################################################################
 ###################### POLYGAMMA and LOGGAMMA FUNCTIONS #######################
 ###############################################################################
+
 
 class polygamma(Function):
     r"""
@@ -560,7 +561,6 @@ class polygamma(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
-
 
     def fdiff(self, argindex=2):
         if argindex == 2:

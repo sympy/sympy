@@ -10,7 +10,9 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
 from sympy.core.mod import Mod
 
+
 n = Symbol('n', integer=True)
+
 
 def test_karr_convention():
     # Test the Karr summation convention that we want to hold.

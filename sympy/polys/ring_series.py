@@ -9,6 +9,7 @@ from sympy.core.compatibility import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
 
+
 def _invert_monoms(p1):
     """
     Compute ``x**n * p1(1/x)`` for ``p1`` univariate polynomial.
@@ -40,6 +41,7 @@ def _invert_monoms(p1):
         p[(deg - mv[i][0],)] = cv[i]
     return p
 
+
 def _giant_steps(target):
     """
     list of precision steps for the Newton's method
@@ -49,6 +51,7 @@ def _giant_steps(target):
     if res[0] != 2:
         res = [2] + res
     return res
+
 
 def rs_trunc(p1, x, prec):
     """
@@ -131,6 +134,7 @@ def rs_mul(p1, p2, x, prec):
     p.strip_zero()
     return p
 
+
 def rs_square(p1, x, prec):
     """
     square modulo ``O(x**prec)``
@@ -170,6 +174,7 @@ def rs_square(p1, x, prec):
             p[e2] = get(e2, 0) + v**2
     p.strip_zero()
     return p
+
 
 def rs_pow(p1, n, x, prec):
     """
@@ -218,6 +223,7 @@ def rs_pow(p1, n, x, prec):
         n = n // 2
     return p
 
+
 def _has_constant_term(p, x):
     """
     test if ``p`` has a constant term in ``x``
@@ -243,6 +249,7 @@ def _has_constant_term(p, x):
         if monomial_min(expv, miv) == zm:
             return True
     return False
+
 
 def _series_inversion1(p, x, prec):
     """
@@ -279,6 +286,7 @@ def _series_inversion1(p, x, prec):
         p1 = 2*p1 - tmp
     return p1
 
+
 def rs_series_inversion(p, x, prec):
     """
     multivariate series inversion ``1/p`` modulo ``O(x**prec)``
@@ -306,6 +314,7 @@ def rs_series_inversion(p, x, prec):
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     return _series_inversion1(p, x, prec)
+
 
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
@@ -392,6 +401,7 @@ def rs_series_from_list(p, c, x, prec, concur=1):
         s += s1
     return s
 
+
 def rs_integrate(self, x):
     """
     integrate ``p`` with respect to ``x``
@@ -418,6 +428,7 @@ def rs_integrate(self, x):
         e = monomial_mul(expv, mn)
         p1[e] = self[expv]/(expv[n] + 1)
     return p1
+
 
 def rs_log(p, x, prec):
     """
@@ -447,6 +458,7 @@ def rs_log(p, x, prec):
     dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
     return rs_integrate(dlog, x)
 
+
 def _exp1(p, x, prec):
     """
     helper function for ``rs_exp``
@@ -458,6 +470,7 @@ def _exp1(p, x, prec):
         tmp = rs_mul(pt, p1, x, precx)
         p1 += tmp
     return p1
+
 
 def rs_exp(p, x, prec):
     """
@@ -490,6 +503,7 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
+
 def rs_newton(p, x, prec):
     """
     compute the truncated Newton sum of the polynomial ``p``
@@ -511,6 +525,7 @@ def rs_newton(p, x, prec):
     p3 = rs_mul(p1.diff(x), p2, x, prec)
     res = deg - p3*x
     return res
+
 
 def rs_hadamard_exp(p1, inverse=False):
     """
@@ -541,6 +556,7 @@ def rs_hadamard_exp(p1, inverse=False):
         for exp1, v1 in p1.items():
             p[exp1] = v1*int(ifac(exp1[0]))
     return p
+
 
 def rs_compose_add(p1, p2):
     """

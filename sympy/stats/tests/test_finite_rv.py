@@ -181,9 +181,11 @@ def test_coins():
 
     raises(ValueError, lambda: P(C > D))  # Can't intelligently compare H to T
 
+
 def test_binomial_verify_parameters():
     raises(ValueError, lambda: Binomial('b', .2, .5))
     raises(ValueError, lambda: Binomial('b', 3, 1.5))
+
 
 def test_binomial_numeric():
     nvals = range(5)
@@ -213,6 +215,7 @@ def test_binomial_symbolic():
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
+
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -247,6 +250,7 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
+
 
 def test_density_call():
     x = Bernoulli('x', p)

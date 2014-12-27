@@ -230,6 +230,7 @@ class Pow(Expr):
                 n, d = e.as_numer_denom()
                 if n.is_integer and d == 2:
                     return True
+
             def _n2(e):
                 """Return ``e`` evaluated to a Number with 2 significant
                 digits, else None."""

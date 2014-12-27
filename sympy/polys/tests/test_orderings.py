@@ -9,6 +9,7 @@ from sympy.abc import x, y, z, t
 from sympy.core import S
 from sympy.utilities.pytest import raises
 
+
 def test_lex_order():
     assert lex((1, 2, 3)) == (1, 2, 3)
     assert str(lex) == 'lex'
@@ -26,6 +27,7 @@ def test_lex_order():
     assert lex.is_global is True
     assert lex == LexOrder()
     assert lex != grlex
+
 
 def test_grlex_order():
     assert grlex((1, 2, 3)) == (6, (1, 2, 3))
@@ -52,6 +54,7 @@ def test_grlex_order():
 
     assert grlex.is_global is True
 
+
 def test_grevlex_order():
     assert grevlex((1, 2, 3)) == (6, (-3, -2, -1))
     assert str(grevlex) == 'grevlex'
@@ -77,6 +80,7 @@ def test_grevlex_order():
 
     assert grevlex.is_global is True
 
+
 def test_InverseOrder():
     ilex = InverseOrder(lex)
     igrlex = InverseOrder(grlex)
@@ -90,6 +94,7 @@ def test_InverseOrder():
     assert ilex != igrlex
     assert ilex == InverseOrder(LexOrder())
 
+
 def test_ProductOrder():
     P = ProductOrder((grlex, lambda m: m[:2]), (grlex, lambda m: m[2:]))
     assert P((1, 3, 3, 4, 5)) > P((2, 1, 5, 5, 5))
@@ -97,6 +102,7 @@ def test_ProductOrder():
     assert P.is_global is True
     assert ProductOrder((grlex, None), (ilex, None)).is_global is None
     assert ProductOrder((igrlex, None), (ilex, None)).is_global is False
+
 
 def test_monomial_key():
     assert monomial_key() == lex
@@ -115,6 +121,7 @@ def test_monomial_key():
         [S(1), x, y, z, x**2, x*y, y**2, x**3, x**2*y**2, x*y**2*z, x**2*z**2]
     assert sorted(M, key=monomial_key('grevlex', [z, y, x])) == \
         [S(1), x, y, z, x**2, x*y, y**2, x**3, x**2*y**2, x**2*z**2, x*y**2*z]
+
 
 def test_build_product_order():
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])((4, 5, 6, 7)) == \

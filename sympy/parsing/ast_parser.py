@@ -29,6 +29,7 @@ from sympy.core.sympify import SympifyError
 from ast import parse, NodeTransformer, Call, Name, Load, \
     fix_missing_locations, Str, Tuple
 
+
 class Transform(NodeTransformer):
 
     def __init__(self, local_dict, global_dict):
@@ -64,6 +65,7 @@ class Transform(NodeTransformer):
         n = Call(Name('Lambda', Load()),
             [Tuple(args, Load()), body], [], None, None)
         return fix_missing_locations(n)
+
 
 def parse_expr(s, local_dict):
     """

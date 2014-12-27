@@ -145,6 +145,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2)*I + I*(1 + sqrt(2)), x,
             compose=False) ==  x**4 + 18*x**2 + 49
 
+
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
     mp = minimal_polynomial(p, x)
@@ -690,6 +691,7 @@ def test_isolate():
 
     raises(NotImplementedError, lambda: isolate(I))
 
+
 def test_minpoly_fraction_field():
     assert minimal_polynomial(1/x, y) == -x*y + 1
     assert minimal_polynomial(1 / (x + 1), y) == (x + 1)*y - 1
@@ -726,10 +728,12 @@ def test_minpoly_fraction_field():
     raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x) - y, x))
     raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), y, compose=False))
 
+
 @slow
 def test_minpoly_fraction_field_slow():
     assert minimal_polynomial(minimal_polynomial(sqrt(x**Rational(1,5) - 1),
         y).subs(y, sqrt(x**Rational(1,5) - 1)), z) == z
+
 
 def test_minpoly_domain():
     assert minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2))) == \

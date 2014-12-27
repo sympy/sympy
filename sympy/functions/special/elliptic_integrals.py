@@ -11,6 +11,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.gamma_functions import gamma
 
+
 class elliptic_k(Function):
     r"""
     The complete elliptic integral of the first kind, defined by

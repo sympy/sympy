@@ -59,6 +59,7 @@ def test_kronecker_delta():
     # to test if canonical
     assert (KroneckerDelta(i, j) == KroneckerDelta(j, i)) == True
 
+
 def test_kronecker_delta_secondquant():
     """secondquant-specific methods"""
     D = KroneckerDelta

@@ -38,27 +38,35 @@ def test_monomial_count():
     assert monomial_count(2, 2) == 6
     assert monomial_count(2, 3) == 10
 
+
 def test_monomial_mul():
     assert monomial_mul((3, 4, 1), (1, 2, 0)) == (4, 6, 1)
+
 
 def test_monomial_div():
     assert monomial_div((3, 4, 1), (1, 2, 0)) == (2, 2, 1)
 
+
 def test_monomial_gcd():
     assert monomial_gcd((3, 4, 1), (1, 2, 0)) == (1, 2, 0)
+
 
 def test_monomial_lcm():
     assert monomial_lcm((3, 4, 1), (1, 2, 0)) == (3, 4, 1)
 
+
 def test_monomial_max():
     assert monomial_max((3, 4, 5), (0, 5, 1), (6, 3, 9)) == (6, 5, 9)
+
 
 def test_monomial_min():
     assert monomial_min((3, 4, 5), (0, 5, 1), (6, 3, 9)) == (0, 3, 1)
 
+
 def test_monomial_divides():
     assert monomial_divides((1, 2, 3), (4, 5, 6)) is True
     assert monomial_divides((1, 2, 3), (0, 5, 6)) is False
+
 
 def test_Monomial():
     m = Monomial((3, 4, 1), (x, y, z))

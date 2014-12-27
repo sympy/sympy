@@ -6,25 +6,31 @@ from sympy.utilities.pytest import skip
 
 mpl = import_module('matplotlib')
 
+
 def test_render_label():
     assert render_label('q0') == r'$|q0\rangle$'
     assert render_label('q0', {'q0': '0'}) == r'$|q0\rangle=|0\rangle$'
 
+
 def test_Mz():
     assert str(Mz(0)) == 'Mz(0)'
+
 
 def test_create1():
     Qgate = CreateOneQubitGate('Q')
     assert str(Qgate(0)) == 'Q(0)'
 
+
 def test_createc():
     Qgate = CreateCGate('Q')
     assert str(Qgate([1],0)) == 'C((1),Q(0))'
+
 
 def test_labeller():
     """Test the labeller utility"""
     assert labeller(2) == ['q_1', 'q_0']
     assert labeller(3,'j') == ['j_2', 'j_1', 'j_0']
+
 
 def test_cnot():
     """Test a simple cnot circuit. Right now this only makes sure the code doesn't
@@ -45,6 +51,7 @@ def test_cnot():
     assert c.nqubits == 2
     assert c.labels == []
 
+
 def test_ex1():
     if not mpl:
         skip("matplotlib not installed")
@@ -55,6 +62,7 @@ def test_ex1():
     assert c.ngates == 2
     assert c.nqubits == 2
     assert c.labels == ['q_1', 'q_0']
+
 
 def test_ex4():
     if not mpl:

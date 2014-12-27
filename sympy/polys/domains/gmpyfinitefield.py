@@ -7,6 +7,7 @@ from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
 
 from sympy.utilities import public
 
+
 @public
 class GMPYFiniteField(FiniteField):
     """Finite field based on GMPY integers. """

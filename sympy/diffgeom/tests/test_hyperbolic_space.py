@@ -18,6 +18,7 @@ from sympy.diffgeom import (twoform_to_matrix,
                             metric_to_Riemann_components, metric_to_Ricci_components)
 import sympy.diffgeom.rn
 
+
 def test_H2():
     TP = sympy.diffgeom.TensorProduct
     R2 = sympy.diffgeom.rn.R2

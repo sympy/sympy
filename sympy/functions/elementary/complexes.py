@@ -595,6 +595,7 @@ class arg(Function):
         x, y = re(self.args[0]), im(self.args[0])
         return atan2(y, x)
 
+
 class conjugate(Function):
     """
     Changes the sign of the imaginary part of a complex number.

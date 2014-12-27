@@ -33,9 +33,11 @@ import warnings
 from sympy.interactive.printing import init_printing
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+
 #-----------------------------------------------------------------------------
 # Definitions of special display functions for use with IPython
 #-----------------------------------------------------------------------------
+
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""

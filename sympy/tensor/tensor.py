@@ -1434,6 +1434,7 @@ class TensorIndex(Basic):
                 (not self._is_up))
         return t1
 
+
 def tensor_indices(s, typ):
     """
     Returns list of tensor indices given their names and their types
@@ -3457,6 +3458,7 @@ def canon_bp(p):
         return p.canon_bp()
     return p
 
+
 def tensor_mul(*a):
     """
     product of tensors
@@ -3483,6 +3485,7 @@ def riemann_cyclic_replace(t_r):
     t2 = S(1)/3*t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))
     t3 = t0 + t1 + t2
     return t3
+
 
 def riemann_cyclic(t2):
     """
@@ -3514,6 +3517,7 @@ def riemann_cyclic(t2):
         return t3
     else:
         return canon_bp(t3)
+
 
 def get_lines(ex, index_type):
     """

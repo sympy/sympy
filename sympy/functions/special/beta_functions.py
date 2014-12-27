@@ -7,6 +7,7 @@ from sympy.functions.special.gamma_functions import gamma, digamma
 ############################ COMPLETE BETA  FUNCTION ##########################
 ###############################################################################
 
+
 class beta(Function):
     r"""
     The beta integral is called the Eulerian integral of the first kind by

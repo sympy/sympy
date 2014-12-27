@@ -687,6 +687,7 @@ class Rotation(UnitaryOperator):
     def _apply_operator_JzKetCoupled(self, ket, **options):
         return self._apply_operator_coupled(JzKetCoupled, ket, **options)
 
+
 class WignerD(Expr):
     """Wigner-D function
 

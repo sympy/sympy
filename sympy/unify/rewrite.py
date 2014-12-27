@@ -8,6 +8,7 @@ from sympy.strategies.tools import subs
 from sympy import Expr
 from sympy.assumptions import Q, ask
 
+
 def rewriterule(source, target, variables=(), condition=None, assume=None):
     """ Rewrite rule
 

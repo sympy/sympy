@@ -811,7 +811,6 @@ class LambertW(Function):
         elif k.is_nonzero and (k + 1).is_nonzero:
             return False
 
-
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
         if s.func == self.func:

@@ -4,6 +4,7 @@ from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
 
 Vector.simp = True
 
+
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
     A = ReferenceFrame('A')

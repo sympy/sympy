@@ -121,6 +121,7 @@ def test_gaunt():
     assert tn(gaunt(
         10, 10, 12, 9, 3, -12, prec=64), (-S(98)/62031) * sqrt(6279)/sqrt(pi))
 
+
 def test_racah():
     assert racah(3,3,3,3,3,3) == Rational(-1,14)
     assert racah(2,2,2,2,2,2) == Rational(-3,70)

@@ -211,8 +211,6 @@ class TypeE(Standard_Cartan):
 
             return posroots
 
-
-
     def roots(self):
         """
         Returns the total number of roots of E_n
@@ -225,7 +223,6 @@ class TypeE(Standard_Cartan):
             return 126
         if n == 8:
             return 240
-
 
     def cartan_matrix(self):
         """
@@ -261,7 +258,6 @@ class TypeE(Standard_Cartan):
         m[2, 3] = -1
         m[n-1, n-2] = -1
         return m
-
 
     def basis(self):
         """

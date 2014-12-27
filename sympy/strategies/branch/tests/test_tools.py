@@ -8,6 +8,7 @@ def posdec(x):
     else:
         yield x
 
+
 def branch5(x):
     if isinstance(x, int):
         if 0 < x < 5:
@@ -20,12 +21,14 @@ def branch5(x):
         else:
             yield x
 
+
 def test_zero_ints():
     expr = Basic(2, Basic(5, 3), 8)
     expected = set([Basic(0, Basic(0, 0), 0)])
 
     brl = canon(posdec)
     assert set(brl(expr)) == expected
+
 
 def test_split5():
     expr = Basic(2, Basic(5,  3), 8)

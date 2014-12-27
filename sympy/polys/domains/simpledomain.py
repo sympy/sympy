@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.polys.domains.domain import Domain
 from sympy.utilities import public
 
+
 @public
 class SimpleDomain(Domain):
     """Base class for simple domains, e.g. ZZ, QQ. """

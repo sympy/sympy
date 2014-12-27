@@ -79,7 +79,6 @@ def linear_expand(expr):
     else:
         raise NotImplementedError("linear_expand for type %s" % type(expr))
 
-
     if not isinstance(coefs, list):  # convert single coef to list
         coefs = [coefs]
     if not isinstance(bases, list):  # convert single base to list
