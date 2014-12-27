@@ -33,6 +33,7 @@ def test_swap_back():
     assert solve(fx + gx**2*x - y, [fx, gx]) == [{fx: y - gx**2*x}]
     assert solve([f(1) - 2, x + 2]) == [{x: -2, f(1): 2}]
 
+
 def guess_solve_strategy(eq, symbol):
     try:
         solve(eq, symbol)
@@ -154,12 +155,9 @@ def test_solve_polynomial1():
     assert set(solve(Eq(x**2, 1), x)) == set([-S(1), S(1)])
 
     assert solve(x - y**3, x) == [y**3]
-    assert set(solve(x - y**3, y)) == set([
-        (-x**Rational(1, 3))/2 + I*sqrt(3)*x**Rational(1, 3)/2,
-        x**Rational(1, 3),
-        (-x**Rational(1, 3))/2 - I*sqrt(3)*x**Rational(1, 3)/2,
-    ])
-
+    rx = root(x, 3)
+    assert solve(x - y**3, y) == [
+        rx, -rx/2 - sqrt(3)*I*rx/2, -rx/2 +  sqrt(3)*I*rx/2]
     a11, a12, a21, a22, b1, b2 = symbols('a11,a12,a21,a22,b1,b2')
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
@@ -203,7 +201,7 @@ def test_solve_polynomial_cv_1a():
 
 def test_solve_polynomial_cv_1b():
     assert set(solve(4*x*(1 - a*sqrt(x)), x)) == set([S(0), 1/a**2])
-    assert set(solve(x * (x**(S(1)/3) - 3), x)) == set([S(0), S(27)])
+    assert set(solve(x*(root(x, 3) - 3), x)) == set([S(0), S(27)])
 
 
 def test_solve_polynomial_cv_2():
@@ -353,7 +351,7 @@ def test_solve_transcendental():
     assert solve(x + 2**x, x) == [-LambertW(log(2))/log(2)]
     ans = solve(3*x + 5 + 2**(-5*x + 3), x)
     assert len(ans) == 1 and ans[0].expand() == \
-        -Rational(5, 3) + LambertW(-10240*2**(S(1)/3)*log(2)/3)/(5*log(2))
+        -Rational(5, 3) + LambertW(-10240*root(2, 3)*log(2)/3)/(5*log(2))
     assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve(2*x + 5 + log(3*x - 2), x) == \
@@ -583,7 +581,7 @@ def test_PR1964():
     f = Function('f')
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
     # issue 4497
-    assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
+    assert solve(1/root(5 + x, 5) - 9, x) == [-295244/S(59049)]
 
     assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
     assert set(solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4))) in \
@@ -599,13 +597,11 @@ def test_PR1964():
     assert solve(exp(x/y)*exp(-z/y) - 2, y) == [(x - z)/log(2)]
     assert solve(
         x**z*y**z - 2, z) in [[log(2)/(log(x) + log(y))], [log(2)/(log(x*y))]]
-    # if you do inversion too soon then multiple roots as for the following will
-    # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
+    # if you do inversion too soon then multiple roots (as for the following)
+    # will be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
     E = S.Exp1
-    assert set(solve(exp(3*x) - exp(3), x)) in [
-        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)]),
-        set([S(1), log(E*(-S(1)/2 - sqrt(3)*I/2)), log(E*(-S(1)/2 + sqrt(3)*I/2))]),
-    ]
+    assert solve(exp(3*x) - exp(3), x) == [
+        1, log(E*(-S.Half - sqrt(3)*I/2)), log(E*(-S.Half + sqrt(3)*I/2))]
 
     # coverage test
     p = Symbol('p', positive=True)
@@ -644,9 +640,9 @@ def test_checking():
 def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    assert set(solve((2**exp(y**2/x) + 2)/(x**2 + 15), y)) == set([
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
         -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-        sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))])
+        sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -1247,6 +1243,7 @@ def test__ispow():
     assert not _ispow(True)
 
 
+@slow
 def test_issue_6644():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
     4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
@@ -1342,12 +1339,16 @@ def test_lambert_multivariate():
 
     # if sign is unknown then only this one solution is obtained
     assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]  # tested numerically
+        -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]
     p = symbols('p', positive=True)
+    _13 = S(1)/3
+    _56 = S(5)/6
+    _53 = S(5)/3
     assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
-        log((-3**(S(1)/3) - 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
-        log((-3**(S(1)/3) + 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
-        log((3*LambertW(S(1)/3)/p**5)**(1/(3*log(p)))),]  # checked numerically
+        log((-3**_13 - 3**_56*I)*LambertW(_13)**_13/(2*p**_53))/log(p),
+        log((-3**_13 + 3**_56*I)*LambertW(_13)**_13/(2*p**_53))/log(p),
+        log((3*LambertW(_13)/p**5)**(1/(3*log(p))))]
+
     # check collection
     assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
         -((log(a**5) + LambertW(1/(b + 3)))/(3*log(a)))]
@@ -1358,7 +1359,7 @@ def test_lambert_multivariate():
 
     # issue 4271
     assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
-        6*LambertW((-1)**(S(1)/3)*a**(S(1)/3)/3)]
+        6*LambertW(root(-1, 3)*root(a, 3)/3)]
 
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
@@ -1434,12 +1435,12 @@ def test_issue_2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solve(eq, R, set=True)[1]
-    assert sol == set([(S(5)/3 + 40/(3*(251 + 3*sqrt(111)*I)**(S(1)/3)) +
-                       (251 + 3*sqrt(111)*I)**(S(1)/3)/3,), ((-160 + (1 +
-                       sqrt(3)*I)*(10 - (1 + sqrt(3)*I)*(251 +
-                       3*sqrt(111)*I)**(S(1)/3))*(251 +
-                       3*sqrt(111)*I)**(S(1)/3))/Mul(6, (1 +
-                       sqrt(3)*I), (251 + 3*sqrt(111)*I)**(S(1)/3),
+    assert sol == set([(S(5)/3 + 40/(3*root(251 + 3*sqrt(111)*I, 3)) +
+                       root(251 + 3*sqrt(111)*I, 3)/3,), ((-160 + (1 +
+                       sqrt(3)*I)*(10 - (1 + sqrt(3)*I)*root(251 +
+                       3*sqrt(111)*I, 3))*root(251 +
+                       3*sqrt(111)*I, 3))/Mul(6, (1 +
+                       sqrt(3)*I), root(251 + 3*sqrt(111)*I, 3),
                        evaluate=False),)])
 
 
