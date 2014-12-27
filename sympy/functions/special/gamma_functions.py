@@ -162,6 +162,9 @@ class gamma(Function):
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
 
+    def _eval_rewrite_as_factorial(self, z):
+        return C.factorial(z - 1)
+
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):

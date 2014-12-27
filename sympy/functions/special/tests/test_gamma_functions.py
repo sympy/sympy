@@ -70,6 +70,10 @@ def test_gamma():
     assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
 
 
+def test_gamma_rewrite():
+    assert gamma(n).rewrite(factorial) == factorial(n - 1)
+
+
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - EulerGamma*x + x**2*(EulerGamma**2/2 + pi**2/12) + O(x**3)
