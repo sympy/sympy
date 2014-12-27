@@ -244,7 +244,6 @@ def test_highorder_poly():
     assert all(isinstance(i, RootOf) for i in sol) and len(sol) == 6
 
 
-@XFAIL
 @slow
 def test_quintics_2():
     f = x**5 + 15*x + 12
