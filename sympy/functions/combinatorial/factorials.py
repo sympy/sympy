@@ -164,6 +164,10 @@ class factorial(CombinatorialFunction):
     def _eval_rewrite_as_gamma(self, n):
         return C.gamma(n + 1)
 
+    def _eval_is_real(self):
+        if self.args[0].is_integer or (self.args[0].is_nonpositive and (not self.args[0].is_integer)):
+            return True
+
     def _eval_is_integer(self):
         if self.args[0].is_integer:
             return True
