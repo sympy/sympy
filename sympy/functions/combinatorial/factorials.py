@@ -172,6 +172,19 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def __mod__(self, other):
+        from sympy.core.numbers import Integer
+        if other == 1:
+            return 0
+        if isinstance(self.args[0], int) or isinstance(self.args[0], Integer):
+            if isinstance(other, int) or isinstance(other, Integer):
+                if abs(other) <= self.args[0] and not other == 0:
+                    return 0
+        elif other in self.args[0].free_symbols:
+            if self.args[0] == other:
+                return 0
+        return super(factorial, self).__mod__(other)
+
 
 class MultiFactorial(CombinatorialFunction):
     pass

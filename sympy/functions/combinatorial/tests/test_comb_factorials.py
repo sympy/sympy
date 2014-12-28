@@ -1,6 +1,6 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func)
+                   oo, zoo, simplify, expand_func, Mod)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -260,3 +260,12 @@ def test_subfactorial():
     assert subfactorial(nt).is_integer is None
     assert subfactorial(nf).is_integer is False
     assert subfactorial(nn).is_integer is None
+
+
+def test_issue_8677():
+    n = Symbol('n', integer=True)
+    x = factorial(n)
+    assert x%n == 0
+    assert x%6 == Mod(factorial(n), 6)
+    assert factorial(7)%5 == 0
+    assert factorial(8)%8 == 0
