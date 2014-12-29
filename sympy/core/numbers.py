@@ -640,14 +640,14 @@ class Float(Number):
         prec = mlib.libmpf.dps_to_prec(dps)
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
-        elif isinstance(num, str):
+        elif isinstance(num, string_types):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
-            if type(num[1]) is str:
+            if type(num[1]) in string_types:
                 # it's a hexadecimal (coming from a pickled object)
                 # assume that it is in standard form
                 num = list(num)
