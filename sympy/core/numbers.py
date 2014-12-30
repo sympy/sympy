@@ -647,7 +647,7 @@ class Float(Number):
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
-            if type(num[1]) in string_types:
+            if isinstance(num[1], string_types):
                 # it's a hexadecimal (coming from a pickled object)
                 # assume that it is in standard form
                 num = list(num)
