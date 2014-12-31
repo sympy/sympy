@@ -455,6 +455,12 @@ class MinMaxBase(Expr, LatticeOp):
         if all(arg.is_odd is False for arg in self.args):
             return False
 
+    def _eval_is_prime(self):
+        if all(arg.is_prime for arg in self.args):
+            return True
+        if all(arg.is_prime is False for arg in self.args):
+            return False
+
     def _eval_is_rational(self):
         if all(arg.is_rational for arg in self.args):
             return True
