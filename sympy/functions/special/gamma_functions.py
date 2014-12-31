@@ -161,6 +161,13 @@ class gamma(Function):
         if x.is_positive or x.is_noninteger:
             return True
 
+    def _eval_is_positive(self):
+        x = self.args[0]
+        if x.is_positive:
+            return True
+        elif x.is_noninteger:
+            return floor(x).is_even
+
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
 

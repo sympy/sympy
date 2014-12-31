@@ -400,3 +400,38 @@ def test_issue_8657():
     assert gamma(o).is_real is True
     assert gamma(p).is_real is True
     assert gamma(w).is_real is None
+
+
+def test_issue_8524():
+    a = Symbol('a')
+    x = Symbol('x', integer=True)
+    y = Symbol('y', positive=True)
+    z = Symbol('z', negative=True)
+    m = Symbol('m', integer=False)
+    n = Symbol('n', positive=False)
+    o = Symbol('o', negative=False)
+    p = Symbol('p', real=True)
+    q = Symbol('q', negative=True, integer=False)
+    r = Symbol('r', negative=False, integer=True)
+    s = Symbol('s', positive=True, integer=False)
+    t = Symbol('t', positive=False, integer=True)
+    u = Symbol('u', positive=True, integer=True)
+    v = Symbol('v', nonnegative=True)
+    assert gamma(a).is_positive is None
+    assert gamma(x).is_positive is None
+    assert gamma(y).is_positive is True
+    assert gamma(z).is_positive is None
+    assert gamma(m).is_positive is None
+    assert gamma(n).is_positive is None
+    assert gamma(o).is_positive is None
+    assert gamma(p).is_positive is None
+    assert gamma(q).is_positive is None
+    assert gamma(r).is_positive is None
+    assert gamma(s).is_positive is True
+    assert gamma(t).is_positive is None
+    assert gamma(u).is_positive is True
+    assert gamma(v).is_positive is None
+    assert gamma(-2*pi).is_positive is False
+    assert gamma(-pi/4).is_positive is False
+    assert gamma(-pi/3).is_positive is True
+    assert gamma(0).is_positive is None
