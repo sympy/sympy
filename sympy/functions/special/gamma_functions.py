@@ -157,7 +157,9 @@ class gamma(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        x = self.args[0]
+        if x.is_positive or x.is_noninteger:
+            return True
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
