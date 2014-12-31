@@ -214,7 +214,8 @@ def test_minmax_assumptions():
     i = Symbol('i', integer=True)
     o = Symbol('o', odd=True)
     e = Symbol('e', even=True)
-    reals = [r, a, t, q, p, n, i, o, e]
+    k = Symbol('k', prime=True)
+    reals = [r, a, t, q, p, n, i, o, e, k]
 
     for ext in (Max, Min):
         for x, y in it.product(reals, repeat=2):
@@ -261,6 +262,14 @@ def test_minmax_assumptions():
                 assert ext(x, y).is_even is False
             else:
                 assert ext(x, y).is_even is None
+
+            # Prime?
+            if x.is_prime and y.is_prime:
+                assert ext(x, y).is_prime
+            elif x.is_prime is False and y.is_prime is False:
+                assert ext(x, y).is_prime is False
+            else:
+                assert ext(x, y).is_prime is None
 
 
 def test_issue_8413():
