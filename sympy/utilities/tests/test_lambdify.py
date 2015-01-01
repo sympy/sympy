@@ -3,7 +3,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, atan, acos, acosh, Rational,
     Float, Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy import mpmath
+import mpmath
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps

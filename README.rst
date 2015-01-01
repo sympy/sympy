@@ -81,7 +81,13 @@ if SymPy is installed.
 Installation
 ------------
 
-To install SymPy, simply run::
+SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`
+library (version >= 0.19).  You should install it first, please refer to
+the mpmath installation guide:
+
+https://github.com/fredrik-johansson/mpmath#1-download--installation
+
+To install SymPy itself, then simply run::
 
     $ python setup.py install
 

@@ -301,7 +301,7 @@ class lowergamma(Function):
                     return (cls(a + 1, x) + x**a * C.exp(-x))/a
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)
@@ -400,7 +400,7 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)

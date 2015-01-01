@@ -35,7 +35,7 @@ from sympy.ntheory.factor_ import multiplicity
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, lcm, gcd)
 
-import sympy.mpmath as mpmath
+import mpmath
 
 
 
