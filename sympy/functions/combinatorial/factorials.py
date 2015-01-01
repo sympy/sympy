@@ -173,8 +173,8 @@ class factorial(CombinatorialFunction):
             return True
 
     def _eval_is_real(self):
-        if ((self.args[0].is_negative and self.args[0].is_noninteger) or
-           self.args[0].is_nonnegative):
+        x = self.args[0]
+        if x.is_nonnegative or x.is_noninteger:
             return True
 
 
