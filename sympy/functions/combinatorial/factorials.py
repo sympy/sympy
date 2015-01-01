@@ -261,13 +261,19 @@ class subfactorial(CombinatorialFunction):
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
 
-    The double factorial is defined for integers >= -1 as::
+    The double factorial is defined for nonnegative integers and for odd
+    negative integers as::
 
                ,
-              |  n*(n - 2)*(n - 4)* ... * 1    for n odd
-        n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n even
-              |  1                             for n = 0, -1
+              |  n*(n - 2)*(n - 4)* ... * 1    for n positive odd
+        n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n positive even
+              |  1                             for n = 0
+              |  (n+2)!! / (n+2)               for n negative odd
                `
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Double_factorial
 
     Examples
     ========
@@ -281,6 +287,8 @@ class factorial2(CombinatorialFunction):
     15
     >>> factorial2(-1)
     1
+    >>> factorial2(-5)
+    1/3
 
     See Also
     ========
@@ -290,18 +298,69 @@ class factorial2(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
+        # TODO: extend this to complex numbers?
         if arg.is_Number:
-            if arg == S.Zero or arg == S.NegativeOne:
-                return S.One
-            return factorial2(arg - 2)*arg
+            if arg.is_infinite:
+                return
+
+            # This implementation is faster than the recursive one
+            # It also avoids "maximum recursion depth exceeded" runtime error
+            if arg.is_nonnegative:
+                if arg.is_even:
+                    k = arg / 2
+                    return 2 ** k * factorial(k)
+
+                return factorial(arg) / factorial2(arg - 1)
+
+            if arg.is_even:
+                raise ValueError("argument must be nonnegative or odd")
+
+            return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+
+    def _eval_is_even(self):
+        # Double factorial is even for every positive even input
+        n = self.args[0]
+        if n.is_integer:
+            if n.is_odd:
+                return False
+            if n.is_even:
+                if n.is_positive:
+                    return True
+                if n.is_zero:
+                    return False
 
     def _eval_is_integer(self):
-        return fuzzy_and((self.args[0].is_integer,
-                          (self.args[0] + 1).is_nonnegative))
+        # Double factorial is an integer for every nonnegative input, and for
+        # -1 and -3
+        n = self.args[0]
+        if n.is_integer:
+            if (n + 1).is_nonnegative:
+                return True
+            if n.is_odd:
+                return (n + 3).is_nonnegative
+
+    def _eval_is_odd(self):
+        # Double factorial is odd for every odd input not smaller than -3, and
+        # for 0
+        n = self.args[0]
+        if n.is_odd:
+            return (n + 3).is_nonnegative
+        if n.is_even:
+            if n.is_positive:
+                return False
+            if n.is_zero:
+                return True
 
     def _eval_is_positive(self):
-        return fuzzy_and((self.args[0].is_integer,
-                          (self.args[0] + 1).is_nonnegative))
+        # Double factorial is positive for every nonnegative input, and for
+        # every odd negative input which is of the form -1-4k for an
+        # nonnegative integer k
+        n = self.args[0]
+        if n.is_integer:
+            if (n + 1).is_nonnegative:
+                return True
+            if n.is_odd:
+                return ((n + 1) / 2).is_even
 
 
 ###############################################################################
