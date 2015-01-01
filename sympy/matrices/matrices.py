@@ -3038,7 +3038,7 @@ class MatrixBase(object):
             left.append( (ev, mult, [l.transpose() for l in ltmp]) )
 
         return left
-            
+
     def singular_values(self):
         """Compute the singular values of a Matrix
 
