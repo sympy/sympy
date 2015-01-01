@@ -3035,7 +3035,7 @@ class MatrixBase(object):
 
         left = []
         for (ev, mult, ltmp) in left_transpose:
-            left.append( (ev, mult, ltmp[0].transpose()) )
+            left.append( (ev, mult, [l.transpose() for l in ltmp]) )
 
         return left
             
