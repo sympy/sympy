@@ -3034,7 +3034,6 @@ class MatrixBase(object):
         left_transpose = mat.transpose().eigenvects(**flags)
 
         left = []
-        
         for (ev, mult, ltmp) in left_transpose:
             left.append( (ev, mult, ltmp[0].transpose()) )
 
