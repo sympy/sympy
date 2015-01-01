@@ -316,6 +316,8 @@ def test_subfactorial():
     nt = Symbol('nt', nonnegative=True)
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nf')
+    te = Symbol('te', even=True, nonnegative=True)
+    to = Symbol('to', odd=True, nonnegative=True)
     assert subfactorial(tt).is_integer
     assert subfactorial(tf).is_integer is None
     assert subfactorial(tn).is_integer is None
@@ -325,3 +327,16 @@ def test_subfactorial():
     assert subfactorial(nt).is_integer is None
     assert subfactorial(nf).is_integer is None
     assert subfactorial(nn).is_integer is None
+    assert subfactorial(tt).is_nonnegative
+    assert subfactorial(tf).is_nonnegative is None
+    assert subfactorial(tn).is_nonnegative is None
+    assert subfactorial(ft).is_nonnegative is None
+    assert subfactorial(ff).is_nonnegative is None
+    assert subfactorial(fn).is_nonnegative is None
+    assert subfactorial(nt).is_nonnegative is None
+    assert subfactorial(nf).is_nonnegative is None
+    assert subfactorial(nn).is_nonnegative is None
+    assert subfactorial(tt).is_even is None
+    assert subfactorial(tt).is_odd is None
+    assert subfactorial(te).is_odd is True
+    assert subfactorial(to).is_even is True

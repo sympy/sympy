@@ -250,12 +250,24 @@ class subfactorial(CombinatorialFunction):
             elif arg is S.Infinity:
                 return arg
 
+    def _eval_is_even(self):
+        if self.args[0].is_odd and self.args[0].is_nonnegative:
+            return True
+
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
     def _eval_rewrite_as_uppergamma(self, arg):
         return C.uppergamma(arg + 1, -1)/S.Exp1
+
+    def _eval_is_nonnegative(self):
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_odd(self):
+        if self.args[0].is_even and self.args[0].is_nonnegative:
+            return True
 
 
 class factorial2(CombinatorialFunction):
