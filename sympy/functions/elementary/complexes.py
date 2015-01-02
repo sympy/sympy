@@ -4,7 +4,7 @@ from sympy.core import S, C
 from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+                                 AppliedUndef)
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -82,7 +82,7 @@ class re(Function):
 
             if len(args) != len(included):
                 a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                              [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
 
@@ -178,7 +178,7 @@ class im(Function):
 
             if len(args) != len(included):
                 a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                              [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
 
@@ -395,8 +395,8 @@ class Abs(Function):
     >>> abs(-x) # The Python built-in
     Abs(x)
 
-    Note that the Python built-in will return either an Expr or int depending on
-    the argument::
+    Note that the Python built-in will return either an Expr or int depending
+    on the argument::
 
         >>> type(abs(-1))
         <... 'int'>
@@ -466,7 +466,7 @@ class Abs(Function):
                     if base.func is cls and exponent is S.NegativeOne:
                         return arg
                     return Abs(base)**exponent
-                if base.is_positive == True:
+                if base.is_positive:
                     return base**re(exponent)
                 return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
         if isinstance(arg, C.exp):
@@ -486,7 +486,8 @@ class Abs(Function):
                 if any(a.is_infinite for a in arg.as_real_imag()):
                     return S.Infinity
             if arg.is_real is None and arg.is_imaginary is None:
-                if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
+                if all(a.is_real or a.is_imaginary
+                       or (S.ImaginaryUnit*a).is_real for a in arg.args):
                     from sympy import expand_mul
                     return sqrt(expand_mul(arg*arg.conjugate()))
         if arg.is_real is False and arg.is_imaginary is False:
@@ -543,9 +544,11 @@ class Abs(Function):
         if self.args[0].is_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
                 * sign(conjugate(self.args[0]))
-        return (re(self.args[0]) * Derivative(re(self.args[0]), x,
-            evaluate=True) + im(self.args[0]) * Derivative(im(self.args[0]),
-                x, evaluate=True)) / Abs(self.args[0])
+        return (re(self.args[0])
+                * Derivative(re(self.args[0]), x, evaluate=True)
+                + im(self.args[0])
+                * Derivative(im(self.args[0]), x, evaluate=True)) /\
+            Abs(self.args[0])
 
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
@@ -572,8 +575,8 @@ class arg(Function):
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
             if arg_.is_Mul:
-                arg_ = Mul(*[a if (sign(a) not in (-1, 1)) else
-                    sign(a) for a in arg_.args])
+                arg_ = Mul(*[a if (sign(a) not in (-1, 1)) else sign(a)
+                             for a in arg_.args])
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
@@ -586,12 +589,13 @@ class arg(Function):
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
-        return (x * Derivative(y, t, evaluate=True) - y *
-                    Derivative(x, t, evaluate=True)) / (x**2 + y**2)
+        return (x * Derivative(y, t, evaluate=True) - y
+                * Derivative(x, t, evaluate=True)) / (x**2 + y**2)
 
     def _eval_rewrite_as_atan2(self, arg):
         x, y = re(self.args[0]), im(self.args[0])
         return atan2(y, x)
+
 
 class conjugate(Function):
     """
@@ -741,7 +745,7 @@ class polar_lift(Function):
         from sympy import exp_polar, pi, I, arg as argument
         if arg.is_number:
             ar = argument(arg)
-            #if not ar.has(argument) and not ar.has(atan):
+            # if not ar.has(argument) and not ar.has(atan):
             if ar in (0, pi/2, -pi/2, pi):
                 return exp_polar(I*ar)*abs(arg)
 
@@ -781,7 +785,8 @@ class periodic_argument(Function):
     logarithm. That is, given a period P, always return a value in
     (-P/2, P/2], by using exp(P*I) == 1.
 
-    >>> from sympy import exp, exp_polar, periodic_argument, unbranched_argument
+    >>> from sympy import exp, exp_polar
+    >>> from sympy import periodic_argument, unbranched_argument
     >>> from sympy import I, pi
     >>> unbranched_argument(exp(5*I*pi))
     pi
@@ -827,8 +832,8 @@ class periodic_argument(Function):
 
     @classmethod
     def eval(cls, ar, period):
-        # Our strategy is to evaluate the argument on the Riemann surface of the
-        # logarithm, and then reduce.
+        # Our strategy is to evaluate the argument on the Riemann surface of
+        # the logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
         from sympy import ceiling, oo, atan2, atan, polar_lift, pi, Mul
