@@ -1,4 +1,4 @@
-from sympy import (Symbol, symbols, factorial, factorial2, binomial,
+from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func)
 from sympy.functions.combinatorial.factorials import subfactorial
@@ -189,6 +189,7 @@ def test_binomial():
     assert binomial(-1, 1) == -1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
+    assert binomial(S.Half, S.Half) == 1
     assert binomial(n, -1) == 0
     assert binomial(n, 0) == 1
     assert expand_func(binomial(n, 1)) == n
