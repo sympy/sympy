@@ -172,6 +172,11 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_is_real(self):
+        if ((self.args[0].is_negative and self.args[0].is_noninteger) or
+           self.args[0].is_nonnegative):
+            return True
+
 
 class MultiFactorial(CombinatorialFunction):
     pass

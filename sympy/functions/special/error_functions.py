@@ -1339,7 +1339,7 @@ class li(Function):
 
     We can even compute Soldner's constant by the help of mpmath:
 
-    >>> from sympy.mpmath import findroot
+    >>> from mpmath import findroot
     >>> findroot(li, 2)
     1.45136923488338
 

@@ -11,7 +11,7 @@ from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY
 
-from sympy import mpmath
+import mpmath
 
 
 def test_issue_3538():

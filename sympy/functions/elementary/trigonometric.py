@@ -24,7 +24,7 @@ class TrigonometricFunction(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.args[0].is_rational and s.args[0].is_nonzero:
                 return False
         else:
             return s.is_rational

@@ -6,7 +6,7 @@ from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import u, with_metaclass
 from sympy.printing.pretty.stringpict import prettyForm
-import sympy.mpmath.libmp as mlib
+import mpmath.libmp as mlib
 
 #-----------------------------------------------------------------------------
 # Constants

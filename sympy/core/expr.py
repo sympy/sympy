@@ -8,7 +8,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, xrange
-from sympy.mpmath.libmp import mpf_log, prec_to_dps
+from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
@@ -388,7 +388,7 @@ class Expr(Basic, EvalfMixin):
             # increase the precision up to the default maximum
             # precision to see if we can get any significance
 
-            from sympy.mpmath.libmp.libintmath import giant_steps
+            from mpmath.libmp.libintmath import giant_steps
             from sympy.core.evalf import DEFAULT_MAXPREC as target
 
             # evaluate
@@ -593,7 +593,7 @@ class Expr(Basic, EvalfMixin):
         if not diff:
             return True
 
-        if not diff.has(Add):
+        if not diff.has(Add, Mod):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
@@ -744,7 +744,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN) or A.has(S.Infinity) or A.has(S.NegativeInfinity):
+            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -755,7 +755,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN) or B.has(S.Infinity) or B.has(S.NegativeInfinity):
+            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
                 B = limit(self, x, b)
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")

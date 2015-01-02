@@ -14,7 +14,7 @@ from .logic import fuzzy_bool
 from .compatibility import as_int, xrange
 from .evaluate import global_evaluate
 
-from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
+from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
 
 
@@ -116,7 +116,7 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | 1**oo        | nan     | Because there are various cases where         |
     | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
-    |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    | 1**zoo       |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
     +--------------+---------+-----------------------------------------------+
     | (-1)**oo     | nan     | Because of oscillations in the limit.         |
     | (-1)**(-oo)  |         |                                               |
@@ -171,12 +171,12 @@ class Pow(Expr):
                     b = -b
                 elif e.is_odd:
                     return -Pow(-b, e)
-            if b is S.One:
-                if e in (S.NaN, S.Infinity, -S.Infinity):
+            if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
+                return S.NaN
+            elif b is S.One:
+                if abs(e).is_infinite:
                     return S.NaN
                 return S.One
-            elif S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
-                return S.NaN
             else:
                 # recognize base as E
                 if not e.is_Atom and b is not S.Exp1 and b.func is not exp_polar:
@@ -297,7 +297,10 @@ class Pow(Expr):
             return self.base.is_even
 
     def _eval_is_positive(self):
-        if self.base.is_positive:
+        if self.base == self.exp:
+            if self.base.is_nonnegative:
+                return True
+        elif self.base.is_positive:
             if self.exp.is_real:
                 return True
         elif self.base.is_negative:
@@ -354,8 +357,9 @@ class Pow(Expr):
 
     def _eval_is_integer(self):
         b, e = self.args
-        if b.is_integer is False and e.is_nonnegative:
-            return False  # rat**nonneg
+        if b.is_rational:
+            if b.is_integer is False and e.is_positive:
+                return False  # rat**nonneg
         if b.is_integer and e.is_integer:
             if b is S.NegativeOne:
                 return True

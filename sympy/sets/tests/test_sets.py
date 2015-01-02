@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, RootOf)
-from sympy.mpmath import mpi
+from mpmath import mpi
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
@@ -430,6 +430,9 @@ def test_contains():
 
     assert S.EmptySet.contains(1) is S.false
     assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
+
+    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
+    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
 
 
 def test_interval_symbolic():

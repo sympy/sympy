@@ -157,10 +157,15 @@ class gamma(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        x = self.args[0]
+        if x.is_positive or x.is_noninteger:
+            return True
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
+
+    def _eval_rewrite_as_factorial(self, z):
+        return C.factorial(z - 1)
 
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
@@ -296,7 +301,7 @@ class lowergamma(Function):
                     return (cls(a + 1, x) + x**a * C.exp(-x))/a
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)
@@ -395,7 +400,7 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)

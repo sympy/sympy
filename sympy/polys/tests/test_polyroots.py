@@ -18,6 +18,7 @@ from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.randtest import verify_numerically
 import sympy
+import mpmath
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
@@ -589,7 +590,7 @@ def test_nroots1():
     n = 64
     p = legendre_poly(n, x, polys=True)
 
-    raises(sympy.mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
+    raises(mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
 
     roots = p.nroots(n=3)
     # The order of roots matters. They are ordered from smallest to the

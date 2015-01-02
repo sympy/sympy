@@ -48,7 +48,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq, generate_bell, flatten
 
-from sympy.mpmath import findroot
+from mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
@@ -685,7 +685,10 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     for i, fi in enumerate(f):
         if isinstance(fi, Equality):
-            f[i] = fi.lhs - fi.rhs
+            if 'ImmutableMatrix' in [type(a).__name__ for a in fi.args]:
+                f[i] = fi.lhs - fi.rhs
+            else:
+                f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
         elif isinstance(fi, (bool, C.BooleanAtom)) or fi.is_Relational:
@@ -1171,8 +1174,8 @@ def _solve(f, *symbols, **flags):
             for candidate in candidates:
                 if candidate in result:
                     continue
-                cond = (cond == True) or cond.subs(symbol, candidate)
-                if cond != False:
+                conds = (cond == True) or cond.subs(symbol, candidate)
+                if conds != False:
                     # Only include solutions that do not match the condition
                     # of any previous pieces.
                     matches_other_piece = False
@@ -1186,7 +1189,7 @@ def _solve(f, *symbols, **flags):
                             break
                     if not matches_other_piece:
                         result.add(Piecewise(
-                            (candidate, cond == True or cond.doit()),
+                            (candidate, conds == True or conds.doit()),
                             (S.NaN, True)
                         ))
         check = False
@@ -2379,6 +2382,8 @@ def _tsolve(eq, sym, **flags):
                                 for i in inversion for s in sol])))
                     except NotImplementedError:
                         pass
+                else:
+                    pass
 
     if flags.pop('force', True):
         flags['force'] = False
@@ -2388,11 +2393,16 @@ def _tsolve(eq, sym, **flags):
                 break
         else:
             u = sym
-        try:
-            soln = _solve(pos, u, **flags)
-        except NotImplementedError:
-            return
-        return list(ordered([s.subs(reps) for s in soln]))
+        if pos.has(u):
+            try:
+                soln = _solve(pos, u, **flags)
+                return list(ordered([s.subs(reps) for s in soln]))
+            except NotImplementedError:
+                pass
+        else:
+            pass  # here for coverage
+
+    return  # here for coverage
 
 
 # TODO: option for calculating J numerically
@@ -2418,7 +2428,8 @@ def nsolve(*args, **kwargs):
 
     >>> from sympy import Symbol, nsolve
     >>> import sympy
-    >>> sympy.mpmath.mp.dps = 15
+    >>> import mpmath
+    >>> mpmath.mp.dps = 15
     >>> x1 = Symbol('x1')
     >>> x2 = Symbol('x2')
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
@@ -2437,8 +2448,43 @@ def nsolve(*args, **kwargs):
     3.14159265358979
 
     mpmath.findroot is used, you can find there more extensive documentation,
-    especially concerning keyword parameters and available solvers.
+    especially concerning keyword parameters and available solvers. Note,
+    however, that this routine works only with the numerator of the function
+    in the one-dimensional case, and for very steep functions near the root
+    this may lead to a failure in the verification of the root. In this case
+    you should use the flag `verify=False` and independently verify the
+    solution.
+
+    >>> from sympy import cos, cosh
+    >>> from sympy.abc import i
+    >>> f = cos(x)*cosh(x) - 1
+    >>> nsolve(f, 3.14*100)
+    Traceback (most recent call last):
+    ...
+    ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-19)
+    >>> ans = nsolve(f, 3.14*100, verify=False); ans
+    312.588469032184
+    >>> f.subs(x, ans).n(2)
+    2.1e+121
+    >>> (f/f.diff(x)).subs(x, ans).n(2)
+    7.4e-15
+
+    One might safely skip the verification if bounds of the root are known
+    and a bisection method is used:
+
+    >>> bounds = lambda i: (3.14*i, 3.14*(i + 1))
+    >>> nsolve(f, bounds(100), solver='bisect', verify=False)
+    315.730061685774
     """
+    # there are several other SymPy functions that use method= so
+    # guard against that here
+    if 'method' in kwargs:
+        raise ValueError(filldedent('''
+            Keyword "method" should not be used in this context.  When using
+            some mpmath solvers directly, the keyword "method" is
+            used, but when using nsolve (and findroot) the keyword to use is
+            "solver".'''))
+
     # interpret arguments
     if len(args) == 3:
         f = args[0]
@@ -2478,6 +2524,7 @@ def nsolve(*args, **kwargs):
 
         f = lambdify(fargs, f, modules)
         return findroot(f, x0, **kwargs)
+
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
             need at least as many equations as variables'''))
@@ -2686,18 +2733,17 @@ def unrad(eq, *syms, **flags):
             A set containing all denominators encountered while removing
             radicals. This may be of interest since any solution obtained in
             the modified expression should not set any denominator to zero.
-        ``syms``
-            an iterable of symbols which, if provided, will limit the focus of
-            radical removal: only radicals with one or more of the symbols of
-            interest will be cleared.
+
+    ``syms``
+        an iterable of symbols which, if provided, will limit the focus of
+        radical removal: only radicals with one or more of the symbols of
+        interest will be cleared.
 
     ``flags`` are used internally for communication during recursive calls.
     Two options are also recognized::
 
         ``take``, when defined, is interpreted as a single-argument function
         that returns True if a given Pow should be handled.
-        ``all``, when True, will signify that an attempt should be made to
-        remove all radicals. ``take``, if present, has priority over ``all``.
 
     Radicals can be removed from an expression if::
 
@@ -2710,15 +2756,15 @@ def unrad(eq, *syms, **flags):
     Examples
     ========
 
-        >>> from sympy.solvers.solvers import unrad
-        >>> from sympy.abc import x
-        >>> from sympy import sqrt, Rational
-        >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
-        (x**5 - 64, [], [])
-        >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
-        (x**3 - x**2 - 2*x - 1, [], [])
-        >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
-        (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
+    >>> from sympy.solvers.solvers import unrad
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, Rational
+    >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
+    (x**5 - 64, [], [])
+    >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
+    (x**3 - x**2 - 2*x - 1, [], [])
+    >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
+    (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
 
     """
     def _canonical(eq):
@@ -2746,22 +2792,6 @@ def unrad(eq, *syms, **flags):
 
     if flags.get('take', None):
         _take = flags.pop('take')
-    elif flags.pop('all', None):
-        _rad = lambda w: w.is_Pow and w.exp.is_Rational and w.exp.q != 1
-        def _take(d):
-            return _rad(d) or any(_rad(i) for i in d.atoms(Pow))
-        if eq.has(S.ImaginaryUnit):
-            i = Dummy()
-            flags['take'] = _take
-            try:
-                rv = unrad(eq.xreplace({S.ImaginaryUnit: sqrt(i)}), *syms, **flags)
-                rep = {i: S.NegativeOne}
-                rv = (_canonical(rv[0].xreplace(rep)),
-                      [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
-                      [i.xreplace(rep) for i in rv[2]])
-                return rv
-            except ValueError as msg:
-                raise msg
     else:
         def _take(d):
             # see if this is a term that has symbols of interest
@@ -2830,7 +2860,7 @@ def unrad(eq, *syms, **flags):
         eq = rterms[0]**lcm - (-args)**lcm
 
     elif len(rterms) == 2 and not args:
-        eq = rterms[0]**lcm - rterms[1]**lcm
+        eq = rterms[0]**lcm - (-rterms[1])**lcm
 
     elif log(lcm, 2).is_Integer and (not args and
             len(rterms) == 4 or len(rterms) < 4):

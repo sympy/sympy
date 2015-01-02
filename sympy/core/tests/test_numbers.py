@@ -7,9 +7,9 @@ from sympy.core.basic import _aresame
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
-from sympy.mpmath import mpf
+from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, slow, raises
-from sympy import mpmath
+import mpmath
 
 
 def test_integers_cache():
@@ -1356,8 +1356,8 @@ def test_issue_4172():
 
 @XFAIL
 def test_mpmath_issues():
-    from sympy.mpmath.libmp.libmpf import _normalize
-    import sympy.mpmath.libmp as mlib
+    from mpmath.libmp.libmpf import _normalize
+    import mpmath.libmp as mlib
     rnd = mlib.round_nearest
     mpf = (0, long(0), -123, -1, 53, rnd)  # nan
     assert _normalize(mpf, 53) != (0, long(0), 0, 0)
@@ -1366,7 +1366,7 @@ def test_mpmath_issues():
     mpf = (1, long(0), -789, -3, 53, rnd)  # -inf
     assert _normalize(mpf, 53) != (0, long(0), 0, 0)
 
-    from sympy.mpmath.libmp.libmpf import fnan
+    from mpmath.libmp.libmpf import fnan
     assert mlib.mpf_eq(fnan, fnan)
 
 
@@ -1397,7 +1397,7 @@ def test_int_NumberSymbols():
 
 
 def test_issue_6640():
-    from sympy.mpmath.libmp.libmpf import (
+    from mpmath.libmp.libmpf import (
         _normalize as mpf_normalize, finf, fninf, fzero)
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply

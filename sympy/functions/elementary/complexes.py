@@ -102,6 +102,9 @@ class re(Function):
     def _eval_rewrite_as_im(self, arg):
         return self.args[0] - im(self.args[0])
 
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
+
     def _sage_(self):
         import sage.all as sage
         return sage.real_part(self.args[0]._sage_())
@@ -206,6 +209,9 @@ class im(Function):
 
     def _eval_rewrite_as_re(self, arg):
         return self.args[0] - re(self.args[0])
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
 
 ###############################################################################
@@ -475,13 +481,17 @@ class Abs(Function):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
                 return arg2
+        if arg.is_Add:
+            if arg.has(S.Infinity, S.NegativeInfinity):
+                if any(a.is_infinite for a in arg.as_real_imag()):
+                    return S.Infinity
+            if arg.is_real is None and arg.is_imaginary is None:
+                if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
+                    from sympy import expand_mul
+                    return sqrt(expand_mul(arg*arg.conjugate()))
         if arg.is_real is False and arg.is_imaginary is False:
             from sympy import expand_mul
-            return sqrt( expand_mul(arg * arg.conjugate()) )
-        if arg.is_real is None and arg.is_imaginary is None and arg.is_Add:
-            if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
-                from sympy import expand_mul
-                return sqrt(expand_mul(arg * arg.conjugate()))
+            return sqrt(expand_mul(arg*arg.conjugate()))
 
     def _eval_is_integer(self):
         if self.args[0].is_real:
@@ -496,6 +506,17 @@ class Abs(Function):
     def _eval_is_rational(self):
         if self.args[0].is_real:
             return self.args[0].is_rational
+
+    def _eval_is_even(self):
+        if self.args[0].is_real:
+            return self.args[0].is_even
+
+    def _eval_is_odd(self):
+        if self.args[0].is_real:
+            return self.args[0].is_odd
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
     def _eval_power(self, exponent):
         if self.args[0].is_real and exponent.is_integer:
@@ -613,6 +634,9 @@ class conjugate(Function):
 
     def _eval_transpose(self):
         return adjoint(self.args[0])
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
 
 class transpose(Function):

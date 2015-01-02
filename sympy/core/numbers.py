@@ -16,11 +16,11 @@ from .cache import cacheit, clear_cache
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS)
-import sympy.mpmath as mpmath
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
-from sympy.mpmath.ctx_mp import mpnumeric
-from sympy.mpmath.libmp.libmpf import (
+import mpmath
+import mpmath.libmp as mlib
+from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
+from mpmath.ctx_mp import mpnumeric
+from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)

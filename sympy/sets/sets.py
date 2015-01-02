@@ -14,7 +14,7 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.sets.contains import Contains
 
-from sympy.mpmath import mpi, mpf
+from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import default_sort_key, subsets
 
@@ -925,6 +925,10 @@ class Interval(Set, EvalfMixin):
     def _contains(self, other):
         if other.is_real is False:
             return false
+
+        if self.start is S.NegativeInfinity and self.end is S.Infinity:
+            if not other.is_real is None:
+                return other.is_real
 
         if self.left_open:
             expr = other > self.start

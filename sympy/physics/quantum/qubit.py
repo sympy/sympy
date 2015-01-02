@@ -24,7 +24,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
-from sympy.mpmath.libmp.libintmath import bitcount
+from mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',

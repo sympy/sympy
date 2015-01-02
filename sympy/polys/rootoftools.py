@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
-        sympify, Rational)
+        sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
@@ -29,8 +29,8 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import QQ
 
-from sympy.mpmath import mp, mpf, mpc, findroot, workprec
-from sympy.mpmath.libmp.libmpf import prec_to_dps
+from mpmath import mp, mpf, mpc, findroot, workprec
+from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
 
@@ -535,7 +535,12 @@ class RootOf(Expr):
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
         with workprec(prec):
-            func = lambdify(self.poly.gen, self.expr)
+            g = self.poly.gen
+            if not g.is_Symbol:
+                d = Dummy('x')
+                func = lambdify(d, self.expr.subs(g, d))
+            else:
+                func = lambdify(g, self.expr)
 
             interval = self._get_interval()
             if not self.is_real:
@@ -552,9 +557,8 @@ class RootOf(Expr):
                     x0 = mpf(str(interval.center))
                 else:
                     x0 = mpc(*map(str, interval.center))
-
                 try:
-                    root = findroot(func, x0)
+                    root = findroot(func, x0, verify=False)
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
@@ -563,6 +567,9 @@ class RootOf(Expr):
                     if self.is_real:
                         a = mpf(str(interval.a))
                         b = mpf(str(interval.b))
+                        if a == b:
+                            root = a
+                            break
                         if not (a < root < b):
                             raise ValueError("Root not in the interval.")
                     else:
@@ -570,6 +577,9 @@ class RootOf(Expr):
                         bx = mpf(str(interval.bx))
                         ay = mpf(str(interval.ay))
                         by = mpf(str(interval.by))
+                        if ax == bx and ay == by:
+                            root = ax + S.ImaginaryUnit*by
+                            break
                         if not (ax < root.real < bx and ay < root.imag < by):
                             raise ValueError("Root not in the interval.")
                 except ValueError:
