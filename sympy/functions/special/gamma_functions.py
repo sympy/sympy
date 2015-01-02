@@ -132,6 +132,9 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
+        if arg.is_integer and arg.is_nonpositive:
+            return S.ComplexInfinity
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
