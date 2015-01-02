@@ -68,6 +68,11 @@ def test_gamma():
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
     assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
 
+    # Issue 8526
+    k = Symbol('k', integer=True, nonnegative=True)
+    assert isinstance(gamma(k), gamma)
+    assert gamma(-k) == zoo
+
 
 def test_gamma_rewrite():
     assert gamma(n).rewrite(factorial) == factorial(n - 1)
