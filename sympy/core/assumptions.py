@@ -27,10 +27,7 @@ Here follows a list of possible assumption names:
 
     imaginary
         object value is a number that can be written as a real
-        number multiplied by the imaginary unit ``I``.  See
-        [3]_.  Please note, that ``0`` is not considered to be an
-        imaginary number, see
-        `issue #7649 <https://github.com/sympy/sympy/issues/7649>`_.
+        number multiplied by the imaginary unit ``I``.  See [3]_.
 
     real
         object can have only values from the set
@@ -177,7 +174,7 @@ _assume_rules = FactRules([
 
     'irrational     ==  real & !rational',
 
-    'imaginary      ->  !real',
+    'imaginary      ->  !real | zero',
 
     'infinite       ->  !finite',
     'noninteger     ==  real & !integer',
