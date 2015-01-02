@@ -175,7 +175,17 @@ class factorial(CombinatorialFunction):
     def _eval_is_real(self):
         if ((self.args[0].is_negative and self.args[0].is_noninteger) or
            self.args[0].is_nonnegative):
-            return True
+            return 
+        
+        def _eval_is_composite(self):
+            x=self.args[0]
+            if x.is_nonnegative and x.is_integer
+                 if x < 3
+                     return False
+                 else
+                     return True
+            else 
+                 return None
 
 
 class MultiFactorial(CombinatorialFunction):
