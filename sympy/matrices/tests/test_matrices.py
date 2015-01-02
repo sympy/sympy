@@ -783,8 +783,8 @@ def test_eigen():
     assert M.left_eigenvects() == (
         [(1, 3, [Matrix([[1, 0, 0]]),
                  Matrix([[0, 1, 0]]),
-                 Matrix([[0, 0, 1]])])])        
-        
+                 Matrix([[0, 0, 1]])])])
+
     M = Matrix([[0, 1, 1],
                 [1, 0, 0],
                 [1, 1, 1]])
@@ -804,7 +804,7 @@ def test_eigen():
             (0, 1, [Matrix([[-1, -1, 1]])]),
             (2, 1, [Matrix([[1, 1, 1]])])
         ])
-    
+
     a = Symbol('a')
     M = Matrix([[a, 0],
                 [0, 1]])
@@ -814,8 +814,8 @@ def test_eigen():
     M = Matrix([[1, -1],
                 [1,  3]])
     assert M.eigenvects() == ([(2, 2, [Matrix(2, 1, [-1, 1])])])
-    assert M.left_eigenvects() == ([(2, 2, [Matrix([[1, 1]])])])    
-    
+    assert M.left_eigenvects() == ([(2, 2, [Matrix([[1, 1]])])])
+
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     a = R(15, 2)
     b = 3*33**R(1, 2)
@@ -855,7 +855,7 @@ def test_eigen():
             (0, 1, [Matrix([[I*eps/Abs(eps), 1]])]),
             (2*Abs(eps), 1, [Matrix([[-I*eps/Abs(eps), 1]])])
         ])
-            
+
     M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     M._eigenvects = M.eigenvects(simplify=False)
     assert max(i.q for i in M._eigenvects[0][2][0]) > 1
