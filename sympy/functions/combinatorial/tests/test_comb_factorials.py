@@ -93,6 +93,8 @@ def test_factorial():
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
+    assert factorial(1) == 1
+    assert factorial(2) == 2
     assert factorial(7) == 5040
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
@@ -110,7 +112,13 @@ def test_factorial():
     assert factorial(r).is_real is None
     assert factorial(s).is_real is True
     assert factorial(t).is_real is True
+    
 
+    assert factorial(k).is_composite 
+    assert factorial(n).is_composite is None
+    assert factorial(r).is_composite is None
+    assert factorial(t).is_composite is None
+    
     assert factorial(oo) == oo
 
 
