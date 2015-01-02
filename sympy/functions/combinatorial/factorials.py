@@ -176,6 +176,16 @@ class factorial(CombinatorialFunction):
         if ((self.args[0].is_negative and self.args[0].is_noninteger) or
            self.args[0].is_nonnegative):
             return True
+        
+    def _eval_is_composite(self):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative:
+            if x < 3:
+                return False
+            else:
+                return True
+        else:
+            return None
 
 
 class MultiFactorial(CombinatorialFunction):
