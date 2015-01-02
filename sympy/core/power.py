@@ -966,7 +966,10 @@ class Pow(Expr):
             return False
         if e.is_integer:
             if b.is_rational:
-                return True
+                if b.is_nonzero or e.is_nonnegative:
+                    return True
+                if b == e:  # always rational, even for 0**0
+                    return True
             elif b.is_irrational:
                 return e.is_zero
 
