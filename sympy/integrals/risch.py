@@ -1101,12 +1101,12 @@ def recognize_derivative(a, d, DE, z=None):
 
     j = 1
     for (s, i) in Sp:
-       delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
-       g = gcd(d, H[-1]).as_poly()
-       if g is not d:
-             flag = False
-             break
-       j = j + 1
+        delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
+        g = gcd(d, H[-1]).as_poly()
+        if g is not d:
+            flag = False
+            break
+        j = j + 1
     return flag
 
 def recognize_log_derivative(a, d, DE, z=None):

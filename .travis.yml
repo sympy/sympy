@@ -59,9 +59,11 @@ matrix:
     - python: 2.7
       env:
         - TEST_THEANO="true"
+        - TEST_PEP="true"
     - python: 3.4
       env:
         - TEST_THEANO="true"
+        - TEST_PEP="true"
     - python: 2.7
       env:
         - TEST_AUTOWRAP="true"
@@ -116,11 +118,17 @@ before_install:
       sudo apt-get update;
       sudo apt-get install sagemath-upstream-binary;
     fi
+  - if [[ "${TEST_PEP}" == "true" ]]; then
+      pip install git+https://github.com/jcrocholl/pep8.git;
+    fi
 install:
   - if [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
 script:
+  - if [[ "${TEST_PEP}" == "true" ]]; then
+      pep8;
+    fi
   - bin/test_travis.sh
 #  - if [[ "${TEST_SPHINX}" == "true" ]]; then
 #      bin/deploy_doc.sh;

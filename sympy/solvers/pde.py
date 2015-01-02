@@ -727,14 +727,14 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
 
 
     if not d:
-         # To deal with cases like b*ux = e or c*uy = e
-         if not (b and c):
+        # To deal with cases like b*ux = e or c*uy = e
+        if not (b and c):
             if c:
                 try:
                     tsol = integrate(e/c, y)
                 except NotImplementedError:
                     raise NotImplementedError("Unable to find a solution"
-                        " due to inability of integrate")
+                                              " due to inability of integrate")
                 else:
                     return Eq(f(x,y), solvefun(x) + tsol)
             if b:

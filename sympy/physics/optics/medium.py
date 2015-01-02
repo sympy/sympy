@@ -70,7 +70,7 @@ class Medium(Symbol):
                 obj._permittivity = n**2/(c**2*obj._permeability)
             if permittivity != None and permittivity != None:
                 if abs(n - c*sqrt(obj._permittivity*obj._permeability)) > 1e-6:
-                   raise ValueError("Values are not consistent.")
+                    raise ValueError("Values are not consistent.")
         elif permittivity is not None and permeability is not None:
             obj._n = c*sqrt(permittivity*permeability)
         elif permittivity is None and permeability is None:

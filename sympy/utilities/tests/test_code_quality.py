@@ -23,15 +23,11 @@ BIN_PATH = join(TOP_PATH, "bin")
 EXAMPLES_PATH = join(TOP_PATH, "examples")
 
 # Error messages
-message_space = "File contains trailing whitespace: %s, line %s."
 message_implicit = "File contains an implicit import: %s, line %s."
-message_tabs = "File contains tabs instead of spaces: %s, line %s."
 message_carriage = "File contains carriage returns at end of line: %s, line %s"
 message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
 message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\""
-message_eof = "File does not end with a newline: %s, line %s"
-message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
@@ -45,18 +41,6 @@ old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_ok_def_re = re.compile(r'^def\s+test_.*:$')
 test_file_re = re.compile(r'.*test_.*\.py$')
-
-
-def tab_in_leading(s):
-    """Returns True if there are tabs in the leading whitespace of a line,
-    including the whitespace of docstring code samples."""
-    n = len(s) - len(s.lstrip())
-    if not s[n:n + 3] in ['...', '>>>']:
-        check = s[:n]
-    else:
-        smore = s[n + 3:]
-        check = s[:n] + smore[:len(smore) - len(smore.lstrip())]
-    return not (check.expandtabs() == check)
 
 
 def find_self_assignments(s):
@@ -126,10 +110,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
 def test_files():
     """
     This test tests all files in sympy and checks that:
-      o no lines contains a trailing whitespace
       o no lines end with \r\n
-      o no line uses tabs instead of spaces
-      o that the file ends with a single newline
       o there are no general or string exceptions
       o there are no old style raise statements
       o name of arg-less test suite functions start with _ or test_
@@ -165,12 +146,8 @@ def test_files():
                     test_set.add(line[3:].split('(')[0].strip())
                     if len(test_set) != tests:
                         assert False, message_duplicate_test % (fname, idx + 1)
-            if line.endswith(" \n") or line.endswith("\t\n"):
-                assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
                 assert False, message_carriage % (fname, idx + 1)
-            if tab_in_leading(line):
-                assert False, message_tabs % (fname, idx + 1)
             if str_raise_re.search(line):
                 assert False, message_str_raise % (fname, idx + 1)
             if gen_raise_re.search(line):
@@ -184,13 +161,6 @@ def test_files():
             if result is not None:
                 assert False, message_old_raise % (
                     fname, idx + 1, result.group(2))
-
-        if line is not None:
-            if line == '\n' and idx > 0:
-                assert False, message_multi_eof % (fname, idx + 1)
-            elif not line.endswith('\n'):
-                # eof newline check
-                assert False, message_eof % (fname, idx + 1)
 
     # Files to test at top level
     top_level_files = [join(TOP_PATH, file) for file in [

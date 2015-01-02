@@ -298,7 +298,7 @@ def graph_certificate(gr):
     # the indices of the tensor are twice the number of lines of the graph
     num_indices = 0
     for v, neigh in items:
-      num_indices += len(neigh)
+        num_indices += len(neigh)
     # associate to each vertex its indices; for each line
     # between two vertices assign the
     # even index to the vertex which comes first in items,
@@ -313,7 +313,7 @@ def graph_certificate(gr):
                 i += 2
     g = []
     for v in vertices:
-      g.extend(v)
+        g.extend(v)
     assert len(g) == num_indices
     g += [num_indices, num_indices + 1]
     size = num_indices + 2

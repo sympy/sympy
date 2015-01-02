@@ -514,7 +514,7 @@ class AskImaginaryHandler(CommonHandler):
     def log(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             if ask(Q.positive(expr.args[0]), assumptions):
-               return False
+                return False
             return
         # XXX it should be enough to do
         # return ask(Q.nonpositive(expr.args[0]), assumptions)

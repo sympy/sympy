@@ -410,11 +410,11 @@ def _sqrt_mod_prime_power(a, p, k):
             if a % 8 != 1:
                 return None
             if k <= 3:
-               s = set()
-               for i in xrange(0, pk, 4):
+                s = set()
+                for i in xrange(0, pk, 4):
                     s.add(1 + i)
                     s.add(-1 + i)
-               return list(s)
+                return list(s)
             # according to Ref.[2] for k > 2 there are two solutions
             # (mod 2**k-1), that is four solutions (mod 2**k), which can be
             # obtained from the roots of x**2 = 0 (mod 8)
