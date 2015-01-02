@@ -179,12 +179,12 @@ class factorial(CombinatorialFunction):
         
     def _eval_is_composite(self):
         x=self.args[0]
-        if x.is_nonnegative and x.is_integer
-            if x < 3
+        if  x.is_integer and x.is_nonnegative:
+            if x < 3:
                 return False
-            else
+            else:
                 return True
-        else 
+        else:
             return None
 
 
