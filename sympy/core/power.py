@@ -266,6 +266,8 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif C.im(b).is_nonzero and (abs(e) == 2) == True:
                     s = 1  # floor = 0
+                elif b.is_imaginary and (abs(e) == 2) == True:
+                    s = 1  # floor = 0
                 elif _half(other):
                     s = C.exp(2*S.Pi*S.ImaginaryUnit*other*C.floor(
                         S.Half - e*C.arg(b)/(2*S.Pi)))
