@@ -366,7 +366,7 @@ def test_loggamma():
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
     assert conjugate(loggamma(-oo)) == conjugate(loggamma(-oo))
     assert loggamma(x).is_real is None
-    y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
+    y, z = Symbol('y', real=True), Symbol('z', imaginary=True, nonzero=True)
     assert loggamma(y).is_real
     assert loggamma(z).is_real is False
 

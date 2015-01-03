@@ -1741,7 +1741,7 @@ class Ci(TrigonometricIntegral):
     _trigfunc = C.cos
     _atzero = S.ComplexInfinity
     _atinf = S.Zero
-    _atneginf = I*pi
+    _atneginf = S.ImaginaryUnit*pi
 
     @classmethod
     def _minusfactor(cls, z):

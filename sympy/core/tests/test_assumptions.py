@@ -10,7 +10,7 @@ def test_symbol_unset():
     x = Symbol('x', real=True, integer=True)
     assert x.is_real is True
     assert x.is_integer is True
-    assert x.is_imaginary is False
+    assert x.is_imaginary is None
     assert x.is_noninteger is False
     assert x.is_number is False
 
@@ -26,7 +26,7 @@ def test_zero():
     assert z.is_complex is True
     assert z.is_noninteger is False
     assert z.is_irrational is False
-    assert z.is_imaginary is False
+    assert z.is_imaginary is True
     assert z.is_positive is False
     assert z.is_negative is False
     assert z.is_nonpositive is True
@@ -832,9 +832,8 @@ def test_issue_4149():
     assert (3 + I).is_complex
     assert (3 + I).is_imaginary is False
     assert (3*I + S.Pi*I).is_imaginary
-    # as Zero.is_imaginary is False, see issue 7649
     y = Symbol('y', real=True)
-    assert (3*I + S.Pi*I + y*I).is_imaginary is None
+    assert (3*I + S.Pi*I + y*I).is_imaginary is True
     p = Symbol('p', positive=True)
     assert (3*I + S.Pi*I + p*I).is_imaginary
     n = Symbol('n', negative=True)

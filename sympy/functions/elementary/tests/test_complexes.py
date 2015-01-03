@@ -185,16 +185,17 @@ def test_sign():
     assert sign(n*m*x) == sign(x)
 
     x = Symbol('x', imaginary=True)
+    xn = Symbol('xn', imaginary=True, nonzero=True)
     assert sign(x).is_imaginary is True
-    assert sign(x).is_integer is False
-    assert sign(x).is_real is False
-    assert sign(x).is_zero is False
+    assert sign(x).is_integer is None
+    assert sign(x).is_real is None
+    assert sign(x).is_zero is None
     assert sign(x).diff(x) == 2*DiracDelta(-I*x)
-    assert sign(x).doit() == x / Abs(x)
+    assert sign(xn).doit() == xn / Abs(xn)
     assert conjugate(sign(x)) == -sign(x)
 
     x = Symbol('x', real=True)
-    assert sign(x).is_imaginary is False
+    assert sign(x).is_imaginary is None
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is None
@@ -221,7 +222,7 @@ def test_sign():
     assert Abs(sign(x)) == 1
 
     x = 0
-    assert sign(x).is_imaginary is False
+    assert sign(x).is_imaginary is True
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is True

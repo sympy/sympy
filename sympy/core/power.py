@@ -377,7 +377,6 @@ class Pow(Expr):
         if real_b is None:
             if self.base.func == C.exp and self.base.args[0].is_imaginary:
                 return self.exp.is_imaginary
-            return
         real_e = self.exp.is_real
         if real_e is None:
             return
