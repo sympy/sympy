@@ -491,7 +491,7 @@ class Abs(Function):
                 if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
                     from sympy import expand_mul
                     return sqrt(expand_mul(arg*arg.conjugate()))
-        if arg.is_real is False and arg.is_imaginary is False:
+        if arg.is_real is not True and arg.is_imaginary is False:
             from sympy import expand_mul
             return sqrt(expand_mul(arg*arg.conjugate()))
 
