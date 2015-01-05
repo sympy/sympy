@@ -172,6 +172,11 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_is_composite(self):
+        x = self.args[0]
+        if x.is_integer:
+            return (x - 3).is_nonnegative
+
     def _eval_is_real(self):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
