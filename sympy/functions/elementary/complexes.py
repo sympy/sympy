@@ -439,6 +439,8 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
+        if not isinstance(arg, C.Expr):
+            raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         if arg.is_Mul:
