@@ -957,9 +957,9 @@ def rootofsimp(expr):
     >>> rootofsimp(r**4)
     RootOf(x**4 - x - 1, 0) + 1
     >>> rootofsimp(r**8)
-    RootOf(x**4 - x - 1, 0)**2 + 2*RootOf(x**4 - x - 1, 0) + 1
+    2*RootOf(x**4 - x - 1, 0) + RootOf(x**4 - x - 1, 0)**2 + 1
     >>> rootofsimp(1/r)
-    RootOf(x**4 - x - 1, 0)**3 - 1
+    -1 + RootOf(x**4 - x - 1, 0)**3
 
     """
     from sympy.polys.rootoftools import RootOf
