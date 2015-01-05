@@ -2,7 +2,8 @@ from sympy import pprint, latex, symbols, S, log
 from sympy.matrices import Matrix
 from sympy.core.trace import Tr
 from sympy.external import import_module
-from sympy.physics.quantum.density import Density, entropy, fidelity
+from sympy.physics.quantum.density import Density, entropy, fidelity, \
+                                          bures_metric, bures_angle
 from sympy.physics.quantum.state import Ket, Bra, TimeDepKet
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
@@ -287,3 +288,20 @@ def test_fidelity():
     # unsupported data-type
     x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))
+
+def test_bures_metric():
+    #test with kets
+    up = JzKet(S(1)/2, S(1)/2)
+    down = JzKet(S(1)/2, -S(1)/2)
+    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
+
+    #check with matrices
+    up_dm = represent(up * Dagger(up))
+    down_dm = represent(down * Dagger(down))
+    updown_dm = represent(updown * Dagger(updown))     
+       
+    assert abs(bures_metric(up_dm, up_dm) ) < 1e-3
+    assert abs(bures_metric(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1/2e-3
+    
+def test_bures_angle():
+    pass
