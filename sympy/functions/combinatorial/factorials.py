@@ -249,6 +249,9 @@ class subfactorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_rewrite_as_uppergamma(self, arg):
+        return C.uppergamma(arg + 1, -1)/S.Exp1
+
 
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
