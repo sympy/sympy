@@ -3070,9 +3070,15 @@ class Expr(Basic, EvalfMixin):
         if dps is not None and allow > dps:
             allow = dps
         mag = Pow(10, p)  # magnitude needed to bring digit p to units place
+        xwas = x
         x += 1/(2*mag)  # add the half for rounding
         i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
-        rv = Integer(i10)//10
+        if i10.is_negative:
+            x = xwas - 1/(2*mag)  # should have gone the other way
+            i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+            rv = -(Integer(-i10)//10)
+        else:
+            rv = Integer(i10)//10
         q = 1
         if p > 0:
             q = mag
