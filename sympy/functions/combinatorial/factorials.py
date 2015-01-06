@@ -165,7 +165,7 @@ class factorial(CombinatorialFunction):
         return C.gamma(n + 1)
 
     def _eval_is_integer(self):
-        if self.args[0].is_integer:
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
     def _eval_is_positive(self):

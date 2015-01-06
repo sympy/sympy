@@ -99,14 +99,15 @@ def test_factorial():
     assert factorial(2*n).func == factorial
 
     assert factorial(x).is_integer is None
-    assert factorial(n).is_integer
+    assert factorial(n).is_integer is None
+    assert factorial(k).is_integer
     assert factorial(r).is_integer is None
 
     assert factorial(n).is_positive is None
     assert factorial(k).is_positive
 
     assert factorial(x).is_real is None
-    assert factorial(n).is_real
+    assert factorial(n).is_real is None
     assert factorial(k).is_real is True
     assert factorial(r).is_real is None
     assert factorial(s).is_real is True
