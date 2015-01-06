@@ -195,9 +195,15 @@ class subfactorial(CombinatorialFunction):
     It can also be written as int(round(n!/exp(1))) but the recursive
     definition with caching is implemented for this function.
 
+    This function is generalized to noninteger arguments [2]_ as
+
+    .. math:: !x = \Gamma(x + 1, -1)/e
+
     References
     ==========
+
     .. [1] http://en.wikipedia.org/wiki/Subfactorial
+    .. [2] http://mathworld.wolfram.com/Subfactorial.html
 
     Examples
     ========
@@ -211,32 +217,32 @@ class subfactorial(CombinatorialFunction):
 
     See Also
     ========
-    factorial, sympy.utilities.iterables.generate_derangements
+
+    sympy.functions.combinatorial.factorials.factorial,
+    sympy.utilities.iterables.generate_derangements,
+    sympy.functions.special.gamma_functions.uppergamma
     """
 
     @classmethod
     @cacheit
     def _eval(self, n):
         if not n:
-            return 1
+            return S.One
         elif n == 1:
-            return 0
+            return S.Zero
         return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
 
     @classmethod
     def eval(cls, arg):
-        try:
-            arg = as_int(arg)
-            if arg < 0:
-                raise ValueError
-            return C.Integer(cls._eval(arg))
-        except ValueError:
-            if sympify(arg).is_Number:
-                raise ValueError("argument must be a nonnegative integer")
+        if arg.is_Number:
+            if arg.is_Integer and arg.is_nonnegative:
+                return cls._eval(arg)
+            elif arg is S.Infinity:
+                return arg
 
     def _eval_is_integer(self):
-        return fuzzy_and((self.args[0].is_integer,
-                          self.args[0].is_nonnegative))
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
+            return True
 
 
 class factorial2(CombinatorialFunction):

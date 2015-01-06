@@ -251,8 +251,7 @@ def test_factorial_simplify_fail():
 def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
-    raises(ValueError, lambda: subfactorial(0.1))
-    raises(ValueError, lambda: subfactorial(-2))
+    assert subfactorial(oo) == oo
 
     tt = Symbol('tt', integer=True, nonnegative=True)
     tf = Symbol('tf', integer=True, nonnegative=False)
@@ -264,11 +263,11 @@ def test_subfactorial():
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nf')
     assert subfactorial(tt).is_integer
-    assert subfactorial(tf).is_integer is False
+    assert subfactorial(tf).is_integer is None
     assert subfactorial(tn).is_integer is None
-    assert subfactorial(ft).is_integer is False
-    assert subfactorial(ff).is_integer is False
-    assert subfactorial(fn).is_integer is False
+    assert subfactorial(ft).is_integer is None
+    assert subfactorial(ff).is_integer is None
+    assert subfactorial(fn).is_integer is None
     assert subfactorial(nt).is_integer is None
-    assert subfactorial(nf).is_integer is False
+    assert subfactorial(nf).is_integer is None
     assert subfactorial(nn).is_integer is None
