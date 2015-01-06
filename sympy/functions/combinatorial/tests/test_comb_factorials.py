@@ -1,6 +1,6 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func)
+                   oo, zoo, simplify, expand_func, C, S)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -252,6 +252,10 @@ def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) == oo
+
+    x = Symbol('x')
+    assert subfactorial(x).rewrite(C.uppergamma) == \
+        C.uppergamma(x + 1, -1)/S.Exp1
 
     tt = Symbol('tt', integer=True, nonnegative=True)
     tf = Symbol('tf', integer=True, nonnegative=False)
