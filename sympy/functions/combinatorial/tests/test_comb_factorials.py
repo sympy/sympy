@@ -91,6 +91,7 @@ def test_factorial():
     s = Symbol('s', integer=False, negative=True)
     t = Symbol('t', nonnegative=True)
     u = Symbol('u', noninteger=True)
+    v = Symbol('v', integer=True, negative=True)
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
@@ -113,6 +114,16 @@ def test_factorial():
     assert factorial(s).is_real is True
     assert factorial(t).is_real is True
     assert factorial(u).is_real is True
+
+    assert factorial(x).is_composite is None
+    assert factorial(n).is_composite is None
+    assert factorial(k).is_composite is None
+    assert factorial(k + 3).is_composite is True
+    assert factorial(r).is_composite is None
+    assert factorial(s).is_composite is None
+    assert factorial(t).is_composite is None
+    assert factorial(u).is_composite is None
+    assert factorial(v).is_composite is False
 
     assert factorial(oo) == oo
 
