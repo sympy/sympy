@@ -232,6 +232,39 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         else:
             return NotImplementedError('Lower and upper bound expected.')
 
+    def _eval_Integral(self, x):
+        from sympy.integrals import Integral
+        """
+        Integrate wrt x as long as x is not in the free symbols of any of
+        the upper or lower limits.
+
+        Works similar to _eval_derivative.
+        """
+
+        if x not in self.free_symbols:
+            return S.Zero
+
+        # get limits and the function
+        f, limits = self.function, list(self.limits)
+
+        limit = limits.pop(-1)
+
+        # f is the argument to a Sum
+        if limits:
+            f = self.func(f, *limits)
+
+        if len(limit) == 3:
+            _, a, b = limit
+            if x in a.free_symbols or x in b.free_symbols:
+                return None
+            If = Integral(f, x).doit()
+            rv = self.func(If, limit)
+            if limit[0] not in If.free_symbols:
+                rv = rv.doit()
+            return rv
+        else:
+            return NotImplementedError('Lower and upper bound expected.')
+
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import sum_simplify
         return sum_simplify(self)
