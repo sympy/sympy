@@ -42,6 +42,22 @@ def parse(s):
         (r"\A(-? *[\d\.]+)([a-zA-Z].*)\Z",  # Implied multiplication - 2a
         lambda m: parse(m.group(1)) + "*" + parse(m.group(2))),
 
+        (r"\A([^\+\-]*[\w\.]) ([^\+\-]+)\Z",  # Space multiplication - x sin[x]
+        lambda m: parse(m.group(1)) + "*" + parse(m.group(2))),
+
+        (r"\A([^- +]+) ([^\+\-]*[\w\.])\Z",  # Space multiplication - sin[x] x
+        lambda m: parse(m.group(1)) + "*" + parse(m.group(2))),
+
+        # Arithmetic operation between anything and a function - x*Sin[1/x]
+        (r"\A(.+)([\-\+\^/\*])(\w+\[[^\]]+[^\[]*\])\Z",
+        lambda m: parse(m.group(1)) + translateFunction(
+            m.group(2)) + parse(m.group(3))),
+
+        # Arithmetic operation between a function and anything - Sin[1/x]*x
+        (r"\A(\w+\[[^\]]+[^\[]*\])([\-\+\^/\*])(.+)\Z",
+        lambda m: parse(m.group(1)) + translateFunction(
+            m.group(2)) + parse(m.group(3))),
+
         (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z",  # Infix operator
         lambda m: parse(m.group(1)) + translateOperator(m.group(2)) + parse(m.group(3))))
     # End rules
@@ -61,7 +77,8 @@ def translateFunction(s):
 
 
 def translateOperator(s):
-    dictionary = {'^': '**'}
+    dictionary = {'^': '**',
+                ' ': '*'}
     if s in dictionary:
         return dictionary[s]
     return s
