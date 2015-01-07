@@ -1471,7 +1471,7 @@ def hessian(f, varlist, constraints=[]):
     return out
 
 
-def GramSchmidt(vlist, orthog=False):
+def GramSchmidt(vlist, orthonormal=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
 
@@ -1487,7 +1487,7 @@ def GramSchmidt(vlist, orthog=False):
             raise ValueError(
                 "GramSchmidt: vector set not linearly independent")
         out.append(tmp)
-    if orthog:
+    if orthonormal:
         for i in range(len(out)):
             out[i] = out[i].normalized()
     return out
