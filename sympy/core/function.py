@@ -1556,9 +1556,7 @@ class Subs(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables:
-            pts = list(self.point.args)
-            pts[self.variables.index(old)] = new
-            return self.func(self.expr, self.variables, pts)
+            return self
 
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
