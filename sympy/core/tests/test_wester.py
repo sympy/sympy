@@ -847,10 +847,10 @@ def test_M1():
 
 
 def test_M2():
-    # The roots of this equation should all be real. Note that this doesn't test
-    # that they are correct.
+    # The roots of this equation should all be real. Note that this
+    # doesn't test that they are correct.
     sol = solve(3*x**3 - 18*x**2 + 33*x - 19, x)
-    assert all(expand(x, complex=True).is_real for x in sol)
+    assert all(s.expand(complex=True).is_real for s in sol)
 
 
 @XFAIL
@@ -859,22 +859,26 @@ def test_M5():
 
 
 def test_M6():
-    assert set(solve(x**7 - 1, x)) == set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
-    # The paper asks for exp terms, but sin's and cos's may be acceptable
+    assert set(solve(x**7 - 1, x)) == \
+        set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
+    # The paper asks for exp terms, but sin's and cos's may be acceptable;
+    # if the results are simplified, exp terms appear for all but
+    # -sin(pi/14) - I*cos(pi/14) and -sin(pi/14) + I*cos(pi/14) which
+    # will simplify if you apply the transformation foo.rewrite(exp).expand()
 
 
 def test_M7():
-    assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)) == set([
-        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
-        ])
+    sol = solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+        226*x**2 - 140*x + 46, x)
+    assert [s.simplify() for s in sol] == [
+        1 - sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 + 2*I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 + 2*I*sqrt(3 + 4*sqrt (3)))/2,
+        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2]
 
 
 @XFAIL  # There are an infinite number of solutions.

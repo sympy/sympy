@@ -633,33 +633,37 @@ class RootOf(Expr):
         if not other.is_finite:
             return S.false
         z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
-        if z is False:
+        if z is False:  # all roots will make z True but we don't know
+                        # whether this is the right root if z is True
             return S.false
         o = other.is_real, other.is_imaginary
         s = self.is_real, self.is_imaginary
         if o != s and None not in o and None not in s:
             return S.false
-        if z:
-            i = self._get_interval()
-            was = i.a, i.b
-            need = [1, 1]
-            # make sure it would be distinct from others
-            while any(need):
-                i = i.refine()
-                a, b = i.a, i.b
-                if need[0] and a != was[0]:
-                    need[0] = 0
-                if need[1] and b != was[1]:
-                    need[1] = 0
+        i = self._get_interval()
+        was = i.a, i.b
+        need = [True]*2
+        # make sure it would be distinct from others
+        while any(need):
+            i = i.refine()
+            a, b = i.a, i.b
+            if need[0] and a != was[0]:
+                need[0] = False
+            if need[1] and b != was[1]:
+                need[1] = False
+        re, im = other.as_real_imag()
+        if not im:
             if self.is_real:
                 a, b = [Rational(str(i)) for i in (a, b)]
                 return sympify(a < other and other < b)
-            re, im = other.as_real_imag()
-            z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
-                i.ax, i.bx, i.ay, i.by)]
-            return sympify((
-                r1 < re and re < r2) and (
-                i1 < im and im < i2))
+            return S.false
+        if self.is_real:
+            return S.false
+        z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
+            i.ax, i.bx, i.ay, i.by)]
+        return sympify((
+            r1 < re and re < r2) and (
+            i1 < im and im < i2))
 
 
 @public

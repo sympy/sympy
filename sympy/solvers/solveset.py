@@ -529,12 +529,11 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             if gen != symbol:
                 y = Dummy('y')
                 lhs, rhs_s = invert_func(gen, y, symbol)
-                result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
-                if lhs is not symbol and lhs is not gen:
-                    result = Union(*[solveset_solver(lhs - rhs, symbol)
-                                     for rhs in result])
+                if lhs is symbol:
+                    result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError(
+                        "inversion of %s not handled" % gen)
         else:
             raise NotImplementedError("multiple generators not handled"
                                       " by solveset")
@@ -737,7 +736,13 @@ def solveset_complex(f, symbol):
             result = EmptySet()
             for equation in equations:
                 if equation == f:
-                    result += _solve_as_rational(equation, symbol,
+                    if any(_has_rational_power(g, symbol)[0]
+                           for g in equation.args):
+                        result += _solve_radical(equation,
+                                                 symbol,
+                                                 solveset_complex)
+                    else:
+                        result += _solve_as_rational(equation, symbol,
                                                  solveset_solver=solveset_complex,
                                                  as_poly_solver=_solve_as_poly_complex)
                 else:
