@@ -183,7 +183,7 @@ def test_Lambda_equality():
 
 def test_Subs():
     assert Subs(x, x, 0) == Subs(y, y, 0)
-    assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 1)
+    assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 0)
     assert Subs(y, x, 0).subs(y, 1) == Subs(1, x, 0)
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
@@ -206,7 +206,7 @@ def test_Subs():
     assert Subs(f(x)*y, (x, y), (0, 1)) == Subs(f(y)*x, (y, x), (0, 1))
     assert Subs(f(x)*y, (x, y), (1, 1)) == Subs(f(y)*x, (x, y), (1, 1))
 
-    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(1)
+    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(0)
     assert Subs(f(x), x, y).subs(y, 0) == Subs(f(x), x, 0)
     assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
@@ -234,6 +234,9 @@ def test_Subs():
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)
+
+    assert f(x).diff(x).subs(x, 0).subs(x, y) == f(x).diff(x).subs(x, 0)
+    assert (x*f(x).diff(x).subs(x, 0)).subs(x, y) == y*f(x).diff(x).subs(x, 0)
 
 
 @XFAIL
