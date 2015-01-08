@@ -52,7 +52,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
+    S, Integer, Rational, Float, Mul, Sum, Symbol, symbols, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.basic import _aresame
@@ -3143,3 +3143,13 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None
+
+
+def test_Poly_eval_grid():
+    assert Poly(x**10+8*x+1, x).eval_grid(3, 10, 3, x) == [59074, 137858491954,
+                                                           41426511213834]
+    assert Poly(x**2+1.5*x-3.5, x).eval_grid(-2, 1, 3, x) == [-2.5, -4.0, -3.5]
+    assert Poly(Sum(d*x**d, (d, 1, 10)).doit()).eval_grid(0, 1, 5, x) == \
+        [0, 55, 18434, 841449, 13514980]
+    assert Poly(x**2+x*y+3*y+1).eval_grid(0, 1, 4, y) == \
+        [x**2 + 1, x**2 + x + 4, x**2 + 2*x + 7, x**2 + 3*x + 10]

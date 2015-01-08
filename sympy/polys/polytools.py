@@ -55,7 +55,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, xrange
 
 
 @public
@@ -3991,6 +3991,71 @@ class Poly(Expr):
     def _strict_eq(f, g):
         return isinstance(g, f.__class__) and f.gens == g.gens and f.rep.eq(g.rep, strict=True)
 
+    def _eval_grid(f, x0, dx, gen):
+        """Helper function for evaluategrid which generates the values of a
+        polynomial evaluated at equally spaced grid points."""
+
+        c = Poly(f, gen).all_coeffs()
+        d = len(c)
+        m = [0]*d
+        a = [0]*d
+        for i in xrange(d):
+            for j in xrange(i, d):
+                a[i] += binomial(j, i)*c[d-j-1]*x0**(j-i)
+            a[i] *= dx**i
+        m[d-1] = a[0]
+        for r in xrange(1, d):
+            for j in xrange(r, d):
+                t = 0
+                for i in xrange(1, r+1):
+                    t += (-1)**(i+j)*i**j*binomial(r, i)
+                m[d-r-1] += a[j]*t
+        yield m[-1]
+        while True:
+            for i in xrange(d-1):
+                m[i+1] += m[i]
+            yield m[-1]
+
+    def eval_grid(f, x0, dx, n, gen, generator=False):
+        r"""
+        Evaluate polynomial f at equally spaced grid points x0+i*dx, i = 0,...,n.
+        Implements Nuttall's algorithm for efficiency when n is large,
+        especially when n is larger than deg(f)**2.
+        If generator is True a generator is returned and the argument n is
+        ignored.
+
+        References
+        ==========
+        .. [1] Albert H. Nuttall, "Efficient Evaluation of Polynomials and
+        Exponentials of Polynomails for Equispaced Arguments," IEEE
+        Transactions on Acoustics, Speech, and Signal Processing, vol. ASSP-35,
+        no. 10, pp. 1486-1487, October 1987.
+        .. [2] S. C. Datta Roy and Shailey Minocha, "A Note on "Efficient
+        Evaluation of Polynomials and Exponentials of Polynomails for
+        Equispaced Arguments",", IEEE Transactions on Signal Processing,
+        vol. 39, no. 11, pp. 2554-2556, November 1991.
+
+        Examples
+        ========
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x**4+3*x+2).eval_grid(1,2,5,x)
+        [6, 92, 642, 2424, 6590]
+
+        >>> Poly(x**3+1).eval_grid(2,3,4,x)
+        [9, 126, 513, 1332]
+
+        >>> Poly(x**2+x*y+3*y+1).eval_grid(0, 1, 5, x)
+        [3*y + 1, 4*y + 2, 5*y + 5, 6*y + 10, 7*y + 17]
+
+        """
+
+        eg = f._eval_grid(x0, dx, gen)
+        if not generator:
+            return list(islice(eg, 0, n, 1))
+        return eg
+
 
 @public
 class PurePoly(Poly):
@@ -6799,3 +6864,5 @@ def poly(expr, *gens, **args):
     return _poly(expr, opt)
 
 from sympy.functions import Piecewise
+from itertools import islice
+from sympy.functions.combinatorial.factorials import binomial
