@@ -4,7 +4,7 @@ from sympy import (
     I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan, And, Eq, Or, re, im
+    Tuple, nan, And, Eq, Or, re, im, summation, Sum
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -1060,3 +1060,12 @@ def test_issue_2708():
     integral_f = NonElementaryIntegral(f, (z, 2, 3))
     assert Integral(f, (z, 2, 3)).doit() == integral_f
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
+
+
+def test_issue_7827():
+    x, n, N = symbols('x n N')
+    assert integrate(summation(x*n, (n, 1, N)), x) == x**2*(N**2/4 + N/4)
+    assert integrate(summation(x*sin(n), (n,1,N)), x) == \
+        Sum(x**2*sin(n)/2, (n, 1, N))
+    assert str(integrate(summation(sin(n*x), (n,1,N)), x)) == \
+        'Sum(Piecewise((0, n == 0), (-cos(n*x)/n, True)), (n, 1, N))'
