@@ -2267,6 +2267,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_positive = True
     is_infinite = True
     is_number = True
+    is_prime = False
 
     __slots__ = []
 
@@ -2828,6 +2829,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_infinite = True
     is_number = True
+    is_prime = False
 
     __slots__ = []
 
