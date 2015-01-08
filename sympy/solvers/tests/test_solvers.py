@@ -1536,3 +1536,16 @@ def test_nsolve():
 def test_issue_8587():
     f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
     assert solve(f-1) == [1/sqrt(2)]
+
+def test_issue_8755():
+    x, y = symbols('x y')
+    f = sqrt(y)*x + x**3 - 1
+    ans = [-sqrt(y)/(3*(sqrt(y**(S(3)/2)/27 + S(1)/4) + S(1)/2)**(S(1)/3)) + \
+        (sqrt(y**(S(3)/2)/27 + S(1)/4) + S(1)/2)**(S(1)/3), \
+        -sqrt(y)/((S(-1)/2 - sqrt(3)*I/2)*3*(sqrt(y**(S(3)/2)/27 + S(1)/4) + \
+        S(1)/2)**(S(1)/3)) + (-S(1)/2 - sqrt(3)*I/2)*(sqrt(y**(S(3)/2)/27 + \
+        S(1)/4) + S(1)/2)**(S(1)/3), \
+        -sqrt(y)/((-S(1)/2 + sqrt(3)*I/2)*3*(sqrt(y**(S(3)/2)/27 + S(1)/4) + \
+        S(1)/2)**(S(1)/3)) + (-S(1)/2 + sqrt(3)*I/2)*(sqrt(y**(S(3)/2)/27 + \
+        S(1)/4) + S(1)/2)**(S(1)/3)]
+    assert set([simplify(w) for w in solve(f, x)]) == set([simplify(w) for w in ans])
