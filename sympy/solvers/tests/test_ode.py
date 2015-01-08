@@ -299,10 +299,8 @@ def test_nonlinear_2eq_order1():
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
     tt = S(2)/3
     sol3 = [
-        Eq(x(t), 6**tt/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3),
-        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3)]
+        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1)*(C2 + t)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1)*(C2 + t)/2)**2)/3)]
     assert dsolve(eq3) == sol3
 
     eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
@@ -2150,10 +2148,10 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        -acos(-sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        -acos(sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        acos(-sqrt(C1*exp(-2*x) + x**4)/x**2),
-        acos(sqrt(C1*exp(-2*x) + x**4)/x**2)]
+        -acos(-sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        -acos(sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        acos(-sqrt(C1*exp(-2*x)/x**4 + 1)),
+        acos(sqrt(C1*exp(-2*x)/x**4 + 1))]
 
 
 def test_separable_reduced():
