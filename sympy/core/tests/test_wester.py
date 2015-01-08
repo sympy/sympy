@@ -931,7 +931,7 @@ def test_M15():
 
 
 def test_M16():
-    assert solve(sin(x) - tan(x), x) == [0, 2*pi]
+    assert solve(sin(x) - tan(x), x) == [0, -pi, pi, 2*pi]
 
 
 @XFAIL

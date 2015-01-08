@@ -620,3 +620,7 @@ def test_nroots2():
     assert [str(r) for r in roots] == \
             ['-0.33199', '-0.83907 - 0.94385*I', '-0.83907 + 0.94385*I',
               '1.0051 - 0.93726*I', '1.0051 + 0.93726*I']
+
+
+def test_roots_composite():
+    assert len(roots(Poly(y**3 + y**2*sqrt(x) + y + x, y, composite=True))) == 3
