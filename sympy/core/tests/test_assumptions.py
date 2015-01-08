@@ -119,7 +119,7 @@ def test_infinity():
     assert oo.is_finite is False
     assert oo.is_infinite is True
     assert oo.is_comparable is True
-    assert oo.is_prime is None
+    assert oo.is_prime is False
     assert oo.is_composite is None
     assert oo.is_number is True
 
