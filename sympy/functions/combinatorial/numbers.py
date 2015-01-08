@@ -13,7 +13,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.cache import cacheit
-from sympy.core.numbers import pi
+from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.exponential import log
@@ -426,6 +426,16 @@ class bell(Function):
             else:
                 r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
+
+    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
+        if (k_sym is not None) or (symbols is not None):
+            return self
+
+        # Dobinski's formula
+        if not n.is_nonnegative:
+            return self
+        k = C.Dummy('k', integer=True, nonnegative=True)
+        return 1 / E * C.Sum(k**n / factorial(k), (k, 0, S.Infinity))
 
 #----------------------------------------------------------------------------#
 #                                                                            #
