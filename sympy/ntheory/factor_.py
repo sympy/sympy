@@ -16,7 +16,6 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.singleton import S
 from sympy.core.function import Function
-from sympy.core.symbol import Dummy
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1479,3 +1478,37 @@ class divisor_sigma(Function):
             else:
                 return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
                            else e + 1 for p, e in factorint(n).items()])
+
+
+def digitslist(n, b=10):
+    """
+    Return a list of the digits of n in base b.
+
+    digitslist(n, 2) is equivalent to [int(d) for d in format(n,'b')]
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import digitslist
+    >>> digitslist(35)
+    [3, 5]
+    >>> digitslist(27,2)
+    [1, 1, 0, 1, 1]
+    >>> digitslist(65536,256)
+    [1, 0, 0]
+    """
+
+    b = sympify(b)
+    n = sympify(n)
+    if b.is_Integer and n.is_Integer:
+        if b <= 1:
+            raise ValueError("b must be >= 2")
+        else:
+            x, y = n, []
+            while x >= b:
+                x, r = divmod(x, b)
+                y.insert(0, r)
+            y.insert(0, x)
+            return y
+    else:
+        raise ValueError("b and n must be integers")

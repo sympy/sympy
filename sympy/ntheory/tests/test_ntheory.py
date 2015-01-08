@@ -15,7 +15,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p, \
-    antidivisors, antidivisor_count
+    antidivisors, antidivisor_count, digitslist
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
@@ -878,3 +878,14 @@ def test_egyptian_fraction():
                                                      10, 11, 12, 27, 744, 893588,
                                                      1251493536607,
                                                      20361068938197002344405230]
+
+
+def test_digitslist():
+    assert all([digitslist(n, 2) == [int(d) for d in format(n, 'b')]
+                for n in range(20)])
+    assert all([digitslist(n, 8) == [int(d) for d in format(n, 'o')]
+                for n in range(20)])
+    assert all([digitslist(n, 16) == [int(d, 16) for d in format(n, 'x')]
+                for n in range(20)])
+    assert digitslist(2345, 34) == [2, 0, 33]
+    assert digitslist(93409) == [9, 3, 4, 0, 9]
