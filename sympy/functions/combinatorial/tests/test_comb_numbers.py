@@ -39,6 +39,14 @@ def test_bernoulli():
     b = bernoulli(10**6, evaluate=False).evalf()
     assert str(b) == '-2.23799235765713e+4767529'
 
+    # Issue #8527
+    l = Symbol('l', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
+    n = Symbol('n', integer=True, positive=True)
+    assert isinstance(bernoulli(2 * l + 1), bernoulli)
+    assert isinstance(bernoulli(2 * m + 1), bernoulli)
+    assert bernoulli(2 * n + 1) == 0
+
 
 def test_fibonacci():
     assert [fibonacci(n) for n in range(-3, 5)] == [2, -1, 1, 0, 1, 1, 2, 3]
