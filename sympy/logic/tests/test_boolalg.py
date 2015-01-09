@@ -667,3 +667,11 @@ def test_all_or_nothing():
 def test_canonical_atoms():
     assert true.canonical == true
     assert false.canonical == false
+
+
+def test_issue_8777():
+    x = symbols('x')
+    assert And(x > 2, x < oo).as_set() == Interval(2, oo, left_open=True)
+    assert And(x >= 1, x < oo).as_set() == Interval(1, oo)
+    assert (x < oo).as_set() == Interval(-oo, oo)
+    assert (x > -oo).as_set() == Interval(-oo, oo)

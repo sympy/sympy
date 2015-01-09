@@ -432,6 +432,12 @@ def solve_univariate_inequality(expr, gen, relational=True):
         raise NotImplementedError('sorting of these roots is not supported')
     for x in reals:
         end = x
+
+        if ((end is S.NegativeInfinity and expr.rel_op in ['>', '>=']) or
+           (end is S.Infinity and expr.rel_op in ['<', '<='])):
+            sol_sets.append(Interval(start, S.Infinity, True, True))
+            break
+
         if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
             sol_sets.append(Interval(start, end, True, True))
 

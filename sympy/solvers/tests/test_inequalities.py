@@ -304,3 +304,11 @@ def test_issue_8545():
     assert reduce_abs_inequality(eq, '<', x) == ans
     eq = 1 - x - sqrt((1 - x)**2)
     assert reduce_inequalities(eq < 0) == ans
+
+
+def test_issue_8783():
+    x = Symbol('x')
+    assert solve(x > -oo) == And(-oo < x, x < oo)
+    assert solve(x < oo) == And(-oo < x, x < oo)
+    assert solve(x > oo) == False
+    assert solve(x < -oo) == False
