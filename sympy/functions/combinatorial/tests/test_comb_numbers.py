@@ -4,9 +4,9 @@ from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, zoo, pi, I, simplify,
     expand_func, diff, EulerGamma, cancel, re, im)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
-    gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
-    cos, cot, zeta)
+    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
+    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
+    sin, cos, cot, zeta)
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -284,6 +284,23 @@ def test_catalan():
     assert str(c) == '0.848826363156775'
     c = catalan(I).evalf(3)
     assert str((re(c), im(c))) == '(0.398, -0.0209)'
+
+
+def test_genocchi():
+    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    for n, g in enumerate(genocchis):
+        assert genocchi(n + 1) == g
+
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True, positive=True)
+    assert genocchi(m) == genocchi(m)
+    assert genocchi(n).rewrite(bernoulli) == 2 * (1 - 2 ** n) * bernoulli(n)
+    assert genocchi(2 * n).is_odd
+    assert genocchi(4 * n).is_positive
+    # This should work for 4 * n - 2, but fails due to some variation of issue
+    # 8632 ((4*n-2).is_positive returns None)
+    assert genocchi(4 * n + 2).is_negative
+
 
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
