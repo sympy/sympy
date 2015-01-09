@@ -91,7 +91,7 @@ def plot_and_save(name):
 
     p = plot(Piecewise((1, x > 0), (0, True)),(x,-1,1))
     p.save(tmp_file('%s_plot_piecewise' % name))
-    
+
     #parametric 2d plots.
     #Single plot with default range.
     plot_parametric(sin(x), cos(x)).save(tmp_file())
