@@ -554,39 +554,41 @@ class RootOf(Expr):
 
             while True:
                 if self.is_real:
+                    a = mpf(str(interval.a))
+                    b = mpf(str(interval.b))
+                    if a == b:
+                        root = a
+                        break
                     x0 = mpf(str(interval.center))
                 else:
+                    ax = mpf(str(interval.ax))
+                    bx = mpf(str(interval.bx))
+                    ay = mpf(str(interval.ay))
+                    by = mpf(str(interval.by))
+                    if ax == bx and ay == by:
+                        root = ax + S.ImaginaryUnit*by
+                        break
                     x0 = mpc(*map(str, interval.center))
+
                 try:
-                    root = findroot(func, x0, verify=False)
+                    root = findroot(func, x0)
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
                     # interval because our initial estimate 'x0' was not close
-                    # enough.
+                    # enough. It is also possible that the secant method will
+                    # get trapped by a max/min in the interval; the root
+                    # verification by findroot will raise a ValueError in this
+                    # case and the interval will then be tightened -- and
+                    # eventually the root will be found.
                     if self.is_real:
-                        a = mpf(str(interval.a))
-                        b = mpf(str(interval.b))
-                        if a == b:
-                            root = a
+                        if (a < root < b):
                             break
-                        if not (a < root < b):
-                            raise ValueError("Root not in the interval.")
-                    else:
-                        ax = mpf(str(interval.ax))
-                        bx = mpf(str(interval.bx))
-                        ay = mpf(str(interval.ay))
-                        by = mpf(str(interval.by))
-                        if ax == bx and ay == by:
-                            root = ax + S.ImaginaryUnit*by
-                            break
-                        if not (ax < root.real < bx and ay < root.imag < by):
-                            raise ValueError("Root not in the interval.")
+                    elif (ax < root.real < bx and ay < root.imag < by):
+                        break
                 except ValueError:
-                    interval = interval.refine()
-                    continue
-                else:
-                    break
+                    pass
+                interval = interval.refine()
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 
