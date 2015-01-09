@@ -79,12 +79,14 @@ class Limit(Expr):
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
     Limit(sin(x)/x, x, 0)
+    >>> Limit(sin(x)/x, x, 0, evaluate=True)
+    1
     >>> Limit(1/x, x, 0, dir="-")
     Limit(1/x, x, 0, dir='-')
 
     """
 
-    def __new__(cls, e, z, z0, dir="+"):
+    def __new__(cls, e, z, z0, dir="+", evaluate=False):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
@@ -104,7 +106,10 @@ class Limit(Expr):
 
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
-        return obj
+        if not evaluate:
+            return obj
+        else:
+            return obj.doit()
 
     def doit(self, **hints):
         """Evaluates limit"""
