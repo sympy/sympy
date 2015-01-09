@@ -2571,6 +2571,7 @@ class Poly(Expr):
         2. [Koepf98]_
         3. [Abramov71]_
         4. [Man93]_
+        
         """
         from sympy.polys.dispersion import dispersionset
         return dispersionset(f, g)
@@ -2646,6 +2647,7 @@ class Poly(Expr):
         2. [Koepf98]_
         3. [Abramov71]_
         4. [Man93]_
+        
         """
         from sympy.polys.dispersion import dispersion
         return dispersion(f, g)
