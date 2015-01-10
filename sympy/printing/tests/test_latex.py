@@ -342,8 +342,8 @@ def test_latex_functions():
     assert latex(udivisor_sigma(x)) == r"\sigma^*\left(x\right)"
     assert latex(udivisor_sigma(x)**2) == r"\sigma^*^{2}\left(x\right)"
     assert latex(udivisor_sigma(x, y)) == r"\sigma^*_y\left(x\right)"
-    assert latex(udivisor_sigma(x, y)**2) == r"\sigma^*^{2}_y\left(x\right)"        
-    
+    assert latex(udivisor_sigma(x, y)**2) == r"\sigma^*^{2}_y\left(x\right)"
+
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
     assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left (x \right )}'
