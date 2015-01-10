@@ -1,6 +1,6 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, C, S)
+                   oo, zoo, simplify, expand_func, C, S, Product)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -146,8 +146,10 @@ def test_factorial_series():
 
 def test_factorial_rewrite():
     n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True, nonnegative=True)
 
     assert factorial(n).rewrite(gamma) == gamma(n + 1)
+    assert str(factorial(k).rewrite(Product)) == 'Product(_i, (_i, 1, k))'
 
 
 def test_factorial2():

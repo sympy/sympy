@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify
+from sympy.core import S, C, sympify, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.ntheory import sieve
@@ -163,6 +163,11 @@ class factorial(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, n):
         return C.gamma(n + 1)
+
+    def _eval_rewrite_as_Product(self, n):
+        if n.is_nonnegative and n.is_integer:
+            i = Dummy('i', integer=True)
+            return C.Product(i, (i, 1, n))
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
