@@ -4028,6 +4028,7 @@ class Poly(Expr):
 
         References
         ==========
+
         .. [1] Albert H. Nuttall, "Efficient Evaluation of Polynomials and
         Exponentials of Polynomails for Equispaced Arguments," IEEE
         Transactions on Acoustics, Speech, and Signal Processing, vol. ASSP-35,
@@ -4039,6 +4040,7 @@ class Poly(Expr):
 
         Examples
         ========
+
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
