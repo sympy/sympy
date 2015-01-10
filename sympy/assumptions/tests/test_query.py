@@ -1226,6 +1226,7 @@ def test_even():
 
     assert ask(Q.even(x*y), Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.even(x*x), Q.integer(x)) is None
+    assert ask(Q.even(x+y+z), Q.even(x) & Q.even(y) & Q.even(z)) is True
     assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.odd(y)) is True
     assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.even(y)) is None
     assert ask(Q.even(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.odd(z)) is True
@@ -1669,6 +1670,8 @@ def test_odd():
     assert ask(Q.odd(2*x + y), Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.odd(x*y), Q.odd(x) & Q.even(y)) is False
     assert ask(Q.odd(x*y), Q.odd(x) & Q.odd(y)) is True
+    assert ask(Q.odd(x+y+z), Q.odd(x) & Q.even(y) & Q.even(z)) is True
+    assert ask(Q.odd(2*x+1), Q.integer(x)) is True
     assert ask(Q.odd(2*x*y), Q.rational(x) & Q.rational(x)) is None
     assert ask(Q.odd(2*x*y), Q.irrational(x) & Q.irrational(x)) is None
 
