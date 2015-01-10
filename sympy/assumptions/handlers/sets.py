@@ -401,7 +401,7 @@ class AskImaginaryHandler(CommonHandler):
     """
     Handler for Q.imaginary
     Test that an expression belongs to the field of imaginary numbers,
-    that is, numbers in the form x*I, where x is real
+    that is, numbers in the form x*I, where x is real (or zero)
     """
 
     @staticmethod
@@ -417,27 +417,28 @@ class AskImaginaryHandler(CommonHandler):
     @staticmethod
     def Add(expr, assumptions):
         """
-        Imaginary + Imaginary -> Imaginary
-        Imaginary + Complex   -> ?
-        Imaginary + Real      -> !Imaginary
+        Imaginary + Imaginary    -> Imaginary
+        Imaginary + Complex      -> ?
+        Imaginary + Nonzero Real -> !Imaginary
         """
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
 
-        reals = 0
+        reals = []
         for arg in expr.args:
             if ask(Q.imaginary(arg), assumptions):
                 pass
             elif ask(Q.real(arg), assumptions):
-                reals += 1
+                reals.append(arg)
             else:
                 break
         else:
-            if reals == 0:
+            if len(reals) == 0:
                 return True
-            if reals == 1 or (len(expr.args) == reals):
+            elif len(reals) in (1, len(expr.args)):
                 # two reals could sum 0 thus giving an imaginary
-                return False
+                if ask(Q.nonzero(C.Add(*reals)), assumptions):
+                    return False
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -448,15 +449,12 @@ class AskImaginaryHandler(CommonHandler):
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
         result = False
-        reals = 0
         for arg in expr.args:
             if ask(Q.imaginary(arg), assumptions):
                 result = result ^ True
             elif not ask(Q.real(arg), assumptions):
                 break
         else:
-            if reals == len(expr.args):
-                return False
             return result
 
     @staticmethod
@@ -466,7 +464,7 @@ class AskImaginaryHandler(CommonHandler):
         Imaginary**Even       -> Real
         b**Imaginary          -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
         Imaginary**Real       -> ?
-        Positive**Real        -> Real
+        Nonnegative**Real     -> Real
         Negative**Integer     -> Real
         Negative**(Integer/2) -> Imaginary
         Negative**Real        -> not Imaginary if exponent is not Rational
@@ -482,12 +480,11 @@ class AskImaginaryHandler(CommonHandler):
                 if ask(Q.integer(2*i), assumptions):
                     return ask(Q.imaginary(((-1)**i)**expr.exp), assumptions)
 
-        if ask(Q.imaginary(expr.base), assumptions):
+        if ask(Q.imaginary(expr.base) & ~Q.zero(expr.base), assumptions):
             if ask(Q.integer(expr.exp), assumptions):
                 odd = ask(Q.odd(expr.exp), assumptions)
                 if odd is not None:
                     return odd
-                return
 
         if ask(Q.imaginary(expr.exp), assumptions):
             imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
@@ -495,13 +492,13 @@ class AskImaginaryHandler(CommonHandler):
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
         if ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
-            if ask(Q.positive(expr.base), assumptions):
+            if ask(Q.nonnegative(expr.base), assumptions):
                 return False
             else:
                 rat = ask(Q.rational(expr.exp), assumptions)
-                if not rat:
+                if not rat and ask(Q.negative(expr.base), assumptions):
                     return rat
-                if ask(Q.integer(expr.exp), assumptions):
+                if ask(Q.integer(expr.exp) & Q.nonzero(expr.base), assumptions):
                     return False
                 else:
                     half = ask(Q.integer(2*expr.exp), assumptions)

@@ -52,10 +52,8 @@ known_facts_cnf = And(
     Or(Not(Q.orthogonal), Q.unitary),
     Or(Not(Q.diagonal), Q.upper_triangular),
     Or(Not(Q.algebraic), Not(Q.transcendental)),
-    Or(Not(Q.antihermitian), Not(Q.hermitian)),
     Or(Not(Q.composite), Not(Q.prime)),
     Or(Not(Q.even), Not(Q.odd)),
-    Or(Not(Q.imaginary), Not(Q.real)),
     Or(Not(Q.invertible), Not(Q.singular)),
     Or(Not(Q.irrational), Not(Q.rational)),
     Or(Not(Q.negative), Not(Q.nonnegative)),
@@ -74,6 +72,8 @@ known_facts_cnf = And(
     Or(Not(Q.lower_triangular), Not(Q.upper_triangular), Q.diagonal),
     Or(Not(Q.fullrank), Not(Q.square), Q.invertible),
     Or(Not(Q.real), Not(Q.unitary), Q.orthogonal),
+    Or(Not(Q.antihermitian), Not(Q.hermitian), Q.zero),
+    Or(Not(Q.imaginary), Not(Q.real), Q.zero),
     Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime)
 )
 
