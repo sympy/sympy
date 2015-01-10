@@ -277,10 +277,10 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
-    "separable",
-    "1st_exact",
     "1st_linear",
     "Bernoulli",
+    "separable",
+    "1st_exact",
     "Riccati_special_minus2",
     "1st_homogeneous_coeff_best",
     "1st_homogeneous_coeff_subs_indep_div_dep",
@@ -290,10 +290,10 @@ allhints = (
     "separable_reduced",
     "1st_power_series",
     "lie_group",
-    "nth_linear_constant_coeff_homogeneous",
-    "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
+    "nth_linear_constant_coeff_homogeneous",
+    "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
