@@ -2404,7 +2404,9 @@ class Expr(Basic, EvalfMixin):
         from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
-            if len(syms) > 1:
+            if not syms:
+                return self
+            elif len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
