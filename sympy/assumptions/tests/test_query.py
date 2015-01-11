@@ -1226,7 +1226,6 @@ def test_even():
 
     assert ask(Q.even(x*y), Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.even(x*x), Q.integer(x)) is None
-    assert ask(Q.even(x+y+z), Q.even(x) & Q.even(y) & Q.even(z)) is True
     assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.odd(y)) is True
     assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.even(y)) is None
     assert ask(Q.even(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.odd(z)) is True
