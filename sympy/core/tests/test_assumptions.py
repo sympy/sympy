@@ -64,6 +64,7 @@ def test_one():
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_number is True
+    assert z.is_composite is False  # issue 8807
 
 
 @XFAIL
