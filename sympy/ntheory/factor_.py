@@ -1309,11 +1309,12 @@ def _udivisors(n):
 
     factorpows = [p**e for p, e in factorint(n).items()]
     for i in xrange(2**len(factorpows)):
-        d, j = 1, i
-        for k in xrange(i.bit_length()):
+        d, j, k = 1, i, 0
+        while j:
             if (j & 1):
                 d *= factorpows[k]
             j >>= 1
+            k += 1
         yield d
 
 
