@@ -2696,6 +2696,7 @@ def test_X11():
             log(cosh(w)) + log(z) + z*sinh(w)/cosh(w) + O(z**2))
 
 
+@SKIP("this hangs")
 @XFAIL
 def test_X12():
     # Look at the generalized Taylor series around x = 1

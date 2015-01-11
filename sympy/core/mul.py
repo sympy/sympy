@@ -1448,11 +1448,36 @@ class Mul(Expr, AssocOp):
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(C.Order):
-            res += C.Order(x**n, x)
-        return res
+
+        exact, args, terms = S.One, [], []
+        for t in self.args:
+            s = t.nseries(x, n=n, logx=logx)
+            if s.has(C.Order):
+                args.append(t)
+                terms.append(s)
+            else:
+                exact *= s
+
+        if not args:
+            return powsimp(exact.expand(), combine='exp', deep=True)
+
+        res = powsimp(self.func(*([exact] + terms)).expand(), combine='exp', deep=True)
+
+        correct_o = C.Order(x**n, x)
+        for o in self.atoms(C.Order):
+            o *= exact
+            if o.contains(correct_o):
+                correct_o = o
+
+        nuse = n + 1
+        while res.getO() and not correct_o.contains(res.getO()):
+            terms = [t.nseries(x, n=nuse, logx=logx) for t in args]
+            res = powsimp(self.func(*([exact] + terms)).expand(), combine='exp', deep=True)
+            o = res.getO()
+            res = res.removeO().cancel() + o
+            nuse += 1
+
+        return res + correct_o
 
     def _eval_as_leading_term(self, x):
         return self.func(*[t.as_leading_term(x) for t in self.args])
