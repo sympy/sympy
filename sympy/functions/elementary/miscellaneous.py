@@ -268,9 +268,10 @@ def real_root(arg, n=None):
     """
     if n is not None:
         n = as_int(n)
-        rv = C.Pow(arg, Rational(1, n))
+        args = arg, Rational(1, n)
         if n % 2 == 0:
-            return rv
+            return C.Pow(*args)
+        rv = C.Pow(*args, evaluate=False)
     else:
         rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
