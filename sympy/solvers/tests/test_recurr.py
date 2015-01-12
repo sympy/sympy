@@ -1,5 +1,5 @@
 from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, expand_func, binomial, gamma
-from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
+from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio, rfind, guess_seq
 from sympy.utilities.pytest import raises
 from sympy.abc import a, b, c
 
@@ -196,3 +196,35 @@ def test_issue_6844():
     f = y(n + 2) - y(n + 1) + y(n)/4
     assert rsolve(f, y(n)) == 2**(-n)*(C0 + C1*n)
     assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2*2**(-n)*n
+
+
+def test_rfind():
+    n, x, y = symbols('n,x,y', integer=True)
+    assert rfind([1, 2, 3, 4, 5, 6]) == Eq(a(n + 2), -a(n) + 2*a(n + 1))
+    assert rfind([0, 1, 1, 2, 3, 5, 8, 13]) == Eq(a(n + 2), a(n) + a(n + 1))
+    assert rfind([2, 3, 5, 9, 17, 33, 65]) == Eq(a(n + 2), -2*a(n) + 3*a(n + 1))
+
+    assert rfind([x, 3*x, 6*x, 10*x, 15*x, 21*x, 28*x]) == Eq(a(n + 3),
+                                                              a(n) - 3*a(n + 1) + 3*a(n + 2))
+    assert rfind([1, y+x, y**2+2*x*y+x**2, y**3+3*x*y**2+3*x**2*y+x**3,
+                  (y+x)**4, (y+x)**5]) == Eq(a(n + 1), (x + y)*a(n))
+    assert rfind([x, y, -x+2*y, -2*x+3*y, -3*x+4*y, -4*x+5*y]) == Eq(a(n + 2),
+                                                                     -a(n) + 2*a(n + 1))
+
+
+def test_rfind_helper():
+    raises(ValueError, lambda: rfind([1, 2, 3, 4, 5]))
+    assert rfind([1, 2, 3, 4, 5, 111, 111]) is None
+
+
+def test_guess_seq():
+    n, x, y = symbols('n,x,y', integer=True)
+    assert guess_seq([1, 2, 3, 4, 5, 6]) == n + 1
+    assert guess_seq([0, 1, 1, 2, 3, 5, 8, 13]) == sqrt(5)*(1/2 + sqrt(5)/2)**n/5 -\
+                                        sqrt(5)*(-sqrt(5)/2 + 1/2)**n/5
+    assert guess_seq([2, 3, 5, 9, 17, 33, 65]) == 2**n + 1
+
+    assert guess_seq([1*x, 3*x, 6*x, 10*x, 15*x, 21*x, 28*x]) == x*(n**2/2 + 3*n/2 + 1)
+    assert guess_seq([1, y+x, y**2+2*x*y+x**2, y**3+3*x*y**2+3*x**2*y+x**3,
+                  (y+x)**4, (y+x)**5]) == (x + y)**n
+    assert guess_seq([x, y, -x+2*y, -2*x+3*y, -3*x+4*y, -4*x+5*y]) == n*(-x + y) + x

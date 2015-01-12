@@ -64,6 +64,10 @@ Recurrence Equations
 
 .. autofunction:: rsolve_hyper
 
+.. autofunction:: rfind
+
+.. autofunction:: guess_seq
+
 Systems of Polynomial Equations
 -------------------------------
 
