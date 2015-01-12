@@ -196,7 +196,16 @@ class StdFactKB(FactKB):
     """
     rules = _assume_rules
 
-    def __init__(self, facts=None):
+    def __init__(self, facts=None, nonuser_facts=None):
+        # save a copy of the facts dict, then add the extra facts
+        #print((facts, type(facts), nonuser_facts))
+        if type(facts) is dict:  # not a subclass
+            self._saved_user_facts = facts.copy()
+        if nonuser_facts:
+            if facts:
+                facts.update(nonuser_facts)
+            else:
+                facts = nonuser_facts
         if facts:
             self.deduce_all_facts(facts)
 
