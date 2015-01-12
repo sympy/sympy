@@ -134,6 +134,13 @@ def test_Dummy():
     assert srepr(d) == "Dummy('d', nonzero=True)"
 
 
+def test_Dummy_from_Symbol():
+    # should not get the full dictionary of assumptions
+    n = Symbol('n', integer=True)
+    d = n.as_dummy()
+    assert srepr(d) == "Dummy('n', integer=True)"
+
+
 def test_tuple():
     sT((x,), "(Symbol('x'),)")
     sT((x, y), "(Symbol('x'), Symbol('y'))")

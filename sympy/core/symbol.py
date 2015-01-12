@@ -150,8 +150,7 @@ class Symbol(AtomicExpr, Boolean):
 
     def as_dummy(self):
         """Return a Dummy having the same name and same assumptions as self."""
-        # FIXME: copy the user-specified assumptions instead/too?
-        return Dummy(self.name, **self.assumptions0)
+        return Dummy(self.name, **self._user_assumptions)
 
     def __call__(self, *args):
         from .function import Function
