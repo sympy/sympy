@@ -140,7 +140,13 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        d = expr._assumptions._saved_user_facts
+        if d == {}:
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                                   self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))

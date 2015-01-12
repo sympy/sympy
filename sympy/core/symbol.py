@@ -58,13 +58,12 @@ class Symbol(AtomicExpr, Boolean):
         """Remove None, covert values to bool, check commutativity *in place*.
         """
 
-        # be strict about commutativity
+        # be strict about commutativity, cannot be None
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
             whose = '%s ' % obj.__name__ if obj else ''
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
-        assumptions['commutative'] = is_commutative
 
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
@@ -107,7 +106,9 @@ class Symbol(AtomicExpr, Boolean):
 
         obj = Expr.__new__(cls)
         obj.name = name
-        obj._assumptions = StdFactKB(assumptions)
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        extra = {'commutative': is_commutative};
+        obj._assumptions = StdFactKB(assumptions, extra)
         return obj
 
     __xnew__ = staticmethod(
@@ -122,6 +123,7 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
+        # FIXME: _user_assumptions?
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
@@ -135,7 +137,7 @@ class Symbol(AtomicExpr, Boolean):
 
     def as_dummy(self):
         """Return a Dummy having the same name and same assumptions as self."""
-        return Dummy(self.name, **self.assumptions0)
+        return Dummy(self.name, **self._assumptions._saved_user_facts)
 
     def __call__(self, *args):
         from .function import Function
