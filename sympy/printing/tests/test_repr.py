@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
-    Symbol)
+    Symbol, Dummy, Wild)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -113,6 +113,25 @@ def test_Symbol():
     sT(x, "Symbol('x')")
     sT(y, "Symbol('y')")
     sT(Symbol('x', negative=True), "Symbol('x', negative=True)")
+
+
+def test_Symbol_two_assumptions():
+    x = Symbol('x', negative=0, integer=1)
+    # order can and does vary (FIXME: is this a caching issue?)
+    s1 = "Symbol('x', integer=True, negative=False)"
+    s2 = "Symbol('x', negative=False, integer=True)"
+    assert srepr(x) in (s1, s2)
+    assert eval(srepr(x), ENV) == x
+
+
+def test_Wild():
+    sT(Wild('x', even=True), "Wild('x', even=True)")
+
+
+def test_Dummy():
+    # cannot use sT here
+    d = Dummy('d', nonzero=True)
+    assert srepr(d) == "Dummy('d', nonzero=True)"
 
 
 def test_tuple():
