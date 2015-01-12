@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import raises
-from sympy import symbols, Function, Integer, Matrix, Abs, \
-    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones
+from sympy import (symbols, Function, Integer, Matrix, Abs,
+    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
+    Symbol)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -111,6 +112,7 @@ def test_Float():
 def test_Symbol():
     sT(x, "Symbol('x')")
     sT(y, "Symbol('y')")
+    sT(Symbol('x', negative=True), "Symbol('x', negative=True)")
 
 
 def test_tuple():

@@ -64,7 +64,8 @@ class Symbol(AtomicExpr, Boolean):
             whose = '%s ' % obj.__name__ if obj else ''
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
-        assumptions['commutative'] = is_commutative
+        # FIXME: what goes wrong if I drop this?
+        #assumptions['commutative'] = is_commutative
 
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
@@ -98,8 +99,13 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
+        # FIXME: could make copy before sanitizing, avoid commutative=T/F.
+        # Easier to drop that from _sanitize as I did above...
+        #acpy = assumptions.copy()
         cls._sanitize(assumptions, cls)
-        return Symbol.__xnew_cached_(cls, name, **assumptions)
+        obj = Symbol.__xnew_cached_(cls, name, **assumptions)
+        #obj._user_assumptions = acpy
+        return obj
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
@@ -107,6 +113,8 @@ class Symbol(AtomicExpr, Boolean):
 
         obj = Expr.__new__(cls)
         obj.name = name
+        # FIXME: _raw_assumptions better name?
+        obj._user_assumptions = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         return obj
 
@@ -135,6 +143,7 @@ class Symbol(AtomicExpr, Boolean):
 
     def as_dummy(self):
         """Return a Dummy having the same name and same assumptions as self."""
+        # FIXME: copy the user-specified assumptions instead/too?
         return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):

@@ -44,7 +44,8 @@ class Basic(with_metaclass(ManagedProperties)):
     """
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
-                 '_assumptions'
+                 '_assumptions',
+                 '_user_assumptions'
                 ]
 
     # To be overridden with True in the appropriate subclasses
