@@ -1290,6 +1290,9 @@ class cot(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_tan(self, arg):
         return 1/tan(arg)
 
+    def _eval_rewrite_as_sincos(self, arg):
+        return cos(arg)/sin(arg)
+
     def as_real_imag(self, deep=True, **hints):
         re, im = self._as_real_imag(deep=deep, **hints)
         if im:
