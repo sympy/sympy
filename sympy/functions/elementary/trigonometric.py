@@ -386,10 +386,6 @@ class sin(TrigonometricFunction):
         if arg.is_real:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sin(self.args[0]._sage_())
-
 
 class cos(TrigonometricFunction):
     """
@@ -735,10 +731,6 @@ class cos(TrigonometricFunction):
         if arg.is_real:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cos(self.args[0]._sage_())
-
 
 class tan(TrigonometricFunction):
     """
@@ -967,10 +959,6 @@ class tan(TrigonometricFunction):
 
         if arg.is_imaginary:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.tan(self.args[0]._sage_())
 
 
 class cot(TrigonometricFunction):
@@ -1212,10 +1200,6 @@ class cot(TrigonometricFunction):
             return S.ComplexInfinity
         return cot(argnew)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cot(self.args[0]._sage_())
-
 
 class ReciprocalTrigonometricFunction(TrigonometricFunction):
     """Base class for reciprocal functions of trigonometric functions. """
@@ -1388,10 +1372,6 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*C.euler(2*k)/C.factorial(2*k)*x**(2*k)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sec(self.args[0]._sage_())
-
 
 class csc(ReciprocalTrigonometricFunction):
     """
@@ -1459,10 +1439,6 @@ class csc(ReciprocalTrigonometricFunction):
             k = n//2 + 1
             return ((-1)**(k - 1)*2*(2**(2*k - 1) - 1)*
                     C.bernoulli(2*k)*x**(2*k - 1)/C.factorial(2*k))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.csc(self.args[0]._sage_())
 
 
 ###############################################################################
@@ -1632,10 +1608,6 @@ class asin(InverseTrigonometricFunction):
         """
         return sin
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.asin(self.args[0]._sage_())
-
 
 class acos(InverseTrigonometricFunction):
     """
@@ -1785,10 +1757,6 @@ class acos(InverseTrigonometricFunction):
             return r
         elif z.is_real and (z + 1).is_nonnegative and (z - 1).is_nonpositive:
             return r
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acos(self.args[0]._sage_())
 
 
 class atan(InverseTrigonometricFunction):
@@ -1941,10 +1909,6 @@ class atan(InverseTrigonometricFunction):
     def _eval_rewrite_as_acsc(self, arg):
         return sqrt(arg**2)/arg*(S.Pi/2 - acsc(sqrt(1 + arg**2)))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.atan(self.args[0]._sage_())
-
 
 class acot(InverseTrigonometricFunction):
     """
@@ -2085,10 +2049,6 @@ class acot(InverseTrigonometricFunction):
     def _eval_rewrite_as_acsc(self, arg):
         return arg*sqrt(1/arg**2)*(S.Pi/2 - acsc(sqrt((1 + arg**2)/arg**2)))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acot(self.args[0]._sage_())
-
 
 class asec(InverseTrigonometricFunction):
     """
@@ -2174,10 +2134,6 @@ class asec(InverseTrigonometricFunction):
     def _eval_rewrite_as_acsc(self, arg):
         return S.Pi/2 - acsc(arg)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.arcsec(self.args[0]._sage_())
-
 
 class acsc(InverseTrigonometricFunction):
     """
@@ -2262,10 +2218,6 @@ class acsc(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_asec(self, arg):
         return S.Pi/2 - asec(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.arccsc(self.args[0]._sage_())
 
 
 class atan2(InverseTrigonometricFunction):
@@ -2432,7 +2384,3 @@ class atan2(InverseTrigonometricFunction):
         y, x = self.args
         if x.is_real and y.is_real:
             super(atan2, self)._eval_evalf(prec)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.atan2(self.args[0]._sage_(), self.args[1]._sage_())

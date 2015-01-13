@@ -9,7 +9,6 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -25,7 +24,6 @@ from sympy.polys import Poly, PolynomialError
 from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
 
@@ -1069,6 +1067,30 @@ class Integral(AddWithLimits):
                     continue
             result += self.function.subs(sym, xi)
         return result*dx
+
+    def _sage_(self):
+        import sage.all as sage
+        f, limits = self.function._sage_(), list(self.limits)
+        for limit in limits:
+            if len(limit) == 1:
+                x = limit[0]
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    hold=True)
+            elif len(limit) == 2:
+                x, b = limit
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    b._sage_(),
+                                    hold=True)
+            else:
+                x, a, b = limit
+                f = sage.integral(f,
+                                  (x._sage_(),
+                                    a._sage_(),
+                                    b._sage_()),
+                                    hold=True)
+        return f
 
 
 @xthreaded
