@@ -224,8 +224,11 @@ def test_RootOf_evalf():
     eq = (531441*x**11 + 3857868*x**10 + 13730229*x**9 + 32597882*x**8 +
         55077472*x**7 + 60452000*x**6 + 32172064*x**5 - 4383808*x**4 -
         11942912*x**3 - 1506304*x**2 + 1453312*x + 512)
-    assert str(RootOf(eq, 1).n(2)) == '-1.4 - 0.77*I'
-    assert str(RootOf(eq, 2).n(2)) == '-1.4 + 0.77*I'
+    a, b = RootOf(eq, 1).n(2).as_real_imag()
+    c, d = RootOf(eq, 2).n(2).as_real_imag()
+    assert a == c
+    assert b < d
+    assert b == -d
     # issue 6451
     r = RootOf(legendre_poly(64, x), 7)
     assert r.n(2) == r.n(100).n(2)
