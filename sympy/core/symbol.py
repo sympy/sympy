@@ -134,9 +134,11 @@ class Symbol(AtomicExpr, Boolean):
         return (self.name,)
 
     def __getstate__(self):
-        return {'_assumptions': self._assumptions}
+        return {'_assumptions': self._assumptions,
+                '_user_assumptions': self._user_assumptions}
 
     def _hashable_content(self):
+        # FIXME: _user_assumptions?
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
@@ -210,7 +212,9 @@ class Dummy(Symbol):
         return obj
 
     def __getstate__(self):
-        return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
+        return {'_assumptions': self._assumptions,
+                '_user_assumptions': self._user_assumptions,
+                'dummy_index': self.dummy_index}
 
     @cacheit
     def sort_key(self, order=None):
