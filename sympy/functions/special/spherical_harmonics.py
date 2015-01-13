@@ -229,6 +229,13 @@ class Ynm(Function):
             res = mp.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.spherical_harmonic(self.args[0]._sage_(),
+                                       self.args[1]._sage_(),
+                                       self.args[2]._sage_(),
+                                       self.args[3]._sage_())
+
 
 def Ynm_c(n, m, theta, phi):
     r"""Conjugate spherical harmonics defined as

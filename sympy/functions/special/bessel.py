@@ -195,6 +195,10 @@ class besselj(BesselBase):
         if nu.is_integer and z.is_real:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_J(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 class bessely(BesselBase):
     r"""
@@ -269,6 +273,10 @@ class bessely(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_Y(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class besseli(BesselBase):
@@ -366,6 +374,10 @@ class besseli(BesselBase):
         if nu.is_integer and z.is_real:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_I(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 class besselk(BesselBase):
     r"""
@@ -445,6 +457,10 @@ class besselk(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_K(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class hankel1(BesselBase):

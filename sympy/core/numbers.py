@@ -2858,6 +2858,11 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
                 else:
                     return S.Zero
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.UnsignedInfinityRing.gen()
+
+
 zoo = S.ComplexInfinity
 
 
