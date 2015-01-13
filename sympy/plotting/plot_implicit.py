@@ -352,7 +352,7 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     use_interval = kwargs.pop('adaptive', True)
     nb_of_points = kwargs.pop('points', 300)
     depth = kwargs.pop('depth', 0)
-    line_color = kwargs.pop('line_color', None)
+    line_color = kwargs.pop('line_color', "blue")
     #Check whether the depth is greater than 4 or less than 0.
     if depth > 4:
         depth = 4
