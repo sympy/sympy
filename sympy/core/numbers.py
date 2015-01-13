@@ -834,6 +834,10 @@ class Float(Number):
                 prec = self._prec
                 return Float._new(
                     mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
+            elif isinstance(expt, Rational) and \
+                    expt.p == 1 and expt.q % 2 and self.is_negative:
+                return Pow(S.NegativeOne, expt, evaluate=False)*(
+                    -self)._eval_power(expt)
             expt, prec = expt._as_mpf_op(self._prec)
             mpfself = self._mpf_
             try:
