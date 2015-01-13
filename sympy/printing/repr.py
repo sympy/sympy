@@ -144,7 +144,7 @@ class ReprPrinter(Printer):
         if d == {}:
             return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
         else:
-            attr = ['%s=%s' % (k, v) for k, v in d.iteritems()]
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
             return "%s(%s, %s)" % (expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
 
