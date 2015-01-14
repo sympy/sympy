@@ -140,7 +140,7 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        d = expr._assumptions._saved_user_facts
+        d = expr._assumptions.generator
         if d == {}:
             return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
         else:
