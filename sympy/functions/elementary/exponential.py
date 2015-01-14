@@ -806,13 +806,18 @@ class LambertW(Function):
         else:
             k = self.args[1]
         if k.is_zero:
-            return (x + 1/S.Exp1).is_positive
+            if (x + 1/S.Exp1).is_positive:
+                return True
+            elif (x + 1/S.Exp1).is_nonpositive:
+                return False
         elif (k + 1).is_zero:
-            from sympy.core.logic import fuzzy_and
-            return fuzzy_and([x.is_negative, (x + 1/S.Exp1).is_positive])
+            if x.is_negative and (x + 1/S.Exp1).is_positive:
+                return True
+            elif x.is_nonpositive or (x + 1/S.Exp1).is_nonnegative:
+                return False
         elif k.is_nonzero and (k + 1).is_nonzero:
-            return False
-
+            if x.is_real:
+                return False
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
