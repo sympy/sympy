@@ -132,11 +132,6 @@ class Symbol(AtomicExpr, Boolean):
         return dict((key, value) for key, value
                 in self._assumptions.items() if value is not None)
 
-    @property
-    def assumptions0(self):
-        return dict((key, value) for key, value
-                in self._assumptions.items() if value is not None)
-
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
