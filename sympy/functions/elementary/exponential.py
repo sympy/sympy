@@ -780,6 +780,8 @@ class LambertW(Function):
                 return -S.ImaginaryUnit*S.Pi/2
             elif x == -1/S.Exp1:
                 return S.NegativeOne
+            elif x == -2*exp(-2):
+                return -C.Integer(2)
 
     def fdiff(self, argindex=1):
         """
