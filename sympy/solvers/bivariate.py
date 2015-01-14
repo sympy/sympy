@@ -143,16 +143,21 @@ def _lambert(eq, x):
         return []  # violated assumptions
 
     u = Dummy('rhs')
-    rhs = -c/b + (a/d)*LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a))
+    sol = []
+    # check only real solutions:
+    for k in [-1, 0]:
+        l = LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
+        # if W's arg is between -1/e and 0 there is
+        # a -1 branch real solution, too.
+        if k and not l.is_real:
+            continue
+        rhs = -c/b + (a/d)*l
 
-    # if W's arg is between -1/e and 0 there is a -1 branch solution, too.
-
-    # Check here to see if exp(W(s)) appears and return s/W(s) instead?
-
-    solns = solve(X1 - u, x)
-    for i, tmp in enumerate(solns):
-        solns[i] = tmp.subs(u, rhs)
-    return solns
+        solns = solve(X1 - u, x)
+        for i, tmp in enumerate(solns):
+            solns[i] = tmp.subs(u, rhs)
+            sol.append(solns[i])
+    return sol
 
 
 def _solve_lambert(f, symbol, gens):

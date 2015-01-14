@@ -2,7 +2,7 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
                    Or, Q, re, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Float, Poly, PurePoly, pi, root)
+                   Function, Float, Poly, PurePoly, pi, root, LambertW, exp)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -312,3 +312,8 @@ def test_issue_8783():
     assert solve(x < oo) == And(-oo < x, x < oo)
     assert solve(x > oo) == False
     assert solve(x < -oo) == False
+
+
+def test_issue_8708():
+    assert reduce_inequalities(1 - x - exp(-2*x) < 0, x) == \
+        Or(And(-oo < x, x < 0), And(LambertW(-2*exp(-2))/2 + 1 < x, x < oo))
