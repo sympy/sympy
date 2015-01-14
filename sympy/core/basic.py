@@ -14,12 +14,10 @@ from inspect import getmro
 
 class Basic(with_metaclass(ManagedProperties)):
     """
-    Base class for all objects in SymPy.
+    Base class for all SymPy objects.
 
-    Not all SymPy objects inherit from Basic: for example mutable objects
-    (e.g., MutableMatrix) do not.
-
-    Conventions:
+    Notes and conventions
+    =====================
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
@@ -43,6 +41,23 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> cot(x)._args    # do not use this, use cot(x).args instead
         (x,)
+
+
+    3)  By "SymPy object" we mean something that can be returned by
+        ``sympify``.  But not all objects one encounters using SymPy are
+        subclasses of Basic:
+
+        >>> from sympy import Basic, Matrix, sympify
+        >>> A = Matrix([[1, 2], [3, 4]])
+        >>> isinstance(A, Basic)
+        False
+
+        >>> B = sympify(A)
+        >>> isinstance(B, Basic)
+        True
+
+        (The distinction here is that ``A`` is mutable whereas ``B`` is
+        immutable.)
 
     """
     __slots__ = ['_mhash',              # hash value
