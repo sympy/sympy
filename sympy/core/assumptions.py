@@ -208,21 +208,28 @@ class StdFactKB(FactKB):
     """
     rules = _assume_rules
 
-    def __init__(self, facts=None, nonuser_facts=None):
+    def __init__(self, facts=None, extra_facts=None):
         # save a copy of the facts dict, then add the extra facts
-        #print((facts, type(facts), nonuser_facts))
-        if type(facts) is dict:  # not a subclass
-            self._saved_user_facts = facts.copy()
-        if nonuser_facts:
+        if not facts:
+            self._generator = {};
+        elif not isinstance(facts, FactKB):
+            self._generator = facts.copy()
+        else:
+            self._generator = facts.generator
+        if extra_facts:
             if facts:
-                facts.update(nonuser_facts)
+                facts.update(extra_facts)
             else:
-                facts = nonuser_facts
+                facts = extra_facts
         if facts:
             self.deduce_all_facts(facts)
 
     def copy(self):
         return self.__class__(self)
+
+    @property
+    def generator(self):
+        return self._generator.copy()
 
 
 def as_property(fact):
