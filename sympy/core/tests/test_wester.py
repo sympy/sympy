@@ -965,9 +965,7 @@ def test_M23():
     x = symbols('x', complex=True)
 
     assert solve(x - 1/sqrt(1 + x**2)) == [
-        simplify(-I*sqrt((sqrt(5) + 1)/2)),
-        simplify(   sqrt((sqrt(5) - 1)/2)),
-    ]
+        -I*sqrt(S.Half + sqrt(5)/2), sqrt(-S.Half + sqrt(5)/2)]
 
 
 def test_M24():

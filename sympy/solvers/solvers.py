@@ -1499,14 +1499,11 @@ def _solve(f, *symbols, **flags):
             except (ValueError, NotImplementedError):
                 u = False
             if u:
-                eq, cov, _ = u
+                eq, cov = u
                 if cov:
-                    isym, ieq = cov[0]
+                    isym, ieq = cov
                     inv = _solve(ieq, symbol, **flags)[0]
-                    try:
-                        rv = set([inv.subs(isym, xi) for xi in _solve(eq, isym)])
-                    except NotImplementedError:
-                        rv = None
+                    rv = set([inv.subs(isym, xi) for xi in _solve(eq, isym, **flags)])
                 else:
                     try:
                         rv = _solve(eq, symbol, **flags)
@@ -1514,6 +1511,9 @@ def _solve(f, *symbols, **flags):
                         rv = None
                 if rv is not None:
                     result = list(ordered(rv))
+                    # if the flag wasn't set then unset it since unrad results
+                    # can be quite long or of very high order
+                    flags['simplify'] = flags.get('simplify', False)
             else:
                 pass  # for coverage
 
@@ -2836,33 +2836,35 @@ def _invert(eq, *symbols, **kwargs):
 
 
 def unrad(eq, *syms, **flags):
-    """ Remove radicals with symbolic arguments and return (eq, cov, dens),
+    """ Remove radicals with symbolic arguments and return (eq, cov),
     None or raise an error:
 
     None is returned if there are no radicals to remove.
 
-    ValueError is raised if there are radicals and they cannot be removed.
+    NotImplementedError is raised if there are radicals and they cannot be
+    removed or if the relationship between the original symbols and the
+    change of variable needed to rewrite the system as a polynomial cannot
+    be solved.
 
-    Otherwise the tuple, ``(eq, cov, dens)``, is returned where::
+    Otherwise the tuple, ``(eq, cov)``, is returned where::
 
         ``eq``, ``cov``
-            equation without radicals, perhaps written in terms of
-            change variables; the relationship to the original variables
-            is given by the expressions in list (``cov``) whose tuples,
-            (``v``, ``expr``) give the change variable introduced (``v``)
-            and the expression (``expr``) which equates the base of the radical
-            to the power of the change variable needed to clear the radical.
-            For example, for sqrt(2 - x) the tuple (_p, -_p**2 - x + 2), would
-            be obtained.
-        ``dens``
-            A set containing all denominators encountered while removing
-            radicals. This may be of interest since any solution obtained in
-            the modified expression should not set any denominator to zero.
+            ``eq`` is an equation without radicals (in the symbol(s) of
+            interest) whose solutions are a superset of the solutions to the
+            original expression. ``eq`` might be re-written in terms of a new
+            variable; the relationship to the original variables is given by
+            ``cov`` which is a list containing ``v`` and ``v**p - b`` where
+            ``p`` is the power needed to clear the radical and ``b`` is the
+            radical now expressed as a polynomial in the symbols of interest.
+            For example, for sqrt(2 - x) the tuple would be
+            ``(c, c**2 - 2 + x)``. The solutions of ``eq`` will contain
+            solutions to the original equation (if there are any).
 
     ``syms``
         an iterable of symbols which, if provided, will limit the focus of
         radical removal: only radicals with one or more of the symbols of
-        interest will be cleared.
+        interest will be cleared. All free symbols are used if ``syms`` is not
+        set.
 
     ``flags`` are used internally for communication during recursive calls.
     Two options are also recognized::
@@ -2877,172 +2879,244 @@ def unrad(eq, *syms, **flags):
         *   if all radicals appear in one term of the expression
         *   there are only 4 terms with sqrt() factors or there are less than
             four terms having sqrt() factors
+        *   there are only two terms with radicals
 
     Examples
     ========
 
     >>> from sympy.solvers.solvers import unrad
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, Rational
+    >>> from sympy import sqrt, Rational, root, real_roots, solve
+
     >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
-    (x**5 - 64, [], [])
-    >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
-    (x**3 - x**2 - 2*x - 1, [], [])
-    >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
-    (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
+    (x**5 - 64, [])
+    >>> unrad(sqrt(x) + root(x + 1, 3))
+    (x**3 - x**2 - 2*x - 1, [])
+    >>> eq = sqrt(x) + root(x, 3) - 2
+    >>> unrad(eq)
+    (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
-    def _canonical(eq):
-        # remove constants since these don't change the location of the root
-        # and expand the expression
-        eq = factor_terms(eq)
-        if eq.is_Mul:
-            eq = Mul(*[f for f in eq.args if not f.is_number])
-        eq = _mexpand(eq)
+    _inv_error = 'cannot get an analytical solution for the inversion'
 
-        # make sign canonical
+    uflags = dict(check=False, simplify=False)
+
+    def _cov(p, e):
+        if cov:
+            # XXX - uncovered
+            oldp, olde = cov
+            if Poly(e, p).degree(p) in (1, 2):
+                cov[:] = [p, olde.subs(oldp, _solve(e, p, **uflags)[0])]
+            else:
+                raise NotImplementedError
+        else:
+            cov[:] = [p, e]
+
+    def _canonical(eq, cov):
+        if cov:
+            # change symbol to vanilla so no solutions are eliminated
+            p, e = cov
+            rep = {p: Dummy(p.name)}
+            eq = eq.xreplace(rep)
+            cov = [p.xreplace(rep), e.xreplace(rep)]
+
+        # remove constants and powers of factors since these don't change
+        # the location of the root
+        eq = factor_terms(eq.as_numer_denom()[0])
+        if eq.is_Mul:
+            args = []
+            for f in eq.args:
+                if f.is_number:
+                    continue
+                if f.is_Pow and _take(f, True):
+                    args.append(f.base)
+                else:
+                    args.append(f)
+            eq = Mul(*args)
+        # fully expand the result
+        eq = _mexpand(eq, recursive=True)
+
+        # make the sign canonical
         free = eq.free_symbols
         if len(free) == 1:
-            if (eq.coeff(free.pop()**degree(eq)) < 0) == True:
+            if eq.coeff(free.pop()**degree(eq)).could_extract_minus_sign():
                 eq = -eq
         elif eq.could_extract_minus_sign():
             eq = -eq
 
-        return eq
+        return eq, cov
 
-    if eq.is_Atom:
-        return
-    cov, dens, nwas, rpt = [flags.get(k, v) for k, v in
-        sorted(dict(dens=None, cov=None, n=None, rpt=0).items())]
+    def _Q(pow):
+        # return leading Rational of denominator of Pow's exponent
+        c = pow.as_base_exp()[1].as_coeff_Mul()[0]
+        if not c.is_Rational:
+            return S.One
+        return c.q
 
-    if flags.get('take', None):
-        _take = flags.pop('take')
-    else:
-        def _take(d):
-            # see if this is a term that has symbols of interest
-            # and merits further processing
-            free = d.free_symbols
-            if not free:
-                return False
-            return not syms or free.intersection(syms)
+    # define the _take method that will determine whether a term is of interest
+    def _take(d, take_int_pow):
+        # return True if coefficient of any factor's exponent's den is not 1
+        for pow in Mul.make_args(d):
+            if not (pow.is_Symbol or pow.is_Pow):
+                continue
+            b, e = pow.as_base_exp()
+            if not b.has(*syms):
+                continue
+            if not take_int_pow and _Q(pow) == 1:
+                continue
+            free = pow.free_symbols
+            if free.intersection(syms):
+                return True
+        return False
+    _take = flags.setdefault('_take', _take)
 
-    if dens is None:
-        dens = set()
-    if cov is None:
-        cov = []
+    cov, nwas, rpt = [flags.setdefault(k, v) for k, v in
+        sorted(dict(cov=[], n=None, rpt=0).items())]
 
+    # preconditioning
     eq = powdenest(factor_terms(eq, radical=True))
     eq, d = eq.as_numer_denom()
-    eq = _mexpand(eq)
-    if _take(d):
-        dens.add(d)
+    eq = _mexpand(eq, recursive=True)
+    if eq.is_number:
+        return
 
-    if not eq.free_symbols:
-        return eq, cov, list(dens)
-
+    syms = set(syms) or eq.free_symbols
     poly = eq.as_poly()
+    gens = [g for g in poly.gens if _take(g, True)]
+    if not gens:
+        return
 
-    # if all the bases are the same or all the radicals are in one
-    # term, `lcm` will be the lcm of the radical's exponent
-    # denominators
-    lcm = 1
-    rads = set()
-    bases = set()
-    for g in poly.gens:
-        if not _take(g) or not g.is_Pow:
-            continue
-        ecoeff = g.exp.as_coeff_mul()[0]  # a Rational
-        if ecoeff.q != 1:
-            rads.add(g)
-            lcm = ilcm(lcm, ecoeff.q)
-            bases.add(g.base)
+    # check for trivial case
+    # - already a polynomial in integer powers
+    if all(_Q(g) == 1 for g in gens):
+        return
+    # - an exponent has a symbol of interest (don't handle)
+    if any(g.as_base_exp()[1].has(*syms) for g in gens):
+        return
+
+    def _rads_bases_lcm(poly):
+        # if all the bases are the same or all the radicals are in one
+        # term, `lcm` will be the lcm of the denominators of the
+        # exponents of the radicals
+        lcm = 1
+        rads = set()
+        bases = set()
+        for g in poly.gens:
+            if not _take(g, False):
+                continue
+            q = _Q(g)
+            if q != 1:
+                rads.add(g)
+                lcm = ilcm(lcm, q)
+                bases.add(g.base)
+        return rads, bases, lcm
+    rads, bases, lcm = _rads_bases_lcm(poly)
 
     if not rads:
         return
 
-    depth = sqrt_depth(eq)
+    covsym = Dummy('p', nonnegative=True)
+
+    # only keep in syms symbols that actually appear in radicals;
+    # and update gens
+    newsyms = set()
+    for r in rads:
+        newsyms.update(syms & r.free_symbols)
+    if newsyms != syms:
+        syms = newsyms
+        gens = [g for g in gens if g.free_symbols & syms]
 
     # get terms together that have common generators
     drad = dict(list(zip(rads, list(range(len(rads))))))
     rterms = {(): []}
     args = Add.make_args(poly.as_expr())
     for t in args:
-        if _take(t):
+        if _take(t, False):
             common = set(t.as_poly().gens).intersection(rads)
             key = tuple(sorted([drad[i] for i in common]))
         else:
             key = ()
         rterms.setdefault(key, []).append(t)
-    args = Add(*rterms.pop(()))
+    others = Add(*rterms.pop(()))
     rterms = [Add(*rterms[k]) for k in rterms.keys()]
+
     # the output will depend on the order terms are processed, so
     # make it canonical quickly
     rterms = list(reversed(list(ordered(rterms))))
 
-    # continue handling
-    ok = True
-    if len(rterms) == 1:
-        eq = rterms[0]**lcm - (-args)**lcm
+    ok = False  # we don't have a solution yet
+    depth = sqrt_depth(eq)
 
-    elif len(rterms) == 2 and not args:
-        eq = rterms[0]**lcm - (-rterms[1])**lcm
-
-    elif log(lcm, 2).is_Integer and (not args and
-            len(rterms) == 4 or len(rterms) < 4):
-        def _norm2(a, b):
-            return a**2 + b**2 + 2*a*b
-
-        if len(rterms) == 4:
-            # (r0+r1)**2 - (r2+r3)**2
-            r0, r1, r2, r3 = rterms
-            eq = _norm2(r0, r1) - _norm2(r2, r3)
-        elif len(rterms) == 3:
-            # (r1+r2)**2 - (r0+args)**2
-            r0, r1, r2 = rterms
-            eq = _norm2(r1, r2) - _norm2(r0, args)
-        elif len(rterms) == 2:
-            # r0**2 - (r1+args)**2
-            r0, r1 = rterms
-            eq = r0**2 - _norm2(r1, args)
-
-    elif len(bases) == 1:  # change of variables may work
-        ok = False
-        covwas = len(cov)
-        b = bases.pop()
-        for p, bexpr in cov:
-            pow = (b - bexpr)
-            if pow.is_Pow:
-                pb, pe = pow.as_base_exp()
-                if pe == lcm and pb == p:
-                    p = pb
-                    break
-        else:
-            p = Dummy('p', positive=True)
-            cov.append((p, b - p**lcm))
-        eq = poly.subs(b, p**lcm).as_expr()
-        if not eq.free_symbols.intersection(syms):
-            ok = True
-        else:
-            if len(cov) > covwas:
-                cov = cov[:-1]
+    if len(rterms) == 1 and not (rterms[0].is_Add and lcm > 2):
+        eq = rterms[0]**lcm - ((-others)**lcm)
+        ok = True
     else:
-        ok = False
+        if len(rterms) == 1 and rterms[0].is_Add:
+            rterms = list(rterms[0].args)
+        if len(bases) == 1:
+            b = bases.pop()
+            if len(syms) > 1:
+                free = b.free_symbols
+                x = set([g for g in gens if g.is_Symbol]) & free
+                if not x:
+                    x = free
+                x = ordered(x)
+            else:
+                x = syms
+            x = list(x)[0]
+            try:
+                inv = _solve(covsym**lcm - b, x, **uflags)
+                if not inv:
+                    raise NotImplementedError
+                eq = poly.as_expr().subs(b, covsym**lcm).subs(x, inv[0])
+                _cov(covsym, covsym**lcm - b)
+                return _canonical(eq, cov)
+            except NotImplementedError:
+                pass
+        else:
+            # no longer consider integer powers as generators
+            gens = [g for g in gens if _Q(g) != 1]
+        if len(rterms) == 2:
+            if not others:
+                eq = rterms[0]**lcm - (-rterms[1])**lcm
+                ok = True
+        # handle power-of-2 cases
+        if not ok:
+            if log(lcm, 2).is_Integer and (not others and
+                    len(rterms) == 4 or len(rterms) < 4):
+                def _norm2(a, b):
+                    return a**2 + b**2 + 2*a*b
 
-    new_depth = sqrt_depth(eq)
+                if len(rterms) == 4:
+                    # (r0+r1)**2 - (r2+r3)**2
+                    r0, r1, r2, r3 = rterms
+                    eq = _norm2(r0, r1) - _norm2(r2, r3)
+                    ok = True
+                elif len(rterms) == 3:
+                    # (r1+r2)**2 - (r0+others)**2
+                    r0, r1, r2 = rterms
+                    eq = _norm2(r1, r2) - _norm2(r0, others)
+                    ok = True
+                elif len(rterms) == 2:
+                    # r0**2 - (r1+others)**2
+                    r0, r1 = rterms
+                    eq = r0**2 - _norm2(r1, others)
+                    ok = True
+
+    new_depth = sqrt_depth(eq) if ok else depth
     rpt += 1  # XXX how many repeats with others unchanging is enough?
     if not ok or (
                 nwas is not None and len(rterms) == nwas and
                 new_depth is not None and new_depth == depth and
                 rpt > 3):
-        # XXX: XFAIL tests indicate other cases that should be handled.
-        raise ValueError('Cannot remove all radicals from %s' % eq)
+        raise NotImplementedError('Cannot remove all radicals')
 
-    neq = unrad(eq, *syms, cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take)
+    flags.update(dict(cov=cov, n=len(rterms), rpt=rpt))
+    neq = unrad(eq, *syms, **flags)
     if neq:
-        eq = neq[0]
-
-    return (_canonical(eq), cov, list(dens))
-
+        eq, cov = neq
+    eq, cov = _canonical(eq, cov)
+    return eq, cov
 
 from sympy.solvers.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)
