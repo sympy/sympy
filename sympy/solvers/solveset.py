@@ -14,7 +14,7 @@ from sympy.functions import (log, Abs, tan, cot, exp,
 from sympy.sets import FiniteSet, EmptySet, imageset, Union
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
-from sympy.solvers.solvers import checksol
+from sympy.solvers.solvers import checksol, denoms
 from sympy.utilities import filldedent
 
 import warnings
@@ -610,25 +610,23 @@ def _has_rational_power(expr, symbol):
 def _solve_radical(f, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
     from sympy.solvers.solvers import unrad
-    try:
-        eq, cov, dens = unrad(f)
-        if cov == []:
-            result = solveset_solver(eq, symbol) - \
-                Union(*[solveset_solver(g, symbol) for g in dens])
-        else:
-            if len(cov) > 1:
-                raise NotImplementedError("Multivariate solver is "
-                                          "not implemented.")
-            else:
-                y = cov[0][0]
-                g_y_s = solveset_solver(cov[0][1], symbol)
-                f_y_sols = solveset_solver(eq, y)
-                result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
-                                 for g_y in g_y_s])
+    eq, cov = unrad(f)
+    if not cov:
+        result = solveset_solver(eq, symbol) - \
+            Union(*[solveset_solver(g, symbol) for g in denoms(f, [symbol])])
+    else:
+        y, yeq = cov
+        if not solveset_solver(y - I, y):
+            yreal = Dummy('yreal', real=True)
+            yeq = yeq.xreplace({y: yreal})
+            eq = eq.xreplace({y: yreal})
+            y = yreal
+        g_y_s = solveset_solver(yeq, symbol)
+        f_y_sols = solveset_solver(eq, y)
+        result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
+                         for g_y in g_y_s])
 
-        return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
-    except ValueError:
-        raise NotImplementedError
+    return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 
 def _solve_abs(f, symbol):
