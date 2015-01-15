@@ -469,16 +469,26 @@ class Float(Number):
     >>> Float(3)
     3.00000000000000
 
-    Floats can be created from a string representations of Python floats
-    to force ints to Float or to enter high-precision (> 15 significant
-    digits) values:
+    Creating Floats from strings (and Python ``int`` and ``long`` types)
+    typically uses approximately 15 significant digits of precision; however
+    the default behaviour is to automatically increase this when the string
+    contains high-precision values:
 
     >>> Float('.0010')
     0.00100000000000000
     >>> Float('1e-3')
     0.00100000000000000
+    >>> Float('123456789.123456789123456789')
+    123456789.123456789123456789
+    >>> Float(12345678901234567890)
+    12345678901234567890.
+
+    The number of digits can also be specified:
+
     >>> Float('1e-3', 3)
     0.00100
+    >>> Float(100, 4)
+    100.0
 
     Float can automatically count significant figures if a null string
     is sent for the precision; space are also allowed in the string. (Auto-
@@ -502,25 +512,21 @@ class Float(Number):
     >>> Float('600e-2', '')  # 3 digits significant
     6.00
 
-    When converting from a string, the default behaviour is to automatically
-    count significant digits, unless that number would be less than 15.  That
-    is, the precision of the resulting Float is at least 15.
-
-    >>> Float('123456789.123456789123456789')
-    123456789.123456789123456789
-    >>> Float('123456789.123456789123456789', 'min15')
-    123456789.123456789123456789
-
-    This default ``min15`` behaviour can be subtly different than using the
-    null string ``''`` as the second argument:
-
-    >>> 2/Float('2.6')
-    0.769230769230769
-    >>> 2/Float('2.6','')
-    0.77
-
     Notes
     =====
+
+    The behaviour when using the null string argument with low-precision can
+    be subtly different from Python double-precision floats.  The default
+    behaviour is closer to Python:
+
+    >>> 2/2.6
+    0.7692307692307692
+    >>> 2/Float('2.6')
+    0.769230769230769
+    >>> 2/Float('2.6', '')
+    0.77
+    >>> 2.0/Float('2.6', '')
+    0.768554687500000
 
     Floats are inexact by their nature unless their value is a binary-exact
     value.
@@ -619,7 +625,7 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, prec='min15'):
+    def __new__(cls, num, prec=None):
         if isinstance(num, string_types):
             num = num.replace(' ', '')
             if num.startswith('.') and len(num) > 1:
@@ -633,7 +639,7 @@ class Float(Number):
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
 
-        if prec == 'min15':
+        if prec is None:
             dps = 15
             if isinstance(num, string_types) and _literal_float(num):
                 try:
