@@ -27,6 +27,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
+from sympy.concrete.summations import Sum
 
 
 class Integral(AddWithLimits):
@@ -396,6 +397,8 @@ class Integral(AddWithLimits):
             return S.Zero
 
         # now compute and check the function
+        if isinstance(self.function, Sum):
+            return Sum(Integral(self.function.function, self.variables[0]).doit(), self.function.limits)
         function = self.function
         if deep:
             function = function.doit(**hints)
