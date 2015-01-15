@@ -556,7 +556,7 @@ class PrettyPrinter(Printer):
             LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
 
-        if z0 in (S.Infinity, S.NegativeInfinity):
+        if str(dir) == "real" or z0 in (S.Infinity, S.NegativeInfinity):
             dir = ""
         else:
             if self._use_unicode:

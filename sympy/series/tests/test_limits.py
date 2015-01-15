@@ -3,7 +3,7 @@ from itertools import product as cartes
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
-    tan, cot, integrate, Sum, sign, Function, subfactorial)
+    tan, cot, integrate, Sum, sign, Function, subfactorial, PoleError)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -67,6 +67,10 @@ def test_basic1():
     assert limit(sqrt(x), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
     assert limit((1 + cos(x))**oo, x, 0) == oo
+
+    assert limit(x**2, x, 0, dir='real') == 0
+    assert limit(exp(x), x, 0, dir='real') == 1
+    raises(PoleError, lambda: limit(1/x, x, 0, dir='real'))
 
 
 def test_basic2():
