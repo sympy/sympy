@@ -502,6 +502,23 @@ class Float(Number):
     >>> Float('600e-2', '')  # 3 digits significant
     6.00
 
+    When converting from a string, the default behaviour is to automatically
+    count significant digits, unless that number would be less than 15.  That
+    is, the precision of the resulting Float is at least 15.
+
+    >>> Float('123456789.123456789123456789')
+    123456789.123456789123456789
+    >>> Float('123456789.123456789123456789', 'min15')
+    123456789.123456789123456789
+
+    This default ``min15`` behaviour can be subtly different than using the
+    null string ``''`` as the second argument:
+
+    >>> 2/Float('2.6')
+    0.769230769230769
+    >>> 2/Float('2.6','')
+    0.77
+
     Notes
     =====
 
@@ -602,7 +619,7 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, prec=15):
+    def __new__(cls, num, prec='min15'):
         if isinstance(num, string_types):
             num = num.replace(' ', '')
             if num.startswith('.') and len(num) > 1:
@@ -616,7 +633,20 @@ class Float(Number):
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
 
-        if prec == '':
+        if prec == 'min15':
+            dps = 15
+            if isinstance(num, string_types) and _literal_float(num):
+                try:
+                    Num = decimal.Decimal(num)
+                except decimal.InvalidOperation:
+                    pass
+                else:
+                    isint = '.' not in num
+                    num, dps = _decimal_to_Rational_prec(Num)
+                    if num.is_Integer and isint:
+                        dps = max(dps, len(str(num).lstrip('-')))
+                    dps = max(15, dps)
+        elif prec == '':
             if not isinstance(num, string_types):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string or an integer.')
