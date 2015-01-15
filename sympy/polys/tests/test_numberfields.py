@@ -1,7 +1,7 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
-    Add, Mul, pi, cos, sin, exp)
+from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
+    pi, cos, sin, exp)
 
 from sympy.utilities.pytest import raises, slow
 
@@ -26,9 +26,6 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
 from sympy.polys.rootoftools import RootOf
 from sympy.polys.polytools import degree
-from sympy.solvers import solve
-
-from sympy.utilities.pytest import skip
 
 from sympy.abc import x, y, z
 

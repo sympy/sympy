@@ -1,5 +1,5 @@
-from sympy import (Add, conjugate, diff, I, Integer, latex, Mul, oo, pi, Pow,
-                   pretty, Rational, sin, sqrt, Symbol, symbols, sympify)
+from sympy import (Add, conjugate, diff, I, Integer, Mul, oo, pi, Pow,
+                   Rational, sin, sqrt, Symbol, symbols, sympify)
 from sympy.utilities.pytest import raises
 
 from sympy.physics.quantum.dagger import Dagger

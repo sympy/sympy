@@ -579,7 +579,7 @@ def benchmark():
             print('Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20)))
 
     print('big function:')
-    from sympy import _exp, _sin, _cos, pi, lambdify
+    from sympy import _exp, _sin, _cos, pi
     x = Symbol('x')
 ##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
 ##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \

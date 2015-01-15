@@ -1,7 +1,7 @@
 import string
 
 from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, zoo, pi, I, simplify,
+    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
     expand_func, diff, EulerGamma, cancel, re, im)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,

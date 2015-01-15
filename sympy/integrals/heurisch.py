@@ -1,14 +1,13 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
 from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import C, sympify
-from sympy.core.numbers import Rational, I, pi
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 

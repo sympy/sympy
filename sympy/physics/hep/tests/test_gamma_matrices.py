@@ -1,7 +1,7 @@
-from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead, TensorManager, TensMul, TensAdd, get_lines, TensExpr
-from sympy import simplify, trace
+from sympy.tensor.tensor import tensor_indices, tensorhead, get_lines, TensExpr
+from sympy import simplify
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, GammaMatrixHead, DiracSpinorIndex
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 def _is_tensor_eq(arg1, arg2):
     if isinstance(arg1, TensExpr):

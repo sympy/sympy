@@ -9,11 +9,10 @@ from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
 from sympy.core.singleton import S
 
-from sympy.functions import re, im, Abs
+from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
 def solve_poly_inequality(poly, rel):

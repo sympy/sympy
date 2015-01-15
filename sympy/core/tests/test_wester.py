@@ -19,7 +19,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, AlgebraicNumber)
+    residue, Derivative, logcombine, Symbol)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling

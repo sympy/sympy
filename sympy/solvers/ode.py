@@ -235,27 +235,27 @@ from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
-from sympy.core.exprtools import factor_terms, gcd_terms
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs, _mexpand)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN, zoo, I
+from sympy.core.numbers import NaN, zoo, I
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    sign, Piecewise, atan2, conjugate
+    atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div, lcm
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, lcm
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction, posify, cse
+    simplify, trigsimp, denom, posify, cse
 from sympy.simplify.simplify import collect_const, powdenest
 from sympy.solvers import solve
 

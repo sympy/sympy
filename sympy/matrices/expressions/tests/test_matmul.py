@@ -1,7 +1,7 @@
 from sympy.core import I, symbols, Basic
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
-        eye, zeros, ImmutableMatrix)
+        eye, ImmutableMatrix)
 from sympy.matrices.expressions import Adjoint, Transpose, det
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)

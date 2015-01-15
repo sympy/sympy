@@ -1,7 +1,7 @@
 from sympy import (
     symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-    LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify, Eq)
+    LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
+    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
 
 
 def test_exp_values():

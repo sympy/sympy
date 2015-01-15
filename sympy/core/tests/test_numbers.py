@@ -8,7 +8,7 @@ from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
 from mpmath import mpf
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
 
@@ -1021,7 +1021,7 @@ def test_bug_sqrt():
 
 
 def test_pi_Pi():
-    "Test, that pi (instance) is imported, but Pi (class) is not"
+    "Test that pi (instance) is imported, but Pi (class) is not"
     from sympy import pi
     with raises(ImportError):
         from sympy import Pi
@@ -1397,8 +1397,7 @@ def test_int_NumberSymbols():
 
 
 def test_issue_6640():
-    from mpmath.libmp.libmpf import (
-        _normalize as mpf_normalize, finf, fninf, fzero)
+    from mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False

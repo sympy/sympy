@@ -8,7 +8,6 @@ from sympy.core import S, Pow, Dummy, pi, C, Expr, Wild, Mul
 from sympy.core.numbers import I, Number, Rational
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)

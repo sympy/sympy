@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import S, C, pi, I, Rational, Symbol, Wild, cacheit, sympify
+from sympy import S, C, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs

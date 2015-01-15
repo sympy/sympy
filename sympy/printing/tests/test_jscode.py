@@ -1,4 +1,4 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
+from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter

@@ -9,7 +9,6 @@ from sympy.external import import_module
 from sympy.core.decorators import wraps
 
 from tempfile import NamedTemporaryFile
-import warnings
 import os
 import sys
 

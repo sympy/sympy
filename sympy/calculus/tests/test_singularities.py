@@ -1,7 +1,7 @@
 from sympy import Symbol, exp, log
 from sympy.calculus.singularities import singularities
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import XFAIL
 
 
 def test_singularities():

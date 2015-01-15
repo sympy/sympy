@@ -5,7 +5,6 @@ from sympy.interactive.session import (init_ipython_session,
 
 from sympy.core import Symbol, Rational, Integer
 from sympy.external import import_module
-from sympy.utilities.pytest import raises
 
 # TODO: The code below could be made more granular with something like:
 #

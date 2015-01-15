@@ -1,6 +1,5 @@
-from sympy.core.add import Add
 from sympy.core.function import Function
-from sympy.core.numbers import Float, I, oo, pi, Rational
+from sympy.core.numbers import I, oo, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root,
@@ -184,7 +183,7 @@ def test_issue_8413():
 
 
 def test_root():
-    from sympy.abc import x, y, z
+    from sympy.abc import x
     n = Symbol('n', integer=True)
 
     assert root(2, 2) == sqrt(2)
@@ -222,7 +221,7 @@ def test_real_root():
 
 
 def test_rewrite_MaxMin_as_Heaviside():
-    from sympy.abc import x, y, z
+    from sympy.abc import x
     assert Max(0, x).rewrite(Heaviside) == x*Heaviside(x)
     assert Max(3, x).rewrite(Heaviside) == x*Heaviside(x - 3) + \
         3*Heaviside(-x + 3)

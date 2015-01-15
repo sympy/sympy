@@ -1,4 +1,4 @@
-from sympy.core import (pi, oo, symbols, Function, Rational, Integer,
+from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              gamma, sign)

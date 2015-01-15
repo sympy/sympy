@@ -10,15 +10,13 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo, zoo, Rational
+from sympy.core.numbers import oo, Rational
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError
 from sympy.polys import Poly, PolynomialError, DomainError
 from sympy.polys.polyutils import _nsort, _not_a_coeff
 from sympy.solvers import solve
-from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity

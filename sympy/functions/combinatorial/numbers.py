@@ -10,7 +10,7 @@ the separate 'factorials' module.
 from __future__ import print_function, division
 
 from sympy.core.function import Function, expand_mul
-from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
+from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.cache import cacheit
 from sympy.core.numbers import pi

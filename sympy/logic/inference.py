@@ -1,8 +1,7 @@
 """Inference in propositional logic"""
 from __future__ import print_function, division
 
-from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
 from sympy.core.compatibility import ordered
 from sympy.core.sympify import sympify
 

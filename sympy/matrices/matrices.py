@@ -20,7 +20,6 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 

@@ -10,8 +10,8 @@ from sympy import (
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
-    meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
+    hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
+    meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma)
