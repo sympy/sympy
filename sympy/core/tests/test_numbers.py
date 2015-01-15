@@ -409,6 +409,7 @@ def test_Float():
     assert _aresame(Float(Integer(i), ''), Float(i, ''))
     assert _aresame(Float(i, ''), Float(str(i), 20))
     assert _aresame(Float(str(i)), Float(i, ''))
+    assert _aresame(Float(i), Float(i, ''))
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
