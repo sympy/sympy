@@ -403,11 +403,12 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
+    # long integer
     i = 12345678901234567890
     assert _aresame(Float(12, ''), Float('12', ''))
     assert _aresame(Float(Integer(i), ''), Float(i, ''))
     assert _aresame(Float(i, ''), Float(str(i), 20))
-    assert not _aresame(Float(str(i)), Float(i, ''))
+    assert _aresame(Float(str(i)), Float(i, ''))
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
