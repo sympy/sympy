@@ -1,10 +1,8 @@
 """Bosonic quantum operators."""
 
-from warnings import warn
-
 from sympy.core.compatibility import u
-from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
-from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
+from sympy import Mul, Integer, exp, sqrt, conjugate
+from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
 from sympy.functions.special.tensor_functions import KroneckerDelta
 

@@ -1,4 +1,4 @@
-from sympy import (symbols, MatrixSymbol, Symbol, MatPow, BlockMatrix,
+from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
 from sympy.utilities.pytest import raises
 

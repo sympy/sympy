@@ -25,7 +25,6 @@ from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .core import C
 from .singleton import S
-from .containers import Tuple
 
 from sympy.utilities.iterables import is_sequence
 

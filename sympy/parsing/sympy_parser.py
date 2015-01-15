@@ -14,7 +14,7 @@ import unicodedata
 
 import sympy
 from sympy.core.compatibility import exec_, StringIO
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 

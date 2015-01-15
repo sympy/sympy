@@ -16,29 +16,24 @@ from __future__ import print_function, division
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, xrange)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
-from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
-    Expr, Mul, Pow)
+from sympy.core import C, S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function, expand_power_exp, Lambda,
+                          Function, expand_power_exp, Lambda,
                           _mexpand)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge
 from sympy.logic.boolalg import And, Or
 from sympy.core.basic import preorder_traversal
 
-from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
-                             sinh, tanh, coth, acos, asin, atan, acot, acosh,
-                             asinh, atanh, acoth, Abs, sign, re, im, arg,
-                             sqrt, atan2)
-from sympy.functions.elementary.miscellaneous import real_root
+from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
+                             Abs, re, im, arg, sqrt, atan2)
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1, hyper_as_trig
+from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
     degree, PolynomialError)

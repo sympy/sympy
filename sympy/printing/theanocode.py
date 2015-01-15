@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 import inspect
 
-from sympy.utilities import default_sort_key
 from sympy.external import import_module
 
 from sympy.printing.printer import Printer
@@ -12,7 +11,6 @@ theano = import_module('theano')
 if theano:
     ts = theano.scalar
     tt = theano.tensor
-    from theano import sandbox
     from theano.sandbox import linalg as tlinalg
 
     mapping = {

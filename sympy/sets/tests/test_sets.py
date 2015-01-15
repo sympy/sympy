@@ -1,11 +1,10 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
+    LessThan, Max, Min, And, Or, Eq, Le, Lt, Float,
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf)
+    Pow, Contains, Sum, RootOf)
 from mpmath import mpi
 
-from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import x, y, z

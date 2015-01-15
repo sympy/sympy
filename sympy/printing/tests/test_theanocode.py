@@ -14,7 +14,7 @@ else:
 import sympy
 from sympy import S
 sy = sympy
-from sympy.abc import x, y, z, a, b, c
+from sympy.abc import x, y, z
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
 

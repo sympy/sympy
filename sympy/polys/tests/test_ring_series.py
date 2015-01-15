@@ -1,5 +1,4 @@
-from sympy import Rational
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import QQ
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term,

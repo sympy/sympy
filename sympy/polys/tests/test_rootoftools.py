@@ -2,7 +2,6 @@
 
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import RootOf, RootSum
-from sympy.polys.orthopolys import legendre_poly
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -11,15 +10,13 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
+    S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
     solve, legendre_poly
 )
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
-from sympy.abc import a, b, c, d, x, y, z, r
-
-import warnings
+from sympy.abc import a, b, x, y, z, r
 
 
 def test_RootOf___new__():

@@ -2301,7 +2301,7 @@ def test_atoms():
 
 @slow
 def test_pinv():
-    from sympy.abc import a, b, c, d, e, f
+    from sympy.abc import a, b, c, d
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
     assert simplify(A1.pinv()) == simplify(A1.inv())

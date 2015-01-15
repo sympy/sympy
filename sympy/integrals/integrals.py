@@ -3,13 +3,12 @@ from __future__ import print_function, division
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -19,13 +18,12 @@ from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.utilities import xthreaded, flatten
+from sympy.utilities import xthreaded
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
 

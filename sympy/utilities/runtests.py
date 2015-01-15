@@ -33,8 +33,7 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, get_function_code,
-                                      string_types, xrange)
+from sympy.core.compatibility import exec_, PY3, string_types, xrange
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning

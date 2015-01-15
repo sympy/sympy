@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, C, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, C, sympify, Expr, Rational, Symbol, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence

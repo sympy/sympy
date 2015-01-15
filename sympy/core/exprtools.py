@@ -938,8 +938,6 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
-    from sympy.simplify.simplify import bottom_up
-
     def do(expr):
         is_iterable = iterable(expr)
 

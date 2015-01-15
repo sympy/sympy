@@ -1,13 +1,10 @@
 from sympy.core.compatibility import xrange, zip_longest
 from sympy.utilities.enumerative import (
-    factoring_visitor,
     list_visitor,
     MultisetPartitionTraverser,
-    multiset_partitions_taocp,
-    PartComponent,
-    part_key
+    multiset_partitions_taocp
     )
-from sympy.utilities.iterables import  multiset_partitions, _set_partitions
+from sympy.utilities.iterables import _set_partitions
 from sympy.utilities.pytest import slow
 
 # first some functions only useful as test scaffolding - these provide

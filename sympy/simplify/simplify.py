@@ -6,26 +6,26 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd,
-    expand_power_exp, expand_log)
+    Function, Dummy, Expr, factor_terms,
+    FunctionClass, expand_power_base, symbols, igcd,
+    expand_power_exp)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (iterable, reduce, default_sort_key,
     ordered, xrange, as_int)
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.numbers import Float, Number, I, Rational, Integer
+from sympy.core.numbers import Float, I, Rational, Integer
 from sympy.core.function import expand_log, count_ops, _mexpand
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
-    sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
+    sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold)
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.integers import ceiling
 
-from sympy.utilities.iterables import flatten, has_variety, sift
+from sympy.utilities.iterables import has_variety, sift
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -1698,7 +1698,6 @@ def nthroot(expr, n, max_len=4, prec=15):
     sqrt(7) + 3
 
     """
-    from sympy.simplify.sqrtdenest import sqrt_depth, is_algebraic
     expr = sympify(expr)
     n = sympify(n)
     p = expr**Rational(1, n)
@@ -3664,10 +3663,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     function, we get a completely different result that is still different
     from the input expression by doing this.
     """
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy.vector import Vector
-
     expr = sympify(expr)
 
     try:
@@ -4323,10 +4318,10 @@ def _futrig(e, **kwargs):
     from sympy.strategies.tree import greedy
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
-        TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
+        TR1, TR2, TR3, TR2i, TR10, L, TR10i,
         TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, TR14, TR22,
         TR12)
-    from sympy.core.compatibility import ordered, _nodes
+    from sympy.core.compatibility import _nodes
 
     if not e.has(C.TrigonometricFunction):
         return e
@@ -4587,7 +4582,6 @@ def trigsimp_old(expr, **opts):
 
     """
     from sympy import tan
-    from sympy.simplify.fu import fu
 
     old = expr
     first = opts.pop('first', True)

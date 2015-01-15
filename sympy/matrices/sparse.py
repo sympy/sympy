@@ -9,7 +9,6 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .matrices import MatrixBase, ShapeError, a2idx
 from .dense import Matrix

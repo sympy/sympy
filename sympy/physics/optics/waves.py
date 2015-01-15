@@ -10,7 +10,7 @@ from __future__ import print_function, division
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, simplify, Symbol, S, C, I,
+from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
     symbols, Derivative, atan2)
 from sympy.core.expr import Expr
 from sympy.physics.units import c

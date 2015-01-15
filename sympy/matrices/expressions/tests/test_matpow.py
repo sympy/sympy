@@ -1,7 +1,7 @@
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.core import I, symbols, Basic, pi, S
-from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ImmutableMatrix)
-from sympy.matrices.expressions import MatMul, MatPow
+from sympy.utilities.pytest import raises
+from sympy.core import symbols, pi, S
+from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix
+from sympy.matrices.expressions import MatPow
 from sympy.matrices.expressions.matexpr import ShapeError
 
 n, m, l, k = symbols('n m l k', integer=True)

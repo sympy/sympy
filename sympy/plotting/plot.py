@@ -25,7 +25,6 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 from __future__ import print_function, division
 
 from inspect import getargspec
-from itertools import chain
 from collections import Callable
 import warnings
 

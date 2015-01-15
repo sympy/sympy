@@ -1,11 +1,11 @@
 from sympy import (
     Abs, acos, Add, atan, Basic, besselsimp, binomial, collect,
-    collect_const, combsimp, cos, cosh, cot, coth, count_ops, denom,
+    collect_const, combsimp, cos, cosh, cot, coth, count_ops,
     Derivative, diff, Dummy, E, Eq, erf, exp, exp_polar, expand,
     expand_multinomial, exptrigsimp, factor, factorial, FallingFactorial,
-    Float, fraction, Function, gamma, GoldenRatio, hyper, hyper,
-    hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
-    Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
+    Float, fraction, Function, gamma, GoldenRatio, hyper,
+    hypersimp, I, Integral, integrate, log, logcombine, Matrix,
+    Mul, nsimplify, O, oo, pi, Piecewise,
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
@@ -1688,7 +1688,7 @@ def test_polarify():
 
 
 def test_unpolarify():
-    from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
+    from sympy import (exp_polar, polar_lift, exp, unpolarify,
                        principal_branch)
     from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
     from sympy.abc import x
@@ -1744,7 +1744,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
+    from sympy import besselj, besseli, exp_polar, cosh, cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
