@@ -2,7 +2,7 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, Abs)
+                   AlgebraicNumber, simplify)
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
