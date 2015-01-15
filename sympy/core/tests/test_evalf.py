@@ -1,7 +1,7 @@
-from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
-                   Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, sympify, S, integrate, atan, product,
-                   Sum, Product, Integral)
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
+                   fibonacci, floor, Function, GoldenRatio, I, Integral,
+                   integrate, log, Mul, N, oo, pi, Pow, product, Product,
+                   Rational, S, Sum, sin, sqrt, sstr, sympify)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from mpmath import inf, ninf
@@ -447,3 +447,11 @@ def test_evalf_integral():
     # test that workprec has to increase in order to get a result other than 0
     eps = Rational(1, 1000000)
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
+
+
+def test_issue_8821_highprec_from_str():
+    s = str(pi.evalf(128))
+    p = N(s)
+    assert Abs(sin(p)) < 1e-15
+    p = N(s, 64)
+    assert Abs(sin(p)) < 1e-64
