@@ -2,12 +2,13 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
+from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr, Dummy
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.core.function import Function, Lambda
 
 
 def _sympifyit(arg, retval=None):
@@ -378,6 +379,86 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_simplify(self, **kwargs):
         return self
+
+
+class ElemWise(MatrixExpr):
+    """Symbolic replresentation of an elementwise operation on a Matrix object
+
+    Represented as ElemWise(A, f) where f is a univariate function and
+    A is a MatrixSymbol.
+
+    Returns an object of type ElemWise.
+
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol, Lambda, Symbol, symbols, cos, ElemWise, Matrix
+    >>> A = MatrixSymbol('A', 3, 3)
+    >>> B = MatrixSymbol('B', 3, 4)
+    >>> x = symbols('x')
+    >>> S = ElemWise(A, Lambda(x, x**2))
+    >>> Matrix(S)
+    Matrix([
+    [A[0, 0]**2, A[0, 1]**2, A[0, 2]**2],
+    [A[1, 0]**2, A[1, 1]**2, A[1, 2]**2],
+    [A[2, 0]**2, A[2, 1]**2, A[2, 2]**2]])
+    >>> z = Symbol('z', real=True)
+    >>> f = Lambda(x, z*x)
+    >>> g = Lambda(x, cos(z*x)**2)
+    >>> L = ElemWise(ElemWise(A*B, f), f).doit()
+    >>> L[1, 1]
+    z**2*(A[1, 0]*B[0, 1] + A[1, 1]*B[1, 1] + A[1, 2]*B[2, 1])
+    >>> O = ElemWise(ElemWise(A, g), f).doit()
+    >>> O
+    ElemWise(A, Lambda(x, z*cos(x*z)**2))
+    >>> T = ElemWise(ElemWise(A, f), g).doit()
+    >>> T
+    ElemWise(A, Lambda(x, cos(x*z**2)**2))
+
+
+    See Also
+    ========
+
+    Lambda
+    MatrixExpr
+    """
+
+    def __new__(cls, expr, func):
+        obj = Basic.__new__(cls, expr, func)
+        validate(expr, func)
+        return obj
+
+    function = property(lambda self: self.args[1])
+    matrix = property(lambda self: self.args[0])
+
+    def doit(self):
+        if self.function == S.IdentityFunction and not isinstance(self.matrix, ElemWise):
+            return self.matrix
+        if isinstance(self.matrix, MatrixExpr) and not isinstance(self.matrix, ElemWise):
+            return ElemWise(self.matrix, self.function)
+        elif isinstance(self.matrix, ElemWise):
+            new_function = self.matrix.function
+            old_function = self.function
+            temp = self.function.variables[0]
+            h = Lambda(temp, old_function(new_function(temp)))
+            return ElemWise(self.matrix.matrix, h).doit()
+
+    def _entry(self, i, j):
+        return self.function(self.matrix[i, j])
+
+    @property
+    def shape(self):
+        return self.matrix.shape
+
+def validate(expr, func):
+    if not isinstance(func, Lambda):
+        raise TypeError('The function should be a sympy Lambda. ')
+    if not isinstance(expr, MatrixExpr):
+        raise TypeError('The matrix should be a MatrixExpr. ')
+    if len(func.variables) != 1:
+        raise ValueError('The function should be univariate. ')
+
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity

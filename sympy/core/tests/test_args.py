@@ -1930,6 +1930,16 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     assert _test_args(MatAdd(X, Y))
 
 
+def test_sympy__matrices__expressions__matexpr__ElemWise():
+    from sympy.matrices.expressions.matexpr import ElemWise
+    from sympy.matrices.expressions import MatrixSymbol
+    from sympy import Symbol, Lambda
+    X = MatrixSymbol('X', x, x)
+    k = Symbol('k')
+    f = Lambda(k, 2*k)
+    assert _test_args(ElemWise(X, f))
+
+
 def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))
@@ -3492,3 +3502,4 @@ def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
     assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+test_sympy__matrices__expressions__matexpr__ElemWise()

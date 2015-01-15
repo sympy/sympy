@@ -1,10 +1,11 @@
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
-from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
+from sympy.matrices import (ElemWise, Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         Transpose, Adjoint)
 from sympy.utilities.pytest import raises
+from sympy.core.function import Lambda
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')
@@ -38,6 +39,20 @@ def test_subs():
     assert (A*B).subs(B, C) == A*C
 
     assert (A*B).subs(l, n).is_square
+
+
+def test_ElemWise():
+    f = Lambda(x, 2*x)
+    g = Lambda(x, cos(x)**2)
+    h = Lambda(x, -1*x)
+    a, b, c = symbols('a b c')
+    m = Lambda(x, x**2+a+b+2*c)
+    X = MatrixSymbol('X', 3, 3)
+    assert ElemWise(X, Lambda(x, 4*x)) == ElemWise(ElemWise(X, f), f).doit()
+    assert ElemWise(X, Lambda(x, 2*cos(x)**2)) == ElemWise(ElemWise(X, g), f).doit()
+    assert X == ElemWise(ElemWise(X, h), h).doit()
+    assert ElemWise(X, Lambda(x, 2*a + 2*b + 4*c + 2*(a + b + 2*c + x**2)**2)) == \
+ElemWise(ElemWise(ElemWise(X, m), m), f).doit()
 
 
 def test_ZeroMatrix():
