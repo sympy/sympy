@@ -456,9 +456,7 @@ class Number(AtomicExpr):
 
 
 class Float(Number):
-    """
-    Represents a floating point number. It is capable of representing
-    arbitrary-precision floating-point numbers.
+    """Represent a floating-point number of arbitrary precision.
 
     Examples
     ========
