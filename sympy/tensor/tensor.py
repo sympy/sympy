@@ -45,7 +45,7 @@ from sympy.core.sympify import CantSympify
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices import eye
-
+from sympy.functions.special.tensor_functions import LeviCivita
 
 class TIDS(CantSympify):
     """
@@ -1485,10 +1485,19 @@ class TensorIndexType(Basic):
                 raise ValueError("Dimension mismatch")
         _tensor_data_substitution_dict[self] = data
         _tensor_data_substitution_dict.add_metric_data(self.metric, data)
+        
         delta = self.get_kronecker_delta()
         i1 = TensorIndex('i1', self)
         i2 = TensorIndex('i2', self)
         delta(i1, -i2).data = _TensorDataLazyEvaluator.parse_data(eye(dim1))
+        
+        epsilon = self.get_epsilon()
+        i3 = TensorIndex('i3', self)
+        levi_civita = [[[LeviCivita(i,j,k) for k in range(dim1)] 
+                         for j in range(dim1)] 
+                        for i in range(dim1)]
+        epsilon(i1,-i2,-i3).data = _TensorDataLazyEvaluator.parse_data(levi_civita)
+        
 
     @data.deleter
     def data(self):
