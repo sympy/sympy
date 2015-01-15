@@ -2,7 +2,7 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify)
+                   AlgebraicNumber, simplify, Abs)
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
@@ -450,6 +450,11 @@ def test_Float():
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+
+
+def test_Float_default_to_highprec_from_str():
+    s = str(pi.evalf(128))
+    assert _aresame(Float(s), Float(s, ''))
 
 
 def test_Float_eval():
