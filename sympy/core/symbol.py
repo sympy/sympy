@@ -64,7 +64,8 @@ class Symbol(AtomicExpr, Boolean):
             whose = '%s ' % obj.__name__ if obj else ''
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
-        assumptions['commutative'] = is_commutative
+        # NOTE: I want do sanitize without adding this, do it later elsewhere
+        #assumptions['commutative'] = is_commutative
 
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
@@ -98,8 +99,18 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
+        # FIXME: could make copy before sanitizing: this avoids changes
+        # to the code related to strict commutative.  But easier to move
+        # commutative=T/F from _sanitize, otherwise need to do this in
+        # Dummy and Wild too.
+        #acpy = assumptions.copy()
+        #cls._sanitize(assumptions, cls)
+        #obj = Symbol.__xnew_cached_(cls, name, **assumptions)
+        #obj._user_assumptions = acpy
+        #return obj
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
+
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
@@ -107,6 +118,10 @@ class Symbol(AtomicExpr, Boolean):
 
         obj = Expr.__new__(cls)
         obj.name = name
+        obj._user_assumptions = assumptions.copy()
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
         return obj
 
@@ -119,9 +134,11 @@ class Symbol(AtomicExpr, Boolean):
         return (self.name,)
 
     def __getstate__(self):
-        return {'_assumptions': self._assumptions}
+        return {'_assumptions': self._assumptions,
+                '_user_assumptions': self._user_assumptions}
 
     def _hashable_content(self):
+        # FIXME: _user_assumptions?
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
@@ -135,7 +152,7 @@ class Symbol(AtomicExpr, Boolean):
 
     def as_dummy(self):
         """Return a Dummy having the same name and same assumptions as self."""
-        return Dummy(self.name, **self.assumptions0)
+        return Dummy(self.name, **self._user_assumptions)
 
     def __call__(self, *args):
         from .function import Function
@@ -195,7 +212,9 @@ class Dummy(Symbol):
         return obj
 
     def __getstate__(self):
-        return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
+        return {'_assumptions': self._assumptions,
+                '_user_assumptions': self._user_assumptions,
+                'dummy_index': self.dummy_index}
 
     @cacheit
     def sort_key(self, order=None):
