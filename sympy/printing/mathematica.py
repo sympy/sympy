@@ -3,7 +3,6 @@ Mathematica code printer
 """
 
 from __future__ import print_function, division
-from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence

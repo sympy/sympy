@@ -670,7 +670,6 @@ def test_issue_7687():
 
 def test_issue_7688():
     from sympy.core.function import Function, UndefinedFunction
-    from sympy.abc import x
 
     f = Function('f')  # actually an UndefinedFunction
     clear_cache()

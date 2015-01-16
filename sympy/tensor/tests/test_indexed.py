@@ -1,4 +1,4 @@
-from sympy.core import symbols, Integer, Symbol, Tuple, oo
+from sympy.core import symbols, Symbol, Tuple, oo
 from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises

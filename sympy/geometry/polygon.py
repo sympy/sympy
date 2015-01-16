@@ -1,15 +1,14 @@
 from __future__ import print_function, division
 
-from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
+from sympy.core import Expr, S, sympify, oo, pi, Symbol
 from sympy.core.compatibility import as_int, xrange
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.geometry.exceptions import GeometryError
 from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
-from sympy.solvers import solve
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety, has_dups, uniq
 

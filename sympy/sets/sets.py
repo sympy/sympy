@@ -16,7 +16,7 @@ from sympy.sets.contains import Contains
 
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
-from sympy.utilities import default_sort_key, subsets
+from sympy.utilities import subsets
 
 
 class Set(Basic):
@@ -1789,7 +1789,6 @@ class FiniteSet(Set, EvalfMixin):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
         return tuple(ordered(self.args, Set._infimum_key))
 
     def _eval_powerset(self):

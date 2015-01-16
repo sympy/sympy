@@ -2,14 +2,13 @@ from __future__ import print_function, division
 
 from sympy.core.basic import C
 from sympy.core.expr import Expr
-from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Wild, Symbol)
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 

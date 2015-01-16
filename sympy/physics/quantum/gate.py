@@ -18,7 +18,7 @@ from __future__ import print_function, division
 from itertools import chain
 import random
 
-from sympy import Add, I, Integer, Matrix, Mul, Pow, sqrt, Tuple
+from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
 from sympy.core.numbers import Number
 from sympy.core.compatibility import is_sequence, u, unicode, xrange
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
@@ -31,7 +31,6 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
                                             HermitianOperator)
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
-from sympy.physics.quantum.dagger import Dagger
 
 from sympy.matrices.matrices import MatrixBase
 

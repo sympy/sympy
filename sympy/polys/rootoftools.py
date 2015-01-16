@@ -14,8 +14,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf,
-    ComplexInterval)
+    dup_isolate_real_roots_sqf)
 
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
@@ -29,7 +28,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import QQ
 
-from mpmath import mp, mpf, mpc, findroot, workprec
+from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
@@ -273,7 +272,6 @@ class RootOf(Expr):
         """return complexes such that no bounding rectangles of non-conjugate
         roots would intersect if slid horizontally or vertically/
         """
-        from sympy.utilities.iterables import sift
         while complexes:  # break when all are distinct
             # get the intervals pairwise-disjoint. If rectangles were drawn around
             # the coordinates of the bounding rectangles, no rectangles would

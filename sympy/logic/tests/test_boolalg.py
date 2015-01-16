@@ -249,7 +249,7 @@ def test_bool_map():
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
-    from sympy.abc import a, b, c, w, x, y, z
+    from sympy.abc import a, b, w, x, y, z
     assert bool_map(Not(Not(a)), a) == (a, {a: a})
     assert bool_map(SOPform(['w', 'x', 'y', 'z'], minterms),
         POSform(['w', 'x', 'y', 'z'], minterms)) == \

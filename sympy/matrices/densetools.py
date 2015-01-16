@@ -5,7 +5,6 @@ The dense matrix is stored as a list of lists
 """
 
 from sympy.core.compatibility import xrange
-from sympy import QQ
 
 
 def trace(matlist, K):

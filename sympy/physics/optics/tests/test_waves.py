@@ -1,6 +1,6 @@
 from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
     Function, simplify, C, I, atan2)
-from sympy.abc import x, epsilon, mu
+from sympy.abc import epsilon, mu
 from sympy.physics.units import c, m, s
 from sympy.physics.optics import TWave
 

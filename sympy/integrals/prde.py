@@ -20,7 +20,6 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
 
-from sympy import im, sqrt, re
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list

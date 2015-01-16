@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import factorial, exp, Basic, Range, S, oo, sympify
+from sympy import factorial, exp, S, sympify
 from sympy.stats.rv import _value_check
 
 __all__ = ['Geometric', 'Poisson']

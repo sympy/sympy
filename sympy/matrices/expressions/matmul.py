@@ -1,16 +1,12 @@
 from __future__ import print_function, division
 
-from functools import reduce
-from operator import mul
-
 from sympy.core import Mul, Basic, sympify, Add
-from sympy.functions import transpose, adjoint
+from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
-from sympy.strategies import (rm_id, unpack, typed, debug, flatten, exhaust,
+from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
-from sympy.utilities import sift
 from sympy.matrices.matrices import MatrixBase
 
 
@@ -59,7 +55,7 @@ class MatMul(MatrixExpr):
 
         from sympy.core.symbol import Dummy
         from sympy.concrete.summations import Sum
-        from sympy.matrices import ImmutableMatrix, MatrixBase
+        from sympy.matrices import ImmutableMatrix
         k = Dummy('k', integer=True)
         if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
             return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.cols)])
@@ -180,7 +176,6 @@ def merge_explicit(matmul):
 
 def xxinv(mul):
     """ Y * X * X.I -> Y """
-    from sympy.matrices.expressions import Inverse
     factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         try:

@@ -9,7 +9,6 @@ from sympy import symbols, sqrt, Matrix, oo
 from sympy.geometry.point3d import Point3D
 from sympy.geometry.line3d import Ray3D
 from sympy.geometry.plane import Plane
-from sympy.utilities.pytest import XFAIL
 
 
 def test_refraction_angle():
