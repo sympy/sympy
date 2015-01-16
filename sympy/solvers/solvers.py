@@ -1253,7 +1253,7 @@ def _solve(f, *symbols, **flags):
                 else:
                     result = _solve(eq, symbol, **flags)
 
-        if result is False:
+        if result is False or result == []:
             # rewrite hyperbolics in terms of exp
             f_num = f_num.replace(lambda w: isinstance(w, C.HyperbolicFunction),
                 lambda w: w.rewrite(exp))
