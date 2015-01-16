@@ -87,7 +87,6 @@ def print_tree(node):
     | complex: True
     | even: True
     | hermitian: True
-    | imaginary: False
     | integer: True
     | irrational: False
     | noninteger: False

@@ -232,7 +232,8 @@ class Add(Expr, AssocOp):
             # in a NaN condition if it had sign opposite of the infinite
             # portion of zoo, e.g., infinite_real - infinite_real.
             newseq = [c for c in newseq if not (c.is_finite and
-                                                c.is_real is not None)]
+                                                (c.is_real is not None
+                                                 or c.is_imaginary is not None))]
 
         # process O(x)
         if order_factors:
@@ -469,11 +470,12 @@ class Add(Expr, AssocOp):
         rv = _fuzzy_group(a.is_imaginary for a in self.args)
         if rv is False:
             return rv
+        elif self.is_zero:
+            return True
         iargs = [a*S.ImaginaryUnit for a in self.args]
         r = _fuzzy_group(a.is_real for a in iargs)
         if r:
-            s = self.func(*iargs, evaluate=False)
-            return fuzzy_not(s.is_zero)
+            return True
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even is True)]

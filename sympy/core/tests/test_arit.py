@@ -1204,7 +1204,7 @@ def test_Mul_is_imaginary_real():
     assert (e**5).is_real is False
     assert (e**3).is_complex
 
-    assert (r*i).is_imaginary is None
+    assert (r*i).is_imaginary is True
     assert (r*i).is_real is None
 
     assert (x*i).is_imaginary is None
@@ -1213,7 +1213,7 @@ def test_Mul_is_imaginary_real():
     assert (i*ii).is_imaginary is False
     assert (i*ii).is_real is True
 
-    assert (r*i*ii).is_imaginary is False
+    assert (r*i*ii).is_imaginary is None
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:

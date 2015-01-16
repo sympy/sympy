@@ -1057,11 +1057,7 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        z = self.is_zero
-        if z:
-            return False
-        elif z is False:
-            return (S.ImaginaryUnit*self).is_real
+        return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
         real = True

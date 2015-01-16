@@ -216,7 +216,7 @@ def test_zero():
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
     assert 0**I == nan
-    i = Symbol('i', imaginary=True)
+    i = Symbol('i', imaginary=True, nonzero=True)
     assert 0**i == nan
 
 
