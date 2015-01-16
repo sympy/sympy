@@ -208,8 +208,9 @@ def test_rfind():
                                                               a(n) - 3*a(n + 1) + 3*a(n + 2))
     assert rfind([1, y+x, y**2+2*x*y+x**2, y**3+3*x*y**2+3*x**2*y+x**3,
                   (y+x)**4, (y+x)**5]) == Eq(a(n + 1), (x + y)*a(n))
-    assert rfind([x, y, -x+2*y, -2*x+3*y, -3*x+4*y, -4*x+5*y]) == Eq(a(n + 2),
-                                                                     -a(n) + 2*a(n + 1))
+    f = Function('f')
+    assert rfind([x, y, -x+2*y, -2*x+3*y, -3*x+4*y, -4*x+5*y], 'f') == Eq(f(n + 2),
+                                                                        -f(n) + 2*f(n + 1))
 
 
 def test_rfind_helper():
@@ -226,5 +227,5 @@ def test_guess_seq():
 
     assert guess_seq([1*x, 3*x, 6*x, 10*x, 15*x, 21*x, 28*x]) == x*(n**2/2 + 3*n/2 + 1)
     assert guess_seq([1, y+x, y**2+2*x*y+x**2, y**3+3*x*y**2+3*x**2*y+x**3,
-                  (y+x)**4, (y+x)**5]) == (x + y)**n
+                      (y+x)**4, (y+x)**5]) == (x + y)**n
     assert guess_seq([x, y, -x+2*y, -2*x+3*y, -3*x+4*y, -4*x+5*y]) == n*(-x + y) + x
