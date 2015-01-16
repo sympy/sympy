@@ -157,7 +157,11 @@ class exp_polar(ExpBase):
         """ Careful! any evalf of polar numbers is flaky """
         from sympy import im, pi, re
         i = im(self.args[0])
-        if i <= -pi or i > pi:
+        try:
+            bad = (i <= -pi or i > pi)
+        except TypeError:
+            bad = True
+        if bad:
             return self  # cannot evalf for this argument
         res = exp(self.args[0])._eval_evalf(prec)
         if i > 0 and im(res) < 0:

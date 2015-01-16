@@ -162,10 +162,11 @@ def cbrt(arg):
     return C.Pow(arg, C.Rational(1, 3))
 
 
-def root(arg, n):
-    """The n-th root function (a shortcut for ``arg**(1/n)``)
+def root(arg, n, k=0):
+    """The n-th root function (a shortcut for ``arg**(1/n)*exp(2*k*I*pi/n)``)
 
-    root(x, n) -> Returns the principal n-th root of x.
+    root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
+    principle root (k=0).
 
 
     Examples
@@ -186,6 +187,10 @@ def root(arg, n):
     >>> root(x, -Rational(2, 3))
     x**(-3/2)
 
+    To get the k-th n-th root, specify k:
+
+    >>> root(-2, 3, 2)
+    (-2)**(1/3)*exp(4*I*pi/3)
 
     To get all n n-th roots you can use the RootOf function.
     The following examples show the roots of unity for n
@@ -193,13 +198,13 @@ def root(arg, n):
 
     >>> from sympy import RootOf, I
 
-    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    >>> [ RootOf(x**2 - 1, i) for i in range(2) ]
     [-1, 1]
 
-    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    >>> [ RootOf(x**3 - 1,i) for i in range(3) ]
     [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
 
-    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    >>> [ RootOf(x**4 - 1,i) for i in range(4) ]
     [-1, 1, -I, I]
 
     SymPy, like other symbolic algebra systems, returns the
@@ -211,13 +216,19 @@ def root(arg, n):
     >>> root(-8, 3)
     2*(-1)**(1/3)
 
-    The real_root function can be used to either make such a result
-    real or simply return the real root in the first place:
+    The real_root function can be used to either make the principle
+    result real (or simply to return the real root directly):
 
     >>> from sympy import real_root
     >>> real_root(_)
     -2
     >>> real_root(-32, 5)
+    -2
+
+    Alternatively, the n//2-th n-th root of a negative number can be
+    computed with root:
+
+    >>> root(-32, 5, 5//2)
     -2
 
     See Also
@@ -237,13 +248,25 @@ def root(arg, n):
     * http://mathworld.wolfram.com/CubeRoot.html
 
     """
-    n = sympify(n)
-    return C.Pow(arg, 1/n)
+    arg = sympify(arg)
+    try:
+        n = as_int(n)
+        k = as_int(k)
+        if arg.is_negative and k == n//2:
+            return -C.Pow(-arg, S.One/n)
+    except ValueError:
+        n = sympify(n)
+        k = sympify(k)
+    if k:
+        return C.Pow(arg, S.One/n)*C.exp(2*S.ImaginaryUnit*S.Pi*k/n)
+    return C.Pow(arg, S.One/n)
 
 
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
-    all instances of (-n)**(1/odd) will be changed to -n**(1/odd).
+    all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
+    will only create a real root of a principle root -- the presence of
+    other factors may cause the result to not be real.
 
     Examples
     ========
@@ -258,6 +281,15 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
+    If one creates a non-principle root and applies real_root, the
+    result will not be real (so use with caution):
+
+    >>> root(-8, 3, 2)
+    2*(-1)**(1/3)*exp(4*I*pi/3)
+    >>> real_root(_)
+    -2*exp(4*I*pi/3)
+
+
     See Also
     ========
 
@@ -267,11 +299,12 @@ def real_root(arg, n=None):
     """
     if n is not None:
         n = as_int(n)
-        rv = C.Pow(arg, Rational(1, n))
-        if n % 2 == 0:
-            return rv
-    else:
-        rv = sympify(arg)
+        arg = sympify(arg)
+        k = 0
+        if n % 2:
+            k = n//2
+        return root(arg, n, k)
+    rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and

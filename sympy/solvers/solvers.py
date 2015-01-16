@@ -741,14 +741,12 @@ def solve(f, *symbols, **flags):
         >>> expr = root(x, 3) - root(x, 5)
 
     We will construct a known value for this expression at x = 3 by selecting
-    a non-principle root for each (i.e. multiplying by a power of the same
-    root of -1):
+    the 1-th root for each radical:
 
-        >>> expr1 = root(x, 3)*root(-1, 3)**2 - root(x, 5)*root(-1, 5)**2
+        >>> expr1 = root(x, 3, 1) - root(x, 5, 1)
         >>> v = expr1.subs(x, -3)
 
-    The solve function is unable to find any exact roots to this equation in
-    either form:
+    The solve function is unable to find any exact roots to this equation:
 
         >>> eq = Eq(expr, v); eq1 = Eq(expr1, v)
         >>> solve(eq, check=False), solve(eq1, check=False)
