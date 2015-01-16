@@ -138,42 +138,35 @@ def test_reduce_poly_inequalities_complex_relational():
 
 
 def test_reduce_rational_inequalities_real_relational():
-    def OpenInterval(a, b):
-        return Interval(a, b, True, True)
-    def LeftOpenInterval(a, b):
-        return Interval(a, b, True, False)
-    def RightOpenInterval(a, b):
-        return Interval(a, b, False, True)
-
     assert reduce_rational_inequalities([], x) == False
     assert reduce_rational_inequalities(
         [[(x**2 + 3*x + 2)/(x**2 - 16) >= 0]], x, relational=False) == \
-        Union(OpenInterval(-oo, -4), Interval(-2, -1), OpenInterval(4, oo))
+        Union(Interval.open(-oo, -4), Interval(-2, -1), Interval.open(4, oo))
 
     assert reduce_rational_inequalities(
         [[((-2*x - 10)*(3 - x))/((x**2 + 5)*(x - 2)**2) < 0]], x,
         relational=False) == \
-        Union(OpenInterval(-5, 2), OpenInterval(2, 3))
+        Union(Interval.open(-5, 2), Interval.open(2, 3))
 
     assert reduce_rational_inequalities([[(x + 1)/(x - 5) <= 0]], x,
         relational=False) == \
-        RightOpenInterval(-1, 5)
+        Interval.Ropen(-1, 5)
 
     assert reduce_rational_inequalities([[(x**2 + 4*x + 3)/(x - 1) > 0]], x,
         relational=False) == \
-        Union(OpenInterval(-3, -1), OpenInterval(1, oo))
+        Union(Interval.open(-3, -1), Interval.open(1, oo))
 
     assert reduce_rational_inequalities([[(x**2 - 16)/(x - 1)**2 < 0]], x,
         relational=False) == \
-        Union(OpenInterval(-4, 1), OpenInterval(1, 4))
+        Union(Interval.open(-4, 1), Interval.open(1, 4))
 
     assert reduce_rational_inequalities([[(3*x + 1)/(x + 4) >= 1]], x,
         relational=False) == \
-        Union(OpenInterval(-oo, -4), RightOpenInterval(S(3)/2, oo))
+        Union(Interval.open(-oo, -4), Interval.Ropen(S(3)/2, oo))
 
     assert reduce_rational_inequalities([[(x - 8)/x <= 3 - x]], x,
         relational=False) == \
-        Union(LeftOpenInterval(-oo, -2), LeftOpenInterval(0, 4))
+        Union(Interval.Lopen(-oo, -2), Interval.Lopen(0, 4))
 
 
 def test_reduce_abs_inequalities():

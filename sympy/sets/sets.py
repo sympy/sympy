@@ -683,6 +683,12 @@ class Interval(Set, EvalfMixin):
     [0, 1]
     >>> Interval(0, 1, False, True)
     [0, 1)
+    >>> Interval.Ropen(0, 1)
+    [0, 1)
+    >>> Interval.Lopen(0, 1)
+    (0, 1]
+    >>> Interval.open(0, 1)
+    (0, 1)
 
     >>> a = Symbol('a', real=True)
     >>> Interval(0, a)
@@ -762,6 +768,21 @@ class Interval(Set, EvalfMixin):
         return self._args[0]
 
     _inf = left = start
+
+    @classmethod
+    def open(cls, a, b):
+        """Return an interval including neither boundary."""
+        return cls(a, b, True, True)
+
+    @classmethod
+    def Lopen(cls, a, b):
+        """Return an interval not including the left boundary."""
+        return cls(a, b, True, False)
+
+    @classmethod
+    def Ropen(cls, a, b):
+        """Return an interval not including the right boundary."""
+        return cls(a, b, False, True)
 
     @property
     def end(self):
