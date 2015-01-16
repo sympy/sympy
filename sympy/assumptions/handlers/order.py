@@ -58,7 +58,7 @@ class AskNegativeHandler(CommonHandler):
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
 
-        r = ask(Q.real(expr), assumptions)
+        r = ask(Q.extended_real(expr), assumptions)
         if r is not True:
             return r
 
@@ -98,14 +98,15 @@ class AskNegativeHandler(CommonHandler):
         """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
-        if ask(Q.real(expr.base), assumptions):
+        if ask(Q.extended_real(expr.base), assumptions):
             if ask(Q.positive(expr.base), assumptions):
                 if ask(Q.real(expr.exp), assumptions):
                     return False
-            if ask(Q.even(expr.exp), assumptions):
-                return False
-            if ask(Q.odd(expr.exp), assumptions):
-                return ask(Q.negative(expr.base), assumptions)
+            if ask(Q.real(expr.base), assumptions):
+                if ask(Q.even(expr.exp), assumptions):
+                    return False
+                if ask(Q.odd(expr.exp), assumptions):
+                    return ask(Q.negative(expr.base), assumptions)
 
     ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
@@ -121,7 +122,7 @@ class AskNonNegativeHandler(CommonHandler):
         if expr.is_number:
             notnegative = fuzzy_not(AskNegativeHandler._number(expr, assumptions))
             if notnegative:
-                return ask(Q.real(expr), assumptions)
+                return ask(Q.extended_real(expr), assumptions)
             else:
                 return notnegative
 
@@ -184,7 +185,7 @@ class AskNonPositiveHandler(CommonHandler):
         if expr.is_number:
             notpositive = fuzzy_not(AskPositiveHandler._number(expr, assumptions))
             if notpositive:
-                return ask(Q.real(expr), assumptions)
+                return ask(Q.extended_real(expr), assumptions)
             else:
                 return notpositive
 
@@ -238,7 +239,7 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
 
-        r = ask(Q.real(expr), assumptions)
+        r = ask(Q.extended_real(expr), assumptions)
         if r is not True:
             return r
 
@@ -258,7 +259,9 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         if ask(Q.positive(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
+            if ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
+                return True
+            if ask(Q.extended_real(expr.base) & Q.positive(expr.exp), assumptions):
                 return True
         if ask(Q.negative(expr.base), assumptions):
             if ask(Q.even(expr.exp), assumptions):
@@ -275,7 +278,7 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def log(expr, assumptions):
-        r = ask(Q.real(expr.args[0]), assumptions)
+        r = ask(Q.extended_real(expr.args[0]), assumptions)
         if r is not True:
             return r
         if ask(Q.positive(expr.args[0] - 1), assumptions):
