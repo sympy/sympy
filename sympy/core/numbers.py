@@ -13,6 +13,7 @@ from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
 from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
+from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS)
@@ -1870,6 +1871,12 @@ class Integer(Rational):
 
         return isprime(self)
 
+    def _eval_is_composite(self):
+        if self > 1:
+            return fuzzy_not(self.is_prime)
+        else:
+            return False
+
     def as_numer_denom(self):
         return self, S.One
 
@@ -2054,7 +2061,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_positive = False
     is_negative = False
     is_zero = True
-    is_composite = False
     is_number = True
 
     __slots__ = []
