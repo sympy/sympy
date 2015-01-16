@@ -61,10 +61,10 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('atan2'))
         return pform
 
-    def _print_Symbol(self, e):
+    def _print_BaseSymbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
-    _print_RandomSymbol = _print_Symbol
+    _print_RandomSymbol = _print_BaseSymbol
 
     def _print_Float(self, e):
         # we will use StrPrinter's Float printer, but we need to handle the
@@ -749,7 +749,7 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
-    _print_MatrixSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_BaseSymbol
 
     def _print_FunctionMatrix(self, X):
         D = self._print(X.lamda.expr)

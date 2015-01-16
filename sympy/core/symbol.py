@@ -17,7 +17,7 @@ import string
 import re as _re
 
 
-class Symbol(AtomicExpr, Boolean):
+class BaseSymbol(AtomicExpr, Boolean):
     """
     Assumptions:
        commutative = True
@@ -99,7 +99,7 @@ class Symbol(AtomicExpr, Boolean):
 
         """
         cls._sanitize(assumptions, cls)
-        return Symbol.__xnew_cached_(cls, name, **assumptions)
+        return BaseSymbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
@@ -161,7 +161,11 @@ class Symbol(AtomicExpr, Boolean):
         return set([self])
 
 
-class Dummy(Symbol):
+class Symbol(BaseSymbol):
+    pass
+
+
+class Dummy(BaseSymbol):
     """Dummy symbols are each unique, identified by an internal count index:
 
     >>> from sympy import Dummy
@@ -203,10 +207,10 @@ class Dummy(Symbol):
             2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
-        return Symbol._hashable_content(self) + (self.dummy_index,)
+        return BaseSymbol._hashable_content(self) + (self.dummy_index,)
 
 
-class Wild(Symbol):
+class Wild(BaseSymbol):
     """
     A Wild symbol matches anything, or anything
     without whatever is explicitly excluded.
@@ -290,7 +294,7 @@ class Wild(Symbol):
     @staticmethod
     @cacheit
     def __xnew__(cls, name, exclude, properties, **assumptions):
-        obj = Symbol.__xnew__(cls, name, **assumptions)
+        obj = BaseSymbol.__xnew__(cls, name, **assumptions)
         obj.exclude = exclude
         obj.properties = properties
         return obj
