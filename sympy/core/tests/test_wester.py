@@ -2359,8 +2359,7 @@ def test_V13():
 @XFAIL
 def test_V14():
     r1 = integrate(log(abs(x**2 - y**2)), x)
-    # I.simplify() raises AttributeError
-    # https://github.com/sympy/sympy/issues/7158
+    # Piecewise result does not simplify to the desired result.
     assert (r1.simplify() == x*log(abs(x**2  - y**2))
                             + y*log(x + y) - y*log(x - y) - 2*x)
 
