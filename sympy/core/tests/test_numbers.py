@@ -1448,3 +1448,17 @@ def test_simplify_AlgebraicNumber():
 
     e = (3 + 4*I)**(Rational(3, 2))
     assert simplify(A(e)) == A(2 + 11*I)  # issue 4401
+
+
+def test_Float_idempotence():
+    x = Float('1.23', '')
+    y = Float(x)
+    z = Float(x, 15)
+    # _aresame not enough here
+    assert str(y) == str(x)
+    assert str(z) != str(x)
+    x = Float(10**20)
+    y = Float(x)
+    z = Float(x, 15)
+    assert str(y) == str(x)
+    assert str(z) != str(x)
