@@ -2704,7 +2704,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         for b, e in c_powers:
             b, e = bkey(b, e)
             if b in common_b.keys():
-                common_b[b] = common_b[b]+e
+                common_b[b] = common_b[b] + e
             else:
                 common_b[b] = e
             if b[1] != 1 and b[0].is_Mul:
