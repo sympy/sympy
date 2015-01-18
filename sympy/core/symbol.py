@@ -106,10 +106,19 @@ class Symbol(AtomicExpr, Boolean):
 
         obj = Expr.__new__(cls)
         obj.name = name
+
+        # FIXME: bit horrid: to avoid having "commutative=True" show up in
+        # Symbol's srepr, keep a copy...
+        tmpasmcopy = assumptions.copy()
+
         # be strict about commutativity
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        extra = {'commutative': is_commutative};
-        obj._assumptions = StdFactKB(assumptions, extra)
+        assumptions['commutative'] = is_commutative
+        obj._assumptions = StdFactKB(assumptions)
+
+        # FIXME: ... then use the copy overwrite the generator
+        obj._assumptions._generator = tmpasmcopy
+
         return obj
 
     __xnew__ = staticmethod(
