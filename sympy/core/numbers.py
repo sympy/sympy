@@ -467,21 +467,33 @@ class Float(Number):
     >>> Float(3)
     3.00000000000000
 
-    Creating Floats from strings (and Python ``int`` and ``long`` types)
-    typically uses approximately 15 significant digits of precision; however
-    the default behaviour is to automatically increase this when the string
-    contains high-precision values:
+    Creating Floats from strings (and Python ``int`` and ``long``
+    types) will give a minimum precision of 15 digits, but the
+    precision will automatically increase to capture all digits
+    entered.
 
-    >>> Float('.0010')
-    0.00100000000000000
-    >>> Float('1e-3')
-    0.00100000000000000
-    >>> Float('123456789.123456789123456789')
-    123456789.123456789123456789
-    >>> Float(12345678901234567890)
-    12345678901234567890.
+    >>> Float(1)
+    1.00000000000000
+    >>> Float(10**20)
+    100000000000000000000.
+    >>> Float('1e20')
+    100000000000000000000.
 
-    The number of digits can also be specified:
+    However, *floating-point* numbers (Python ``float`` types) retain
+    only 15 digits of precision:
+
+    >>> Float(1e20)
+    1.00000000000000e+20
+    >>> Float(1.23456789123456789)
+    1.23456789123457
+
+    It may be preferable to enter high-precision decimal numbers
+    as strings:
+
+    Float('1.23456789123456789')
+    1.23456789123456789
+
+    The desired number of digits can also be specified:
 
     >>> Float('1e-3', 3)
     0.00100
