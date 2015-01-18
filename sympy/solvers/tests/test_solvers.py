@@ -778,8 +778,6 @@ def test_unrad1():
 
     def s_check(rv, ans):
         # get the dummy
-        was = rv, ans
-        was = was[:]
         rv = list(rv)
         d = rv[0].atoms(Dummy)
         reps = list(zip(d, [s]*len(d)))
