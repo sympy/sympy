@@ -208,19 +208,14 @@ class StdFactKB(FactKB):
     """
     rules = _assume_rules
 
-    def __init__(self, facts=None, extra_facts=None):
-        # save a copy of the facts dict, then add the extra facts
+    def __init__(self, facts=None):
+        # save a copy of the facts dict
         if not facts:
             self._generator = {};
         elif not isinstance(facts, FactKB):
             self._generator = facts.copy()
         else:
             self._generator = facts.generator
-        if extra_facts:
-            if facts:
-                facts.update(extra_facts)
-            else:
-                facts = extra_facts
         if facts:
             self.deduce_all_facts(facts)
 

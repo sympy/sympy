@@ -117,7 +117,7 @@ def test_Symbol():
 
 def test_Symbol_two_assumptions():
     x = Symbol('x', negative=0, integer=1)
-    # order can and does vary (FIXME: is this a caching issue?)
+    # order could vary
     s1 = "Symbol('x', integer=True, negative=False)"
     s2 = "Symbol('x', negative=False, integer=True)"
     assert srepr(x) in (s1, s2)
