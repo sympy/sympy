@@ -206,6 +206,12 @@ class Set(Basic):
         elif isinstance(other, FiniteSet):
             return FiniteSet(*[el for el in other if self.contains(el) != True])
 
+    def symmetric_difference(self, other):
+         return SymmetricDifference(self, other)
+
+    def _symmetric_difference(self, other):
+        return Union(Complement(self, other), Complement(other, self))
+
     @property
     def inf(self):
         """
@@ -486,6 +492,9 @@ class Set(Basic):
 
     def __mul__(self, other):
         return ProductSet(self, other)
+
+    def __xor__(self, other):
+        return SymmetricDifference(self, other)
 
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
@@ -1583,6 +1592,9 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _complement(self, other):
         return other
 
+    def _symmetric_difference(self, other):
+        return other
+
 
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
@@ -1617,6 +1629,9 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     def _complement(self, other):
         return S.EmptySet
+
+    def _symmetric_difference(self, other):
+        return other
 
     @property
     def _measure(self):
@@ -1737,6 +1752,7 @@ class FiniteSet(Set, EvalfMixin):
 
         return None
 
+
     def _contains(self, other):
         """
         Tests whether an element, other, is in the set.
@@ -1826,6 +1842,45 @@ class FiniteSet(Set, EvalfMixin):
 
     def __lt__(self, other):
         return self.is_proper_subset(other)
+
+
+class SymmetricDifference(Set):
+    """Represents the set of elements which are in either of the
+    sets and not in their intersection.
+
+    Examples
+    ========
+
+    >>> from sympy import SymmetricDifference, FiniteSet
+    >>> SymmetricDifference(FiniteSet(1, 2, 3), FiniteSet(3, 4, 5))
+    {1, 2, 4, 5}
+
+    See Also
+    ========
+
+    Complement, Union
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Symmetric_difference
+    """
+
+    is_SymmetricDifference = True
+
+    def __new__(cls, a, b, evaluate=True):
+        if evaluate:
+            return SymmetricDifference.reduce(a, b)
+
+        return Basic.__new__(cls, a, b)
+
+    @staticmethod
+    def reduce(A, B):
+        result = B._symmetric_difference(A)
+        if result is not None:
+            return result
+        else:
+            return SymmetricDifference(A, B, evaluate=False)
 
 
 def imageset(*args):
