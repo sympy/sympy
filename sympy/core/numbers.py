@@ -638,6 +638,8 @@ class Float(Number):
 
         if prec is None:
             dps = 15
+            if isinstance(num, Float):
+                return num
             if isinstance(num, string_types) and _literal_float(num):
                 try:
                     Num = decimal.Decimal(num)
