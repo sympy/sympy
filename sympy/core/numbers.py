@@ -513,19 +513,6 @@ class Float(Number):
     Notes
     =====
 
-    The behaviour when using the null string argument with low-precision can
-    be subtly different from Python double-precision floats.  The default
-    behaviour is closer to Python:
-
-    >>> 2/2.6
-    0.7692307692307692
-    >>> 2/Float('2.6')
-    0.769230769230769
-    >>> 2/Float('2.6', '')
-    0.77
-    >>> 2.0/Float('2.6', '')
-    0.768554687500000
-
     Floats are inexact by their nature unless their value is a binary-exact
     value.
 
