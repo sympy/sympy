@@ -185,6 +185,7 @@ def test_issue_8413():
 def test_root():
     from sympy.abc import x
     n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
 
     assert root(2, 2) == sqrt(2)
     assert root(2, 1) == 2
@@ -205,6 +206,8 @@ def test_root():
 
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
+
+    assert root(x, n, k) == x**(1/n)*(-1)**(2*k/n)
 
 
 def test_real_root():

@@ -163,9 +163,7 @@ def cbrt(arg):
 
 
 def root(arg, n, k=0):
-    """The n-th root function (a shortcut for ``arg**(1/n)*exp(2*k*I*pi/n)``)
-
-    root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
+    """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
     principle root (k=0).
 
 
@@ -190,7 +188,7 @@ def root(arg, n, k=0):
     To get the k-th n-th root, specify k:
 
     >>> root(-2, 3, 2)
-    (-2)**(1/3)*exp(4*I*pi/3)
+    -(-1)**(2/3)*2**(1/3)
 
     To get all n n-th roots you can use the RootOf function.
     The following examples show the roots of unity for n
@@ -248,18 +246,10 @@ def root(arg, n, k=0):
     * http://mathworld.wolfram.com/CubeRoot.html
 
     """
-    arg = sympify(arg)
-    try:
-        n = as_int(n)
-        k = as_int(k)
-        if arg.is_negative and k == n//2:
-            return -C.Pow(-arg, S.One/n)
-    except ValueError:
-        n = sympify(n)
-        k = sympify(k)
+    n = sympify(n)
     if k:
-        return C.Pow(arg, S.One/n)*C.exp(2*S.ImaginaryUnit*S.Pi*k/n)
-    return C.Pow(arg, S.One/n)
+        return C.Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
+    return C.Pow(arg, 1/n)
 
 
 def real_root(arg, n=None):
@@ -285,9 +275,9 @@ def real_root(arg, n=None):
     result will not be real (so use with caution):
 
     >>> root(-8, 3, 2)
-    2*(-1)**(1/3)*exp(4*I*pi/3)
+    -2*(-1)**(2/3)
     >>> real_root(_)
-    -2*exp(4*I*pi/3)
+    -2*(-1)**(2/3)
 
 
     See Also
@@ -299,12 +289,9 @@ def real_root(arg, n=None):
     """
     if n is not None:
         n = as_int(n)
-        arg = sympify(arg)
-        k = 0
-        if n % 2:
-            k = n//2
-        return root(arg, n, k)
-    rv = sympify(arg)
+        rv = root(arg, n)
+    else:
+        rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and
