@@ -682,6 +682,8 @@ def test_powsimp():
 
     assert all(powsimp(e) == e for e in (sqrt(x**a), sqrt(x**2)))
 
+    # issue 8836
+    assert str( powsimp(exp(I*pi/3)*root(-1,3)) ) == '(-1)**(2/3)'
 
 def test_issue_6367():
     z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
