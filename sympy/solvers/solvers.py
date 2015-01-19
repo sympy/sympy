@@ -721,7 +721,7 @@ def solve(f, *symbols, **flags):
 
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
-        >>> solve(eq)  # this gives 2 solutions but missed a 3rd
+        >>> solve(eq)  # this gives 2 solutions but misses a 3rd
         [RootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
         RootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
@@ -733,6 +733,46 @@ def solve(f, *symbols, **flags):
 
         >>> abs(real_root(eq.subs(x, sol[0])).n(2))
         0.e-110
+
+    If the roots of the equation are not real then more care will be necessary
+    to find the roots, especially for higher order equations. Consider the
+    following expression:
+
+        >>> expr = root(x, 3) - root(x, 5)
+
+    We will construct a known value for this expression at x = 3 by selecting
+    a non-principle root for each (i.e. multiplying by a power of the same
+    root of -1):
+
+        >>> expr1 = root(x, 3)*root(-1, 3)**2 - root(x, 5)*root(-1, 5)**2
+        >>> v = expr1.subs(x, -3)
+
+    The solve function is unable to find any exact roots to this equation in
+    either form:
+
+        >>> eq = Eq(expr, v); eq1 = Eq(expr1, v)
+        >>> solve(eq, check=False), solve(eq1, check=False)
+        ([], [])
+
+    The function unrad, however, can be used to get a form of the equation for
+    which numerical roots can be found:
+
+        >>> from sympy.solvers.solvers import unrad
+        >>> from sympy import nroots
+        >>> e, (p, cov) = unrad(eq)
+        >>> pvals = nroots(e)
+        >>> inversion = solve(cov, x)[0]
+        >>> xvals = [inversion.subs(p, i) for i in pvals]
+
+    Although eq or eq1 could have been used to find xvals, the solution can
+    only be verified with expr1:
+
+        >>> z = expr-v
+        >>> [xi.n(chop=1e-9) for xi in xvals if abs(z.subs(x, xi).n())<1e-9]
+        []
+        >>> z1 = expr1 - v
+        >>> [xi.n(chop=1e-9) for xi in xvals if abs(z1.subs(x, xi).n()) < 1e-9]
+        [-3.0]
 
     See Also
     ========
