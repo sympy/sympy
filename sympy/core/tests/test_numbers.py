@@ -3,13 +3,17 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify)
-from sympy.core.basic import _aresame
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
 from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
+
+
+def same_and_same_prec(a, b):
+    # stricter matching for Floats
+    return a == b and a._prec == b._prec
 
 
 def test_integers_cache():
@@ -405,11 +409,11 @@ def test_Float():
 
     # long integer
     i = 12345678901234567890
-    assert _aresame(Float(12, ''), Float('12', ''))
-    assert _aresame(Float(Integer(i), ''), Float(i, ''))
-    assert _aresame(Float(i, ''), Float(str(i), 20))
-    assert _aresame(Float(str(i)), Float(i, ''))
-    assert _aresame(Float(i), Float(i, ''))
+    assert same_and_same_prec(Float(12, ''), Float('12', ''))
+    assert same_and_same_prec(Float(Integer(i), ''), Float(i, ''))
+    assert same_and_same_prec(Float(i, ''), Float(str(i), 20))
+    assert same_and_same_prec(Float(str(i)), Float(i, ''))
+    assert same_and_same_prec(Float(i), Float(i, ''))
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
@@ -455,7 +459,7 @@ def test_Float():
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))
-    assert _aresame(Float(s), Float(s, ''))
+    assert same_and_same_prec(Float(s), Float(s, ''))
 
 
 def test_Float_eval():
@@ -1454,11 +1458,10 @@ def test_Float_idempotence():
     x = Float('1.23', '')
     y = Float(x)
     z = Float(x, 15)
-    # _aresame not enough here
-    assert str(y) == str(x)
-    assert str(z) != str(x)
+    assert same_and_same_prec(y, x)
+    assert not same_and_same_prec(z, x)
     x = Float(10**20)
     y = Float(x)
     z = Float(x, 15)
-    assert str(y) == str(x)
-    assert str(z) != str(x)
+    assert same_and_same_prec(y, x)
+    assert not same_and_same_prec(z, x)
