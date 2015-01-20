@@ -92,6 +92,12 @@ class Set(Basic):
         >>> Interval(1, 3).intersect(Interval(1, 2))
         [1, 2]
 
+        >>> from sympy import imageset, Lambda, symbols, S
+        >>> n, m = symbols('n m')
+        >>> a = imageset(Lambda(n, 2*n), S.Integers)
+        >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
+        EmptySet()
+
         """
         return Intersection(self, other)
 
