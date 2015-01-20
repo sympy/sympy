@@ -12,6 +12,14 @@ See the webpage for more information and documentation:
 from __future__ import absolute_import, print_function
 del absolute_import, print_function
 
+try:
+    import mpmath
+except ImportError:
+    raise ImportError("SymPy now depends on mpmath as an external library. "
+    "You can install mpmath with 'pip install mpmath'.")
+
+del mpmath
+
 from sympy.release import __version__
 
 import sys
