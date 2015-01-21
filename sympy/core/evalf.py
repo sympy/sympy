@@ -320,7 +320,7 @@ def get_integer_part(expr, no, options, return_ints=False):
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
         n, c, p, b = nexpr
-        if c != 1 and p != 0:
+        if (c != 1 and p != 0) or p < 0:
             expr = C.Add(expr, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(expr, 10, options)
             try:
