@@ -1,8 +1,9 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
                    fibonacci, floor, Function, GoldenRatio, I, Integral,
                    integrate, log, Mul, N, oo, pi, Pow, product, Product,
-                   Rational, S, Sum, sin, sqrt, sstr, sympify)
-from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
+                   Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol)
+from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
+    scaled_zero, get_integer_part)
 from sympy.core.compatibility import long
 from mpmath import inf, ninf
 from sympy.abc import n, x, y
@@ -455,3 +456,16 @@ def test_issue_8821_highprec_from_str():
     assert Abs(sin(p)) < 1e-15
     p = N(s, 64)
     assert Abs(sin(p)) < 1e-64
+
+
+def test_issue_8853():
+    p = Symbol('x', even=True, positive=True)
+    assert floor(-p - S.Half).is_even == False
+    assert floor(-p + S.Half).is_even == True
+    assert ceiling(p - S.Half).is_even == True
+    assert ceiling(p + S.Half).is_even == False
+
+    assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
+    assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
+    assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
+    assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)
