@@ -136,7 +136,7 @@ class SparseMatrix(MatrixBase):
             return False
         if not all(self[i, i] == 1 for i in range(self.rows)):
             return False
-        return len(self) == self.rows
+        return len(self._smat) == self.rows
 
     def tolist(self):
         """Convert this sparse matrix into a list of nested Python lists.
