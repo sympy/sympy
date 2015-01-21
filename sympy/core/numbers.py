@@ -24,6 +24,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
+from sympy.utilities.misc import debug
 
 rnd = mlib.round_nearest
 
@@ -263,7 +264,6 @@ class Number(AtomicExpr):
             rat = self/other
         w = sign(rat)*int(abs(rat))  # = rat.floor()
         r = self - other*w
-        #w*other + r == self
         return Tuple(w, r)
 
     def __rdivmod__(self, other):
@@ -748,9 +748,8 @@ class Float(Number):
 
     def _as_mpf_val(self, prec):
         rv = mpf_norm(self._mpf_, prec)
-        # uncomment to see failures
-        #if rv != self._mpf_ and self._prec == prec:
-        #    print self._mpf_, rv
+        if rv != self._mpf_ and self._prec == prec:
+            debug(self._mpf_, rv)
         return rv
 
     def _as_mpf_op(self, prec):
@@ -1169,7 +1168,6 @@ class Rational(Number):
         obj = Expr.__new__(cls)
         obj.p = p
         obj.q = q
-        #obj._args = (p, q)
         return obj
 
     def limit_denominator(self, max_denominator=1000000):

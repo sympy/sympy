@@ -742,7 +742,10 @@ class polar_lift(Function):
         from sympy import exp_polar, pi, I, arg as argument
         if arg.is_number:
             ar = argument(arg)
-            #if not ar.has(argument) and not ar.has(atan):
+            # In general we want to affirm that something is known,
+            # e.g. `not ar.has(argument) and not ar.has(atan)`
+            # but for now we will just be more restrictive and
+            # see that it has evaluated to one of the known values.
             if ar in (0, pi/2, -pi/2, pi):
                 return exp_polar(I*ar)*abs(arg)
 

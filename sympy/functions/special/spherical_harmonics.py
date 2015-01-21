@@ -295,13 +295,9 @@ class Znm(Function):
 
         if m.is_positive:
             zz = (Ynm(n, m, th, ph) + Ynm_c(n, m, th, ph)) / sqrt(2)
-            #zz = zz.expand(complex=True)
-            #zz = simplify(zz)
             return zz
         elif m.is_zero:
             return Ynm(n, m, th, ph)
         elif m.is_negative:
             zz = (Ynm(n, m, th, ph) - Ynm_c(n, m, th, ph)) / (sqrt(2)*I)
-            #zz = zz.expand(complex=True)
-            #zz = simplify(zz)
             return zz

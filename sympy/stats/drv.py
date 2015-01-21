@@ -70,7 +70,6 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
         if evaluate:
             return summation(expr * self.pdf(var),

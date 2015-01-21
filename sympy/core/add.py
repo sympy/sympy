@@ -72,9 +72,6 @@ class Add(Expr, AssocOp):
 
     is_Add = True
 
-    #identity = S.Zero
-    # cyclic import, so defined in numbers.py
-
     @classmethod
     def flatten(cls, seq):
         """

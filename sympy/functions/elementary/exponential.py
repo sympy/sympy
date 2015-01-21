@@ -686,8 +686,6 @@ class log(Function):
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
         if r is not None:
-            #k = r.get(r, S.One)
-            #l = r.get(l, S.Zero)
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
                 r = log(k) + l*logx  # XXX true regardless of assumptions?

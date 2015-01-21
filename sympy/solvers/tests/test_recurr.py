@@ -91,6 +91,7 @@ def test_rsolve_bulk():
             q = recurrence_term(c, p)
             if p.is_polynomial(n):
                 assert rsolve_poly(c, q, n) == p
+            # See issue 3956:
             #if p.is_hypergeometric(n):
             #    assert rsolve_hyper(c, q, n) == p
 

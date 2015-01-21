@@ -12,7 +12,6 @@ rmul = Permutation.rmul
 
 
 def test_has():
-    # return p in self.generators
     a = Permutation([1, 0])
     G = PermutationGroup([a])
     assert G.is_abelian
