@@ -17,12 +17,13 @@ each function for more information.
 from __future__ import print_function, division
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
-
+from sympy import fraction
 from sympy.matrices import Matrix, zeros, eye
 
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
+from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -335,7 +336,6 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     """
     m = len(Q)
     H = [Poly(0, DE.t)]*m
-
     for N in xrange(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
@@ -359,36 +359,62 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
         return (H, A)
     else:
-        # TODO: implement this (requires recursive param_rischDE() call)
-        raise NotImplementedError
-
+        Q0 = [q.eval(0).as_poly(DE.t) for q in Q]
+        Q0 = [tuple([i.as_poly(DE.t) for i in q.as_numer_denom()]) for q in Q0]
+        ba, bd = b.as_expr().as_numer_denom()
+        ba, bd = ba.as_poly(DE.t), bd.as_poly(DE.t)
+        F, B = param_rischDE(ba, bd, Q0, DE)
+        if all(qi.is_zero for qi in Q):
+            dc = -1 if all((derivation(f, DE) + b*f).is_zero for f in F) else 0
+        else:
+            dc = max([qi.degree(DE.t) for qi in Q])
+        M = zeros(dc + 1, m + len(F) + 1)
+        M_ = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
+        M[0, 0] = M_
+        for j, f in enumerate(F):
+            Df = derivation(f, DE)
+            M[1, j + 1 + m] = (-Df - b*f).as_expr()
+        A, u = constant_system(M, zeros(dc + 1, 1), DE)
+        c = eye(m).row_join(-eye(m))
+        #vertical concatenation of A & B
+        big_cols = max([A.cols, B.cols, c.cols])
+        big_rows = A.rows + B.rows + c.rows
+        concat = zeros(big_rows , big_cols)
+        concat[0, 0] = A
+        if B.rows:
+            concat[A.rows, 0] = B
+        concat[A.rows + B.rows , 0] = c
+        A = concat
+        return (F, H, A)
 
 def param_rischDE(fa, fd, G, DE):
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
     """
     _, (fa, fd) = weak_normalizer(fa, fd, DE)
-    a, (ba, bd), G, hn = prde_normal_denom(ga, gd, G, DE)
+    a, (ba, bd), G, hn = prde_normal_denom(fa, fd, G, DE)
     A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
     g = gcd(A, B)
     A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
-        gia, gid in G]
+    gia, gid in G]
     Q, M = prde_linear_constraints(A, B, G, DE)
     M, _ = constant_system(M, zeros(M.rows, 1), DE)
     # Reduce number of constants at this point
     try:
         # Similar to rischDE(), we try oo, even though it might lead to
-        # non-termination when there is no solution.  At least for prde_spde,
+        # non-termination when there is no solution. At least for prde_spde,
         # it will always terminate no matter what n is.
-        n = bound_degree(A, B, G, DE, parametric=True)
+        G_expr = [(i.as_expr()/j.as_expr()).as_poly(DE.t) for (i, j) in G]
+        n = bound_degree(A, B, G_expr, DE, parametric=True)
     except NotImplementedError:
         # Useful for debugging:
         # import warnings
         # warnings.warn("param_rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
+        # "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
+    return (Q, M)
 
 
 def limited_integrate_reduce(fa, fd, G, DE):
