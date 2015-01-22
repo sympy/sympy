@@ -465,6 +465,12 @@ def test_sympy__sets__sets__Complement():
     assert _test_args(Complement(Interval(0, 2), Interval(0, 1)))
 
 
+def test_sympy__sets__sets__SymmetricDifference():
+    from sympy.sets.sets import FiniteSet, SymmetricDifference
+    assert _test_args(SymmetricDifference(FiniteSet(1, 2, 3), \
+           FiniteSet(2, 3, 4)))
+
+
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
