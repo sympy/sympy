@@ -747,6 +747,34 @@ def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
         set([(-sqrt(-y - 4),), (sqrt(-y - 4),)])
 
+def test_issue_8828():
+    x1 = 0
+    y1 = -620
+    r1 = 920
+    x2 = 126
+    y2 = 276
+    x3 = 51
+    y3 = 205
+    r3 = 104
+
+    f1 = (x-x1)**2 + (y-y1)**2 - (r1-z)**2
+    f2 = (x2-x)**2 + (y2-y)**2 - z**2
+    f3 = (x-x3)**2 + (y-y3)**2 - (r3-z)**2
+    F = f1,f2,f3
+
+    g1 = sqrt((x-x1)**2 + (y-y1)**2) + z - r1
+    g2 = f2
+    g3 = sqrt((x-x3)**2 + (y-y3)**2) + z - r3
+    G = g1,g2,g3
+
+    A = solve(F,[x,y,z])
+    B = solve(G,[x,y,z])
+
+    p = [[i.evalf() for i in j] for j in A]
+    q = [[i.evalf() for i in j] for j in B]
+
+    for sol in p:
+        assert( sol in q )
 
 def test_polysys():
     assert set(solve([x**2 + 2/y - 2, x + y - 3], [x, y])) == \

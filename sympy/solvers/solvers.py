@@ -1743,6 +1743,8 @@ def _solve_system(exprs, symbols, **flags):
             got_s = set([])
             u = Dummy()
             for r in result:
+                # For each new result reset the list of symbols solved
+                got_s = set([])
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
                 # if check is True then we see if it satisfies this
