@@ -767,8 +767,8 @@ def solve(f, *symbols, **flags):
     Although eq or eq1 could have been used to find xvals, the solution can
     only be verified with expr1:
 
-        >>> z = expr-v
-        >>> [xi.n(chop=1e-9) for xi in xvals if abs(z.subs(x, xi).n())<1e-9]
+        >>> z = expr - v
+        >>> [xi.n(chop=1e-9) for xi in xvals if abs(z.subs(x, xi).n()) < 1e-9]
         []
         >>> z1 = expr1 - v
         >>> [xi.n(chop=1e-9) for xi in xvals if abs(z1.subs(x, xi).n()) < 1e-9]
