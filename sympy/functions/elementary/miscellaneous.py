@@ -288,8 +288,20 @@ def real_root(arg, n=None):
     root, sqrt
     """
     if n is not None:
-        n = as_int(n)
-        rv = root(arg, n)
+        try:
+            n = as_int(n)
+            arg = sympify(arg)
+            if arg.is_positive or arg.is_negative:
+                rv = root(arg, n)
+            else:
+                raise ValueError
+        except ValueError:
+            return root(arg, n)*C.Piecewise(
+                (S.One, ~C.Equality(C.im(arg), 0)),
+                (C.Pow(S.NegativeOne, S.One/n)**(2*C.floor(n/2)), C.And(
+                    C.Equality(n % 2, 1),
+                    arg < 0)),
+                (S.One, True))
     else:
         rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
