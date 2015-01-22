@@ -292,6 +292,10 @@ class bernoulli(Function):
                 raise ValueError("Bernoulli numbers are defined only"
                                  " for nonnegative integer indices.")
 
+        if sym is None:
+            if n.is_odd and (n - 1).is_positive:
+                return S.Zero
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
