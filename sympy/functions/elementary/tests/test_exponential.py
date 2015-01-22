@@ -439,3 +439,8 @@ def test_log_product():
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+
+def test_issue_8866():
+    x = Symbol('x')
+    assert simplify(log(x, 10, evaluate=False)) == simplify(log(x, 10))
+    assert expand_log(log(x, 10, evaluate=False)) == expand_log(log(x, 10))
