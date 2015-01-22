@@ -175,7 +175,6 @@ class Reals(with_metaclass(Singleton, Interval)):
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 
-
 class ImageSet(Set):
     """
     Image of a set under a mathematical function
@@ -297,6 +296,15 @@ def TransformationSet(*args, **kwargs):
     """Deprecated alias for the ImageSet constructor."""
     return ImageSet(*args, **kwargs)
 
+class Complex(with_metaclass(Singleton, Interval)):
+
+    def __new__(cls):
+    	from sympy.core import Symbol
+    	from sympy.core.numbers import ImaginaryUnit
+    	I=ImaginaryUnit()
+        x = Symbol('x')
+        y = Symbol('y')
+        return ImageSet(Lambda((x, y), x + I*y), S.Reals*S.Reals)
 
 class Range(Set):
     """
