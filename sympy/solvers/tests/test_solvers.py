@@ -915,9 +915,8 @@ def test_unrad1():
     # if it's not then this next test will take a long time
     assert solve(root(x, 3) + root(x, 5) - 2) == [1]
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
-    assert unrad(eq) in [
-        (5*x**4 - 72*x**3 + 330*x**2 - 504*x + 241, []),  # as special case
-        (15625*x**4 + 173000*x**3 + 355600*x**2 - 817920*x + 331776, [])]  # normal
+    assert check(unrad(eq),
+        ((5*x - 4)*(3125*x**3 + 37100*x**2 + 100800*x - 82944), []))
     ans = S('''
         [4/5, -1484/375 + 172564/(140625*(114*sqrt(12657)/78125 +
         12459439/52734375)**(1/3)) +

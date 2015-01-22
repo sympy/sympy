@@ -2961,7 +2961,7 @@ def unrad(eq, *syms, **flags):
             cov = [p.xreplace(rep), e.xreplace(rep)]
 
         # remove constants and powers of factors since these don't change
-        # the location of the root
+        # the location of the root; XXX should factor or factor_terms be used?
         eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True))
         if eq.is_Mul:
             args = []
@@ -2972,9 +2972,7 @@ def unrad(eq, *syms, **flags):
                     args.append(f.base)
                 else:
                     args.append(f)
-            eq = Mul(*args)
-        # fully expand the result
-        eq = _mexpand(eq)
+            eq = Mul(*args)  # leave as Mul for more efficient solving
 
         # make the sign canonical
         free = eq.free_symbols
@@ -3168,7 +3166,7 @@ def unrad(eq, *syms, **flags):
         elif len(rterms) == 3:
             # two cube roots and another with order less than 5
             # (so an analytical solution can be found) or a base
-            # that matches one of the cubr root bases
+            # that matches one of the cube root bases
             info = [_rads_bases_lcm(i.as_poly()) for i in rterms]
             RAD = 0
             BASES = 1
