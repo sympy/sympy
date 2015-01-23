@@ -1810,6 +1810,22 @@ def _solve_system(exprs, symbols, **flags):
                 result = newresult
             for b in bad_results:
                 result.remove(b)
+
+        # Final check on numerical solutions. ( Read #8828 )
+        if check and result:
+            temp = []
+            for sol in result:
+                ok = True
+                for eq in failed:
+                    ans = eq.subs(sol).evalf()
+                    if type(abs(ans)) != Float:  # To avoid relational equations
+                        continue
+                    if abs(ans) > 10**(-10):     # Precision 10**(-10)?
+                        ok = False
+                if ok is True:
+                    temp.append(sol)
+            result = temp
+
     return result
 
 
