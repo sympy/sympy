@@ -1619,6 +1619,7 @@ def test_issue_8755():
     assert len(solve(-512*y**3 + 1344*(x + 2)**(S(1)/3)*y**2 -
         1176*(x + 2)**(S(2)/3)*y - 169*x + 686, y, _unrad=False)) == 3
 
+
 def test_issue_8828():
     x1 = 0
     y1 = -620
@@ -1628,6 +1629,7 @@ def test_issue_8828():
     x3 = 51
     y3 = 205
     r3 = 104
+    v = x, y, z
 
     f1 = (x - x1)**2 + (y - y1)**2 - (r1 - z)**2
     f2 = (x2 - x)**2 + (y2 - y)**2 - z**2
@@ -1639,12 +1641,9 @@ def test_issue_8828():
     g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
     G = g1,g2,g3
 
-    A = solve(F,[x,y,z])
-    B = solve(G,[x,y,z])
-    C = solve(G,[x,y,z],manual=True)
+    A = solve(F, v)
+    B = solve(G, v)
+    C = solve(G, v, manual=True)
 
-    p = [[i.evalf() for i in j] for j in A]
-    q = [[i.evalf() for i in j] for j in B]
-    r = [[i.evalf() for i in j] for j in C]
-
-    assert( sorted(p) == sorted(q) == sorted(r) )
+    p, q, r = [sorted([[i.evalf(2) for i in j] for j in R]) for R in A, B, C]
+    assert p == q == r
