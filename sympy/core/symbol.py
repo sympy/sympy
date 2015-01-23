@@ -107,18 +107,21 @@ class Symbol(AtomicExpr, Boolean):
         obj = Expr.__new__(cls)
         obj.name = name
 
-        # FIXME: bit horrid: to avoid having "commutative=True" show up in
-        # Symbol's srepr, keep a copy...
-        tmpasmcopy = assumptions.copy()
+        # TODO: Issue #8873: Forcing the commutative assumption here means
+        # later code such as ``srepr()`` cannot tell whether the user
+        # specified ``commutative=True`` or omitted it.  To workaround this,
+        # we keep a copy of the assumptions dict, then create the StdFactKB,
+        # and finally overwrite its ``._generator`` with the dict copy.  This
+        # is a bit of a hack because we assume StdFactKB merely copies the
+        # given dict as ``._generator``, but future modification might, e.g.,
+        # compute a minimal equivalent assumption set.
+        tmp_asm_copy = assumptions.copy()
 
         # be strict about commutativity
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         assumptions['commutative'] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
-
-        # FIXME: ... then use the copy overwrite the generator
-        obj._assumptions._generator = tmpasmcopy
-
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
     __xnew__ = staticmethod(
