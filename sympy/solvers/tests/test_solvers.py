@@ -121,7 +121,7 @@ def test_solve_args():
     assert solve(a*x**2 + b*x + c -
                 ((x - h)**2 + 4*p*k)/4/p,
                 [h, p, k], exclude=[a, b, c], dict=True) == \
-        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
+        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
@@ -1620,6 +1620,7 @@ def test_issue_8755():
         1176*(x + 2)**(S(2)/3)*y - 169*x + 686, y, _unrad=False)) == 3
 
 
+@slow
 def test_issue_8828():
     x1 = 0
     y1 = -620
@@ -1645,5 +1646,5 @@ def test_issue_8828():
     B = solve(G, v)
     C = solve(G, v, manual=True)
 
-    p, q, r = [sorted([[i.evalf(2) for i in j] for j in R]) for R in A, B, C]
+    p, q, r = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in A, B, C]
     assert p == q == r
