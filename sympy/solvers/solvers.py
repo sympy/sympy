@@ -1592,7 +1592,6 @@ def _solve(f, *symbols, **flags):
 
 
 def _solve_system(exprs, symbols, **flags):
-    check = flags.get('check', True)
     if not exprs:
         return []
 
@@ -1601,6 +1600,8 @@ def _solve_system(exprs, symbols, **flags):
     failed = []
     result = False
     manual = flags.get('manual', False)
+    check = flags.get('check', True)
+
     for j, g in enumerate(exprs):
         dens.update(_simple_dens(g, symbols))
         i, d = _invert(g, *symbols)
@@ -1643,6 +1644,7 @@ def _solve_system(exprs, symbols, **flags):
                 # is also handled by checksol
                 if any(checksol(d, result, **flags) for d in dens):
                     result = None
+                check = False
             if failed:
                 if result:
                     solved_syms = list(result.keys())
@@ -1694,25 +1696,6 @@ def _solve_system(exprs, symbols, **flags):
                     #
                     result = [dict(list(zip(solved_syms, r))) for r in result]
 
-            if result:
-                # check & simplify nonlinear solutions
-                # simplify first
-                if flags.get('simplfy', True):
-                    for sol in result:
-                        for k in sol:
-                            sol[k] = simplify(sol[k])
-                flags['simplify'] = False  # don't need to do so in checksol now
-                if check:
-                    ok = []
-                    for sol in result:
-                        if any(checksol(e, sol, **flags) is False for e in exprs):
-                            continue
-                        if any(checksol(d, sol, **flags) for d in dens):
-                            continue
-                        ok.append(sol)
-                    result = ok
-                    del ok
-
     if failed:
         # For each failed equation, see if we can solve for one of the
         # remaining symbols from that equation. If so, we update the
@@ -1747,19 +1730,6 @@ def _solve_system(exprs, symbols, **flags):
                 got_s = set([])
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
-                # if check is True then we see if it satisfies this
-                # equation, otherwise we just accept it
-                if check and r:
-                    b = checksol(u, u, eq2, minimal=True)
-                    if b is not None:
-                        # this solution is sufficient to know whether
-                        # it is valid or not so we either accept or
-                        # reject it, then continue
-                        if b:
-                            newresult.append(r)
-                        else:
-                            bad_results.append(r)
-                        continue
                 # search for a symbol amongst those available that
                 # can be solved for
                 ok_syms = _ok_syms(eq2, sort=True)
@@ -1811,7 +1781,6 @@ def _solve_system(exprs, symbols, **flags):
             for b in bad_results:
                 result.remove(b)
 
-        # Final check on numerical solutions. ( Read #8828 )
         if check and result:
             temp = []
             for sol in result:
@@ -1820,11 +1789,14 @@ def _solve_system(exprs, symbols, **flags):
                     ans = eq.subs(sol).evalf()
                     if type(abs(ans)) != Float:  # To avoid relational equations
                         continue
-                    if abs(ans) > 10**(-10):     # Precision 10**(-10)?
-                        ok = False
+                    if any(checksol(e, sol, **flags) is False for e in exprs):
+                        continue
+                    if any(checksol(d, sol, **flags) for d in dens):
+                        continue
                 if ok is True:
                     temp.append(sol)
             result = temp
+            del temp
 
     return result
 
