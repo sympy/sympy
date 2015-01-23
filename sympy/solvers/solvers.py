@@ -1717,19 +1717,31 @@ def _solve_system(exprs, symbols, **flags):
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
-        simplify_flag = flags.get('simplify', None)
+        missing = Dummy()
+        simplify_flag = flags.get('simplify', missing)
         do_simplify = flags.get('simplify', True)
         # sort so equation with the fewest potential symbols is first
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
-            bad_results = []
             got_s = set([])
             u = Dummy()
+            got_s = set([])
             for r in result:
-                # For each new result reset the list of symbols solved
-                got_s = set([])
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
+                # if check is True then we see if it satisfies this
+                # equation, otherwise we just accept it
+                if check and r:
+                    b = checksol(u, u, eq2, minimal=True)
+                    if b is not None:
+                        # this solution is sufficient to know whether
+                        # it is valid or not so we either accept or
+                        # reject it, then continue
+                        if b:
+                            newresult.append(r)
+                        else:
+                            bad_results.append(r)
+                        continue
                 # search for a symbol amongst those available that
                 # can be solved for
                 ok_syms = _ok_syms(eq2, sort=True)
@@ -1771,30 +1783,28 @@ def _solve_system(exprs, symbols, **flags):
                         # and add this new solution
                         rnew[s] = sol
                         newresult.append(rnew)
-                    if simplify_flag is not None:
-                        flags['simplify'] = simplify_flag
+                    flags['simplify'] = simplify_flag
                     got_s.add(s)
                 if not got_s:
                     raise NotImplementedError('could not solve %s' % eq2)
             if got_s:
                 result = newresult
-            for b in bad_results:
-                result.remove(b)
+            if simplify_flag is missing:
+                flags.pop('simplify', None)
 
         if check and result:
+            if flags.get('simplfy', True):
+                for sol in result:
+                    for k in sol:
+                        sol[k] = simplify(sol[k])
+                flags['simplify'] = False  # don't need to do so in checksol now
             temp = []
             for sol in result:
-                ok = True
-                for eq in failed:
-                    ans = eq.subs(sol).evalf()
-                    if type(abs(ans)) != Float:  # To avoid relational equations
-                        continue
-                    if any(checksol(e, sol, **flags) is False for e in exprs):
-                        continue
-                    if any(checksol(d, sol, **flags) for d in dens):
-                        continue
-                if ok is True:
-                    temp.append(sol)
+                if any(checksol(e, sol, **flags) is False for e in exprs):
+                    continue
+                if any(checksol(d, sol, **flags) for d in dens):
+                    continue
+                temp.append(sol)
             result = temp
             del temp
 
