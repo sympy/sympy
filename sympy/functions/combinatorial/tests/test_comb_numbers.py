@@ -2,7 +2,7 @@ import string
 
 from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im)
+    expand_func, diff, EulerGamma, cancel, re, im, Product)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
     gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
@@ -272,17 +272,28 @@ def test_euler_failing():
 
 
 def test_catalan():
-    assert catalan(1) == 1
-    assert catalan(2) == 2
-    assert catalan(3) == 5
-    assert catalan(4) == 14
+    n = Symbol('n', integer=True)
+    m = Symbol('n', integer=True, positive=True)
+
+    catalans = [1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, 16796, 58786]
+    for i, c in enumerate(catalans):
+        assert catalan(i) == c
+        assert catalan(n).rewrite(factorial).subs(n, i) == c
+        assert catalan(n).rewrite(Product).subs(n, i).doit() == c
 
     assert catalan(x) == catalan(x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
+    assert catalan(Rational(1, 2)).rewrite(factorial).rewrite(gamma) ==\
+        8 / (3 * pi)
     assert catalan(3*x).rewrite(gamma) == 4**(
         3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
+
+    assert catalan(n).rewrite(factorial) == factorial(2*n) / (factorial(n + 1)
+                                                              * factorial(n))
+    assert isinstance(catalan(n).rewrite(Product), catalan)
+    assert isinstance(catalan(m).rewrite(Product), Product)
 
     assert diff(catalan(x), x) == (polygamma(
         0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
