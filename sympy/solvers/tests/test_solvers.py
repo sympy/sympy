@@ -951,14 +951,6 @@ def test_unrad1():
         assert None  # no answer was found
 
 
-@slow
-def test_unrad_slow():
-    # this has roots with multiplicity > 1; there should be no
-    # repeats in roots obtained, however
-    eq = (sqrt(1 + sqrt(1 - 4*x**2)) - x*((1 + sqrt(1 + 2*sqrt(1 - 4*x**2)))))
-    assert solve(eq) == [S.Half]
-
-
 @XFAIL
 def test_unrad_fail():
     # this only works if we check real_root(eq.subs(x, S(1)/3))
@@ -1025,7 +1017,7 @@ def test_issue_5849():
     Q2: 2*I3 + 2*I5 + 3*I6,
     I1: I2 + I3,
     Q4: -I3/2 + 3*I5/2 - dI4/2}]
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == ans
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == []
     # the matrix solver (tested below) doesn't like this because it produces
     # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
@@ -1626,3 +1618,33 @@ def test_issue_8755():
     assert len(solve(sqrt(y)*x + x**3 - 1, x)) == 3
     assert len(solve(-512*y**3 + 1344*(x + 2)**(S(1)/3)*y**2 -
         1176*(x + 2)**(S(2)/3)*y - 169*x + 686, y, _unrad=False)) == 3
+
+
+@slow
+def test_issue_8828():
+    x1 = 0
+    y1 = -620
+    r1 = 920
+    x2 = 126
+    y2 = 276
+    x3 = 51
+    y3 = 205
+    r3 = 104
+    v = x, y, z
+
+    f1 = (x - x1)**2 + (y - y1)**2 - (r1 - z)**2
+    f2 = (x2 - x)**2 + (y2 - y)**2 - z**2
+    f3 = (x - x3)**2 + (y - y3)**2 - (r3 - z)**2
+    F = f1,f2,f3
+
+    g1 = sqrt((x - x1)**2 + (y - y1)**2) + z - r1
+    g2 = f2
+    g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
+    G = g1,g2,g3
+
+    A = solve(F, v)
+    B = solve(G, v)
+    C = solve(G, v, manual=True)
+
+    p, q, r = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in A, B, C]
+    assert p == q == r

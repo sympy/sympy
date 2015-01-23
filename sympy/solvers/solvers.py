@@ -767,8 +767,8 @@ def solve(f, *symbols, **flags):
     Although eq or eq1 could have been used to find xvals, the solution can
     only be verified with expr1:
 
-        >>> z = expr - v
-        >>> [xi.n(chop=1e-9) for xi in xvals if abs(z.subs(x, xi).n()) < 1e-9]
+        >>> z = expr-v
+        >>> [xi.n(chop=1e-9) for xi in xvals if abs(z.subs(x, xi).n())<1e-9]
         []
         >>> z1 = expr1 - v
         >>> [xi.n(chop=1e-9) for xi in xvals if abs(z1.subs(x, xi).n()) < 1e-9]
@@ -1546,7 +1546,7 @@ def _solve(f, *symbols, **flags):
                     rv = set([inv.subs(isym, xi) for xi in _solve(eq, isym, **flags)])
                 else:
                     try:
-                        rv = set(_solve(eq, symbol, **flags))
+                        rv = _solve(eq, symbol, **flags)
                     except NotImplementedError:
                         rv = None
                 if rv is not None:
@@ -1592,7 +1592,6 @@ def _solve(f, *symbols, **flags):
 
 
 def _solve_system(exprs, symbols, **flags):
-    check = flags.get('check', True)
     if not exprs:
         return []
 
@@ -1601,6 +1600,8 @@ def _solve_system(exprs, symbols, **flags):
     failed = []
     result = False
     manual = flags.get('manual', False)
+    check = flags.get('check', True)
+
     for j, g in enumerate(exprs):
         dens.update(_simple_dens(g, symbols))
         i, d = _invert(g, *symbols)
@@ -1643,6 +1644,7 @@ def _solve_system(exprs, symbols, **flags):
                 # is also handled by checksol
                 if any(checksol(d, result, **flags) for d in dens):
                     result = None
+                check = False
             if failed:
                 if result:
                     solved_syms = list(result.keys())
@@ -1694,25 +1696,6 @@ def _solve_system(exprs, symbols, **flags):
                     #
                     result = [dict(list(zip(solved_syms, r))) for r in result]
 
-            if result:
-                # check & simplify nonlinear solutions
-                # simplify first
-                if flags.get('simplfy', True):
-                    for sol in result:
-                        for k in sol:
-                            sol[k] = simplify(sol[k])
-                flags['simplify'] = False  # don't need to do so in checksol now
-                if check:
-                    ok = []
-                    for sol in result:
-                        if any(checksol(e, sol, **flags) is False for e in exprs):
-                            continue
-                        if any(checksol(d, sol, **flags) for d in dens):
-                            continue
-                        ok.append(sol)
-                    result = ok
-                    del ok
-
     if failed:
         # For each failed equation, see if we can solve for one of the
         # remaining symbols from that equation. If so, we update the
@@ -1734,14 +1717,15 @@ def _solve_system(exprs, symbols, **flags):
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
-        simplify_flag = flags.get('simplify', None)
+        missing = Dummy()
+        simplify_flag = flags.get('simplify', missing)
         do_simplify = flags.get('simplify', True)
         # sort so equation with the fewest potential symbols is first
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
-            bad_results = []
             got_s = set([])
             u = Dummy()
+            got_s = set([])
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
@@ -1755,8 +1739,6 @@ def _solve_system(exprs, symbols, **flags):
                         # reject it, then continue
                         if b:
                             newresult.append(r)
-                        else:
-                            bad_results.append(r)
                         continue
                 # search for a symbol amongst those available that
                 # can be solved for
@@ -1799,15 +1781,31 @@ def _solve_system(exprs, symbols, **flags):
                         # and add this new solution
                         rnew[s] = sol
                         newresult.append(rnew)
-                    if simplify_flag is not None:
-                        flags['simplify'] = simplify_flag
+                    flags['simplify'] = simplify_flag
                     got_s.add(s)
                 if not got_s:
                     raise NotImplementedError('could not solve %s' % eq2)
             if got_s:
                 result = newresult
-            for b in bad_results:
-                result.remove(b)
+            if simplify_flag is missing:
+                flags.pop('simplify', None)
+
+    if check and result:
+        if flags.get('simplfy', True):
+            for sol in result:
+                for k in sol:
+                    sol[k] = simplify(sol[k])
+            flags['simplify'] = False  # don't need to do so in checksol now
+        temp = []
+        for sol in result:
+            if any(checksol(e, sol, **flags) is False for e in exprs):
+                continue
+            if any(checksol(d, sol, **flags) for d in dens):
+                continue
+            temp.append(sol)
+        result = temp
+        del temp
+
     return result
 
 
