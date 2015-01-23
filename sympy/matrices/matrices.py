@@ -129,87 +129,92 @@ class MatrixBase(object):
         """
         from sympy.matrices.sparse import SparseMatrix
 
-        # Matrix(SparseMatrix(...))
-        if len(args) == 1 and isinstance(args[0], SparseMatrix):
-            return args[0].rows, args[0].cols, flatten(args[0].tolist())
+        flat_list = None
 
-        # Matrix(Matrix(...))
-        if len(args) == 1 and isinstance(args[0], MatrixBase):
-            return args[0].rows, args[0].cols, args[0]._mat
+        if len(args) == 1:
+            # Matrix(SparseMatrix(...))
+            if isinstance(args[0], SparseMatrix):
+                return args[0].rows, args[0].cols, flatten(args[0].tolist())
 
-        # Matrix(MatrixSymbol('X', 2, 2))
-        if len(args) == 1 and isinstance(args[0], Basic) and args[0].is_Matrix:
-            return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+            # Matrix(Matrix(...))
+            elif isinstance(args[0], MatrixBase):
+                return args[0].rows, args[0].cols, args[0]._mat
 
-        if len(args) == 3:
+            # Matrix(MatrixSymbol('X', 2, 2))
+            elif isinstance(args[0], Basic) and args[0].is_Matrix:
+                return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+
+            # Matrix(numpy.ones((2, 2)))
+            elif hasattr(args[0], "__array__"):
+                # NumPy array or matrix or some other object that implements
+                # __array__. So let's first use this method to get a
+                # numpy.array() and then make a python list out of it.
+                arr = args[0].__array__()
+                if len(arr.shape) == 2:
+                    rows, cols = arr.shape[0], arr.shape[1]
+                    flat_list = [cls._sympify(i) for i in arr.ravel()]
+                    return rows, cols, flat_list
+                elif len(arr.shape) == 1:
+                    rows, cols = arr.shape[0], 1
+                    flat_list = [S.Zero]*rows
+                    for i in range(len(arr)):
+                        flat_list[i] = cls._sympify(arr[i])
+                    return rows, cols, flat_list
+                else:
+                    raise NotImplementedError(
+                        "SymPy supports just 1D and 2D matrices")
+
+            # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
+            elif is_sequence(args[0])\
+                    and not isinstance(args[0], DeferredVector):
+                in_mat = []
+                ncol = set()
+                for row in args[0]:
+                    if isinstance(row, MatrixBase):
+                        in_mat.extend(row.tolist())
+                        if row.cols or row.rows:  # only pay attention if it's not 0x0
+                            ncol.add(row.cols)
+                    else:
+                        in_mat.append(row)
+                        try:
+                            ncol.add(len(row))
+                        except TypeError:
+                            ncol.add(1)
+                if len(ncol) > 1:
+                    raise ValueError("Got rows of variable lengths: %s" %
+                        sorted(list(ncol)))
+                cols = ncol.pop() if ncol else 0
+                rows = len(in_mat) if cols else 0
+                if rows:
+                    if not is_sequence(in_mat[0]):
+                        cols = 1
+                        flat_list = [cls._sympify(i) for i in in_mat]
+                        return rows, cols, flat_list
+                flat_list = []
+                for j in range(rows):
+                    for i in range(cols):
+                        flat_list.append(cls._sympify(in_mat[j][i]))
+
+        elif len(args) == 3:
             rows = as_int(args[0])
             cols = as_int(args[1])
 
-        # Matrix(2, 2, lambda i, j: i+j)
-        if len(args) == 3 and isinstance(args[2], collections.Callable):
-            operation = args[2]
-            flat_list = []
-            for i in range(rows):
-                flat_list.extend([cls._sympify(operation(cls._sympify(i), j))
-                    for j in range(cols)])
+            # Matrix(2, 2, lambda i, j: i+j)
+            if len(args) == 3 and isinstance(args[2], collections.Callable):
+                op = args[2]
+                flat_list = []
+                for i in range(rows):
+                    flat_list.extend(
+                        [cls._sympify(op(cls._sympify(i), cls._sympify(j)))
+                        for j in range(cols)])
 
-        # Matrix(2, 2, [1, 2, 3, 4])
-        elif len(args) == 3 and is_sequence(args[2]):
-            flat_list = args[2]
-            if len(flat_list) != rows*cols:
-                raise ValueError('List length should be equal to rows*columns')
-            flat_list = [cls._sympify(i) for i in flat_list]
+            # Matrix(2, 2, [1, 2, 3, 4])
+            elif len(args) == 3 and is_sequence(args[2]):
+                flat_list = args[2]
+                if len(flat_list) != rows*cols:
+                    raise ValueError('List length should be equal to rows*columns')
+                flat_list = [cls._sympify(i) for i in flat_list]
 
-        # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"):
-            # NumPy array or matrix or some other object that implements
-            # __array__. So let's first use this method to get a
-            # numpy.array() and then make a python list out of it.
-            arr = args[0].__array__()
-            if len(arr.shape) == 2:
-                rows, cols = arr.shape[0], arr.shape[1]
-                flat_list = [cls._sympify(i) for i in arr.ravel()]
-                return rows, cols, flat_list
-            elif len(arr.shape) == 1:
-                rows, cols = arr.shape[0], 1
-                flat_list = [S.Zero]*rows
-                for i in range(len(arr)):
-                    flat_list[i] = cls._sympify(arr[i])
-                return rows, cols, flat_list
-            else:
-                raise NotImplementedError(
-                    "SymPy supports just 1D and 2D matrices")
-
-        # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
-        elif len(args) == 1 and is_sequence(args[0])\
-                and not isinstance(args[0], DeferredVector):
-            in_mat = []
-            ncol = set()
-            for row in args[0]:
-                if isinstance(row, MatrixBase):
-                    in_mat.extend(row.tolist())
-                    if row.cols or row.rows:  # only pay attention if it's not 0x0
-                        ncol.add(row.cols)
-                else:
-                    in_mat.append(row)
-                    try:
-                        ncol.add(len(row))
-                    except TypeError:
-                        ncol.add(1)
-            if len(ncol) > 1:
-                raise ValueError("Got rows of variable lengths: %s" %
-                    sorted(list(ncol)))
-            cols = ncol.pop() if ncol else 0
-            rows = len(in_mat) if cols else 0
-            if rows:
-                if not is_sequence(in_mat[0]):
-                    cols = 1
-                    flat_list = [cls._sympify(i) for i in in_mat]
-                    return rows, cols, flat_list
-            flat_list = []
-            for j in range(rows):
-                for i in range(cols):
-                    flat_list.append(cls._sympify(in_mat[j][i]))
 
         # Matrix()
         elif len(args) == 0:
@@ -217,7 +222,7 @@ class MatrixBase(object):
             rows = cols = 0
             flat_list = []
 
-        else:
+        if flat_list is None:
             raise TypeError("Data type not understood")
 
         return rows, cols, flat_list
