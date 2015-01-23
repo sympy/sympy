@@ -209,11 +209,22 @@ class StdFactKB(FactKB):
     rules = _assume_rules
 
     def __init__(self, facts=None):
+        # save a copy of the facts dict
+        if not facts:
+            self._generator = {};
+        elif not isinstance(facts, FactKB):
+            self._generator = facts.copy()
+        else:
+            self._generator = facts.generator
         if facts:
             self.deduce_all_facts(facts)
 
     def copy(self):
         return self.__class__(self)
+
+    @property
+    def generator(self):
+        return self._generator.copy()
 
 
 def as_property(fact):
