@@ -1405,13 +1405,15 @@ class totient(Function):
     def eval(cls, n):
         n = sympify(n)
         if n.is_Integer:
-            if n < 1:
+            if n<1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
             t = 1
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif not n.is_Symbol:
+            raise ValueError("n must be a postive integer")
 
 
 class divisor_sigma(Function):
