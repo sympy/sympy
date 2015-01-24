@@ -353,6 +353,7 @@ def bures_metric(state1, state2):
     >>> # calculates the Bures metric between two identitcal states (yields: 1)
     >>> print bures_metric(phip_dm, phip_dm)
     0
+    
     References
     ==========
     .. [1] http://en.wikipedia.org/wiki/Bures_metric
@@ -404,6 +405,7 @@ def bures_angle(state1, state2):
     >>> # calculates the Bures angle between two identitcal states (yields: 1)
     >>> print bures_angle(phip_dm, phip_dm)
     0.0
+    
     References
     ==========
     .. [1] http://en.wikipedia.org/wiki/Bures_metric
