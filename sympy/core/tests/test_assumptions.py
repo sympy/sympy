@@ -745,6 +745,7 @@ def test_Mul_is_infinite():
 
 def test_special_is_rational():
     i = Symbol('i', integer=True)
+    i2 = Symbol('i2', integer=True)
     ni = Symbol('ni', integer=True, nonzero=True)
     r = Symbol('r', rational=True)
     rn = Symbol('r', rational=True, nonzero=True)
@@ -767,7 +768,8 @@ def test_special_is_rational():
     assert (sqrt(3) + S.Pi).is_rational is False
     assert (x**i).is_rational is None
     assert (i**i).is_rational is True
-    assert (r**i).is_rational is True
+    assert (i**i2).is_rational is None
+    assert (r**i).is_rational is None
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
     assert (nr**i).is_rational is None  # issue 8598
