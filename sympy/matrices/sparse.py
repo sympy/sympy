@@ -55,7 +55,8 @@ class SparseMatrix(MatrixBase):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = self._sympify(op(i, j))
+                        value = self._sympify(
+                            op(self._sympify(i), self._sympify(j)))
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
@@ -63,7 +64,7 @@ class SparseMatrix(MatrixBase):
                 for key in args[2].keys():
                     v = args[2][key]
                     if v:
-                        self._smat[key] = v
+                        self._smat[key] = self._sympify(v)
             elif is_sequence(args[2]):
                 if len(args[2]) != self.rows*self.cols:
                     raise ValueError(
@@ -221,7 +222,8 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(k))]
+        return [tuple(k + (self[k],)) for k in
+            sorted(list(self._smat.keys()), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
