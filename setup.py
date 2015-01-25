@@ -34,7 +34,7 @@ mpmath_version = '0.19'
 try:
     from setuptools import setup, Command
 except ImportError:
-    from distutils import setup, Command
+    from distutils.core import setup, Command
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
