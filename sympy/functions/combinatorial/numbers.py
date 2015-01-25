@@ -834,12 +834,21 @@ class catalan(Function):
     def _eval_rewrite_as_binomial(self, n):
         return C.binomial(2*n, n)/(n + 1)
 
+    def _eval_rewrite_as_factorial(self, n):
+        return factorial(2*n) / (factorial(n+1) * factorial(n))
+
     def _eval_rewrite_as_gamma(self, n):
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
 
     def _eval_rewrite_as_hyper(self, n):
         return C.hyper([1 - n, -n], [2], 1)
+
+    def _eval_rewrite_as_Product(self, n):
+        if not (n.is_integer and n.is_nonnegative):
+            return self
+        k = Dummy('k', integer=True, positive=True)
+        return C.Product((n + k) / k, (k, 2, n))
 
     def _eval_evalf(self, prec):
         if self.args[0].is_number:
