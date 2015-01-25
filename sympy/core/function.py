@@ -1014,7 +1014,8 @@ class Derivative(Expr):
 
             if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
-                ordinal = 'st' if count == 1 else 'nd' if count == 2 else 'rd' if count == 3 else 'th'
+                last_digit = int(str(count)[-1])
+                ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
                 raise ValueError(filldedent('''
                 Can\'t calculate %s%s derivative wrt %s.''' % (count, ordinal, v)))
 
