@@ -21,8 +21,7 @@ from sympy.core import C, S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          Function, expand_power_exp, Lambda,
-                          _mexpand)
+                          Function, expand_power_exp, Lambda, _mexpand)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge
 from sympy.logic.boolalg import And, Or
@@ -781,7 +780,6 @@ def solve(f, *symbols, **flags):
         - dsolve() for solving differential equations
 
     """
-    # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################
@@ -1106,12 +1104,15 @@ def solve(f, *symbols, **flags):
     if floats and solution and flags.get('rational', None) is None:
         solution = nfloat(solution, exponent=False)
 
-    if check and solution:
+    if check and solution:  # assumption checking
 
         warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
-        if type(solution) is list:
+        if type(solution) is tuple:
+            # this has already been checked and is in as_set form
+            return solution
+        elif type(solution) is list:
             if type(solution[0]) is tuple:
                 for sol in solution:
                     for symb, val in zip(symbols, sol):
@@ -1212,7 +1213,7 @@ def solve(f, *symbols, **flags):
     assert as_set
     if not solution:
         return [], set()
-    k = sorted(list(solution[0].keys()), key=lambda i: i.sort_key())
+    k = list(ordered(solution[0].keys()))
     return k, set([tuple([s[ki] for ki in k]) for s in solution])
 
 
@@ -1238,11 +1239,30 @@ def _solve(f, *symbols, **flags):
         if len(ex) == 1:
             ex = ex.pop()
             try:
-                # may come back as dict or list (if non-linear)
-                soln = solve_undetermined_coeffs(f, symbols, ex)
+                # soln may come back as dict, list of dicts or tuples, or
+                # tuple of symbol list and set of solution tuples
+                soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
             except NotImplementedError:
                 pass
         if soln:
+            if flags.get('simplify', True):
+                if type(soln) is dict:
+                    for k in soln:
+                        soln[k] = simplify(soln[k])
+                elif type(soln) is list:
+                    if type(soln[0]) is dict:
+                        for d in soln:
+                            for k in d:
+                                d[k] = simplify(d[k])
+                    elif type(soln[0]) is tuple:
+                        soln = [tuple(simplify(i) for i in j) for j in soln]
+                    else:
+                        raise TypeError('unrecognized args in list')
+                elif type(soln) is tuple:
+                    sym, sols = soln
+                    soln = sym, set([tuple(simplify(i) for i in j) for j in sols])
+                else:
+                    raise TypeError('unrecognized solution type')
             return soln
         # find first successful solution
         failed = []
@@ -1599,8 +1619,9 @@ def _solve_system(exprs, symbols, **flags):
     dens = set()
     failed = []
     result = False
+    linear = False
     manual = flags.get('manual', False)
-    check = flags.get('check', True)
+    checkdens = check = flags.get('check', True)
 
     for j, g in enumerate(exprs):
         dens.update(_simple_dens(g, symbols))
@@ -1638,27 +1659,21 @@ def _solve_system(exprs, symbols, **flags):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
             else:
                 result = solve_linear_system(matrix, *symbols, **flags)
-            if result:
-                # it doesn't need to be checked but we need to see
-                # that it didn't set any denominators to 0; the simplification
-                # is also handled by checksol
-                if any(checksol(d, result, **flags) for d in dens):
-                    result = None
-                check = False
             if failed:
                 if result:
                     solved_syms = list(result.keys())
                 else:
                     solved_syms = []
+            else:
+                linear = True
 
         else:
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
 
                 free = set().union(*[p.free_symbols for p in polys])
-                free = list(free.intersection(symbols))
-                free.sort(key=default_sort_key)
-                got_s = set([])
+                free = list(ordered(free.intersection(symbols)))
+                got_s = set()
                 result = []
                 for syms in subsets(free, len(polys)):
                     try:
@@ -1696,18 +1711,18 @@ def _solve_system(exprs, symbols, **flags):
                     #
                     result = [dict(list(zip(solved_syms, r))) for r in result]
 
+    if result:
+        if type(result) is dict:
+            result = [result]
+    else:
+        result = [{}]
+
     if failed:
         # For each failed equation, see if we can solve for one of the
         # remaining symbols from that equation. If so, we update the
         # solution set and continue with the next failed equation,
         # repeating until we are done or we get an equation that can't
         # be solved.
-        if result:
-            if type(result) is dict:
-                result = [result]
-        else:
-            result = [{}]
-
         def _ok_syms(e, sort=False):
             rv = (e.free_symbols - solved_syms) & legal
             if sort:
@@ -1717,16 +1732,14 @@ def _solve_system(exprs, symbols, **flags):
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
-        missing = Dummy()
-        simplify_flag = flags.get('simplify', missing)
-        do_simplify = flags.get('simplify', True)
+
         # sort so equation with the fewest potential symbols is first
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
+            u = Dummy()  # used in solution checking
             newresult = []
-            got_s = set([])
-            u = Dummy()
-            got_s = set([])
             bad_results = []
+            got_s = set()
+            hit = False
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
@@ -1758,59 +1771,44 @@ def _solve_system(exprs, symbols, **flags):
                     # put each solution in r and append the now-expanded
                     # result in the new result list; use copy since the
                     # solution for s in being added in-place
-                    if do_simplify:
-                        flags['simplify'] = False  # for checksol's sake
                     for sol in soln:
                         if got_s and any([ss in sol.free_symbols for ss in got_s]):
                             # sol depends on previously solved symbols: discard it
                             continue
-                        if check:
-                            # check that it satisfies *other* equations
-                            ok = False
-                            for p in polys:
-                                if checksol(p, s, sol, **flags) is False:
-                                    break
-                            else:
-                                ok = True
-                            if not ok:
-                                continue
-                            # check that it doesn't set any denominator to 0
-                            if any(checksol(d, s, sol, **flags) for d in dens):
-                                continue
-                        # update existing solutions with this new one
                         rnew = r.copy()
                         for k, v in r.items():
                             rnew[k] = v.subs(s, sol)
                         # and add this new solution
                         rnew[s] = sol
                         newresult.append(rnew)
-                    flags['simplify'] = simplify_flag
+                    hit = True
                     got_s.add(s)
-                if not got_s:
+                if not hit:
                     raise NotImplementedError('could not solve %s' % eq2)
-            if got_s:
+            else:
                 result = newresult
-            for b in bad_results:
-                result.remove(b)
-            if simplify_flag is missing:
-                flags.pop('simplify', None)
+                for b in bad_results:
+                    if b in result:
+                        result.remove(b)
 
-    if check and result:
-        if flags.get('simplfy', True):
-            for sol in result:
-                for k in sol:
-                    sol[k] = simplify(sol[k])
-            flags['simplify'] = False  # don't need to do so in checksol now
-        temp = []
-        for sol in result:
-            if any(checksol(e, sol, **flags) is False for e in exprs):
-                continue
-            if any(checksol(d, sol, **flags) for d in dens):
-                continue
-            temp.append(sol)
-        result = temp
-        del temp
+    default_simplify = bool(failed)  # rely on system-solvers to simplify
+    if  flags.get('simplify', default_simplify):
+        for r in result:
+            for k in r:
+                r[k] = simplify(r[k])
+        flags['simplify'] = False  # don't need to do so in checksol now
 
+    if checkdens:
+        result = [r for r in result
+            if not any(checksol(d, r, **flags) for d in dens)]
+
+    if check and not linear:
+        result = [r for r in result
+            if not any(checksol(e, r, **flags) is False for e in exprs)]
+
+    result = [r for r in result if r]
+    if linear and result:
+        result = result[0]
     return result
 
 

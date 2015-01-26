@@ -118,10 +118,20 @@ def test_solve_args():
     assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    assert solve(a*x**2 + b*x + c -
-                ((x - h)**2 + 4*p*k)/4/p,
-                [h, p, k], exclude=[a, b, c], dict=True) == \
+    args = (a + b)*x - b**2 + 2, a, b
+    assert solve(*args) == \
+        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
+    assert solve(*args, set=True) == \
+        ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
+    assert solve(*args, dict=True) == \
+        [{b: sqrt(2), a: -sqrt(2)}, {b: -sqrt(2), a: sqrt(2)}]
+    eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
+    flags = dict(dict=True)
+    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
         [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
+    flags.update(dict(simplify=False))
+    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
+        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
@@ -732,8 +742,9 @@ def test_issue_5335():
     assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 
+@XFAIL
 def test_issue_5335_float():
-    skip("This test hangs.")
+    # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
            a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
@@ -1264,14 +1275,13 @@ def test_real_roots():
     assert len(solve(x**5 + x**3 + 1)) == 1
 
 
-@slow
 def test_issue_6528():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
         895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
-    assert len(solve(eqs, y, x)) == len(solve(eqs, y, x, manual=True)) == 4
+    # two expressions encountered are > 1400 ops long so if this hangs
+    # it is likely because simplification is being done
+    assert len(solve(eqs, y, x, check=False)) == 4
 
 
 def test_overdetermined():
@@ -1509,7 +1519,7 @@ def test_issue_5114_6611():
         [-c/g + f*(1/j + 1/i + 1/g) - h/i], [-f/i + h*(1/m + 1/l + 1/i) - k/m],
         [-h/m + k*(1/p + 1/o + 1/m) - n/p], [-k/p + n*(1/q + 1/p)]])
     v = Matrix([f, h, k, n, b, c])
-    ans = solve(list(eqs) , list(v), simplify=False)
+    ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
     assert sum([s.count_ops() for s in ans.values()]) <= 2617
