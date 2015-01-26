@@ -7,7 +7,8 @@ import math
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.compatibility import ordered
-from sympy.core.mul import expand_2arg
+from sympy.core.mul import expand_2arg, Mul
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
@@ -53,6 +54,20 @@ def roots_quadratic(f):
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
 
+    def _sqrt(d):
+        co = []
+        other = []
+        for di in Mul.make_args(d):
+            if di.is_Pow and di.exp.is_Integer and di.exp % 2 ==0:
+                co.append(Pow(di.base,di.exp/2))
+            else:
+                other.append(di)
+        if co:
+            d = Mul(*other)
+            co = Mul(*co)
+            return co*sqrt(d)
+        return sqrt(d)
+
     def _simplify(expr):
         if dom.is_Composite:
             return factor(expr)
@@ -71,7 +86,7 @@ def roots_quadratic(f):
         if not dom.is_Numerical:
             r = _simplify(r)
 
-        R = sqrt(r)
+        R = _sqrt(r)
         r0 = -R
         r1 = R
     else:
@@ -83,7 +98,7 @@ def roots_quadratic(f):
             d = _simplify(d)
             B = _simplify(B)
 
-        D = sqrt(d)/A
+        D = _sqrt(d)/A
         r0 = B - D
         r1 = B + D
         if a.is_negative:
