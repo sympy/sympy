@@ -18,8 +18,6 @@ except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
     "You can install mpmath with 'pip install mpmath'.")
 
-del mpmath
-
 from sympy.release import __version__
 
 import sys
@@ -28,6 +26,8 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 6:
 else:  # Python 3
     pass
     # Here we can also check for specific Python 3 versions, if needed
+
+sys.modules['sympy.mpmath'] = mpmath
 
 del sys
 
