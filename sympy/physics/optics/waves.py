@@ -246,6 +246,9 @@ class TWave(Expr):
 
     __repr__ = __str__
 
+    def __mul__(self, float):
+        return TWave(self._amplitude*float, self._frequency, self._phase)
+
     def __add__(self, other):
         """
         Addition of two waves will result in their superposition.
