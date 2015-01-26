@@ -24,7 +24,7 @@ class TWave(Expr):
     they can be changed later with respective methods provided.
 
     It has been represented as :math:`A \times cos(k*x - \omega \times t + \phi )`
-    where :math:`A` is amplitude, :math:`\omega` is angular velocity, :math:`k`is
+    where :math:`A` is amplitude, :math:`\omega` is angular frequency, :math:`k`is
     wavenumber, :math:`x` is a spatial variable to represent the position on the
     dimension on which the wave propagates and :math:`\phi` is phase angle of the wave.
 
@@ -71,6 +71,12 @@ class TWave(Expr):
     299792458*m/(n*s)
     >>> w3.angular_velocity
     2*pi*f
+    >>>w4 = 2*w1
+    >>>w4.amplitude
+    2*A1
+    >>>w4.phase
+    phi1
+    
 
     """
 
