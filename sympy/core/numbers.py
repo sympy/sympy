@@ -1963,11 +1963,13 @@ class AlgebraicNumber(Expr):
 
         else:
             rep = DMP.from_list([1, 0], 0, dom)
+            scoeffs = Tuple(1, 0)
 
             if root.is_negative:
                 rep = -rep
+                scoeffs = Tuple(-1, 0)
 
-            sargs = (root, coeffs)
+            sargs = (root, scoeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):

@@ -636,9 +636,9 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(sqrt(2))
     b = to_number_field(sqrt(2))
-    assert a.args == b.args == (sqrt(2), Tuple())
+    assert a.args == b.args == (sqrt(2), Tuple(1, 0))
     b = AlgebraicNumber(sqrt(2), alias='alpha')
-    assert b.args == (sqrt(2), Tuple(), Symbol('alpha'))
+    assert b.args == (sqrt(2), Tuple(1, 0), Symbol('alpha'))
 
     a = AlgebraicNumber(sqrt(2), [1, 2, 3])
     assert a.args == (sqrt(2), Tuple(1, 2, 3))
