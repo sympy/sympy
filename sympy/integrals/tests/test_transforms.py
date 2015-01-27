@@ -5,8 +5,8 @@ from sympy.integrals.transforms import (mellin_transform,
     cosine_transform, inverse_cosine_transform,
     hankel_transform, inverse_hankel_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
-    InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform,
-    HankelTransform, InverseHankelTransform)
+    InverseLaplaceTransform, InverseFourierTransform,
+    InverseSineTransform, InverseCosineTransform)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
@@ -61,7 +61,6 @@ def test_as_integral():
 def test_mellin_transform_fail():
     skip("Risch takes forever.")
 
-    from sympy import Max, Min
     MT = mellin_transform
 
     bpos = symbols('b', positive=True)
@@ -88,7 +87,7 @@ def test_mellin_transform_fail():
 
 
 def test_mellin_transform():
-    from sympy import Max, Min, Ne
+    from sympy import Max, Min
     MT = mellin_transform
 
     bpos = symbols('b', positive=True)
@@ -163,7 +162,7 @@ def test_mellin_transform():
 
 
 def test_mellin_transform_bessel():
-    from sympy import Max, Min, hyper, meijerg
+    from sympy import Max
     MT = mellin_transform
 
     # 8.4.19
@@ -305,8 +304,8 @@ def test_expint():
 
 
 def test_inverse_mellin_transform():
-    from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
-                       powdenest, powsimp, exp_polar, combsimp, cos, cot)
+    from sympy import (sin, simplify, Max, Min, expand,
+                       powsimp, exp_polar, cos, cot)
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -440,7 +439,7 @@ def test_inverse_mellin_transform():
 
 
 def test_laplace_transform():
-    from sympy import (fresnels, fresnelc, hyper)
+    from sympy import fresnels, fresnelc
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -513,8 +512,7 @@ def test_laplace_transform():
 
 
 def test_inverse_laplace_transform():
-    from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
-                       unpolarify, simplify, factor_terms)
+    from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True, finite=True)
     t = symbols('t')
@@ -618,7 +616,7 @@ def test_fourier_transform():
 
 
 def test_sine_transform():
-    from sympy import sinh, cosh, EulerGamma
+    from sympy import EulerGamma
 
     t = symbols("t")
     w = symbols("w")
@@ -656,7 +654,7 @@ def test_sine_transform():
 
 
 def test_cosine_transform():
-    from sympy import sinh, cosh, Si, Ci
+    from sympy import Si, Ci
 
     t = symbols("t")
     w = symbols("w")
@@ -698,7 +696,7 @@ def test_cosine_transform():
 
 
 def test_hankel_transform():
-    from sympy import sinh, cosh, gamma, sqrt, exp
+    from sympy import gamma, sqrt, exp
 
     r = Symbol("r")
     k = Symbol("k")

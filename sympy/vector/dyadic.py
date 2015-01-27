@@ -2,7 +2,6 @@ from sympy.vector.basisdependent import BasisDependent, \
      BasisDependentAdd, BasisDependentMul, BasisDependentZero
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
-from sympy.core.assumptions import StdFactKB
 from sympy import ImmutableMatrix as Matrix
 from sympy.core.compatibility import u
 import sympy.vector

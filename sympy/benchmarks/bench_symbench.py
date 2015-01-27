@@ -24,10 +24,6 @@ def bench_R2():
             return 1
         return (2*y*hermite(n - 1, y) - 2*(n - 1)*hermite(n - 2, y)).expand()
 
-    #def phi(n, y):
-    #  return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \
-    #            hermite(n,y)
-
     a = hermite(15, y)
 
 

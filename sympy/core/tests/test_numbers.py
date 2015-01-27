@@ -3,13 +3,17 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify)
-from sympy.core.basic import _aresame
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
 from mpmath import mpf
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, raises
 import mpmath
+
+
+def same_and_same_prec(a, b):
+    # stricter matching for Floats
+    return a == b and a._prec == b._prec
 
 
 def test_integers_cache():
@@ -403,11 +407,13 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
+    # long integer
     i = 12345678901234567890
-    assert _aresame(Float(12, ''), Float('12', ''))
-    assert _aresame(Float(Integer(i), ''), Float(i, ''))
-    assert _aresame(Float(i, ''), Float(str(i), 20))
-    assert not _aresame(Float(str(i)), Float(i, ''))
+    assert same_and_same_prec(Float(12, ''), Float('12', ''))
+    assert same_and_same_prec(Float(Integer(i), ''), Float(i, ''))
+    assert same_and_same_prec(Float(i, ''), Float(str(i), 20))
+    assert same_and_same_prec(Float(str(i)), Float(i, ''))
+    assert same_and_same_prec(Float(i), Float(i, ''))
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
@@ -449,6 +455,11 @@ def test_Float():
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+
+
+def test_Float_default_to_highprec_from_str():
+    s = str(pi.evalf(128))
+    assert same_and_same_prec(Float(s), Float(s, ''))
 
 
 def test_Float_eval():
@@ -1021,7 +1032,7 @@ def test_bug_sqrt():
 
 
 def test_pi_Pi():
-    "Test, that pi (instance) is imported, but Pi (class) is not"
+    "Test that pi (instance) is imported, but Pi (class) is not"
     from sympy import pi
     with raises(ImportError):
         from sympy import Pi
@@ -1397,8 +1408,7 @@ def test_int_NumberSymbols():
 
 
 def test_issue_6640():
-    from mpmath.libmp.libmpf import (
-        _normalize as mpf_normalize, finf, fninf, fzero)
+    from mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False
@@ -1442,3 +1452,16 @@ def test_simplify_AlgebraicNumber():
 
     e = (3 + 4*I)**(Rational(3, 2))
     assert simplify(A(e)) == A(2 + 11*I)  # issue 4401
+
+
+def test_Float_idempotence():
+    x = Float('1.23', '')
+    y = Float(x)
+    z = Float(x, 15)
+    assert same_and_same_prec(y, x)
+    assert not same_and_same_prec(z, x)
+    x = Float(10**20)
+    y = Float(x)
+    z = Float(x, 15)
+    assert same_and_same_prec(y, x)
+    assert not same_and_same_prec(z, x)

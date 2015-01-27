@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
 )
 
 from sympy.core.compatibility import u

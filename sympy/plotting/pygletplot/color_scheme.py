@@ -229,7 +229,6 @@ class ColorScheme(object):
         try:
             return self.f(x, y, z, u, v)
         except Exception as e:
-            #print e
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):

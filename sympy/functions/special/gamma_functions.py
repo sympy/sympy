@@ -8,7 +8,6 @@ from .error_functions import erf
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import csc
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
@@ -133,6 +132,9 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
+        if arg.is_integer and arg.is_nonpositive:
+            return S.ComplexInfinity
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
@@ -160,6 +162,13 @@ class gamma(Function):
         x = self.args[0]
         if x.is_positive or x.is_noninteger:
             return True
+
+    def _eval_is_positive(self):
+        x = self.args[0]
+        if x.is_positive:
+            return True
+        elif x.is_noninteger:
+            return floor(x).is_even
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))

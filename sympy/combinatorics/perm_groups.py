@@ -1281,7 +1281,6 @@ class PermutationGroup(Basic):
         while 1:
             # backtrack when finished iterating over coset
             if pos[h] >= posmax[h]:
-                #count_b += 1
                 if h == 0:
                     raise StopIteration
                 pos[h] = 0

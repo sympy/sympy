@@ -25,7 +25,6 @@ from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .core import C
 from .singleton import S
-from .containers import Tuple
 
 from sympy.utilities.iterables import is_sequence
 
@@ -321,7 +320,7 @@ def get_integer_part(expr, no, options, return_ints=False):
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
         n, c, p, b = nexpr
-        if c != 1 and p != 0:
+        if (c != 1 and p != 0) or p < 0:
             expr = C.Add(expr, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(expr, 10, options)
             try:
@@ -440,7 +439,6 @@ def add_terms(terms, prec, target_prec):
     sum_accuracy = sum_exp + sum_bc - absolute_error
     r = normalize(sum_sign, sum_man, sum_exp, sum_bc, target_prec,
         rnd), sum_accuracy
-    #print "returning", to_str(r[0],50), r[1]
     return r
 
 
@@ -1343,13 +1341,11 @@ class EvalfMixin(object):
         re, im, re_acc, im_acc = result
         if re:
             p = max(min(prec, re_acc), 1)
-            #re = mpf_pos(re, p, rnd)
             re = C.Float._new(re, p)
         else:
             re = S.Zero
         if im:
             p = max(min(prec, im_acc), 1)
-            #im = mpf_pos(im, p, rnd)
             im = C.Float._new(im, p)
             return re + im*S.ImaginaryUnit
         else:

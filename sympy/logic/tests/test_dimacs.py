@@ -5,7 +5,6 @@ ftp://dimacs.rutgers.edu/pub/challenge/satisfiability/benchmarks/cnf/
 
 from sympy.logic.utilities.dimacs import load
 from sympy.logic.algorithms.dpll import dpll_satisfiable
-from sympy.utilities.pytest import skip
 
 
 def test_f1():

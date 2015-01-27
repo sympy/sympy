@@ -1,10 +1,11 @@
-from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
-                   Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, sympify, S, integrate, atan, product,
-                   Sum, Product, Integral)
-from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
+                   fibonacci, floor, Function, GoldenRatio, I, Integral,
+                   integrate, log, Mul, N, oo, pi, Pow, product, Product,
+                   Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol)
+from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
+    scaled_zero, get_integer_part)
 from sympy.core.compatibility import long
-from mpmath import inf, ninf, nan
+from mpmath import inf, ninf
 from sympy.abc import n, x, y
 from mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL
@@ -355,7 +356,6 @@ def test_bugs():
 
 
 def test_subs():
-    from sympy import besseli
     assert NS('besseli(-x, y) - besseli(x, y)', subs={x: 3.5, y: 20.0}) == \
         '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x: 0.1}) == \
@@ -448,3 +448,24 @@ def test_evalf_integral():
     # test that workprec has to increase in order to get a result other than 0
     eps = Rational(1, 1000000)
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
+
+
+def test_issue_8821_highprec_from_str():
+    s = str(pi.evalf(128))
+    p = N(s)
+    assert Abs(sin(p)) < 1e-15
+    p = N(s, 64)
+    assert Abs(sin(p)) < 1e-64
+
+
+def test_issue_8853():
+    p = Symbol('x', even=True, positive=True)
+    assert floor(-p - S.Half).is_even == False
+    assert floor(-p + S.Half).is_even == True
+    assert ceiling(p - S.Half).is_even == True
+    assert ceiling(p + S.Half).is_even == False
+
+    assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
+    assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
+    assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
+    assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)

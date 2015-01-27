@@ -12,7 +12,7 @@ from sympy.polys.polyutils import _analyze_gens
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densebasic import (
-    dmp_zero, dmp_one, dmp_ground, dmp_normal,
+    dmp_zero, dmp_one, dmp_ground,
     dup_from_raw_dict, dmp_raise, dup_random
 )
 

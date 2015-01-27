@@ -1,7 +1,7 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, atan, simplify, Function, \
+from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
         Derivative, Matrix
 
 

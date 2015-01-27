@@ -205,7 +205,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)
-    # assert a.div(p)[1]
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)

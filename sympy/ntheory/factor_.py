@@ -10,13 +10,13 @@ from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
 from sympy.core.evalf import bitcount
-from sympy.core.numbers import igcd, oo, Rational
+from sympy.core.logic import fuzzy_and
+from sympy.core.numbers import igcd, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.singleton import S
 from sympy.core.function import Function
-from sympy.core.symbol import Dummy
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1413,6 +1413,9 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+
+    def _eval_is_integer(self):
+        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
 
 
 class divisor_sigma(Function):

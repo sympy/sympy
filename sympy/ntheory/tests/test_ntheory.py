@@ -1,8 +1,8 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
+    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, \
     factorial as fac, pi, GoldenRatio as phi, sqrt
-from sympy.core.numbers import Integer, igcd, Rational
+from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -26,8 +26,6 @@ from sympy.ntheory.continued_fraction import \
      continued_fraction_convergents as cf_c,
      continued_fraction_reduce as cf_r)
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
-
-from fractions import Fraction
 
 from sympy.core.add import Add
 
@@ -381,6 +379,7 @@ def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == set([1,2,4])
 
+
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
         [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
@@ -393,6 +392,9 @@ def test_totient():
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
     assert summation(totient(m), (m, 1, 11)) == 42
+
+    n = Symbol("n", integer=True, positive=True)
+    assert totient(n).is_integer
 
 
 def test_divisor_sigma():

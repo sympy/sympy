@@ -5,7 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.function import Function
 from sympy.core import Add
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.core.relational import Gt, Lt, Ge, Le, Eq
+from sympy.core.relational import Gt, Lt, Ge, Le
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################

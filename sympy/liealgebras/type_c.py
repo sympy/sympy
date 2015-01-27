@@ -1,5 +1,3 @@
-from sympy.core import Dict, Tuple
-from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 

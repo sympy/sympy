@@ -9,8 +9,8 @@ MKS stands for "meter, kilogram, second, ampere".
 from __future__ import division
 
 from sympy import pi
-from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
-from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
+from sympy.physics.unitsystems.dimensions import Dimension
+from sympy.physics.unitsystems.units import Unit, Constant
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 from sympy.physics.unitsystems.systems.mks import mks_dim, mks
 

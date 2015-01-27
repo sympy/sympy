@@ -3,17 +3,13 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, C, Expr, Rational, AlgebraicNumber,
-    Symbol, Add, Mul, sympify, Dummy, Tuple, expand_mul, I, pi
+    S, C, Rational, AlgebraicNumber,
+    Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
-)
-
-from sympy.polys.polyclasses import (
-    ANP, DMP,
 )
 
 from sympy.polys.polyerrors import (
@@ -249,7 +245,6 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     [2] I.M. Isaacs, Proc. Amer. Math. Soc. 25 (1970), 638
     "Degrees of sums in a separable field extension".
     """
-    from sympy import gcd
     y = Dummy(str(x))
     if mp1 is None:
         mp1 = _minpoly_compose(ex1, x, dom)
@@ -397,7 +392,6 @@ def _minpoly_sin(ex, x):
     Returns the minimal polynomial of ``sin(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
-    from sympy.functions.combinatorial.factorials import binomial
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:

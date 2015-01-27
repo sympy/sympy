@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, C
 from sympy.core.compatibility import string_types
-from sympy.functions import tan, cot, factorial, gamma
+from sympy.functions import factorial, gamma
 from .gruntz import gruntz
 
 

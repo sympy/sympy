@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
+from sympy import Expr, Add, Mul, Pow, sympify, Matrix, Tuple
 from sympy.core.compatibility import xrange
 from sympy.utilities import default_sort_key
 

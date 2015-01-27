@@ -3,7 +3,7 @@ from __future__ import division
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh, cosh,
+    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
@@ -299,10 +299,8 @@ def test_nonlinear_2eq_order1():
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
     tt = S(2)/3
     sol3 = [
-        Eq(x(t), 6**tt/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3),
-        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3)]
+        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1)*(C2 + t)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1)*(C2 + t)/2)**2)/3)]
     assert dsolve(eq3) == sol3
 
     eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
@@ -970,8 +968,6 @@ def test_separable1():
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
     sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
-    #sol5 = Eq(f(x), C1*(C2 + sqrt(1 + tan(x)**2)))
-    #sol5 = Eq(-log(2 + f(x)), C1 - log(1 + tan(x)**2)/2)
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
@@ -2150,10 +2146,10 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        -acos(-sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        -acos(sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        acos(-sqrt(C1*exp(-2*x) + x**4)/x**2),
-        acos(sqrt(C1*exp(-2*x) + x**4)/x**2)]
+        -acos(-sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        -acos(sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        acos(-sqrt(C1*exp(-2*x)/x**4 + 1)),
+        acos(sqrt(C1*exp(-2*x)/x**4 + 1))]
 
 
 def test_separable_reduced():

@@ -387,7 +387,7 @@ def _rewrite_sin(m_n, s, a, b):
     # we create an undefined function!
     # So we try to write this in such a way that the gammas are
     # eminently on the right side of the strip.
-    from sympy import expand_mul, pi, ceiling, gamma, re
+    from sympy import expand_mul, pi, ceiling, gamma
     m, n = m_n
 
     m = expand_mul(m/pi)
@@ -451,7 +451,7 @@ def _rewrite_gamma(f, s, a, b):
     (([], []), ([], []), 1/2, 1, 8)
     """
     from itertools import repeat
-    from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, E, expand,
+    from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, expand,
                        roots, ilcm, pi, sin, cos, tan, cot, igcd, exp_polar)
     # Our strategy will be as follows:
     # 1) Guess a constant c such that the inversion integral should be
@@ -953,7 +953,7 @@ def _simplifyconds(expr, s, a):
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
-    from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
+    from sympy import (re, Max, exp, pi, Min, periodic_argument as arg,
                        cos, Wild, symbols, polar_lift)
     s = Dummy('s')
     F = integrate(exp(-s*t) * f, (t, 0, oo))
@@ -1460,7 +1460,7 @@ class SineCosineTypeTransform(IntegralTransform):
                                       self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral, exp, I
+        from sympy import Integral
         a = self.__class__._a
         b = self.__class__._b
         K = self.__class__._kern

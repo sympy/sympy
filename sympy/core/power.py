@@ -56,15 +56,12 @@ def integer_nthroot(y, n):
             guess = int(2.0**(exp - shift) + 1) << shift
         else:
             guess = int(2.0**exp)
-    #print n
     if guess > 2**50:
         # Newton iteration
         xprev, x = -1, guess
         while 1:
             t = x**(n - 1)
-            #xprev, x = x, x - (t*x-y)//(n*t)
             xprev, x = x, ((n - 1)*x + y//t)//n
-            #print n, x-xprev, abs(x-xprev) < 2
             if abs(x - xprev) < 2:
                 break
     else:
@@ -969,7 +966,10 @@ class Pow(Expr):
             return False
         if e.is_integer:
             if b.is_rational:
-                return True
+                if b.is_nonzero or e.is_nonnegative:
+                    return True
+                if b == e:  # always rational, even for 0**0
+                    return True
             elif b.is_irrational:
                 return e.is_zero
 
@@ -1270,7 +1270,6 @@ class Pow(Expr):
         o2 = order*(b0**-e)
         z = (b/b0 - 1)
         o = O(z, x)
-        #r = self._compute_oseries3(z, o2, self.taylor_term)
         if o is S.Zero or o2 is S.Zero:
             infinite = True
         else:
