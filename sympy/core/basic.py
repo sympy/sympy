@@ -840,7 +840,10 @@ class Basic(with_metaclass(ManagedProperties)):
         sequence = list(sequence)
         for i in range(len(sequence)):
             o, n = sequence[i]
-            so, sn = sympify(o), sympify(n)
+            try:
+                so, sn = sympify(o), sympify(n)
+            except:
+                raise TypeError("Argument type isn't supported by subs.")
             if not isinstance(so, Basic):
                 if type(o) is str:
                     so = C.Symbol(o)
