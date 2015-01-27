@@ -303,7 +303,7 @@ class Complex(with_metaclass(Singleton, ImageSet)):
     def __new__(cls):
         from sympy.core import Symbol
         from sympy.core.numbers import ImaginaryUnit
-        I=ImaginaryUnit()
+        I = ImaginaryUnit()
         x = Symbol('x')
         y = Symbol('y')
         return ImageSet.__new__(cls,Lambda((x, y), x + I*y), S.Reals*S.Reals)
