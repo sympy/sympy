@@ -705,13 +705,16 @@ class euler(Function):
 
     @classmethod
     def eval(cls, m):
-        if m.is_odd:
-            return S.Zero
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            m = m._to_mpmath(mp.prec)
-            res = mp.eulernum(m, exact=True)
-            return Integer(res)
+        if (not m.is_Number) or m.is_nonnegative:
+            if m.is_odd:
+                return S.Zero
+            if m.is_Integer and m.is_nonnegative:
+                from mpmath import mp
+                m = m._to_mpmath(mp.prec)
+                res = mp.eulernum(m, exact=True)
+                return Integer(res)
+        else:
+            raise ValueError('Euler numbers are not defined on negative numbers')
 
     def _eval_rewrite_as_Sum(self, arg):
         if arg.is_even:

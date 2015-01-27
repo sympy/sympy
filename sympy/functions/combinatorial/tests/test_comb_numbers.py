@@ -250,6 +250,8 @@ def test_euler():
     assert euler(4) == 5
     assert euler(6) == -61
     assert euler(8) == 1385
+    raises(ValueError, lambda: euler(-1))
+    raises(ValueError, lambda: euler(-2))
 
     assert euler(20, evaluate=False) != 370371188237525
 
