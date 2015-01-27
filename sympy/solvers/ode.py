@@ -287,11 +287,11 @@ allhints = (
     "1st_homogeneous_coeff_subs_dep_div_indep",
     "almost_linear",
     "linear_coefficients",
+    "nth_linear_constant_coeff_undetermined_coefficients",
+    "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
     "separable_reduced",
     "1st_power_series",
     "lie_group",
-    "nth_linear_constant_coeff_undetermined_coefficients",
-    "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_variation_of_parameters",
@@ -573,7 +573,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0)]
     >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
     >>> dsolve(eq)
-    set([x(t) == -exp(C1)/(C2*exp(C1) - cos(t)), y(t) == -1/(C1 - cos(t))])
+    set([x(t) == 1/(C1 + exp(-C2)*cos(t)), y(t) == 1/(C1 + cos(t))])
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -792,7 +792,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('1st_linear', 'separable', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group',
