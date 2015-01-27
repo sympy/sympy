@@ -552,9 +552,11 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy import unpolarify
+        from sympy import unpolarify, expand_log
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
+        if (len(self.args) == 2):
+            return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
         if arg.is_Integer:
             # remove perfect powers
@@ -596,6 +598,8 @@ class log(Function):
 
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import expand_log, simplify
+        if (len(self.args) == 2):
+            return simplify(self.func(*self.args), ratio=ratio, measure=measure)
         expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=measure)
