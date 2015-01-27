@@ -304,8 +304,8 @@ class Complex(with_metaclass(Singleton, ImageSet)):
         from sympy.core import Symbol
         from sympy.core.numbers import ImaginaryUnit
         I = ImaginaryUnit()
-        x = Symbol('x')
-        y = Symbol('y')
+        x = Symbol('x', real=True)
+        y = Symbol('y', real=True)
         return ImageSet.__new__(cls,Lambda((x, y), x + I*y), S.Reals*S.Reals)
 
 class Range(Set):
