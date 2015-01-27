@@ -64,11 +64,7 @@ def test_one():
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_number is True
-
-
-@XFAIL
-def test_one_is_composite():
-    assert S(1).is_composite is False
+    assert z.is_composite is False  # issue 8807
 
 
 def test_negativeone():
@@ -481,6 +477,9 @@ def test_composite():
     assert S(2).is_composite is False
     assert S(17).is_composite is False
     assert S(4).is_composite is True
+    x = Dummy(integer=True, positive=True, prime=False)
+    assert x.is_composite
+    assert (x + 1).is_composite is None
 
 
 def test_prime_symbol():
