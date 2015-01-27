@@ -122,6 +122,7 @@ class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
     """
+    is_Boolean = True
     @property
     def canonical(self):
         return self
