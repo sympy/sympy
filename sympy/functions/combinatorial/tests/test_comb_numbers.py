@@ -86,6 +86,17 @@ def test_bell():
     X = (1, 2, 3, 5)
     assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
 
+    # Dobinski's formula
+    n = Symbol('n', integer=True, nonnegative=True)
+    # For large numbers, this is too slow
+    # For nonintegers, there are significant precision errors
+    for i in [0, 2, 3, 7, 13, 42, 55]:
+        assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
+
+    # For negative numbers, the formula does not hold
+    m = Symbol('m', integer=True)
+    assert bell(-1).evalf() == bell(m).rewrite(Sum).evalf(subs={m: -1})
+
 
 def test_harmonic():
     n = Symbol("n")
