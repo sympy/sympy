@@ -6,14 +6,14 @@ from sympy.integrals.transforms import (mellin_transform,
     hankel_transform, inverse_hankel_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
     InverseLaplaceTransform, InverseFourierTransform,
-    InverseSineTransform, InverseCosineTransform)
+    InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    combsimp, trigsimp)
-from sympy.utilities.pytest import XFAIL, slow, skip
+    combsimp, trigsimp, atan)
+from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
@@ -728,12 +728,8 @@ def test_hankel_transform():
 def test_issue_7181():
     assert mellin_transform(1/(1 - x), x, s) != None
 
-def test_issue_8882():
-    from sympy import atan
-    from sympy.utilities.pytest import raises
-    from sympy.integrals.transforms import IntegralTransformError
-    a0 = Symbol('a0')
 
+def test_issue_8882():
     # This is the original test.
     # from sympy import diff, Integral, integrate
     # r = Symbol('r')
@@ -743,7 +739,8 @@ def test_issue_8882():
     # assert integrate(f, (r, -oo, 3), meijerg=True).has(Integral) == True
 
     # To save time, only the critical part is included.
-    F = -a0**(-s + 1)*(4 + a0**(-2))**(-s/2)*sqrt(a0**(-2))*exp(-s*I*pi)*sin(s*atan(sqrt(a0**(-2))/2))*gamma(s)
-    hints = {'as_meijerg': True, 'needeval': True}
-    code = lambda: inverse_mellin_transform(F, s, x, (-1, oo), **hints)
-    raises(IntegralTransformError, code)
+    F = -a**(-s + 1)*(4 + 1/a**2)**(-s/2)*sqrt(1/a**2)*exp(-s*I*pi)* \
+        sin(s*atan(sqrt(1/a**2)/2))*gamma(s)
+    raises(IntegralTransformError, lambda:
+        inverse_mellin_transform(F, s, x, (-1, oo),
+        **{'as_meijerg': True, 'needeval': True}))
