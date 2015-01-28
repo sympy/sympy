@@ -1550,6 +1550,12 @@ def test_Mod():
     n = Symbol('n', integer=True, positive=True)
     assert (factorial(n) % n).equals(0) is not False
 
+    # symbolic with known parity
+    n = Symbol('n', even=True)
+    assert Mod(n, 2) == 0
+    n = Symbol('n', odd=True)
+    assert Mod(n, 2) == 1
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
