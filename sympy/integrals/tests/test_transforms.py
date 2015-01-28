@@ -727,3 +727,23 @@ def test_hankel_transform():
 
 def test_issue_7181():
     assert mellin_transform(1/(1 - x), x, s) != None
+
+def test_issue_8882():
+    from sympy import atan
+    from sympy.utilities.pytest import raises
+    from sympy.integrals.transforms import IntegralTransformError
+    a0 = Symbol('a0')
+
+    # This is the original test.
+    # from sympy import diff, Integral, integrate
+    # r = Symbol('r')
+    # psi = 1/r*sin(r)*exp(-(a0*r))
+    # h = -1/2*diff(psi, r, r) - 1/r*psi
+    # f = 4*pi*psi*h*r**2
+    # assert integrate(f, (r, -oo, 3), meijerg=True).has(Integral) == True
+
+    # To save time, only the critical part is included.
+    F = -a0**(-s + 1)*(4 + a0**(-2))**(-s/2)*sqrt(a0**(-2))*exp(-s*I*pi)*sin(s*atan(sqrt(a0**(-2))/2))*gamma(s)
+    hints = {'as_meijerg': True, 'needeval': True}
+    code = lambda: inverse_mellin_transform(F, s, x, (-1, oo), **hints)
+    raises(IntegralTransformError, code)

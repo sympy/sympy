@@ -506,15 +506,16 @@ def _rewrite_gamma(f, s, a, b):
             arg = arg.as_independent(s)[1]
         coeff, _ = arg.as_coeff_mul(s)
         s_multipliers += [coeff/pi]
-    s_multipliers = [abs(x) for x in s_multipliers if x.is_real]
+    s_multipliers = [abs(x) if x.is_real else x for x in s_multipliers]
     common_coefficient = S(1)
     for x in s_multipliers:
         if not x.is_Rational:
             common_coefficient = x
             break
     s_multipliers = [x/common_coefficient for x in s_multipliers]
-    if any(not x.is_Rational for x in s_multipliers):
-        raise NotImplementedError
+    if (any(not x.is_Rational for x in s_multipliers) or
+        not common_coefficient.is_real):
+        raise IntegralTransformError("Gamma", None, "Nonrational multiplier")
     s_multiplier = common_coefficient/reduce(ilcm, [S(x.q)
                                              for x in s_multipliers], S(1))
     if s_multiplier == common_coefficient:
