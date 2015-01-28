@@ -896,12 +896,8 @@ class Float(Number):
     def __eq__(self, other):
         if isinstance(other, float):
             # coerce to Float at same precision
-            o = Float(other)
-            try:
-                ompf = o._as_mpf_val(self._prec)
-            except ValueError:
-                return False
-            return bool(mlib.mpf_eq(self._mpf_, ompf))
+            o = Float(other,prec_to_dps(self._prec))
+            return str(self) == str(o)
         try:
             other = _sympify(other)
         except SympifyError:
@@ -911,7 +907,7 @@ class Float(Number):
                 return False
             return other.__eq__(self)
         if isinstance(other, Float):
-            return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
+            return str(self) == str(other)
         if isinstance(other, Number):
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide

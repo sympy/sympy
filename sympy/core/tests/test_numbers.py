@@ -1400,6 +1400,7 @@ def test_Float_eq():
     assert Float(.12, 3) == .12
     assert 0.12 == Float(.12, 3)
     assert Float('.12', 22) != .12
+    assert sqrt(2).n(2) == S('1.4').n(2)
 
 
 def test_int_NumberSymbols():
