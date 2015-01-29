@@ -37,6 +37,7 @@ from sympy.simplify import hyperexpand, powdenest
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.hyperbolic import _rewrite_hyperbolics_as_exp
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
@@ -1564,6 +1565,7 @@ def meijerint_indefinite(f, x):
     -cos(x)
     """
     from sympy import hyper, meijerg
+    f = _rewrite_hyperbolics_as_exp(f)
     results = []
     for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
@@ -1698,6 +1700,8 @@ def meijerint_definite(f, x, a, b):
 
     f_, x_, a_, b_ = f, x, a, b
 
+    f = _rewrite_hyperbolics_as_exp(f)
+
     # Let's use a dummy in case any of the boundaries has x.
     d = Dummy('x')
     f = f.subs(x, d)
@@ -1785,20 +1789,23 @@ def _guess_expansion(f, x):
     """ Try to guess sensible rewritings for integrand f(x). """
     from sympy import expand_trig
     from sympy.functions.elementary.trigonometric import TrigonometricFunction
-    from sympy.functions.elementary.hyperbolic import HyperbolicFunction
     res = [(f, 'original integrand')]
 
-    expanded = expand_mul(res[-1][0])
-    if expanded != res[-1][0]:
+    orig = res[-1][0]
+    saw = set([orig])
+    expanded = expand_mul(orig)
+    if expanded not in saw:
         res += [(expanded, 'expand_mul')]
+        saw.add(expanded)
 
-    expanded = expand(res[-1][0])
-    if expanded != res[-1][0]:
+    expanded = expand(orig)
+    if expanded not in saw:
         res += [(expanded, 'expand')]
+        saw.add(expanded)
 
-    if res[-1][0].has(TrigonometricFunction, HyperbolicFunction):
-        expanded = expand_mul(expand_trig(res[-1][0]))
-        if expanded != res[-1][0]:
+    if orig.has(TrigonometricFunction):
+        expanded = expand_mul(expand_trig(orig))
+        if expanded not in saw:
             res += [(expanded, 'expand_trig, expand_mul')]
 
     return res
@@ -1819,6 +1826,7 @@ def _meijerint_definite_2(f, x):
     # _meijerint_definite_3 for (2) and (3) combined.
 
     # use a positive dummy - we integrate from 0 to oo
+    # XXX if a nonnegative symbol is used there will be test failures
     dummy = _dummy('x', 'meijerint-definite2', f, positive=True)
     f = f.subs(x, dummy)
     x = dummy
