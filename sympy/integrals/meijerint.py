@@ -959,46 +959,21 @@ def _check_antecedents(g1, g2, x):
            % (omega, m, n, p, q, cstar, mu))
     _debug('  phi=%s, eta=%s, psi=%s, theta=%s' % (phi, eta, psi, theta))
 
-    c1 = True
-    for g in [g1, g2]:
-        for a in g1.an:
-            for b in g1.bm:
-                diff = a - b
-                if (diff > 0) == True and diff.is_integer:
-                    c1 = False
-
-    tmp = []
-    for b in g1.bm:
-        for d in g2.bm:
-            tmp += [re(1 + b + d) > 0]
-    c2 = And(*tmp)
-
-    tmp = []
-    for a in g1.an:
-        for c in g2.an:
-            tmp += [re(1 + a + c) < 1 + 1]
-    c3 = And(*tmp)
-
-    tmp = []
-    for c in g1.an:
-        tmp += [(p - q)*re(1 + c - 1) - re(mu) > -S(3)/2]
-    c4 = And(*tmp)
-
-    tmp = []
-    for d in g1.bm:
-        tmp += [(p - q)*re(1 + d) - re(mu) > -S(3)/2]
-    c5 = And(*tmp)
-
-    tmp = []
-    for c in g2.an:
-        tmp += [(u - v)*re(1 + c - 1) - re(rho) > -S(3)/2]
-    c6 = And(*tmp)
-
-    tmp = []
-    for d in g2.bm:
-        tmp += [(u - v)*re(1 + d) - re(rho) > -S(3)/2]
-    c7 = And(*tmp)
-
+    def _c1():
+        for g in [g1, g2]:
+            for i in g.an:
+                for j in g.bm:
+                    diff = i - j
+                    if diff.is_integer and diff.is_positive:
+                        return False
+        return True
+    c1 = _c1()
+    c2 = And(*[re(1 + i + j) > 0 for i in g1.bm for j in g2.bm])
+    c3 = And(*[re(1 + i + j) < 1 + 1 for i in g1.an for j in g2.an])
+    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > -S(3)/2 for i in g1.an])
+    c5 = And(*[(p - q)*re(1 + i) - re(mu) > -S(3)/2 for i in g1.bm])
+    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > -S(3)/2 for i in g2.an])
+    c7 = And(*[(u - v)*re(1 + i) - re(rho) > -S(3)/2 for i in g2.bm])
     c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
     c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
@@ -1854,7 +1829,7 @@ def _meijerint_definite_2(f, x):
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
         res = _meijerint_definite_3(g, x)
-        if res is not None and res[1] != False:
+        if res:
             return res
 
 
@@ -1913,11 +1888,13 @@ def _meijerint_definite_4(f, x, only_double=False):
                 C, f = _rewrite_saxena_1(fac*C, po*x**s, f, x)
                 res += C*_int0oo_1(f, x)
                 cond = And(cond, _check_antecedents_1(f, x))
-            _debug('Result before branch substitutions is:', res)
+                if cond == False:
+                    break
             cond = _my_unpolarify(cond)
             if cond == False:
                 _debug('But cond is always False.')
             else:
+                _debug('Result before branch substitutions is:', res)
                 return _my_unpolarify(hyperexpand(res)), cond
 
     # Try two G functions.
@@ -1937,12 +1914,17 @@ def _meijerint_definite_4(f, x, only_double=False):
                     C, f1_, f2_ = r
                     _debug('Saxena subst for yielded:', C, f1_, f2_)
                     cond = And(cond, _check_antecedents(f1_, f2_, x))
+                    if cond == False:
+                        break
                     res += C*_int0oo(f1_, f2_, x)
-            _debug('Result before branch substitutions is:', res)
+                else:
+                    continue
+                break
             cond = _my_unpolarify(cond)
             if cond == False:
                 _debug('But cond is always False (full_pb=%s).' % full_pb)
             else:
+                _debug('Result before branch substitutions is:', res)
                 if only_double:
                     return res, cond
                 return _my_unpolarify(hyperexpand(res)), cond
@@ -2024,6 +2006,8 @@ def meijerint_inversion(f, x, t):
             C, f = _rewrite_inversion(fac*C, po*x**s, f, x)
             res += C*_int_inversion(f, x, t)
             cond = And(cond, _check_antecedents_inversion(f, x))
+            if cond == False:
+                break
         cond = _my_unpolarify(cond)
         if cond == False:
             _debug('But cond is always False.')
