@@ -10,7 +10,7 @@ from __future__ import print_function, division
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
+from sympy import (sympify, pi, sin, cos, sqrt, Number, Symbol, S,
     symbols, Derivative, atan2)
 from sympy.core.expr import Expr
 from sympy.physics.units import c
@@ -24,7 +24,7 @@ class TWave(Expr):
     they can be changed later with respective methods provided.
 
     It has been represented as :math:`A \times cos(k*x - \omega \times t + \phi )`
-    where :math:`A` is amplitude, :math:`\omega` is angular velocity, :math:`k`is
+    where :math:`A` is amplitude, :math:`\omega` is angular frequency, :math:`k`is
     wavenumber, :math:`x` is a spatial variable to represent the position on the
     dimension on which the wave propagates and :math:`\phi` is phase angle of the wave.
 
@@ -61,12 +61,11 @@ class TWave(Expr):
     >>> w2 = TWave(A2, f, phi2)
     >>> w3 = w1 + w2  # Superposition of two waves
     >>> w3
-    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f,
-        atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)))
+    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f, atan2(A1*sin(phi1) + A2*sin(phi2), A1*cos(phi1) + A2*cos(phi2)))
     >>> w3.amplitude
     sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)
     >>> w3.phase
-    atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))
+    atan2(A1*sin(phi1) + A2*sin(phi2), A1*cos(phi1) + A2*cos(phi2))
     >>> w3.speed
     299792458*m/(n*s)
     >>> w3.angular_velocity
@@ -254,19 +253,44 @@ class TWave(Expr):
         if isinstance(other, TWave):
             if self._frequency == other._frequency and self.wavelength == other.wavelength:
                 return TWave(sqrt(self._amplitude**2 + other._amplitude**2 + 2 *
-                                  self.amplitude*other.amplitude*cos(
+                                  self._amplitude*other._amplitude*cos(
                                       self._phase - other.phase)),
-                             self.frequency,
-                             atan2(self._amplitude*cos(self._phase)
-                             +other._amplitude*cos(other._phase),
-                             self._amplitude*sin(self._phase)
-                             +other._amplitude*sin(other._phase))
+                             self._frequency,
+                             atan2(self._amplitude*sin(self._phase)
+                             +other._amplitude*sin(other._phase),
+                             self._amplitude*cos(self._phase)
+                             +other._amplitude*cos(other._phase))
                              )
             else:
                 raise NotImplementedError("Interference of waves with different frequencies"
                     " has not been implemented.")
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
+
+    def __mul__(self, other):
+        """
+        Multiplying a wave by a scalar rescales the amplitude of the wave.
+        """
+        other = sympify(other)
+        if isinstance(other, Number):
+            return TWave(self._amplitude*other, *self.args[1:])
+        else:
+            raise TypeError(type(other).__name__ + " and TWave objects can't be multiplied.")
+
+    def __sub__(self, other):
+            return self.__add__(-1*other)
+
+    def __neg__(self):
+            return self.__mul__(-1)
+
+    def __radd__(self, other):
+            return self.__add__(other)
+
+    def __rmul__(self, other):
+            return self.__mul__(other)
+
+    def __rsub__(self,other):
+            return (-self).__radd__(other)
 
     def _eval_rewrite_as_sin(self, *args):
         return self._amplitude*sin(self.wavenumber*Symbol('x')
