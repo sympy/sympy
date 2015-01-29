@@ -1068,6 +1068,30 @@ class Integral(AddWithLimits):
             result += self.function.subs(sym, xi)
         return result*dx
 
+    def _sage_(self):
+        import sage.all as sage
+        f, limits = self.function._sage_(), list(self.limits)
+        for limit in limits:
+            if len(limit) == 1:
+                x = limit[0]
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    hold=True)
+            elif len(limit) == 2:
+                x, b = limit
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    b._sage_(),
+                                    hold=True)
+            else:
+                x, a, b = limit
+                f = sage.integral(f,
+                                  (x._sage_(),
+                                    a._sage_(),
+                                    b._sage_()),
+                                    hold=True)
+        return f
+
 
 @xthreaded
 def integrate(*args, **kwargs):

@@ -418,10 +418,6 @@ class exp(ExpBase):
     def _eval_rewrite_as_tanh(self, arg):
         return (1 + C.tanh(arg/2))/(1 - C.tanh(arg/2))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.exp(self.args[0]._sage_())
-
 
 class log(Function):
     """
@@ -715,10 +711,6 @@ class log(Function):
         if arg is S.One:
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.log(self.args[0]._sage_())
 
 
 class LambertW(Function):

@@ -301,6 +301,12 @@ class hyper(TupleParametersBase):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
+    def _sage_(self):
+        import sage.all as sage
+        ap = [arg._sage_() for arg in self.args[0]]
+        bq = [arg._sage_() for arg in self.args[1]]
+        return sage.hypergeometric(ap, bq, self.argument._sage_())
+
 
 class meijerg(TupleParametersBase):
     r"""
