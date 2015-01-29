@@ -1491,11 +1491,12 @@ def test_uselogcombine():
 def test_atan2():
     assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
 
+
 def test_errorinverses():
-    assert solve(erf(x)-y,x)==[erfinv(y)]
-    assert solve(erfinv(x)-y,x)==[erf(y)]
-    assert solve(erfc(x)-y,x)==[erfcinv(y)]
-    assert solve(erfcinv(x)-y,x)==[erfc(y)]
+    assert solve(erf(x) - y, x) == [erfinv(y)]
+    assert solve(erfinv(x) - y, x) == [erf(y)]
+    assert solve(erfc(x) - y, x) == [erfcinv(y)]
+    assert solve(erfcinv(x) - y, x) == [erfc(y)]
 
 
 def test_issue_2725():

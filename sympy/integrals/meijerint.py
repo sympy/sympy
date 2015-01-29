@@ -457,9 +457,6 @@ def _mul_as_two_parts(f):
     if the case of len(gs) == 2 is removed and multiset is allowed to
     sort the terms, some tests fail.
 
-    Examples
-    ========
-
     >>> from sympy.integrals.meijerint import _mul_as_two_parts
     >>> from sympy import sin, exp, ordered
     >>> from sympy.abc import x
@@ -792,7 +789,7 @@ def _check_antecedents_1(g, x, helper=False):
     # TODO altered cases 4-7
 
     # extra case from wofram functions site:
-    # (reproduced verbatim from prudnikov, section 2.24.2)
+    # (reproduced verbatim from Prudnikov, section 2.24.2)
     # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
     case_extra = []
     case_extra += [Eq(p, q), Eq(delta, 0), Eq(arg(eta), 0), Ne(eta, 0)]
@@ -813,7 +810,7 @@ def _check_antecedents_1(g, x, helper=False):
     conds += [case_extra_2]
     debug('  second extra case:', [case_extra_2])
 
-    # TODO This leaves only one case from the three listed by prudnikov.
+    # TODO This leaves only one case from the three listed by Prudnikov.
     #      Investigate if these indeed cover everything; if so, remove the rest.
 
     return Or(*conds)
@@ -1012,7 +1009,7 @@ def _check_antecedents(g1, g2, x):
     c13 = Eq(abs(arg(omega)), cstar*pi)
 
     # The following condition is *not* implemented as stated on the wolfram
-    # function site. In the book of prudnikov there is an additional part
+    # function site. In the book of Prudnikov there is an additional part
     # (the And involving re()). However, I only have this book in russian, and
     # I don't read any russian. The following condition is what other people
     # have told me it means.
@@ -1133,7 +1130,7 @@ def _check_antecedents(g1, g2, x):
     pr(23)
 
     # The following case is from [Luke1969]. As far as I can tell, it is *not*
-    # covered by prudnikov's.
+    # covered by Prudnikov's.
     # Let G1 and G2 be the two G-functions. Suppose the integral exists from
     # 0 to a > 0 (this is easy the easy part), that G1 is exponential decay at
     # infinity, and that the mellin transform of G2 exists.
@@ -1331,7 +1328,7 @@ def _check_antecedents_inversion(g, x):
     # When p < q, we need to use the theorems of [L], 5.10.
 
     if p >= q:
-        _debug('  Using asymptotic slater expansion.')
+        _debug('  Using asymptotic Slater expansion.')
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
@@ -1465,7 +1462,7 @@ def _rewrite_single(f, x, recursive=True):
     # try recursive mellin transform
     if not recursive:
         return None
-    _debug('Trying recursive mellin transform method.')
+    _debug('Trying recursive Mellin transform method.')
     from sympy.integrals.transforms import (mellin_transform,
                                     inverse_mellin_transform, IntegralTransformError,
                                     MellinTransformStripError)
@@ -1516,7 +1513,7 @@ def _rewrite_single(f, x, recursive=True):
             except IntegralTransformError:
                 g = None
     if g is None or g.has(oo, nan, zoo):
-        _debug('Recursive mellin transform failed.')
+        _debug('Recursive Mellin transform failed.')
         return None
     args = Add.make_args(g)
     res = []
@@ -1530,7 +1527,7 @@ def _rewrite_single(f, x, recursive=True):
                                unpolarify(polarify(
                                    a, lift=True), exponents_only=True)
                                *x**b))]
-    _debug('Recursive mellin transform worked:', g)
+    _debug('Recursive Mellin transform worked:', g)
     return res, True
 
 
@@ -1581,6 +1578,9 @@ def _rewrite2(f, x):
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import meijerint_indefinite
     >>> from sympy import sin
@@ -1691,6 +1691,9 @@ def meijerint_definite(f, x, a, b):
     of two G functions, or as a single G function.
 
     Return res, cond, where cond are convergence conditions.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import meijerint_definite
     >>> from sympy import exp, oo
@@ -1808,7 +1811,7 @@ def _guess_expansion(f, x):
     from sympy import expand_trig
     from sympy.functions.elementary.trigonometric import TrigonometricFunction
     from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-    res = [(f, 'originial integrand')]
+    res = [(f, 'original integrand')]
 
     expanded = expand_mul(res[-1][0])
     if expanded != res[-1][0]:
@@ -1910,8 +1913,8 @@ def _meijerint_definite_4(f, x, only_double=False):
                 C, f = _rewrite_saxena_1(fac*C, po*x**s, f, x)
                 res += C*_int0oo_1(f, x)
                 cond = And(cond, _check_antecedents_1(f, x))
-            cond = _my_unpolarify(cond)
             _debug('Result before branch substitutions is:', res)
+            cond = _my_unpolarify(cond)
             if cond == False:
                 _debug('But cond is always False.')
             else:
@@ -1953,6 +1956,9 @@ def meijerint_inversion(f, x, t):
     Note that ``t`` is always assumed real and positive.
 
     Return None if the integral does not exist or could not be evaluated.
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, t
     >>> from sympy.integrals.meijerint import meijerint_inversion

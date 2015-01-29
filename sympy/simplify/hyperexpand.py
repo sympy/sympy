@@ -1982,7 +1982,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     # First reduce order as much as possible.
     func, ops = reduce_order(func)
     if ops:
-        debug('  Reduced order to', func)
+        debug('  Reduced order to ', func)
     else:
         debug('  Could not reduce order.')
 
@@ -1999,7 +1999,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     res = try_shifted_sum(func, z0)
     if res is not None:
         func, nops, p = res
-        debug('  Recognised shifted sum, reduced order to', func)
+        debug('  Recognised shifted sum, reduced order to ', func)
         ops += nops
 
     # apply the plan for poly
@@ -2022,12 +2022,12 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         formula = try_lerchphi(func)
 
     if formula is None:
-        debug('  Could not find an origin.',
+        debug('  Could not find an origin. ',
               'Will return answer in terms of '
               'simpler hypergeometric functions.')
         formula = build_hypergeometric_formula(func)
 
-    debug('  Found an origin:', formula.closed_form, formula.func)
+    debug('  Found an origin: ', formula.closed_form, ' ', formula.func)
 
     # We need to find the operators that convert formula into func.
     ops += devise_plan(func, formula.func, z0)
@@ -2185,21 +2185,21 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
         rewrite = None
 
     func0 = func
-    debug('Try to expand meijer G function corresponding to', func)
+    debug('Try to expand Meijer G function corresponding to ', func)
 
     # We will play games with analytic continuation - rather use a fresh symbol
     z = Dummy('z')
 
     func, ops = reduce_order_meijer(func)
     if ops:
-        debug('  Reduced order to', func)
+        debug('  Reduced order to ', func)
     else:
         debug('  Could not reduce order.')
 
     # Try to find a direct formula
     f = _meijercollection.lookup_origin(func)
     if f is not None:
-        debug('  Found a Meijer G formula:', f.func)
+        debug('  Found a Meijer G formula: ', f.func)
         ops += devise_plan_meijer(f.func, func, z)
 
         # Now carry out the plan.
@@ -2211,7 +2211,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
         r = r[0].subs(z, z0)
         return powdenest(r, polar=True)
 
-    debug("  Could not find a direct formula. Trying slater's theorem.")
+    debug("  Could not find a direct formula. Trying Slater's theorem.")
 
     # TODO the following would be possible:
     # *) Paired Index Theorems
@@ -2406,7 +2406,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     #      is known to diverge.
     r = Piecewise((slater1, cond1), (slater2, cond2), (func0(z0), True))
     if r.has(hyper) and not allow_hyper:
-        debug('  Could express using hypergeometric functions, ' +
+        debug('  Could express using hypergeometric functions, '
               'but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r
