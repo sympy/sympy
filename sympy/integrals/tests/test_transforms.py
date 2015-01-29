@@ -755,3 +755,20 @@ def test_issue_8882():
     raises(IntegralTransformError, lambda:
         inverse_mellin_transform(F, s, x, (-1, oo),
         **{'as_meijerg': True, 'needeval': True}))
+
+
+def test_issue_7173():
+    assert laplace_transform(sinh(t)*cosh(t), t, s) == (1/(s**2 - 4), 2, s/2 != 1)
+    >>> laplace_transform(sinh(w*t)*cosh(w*t), t, s)
+    (w/(s**2 - 4*w**2), 0, And(Or(Abs(periodic_argument(exp_polar(I*pi)*pol
+    ), oo)) < pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(w), oo
+    2), Or(Abs(periodic_argument(w, oo)) < pi/2, Abs(periodic_argument(w, o
+    /2)))
+    >>> fit(_)
+
+    (w/(s**2 - 4*w**2), 0,
+    And(Or(Abs(periodic_argument(exp_polar(I*pi)*polar_lift(w), oo)) <
+    pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(w), oo)) <=
+    pi/2), Or(Abs(periodic_argument(w, oo)) < pi/2,
+    Abs(periodic_argument(w, oo)) <= pi/2)))
+    >>> ^Z

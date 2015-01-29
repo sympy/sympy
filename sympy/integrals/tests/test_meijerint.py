@@ -1,4 +1,4 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
+from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
@@ -631,5 +631,11 @@ def test_fresnel():
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
+
 def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None
+
+
+def test_issue_8368():
+    assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
+        (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
