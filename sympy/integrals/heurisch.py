@@ -558,7 +558,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            solution = [ (k.as_expr(), v.as_expr()) for k, v in solution.items() ]
+            # If the ring is RR k.as_expr() will be 1.0*A
+            solution = [ (k.as_expr().as_coeff_Mul()[1], v.as_expr()) for k, v in solution.items() ]
             return candidate.subs(solution).subs(list(zip(coeffs, [S.Zero]*len(coeffs))))
 
     if not (F.free_symbols - set(V)):
