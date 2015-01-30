@@ -1247,8 +1247,7 @@ class Permutation(Basic):
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
         if isinstance(other, PermutationGroup):
-            b = [perm for perm in other.generators]
-            return [a*i for i in b]
+            return [a*i for i in other.generators]
         else:
             b = other.array_form
         if not b:
