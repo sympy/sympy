@@ -871,7 +871,27 @@ def roots(f, *gens, **flags):
         f = Poly(poly, x, field=True)
     else:
         try:
+            expr = f
             f = Poly(f, *gens, **flags)
+            if not isinstance(expr, Poly) and f.length == 2 and f.degree() !=1:
+                # see if there are powers in the constant that match the degree
+                con = expr.as_independent(*gens)[0]
+                n = f.degree()
+                npow_bases = []
+                for p in Mul.make_args(con):
+                    if p.is_Pow and not p.exp % n:
+                        npow_bases.append(p.base**(p.exp/n))
+                    else:
+                        other.append(p)
+                    if npow_bases:
+                        b = Mul(*npow_bases)
+                        B = Dummy()
+                        d = roots(Poly(expr - con + B**n*Mul(*others), *gens, **flags), *gens, **flags)
+                        rv = {}
+                        for k, v in d.items():
+                            rv[k.subs(B, b)] = v
+                        return rv
+
         except GeneratorsNeeded:
             if multiple:
                 return []
