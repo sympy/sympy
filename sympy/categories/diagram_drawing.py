@@ -84,7 +84,7 @@ References
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, Dict, Symbol
+from sympy.core import Dict, Symbol
 from sympy.sets import FiniteSet
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)

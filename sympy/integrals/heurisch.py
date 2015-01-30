@@ -1,14 +1,13 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
 from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import C, sympify
-from sympy.core.numbers import Rational, I, pi
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 
@@ -559,7 +558,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            solution = [ (k.as_expr(), v.as_expr()) for k, v in solution.items() ]
+            # If the ring is RR k.as_expr() will be 1.0*A
+            solution = [ (k.as_expr().as_coeff_Mul()[1], v.as_expr()) for k, v in solution.items() ]
             return candidate.subs(solution).subs(list(zip(coeffs, [S.Zero]*len(coeffs))))
 
     if not (F.free_symbols - set(V)):

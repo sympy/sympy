@@ -31,7 +31,7 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm, oo
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered, xrange
@@ -40,7 +40,7 @@ from sympy.integrals.heurisch import _symbols
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
 
-from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
+from sympy.functions import sinh, cosh, tanh, coth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError

@@ -1,13 +1,13 @@
 from sympy.external import import_module
 from sympy import Mul, Integer
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
-        IdentityGate, CGate, PhaseGate, TGate, gate_simp)
+from sympy.physics.quantum.gate import (X, Y, Z, H, CNOT,
+        IdentityGate, CGate, PhaseGate, TGate)
 from sympy.physics.quantum.identitysearch import (generate_gate_rules,
         generate_equivalent_ids, GateIdentity, bfs_identity_search,
-        random_identity_search, is_scalar_sparse_matrix,
+        is_scalar_sparse_matrix,
         is_scalar_nonsparse_matrix, is_degenerate, is_reducible)
-from sympy.utilities.pytest import skip
+from sympy.utilities.pytest import skip, XFAIL
 
 
 def create_gate_sequence(qubit=0):
@@ -482,7 +482,11 @@ def test_bfs_identity_search():
     id_set = set([GateIdentity(s, s, s, s)])
     assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
 
-    # Throws an error in represent: "exponent must be >= 0"
-    #gate_list = [Dagger(s), t]
-    #id_set = set([GateIdentity(Dagger(s), t, t)])
-    #assert bfs_identity_search(gate_list, 1, max_depth=3) == id_set
+
+@XFAIL
+def test_bfs_identity_search_xfail():
+    s = PhaseGate(0)
+    t = TGate(0)
+    gate_list = [Dagger(s), t]
+    id_set = set([GateIdentity(Dagger(s), t, t)])
+    assert bfs_identity_search(gate_list, 1, max_depth=3) == id_set

@@ -40,8 +40,14 @@ class Mod(Function):
                     p.is_integer and q == 1):
                 return S.Zero
 
-            if p.is_Number and q.is_Number:
-                return (p % q)
+            if q.is_Number:
+                if p.is_Number:
+                    return (p % q)
+                if q == 2:
+                    if p.is_even:
+                        return S.Zero
+                    elif p.is_odd:
+                        return S.One
 
             # by ratio
             r = p/q

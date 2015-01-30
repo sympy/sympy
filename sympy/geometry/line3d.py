@@ -10,11 +10,7 @@ Segment3D
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
-from sympy.core.logic import fuzzy_and
-from sympy.core.exprtools import factor_terms
+from sympy.core import S, C, Dummy, nan
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError

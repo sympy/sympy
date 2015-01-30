@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy import S, Symbol, symbols, I, log, atan, \
     roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
-from sympy.polys import Poly, subresultants, resultant, ZZ
+from sympy.polys import Poly, resultant, ZZ
 from sympy.core.compatibility import xrange
 
 

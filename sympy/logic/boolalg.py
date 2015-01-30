@@ -122,6 +122,7 @@ class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
     """
+    is_Boolean = True
     @property
     def canonical(self):
         return self
@@ -1443,8 +1444,6 @@ def SOPform(variables, minterms, dontcares=None):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    from sympy.core.symbol import Symbol
-
     variables = [sympify(v) for v in variables]
     if minterms == []:
         return false
@@ -1495,8 +1494,6 @@ def POSform(variables, minterms, dontcares=None):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    from sympy.core.symbol import Symbol
-
     variables = [sympify(v) for v in variables]
     if minterms == []:
         return false

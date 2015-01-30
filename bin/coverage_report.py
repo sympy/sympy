@@ -80,7 +80,7 @@ def make_report(source_dir, report_dir, use_cache=False):
         cov.start()
         import sympy
         sympy.test(source_dir, subprocess=False)
-        #sympy.doctest()        #coverage doesn't play well with doctests
+        #sympy.doctest()  # coverage doesn't play well with doctests
         cov.stop()
         cov.save()
 

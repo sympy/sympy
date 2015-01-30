@@ -11,8 +11,9 @@ from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
-from .decorators import _sympifyit, deprecated
+from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
+from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS)
@@ -24,6 +25,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
+from sympy.utilities.misc import debug
 
 rnd = mlib.round_nearest
 
@@ -263,7 +265,6 @@ class Number(AtomicExpr):
             rat = self/other
         w = sign(rat)*int(abs(rat))  # = rat.floor()
         r = self - other*w
-        #w*other + r == self
         return Tuple(w, r)
 
     def __rdivmod__(self, other):
@@ -456,9 +457,7 @@ class Number(AtomicExpr):
 
 
 class Float(Number):
-    """
-    Represents a floating point number. It is capable of representing
-    arbitrary-precision floating-point numbers.
+    """Represent a floating-point number of arbitrary precision.
 
     Examples
     ========
@@ -469,16 +468,38 @@ class Float(Number):
     >>> Float(3)
     3.00000000000000
 
-    Floats can be created from a string representations of Python floats
-    to force ints to Float or to enter high-precision (> 15 significant
-    digits) values:
+    Creating Floats from strings (and Python ``int`` and ``long``
+    types) will give a minimum precision of 15 digits, but the
+    precision will automatically increase to capture all digits
+    entered.
 
-    >>> Float('.0010')
-    0.00100000000000000
-    >>> Float('1e-3')
-    0.00100000000000000
+    >>> Float(1)
+    1.00000000000000
+    >>> Float(10**20)
+    100000000000000000000.
+    >>> Float('1e20')
+    100000000000000000000.
+
+    However, *floating-point* numbers (Python ``float`` types) retain
+    only 15 digits of precision:
+
+    >>> Float(1e20)
+    1.00000000000000e+20
+    >>> Float(1.23456789123456789)
+    1.23456789123457
+
+    It may be preferable to enter high-precision decimal numbers
+    as strings:
+
+    Float('1.23456789123456789')
+    1.23456789123456789
+
+    The desired number of digits can also be specified:
+
     >>> Float('1e-3', 3)
     0.00100
+    >>> Float(100, 4)
+    100.0
 
     Float can automatically count significant figures if a null string
     is sent for the precision; space are also allowed in the string. (Auto-
@@ -602,7 +623,7 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, prec=15):
+    def __new__(cls, num, prec=None):
         if isinstance(num, string_types):
             num = num.replace(' ', '')
             if num.startswith('.') and len(num) > 1:
@@ -616,7 +637,22 @@ class Float(Number):
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
 
-        if prec == '':
+        if prec is None:
+            dps = 15
+            if isinstance(num, Float):
+                return num
+            if isinstance(num, string_types) and _literal_float(num):
+                try:
+                    Num = decimal.Decimal(num)
+                except decimal.InvalidOperation:
+                    pass
+                else:
+                    isint = '.' not in num
+                    num, dps = _decimal_to_Rational_prec(Num)
+                    if num.is_Integer and isint:
+                        dps = max(dps, len(str(num).lstrip('-')))
+                    dps = max(15, dps)
+        elif prec == '':
             if not isinstance(num, string_types):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string or an integer.')
@@ -715,9 +751,8 @@ class Float(Number):
 
     def _as_mpf_val(self, prec):
         rv = mpf_norm(self._mpf_, prec)
-        # uncomment to see failures
-        #if rv != self._mpf_ and self._prec == prec:
-        #    print self._mpf_, rv
+        if rv != self._mpf_ and self._prec == prec:
+            debug(self._mpf_, rv)
         return rv
 
     def _as_mpf_op(self, prec):
@@ -834,6 +869,10 @@ class Float(Number):
                 prec = self._prec
                 return Float._new(
                     mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
+            elif isinstance(expt, Rational) and \
+                    expt.p == 1 and expt.q % 2 and self.is_negative:
+                return Pow(S.NegativeOne, expt, evaluate=False)*(
+                    -self)._eval_power(expt)
             expt, prec = expt._as_mpf_op(self._prec)
             mpfself = self._mpf_
             try:
@@ -1132,7 +1171,6 @@ class Rational(Number):
         obj = Expr.__new__(cls)
         obj.p = p
         obj.q = q
-        #obj._args = (p, q)
         return obj
 
     def limit_denominator(self, max_denominator=1000000):
@@ -1866,6 +1904,12 @@ class Integer(Rational):
 
         return isprime(self)
 
+    def _eval_is_composite(self):
+        if self > 1:
+            return fuzzy_not(self.is_prime)
+        else:
+            return False
+
     def as_numer_denom(self):
         return self, S.One
 
@@ -2050,7 +2094,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_positive = False
     is_negative = False
     is_zero = True
-    is_composite = False
     is_number = True
 
     __slots__ = []
@@ -2267,6 +2310,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_positive = True
     is_infinite = True
     is_number = True
+    is_prime = False
 
     __slots__ = []
 
@@ -2828,6 +2872,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_infinite = True
     is_number = True
+    is_prime = False
 
     __slots__ = []
 
@@ -2857,6 +2902,11 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
                     return S.ComplexInfinity
                 else:
                     return S.Zero
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.UnsignedInfinityRing.gen()
+
 
 zoo = S.ComplexInfinity
 

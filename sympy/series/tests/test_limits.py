@@ -2,8 +2,8 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
-    tan, cot, integrate, Sum, sign, Function)
+    atan, gamma, Symbol, S, pi, Integral, Rational, I,
+    tan, cot, integrate, Sum, sign, Function, subfactorial)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -433,3 +433,7 @@ def test_issue_4503():
     dx = Symbol('dx')
     assert limit((sqrt(1 + exp(x + dx)) - sqrt(1 + exp(x)))/dx, dx, 0) == \
         exp(x)/(2*sqrt(exp(x) + 1))
+
+
+def test_issue_8730():
+    assert limit(subfactorial(x), x, oo) == oo

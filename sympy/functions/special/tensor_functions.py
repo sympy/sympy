@@ -444,3 +444,7 @@ class KroneckerDelta(Function):
     @staticmethod
     def _latex_no_arg(printer):
         return r'\delta'
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())

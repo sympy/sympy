@@ -655,6 +655,15 @@ def test_mul():
     assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
     assert t.components == [A]
 
+    ts = A(a, b)
+    assert str(ts) == 'A(a, b)'
+    assert ts.types == [Lorentz]
+    assert ts.rank == 2
+    assert ts.dum == []
+    assert ts.coeff == 1
+    assert sorted(ts.free) == [(a, 0, 0), (b, 1, 0)]
+    assert ts.components == [A]
+
     t = A(-b, a)*B(-a, c)*A(-c, d)
     t1 = tensor_mul(*t.split())
     assert t == t(-b, d)
@@ -1187,7 +1196,7 @@ def test_hidden_indices_for_matrix_multiplication():
     B1 = B(m1)
 
     assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
-    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, -S.auto_right))
+    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, S.auto_left))
     assert _is_equal((A0*B0), A(m0, S.auto_left, s0)*B(-m0, -s0))
 
     C = tensorhead('C', [L, L], [[1]*2])

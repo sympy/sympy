@@ -1,7 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.misc import filldedent
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols

@@ -182,10 +182,6 @@ class sinh(HyperbolicFunction):
         if arg.is_imaginary:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sinh(self.args[0]._sage_())
-
 
 class cosh(HyperbolicFunction):
     r"""
@@ -330,10 +326,6 @@ class cosh(HyperbolicFunction):
         if arg.is_imaginary:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cosh(self.args[0]._sage_())
-
 
 class tanh(HyperbolicFunction):
     r"""
@@ -467,10 +459,6 @@ class tanh(HyperbolicFunction):
         if arg.is_real:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.tanh(self.args[0]._sage_())
-
 
 class coth(HyperbolicFunction):
     r"""
@@ -590,10 +578,6 @@ class coth(HyperbolicFunction):
             return 1/arg
         else:
             return self.func(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.coth(self.args[0]._sage_())
 
 
 class ReciprocalHyperbolicFunction(HyperbolicFunction):
@@ -839,10 +823,6 @@ class asinh(Function):
         """
         return sinh
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.asinh(self.args[0]._sage_())
-
 
 class acosh(Function):
     """
@@ -954,10 +934,6 @@ class acosh(Function):
         """
         return cosh
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acosh(self.args[0]._sage_())
-
 
 class atanh(Function):
     """
@@ -1031,10 +1007,6 @@ class atanh(Function):
         """
         return tanh
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.atanh(self.args[0]._sage_())
-
 
 class acoth(Function):
     """
@@ -1104,7 +1076,3 @@ class acoth(Function):
         Returns the inverse of this function.
         """
         return coth
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acoth(self.args[0]._sage_())

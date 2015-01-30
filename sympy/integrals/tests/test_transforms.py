@@ -5,15 +5,15 @@ from sympy.integrals.transforms import (mellin_transform,
     cosine_transform, inverse_cosine_transform,
     hankel_transform, inverse_hankel_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
-    InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform,
-    HankelTransform, InverseHankelTransform)
+    InverseLaplaceTransform, InverseFourierTransform,
+    InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    combsimp, trigsimp)
-from sympy.utilities.pytest import XFAIL, slow, skip
+    combsimp, trigsimp, atan)
+from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
@@ -61,7 +61,6 @@ def test_as_integral():
 def test_mellin_transform_fail():
     skip("Risch takes forever.")
 
-    from sympy import Max, Min
     MT = mellin_transform
 
     bpos = symbols('b', positive=True)
@@ -88,7 +87,7 @@ def test_mellin_transform_fail():
 
 
 def test_mellin_transform():
-    from sympy import Max, Min, Ne
+    from sympy import Max, Min
     MT = mellin_transform
 
     bpos = symbols('b', positive=True)
@@ -163,7 +162,7 @@ def test_mellin_transform():
 
 
 def test_mellin_transform_bessel():
-    from sympy import Max, Min, hyper, meijerg
+    from sympy import Max
     MT = mellin_transform
 
     # 8.4.19
@@ -305,8 +304,8 @@ def test_expint():
 
 
 def test_inverse_mellin_transform():
-    from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
-                       powdenest, powsimp, exp_polar, combsimp, cos, cot)
+    from sympy import (sin, simplify, Max, Min, expand,
+                       powsimp, exp_polar, cos, cot)
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -440,7 +439,7 @@ def test_inverse_mellin_transform():
 
 
 def test_laplace_transform():
-    from sympy import (fresnels, fresnelc, hyper)
+    from sympy import fresnels, fresnelc
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -513,8 +512,7 @@ def test_laplace_transform():
 
 
 def test_inverse_laplace_transform():
-    from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
-                       unpolarify, simplify, factor_terms)
+    from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True, finite=True)
     t = symbols('t')
@@ -618,7 +616,7 @@ def test_fourier_transform():
 
 
 def test_sine_transform():
-    from sympy import sinh, cosh, EulerGamma
+    from sympy import EulerGamma
 
     t = symbols("t")
     w = symbols("w")
@@ -656,7 +654,7 @@ def test_sine_transform():
 
 
 def test_cosine_transform():
-    from sympy import sinh, cosh, Si, Ci
+    from sympy import Si, Ci
 
     t = symbols("t")
     w = symbols("w")
@@ -698,7 +696,7 @@ def test_cosine_transform():
 
 
 def test_hankel_transform():
-    from sympy import sinh, cosh, gamma, sqrt, exp
+    from sympy import gamma, sqrt, exp
 
     r = Symbol("r")
     k = Symbol("k")
@@ -729,3 +727,20 @@ def test_hankel_transform():
 
 def test_issue_7181():
     assert mellin_transform(1/(1 - x), x, s) != None
+
+
+def test_issue_8882():
+    # This is the original test.
+    # from sympy import diff, Integral, integrate
+    # r = Symbol('r')
+    # psi = 1/r*sin(r)*exp(-(a0*r))
+    # h = -1/2*diff(psi, r, r) - 1/r*psi
+    # f = 4*pi*psi*h*r**2
+    # assert integrate(f, (r, -oo, 3), meijerg=True).has(Integral) == True
+
+    # To save time, only the critical part is included.
+    F = -a**(-s + 1)*(4 + 1/a**2)**(-s/2)*sqrt(1/a**2)*exp(-s*I*pi)* \
+        sin(s*atan(sqrt(1/a**2)/2))*gamma(s)
+    raises(IntegralTransformError, lambda:
+        inverse_mellin_transform(F, s, x, (-1, oo),
+        **{'as_meijerg': True, 'needeval': True}))

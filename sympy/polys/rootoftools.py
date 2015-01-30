@@ -14,8 +14,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf,
-    ComplexInterval)
+    dup_isolate_real_roots_sqf)
 
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
@@ -29,7 +28,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import QQ
 
-from mpmath import mp, mpf, mpc, findroot, workprec
+from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
@@ -273,7 +272,6 @@ class RootOf(Expr):
         """return complexes such that no bounding rectangles of non-conjugate
         roots would intersect if slid horizontally or vertically/
         """
-        from sympy.utilities.iterables import sift
         while complexes:  # break when all are distinct
             # get the intervals pairwise-disjoint. If rectangles were drawn around
             # the coordinates of the bounding rectangles, no rectangles would
@@ -554,39 +552,54 @@ class RootOf(Expr):
 
             while True:
                 if self.is_real:
+                    a = mpf(str(interval.a))
+                    b = mpf(str(interval.b))
+                    if a == b:
+                        root = a
+                        break
                     x0 = mpf(str(interval.center))
                 else:
+                    ax = mpf(str(interval.ax))
+                    bx = mpf(str(interval.bx))
+                    ay = mpf(str(interval.ay))
+                    by = mpf(str(interval.by))
+                    if ax == bx and ay == by:
+                        # the sign of the imaginary part will be assigned
+                        # according to the desired index using the fact that
+                        # roots are sorted with negative imag parts coming
+                        # before positive (and all imag roots coming after real
+                        # roots)
+                        deg = self.poly.degree()
+                        i = self.index  # a positive attribute after creation
+                        if (deg - i) % 2:
+                            if ay < 0:
+                                ay = -ay
+                        else:
+                            if ay > 0:
+                                ay = -ay
+                        root = mpc(ax, ay)
+                        break
                     x0 = mpc(*map(str, interval.center))
+
                 try:
-                    root = findroot(func, x0, verify=False)
+                    root = findroot(func, x0)
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
                     # interval because our initial estimate 'x0' was not close
-                    # enough.
+                    # enough. It is also possible that the secant method will
+                    # get trapped by a max/min in the interval; the root
+                    # verification by findroot will raise a ValueError in this
+                    # case and the interval will then be tightened -- and
+                    # eventually the root will be found.
                     if self.is_real:
-                        a = mpf(str(interval.a))
-                        b = mpf(str(interval.b))
-                        if a == b:
-                            root = a
+                        if (a < root < b):
                             break
-                        if not (a < root < b):
-                            raise ValueError("Root not in the interval.")
-                    else:
-                        ax = mpf(str(interval.ax))
-                        bx = mpf(str(interval.bx))
-                        ay = mpf(str(interval.ay))
-                        by = mpf(str(interval.by))
-                        if ax == bx and ay == by:
-                            root = ax + S.ImaginaryUnit*by
-                            break
-                        if not (ax < root.real < bx and ay < root.imag < by):
-                            raise ValueError("Root not in the interval.")
+                    elif (ax < root.real < bx and ay < root.imag < by):
+                        break
                 except ValueError:
-                    interval = interval.refine()
-                    continue
-                else:
-                    break
+                    pass
+                interval = interval.refine()
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 
@@ -633,33 +646,37 @@ class RootOf(Expr):
         if not other.is_finite:
             return S.false
         z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
-        if z is False:
+        if z is False:  # all roots will make z True but we don't know
+                        # whether this is the right root if z is True
             return S.false
         o = other.is_real, other.is_imaginary
         s = self.is_real, self.is_imaginary
         if o != s and None not in o and None not in s:
             return S.false
-        if z:
-            i = self._get_interval()
-            was = i.a, i.b
-            need = [1, 1]
-            # make sure it would be distinct from others
-            while any(need):
-                i = i.refine()
-                a, b = i.a, i.b
-                if need[0] and a != was[0]:
-                    need[0] = 0
-                if need[1] and b != was[1]:
-                    need[1] = 0
+        i = self._get_interval()
+        was = i.a, i.b
+        need = [True]*2
+        # make sure it would be distinct from others
+        while any(need):
+            i = i.refine()
+            a, b = i.a, i.b
+            if need[0] and a != was[0]:
+                need[0] = False
+            if need[1] and b != was[1]:
+                need[1] = False
+        re, im = other.as_real_imag()
+        if not im:
             if self.is_real:
                 a, b = [Rational(str(i)) for i in (a, b)]
                 return sympify(a < other and other < b)
-            re, im = other.as_real_imag()
-            z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
-                i.ax, i.bx, i.ay, i.by)]
-            return sympify((
-                r1 < re and re < r2) and (
-                i1 < im and im < i2))
+            return S.false
+        if self.is_real:
+            return S.false
+        z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
+            i.ax, i.bx, i.ay, i.by)]
+        return sympify((
+            r1 < re and re < r2) and (
+            i1 < im and im < i2))
 
 
 @public

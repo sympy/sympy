@@ -150,10 +150,6 @@ def main():
             print("Setting up binary integrators for the integral:")
             pprint(Integral(x**2*psi_ho(x)*Function('psi')(x), (x, 0, oo)))
 
-        # But it needs to be an operation on indexed objects, so that the code
-        # generators will recognize it correctly as an array.
-        # expr = expr.subs(x, A[i])
-
         # Autowrap it.  For functions that take more than one argument, it is
         # a good idea to use the 'args' keyword so that you know the signature
         # of the wrapped function.  (The dimension m will be an optional

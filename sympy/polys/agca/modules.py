@@ -1245,7 +1245,6 @@ class QuotientModuleElement(ModuleElement):
         return self.module.killed_module.contains(d1 - d2)
 
     def __repr__(self):
-        from sympy import sstr
         return repr(self.data) + " + " + repr(self.module.killed_module)
 
 

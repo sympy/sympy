@@ -369,7 +369,6 @@ def _find_splitting_points(expr, x):
     >>> fsp(sin(x+3)*x, x)
     set([-3, 0])
     """
-    from sympy import Tuple
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
     def compute_innermost(expr, res):
@@ -916,8 +915,7 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
 
 def _check_antecedents(g1, g2, x):
     """ Return a condition under which the integral theorem applies. """
-    from sympy import (re, Eq, Not, Ne, cos, I, exp, ceiling, sin, sign,
-                       unpolarify)
+    from sympy import re, Eq, Ne, cos, I, exp, sin, sign, unpolarify
     from sympy import arg as arg_, unbranched_argument as arg
     #  Yes, this is madness.
     # XXX TODO this is a testing *nightmare*
@@ -1590,7 +1588,7 @@ def meijerint_indefinite(f, x):
     >>> meijerint_indefinite(sin(x), x)
     -cos(x)
     """
-    from sympy import hyper, meijerg, count_ops
+    from sympy import hyper, meijerg
     results = []
     for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
@@ -1713,7 +1711,7 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import Integral, arg, exp, I, And, DiracDelta, count_ops
+    from sympy import arg, exp, I, And, DiracDelta, count_ops
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):

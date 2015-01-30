@@ -49,6 +49,7 @@ except ImportError:
 import sys
 import subprocess
 import os
+import shutil
 
 PY3 = sys.version_info[0] > 2
 
@@ -173,14 +174,23 @@ class clean(Command):
         pass
 
     def run(self):
-        import os
-        os.system("find . -name '*.pyc' | xargs rm -f")
-        os.system("rm -f python-build-stamp-2.4")
-        os.system("rm -f MANIFEST")
-        os.system("rm -rf build")
-        os.system("rm -rf dist")
-        os.system("rm -rf doc/_build")
-        os.system("rm -f sample.tex")
+        dir_setup = os.path.dirname(os.path.realpath(__file__))
+        curr_dir = os.getcwd()
+        for root, dirs, files in os.walk(dir_setup):
+            for file in files:
+                if file.endswith('.pyc') and os.path.isfile:
+                    os.remove(os.path.join(root, file))
+
+        os.chdir(dir_setup)
+        names = ["python-build-stamp-2.4", "MANIFEST", "build", "dist", "doc/_build", "sample.tex"]
+
+        for f in names:
+            if os.path.isfile(f):
+                os.remove(f)
+            elif os.path.isdir(f):
+                shutil.rmtree(f)
+
+        os.chdir(curr_dir)
 
 
 class test_sympy(Command):

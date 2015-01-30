@@ -369,7 +369,7 @@ class Expr(Basic, EvalfMixin):
                            for zi in free])))
             try:
                 nmag = abs(self.evalf(2, subs=reps))
-            except TypeError:
+            except (ValueError, TypeError):
                 # if an out of range value resulted in evalf problems
                 # then return None -- XXX is there a way to know how to
                 # select a good random number for a given expression?
@@ -663,6 +663,10 @@ class Expr(Basic, EvalfMixin):
         if failing_expression:
             return diff
         return None
+
+    def _eval_is_composite(self):
+        if self.is_integer and self.is_positive and self.is_prime is False:
+            return True
 
     def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
@@ -2404,7 +2408,9 @@ class Expr(Basic, EvalfMixin):
         from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
-            if len(syms) > 1:
+            if not syms:
+                return self
+            elif len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
@@ -3070,9 +3076,15 @@ class Expr(Basic, EvalfMixin):
         if dps is not None and allow > dps:
             allow = dps
         mag = Pow(10, p)  # magnitude needed to bring digit p to units place
+        xwas = x
         x += 1/(2*mag)  # add the half for rounding
         i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
-        rv = Integer(i10)//10
+        if i10.is_negative:
+            x = xwas - 1/(2*mag)  # should have gone the other way
+            i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+            rv = -(Integer(-i10)//10)
+        else:
+            rv = Integer(i10)//10
         q = 1
         if p > 0:
             q = mag
@@ -3150,7 +3162,7 @@ def _mag(x):
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, expand_mul, Function
+from .function import Derivative, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

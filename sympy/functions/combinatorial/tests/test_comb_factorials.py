@@ -1,6 +1,6 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func)
+                   oo, zoo, simplify, expand_func, C, S, Product)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -88,8 +88,10 @@ def test_factorial():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, nonnegative=True)
     r = Symbol('r', integer=False)
-    s = Symbol('s', integer = False, negative = True)
+    s = Symbol('s', integer=False, negative=True)
     t = Symbol('t', nonnegative=True)
+    u = Symbol('u', noninteger=True)
+    v = Symbol('v', integer=True, negative=True)
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
@@ -98,18 +100,30 @@ def test_factorial():
     assert factorial(2*n).func == factorial
 
     assert factorial(x).is_integer is None
-    assert factorial(n).is_integer
+    assert factorial(n).is_integer is None
+    assert factorial(k).is_integer
     assert factorial(r).is_integer is None
 
     assert factorial(n).is_positive is None
     assert factorial(k).is_positive
 
     assert factorial(x).is_real is None
-    assert factorial(n).is_real
+    assert factorial(n).is_real is None
     assert factorial(k).is_real is True
     assert factorial(r).is_real is None
     assert factorial(s).is_real is True
     assert factorial(t).is_real is True
+    assert factorial(u).is_real is True
+
+    assert factorial(x).is_composite is None
+    assert factorial(n).is_composite is None
+    assert factorial(k).is_composite is None
+    assert factorial(k + 3).is_composite is True
+    assert factorial(r).is_composite is None
+    assert factorial(s).is_composite is None
+    assert factorial(t).is_composite is None
+    assert factorial(u).is_composite is None
+    assert factorial(v).is_composite is False
 
     assert factorial(oo) == oo
 
@@ -132,8 +146,10 @@ def test_factorial_series():
 
 def test_factorial_rewrite():
     n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True, nonnegative=True)
 
     assert factorial(n).rewrite(gamma) == gamma(n + 1)
+    assert str(factorial(k).rewrite(Product)) == 'Product(_i, (_i, 1, k))'
 
 
 def test_factorial2():
@@ -147,7 +163,12 @@ def test_factorial2():
 
     # The following is exhaustive
     tt = Symbol('tt', integer=True, nonnegative=True)
+    tte = Symbol('tte', even=True, nonnegative=True)
+    tpe = Symbol('tpe', even=True, positive=True)
+    tto = Symbol('tto', odd=True, nonnegative=True)
     tf = Symbol('tf', integer=True, nonnegative=False)
+    tfe = Symbol('tfe', even=True, nonnegative=False)
+    tfo = Symbol('tfo', odd=True, nonnegative=False)
     ft = Symbol('ft', integer=False, nonnegative=True)
     ff = Symbol('ff', integer=False, nonnegative=False)
     fn = Symbol('fn', integer=False)
@@ -155,24 +176,56 @@ def test_factorial2():
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
 
-    assert factorial2(tt - 1).is_integer
-    assert factorial2(tf - 1).is_integer is False
     assert factorial2(n).is_integer is None
-    assert factorial2(ft - 1).is_integer is False
-    assert factorial2(ff - 1).is_integer is False
-    assert factorial2(fn).is_integer is False
-    assert factorial2(nt - 1).is_integer is None
-    assert factorial2(nf - 1).is_integer is False
+    assert factorial2(tt - 1).is_integer
+    assert factorial2(tte - 1).is_integer
+    assert factorial2(tpe - 3).is_integer
+    # This should work, but it doesn't due to ...
+    # assert factorial2(tto - 4).is_integer
+    assert factorial2(tto - 2).is_integer
+    assert factorial2(tf).is_integer is None
+    assert factorial2(tfe).is_integer is None
+    assert factorial2(tfo).is_integer is None
+    assert factorial2(ft).is_integer is None
+    assert factorial2(ff).is_integer is None
+    assert factorial2(fn).is_integer is None
+    assert factorial2(nt).is_integer is None
+    assert factorial2(nf).is_integer is None
     assert factorial2(nn).is_integer is None
-    assert factorial2(tt - 1).is_positive
-    assert factorial2(tf - 1).is_positive is False
+
     assert factorial2(n).is_positive is None
-    assert factorial2(ft - 1).is_positive is False
-    assert factorial2(ff - 1).is_positive is False
-    assert factorial2(fn).is_positive is False
-    assert factorial2(nt - 1).is_positive is None
-    assert factorial2(nf - 1).is_positive is False
+    assert factorial2(tt - 1).is_positive is True
+    assert factorial2(tte - 1).is_positive is True
+    # This should work, but it doesn't due to ...
+    # assert factorial2(tpe - 3).is_positive is True
+    assert factorial2(tpe - 1).is_positive is True
+    # This should work, but it doesn't due to ...
+    # assert factorial2(tto - 2).is_positive is True
+    assert factorial2(tto - 1).is_positive is True
+    assert factorial2(tf).is_positive is None
+    assert factorial2(tfe).is_positive is None
+    assert factorial2(tfo).is_positive is None
+    assert factorial2(ft).is_positive is None
+    assert factorial2(ff).is_positive is None
+    assert factorial2(fn).is_positive is None
+    assert factorial2(nt).is_positive is None
+    assert factorial2(nf).is_positive is None
     assert factorial2(nn).is_positive is None
+
+    assert factorial2(tt).is_even is None
+    assert factorial2(tt).is_odd is None
+    assert factorial2(tte).is_even is None
+    assert factorial2(tte).is_odd is None
+    assert factorial2(tte + 2).is_even is True
+    assert factorial2(tpe).is_even is True
+    assert factorial2(tto).is_odd is True
+    assert factorial2(tf).is_even is None
+    assert factorial2(tf).is_odd is None
+    assert factorial2(tfe).is_even is None
+    assert factorial2(tfe).is_odd is None
+    assert factorial2(tfo).is_even is False
+    assert factorial2(tfo).is_odd is None
+
 
 
 def test_binomial():
@@ -248,8 +301,11 @@ def test_factorial_simplify_fail():
 def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
-    raises(ValueError, lambda: subfactorial(0.1))
-    raises(ValueError, lambda: subfactorial(-2))
+    assert subfactorial(oo) == oo
+
+    x = Symbol('x')
+    assert subfactorial(x).rewrite(C.uppergamma) == \
+        C.uppergamma(x + 1, -1)/S.Exp1
 
     tt = Symbol('tt', integer=True, nonnegative=True)
     tf = Symbol('tf', integer=True, nonnegative=False)
@@ -260,12 +316,27 @@ def test_subfactorial():
     nt = Symbol('nt', nonnegative=True)
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nf')
+    te = Symbol('te', even=True, nonnegative=True)
+    to = Symbol('to', odd=True, nonnegative=True)
     assert subfactorial(tt).is_integer
-    assert subfactorial(tf).is_integer is False
+    assert subfactorial(tf).is_integer is None
     assert subfactorial(tn).is_integer is None
-    assert subfactorial(ft).is_integer is False
-    assert subfactorial(ff).is_integer is False
-    assert subfactorial(fn).is_integer is False
+    assert subfactorial(ft).is_integer is None
+    assert subfactorial(ff).is_integer is None
+    assert subfactorial(fn).is_integer is None
     assert subfactorial(nt).is_integer is None
-    assert subfactorial(nf).is_integer is False
+    assert subfactorial(nf).is_integer is None
     assert subfactorial(nn).is_integer is None
+    assert subfactorial(tt).is_nonnegative
+    assert subfactorial(tf).is_nonnegative is None
+    assert subfactorial(tn).is_nonnegative is None
+    assert subfactorial(ft).is_nonnegative is None
+    assert subfactorial(ff).is_nonnegative is None
+    assert subfactorial(fn).is_nonnegative is None
+    assert subfactorial(nt).is_nonnegative is None
+    assert subfactorial(nf).is_nonnegative is None
+    assert subfactorial(nn).is_nonnegative is None
+    assert subfactorial(tt).is_even is None
+    assert subfactorial(tt).is_odd is None
+    assert subfactorial(te).is_odd is True
+    assert subfactorial(to).is_even is True

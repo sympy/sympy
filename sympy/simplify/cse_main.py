@@ -2,11 +2,8 @@
 """
 from __future__ import print_function, division
 
-import difflib
-
-from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple, Symbol
+from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
 from sympy.core.singleton import S
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, xrange
@@ -166,8 +163,6 @@ def opt_cse(exprs, order='canonical'):
     >>> print(opt_subs)
     {x**(-2): 1/(x**2)}
     """
-    from sympy.matrices import Matrix
-
     opt_subs = dict()
 
     adds = set()
@@ -282,8 +277,6 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         The order by which Mul and Add arguments are processed. For large
         expressions where speed is a concern, use the setting order='none'.
     """
-    from sympy.matrices import Matrix
-
     if opt_subs is None:
         opt_subs = dict()
 

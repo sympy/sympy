@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-    BooleanFunction, true, false, BooleanAtom)
+    BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)

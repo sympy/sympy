@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify
 from sympy.core.add import Add
-from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -244,7 +243,7 @@ def root(arg, n):
 
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
-    all instances of -1**(1/odd) will be changed to -1.
+    all instances of (-n)**(1/odd) will be changed to -n**(1/odd).
 
     Examples
     ========
@@ -273,10 +272,10 @@ def real_root(arg, n=None):
             return rv
     else:
         rv = sympify(arg)
-    n1pow = Transform(lambda x: S.NegativeOne,
+    n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and
-                      x.base is S.NegativeOne and
+                      x.base.is_negative and
                       x.exp.is_Rational and
                       x.exp.p == 1 and x.exp.q % 2)
     return rv.xreplace(n1pow)

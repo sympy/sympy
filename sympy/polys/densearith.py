@@ -6,7 +6,6 @@ from sympy.polys.densebasic import (
     dup_slice,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
-    dup_normal,
     dup_strip, dmp_strip,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,

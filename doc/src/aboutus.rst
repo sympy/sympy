@@ -379,6 +379,12 @@ want to be mentioned here, so see our repository history for a full list).
 #. Cody Herbst: modified Euler-MacLaurin to not exit when term == 0
 #. AMiT Kumar: fix sign error in unrad
 #. Nishith Shah: fix solving of Piecewise functions
+#. Guillaume Gay: bugfix for LagrangesMethod
+#. Ray Cathcart: improve error handling in _random
+#. Mihir Wadwekar: watch for duplicate bases in powsimp
+#. Tuan Manh Lai: correct SparseMatrix.is_Identity property
+#. Darshan Chaudhary: cross platform support in setup.py options
+#. Alec Kalinin: fixed simplify and expand_log so base of log is not dropped
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

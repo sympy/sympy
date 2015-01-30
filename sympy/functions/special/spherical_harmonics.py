@@ -229,6 +229,13 @@ class Ynm(Function):
             res = mp.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.spherical_harmonic(self.args[0]._sage_(),
+                                       self.args[1]._sage_(),
+                                       self.args[2]._sage_(),
+                                       self.args[3]._sage_())
+
 
 def Ynm_c(n, m, theta, phi):
     r"""Conjugate spherical harmonics defined as
@@ -295,13 +302,9 @@ class Znm(Function):
 
         if m.is_positive:
             zz = (Ynm(n, m, th, ph) + Ynm_c(n, m, th, ph)) / sqrt(2)
-            #zz = zz.expand(complex=True)
-            #zz = simplify(zz)
             return zz
         elif m.is_zero:
             return Ynm(n, m, th, ph)
         elif m.is_negative:
             zz = (Ynm(n, m, th, ph) - Ynm_c(n, m, th, ph)) / (sqrt(2)*I)
-            #zz = zz.expand(complex=True)
-            #zz = simplify(zz)
             return zz

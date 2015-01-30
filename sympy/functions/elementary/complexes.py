@@ -5,12 +5,11 @@ from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
-from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -439,6 +438,8 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
+        if not isinstance(arg, C.Expr):
+            raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         if arg.is_Mul:
@@ -741,7 +742,10 @@ class polar_lift(Function):
         from sympy import exp_polar, pi, I, arg as argument
         if arg.is_number:
             ar = argument(arg)
-            #if not ar.has(argument) and not ar.has(atan):
+            # In general we want to affirm that something is known,
+            # e.g. `not ar.has(argument) and not ar.has(atan)`
+            # but for now we will just be more restrictive and
+            # see that it has evaluated to one of the known values.
             if ar in (0, pi/2, -pi/2, pi):
                 return exp_polar(I*ar)*abs(arg)
 

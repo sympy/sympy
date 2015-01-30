@@ -301,6 +301,12 @@ class hyper(TupleParametersBase):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
+    def _sage_(self):
+        import sage.all as sage
+        ap = [arg._sage_() for arg in self.args[0]]
+        bq = [arg._sage_() for arg in self.args[1]]
+        return sage.hypergeometric(ap, bq, self.argument._sage_())
+
 
 class meijerg(TupleParametersBase):
     r"""
@@ -613,7 +619,6 @@ class meijerg(TupleParametersBase):
             branch = S(0)
         n = ceiling(abs(branch/S.Pi)) + 1
         znum = znum**(S(1)/n)*exp(I*branch / n)
-        #print znum, branch, n
 
         # Convert all args to mpf or mpc
         try:

@@ -210,7 +210,7 @@ def refine_atan2(expr, assumptions):
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.negative(x))
     atan(y/x) + pi
     """
-    from sympy.functions.elementary.complexes import atan
+    from sympy.functions.elementary.trigonometric import atan
     from sympy.core import S
     y, x = expr.args
     if ask(Q.real(y) & Q.positive(x), assumptions):

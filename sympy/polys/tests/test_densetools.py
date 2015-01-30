@@ -1,15 +1,12 @@
 """Tests for dense recursive polynomials' tools. """
 
 from sympy.polys.densebasic import (
-    dup_LC, dmp_LC, dup_normal, dmp_normal,
-    dup_from_raw_dict, dmp_from_dict,
-    dmp_convert, dmp_swap, dmp_one_p,
+    dup_normal, dmp_normal,
+    dup_from_raw_dict,
+    dmp_convert, dmp_swap,
 )
 
-from sympy.polys.densearith import (
-    dup_add, dup_mul, dup_exquo,
-    dmp_neg, dmp_sub, dmp_mul_ground, dmp_mul, dmp_sqr,
-)
+from sympy.polys.densearith import dmp_mul_ground
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -32,7 +29,7 @@ from sympy.polys.densetools import (
     dup_revert, dmp_revert,
 )
 
-from sympy.polys.polyclasses import DMP, ANP
+from sympy.polys.polyclasses import ANP
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -41,12 +38,7 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy.polys.specialpolys import (
-    f_polys,
-    dmp_fateman_poly_F_1,
-    dmp_fateman_poly_F_2,
-    dmp_fateman_poly_F_3,
-)
+from sympy.polys.specialpolys import f_polys
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
 from sympy.polys.rings import ring
