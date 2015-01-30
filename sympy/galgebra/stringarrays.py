@@ -8,7 +8,7 @@ symbols.
 
 import operator
 
-from functools import reduce
+from sympy.core.compatibility import reduce
 from itertools import combinations
 
 from sympy import S, Symbol, Function
