@@ -31,13 +31,12 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-import functools
 from collections import defaultdict
 from sympy import Matrix, Rational
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, sympify, Add, S
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -920,7 +919,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             # to .data_product_tensor(...)
             return data, TensMul.from_TIDS(S.One, TIDS(components, free, dum))
 
-        return functools.reduce(data_mul, zip(data_list, tensmul_list))
+        return reduce(data_mul, zip(data_list, tensmul_list))
 
     def _assign_data_to_tensor_expr(self, key, data):
         if isinstance(key, TensAdd):
@@ -3335,12 +3334,12 @@ class TensMul(TensExpr):
                     if not isinstance(arg, Tensor):
                         continue
                     is_canon_bp = kw_args.get('is_canon_bp', arg._is_canon_bp)
-            tids = functools.reduce(lambda a, b: a*b, tids_list)
+            tids = reduce(lambda a, b: a*b, tids_list)
 
         if any([isinstance(arg, TensAdd) for arg in args]):
             add_args = TensAdd._tensAdd_flatten(args)
             return TensAdd(*add_args)
-        coeff = functools.reduce(lambda a, b: a*b, [S.One] + [arg for arg in args if not isinstance(arg, TensExpr)])
+        coeff = reduce(lambda a, b: a*b, [S.One] + [arg for arg in args if not isinstance(arg, TensExpr)])
         args = tids.get_tensors()
         if coeff != 1:
             args = [coeff] + args

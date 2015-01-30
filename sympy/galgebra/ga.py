@@ -23,7 +23,7 @@ at the documentation for the module.
 
 from __future__ import print_function
 
-from functools import reduce
+from sympy.core.compatibility import reduce
 from itertools import combinations
 
 import copy
