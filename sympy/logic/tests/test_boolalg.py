@@ -274,6 +274,15 @@ def test_bool_symbol():
     assert Or(A, False) == A
 
 
+def test_is_boolean():
+
+    assert true.is_Boolean
+    assert (A & B).is_Boolean
+    assert (A | B).is_Boolean
+    assert (~A).is_Boolean
+    assert (A ^ B).is_Boolean
+
+
 def test_subs():
 
     assert (A & B).subs(A, True) == B
