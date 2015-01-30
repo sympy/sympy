@@ -1080,4 +1080,7 @@ def test_issue_8368():
 
 def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
-    assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
+    # XXX a hash related error makes this nondeterministic
+    assert integrate(tanh(1.0*x)) in [
+        1.0*x - 1.0*log(tanh(1.0*x) + 1),
+        -1.0*x - 1.0*log(tanh(1.0*x) - 1),]

@@ -28,7 +28,7 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, default_sort_key, ordered
+from sympy.core.compatibility import reduce, default_sort_key
 
 
 def components(f, x):
@@ -546,7 +546,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         except PolynomialError:
             return None
         else:
-            ground, _ = construct_domain(list(ordered(non_syms)), field=True)
+            ground, _ = construct_domain(non_syms, field=True)
 
         coeff_ring = PolyRing(coeffs, ground)
         ring = PolyRing(V, coeff_ring)
