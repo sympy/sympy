@@ -21,7 +21,7 @@ from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from mpmath.libmp.gammazeta import mpf_bernoulli
 
-from .compatibility import SYMPY_INTS
+from .compatibility import SYMPY_INTS, range
 from .sympify import sympify
 from .core import C
 from .singleton import S

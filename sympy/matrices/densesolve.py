@@ -8,7 +8,7 @@ The dense matrix is stored as a list of lists.
 from sympy.matrices.densetools import col, eye, augment
 from sympy.matrices.densetools import rowadd, rowmul, conjugate_transpose
 from sympy import sqrt, var
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 import copy
 
 def row_echelon(matlist, K):
@@ -100,8 +100,8 @@ def LU(matlist, K, reverse = 0):
     """
     nrow = len(matlist)
     new_matlist1, new_matlist2 = eye(nrow, K), copy.deepcopy(matlist)
-    for i in xrange(nrow):
-        for j in xrange(i + 1, nrow):
+    for i in range(nrow):
+        for j in range(i + 1, nrow):
             if (new_matlist2[j][i] != 0):
                 new_matlist1[j][i] = new_matlist2[j][i]/new_matlist2[i][i]
                 rowadd(new_matlist2, j, i, -new_matlist2[j][i]/new_matlist2[i][i], K)

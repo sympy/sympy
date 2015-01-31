@@ -4,6 +4,7 @@ from sympy import (
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
     laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x')

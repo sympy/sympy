@@ -4,6 +4,7 @@ from random import randrange, choice
 from math import log
 
 from sympy.core import Basic
+from sympy.core.compatability import range
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
     _af_rmul, _af_rmuln, _af_pow, Cycle)

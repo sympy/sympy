@@ -8,6 +8,7 @@ from sympy.functions import (
     gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
     cos, cot, zeta)
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')

@@ -11,6 +11,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
+from sympy.core.compatibility import range
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):

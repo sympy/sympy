@@ -10,6 +10,7 @@ import warnings
 import io
 
 from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

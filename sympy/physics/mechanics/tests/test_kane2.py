@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy import cos, Matrix, simplify, sin, solve
 from sympy import symbols, trigsimp, zeros
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,

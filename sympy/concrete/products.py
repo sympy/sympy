@@ -7,7 +7,7 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class Product(ExprWithIntLimits):
@@ -253,7 +253,7 @@ class Product(ExprWithIntLimits):
 
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
+            return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)

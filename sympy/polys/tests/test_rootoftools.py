@@ -14,7 +14,7 @@ from sympy import (
     solve, legendre_poly
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, range
 
 from sympy.abc import a, b, x, y, z, r
 

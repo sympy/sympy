@@ -93,6 +93,7 @@ if PY3:
     exec_ = getattr(builtins, "exec")
 
     xrange = range
+    range = range
 else:
     import codecs
     import types
@@ -135,8 +136,9 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-
-    xrange = xrange
+    
+    range=xrange
+    xrange=xrange
 
 def with_metaclass(meta, *bases):
     """

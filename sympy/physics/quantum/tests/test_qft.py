@@ -1,5 +1,6 @@
 from sympy import exp, I, Matrix, pi, sqrt, Symbol
 
+from sympy.core.compatibility import range
 from sympy.physics.quantum.qft import QFT, IQFT, RkGate
 from sympy.physics.quantum.gate import (ZGate, SwapGate, HadamardGate, CGate,
                                         PhaseGate, TGate)

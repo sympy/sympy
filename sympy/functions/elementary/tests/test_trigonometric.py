@@ -5,7 +5,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         conjugate, series, FiniteSet, asec, acsc)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -110,7 +110,7 @@ def test_sin():
     assert isinstance(sin(-re(x) + im(y)), sin) is False
 
     for d in list(range(1, 22)) + [60, 85]:
-        for n in xrange(0, d*2 + 1):
+        for n in range(0, d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
@@ -118,7 +118,7 @@ def test_sin():
 
 def test_sin_cos():
     for d in [1, 2, 3, 4, 5, 6, 10, 12]:  # list is not exhaustive...
-        for n in xrange(-2*d, d*2):
+        for n in range(-2*d, d*2):
             x = n*pi/d
             assert sin(x + pi/2) == cos(x), "fails for %d*pi/%d" % (n, d)
             assert sin(x - pi/2) == -cos(x), "fails for %d*pi/%d" % (n, d)
@@ -290,7 +290,7 @@ def test_cos():
     assert cos(2*k*pi) == 1
 
     for d in list(range(1, 22)) + [60, 85]:
-        for n in xrange(0, 2*d + 1):
+        for n in range(0, 2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
             assert e < 1e-12
@@ -1051,7 +1051,7 @@ def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in xrange(1, (n + 1)//2 + 1):
+            for i in range(1, (n + 1)//2 + 1):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
@@ -1069,7 +1069,7 @@ def test_tancot_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in xrange(1, (n + 1)//2 + 1):
+            for i in range(1, (n + 1)//2 + 1):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     if  2*i != n and 3*i != 2*n:

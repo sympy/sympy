@@ -1,5 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
+from sympy.core.compatibility import range
                    Implies, Xor, zoo, sqrt, Rational, simplify, Function)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,

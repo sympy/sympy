@@ -22,6 +22,7 @@ from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
 
 from sympy.core.compatibility import u_decode as u
+from sympy.core.compatibility import range
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')

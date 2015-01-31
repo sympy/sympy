@@ -6,6 +6,7 @@ from sympy import (
     sstr, Sum, Symbol, symbols, sympify, trigsimp,
     Tuple, nan, And, Eq, re, im
 )
+from sympy.core.compatibility import range
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.physics import units

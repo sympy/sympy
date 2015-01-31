@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, Basic, sympify, Add
+from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,

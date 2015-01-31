@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import random
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S

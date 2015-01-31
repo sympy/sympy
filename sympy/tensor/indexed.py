@@ -109,7 +109,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types, NotIterable
+from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
 
 
 class IndexException(Exception):

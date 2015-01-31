@@ -19,6 +19,7 @@ http://aima.cs.berkeley.edu/python/logic.html
 from __future__ import print_function, division
 
 from sympy.utilities.iterables import kbins
+from sympy.core.compatibility import range
 
 class Compound(object):
     """ A little class to represent an interior node in the tree

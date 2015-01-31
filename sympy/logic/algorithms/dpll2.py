@@ -13,6 +13,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 from heapq import heappush, heappop
 
+from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
 from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
 

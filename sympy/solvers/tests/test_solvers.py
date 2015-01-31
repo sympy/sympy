@@ -6,6 +6,7 @@ from sympy import (
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
 
+from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs

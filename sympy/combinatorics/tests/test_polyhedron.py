@@ -1,3 +1,4 @@
+from sympy.core.compatibility
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,

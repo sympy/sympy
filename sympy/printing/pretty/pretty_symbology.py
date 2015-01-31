@@ -6,7 +6,7 @@ import sys
 import warnings
 unicode_warnings = ''
 
-from sympy.core.compatibility import u, unicode
+from sympy.core.compatibility import u, unicode, range
 
 # first, setup unicodedate environment
 try:

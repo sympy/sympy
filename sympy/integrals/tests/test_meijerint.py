@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)

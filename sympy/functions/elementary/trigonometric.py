@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -896,10 +896,10 @@ class tan(TrigonometricFunction):
                 TX.append(tx)
 
             Yg = numbered_symbols('Y')
-            Y = [ next(Yg) for i in xrange(n) ]
+            Y = [ next(Yg) for i in range(n) ]
 
             p = [0, 0]
-            for i in xrange(n + 1):
+            for i in range(n + 1):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
@@ -1171,10 +1171,10 @@ class cot(TrigonometricFunction):
                 CX.append(cx)
 
             Yg = numbered_symbols('Y')
-            Y = [ next(Yg) for i in xrange(n) ]
+            Y = [ next(Yg) for i in range(n) ]
 
             p = [0, 0]
-            for i in xrange(n, -1, -1):
+            for i in range(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, CX)))
         else:
