@@ -535,8 +535,8 @@ def test_dsolve_options():
     assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best') == Eq(f(x), C1/x)
-    assert a['default'] == 'separable'
-    assert a['best_hint'] == 'separable'
+    assert a['default'] == '1st_linear'
+    assert a['best_hint'] == '1st_linear'
     assert not a['1st_exact'].has(Integral)
     assert not a['separable'].has(Integral)
     assert not a['1st_homogeneous_coeff_best'].has(Integral)
@@ -552,7 +552,7 @@ def test_dsolve_options():
     assert b['order'] == ode_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best', simplify=False) == Eq(f(x), C1/x)
-    assert b['default'] == 'separable'
+    assert b['default'] == '1st_linear'
     assert b['best_hint'] == '1st_linear'
     assert a['separable'] != b['separable']
     assert a['1st_homogeneous_coeff_subs_dep_div_indep'] != \
@@ -586,8 +586,8 @@ def test_classify_ode():
         ('nth_linear_constant_coeff_homogeneous', 'Liouville',
             '2nd_power_series_ordinary' ,'Liouville_Integral')
     assert classify_ode(f(x), f(x)) == ()
-    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable',
-        '1st_linear', '1st_homogeneous_coeff_best',
+    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('1st_linear',
+        'separable', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_power_series', 'lie_group',
@@ -604,8 +604,8 @@ def test_classify_ode():
     assert a == ('1st_linear',
         'Bernoulli',
         'almost_linear',
-        '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
+        '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral',
         'Bernoulli_Integral',
@@ -627,12 +627,12 @@ def test_classify_ode():
         ('separable', '1st_exact', '1st_power_series', 'lie_group',
          'separable_Integral', '1st_exact_Integral')
     # preprocessing
-    ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
+    ans = ('1st_linear', 'Bernoulli', 'separable', '1st_exact',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+	'nth_linear_constant_coeff_undetermined_coefficients',
         '1st_power_series', 'lie_group',
-        'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
         '1st_linear_Integral',
@@ -647,7 +647,7 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('separable', '1st_linear', '1st_power_series', 'lie_group',
+        ('1st_linear', 'separable', '1st_power_series', 'lie_group',
          'separable_Integral', '1st_linear_Integral')
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
         ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
@@ -1891,8 +1891,8 @@ def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
+	'nth_linear_constant_coeff_undetermined_coefficients',
         '1st_power_series', 'lie_group',
-        'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral', 'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
@@ -2259,9 +2259,9 @@ def test_issue_6989():
         ))
     eq = -f(x).diff(x) + x*exp(-k*x)
     sol = dsolve(eq, f(x))
-    actual_sol = Eq(f(x), Piecewise((C1 + x**2/2, Eq(k**3, 0)),
-            (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, True)
-        ))
+    actual_sol = C1 + Piecewise((x**2/2, k**3 == 0),
+	    ((-k**2*x - k)*exp(-k*x)/k**3, True)
+	)
     errstr = str(eq) + ' : ' + str(sol) + ' == ' + str(actual_sol)
     assert sol == actual_sol, errstr
 
