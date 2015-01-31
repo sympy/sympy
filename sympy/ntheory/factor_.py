@@ -1405,7 +1405,7 @@ class totient(Function):
     @classmethod
     def eval(cls, n):
         n = sympify(n)
-        if n.is_Integer:
+        if not(n.is_Symbol) and n.is_integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
@@ -1413,6 +1413,8 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif n.is_integer==False:
+            raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])

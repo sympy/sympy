@@ -387,6 +387,11 @@ def test_totient():
     assert totient(5006) == 2502
     assert totient(5009) == 5008
     assert totient(2**100) == 2**99
+    raises(ValueError,lambda: totient(2.3))
+    x = Symbol("x", integer=False)
+    raises(ValueError, lambda: totient(x))
+    x = Symbol("x", real=True)
+    assert totient(x)
 
     m = Symbol("m", integer=True)
     assert totient(m)
