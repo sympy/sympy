@@ -552,7 +552,7 @@ def test_dsolve_options():
     assert b['order'] == ode_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best', simplify=False) == Eq(f(x), C1/x)
-    assert b['default'] == 'separable'
+    assert b['default'] == '1st_linear'
     assert b['best_hint'] == '1st_linear'
     assert a['separable'] != b['separable']
     assert a['1st_homogeneous_coeff_subs_dep_div_indep'] != \
@@ -604,8 +604,8 @@ def test_classify_ode():
     assert a == ('1st_linear',
         'Bernoulli',
         'almost_linear',
-        '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
+        '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral',
         'Bernoulli_Integral',
@@ -627,12 +627,12 @@ def test_classify_ode():
         ('separable', '1st_exact', '1st_power_series', 'lie_group',
          'separable_Integral', '1st_exact_Integral')
     # preprocessing
-    ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
+    ans = ('1st_linear', 'Bernoulli', 'separable', '1st_exact',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+	'nth_linear_constant_coeff_undetermined_coefficients',
         '1st_power_series', 'lie_group',
-        'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
         '1st_linear_Integral',
@@ -647,7 +647,7 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('separable', '1st_linear', '1st_power_series', 'lie_group',
+        ('1st_linear', 'separable', '1st_power_series', 'lie_group',
          'separable_Integral', '1st_linear_Integral')
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
         ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
