@@ -96,7 +96,8 @@ class SparseMatrix(MatrixBase):
                 return self._smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    i = range(self.rows)[i]
+                    # XXX remove list() when PY2 support is dropped
+                    i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
                 else:
@@ -104,7 +105,8 @@ class SparseMatrix(MatrixBase):
                         raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
-                    j = range(self.cols)[j]
+                    # XXX remove list() when PY2 support is dropped
+                    j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
                 else:

@@ -524,7 +524,7 @@ class Polygon(GeometryEntity):
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
         args = poly.args
-        indices = range(-len(args), 1)
+        indices = list(range(-len(args), 1))
 
         if poly.is_convex():
             orientation = None
