@@ -25,6 +25,7 @@ from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.series import limit
+from sympy.concrete.summations import Sum
 
 
 class Integral(AddWithLimits):
@@ -394,6 +395,8 @@ class Integral(AddWithLimits):
             return S.Zero
 
         # now compute and check the function
+        if isinstance(self.function, Sum):
+            return Sum(integrate(self.function.function, self.variables[0]), self.function.limits)
         function = self.function
         if deep:
             function = function.doit(**hints)
