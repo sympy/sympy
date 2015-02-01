@@ -422,6 +422,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     if isinstance(exprs, Basic):
         exprs = [exprs]
 
+    copy = exprs
     temp = []
     for e in exprs:
         if isinstance(e, Matrix):
@@ -460,6 +461,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
                                            order)
 
     # Postprocess the expressions to return the expressions to canonical form.
+    exprs = copy
     for i, (sym, subtree) in enumerate(replacements):
         subtree = postprocess_for_cse(subtree, optimizations)
         replacements[i] = (sym, subtree)
@@ -468,6 +470,19 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     if isinstance(exprs, Matrix):
         reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
+    else:
+        temp = []
+        i = 0
+        for e in exprs:
+            if isinstance(e, Matrix):
+                temp.append([Matrix(e.rows, e.cols, reduced_exprs[i:i+e.rows*e.cols])])
+                i = e.rows*e.cols + i
+            else:
+                temp.append(reduced_exprs[i])
+                i = i + 1
+        reduced_exprs = temp
+        del temp
+
     if postprocess is None:
         return replacements, reduced_exprs
     return postprocess(replacements, reduced_exprs)
