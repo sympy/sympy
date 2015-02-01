@@ -361,4 +361,5 @@ def test_issue_7840():
 def test_issue_8891():
     m1 = Matrix([w + x, w + x])
     m2 = Matrix([y + z, y + z])
-    assert cse([m1, m2]) == cse(m1[:] + m2[:])
+    ans = '([(x0, w + x), (x1, y + z)], [[Matrix([\n[x0],\n[x0]])], [Matrix([\n[x1],\n[x1]])]])'
+    assert str(cse([m1, m2])) == ans
