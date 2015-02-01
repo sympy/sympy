@@ -28,7 +28,7 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, default_sort_key
+from sympy.core.compatibility import reduce, ordered
 
 
 def components(f, x):
@@ -274,7 +274,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             b = Wild('b', exclude=[x])
             c = Wild('c', exclude=[x])
 
-            for g in set(terms):
+            for g in set(terms):  # using copy of terms
                 if g.is_Function:
                     if g.func is li:
                         M = g.args[0].match(a*x**b)
@@ -334,30 +334,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         else:
             terms |= set(hints)
 
-    for g in set(terms):
+    for g in set(terms):  # using copy of terms
         terms |= components(cancel(g.diff(x)), x)
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
 
-    mapping = dict(list(zip(terms, V)))
 
-    rev_mapping = {}
-
-    if unnecessary_permutations is None:
-        unnecessary_permutations = []
-    for k, v in mapping.items():
-        rev_mapping[v] = k
-
-    if mappings is None:
-        # Pre-sort mapping in order of largest to smallest expressions (last is always x).
-        def _sort_key(arg):
-            return default_sort_key(arg[0].as_independent(x)[1])
-        #optimizing the number of permutations of mappping
-        unnecessary_permutations = [(x, mapping[x])]
-        del mapping[x]
-        mapping = sorted(list(mapping.items()), key=_sort_key, reverse=True)
+    # sort mapping expressions from largest to smallest (last is always x).
+    mapping = list(reversed(list(zip(*ordered(                          #
+        [(a[0].as_independent(x)[1], a) for a in zip(terms, V)])))[1])) #
+    rev_mapping = dict([(v, k) for k, v in mapping])                    #
+    if mappings is None:                                                #
+        # optimizing the number of permutations of mapping              #
+        assert mapping[-1][0] == x  # if not, find it and correct this comment
+        unnecessary_permutations = [mapping.pop(-1)]
         mappings = permutations(mapping)
+    else:
+        unnecessary_permutations = unnecessary_permutations or []
 
     def _substitute(expr):
         return expr.subs(mapping)
@@ -372,7 +366,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             break
     else:
         if not rewrite:
-            result = heurisch(f, x, rewrite=True, hints=hints, unnecessary_permutations=unnecessary_permutations)
+            result = heurisch(f, x, rewrite=True, hints=hints,
+                unnecessary_permutations=unnecessary_permutations)
 
             if result is not None:
                 return indep*result
@@ -436,7 +431,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     u_split = _splitter(denom)
     v_split = _splitter(Q)
 
-    polys = list(v_split) + [ u_split[0] ] + list(special.keys())
+    polys = set(list(v_split) + [ u_split[0] ] + list(special.keys()))
 
     s = u_split[0] * Mul(*[ k for k, v in special.items() if v ])
     polified = [ p.as_poly(*V) for p in [s, P, Q] ]
@@ -444,6 +439,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     if None in polified:
         return None
 
+    #--- definitions for _integrate
     a, b, c = [ p.total_degree() for p in polified ]
 
     poly_denom = (s * v_split[0] * _deflation(v_split[1])).as_expr()
@@ -495,7 +491,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         for poly in reducibles:
             for z in poly.free_symbols:
                 if z in V:
-                    break
+                    break  # XXX should this be `irreducibles |= set(root_factors(poly, z, filter=field))`? and the one below deleted?
             else:
                 continue
 
