@@ -357,3 +357,8 @@ def test_issue_7840():
     assert new_eqn[0] == expr
     # there should not be any replacements
     assert len(substitutions) < 1
+
+def test_issue_8891():
+    m1 = Matrix([w + x, w + x])
+    m2 = Matrix([y + z, y + z])
+    assert cse([m1, m2]) == cse(m1[:] + m2[:])

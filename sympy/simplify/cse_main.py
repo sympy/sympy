@@ -422,6 +422,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     if isinstance(exprs, Basic):
         exprs = [exprs]
 
+    temp = []
+    for e in exprs:
+        if isinstance(e, Matrix):
+            for subexp in e:
+                temp.append(subexp)
+        else:
+            temp.append(e)
+    exprs = temp
+    del temp
+
     if optimizations is None:
         optimizations = list()
     elif optimizations == 'basic':
