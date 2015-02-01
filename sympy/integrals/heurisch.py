@@ -491,21 +491,21 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         for poly in reducibles:
             for z in poly.free_symbols:
                 if z in V:
-                    break  # XXX should this be `irreducibles |= set(root_factors(poly, z, filter=field))`? and the one below deleted?
-            else:
-                continue
-
+                    break  # should this be: `irreducibles |= \
+            else:          # set(root_factors(poly, z, filter=field))`
+                continue   # and the line below deleted?
+                           #               |
+                           #               V
             irreducibles |= set(root_factors(poly, z, filter=field))
 
         log_coeffs, log_part = [], []
         B = _symbols('B', len(irreducibles))
 
-        for i, poly in enumerate(irreducibles):
+        # Note: the ordering matters here
+        for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
             if poly.has(*V):
-                log_coeffs.append(B[i])
-                log_part.append(log_coeffs[-1] * log(poly))
-
-        coeffs = poly_coeffs + log_coeffs
+                poly_coeffs.append(b)
+                log_part.append(b * log(poly))
 
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
@@ -520,7 +520,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # that we have to determine. We can't use simply atoms() because log(3),
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.
-        syms = set(coeffs) | set(V)
+        syms = set(poly_coeffs) | set(V)
         non_syms = set([])
 
         def find_non_syms(expr):
@@ -544,7 +544,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         else:
             ground, _ = construct_domain(non_syms, field=True)
 
-        coeff_ring = PolyRing(coeffs, ground)
+        coeff_ring = PolyRing(poly_coeffs, ground)
         ring = PolyRing(V, coeff_ring)
 
         numer = ring.from_expr(raw_numer)
@@ -555,7 +555,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             return None
         else:
             return candidate.subs(solution).subs(
-                list(zip(coeffs, [S.Zero]*len(coeffs))))
+                list(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
     if not (F.free_symbols - set(V)):
         solution = _integrate('Q')
