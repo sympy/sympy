@@ -485,7 +485,8 @@ def test_Float():
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
-    assert str(Rel(x + y, y, "==")) == "x + y == y"
+    assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
+    assert str(Rel(x, y, "!=")) == "Ne(x, y)"
 
 
 def test_RootOf():
@@ -643,7 +644,7 @@ def test_RandomDomain():
     assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
+    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)

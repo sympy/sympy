@@ -80,14 +80,12 @@ def test_python_keyword_function_name_escaping():
 
 
 def test_python_relational():
-    assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
+    assert python(Eq(x, y)) == "e = Eq(x, y)"
     assert python(Ge(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x >= y"
     assert python(Le(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
     assert python(Gt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x > y"
     assert python(Lt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x < y"
-    assert python(Ne(x/(y + 1), y**2)) in [
-        "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
-        "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
+    assert python(Ne(x/(y + 1), y**2)) in ["e = Ne(x/(1 + y), y**2)", "e = Ne(x/(y + 1), y**2)"]
 
 
 def test_python_functions():

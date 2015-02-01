@@ -556,24 +556,23 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
-    f(x) == C1*sin(3*x) + C2*cos(3*x)
+    Eq(f(x), C1*sin(3*x) + C2*cos(3*x))
 
     >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
     >>> dsolve(eq, hint='1st_exact')
-    [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [f(x) == -acos(C1/sqrt(-cos(x)**2)) + 2*pi,
-    f(x) == acos(C1/sqrt(-cos(x)**2))]
+    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
     >>> dsolve(eq)
-    [x(t) == C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t),
-    y(t) == C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
-    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0)]
+    [Eq(x(t), C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t)),
+    Eq(y(t), C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
+    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0))]
     >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
     >>> dsolve(eq)
-    set([x(t) == -exp(C1)/(C2*exp(C1) - cos(t)), y(t) == -1/(C1 - cos(t))])
+    set([Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))])
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -2418,9 +2417,9 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     >>> eq1 = Eq(f(x)/tan(f(x)/(2*x)), C1)
     >>> eq2 = Eq(f(x)/tan(f(x)/(2*x) + f(x)), C2)
     >>> [ode_sol_simplicity(eq, f(x)) for eq in [eq1, eq2]]
-    [26, 33]
+    [28, 35]
     >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
-    f(x)/tan(f(x)/(2*x)) == C1
+    Eq(f(x)/tan(f(x)/(2*x)), C1)
 
     """
     # TODO: if two solutions are solved for f(x), we still want to be
@@ -2849,7 +2848,7 @@ def ode_1st_exact(eq, func, order, match):
     >>> f = Function('f')
     >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
     ... f(x), hint='1st_exact')
-    x*cos(f(x)) + f(x)**3/3 == C1
+    Eq(x*cos(f(x)) + f(x)**3/3, C1)
 
     References
     ==========
@@ -3887,7 +3886,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
     ... hint='nth_linear_euler_eq_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-        f(x) == sqrt(x)*(C1 + C2*log(x))
+    Eq(f(x), sqrt(x)*(C1 + C2*log(x)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_euler_eq_homogeneous_Integral`` hint.
@@ -4044,7 +4043,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
     >>> dsolve(eq, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients').expand()
-    f(x) == C1*x + C2*x**2 + log(x)/2 + 3/4
+    Eq(f(x), C1*x + C2*x**2 + log(x)/2 + 3/4)
 
     """
     x = func.args[0]
@@ -4121,7 +4120,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**4
     >>> dsolve(eq, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters').expand()
-    f(x) == C1*x + C2*x**2 + x**4/6
+    Eq(f(x), C1*x + C2*x**2 + x**4/6)
 
     """
     x = func.args[0]
@@ -4186,7 +4185,7 @@ def ode_almost_linear(eq, func, order, match):
     >>> d = f(x).diff(x)
     >>> eq = x*d + x*f(x) + 1
     >>> dsolve(eq, f(x), hint='almost_linear')
-    f(x) == (C1 - Ei(x))*exp(-x)
+    Eq(f(x), (C1 - Ei(x))*exp(-x))
     >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                          -x
     f(x) = (C1 - Ei(x))*e
@@ -4322,7 +4321,7 @@ def ode_linear_coefficients(eq, func, order, match):
     >>> df = f(x).diff(x)
     >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
     >>> dsolve(eq, hint='linear_coefficients')
-    [f(x) == -x - sqrt(C1 + 7*x**2) - 1, f(x) == -x + sqrt(C1 + 7*x**2) - 1]
+    [Eq(f(x), -x - sqrt(C1 + 7*x**2) - 1), Eq(f(x), -x + sqrt(C1 + 7*x**2) - 1)]
     >>> pprint(dsolve(eq, hint='linear_coefficients'))
                       ___________                     ___________
                    /         2                     /         2
@@ -4387,7 +4386,7 @@ def ode_separable_reduced(eq, func, order, match):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
+    [Eq(f(x), (-sqrt(C1*x**2 + 1) + 1)/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
                  ___________                ___________
                 /     2                    /     2
@@ -4523,11 +4522,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
+    Eq(f(x), C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
     C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) +
     C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) +
     C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4))
+    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.

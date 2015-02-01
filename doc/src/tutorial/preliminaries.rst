@@ -35,7 +35,7 @@ SymPy Live" button below
     >>> x = symbols('x')
     >>> a = Integral(cos(x)*exp(x), x)
     >>> Eq(a, a.doit())
-    Integral(exp(x)*cos(x), x) == exp(x)*sin(x)/2 + exp(x)*cos(x)/2
+    Eq(Integral(exp(x)*cos(x), x), exp(x)*sin(x)/2 + exp(x)*cos(x)/2)
 
 The SymPy Live shell in the bottom corner will pop up and evaluate the code
 block. You can also click any individual line to evaluate it one at a time.

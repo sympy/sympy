@@ -204,14 +204,14 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> x = Symbol('x', real=True)
 
     >>> reduce_rational_inequalities([[x**2 <= 0]], x)
-    x == 0
+    Eq(x, 0)
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
     And(-2 < x, x < oo)
     >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
     And(-2 < x, x < oo)
     >>> reduce_rational_inequalities([[x + 2]], x)
-    x == -2
+    Eq(x, -2)
     """
     exact = True
     eqs = []

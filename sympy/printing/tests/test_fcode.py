@@ -343,8 +343,8 @@ def test_fcode_Xlogical():
 
 def test_fcode_Relational():
     x, y = symbols("x y")
-    assert fcode(Relational(x, y, "=="), source_format="free") == "x == y"
-    assert fcode(Relational(x, y, "!="), source_format="free") == "x /= y"
+    assert fcode(Relational(x, y, "=="), source_format="free") == "Eq(x, y)"
+    assert fcode(Relational(x, y, "!="), source_format="free") == "Ne(x, y)"
     assert fcode(Relational(x, y, ">="), source_format="free") == "x >= y"
     assert fcode(Relational(x, y, "<="), source_format="free") == "x <= y"
     assert fcode(Relational(x, y, ">"), source_format="free") == "x > y"

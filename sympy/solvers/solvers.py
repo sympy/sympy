@@ -595,7 +595,7 @@ def solve(f, *symbols, **flags):
         * involving relationals or bools
 
             >>> solve([x < 3, x - 2])
-            x == 2
+            Eq(x, 2)
             >>> solve([x > 3, x - 2])
             False
 
