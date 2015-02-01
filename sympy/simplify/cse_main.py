@@ -2,7 +2,7 @@
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
+from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
@@ -415,6 +415,54 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         list.
     reduced_exprs : list of sympy expressions
         The reduced expressions with all of the replacements above.
+
+    Examples
+    ========
+
+    >>> from sympy import cse
+    >>> from sympy.abc import x, y, z, w
+    >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
+    ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
+
+    Note that currently, y + z will not get substituted if -y - z is used.
+
+     >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
+     ([(x0, w + x)], [(w - y - z)*(x0 + y + z)/x0**3])
+
+    Matrices:
+
+    >>> from sympy import Matrix, SparseMatrix
+    >>> m1 = Matrix([x + y, x + y])
+    >>> cse(m1)
+    ([(x0, x + y)], [Matrix([
+    [x0],
+    [x0]])])
+    >>> cse(m1)[1][0].__class__.__name__
+    'MutableDenseMatrix'
+
+    >>> m2 = SparseMatrix.zeros(2)
+    >>> m2[0,0] = x + y; m2[1,1] = x + y
+    >>> cse(m2)
+    ([(x0, x + y)], [Matrix([
+    [x0,  0],
+    [ 0, x0]])])
+    >>> cse(m2)[1][0].__class__.__name__
+    'MutableSparseMatrix'
+
+    List of expressions with recursive substitutions:
+
+    >>> cse([(x+y)**2, x + y + z, y + z, x + z + y])
+    ([(x0, x + y), (x1, x0 + z)], [x0**2, x1, y + z, x1])
+
+    List with expression and matrices:
+
+    >>> cse([x + y, m1, m2])
+    ([(x0, x + y)], [x0, [Matrix([
+    [x0],
+    [x0]])], [Matrix([
+    [x0,  0],
+    [ 0, x0]])]])
+
     """
     from sympy.matrices import Matrix, SparseMatrix
 
@@ -422,12 +470,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     if isinstance(exprs, Basic):
         exprs = [exprs]
 
+    if isinstance(exprs, Matrix) or isinstance(exprs, SparseMatrix):
+        exprs = [exprs]
+
     copy = exprs
     temp = []
     for e in exprs:
-        if isinstance(e, Matrix) or isinstance(e, SparseMatrix):
-            for subexp in e:
-                temp.append(subexp)
+        if isinstance(e, Matrix):
+            temp.append(Tuple(*e._mat))
+        elif isinstance(e, SparseMatrix):
+            temp.append(Tuple(*e._smat.items()))
         else:
             temp.append(e)
     exprs = temp
@@ -468,20 +520,25 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     reduced_exprs = [postprocess_for_cse(e, optimizations)
                      for e in reduced_exprs]
 
-    if isinstance(exprs, Matrix):
-        reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
-    else:
-        temp = []
-        i = 0
-        for e in exprs:
-            if isinstance(e, Matrix) or isinstance(e, SparseMatrix):
-                temp.append([e.__class__(e.rows, e.cols, reduced_exprs[i:i+e.rows*e.cols])])
-                i = e.rows*e.cols + i
-            else:
-                temp.append(reduced_exprs[i])
-                i = i + 1
-        reduced_exprs = temp
-        del temp
+    # Get the matrices back
+    temp = []
+    i = 0
+    for e in exprs:
+        if isinstance(e, Matrix):
+            temp.append([e.__class__(e.rows, e.cols, reduced_exprs[i])])
+        elif isinstance(e, SparseMatrix):
+            temp.append([e.__class__(e.rows, e.cols, {})])
+            for k,v in reduced_exprs[i]:
+                temp[-1][0][k] = v
+        else:
+            temp.append(reduced_exprs[i])
+        i = i + 1
+    reduced_exprs = temp
+    del temp
+
+    # In case of single matrix, there is no need for a list of list
+    if len(reduced_exprs) == 1 and isinstance(reduced_exprs[0],list):
+        reduced_exprs = reduced_exprs[0]
 
     if postprocess is None:
         return replacements, reduced_exprs
