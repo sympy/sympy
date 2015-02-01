@@ -34,6 +34,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 from __future__ import print_function, division
 
 from sympy import Integer, pi, sqrt, sympify
+from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients

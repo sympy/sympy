@@ -3,7 +3,7 @@ from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, \
     factorial as fac, pi, GoldenRatio as phi, sqrt
 from sympy.core.numbers import Integer, Rational
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, range
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \

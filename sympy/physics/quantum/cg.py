@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta

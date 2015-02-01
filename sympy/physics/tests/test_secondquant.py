@@ -12,6 +12,7 @@ from sympy.physics.secondquant import (
 from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
                    Symbol, symbols)
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL
 
 

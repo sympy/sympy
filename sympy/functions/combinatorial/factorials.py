@@ -6,7 +6,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, as_int, xrange
+from sympy.core.compatibility import reduce, as_int, range
 from sympy.core.cache import cacheit
 
 
@@ -436,14 +436,14 @@ class RisingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x + i), xrange(0, int(k)), 1)
+                        return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x - i), xrange(1, abs(int(k)) + 1), 1)
+                        return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return C.gamma(x + k) / C.gamma(x)
@@ -508,14 +508,14 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x - i), xrange(0, int(k)), 1)
+                        return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x + i), xrange(1, abs(int(k)) + 1), 1)
+                        return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
@@ -653,7 +653,7 @@ class binomial(CombinatorialFunction):
                     return C.Integer(result)
                 elif n.is_Number:
                     result = n - k + 1
-                    for i in xrange(2, k + 1):
+                    for i in range(2, k + 1):
                         result *= n - k + i
                         result /= i
                     return result
@@ -690,7 +690,7 @@ class binomial(CombinatorialFunction):
             else:
                 n = self.args[0]
                 result = n - k + 1
-                for i in xrange(2, k + 1):
+                for i in range(2, k + 1):
                     result *= n - k + i
                     result /= i
                 return result

@@ -48,6 +48,7 @@ array (perhaps just a matter of preference).
 from __future__ import print_function, division
 
 import math
+from sympy.core.compatibility import range
 
 
 def _series(j, n):

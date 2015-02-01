@@ -4,7 +4,7 @@ from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
         sign, im, nan, Dummy, factorial
 )
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically

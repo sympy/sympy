@@ -33,6 +33,7 @@ from sympy import Symbol, Expr, expand, Mul, Add, S, collect, \
     Function, simplify, diff, trigsimp, sqrt, Number, \
     factor_terms, sin, cos, sinh, cosh
 from sympy import N as Nsympy
+from sympy.core.compatibility import range
 
 from sympy.galgebra.printing import GA_Printer, GA_LatexPrinter, enhance_print, latex
 from sympy.galgebra.vector import Vector

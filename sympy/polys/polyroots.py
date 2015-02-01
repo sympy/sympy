@@ -25,7 +25,7 @@ from sympy.polys.rationaltools import together
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import public
 
-from sympy.core.compatibility import reduce, xrange
+from sympy.core.compatibility import reduce, range
 
 
 def roots_linear(f):
@@ -450,7 +450,7 @@ def roots_cyclotomic(f, factor=False):
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
-    for n in xrange(L, U + 1):
+    for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
         if f == g:
@@ -464,7 +464,7 @@ def roots_cyclotomic(f, factor=False):
         # get the indices in the right order so the computed
         # roots will be sorted
         h = n//2
-        ks = [i for i in xrange(1, n + 1) if igcd(i, n) == 1]
+        ks = [i for i in range(1, n + 1) if igcd(i, n) == 1]
         ks.sort(key=lambda x: (x, -1) if x <= h else (abs(x - n), 1))
         d = 2*I*pi/n
         for k in reversed(ks):

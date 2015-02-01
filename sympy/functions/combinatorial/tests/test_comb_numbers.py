@@ -8,6 +8,7 @@ from sympy.functions import (
     gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
     cos, cot, zeta)
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
@@ -373,7 +374,7 @@ def test_nC_nP_nT():
         for j in range(1, i + 2):
             check = nT(range(i), j)
             tot += check
-            assert len(list(multiset_partitions(range(i), j))) == check
+            assert len(list(multiset_partitions(list(range(i)), j))) == check
         assert nT(range(i)) == tot
 
     for i in range(100):

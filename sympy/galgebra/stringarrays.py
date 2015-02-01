@@ -12,6 +12,7 @@ from sympy.core.compatibility import reduce
 from itertools import combinations
 
 from sympy import S, Symbol, Function
+from sympy.core.compatibility import range
 
 
 def str_array(base, n=None):

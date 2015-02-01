@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
 from util import interpolate, rinterpolate, create_bounds, update_bounds
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class ColorGradient(object):
@@ -16,8 +16,8 @@ class ColorGradient(object):
         elif len(args) > 0:
             if len(args) % 2 != 0:
                 raise ValueError("len(args) should be even")
-            self.colors = [args[i] for i in xrange(1, len(args), 2)]
-            self.intervals = [args[i] for i in xrange(0, len(args), 2)]
+            self.colors = [args[i] for i in range(1, len(args), 2)]
+            self.intervals = [args[i] for i in range(0, len(args), 2)]
         assert len(self.colors) == len(self.intervals)
 
     def copy(self):
@@ -243,7 +243,7 @@ class ColorScheme(object):
             set_len(len(u_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if verts[_u] is None:
                 cverts.append(None)
             else:
@@ -257,7 +257,7 @@ class ColorScheme(object):
             if callable(inc_pos):
                 inc_pos()
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if cverts[_u] is not None:
                 for _c in range(3):
                     # scale from [f_min, f_max] to [0,1]
@@ -281,9 +281,9 @@ class ColorScheme(object):
             set_len(len(u_set)*len(v_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             column = list()
-            for _v in xrange(len(v_set)):
+            for _v in range(len(v_set)):
                 if verts[_u][_v] is None:
                     column.append(None)
                 else:
@@ -298,8 +298,8 @@ class ColorScheme(object):
                     inc_pos()
             cverts.append(column)
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
-            for _v in xrange(len(v_set)):
+        for _u in range(len(u_set)):
+            for _v in range(len(v_set)):
                 if cverts[_u][_v] is not None:
                     # scale from [f_min, f_max] to [0,1]
                     for _c in range(3):
