@@ -7,6 +7,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.matrices import eye, SparseMatrix
 
 w, x, y, z = symbols('w,x,y,z')
 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
@@ -359,7 +360,14 @@ def test_issue_7840():
     assert len(substitutions) < 1
 
 def test_issue_8891():
-    m1 = Matrix([w + x, w + x])
-    m2 = Matrix([y + z, y + z])
-    ans = '([(x0, w + x), (x1, y + z)], [[Matrix([\n[x0],\n[x0]])], [Matrix([\n[x1],\n[x1]])]])'
-    assert str(cse([m1, m2])) == ans
+    m1 = eye(2)*(x + y)
+    m2 = SparseMatrix.zeros(2)
+    m2[0, 0] = x + y
+    m = [x + y, m1, m2]
+    r,e = cse(m)
+
+    ans = ([(x0, x + y)], [x0, [Matrix([[x0, 0], [0, x0]])], [Matrix([[x0, 0], [0, 0]])]])
+    assert cse(m) == ans
+
+    ans = ['MutableDenseMatrix', 'MutableSparseMatrix']
+    assert [e[1][0].__class__.__name__, e[2][0].__class__.__name__] == ans
