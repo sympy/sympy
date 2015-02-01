@@ -416,7 +416,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     reduced_exprs : list of sympy expressions
         The reduced expressions with all of the replacements above.
     """
-    from sympy.matrices import Matrix
+    from sympy.matrices import Matrix, SparseMatrix
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
@@ -425,7 +425,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     copy = exprs
     temp = []
     for e in exprs:
-        if isinstance(e, Matrix):
+        if isinstance(e, Matrix) or isinstance(e, SparseMatrix):
             for subexp in e:
                 temp.append(subexp)
         else:
@@ -474,8 +474,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         temp = []
         i = 0
         for e in exprs:
-            if isinstance(e, Matrix):
-                temp.append([Matrix(e.rows, e.cols, reduced_exprs[i:i+e.rows*e.cols])])
+            if isinstance(e, Matrix) or isinstance(e, SparseMatrix):
+                temp.append([e.__class__(e.rows, e.cols, reduced_exprs[i:i+e.rows*e.cols])])
                 i = e.rows*e.cols + i
             else:
                 temp.append(reduced_exprs[i])
@@ -485,4 +485,5 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     if postprocess is None:
         return replacements, reduced_exprs
+
     return postprocess(replacements, reduced_exprs)
