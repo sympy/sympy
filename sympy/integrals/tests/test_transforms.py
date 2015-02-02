@@ -9,10 +9,10 @@ from sympy.integrals.transforms import (mellin_transform,
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
-    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
+    cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    combsimp, trigsimp, atan)
+    combsimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -482,7 +482,6 @@ def test_laplace_transform():
         exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2), -a, True)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
         ((a + s)/(b**2 + (a + s)**2), -a, True)
-    # TODO sinh, cosh have delicate cancellation
 
     assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
     assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
@@ -509,6 +508,19 @@ def test_laplace_transform():
             [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],
             [((s + 1)**(-2), 0, True), (1/(s - 1), 1, True)]
         ])
+
+
+def test_issue_8368_7173():
+    LT = laplace_transform
+    # hyperbolic
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, True)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
+    assert LT(sinh(x + 3), x, s) == (
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
+    assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, Ne(s/2, 1))
+
+    # trig (make sure they are not being rewritten in terms of exp)
+    assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
 
 def test_inverse_laplace_transform():
@@ -744,3 +756,12 @@ def test_issue_8882():
     raises(IntegralTransformError, lambda:
         inverse_mellin_transform(F, s, x, (-1, oo),
         **{'as_meijerg': True, 'needeval': True}))
+
+
+def test_issue_7173():
+    assert laplace_transform(sinh(a*x)*cosh(a*x), x, s) == \
+        (a/(s**2 - 4*a**2), 0,
+        And(Or(Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <
+        pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <=
+        pi/2), Or(Abs(periodic_argument(a, oo)) < pi/2,
+        Abs(periodic_argument(a, oo)) <= pi/2)))

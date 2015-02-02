@@ -1486,6 +1486,7 @@ def test_uselogcombine():
         [-3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
         -3 - sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2],
         ]
+    assert solve(log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)) == []
 
 
 def test_atan2():

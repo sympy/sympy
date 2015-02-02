@@ -35,7 +35,8 @@ from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
-    degree, PolynomialError)
+    degree)
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -1383,9 +1384,15 @@ def _solve(f, *symbols, **flags):
         # as a polynomial, followed (perhaps) by a change of variables if the
         # generator is not a symbol
 
-        poly = Poly(f_num)
-        if poly is None:
-            raise ValueError('could not convert %s to Poly' % f_num)
+        try:
+            poly = Poly(f_num)
+            if poly is None:
+                raise ValueError('could not convert %s to Poly' % f_num)
+        except GeneratorsNeeded:
+            simplified_f = simplify(f_num)
+            if simplified_f != f_num:
+                return _solve(simplified_f, symbol, **flags)
+            raise ValueError('expression appears to be a constant')
 
         gens = [g for g in poly.gens if g.has(symbol)]
 
