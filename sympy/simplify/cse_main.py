@@ -419,7 +419,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     Examples
     ========
 
-    >>> from sympy import cse, Matrix
+    >>> from sympy import cse, SparseMatrix
     >>> from sympy.abc import x, y, z, w
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
     ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
@@ -431,29 +431,36 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     List of expressions with recursive substitutions:
 
-    >>> m = Matrix([x + y, x + y + z])
+    >>> m = SparseMatrix([x + y, x + y + z])
     >>> cse([(x+y)**2, x + y + z, y + z, x + z + y, m])
     ([(x0, x + y), (x1, x0 + z)], [x0**2, x1, y + z, x1, Matrix([
     [x0],
     [x1]])])
+
+    Note: the type and mutability of input matrices is retained.
+
+    >>> isinstance(_[1][-1], SparseMatrix)
+    True
     """
-    from sympy.matrices import Matrix, SparseMatrix
+    from sympy.matrices import (Matrix, SparseMatrix, ImmutableMatrix, 
+        ImmutableSparseMatrix)
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
         exprs = [exprs]
 
     is_singlematrix = False
-    if isinstance(exprs, Matrix) or isinstance(exprs, SparseMatrix):
+    if isinstance(exprs, (Matrix, SparseMatrix, ImmutableMatrix,
+            ImmutableSparseMatrix)):
         exprs = [exprs]
         is_singlematrix = True
 
     copy = exprs
     temp = []
     for e in exprs:
-        if isinstance(e, Matrix):
+        if isinstance(e, (Matrix, ImmutableMatrix)):
             temp.append(Tuple(*e._mat))
-        elif isinstance(e, SparseMatrix):
+        elif isinstance(e, (SparseMatrix, ImmutableSparseMatrix)):
             temp.append(Tuple(*e._smat.items()))
         else:
             temp.append(e)
@@ -497,12 +504,17 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     # Get the matrices back
     for i, e in enumerate(exprs):
-        if isinstance(e, Matrix):
-            reduced_exprs[i] = e.__class__(e.rows, e.cols, reduced_exprs[i])
-        elif isinstance(e, SparseMatrix):
-            m = reduced_exprs[i] = e.__class__(e.rows, e.cols, {})
+        if isinstance(e, (Matrix, ImmutableMatrix)):
+            reduced_exprs[i] = Matrix(e.rows, e.cols, reduced_exprs[i])
+            if isinstance(e, ImmutableMatrix):
+                reduced_exprs[i] = reduced_exprs[i].as_immutable()
+        elif isinstance(e, (SparseMatrix, ImmutableSparseMatrix)):
+            m = SparseMatrix(e.rows, e.cols, {})
             for k, v in reduced_exprs[i]:
                 m[k] = v
+            if isinstance(e, ImmutableSparseMatrix):
+                m = m.as_immutable()
+            reduced_exprs[i] = m
 
     # In case of single matrix, there is no need for a list
     if is_singlematrix is True:
