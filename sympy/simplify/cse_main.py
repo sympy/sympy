@@ -431,23 +431,23 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     Matrices:
 
-    >>> from sympy import Matrix, SparseMatrix
+    >>> from sympy import Matrix, SparseMatrix, MutableDenseMatrix, MutableSparseMatrix
     >>> m1 = Matrix([x + y, x + y])
     >>> cse(m1)
-    ([(x0, x + y)], [Matrix([
+    ([(x0, x + y)], Matrix([
     [x0],
-    [x0]])])
-    >>> cse(m1)[1][0].__class__.__name__
-    'MutableDenseMatrix'
+    [x0]]))
+    >>> isinstance(cse(m1)[1], MutableDenseMatrix)
+    True
 
     >>> m2 = SparseMatrix.zeros(2)
-    >>> m2[0,0] = x + y; m2[1,1] = x + y
+    >>> m2[0, 0] = x + y; m2[1, 1] = x + y
     >>> cse(m2)
-    ([(x0, x + y)], [Matrix([
+    ([(x0, x + y)], Matrix([
     [x0,  0],
-    [ 0, x0]])])
-    >>> cse(m2)[1][0].__class__.__name__
-    'MutableSparseMatrix'
+    [ 0, x0]]))
+    >>> isinstance(cse(m2)[1], MutableSparseMatrix)
+    True
 
     List of expressions with recursive substitutions:
 
@@ -457,11 +457,11 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     List with expression and matrices:
 
     >>> cse([x + y, m1, m2])
-    ([(x0, x + y)], [x0, [Matrix([
+    ([(x0, x + y)], [x0, Matrix([
     [x0],
-    [x0]])], [Matrix([
+    [x0]]), Matrix([
     [x0,  0],
-    [ 0, x0]])]])
+    [ 0, x0]])])
 
     """
     from sympy.matrices import Matrix, SparseMatrix
@@ -470,8 +470,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     if isinstance(exprs, Basic):
         exprs = [exprs]
 
+    is_singlematrix = False
     if isinstance(exprs, Matrix) or isinstance(exprs, SparseMatrix):
         exprs = [exprs]
+        is_singlematrix = True
 
     copy = exprs
     temp = []
@@ -525,19 +527,19 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     i = 0
     for e in exprs:
         if isinstance(e, Matrix):
-            temp.append([e.__class__(e.rows, e.cols, reduced_exprs[i])])
+            temp.append(e.__class__(e.rows, e.cols, reduced_exprs[i]))
         elif isinstance(e, SparseMatrix):
-            temp.append([e.__class__(e.rows, e.cols, {})])
+            temp.append(e.__class__(e.rows, e.cols, {}))
             for k,v in reduced_exprs[i]:
-                temp[-1][0][k] = v
+                temp[-1][k] = v
         else:
             temp.append(reduced_exprs[i])
         i = i + 1
     reduced_exprs = temp
     del temp
 
-    # In case of single matrix, there is no need for a list of list
-    if len(reduced_exprs) == 1 and isinstance(reduced_exprs[0],list):
+    # In case of single matrix, there is no need for a list
+    if is_singlematrix is True:
         reduced_exprs = reduced_exprs[0]
 
     if postprocess is None:
