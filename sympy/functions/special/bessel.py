@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import S, C, pi, I, Rational, Symbol, Wild, cacheit, sympify
+from sympy import S, C, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
@@ -195,6 +195,10 @@ class besselj(BesselBase):
         if nu.is_integer and z.is_real:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_J(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 class bessely(BesselBase):
     r"""
@@ -269,6 +273,10 @@ class bessely(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_Y(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class besseli(BesselBase):
@@ -366,6 +374,10 @@ class besseli(BesselBase):
         if nu.is_integer and z.is_real:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_I(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 class besselk(BesselBase):
     r"""
@@ -445,6 +457,10 @@ class besselk(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.bessel_K(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class hankel1(BesselBase):
@@ -706,8 +722,8 @@ def jn_zeros(n, k, method="sympy", dps=15):
     from math import pi
 
     if method == "sympy":
-        from sympy.mpmath import besseljzero
-        from sympy.mpmath.libmp.libmpf import dps_to_prec
+        from mpmath import besseljzero
+        from mpmath.libmp.libmpf import dps_to_prec
         from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
@@ -1209,7 +1225,7 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
@@ -1365,7 +1381,7 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):

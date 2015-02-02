@@ -5,12 +5,11 @@ from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
-from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -101,6 +100,9 @@ class re(Function):
 
     def _eval_rewrite_as_im(self, arg):
         return self.args[0] - im(self.args[0])
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
     def _sage_(self):
         import sage.all as sage
@@ -206,6 +208,9 @@ class im(Function):
 
     def _eval_rewrite_as_re(self, arg):
         return self.args[0] - re(self.args[0])
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
 
 ###############################################################################
@@ -433,6 +438,8 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
+        if not isinstance(arg, C.Expr):
+            raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         if arg.is_Mul:
@@ -475,13 +482,17 @@ class Abs(Function):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
                 return arg2
+        if arg.is_Add:
+            if arg.has(S.Infinity, S.NegativeInfinity):
+                if any(a.is_infinite for a in arg.as_real_imag()):
+                    return S.Infinity
+            if arg.is_real is None and arg.is_imaginary is None:
+                if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
+                    from sympy import expand_mul
+                    return sqrt(expand_mul(arg*arg.conjugate()))
         if arg.is_real is False and arg.is_imaginary is False:
             from sympy import expand_mul
-            return sqrt( expand_mul(arg * arg.conjugate()) )
-        if arg.is_real is None and arg.is_imaginary is None and arg.is_Add:
-            if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
-                from sympy import expand_mul
-                return sqrt(expand_mul(arg * arg.conjugate()))
+            return sqrt(expand_mul(arg*arg.conjugate()))
 
     def _eval_is_integer(self):
         if self.args[0].is_real:
@@ -496,6 +507,17 @@ class Abs(Function):
     def _eval_is_rational(self):
         if self.args[0].is_real:
             return self.args[0].is_rational
+
+    def _eval_is_even(self):
+        if self.args[0].is_real:
+            return self.args[0].is_even
+
+    def _eval_is_odd(self):
+        if self.args[0].is_real:
+            return self.args[0].is_odd
+
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
 
     def _eval_power(self, exponent):
         if self.args[0].is_real and exponent.is_integer:
@@ -614,6 +636,9 @@ class conjugate(Function):
     def _eval_transpose(self):
         return adjoint(self.args[0])
 
+    def _eval_is_algebraic(self):
+        return self.args[0].is_algebraic
+
 
 class transpose(Function):
     """
@@ -717,7 +742,10 @@ class polar_lift(Function):
         from sympy import exp_polar, pi, I, arg as argument
         if arg.is_number:
             ar = argument(arg)
-            #if not ar.has(argument) and not ar.has(atan):
+            # In general we want to affirm that something is known,
+            # e.g. `not ar.has(argument) and not ar.has(atan)`
+            # but for now we will just be more restrictive and
+            # see that it has evaluated to one of the known values.
             if ar in (0, pi/2, -pi/2, pi):
                 return exp_polar(I*ar)*abs(arg)
 

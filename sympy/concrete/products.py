@@ -1,13 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core.containers import Tuple
 from sympy.core.core import C
-from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp

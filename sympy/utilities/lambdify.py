@@ -7,7 +7,6 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
-import warnings
 
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
@@ -93,7 +92,7 @@ NUMEXPR_TRANSLATIONS = {}
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
-    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -371,7 +370,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     flat = '__flatten_args__'
 
     if flat in lstr:
-        import itertools
         namespace.update({flat: flatten})
     func = eval(lstr, namespace)
     # Apply the docstring

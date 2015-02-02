@@ -2,7 +2,9 @@
 """Distutils based setup script for SymPy.
 
 This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
-python mechanism for installing packages. For the easiest installation
+python mechanism for installing packages.  Optionally, you can use
+Setuptools (http://pythonhosted.org/setuptools/setuptools.html) to automatically
+handle dependencies.  For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
     python setup.py install
@@ -27,10 +29,27 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
-from distutils.core import setup, Command
+mpmath_version = '0.19'
+
+try:
+    from setuptools import setup, Command
+except ImportError:
+    from distutils import setup, Command
+
+    # handle mpmath deps in the hard way:
+    from distutils.version import LooseVersion
+    try:
+        import mpmath
+        if mpmath.__version__ < LooseVersion(mpmath_version):
+            raise ImportError
+    except ImportError:
+        print("Please install the mpmath package with a version >= %s" % mpmath_version)
+        sys.exit(-1)
+
 import sys
 import subprocess
 import os
+import shutil
 
 PY3 = sys.version_info[0] > 2
 
@@ -73,11 +92,6 @@ modules = [
     'sympy.matrices',
     'sympy.matrices.benchmarks',
     'sympy.matrices.expressions',
-    'sympy.mpmath',
-    'sympy.mpmath.calculus',
-    'sympy.mpmath.functions',
-    'sympy.mpmath.libmp',
-    'sympy.mpmath.matrices',
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
@@ -135,10 +149,7 @@ class audit(Command):
         except ImportError:
             print("In order to run the audit, you need to have PyFlakes installed.")
             sys.exit(-1)
-        # We don't want to audit external dependencies
-        ext = ('mpmath',)
-        dirs = (os.path.join(*d) for d in
-               (m.split('.') for m in modules) if d[1] not in ext)
+        dirs = (os.path.join(*d) for d in (m.split('.') for m in modules))
         warns = 0
         for dir in dirs:
             for filename in os.listdir(dir):
@@ -163,14 +174,23 @@ class clean(Command):
         pass
 
     def run(self):
-        import os
-        os.system("find . -name '*.pyc' | xargs rm -f")
-        os.system("rm -f python-build-stamp-2.4")
-        os.system("rm -f MANIFEST")
-        os.system("rm -rf build")
-        os.system("rm -rf dist")
-        os.system("rm -rf doc/_build")
-        os.system("rm -f sample.tex")
+        dir_setup = os.path.dirname(os.path.realpath(__file__))
+        curr_dir = os.getcwd()
+        for root, dirs, files in os.walk(dir_setup):
+            for file in files:
+                if file.endswith('.pyc') and os.path.isfile:
+                    os.remove(os.path.join(root, file))
+
+        os.chdir(dir_setup)
+        names = ["python-build-stamp-2.4", "MANIFEST", "build", "dist", "doc/_build", "sample.tex"]
+
+        for f in names:
+            if os.path.isfile(f):
+                os.remove(f)
+            elif os.path.isdir(f):
+                shutil.rmtree(f)
+
+        os.chdir(curr_dir)
 
 
 class test_sympy(Command):
@@ -246,7 +266,6 @@ tests = [
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
-    'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
     'sympy.physics.hep.tests',
@@ -336,5 +355,6 @@ setup(name='sympy',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        ]
+        ],
+      install_requires=['mpmath>=%s' % mpmath_version]
       )

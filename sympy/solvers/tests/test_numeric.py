@@ -1,5 +1,5 @@
 from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
-from sympy.mpmath import mnorm, mpf
+from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL

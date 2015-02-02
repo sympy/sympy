@@ -2,12 +2,12 @@ from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 
 from sympy.polys.galoistools import (
-    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm, gf_rem)
+    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
 from sympy.polys.domains import PolynomialRing
 
 from sympy.core.compatibility import xrange
-from sympy.mpmath import sqrt
+from mpmath import sqrt
 from sympy import Dummy
 import random
 

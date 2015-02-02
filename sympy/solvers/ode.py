@@ -235,27 +235,27 @@ from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
-from sympy.core.exprtools import factor_terms, gcd_terms
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs, _mexpand)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN, zoo, I
+from sympy.core.numbers import NaN, zoo, I
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    sign, Piecewise, atan2, conjugate
+    atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div, lcm
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, lcm
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction, posify, cse
+    simplify, trigsimp, denom, posify, cse
 from sympy.simplify.simplify import collect_const, powdenest
 from sympy.solvers import solve
 
@@ -562,8 +562,8 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='1st_exact')
     [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
     >>> dsolve(eq, hint='almost_linear')
-    [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
-    f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    [f(x) == -acos(C1/sqrt(-cos(x)**2)) + 2*pi,
+    f(x) == acos(C1/sqrt(-cos(x)**2))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
@@ -4910,12 +4910,6 @@ def _undetermined_coefficients_match(expr, x):
             Similar to expr.as_independent(x)[1], except it only works
             multiplicatively.
             """
-            # I was using the below match, but it doesn't always put all of the
-            # coefficient in c.  c.f. 2**x*6*exp(x)*log(2)
-            # The below code is probably cleaner anyway.
-#            c = Wild('c', exclude=[x])
-#            t = Wild('t')
-#            r = expr.match(c*t)
             term = S.One
             if expr.is_Mul:
                 for i in expr.args:

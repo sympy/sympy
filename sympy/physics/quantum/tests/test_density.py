@@ -1,447 +1,275 @@
-from sympy import pprint, latex, symbols, S, log
-from sympy.matrices import Matrix
+from __future__ import print_function, division
+
+from itertools import product
+
+from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
 from sympy.core.trace import Tr
-from sympy.external import import_module
-from sympy.physics.quantum.density import Density, entropy, fidelity, \
-                                          bures_metric, bures_angle
-from sympy.physics.quantum.state import Ket, Bra, TimeDepKet
-from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.gate import HadamardGate
-from sympy.physics.quantum.represent import represent
+from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
-from sympy.physics.quantum.spin import JzKet, Jz
-from sympy.physics.quantum.operator import OuterProduct
-from sympy.functions import sqrt
-from sympy.utilities.pytest import raises
-from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
-from sympy.physics.quantum.tensorproduct import TensorProduct
-
-
-def test_eval_args():
-    # check instance created
-    assert isinstance(Density([Ket(0), 0.5], [Ket(1), 0.5]), Density)
-    assert isinstance(Density([Qubit('00'), 1/sqrt(2)],
-                              [Qubit('11'), 1/sqrt(2)]), Density)
-
-    #test if Qubit object type preserved
-    d = Density([Qubit('00'), 1/sqrt(2)], [Qubit('11'), 1/sqrt(2)])
-    for (state, prob) in d.args:
-        assert isinstance(state, Qubit)
-
-    # check for value error, when prob is not provided
-    raises(ValueError, lambda: Density([Ket(0)], [Ket(1)]))
-
-
-def test_doit():
-
-    x, y = symbols('x y')
-    A, B, C, D, E, F = symbols('A B C D E F', commutative=False)
-    d = Density([XKet(), 0.5], [PxKet(), 0.5])
-    assert (0.5*(PxKet()*Dagger(PxKet())) +
-            0.5*(XKet()*Dagger(XKet()))) == d.doit()
-
-    # check for kets with expr in them
-    d_with_sym = Density([XKet(x*y), 0.5], [PxKet(x*y), 0.5])
-    assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
-            0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
-
-    d = Density([(A + B)*C, 1.0])
-    assert d.doit() == (1.0*A*C*Dagger(C)*Dagger(A) +
-                        1.0*A*C*Dagger(C)*Dagger(B) +
-                        1.0*B*C*Dagger(C)*Dagger(A) +
-                        1.0*B*C*Dagger(C)*Dagger(B))
-
-    #  With TensorProducts as args
-    # Density with simple tensor products as args
-    t = TensorProduct(A, B, C)
-    d = Density([t, 1.0])
-    assert d.doit() == \
-        1.0 * TensorProduct(A*Dagger(A), B*Dagger(B), C*Dagger(C))
-
-    # Density with multiple Tensorproducts as states
-    t2 = TensorProduct(A, B)
-    t3 = TensorProduct(C, D)
-
-    d = Density([t2, 0.5], [t3, 0.5])
-    assert d.doit() == (0.5 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
-                        0.5 * TensorProduct(C*Dagger(C), D*Dagger(D)))
-
-    #Density with mixed states
-    d = Density([t2 + t3, 1.0])
-    assert d.doit() == (1.0 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
-                        1.0 * TensorProduct(A*Dagger(C), B*Dagger(D)) +
-                        1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +
-                        1.0 * TensorProduct(C*Dagger(C), D*Dagger(D)))
-
-    #Density operators with spin states
-    tp1 = TensorProduct(JzKet(1, 1), JzKet(1, -1))
-    d = Density([tp1, 1])
-
-    # full trace
-    t = Tr(d)
-    assert t.doit() == 1
-
-    #Partial trace on density operators with spin states
-    t = Tr(d, [0])
-    assert t.doit() == JzKet(1, -1) * Dagger(JzKet(1, -1))
-    t = Tr(d, [1])
-    assert t.doit() == JzKet(1, 1) * Dagger(JzKet(1, 1))
-
-    # with another spin state
-    tp2 = TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2))
-    d = Density([tp2, 1])
-
-    #full trace
-    t = Tr(d)
-    assert t.doit() == 1
-
-    #Partial trace on density operators with spin states
-    t = Tr(d, [0])
-    assert t.doit() == JzKet(S(1)/2, -S(1)/2) * Dagger(JzKet(S(1)/2, -S(1)/2))
-    t = Tr(d, [1])
-    assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
-
-
-def test_apply_op():
-    d = Density([Ket(0), 0.5], [Ket(1), 0.5])
-    assert d.apply_op(XOp()) == Density([XOp()*Ket(0), 0.5],
-                                        [XOp()*Ket(1), 0.5])
-
-
-def test_represent():
-    x, y = symbols('x y')
-    d = Density([XKet(), 0.5], [PxKet(), 0.5])
-    assert (represent(0.5*(PxKet()*Dagger(PxKet()))) +
-            represent(0.5*(XKet()*Dagger(XKet())))) == represent(d)
-
-    # check for kets with expr in them
-    d_with_sym = Density([XKet(x*y), 0.5], [PxKet(x*y), 0.5])
-    assert (represent(0.5*(PxKet(x*y)*Dagger(PxKet(x*y)))) +
-            represent(0.5*(XKet(x*y)*Dagger(XKet(x*y))))) == \
-        represent(d_with_sym)
-
-    # check when given explicit basis
-    assert (represent(0.5*(XKet()*Dagger(XKet())), basis=PxOp()) +
-            represent(0.5*(PxKet()*Dagger(PxKet())), basis=PxOp())) == \
-        represent(d, basis=PxOp())
-
-
-def test_states():
-    d = Density([Ket(0), 0.5], [Ket(1), 0.5])
-    states = d.states()
-    assert states[0] == Ket(0) and states[1] == Ket(1)
-
-
-def test_probs():
-    d = Density([Ket(0), .75], [Ket(1), 0.25])
-    probs = d.probs()
-    assert probs[0] == 0.75 and probs[1] == 0.25
-
-    #probs can be symbols
-    x, y = symbols('x y')
-    d = Density([Ket(0), x], [Ket(1), y])
-    probs = d.probs()
-    assert probs[0] == x and probs[1] == y
-
-
-def test_get_state():
-    x, y = symbols('x y')
-    d = Density([Ket(0), x], [Ket(1), y])
-    states = (d.get_state(0), d.get_state(1))
-    assert states[0] == Ket(0) and states[1] == Ket(1)
-
-
-def test_get_prob():
-    x, y = symbols('x y')
-    d = Density([Ket(0), x], [Ket(1), y])
-    probs = (d.get_prob(0), d.get_prob(1))
-    assert probs[0] == x and probs[1] == y
-
-
-def test_entropy():
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    d = Density((up, 0.5), (down, 0.5))
-
-    # test for density object
-    ent = entropy(d)
-    assert entropy(d) == 0.5*log(2)
-    assert d.entropy() == 0.5*log(2)
-
-    np = import_module('numpy', min_module_version='1.4.0')
-    if np:
-        #do this test only if 'numpy' is available on test machine
-        np_mat = represent(d, format='numpy')
-        ent = entropy(np_mat)
-        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix)
-        assert ent.real == 0.69314718055994529
-        assert ent.imag == 0
-
-    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
-    if scipy and np:
-        #do this test only if numpy and scipy are available
-        mat = represent(d, format="scipy.sparse")
-        assert isinstance(mat, scipy_sparse_matrix)
-        assert ent.real == 0.69314718055994529
-        assert ent.imag == 0
-
-
-def test_eval_trace():
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    d = Density((up, 0.5), (down, 0.5))
-
-    t = Tr(d)
-    assert t.doit() == 1
-
-    #test dummy time dependent states
-    class TestTimeDepKet(TimeDepKet):
-        def _eval_trace(self, bra, **options):
-            return 1
-
-    x, t = symbols('x t')
-    k1 = TestTimeDepKet(0, 0.5)
-    k2 = TestTimeDepKet(0, 1)
-    d = Density([k1, 0.5], [k2, 0.5])
-    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual) +
-                        0.5 * OuterProduct(k2, k2.dual))
-
-    t = Tr(d)
-    assert t.doit() == 1
-
-
-def test_fidelity():
-    #test with kets
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
-
-    #check with matrices
-    up_dm = represent(up * Dagger(up))
-    down_dm = represent(down * Dagger(down))
-    updown_dm = represent(updown * Dagger(updown))
-
-    assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
-    assert fidelity(up_dm, down_dm) < 1e-3
-    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
-    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
-
-    #check with density
-    up_dm = Density([up, 1.0])
-    down_dm = Density([down, 1.0])
-    updown_dm = Density([updown, 1.0])
-
-    assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
-    assert abs(fidelity(up_dm, down_dm)) < 1e-3
-    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
-    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
-
-    #check mixed states with density
-    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
-    d1 = Density([updown, 0.25], [updown2, 0.75])
-    d2 = Density([updown, 0.75], [updown2, 0.25])
-    assert abs(fidelity(d1, d2) - 0.991) < 1e-3
-    assert abs(fidelity(d2, d1) - fidelity(d1, d2)) < 1e-3
-
-    #using qubits/density(pure states)
-    state1 = Qubit('0')
-    state2 = Qubit('1')
-    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
-
-    state1_dm = Density([state1, 1])
-    state2_dm = Density([state2, 1])
-    state3_dm = Density([state3, 1])
-
-    assert fidelity(state1_dm, state1_dm) == 1
-    assert fidelity(state1_dm, state2_dm) == 0
-    assert abs(fidelity(state1_dm, state3_dm) - 1/sqrt(2)) < 1e-3
-    assert abs(fidelity(state3_dm, state2_dm) - 1/sqrt(2)) < 1e-3
-
-    #using qubits/density(mixed states)
-    d1 = Density([state3, 0.70], [state4, 0.30])
-    d2 = Density([state3, 0.20], [state4, 0.80])
-    assert abs(fidelity(d1, d1) - 1) < 1e-3
-    assert abs(fidelity(d1, d2) - 0.996) < 1e-3
-    assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
-
-    #TODO: test for invalid arguments
-    # non-square matrix
-    mat1 = [[0, 0],
-            [0, 0],
-            [0, 0]]
-
-    mat2 = [[0, 0],
-            [0, 0]]
-    raises(ValueError, lambda: fidelity(mat1, mat2))
-
-    # unequal dimensions
-    mat1 = [[0, 0],
-            [0, 0]]
-    mat2 = [[0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]]
-    raises(ValueError, lambda: fidelity(mat1, mat2))
-
-    # unsupported data-type
-    x, y = 1, 2  # random values that is not a matrix
-    raises(ValueError, lambda: fidelity(x, y))
-
-
-def test_bures_metric():
-    #test with kets
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
-
-    #check with matrices
-    up_dm = represent(up * Dagger(up))
-    down_dm = represent(down * Dagger(down))
-    updown_dm = represent(updown * Dagger(updown))     
-       
-    assert abs(bures_metric(up_dm, up_dm)) < 1e-3
-    # COMMENT BACK IN TODO
-    #assert abs(bures_metric(up_dm, updown_dm)) < 1/2e-3 
-    assert abs(bures_metric(updown_dm, down_dm)) < 1/2e-3 
-     
-    #check with density
-    up_dm = Density([up, 1.0])
-    down_dm = Density([down, 1.0])
-    updown_dm = Density([updown, 1.0])
-
-    assert abs(bures_metric(up_dm, up_dm)) < 1e-3
-    assert abs(bures_metric(up_dm, updown_dm)) < 1/2e-3 
-    assert abs(bures_metric(updown_dm, down_dm)) < 1/2e-3 
-
-    #check mixed states with density
-    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
-    d1 = Density([updown, 0.25], [updown2, 0.75])
-    d2 = Density([updown, 0.75], [updown2, 0.25])
-    
-    assert abs(bures_metric(d1, d2) - 1) < 1
-    assert abs(bures_metric(d2, d1) - bures_metric(d1, d2)) < 1e-3
-
-    #using qubits/density(pure states)
-    state1 = Qubit('0')
-    state2 = Qubit('1')
-    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
-
-    state1_dm = Density([state1, 1])
-    state2_dm = Density([state2, 1])
-    state3_dm = Density([state3, 1])    
-
-    assert bures_metric(state1_dm, state1_dm) == 0
-    assert bures_metric(state1_dm, state2_dm) == 1
-    assert abs(bures_metric(state1_dm, state3_dm) - 1/sqrt(2)) < 1
-    assert abs(bures_metric(state3_dm, state2_dm) - 1/sqrt(2)) < 1   
-
-    #using qubits/density(mixed states)
-    d1 = Density([state3, 0.70], [state4, 0.30])
-    d2 = Density([state3, 0.20], [state4, 0.80])
-    assert abs(bures_metric(d1, d1) - 1)  < 1
-    assert abs(bures_metric(d1, d2) - 0.996) < 1
-    assert abs(bures_metric(d1, d2) - bures_metric(d2, d1)) < 1e-10
-
-    #TODO: test for invalid arguments
-    # non-square matrix
-    mat1 = [[0, 0],
-            [0, 0],
-            [0, 0]]
-
-    mat2 = [[0, 0],
-            [0, 0]]
-
-    raises(ValueError, lambda: bures_metric(mat1, mat2))
-    
-    # unequal dimensions
-    mat1 = [[0, 0],
-            [0, 0]]
-    mat2 = [[0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]]
-    raises(ValueError, lambda: bures_metric(mat1, mat2))
-    
-    # unsupported data-type
-    x, y = 1, 2  # random values that is not a matrix
-    raises(ValueError, lambda: bures_metric(x, y))
-    
-    
-def test_bures_angle():
-    #test with kets
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
-
-    #check with matrices
-    up_dm = represent(up * Dagger(up))
-    down_dm = represent(down * Dagger(down))
-    updown_dm = represent(updown * Dagger(updown))     
-       
-    assert abs(bures_angle(up_dm, up_dm)) < 1e-3
-    assert abs(bures_angle(up_dm, updown_dm)) < 1/2e-3 
-    assert abs(bures_angle(updown_dm, down_dm)) < 1/2e-3 
-     
-    #check with density
-    up_dm = Density([up, 1.0])
-    down_dm = Density([down, 1.0])
-    updown_dm = Density([updown, 1.0])
-
-    assert abs(bures_angle(up_dm, up_dm)) < 1e-3
-    assert abs(bures_angle(up_dm, updown_dm)) < 1/2e-3 
-    assert abs(bures_angle(updown_dm, down_dm)) < 1/2e-3 
-
-    #check mixed states with density
-    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
-    d1 = Density([updown, 0.25], [updown2, 0.75])
-    d2 = Density([updown, 0.75], [updown2, 0.25])
-    
-    assert abs(bures_angle(d1, d2) - 1) < 1
-    assert abs(bures_angle(d2, d1) - bures_angle(d1, d2)) < 1e-3
-
-    #using qubits/density(pure states)
-    state1 = Qubit('0')
-    state2 = Qubit('1')
-    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
-
-    state1_dm = Density([state1, 1])
-    state2_dm = Density([state2, 1])
-    state3_dm = Density([state3, 1])    
-
-    assert bures_angle(state1_dm, state1_dm) == 0
-    assert bures_angle(state1_dm, state2_dm) == 1
-    assert abs(bures_angle(state1_dm, state3_dm) - 1/sqrt(2)) < 1
-    assert abs(bures_angle(state3_dm, state2_dm) - 1/sqrt(2)) < 1   
-
-    #using qubits/density(mixed states)
-    d1 = Density([state3, 0.70], [state4, 0.30])
-    d2 = Density([state3, 0.20], [state4, 0.80])
-    assert abs(bures_angle(d1, d1) - 1)  < 1
-    assert abs(bures_angle(d1, d2) - 0.996) < 1
-    assert abs(bures_angle(d1, d2) - bures_angle(d2, d1)) < 1e-10
-
-    #TODO: test for invalid arguments
-    # non-square matrix
-    mat1 = [[0, 0],
-            [0, 0],
-            [0, 0]]
-
-    mat2 = [[0, 0],
-            [0, 0]]
-
-    raises(ValueError, lambda: bures_angle(mat1, mat2))
-    
-    # unequal dimensions
-    mat1 = [[0, 0],
-            [0, 0]]
-    mat2 = [[0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]]
-    raises(ValueError, lambda: bures_angle(mat1, mat2))
-    
-    # unsupported data-type
-    x, y = 1, 2  # random values that is not a matrix
-    raises(ValueError, lambda: bures_angle(x, y))  
+from sympy.physics.quantum.operator import HermitianOperator
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
+from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
+
+
+class Density(HermitianOperator):
+    """Density operator for representing mixed states.
+    TODO: Density operator support for Qubits
+    Parameters
+    ==========
+    values : tuples/lists
+    Each tuple/list should be of form (state, prob) or [state,prob]
+    Examples
+    =========
+    Create a density operator with 2 states represented by Kets.
+    >>> from sympy.physics.quantum.state import Ket
+    >>> from sympy.physics.quantum.density import Density
+    >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+    >>> d
+    'Density'((|0>, 0.5),(|1>, 0.5))
+    """
+
+    @classmethod
+    def _eval_args(cls, args):
+        # call this to qsympify the args
+        args = super(Density, cls)._eval_args(args)
+
+        for arg in args:
+            # Check if arg is a tuple
+            if not (isinstance(arg, Tuple) and
+                    len(arg) == 2):
+                raise ValueError("Each argument should be of form [state,prob]"
+                                 " or ( state, prob )")
+
+        return args
+
+    def states(self):
+        """Return list of all states.
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.density import Density
+        >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+        >>> d.states()
+        (|0>, |1>)
+        """
+        return Tuple(*[arg[0] for arg in self.args])
+
+    def probs(self):
+        """Return list of all probabilities.
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.density import Density
+        >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+        >>> d.probs()
+        (0.5, 0.5)
+        """
+        return Tuple(*[arg[1] for arg in self.args])
+
+    def get_state(self, index):
+        """Return specfic state by index.
+        Parameters
+        ==========
+        index : index of state to be returned
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.density import Density
+        >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+        >>> d.states()[1]
+        |1>
+        """
+        state = self.args[index][0]
+        return state
+
+    def get_prob(self, index):
+        """Return probability of specific state by index.
+        Parameters
+        ===========
+        index : index of states whose probability is returned.
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.density import Density
+        >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+        >>> d.probs()[1]
+        0.500000000000000
+        """
+        prob = self.args[index][1]
+        return prob
+
+    def apply_op(self, op):
+        """op will operate on each individual state.
+        Parameters
+        ==========
+        op : Operator
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.density import Density
+        >>> from sympy.physics.quantum.operator import Operator
+        >>> A = Operator('A')
+        >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+        >>> d.apply_op(A)
+        'Density'((A*|0>, 0.5),(A*|1>, 0.5))
+        """
+        new_args = [(op*state, prob) for (state, prob) in self.args]
+        return Density(*new_args)
+
+    def doit(self, **hints):
+        """Expand the density operator into an outer product format.
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.density import Density
+        >>> from sympy.physics.quantum.operator import Operator
+        >>> A = Operator('A')
+        >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
+        >>> d.doit()
+        0.5*|0><0| + 0.5*|1><1|
+        """
+
+        terms = []
+        for (state, prob) in self.args:
+            state = state.expand()  # needed to break up (a+b)*c
+            if (isinstance(state, Add)):
+                for arg in product(state.args, repeat=2):
+                    terms.append(prob *
+                                 self._generate_outer_prod(arg[0], arg[1]))
+            else:
+                terms.append(prob *
+                             self._generate_outer_prod(state, state))
+
+        return Add(*terms)
+
+    def _generate_outer_prod(self, arg1, arg2):
+        c_part1, nc_part1 = arg1.args_cnc()
+        c_part2, nc_part2 = arg2.args_cnc()
+
+        if ( len(nc_part1) == 0 or
+             len(nc_part2) == 0 ):
+            raise ValueError('Atleast one-pair of'
+                             ' Non-commutative instance required'
+                             ' for outer product.')
+
+        # Muls of Tensor Products should be expanded
+        # before this function is called
+        if (isinstance(nc_part1[0], TensorProduct) and
+                len(nc_part1) == 1 and len(nc_part2) == 1):
+            op = tensor_product_simp(nc_part1[0] * Dagger(nc_part2[0]))
+        else:
+            op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
+
+        return Mul(*c_part1)*Mul(*c_part2)*op
+
+    def _represent(self, **options):
+        return represent(self.doit(), **options)
+
+    def _print_operator_name_latex(self, printer, *args):
+        return printer._print(r'\rho', *args)
+
+    def _print_operator_name_pretty(self, printer, *args):
+        return prettyForm(unichr('\N{GREEK SMALL LETTER RHO}'))
+
+    def _eval_trace(self, **kwargs):
+        indices = kwargs.get('indices', [])
+        return Tr(self.doit(), indices).doit()
+
+    def entropy(self):
+        """ Compute the entropy of a density matrix.
+        Refer to density.entropy() method  for examples.
+        """
+        return entropy(self)
+
+
+def entropy(density):
+    """Compute the entropy of a matrix/density object.
+    This computes -Tr(density*ln(density)) using the eigenvalue decomposition
+    of density, which is given as either a Density instance or a matrix
+    (numpy.ndarray, sympy.Matrix or scipy.sparse).
+    Parameters
+    ==========
+    density : density matrix of type Density, sympy matrix,
+    scipy.sparse or numpy.ndarray
+    Examples:
+    ========
+    >>> from sympy.physics.quantum.density import Density, entropy
+    >>> from sympy.physics.quantum.represent import represent
+    >>> from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+    >>> from sympy.physics.quantum.spin import JzKet, Jz
+    >>> from sympy import S, log
+    >>> up = JzKet(S(1)/2,S(1)/2)
+    >>> down = JzKet(S(1)/2,-S(1)/2)
+    >>> d = Density((up,0.5),(down,0.5))
+    >>> entropy(d)
+    log(2)/2
+    """
+    if isinstance(density, Density):
+        density = represent(density)  # represent in Matrix
+
+    if isinstance(density, scipy_sparse_matrix):
+        density = to_numpy(density)
+
+    if isinstance(density, Matrix):
+        eigvals = density.eigenvals().keys()
+        return expand(-sum(e*log(e) for e in eigvals))
+    elif isinstance(density, numpy_ndarray):
+        import numpy as np
+        eigvals = np.linalg.eigvals(density)
+        return -np.sum(eigvals*np.log(eigvals))
+    else:
+        raise ValueError(
+            "numpy.ndarray, scipy.sparse or sympy matrix expected")
+
+
+def fidelity(state1, state2):
+    """ Computes the fidelity [1]_ between two quantum states
+    The arguments provided to this function should be a square matrix or a
+    Density object. If it is a square matrix, it is assumed to be diagonalizable.
+    Parameters:
+    ==========
+    state1, state2 : a density matrix or Matrix
+    Examples:
+    =========
+    >>> from sympy import S, sqrt
+    >>> from sympy.physics.quantum.dagger import Dagger
+    >>> from sympy.physics.quantum.spin import JzKet
+    >>> from sympy.physics.quantum.density import Density, fidelity
+    >>> from sympy.physics.quantum.represent import represent
+    >>>
+    >>> up = JzKet(S(1)/2,S(1)/2)
+    >>> down = JzKet(S(1)/2,-S(1)/2)
+    >>> amp = 1/sqrt(2)
+    >>> updown = (amp * up) + (amp * down)
+    >>>
+    >>> # represent turns Kets into matrices
+    >>> up_dm = represent(up * Dagger(up))
+    >>> down_dm = represent(down * Dagger(down))
+    >>> updown_dm = represent(updown * Dagger(updown))
+    >>>
+    >>> fidelity(up_dm, up_dm)
+    1
+    >>> fidelity(up_dm, down_dm) #orthogonal states
+    0
+    >>> fidelity(up_dm, updown_dm).evalf().round(3)
+    0.707
+    References
+    ==========
+    .. [1] http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
+    """
+    state1 = represent(state1) if isinstance(state1, Density) else state1
+    state2 = represent(state2) if isinstance(state2, Density) else state2
+
+    if (not isinstance(state1, Matrix) or
+            not isinstance(state2, Matrix)):
+        raise ValueError("state1 and state2 must be of type Density or Matrix "
+                         "received type=%s for state1 and type=%s for state2" %
+                         (type(state1), type(state2)))
+
+    if ( state1.shape != state2.shape and state1.is_square):
+        raise ValueError("The dimensions of both args should be equal and the "
+                         "matrix obtained should be a square matrix")
+
+    sqrt_state1 = state1**Rational(1, 2)
+    return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()

@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
+from sympy import (Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime, nextprime, integer_nthroot, Expr, Pow)
+    isprime, nextprime, integer_nthroot)
 
 from sympy.core.function import _mexpand
 from sympy.simplify.simplify import rad_rationalize
-from sympy.ntheory.modular import solve_congruence
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod

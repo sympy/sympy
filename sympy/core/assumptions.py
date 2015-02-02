@@ -4,10 +4,22 @@ This module contains the machinery handling assumptions.
 All symbolic objects have assumption attributes that can be accessed via
 .is_<assumption name> attribute.
 
-Assumptions determine certain properties of symbolic objects. Assumptions
-can have 3 possible values: True, False, None.  None is returned when it is
-impossible to say something about the property. For example, a generic Symbol
-is not known beforehand to be positive.
+Assumptions determine certain properties of symbolic objects and can
+have 3 possible values: True, False, None.  True is returned if the
+object has the property and False is returned if it doesn't or can't
+(i.e. doesn't make sense):
+
+    >>> from sympy import I
+    >>> I.is_algebraic
+    True
+    >>> I.is_real
+    False
+    >>> I.is_prime
+    False
+
+When the property cannot be determined (or when a method is not
+implemented) None will be returned, e.g. a generic symbol, x, may or
+may not be positive so a value of None is returned for x.is_positive.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -173,7 +185,7 @@ _assume_rules = FactRules([
     'zero           ->  even & finite',
 
     'prime          ->  integer & positive',
-    'composite      ==  integer & positive & !prime',
+    'composite      ->  integer & positive & !prime',
 
     'irrational     ==  real & !rational',
 
@@ -197,11 +209,22 @@ class StdFactKB(FactKB):
     rules = _assume_rules
 
     def __init__(self, facts=None):
+        # save a copy of the facts dict
+        if not facts:
+            self._generator = {};
+        elif not isinstance(facts, FactKB):
+            self._generator = facts.copy()
+        else:
+            self._generator = facts.generator
         if facts:
             self.deduce_all_facts(facts)
 
     def copy(self):
         return self.__class__(self)
+
+    @property
+    def generator(self):
+        return self._generator.copy()
 
 
 def as_property(fact):

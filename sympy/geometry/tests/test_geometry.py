@@ -337,7 +337,9 @@ def test_line_geom():
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=4.05*pi) == Ray(Point(1, 1),
-               Point(2, 1 + C.tan(4.05*pi)))
+               Point(2, -sqrt(5)*sqrt(2*sqrt(5) + 10)/4 - sqrt(2*sqrt(5) + 10)/4 + 2 + sqrt(5)))
+    assert Ray((1, 1), angle=4.02*pi) == Ray(Point(1, 1),
+               Point(2, 1 + C.tan(4.02*pi)))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 
@@ -1011,20 +1013,25 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(1, 0))]
     assert e.normal_lines((0, 1)) == \
         [Line(Point(0, 0), Point(0, 1))]
-    assert e.normal_lines(Point(1, 1), 1) == \
-        [Line(Point(-2, -1/5), Point(-1, 1/5)),
-         Line(Point(1, -9/10), Point(2, -43/11))]
+    assert e.normal_lines(Point(1, 1), 2) == [
+        Line(Point(-51/26, -1/5), Point(-25/26, 17/83)),
+        Line(Point(28/29, -7/8), Point(57/29, -9/2))]
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
-    assert e.normal_lines(p, 1) == \
-        [Line(Point(7/4, 1/2), Point(11/4, 3/2)),
-        Line(Point(-2, -26/337), Point(-1, 1/8))]
+    assert e.normal_lines(p, 2) == [
+        Line(Point(-341/171, -1/13), Point(-170/171, 5/64)),
+        Line(Point(26/15, -1/2), Point(41/15, -43/26))]
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
-    assert e.normal_lines((1, 1), 1) == \
-        [Line(Point(-2, -1/3), Point(-1, 1/6)),
+    assert e.normal_lines((1, 1), 2) == [
+        Line(Point(-64/33, -20/71), Point(-31/33, 2/13)),
         Line(Point(1, -1), Point(2, -4))]
+    # general ellipse fails except under certain conditions
+    e = Ellipse((0, 0), x, 1)
+    assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
+    raises(NotImplementedError, lambda: e.normal_lines((x + 1, 1)))
+
 
     # Properties
     major = 3
@@ -1659,9 +1666,8 @@ def test_idiff():
     assert ans == idiff(circ, [y], x, 3).simplify()
     assert idiff(circ, y, x, 3).simplify() == ans
     explicit  = 12*x/sqrt(-x**2 + 4)**5
-    assert ans.subs(y, solve(circ, y)[0]).simplify() == \
-        explicit
-    assert explicit in [sol.diff(x, 3).simplify() for sol in solve(circ, y)]
+    assert ans.subs(y, solve(circ, y)[0]).equals(explicit)
+    assert True in [sol.diff(x, 3).equals(explicit) for sol in solve(circ, y)]
     assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1
 
 

@@ -33,8 +33,7 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, get_function_code,
-                                      string_types, xrange)
+from sympy.core.compatibility import exec_, PY3, string_types, xrange
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -472,9 +471,6 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     blacklist = kwargs.get('blacklist', [])
-    blacklist.extend([
-        "sympy/mpmath", # needs to be fixed upstream
-    ])
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
@@ -606,8 +602,6 @@ def _doctest(*paths, **kwargs):
     blacklist = kwargs.get("blacklist", [])
     split  = kwargs.get('split', None)
     blacklist.extend([
-        "doc/src/modules/mpmath",  # needs to be fixed upstream
-        "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
@@ -647,14 +641,6 @@ def _doctest(*paths, **kwargs):
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
         ])
-
-    # pytest = import_module('pytest')
-    # py = import_module('py')
-    # if py is None or pytest is None:
-    #     blacklist.extend([
-    #         "sympy/conftest.py",
-    #         "sympy/utilities/benchmarking.py"
-    #     ])
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
@@ -745,9 +731,6 @@ def _doctest(*paths, **kwargs):
             continue
         old_displayhook = sys.displayhook
         try:
-            # out = pdoctest.testfile(
-            #    rst_file, module_relative=False, encoding='utf-8',
-            #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -1323,7 +1306,6 @@ class SymPyDocTests(object):
         if executables is not None:
             for ex in executables:
                 found = find_executable(ex)
-                # print "EXE %s found %s" %(ex, found)
                 if found is None:
                     return False
         if moduledeps is not None:
@@ -1336,10 +1318,7 @@ class SymPyDocTests(object):
                         min_module_version='1.0.0', catch=(RuntimeError,))
                     if matplotlib is not None:
                         pass
-                        # print "EXTMODULE matplotlib version %s found" % \
-                        #     matplotlib.__version__
                     else:
-                        # print "EXTMODULE matplotlib > 1.0.0 not found"
                         return False
                 else:
                     # TODO min version support
@@ -1348,9 +1327,7 @@ class SymPyDocTests(object):
                         version = "unknown"
                         if hasattr(mod, '__version__'):
                             version = mod.__version__
-                        # print "EXTMODULE %s version %s found" %(extmod, version)
                     else:
-                        # print "EXTMODULE %s not found" %(extmod)
                         return False
         if viewers is not None:
             import tempfile
@@ -1857,9 +1834,11 @@ class PyTestReporter(Reporter):
                         columns = match.group('columns')
 
                         try:
-                            return int(columns)
+                            width = int(columns)
                         except ValueError:
                             pass
+                        if width != 0:
+                            return width
 
             return self._default_width
 
@@ -2049,7 +2028,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
-            #self.write_center("These tests raised an exception", "_")
             for e in self._exceptions:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
@@ -2062,7 +2040,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._failed) > 0:
-            #self.write_center("Failed", "_")
             for e in self._failed:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
@@ -2071,7 +2048,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._failed_doctest) > 0:
-            #self.write_center("Failed", "_")
             for e in self._failed_doctest:
                 filename, msg = e
                 self.write_center("", "_")

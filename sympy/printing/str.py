@@ -6,12 +6,11 @@ from __future__ import print_function, division
 
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
-from sympy.core.numbers import Integer
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import prec_to_dps
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps
 
 from sympy.utilities import default_sort_key
 
@@ -362,6 +361,9 @@ class StrPrinter(Printer):
         return expr._print()
 
     def _print_TensorHead(self, expr):
+        return expr._print()
+
+    def _print_Tensor(self, expr):
         return expr._print()
 
     def _print_TensMul(self, expr):

@@ -24,7 +24,7 @@ class TrigonometricFunction(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.args[0].is_rational and s.args[0].is_nonzero:
                 return False
         else:
             return s.is_rational
@@ -189,6 +189,9 @@ class sin(TrigonometricFunction):
     1
     >>> sin(pi/6)
     1/2
+    >>> sin(pi/12)
+    -sqrt(2)/4 + sqrt(6)/4
+
 
     See Also
     ========
@@ -386,10 +389,6 @@ class sin(TrigonometricFunction):
         if arg.is_real:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sin(self.args[0]._sage_())
-
 
 class cos(TrigonometricFunction):
     """
@@ -417,6 +416,8 @@ class cos(TrigonometricFunction):
     0
     >>> cos(2*pi/3)
     -1/2
+    >>> cos(pi/12)
+    sqrt(2)/4 + sqrt(6)/4
 
     See Also
     ========
@@ -483,8 +484,8 @@ class cos(TrigonometricFunction):
             # cosine formula #####################
             # https://github.com/sympy/sympy/issues/6048
             # explicit calculations are preformed for
-            # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
-            # Some other exact values like cos(k pi/15) can be
+            # cos(k pi/n) for n = 8,10,12,15,20,24,30,40,60,120
+            # Some other exact values like cos(k pi/240) can be
             # calculated using a partial-fraction decomposition
             # by calling cos( X ).rewrite(sqrt)
             cst_table_some = {
@@ -502,8 +503,26 @@ class cos(TrigonometricFunction):
                     return -cls(narg)
 
                 # If nested sqrt's are worse than un-evaluation
-                # you can require q in (1, 2, 3, 4, 6)
-                # q <= 12 returns expressions with 2 or fewer nestings.
+                # you can require q to be in (1, 2, 3, 4, 6, 12)
+                # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
+                # expressions with 2 or fewer sqrt nestings.
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                if q in table2:
+                    a, b = p*S.Pi/table2[q][0], p*S.Pi/table2[q][1]
+                    nvala, nvalb = cls(a), cls(b)
+                    if None == nvala or None == nvalb:
+                        return None
+                    return nvala*nvalb + cls(S.Pi/2 - a)*cls(S.Pi/2 - b)
+
                 if q > 12:
                     return None
 
@@ -735,10 +754,6 @@ class cos(TrigonometricFunction):
         if arg.is_real:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cos(self.args[0]._sage_())
-
 
 class tan(TrigonometricFunction):
     """
@@ -754,12 +769,14 @@ class tan(TrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import tan
+    >>> from sympy import tan, pi
     >>> from sympy.abc import x
     >>> tan(x**2).diff(x)
     2*x*(tan(x**2)**2 + 1)
     >>> tan(1).diff(x)
     0
+    >>> tan(pi/8).expand()
+    -1 + sqrt(2)
 
     See Also
     ========
@@ -814,6 +831,31 @@ class tan(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                if not pi_coeff.q % 2:
+                    narg = pi_coeff*S.Pi*2
+                    cresult, sresult = cos(narg), cos(narg - S.Pi/2)
+                    if not isinstance(cresult, cos) \
+                            and not isinstance(sresult, cos):
+                        if sresult == 0:
+                            return S.ComplexInfinity
+                        return (1 - cresult)/sresult
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                q = pi_coeff.q
+                p = pi_coeff.p % q
+                if q in table2:
+                    nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
+                    if None == nvala or None == nvalb:
+                        return None
+                    return (nvala - nvalb)/(1 + nvala*nvalb)
                 narg = ((pi_coeff + S.Half) % 1 - S.Half)*S.Pi
                 # see cos() to specify which expressions should  be
                 # expanded automatically in terms of radicals
@@ -968,10 +1010,6 @@ class tan(TrigonometricFunction):
         if arg.is_imaginary:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.tan(self.args[0]._sage_())
-
 
 class cot(TrigonometricFunction):
     """
@@ -987,12 +1025,14 @@ class cot(TrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import cot
+    >>> from sympy import cot, pi
     >>> from sympy.abc import x
     >>> cot(x**2).diff(x)
     2*x*(-cot(x**2)**2 - 1)
     >>> cot(1).diff(x)
     0
+    >>> cot(pi/12)
+    sqrt(3) + 2
 
     See Also
     ========
@@ -1047,6 +1087,29 @@ class cot(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                if pi_coeff.q > 2 and not pi_coeff.q % 2:
+                    narg = pi_coeff*S.Pi*2
+                    cresult, sresult = cos(narg), cos(narg - S.Pi/2)
+                    if not isinstance(cresult, cos) \
+                            and not isinstance(sresult, cos):
+                        return (1 + cresult)/sresult
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                q = pi_coeff.q
+                p = pi_coeff.p % q
+                if q in table2:
+                    nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
+                    if None == nvala or None == nvalb:
+                        return None
+                    return (1 + nvala*nvalb)/(nvalb - nvala)
                 narg = (((pi_coeff + S.Half) % 1) - S.Half)*S.Pi
                 # see cos() to specify which expressions should be
                 # expanded automatically in terms of radicals
@@ -1211,10 +1274,6 @@ class cot(TrigonometricFunction):
         if arg != argnew and (argnew/S.Pi).is_integer:
             return S.ComplexInfinity
         return cot(argnew)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cot(self.args[0]._sage_())
 
 
 class ReciprocalTrigonometricFunction(TrigonometricFunction):
@@ -1388,10 +1447,6 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*C.euler(2*k)/C.factorial(2*k)*x**(2*k)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sec(self.args[0]._sage_())
-
 
 class csc(ReciprocalTrigonometricFunction):
     """
@@ -1459,10 +1514,6 @@ class csc(ReciprocalTrigonometricFunction):
             k = n//2 + 1
             return ((-1)**(k - 1)*2*(2**(2*k - 1) - 1)*
                     C.bernoulli(2*k)*x**(2*k - 1)/C.factorial(2*k))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.csc(self.args[0]._sage_())
 
 
 ###############################################################################
@@ -1632,10 +1683,6 @@ class asin(InverseTrigonometricFunction):
         """
         return sin
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.asin(self.args[0]._sage_())
-
 
 class acos(InverseTrigonometricFunction):
     """
@@ -1785,10 +1832,6 @@ class acos(InverseTrigonometricFunction):
             return r
         elif z.is_real and (z + 1).is_nonnegative and (z - 1).is_nonpositive:
             return r
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acos(self.args[0]._sage_())
 
 
 class atan(InverseTrigonometricFunction):
@@ -1941,10 +1984,6 @@ class atan(InverseTrigonometricFunction):
     def _eval_rewrite_as_acsc(self, arg):
         return sqrt(arg**2)/arg*(S.Pi/2 - acsc(sqrt(1 + arg**2)))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.atan(self.args[0]._sage_())
-
 
 class acot(InverseTrigonometricFunction):
     """
@@ -2085,10 +2124,6 @@ class acot(InverseTrigonometricFunction):
     def _eval_rewrite_as_acsc(self, arg):
         return arg*sqrt(1/arg**2)*(S.Pi/2 - acsc(sqrt((1 + arg**2)/arg**2)))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acot(self.args[0]._sage_())
-
 
 class asec(InverseTrigonometricFunction):
     """
@@ -2174,10 +2209,6 @@ class asec(InverseTrigonometricFunction):
     def _eval_rewrite_as_acsc(self, arg):
         return S.Pi/2 - acsc(arg)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.arcsec(self.args[0]._sage_())
-
 
 class acsc(InverseTrigonometricFunction):
     """
@@ -2262,10 +2293,6 @@ class acsc(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_asec(self, arg):
         return S.Pi/2 - asec(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.arccsc(self.args[0]._sage_())
 
 
 class atan2(InverseTrigonometricFunction):
@@ -2432,7 +2459,3 @@ class atan2(InverseTrigonometricFunction):
         y, x = self.args
         if x.is_real and y.is_real:
             super(atan2, self)._eval_evalf(prec)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.atan2(self.args[0]._sage_(), self.args[1]._sage_())

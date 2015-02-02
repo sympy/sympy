@@ -1,4 +1,4 @@
-from sympy.functions import bspline_basis, bspline_basis_set
+from sympy.functions import bspline_basis_set
 from sympy import Piecewise, Interval
 from sympy import symbols, Rational
 

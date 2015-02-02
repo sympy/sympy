@@ -5,13 +5,10 @@ The dense matrix is stored as a list of lists.
 
 """
 
-from sympy.matrices.densetools import trace
-from sympy.matrices.densetools import col, row, eye, augment
+from sympy.matrices.densetools import col, eye, augment
 from sympy.matrices.densetools import rowadd, rowmul, conjugate_transpose
-from sympy import Dummy, sqrt, var
-from sympy.matrices.densetools import isHermitian
+from sympy import sqrt, var
 from sympy.core.compatibility import xrange
-from sympy import QQ
 import copy
 
 def row_echelon(matlist, K):

@@ -2,8 +2,8 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf)
-from sympy.mpmath import mpi
+    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference)
+from mpmath import mpi
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
@@ -431,6 +431,9 @@ def test_contains():
     assert S.EmptySet.contains(1) is S.false
     assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
 
+    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
+    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+
 
 def test_interval_symbolic():
     x = Symbol('x')
@@ -828,3 +831,16 @@ def test_Eq():
 
     assert Eq(s1*s2, s1*s2)
     assert Eq(s1*s2, s2*s1) == False
+
+
+def test_SymmetricDifference():
+   assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
+          FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
+   assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 ,4 ,5 )) \
+          == FiniteSet(5)
+   assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
+          FiniteSet(3, 4, 6)
+   assert Set(1, 2 ,3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
+          Set(2, 3, 4) - Set(1, 2, 3))
+   assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
+          Interval(2, 5), Interval(2, 5) - Interval(0, 4))

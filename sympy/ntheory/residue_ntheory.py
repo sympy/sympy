@@ -306,7 +306,7 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+    from sympy.polys.galoistools import gf_crt1, gf_crt2
     from sympy.polys.domains import ZZ
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):

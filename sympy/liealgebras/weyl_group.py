@@ -3,9 +3,7 @@
 from sympy.core import Basic, Rational
 from sympy.core.numbers import igcd
 from .cartan_type import CartanType
-from sympy.mpmath import fac
-from operator import itemgetter
-from itertools import groupby
+from mpmath import fac
 from sympy.matrices import Matrix, eye
 
 class WeylGroup(Basic):

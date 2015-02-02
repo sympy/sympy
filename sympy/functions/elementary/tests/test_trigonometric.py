@@ -82,6 +82,13 @@ def test_sin():
 
     assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
+    assert sin(pi/10) == -1/4 + sqrt(5)/4
+
+    assert sin(pi/12) == -sqrt(2)/4 + sqrt(6)/4
+    assert sin(5*pi/12) == sqrt(2)/4 + sqrt(6)/4
+    assert sin(-7*pi/12) == -sqrt(2)/4 - sqrt(6)/4
+    assert sin(-11*pi/12) == sqrt(2)/4 - sqrt(6)/4
+
     assert sin(104*pi/105) == sin(pi/105)
     assert sin(106*pi/105) == -sin(pi/105)
 
@@ -102,6 +109,9 @@ def test_sin():
     assert sin(na).is_algebraic is False
     q = Symbol('q', rational=True)
     assert sin(pi*q).is_algebraic
+    qn = Symbol('qn', rational=True, nonzero=True)
+    assert sin(qn).is_rational is False
+    assert sin(q).is_rational is None  # issue 8653
 
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
@@ -114,7 +124,7 @@ def test_sin():
 
 
 def test_sin_cos():
-    for d in [1, 2, 3, 4, 5, 6, 10, 12]:  # list is not exhaustive...
+    for d in [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 24, 30, 40, 60, 120]:  # list is not exhaustive...
         for n in xrange(-2*d, d*2):
             x = n*pi/d
             assert sin(x + pi/2) == cos(x), "fails for %d*pi/%d" % (n, d)
@@ -265,6 +275,11 @@ def test_cos():
 
     assert cos(pi/8) == sqrt((2 + sqrt(2))/4)
 
+    assert cos(pi/12) == sqrt(2)/4 + sqrt(6)/4
+    assert cos(5*pi/12) == -sqrt(2)/4 + sqrt(6)/4
+    assert cos(7*pi/12) == sqrt(2)/4 - sqrt(6)/4
+    assert cos(11*pi/12) == -sqrt(2)/4 - sqrt(6)/4
+
     assert cos(104*pi/105) == -cos(pi/105)
     assert cos(106*pi/105) == -cos(pi/105)
 
@@ -382,6 +397,27 @@ def test_tan():
     assert tan(7*pi/6) == 1/sqrt(3)
     assert tan(-5*pi/6) == 1/sqrt(3)
 
+    assert tan(pi/8).expand() == -1 + sqrt(2)
+    assert tan(3*pi/8).expand() == 1 + sqrt(2)
+    assert tan(5*pi/8).expand() == -1 - sqrt(2)
+    assert tan(7*pi/8).expand() == 1 - sqrt(2)
+
+    assert tan(pi/12) == -sqrt(3) + 2
+    assert tan(5*pi/12) == sqrt(3) + 2
+    assert tan(7*pi/12) == -sqrt(3) - 2
+    assert tan(11*pi/12) == sqrt(3) - 2
+
+    assert tan(pi/24).radsimp() == -2 - sqrt(3) + sqrt(2) + sqrt(6)
+    assert tan(5*pi/24).radsimp() == -2 + sqrt(3) - sqrt(2) + sqrt(6)
+    assert tan(7*pi/24).radsimp() == 2 - sqrt(3) - sqrt(2) + sqrt(6)
+    assert tan(11*pi/24).radsimp() == 2 + sqrt(3) + sqrt(2) + sqrt(6)
+    assert tan(13*pi/24).radsimp() == -2 - sqrt(3) - sqrt(2) - sqrt(6)
+    assert tan(17*pi/24).radsimp() == -2 + sqrt(3) + sqrt(2) - sqrt(6)
+    assert tan(19*pi/24).radsimp() == 2 - sqrt(3) + sqrt(2) - sqrt(6)
+    assert tan(23*pi/24).radsimp() == 2 + sqrt(3) - sqrt(2) - sqrt(6)
+
+    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
+
     assert tan(x*I) == tanh(x)*I
 
     assert tan(k*pi) == 0
@@ -398,6 +434,9 @@ def test_tan():
     assert tan(10*pi/7) == tan(3*pi/7)
     assert tan(11*pi/7) == -tan(3*pi/7)
     assert tan(-11*pi/7) == tan(3*pi/7)
+
+    assert tan(15*pi/14) == tan(pi/14)
+    assert tan(-15*pi/14) == -tan(pi/14)
 
 
 def test_tan_series():
@@ -428,7 +467,8 @@ def test_tan_rewrite():
     assert tan(cot(x)).rewrite(
         exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
-    assert 0 == (cos(pi/15)*tan(pi/15) - sin(pi/15)).rewrite(pow)
+    assert 0 == (cos(pi/34)*tan(pi/34) - sin(pi/34)).rewrite(pow)
+    assert 0 == (cos(pi/17)*tan(pi/17) - sin(pi/17)).rewrite(pow)
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
     assert tan(8*pi/19).rewrite(sqrt) == tan(8*pi/19)
 
@@ -492,6 +532,27 @@ def test_cot():
     assert cot(7*pi/6) == sqrt(3)
     assert cot(-5*pi/6) == sqrt(3)
 
+    assert cot(pi/8).expand() == 1 + sqrt(2)
+    assert cot(3*pi/8).expand() == -1 + sqrt(2)
+    assert cot(5*pi/8).expand() == 1 - sqrt(2)
+    assert cot(7*pi/8).expand() == -1 - sqrt(2)
+
+    assert cot(pi/12) == sqrt(3) + 2
+    assert cot(5*pi/12) == -sqrt(3) + 2
+    assert cot(7*pi/12) == sqrt(3) - 2
+    assert cot(11*pi/12) == -sqrt(3) - 2
+
+    assert cot(pi/24).radsimp() == sqrt(2) + sqrt(3) + 2 + sqrt(6)
+    assert cot(5*pi/24).radsimp() == -sqrt(2) - sqrt(3) + 2 + sqrt(6)
+    assert cot(7*pi/24).radsimp() == -sqrt(2) + sqrt(3) - 2 + sqrt(6)
+    assert cot(11*pi/24).radsimp() == sqrt(2) - sqrt(3) - 2 + sqrt(6)
+    assert cot(13*pi/24).radsimp() == -sqrt(2) + sqrt(3) + 2 - sqrt(6)
+    assert cot(17*pi/24).radsimp() == sqrt(2) - sqrt(3) + 2 - sqrt(6)
+    assert cot(19*pi/24).radsimp() == sqrt(2) + sqrt(3) - 2 - sqrt(6)
+    assert cot(23*pi/24).radsimp() == -sqrt(2) - sqrt(3) - 2 - sqrt(6)
+
+    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
+
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
 
@@ -503,6 +564,9 @@ def test_cot():
     assert cot(10*pi/7) == cot(3*pi/7)
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
+
+    assert cot(39*pi/34) == cot(5*pi/34)
+    assert cot(-41*pi/34) == -cot(7*pi/34)
 
     assert cot(x).is_finite is None
     assert cot(r).is_finite is None
@@ -539,7 +603,8 @@ def test_cot_rewrite():
     assert cot(tan(x)).rewrite(
         exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
-    assert cot(4*pi/15).rewrite(pow) == (cos(4*pi/15)/sin(4*pi/15)).rewrite(pow)
+    assert cot(4*pi/34).rewrite(pow).ratsimp() == (cos(4*pi/34)/sin(4*pi/34)).rewrite(pow).ratsimp()
+    assert cot(4*pi/17).rewrite(pow) == (cos(4*pi/17)/sin(4*pi/17)).rewrite(pow)
     assert cot(pi/19).rewrite(pow) == cot(pi/19)
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
 
@@ -1263,3 +1328,10 @@ def test_csc_rewrite_failing():
     # https://github.com/sympy/sympy/issues/7171
     assert csc(x).rewrite(pow) == csc(x)
     assert csc(x).rewrite(sqrt) == csc(x)
+
+
+def test_issue_8653():
+    n = Symbol('n', integer=True)
+    assert sin(n).is_irrational is None
+    assert cos(n).is_irrational is None
+    assert tan(n).is_irrational is None

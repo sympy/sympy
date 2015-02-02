@@ -6,8 +6,7 @@ from sympy import (
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
-    groebner, oo, pi, symbols, lex, ilex, grlex, Range,
-    Complement, Contains)
+    groebner, oo, pi, symbols, ilex, grlex, Range, Contains)
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -4298,8 +4297,8 @@ atan2⎜───────, ╲╱ x ⎟\n\
 def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
-    e = Ray((1, 1), angle=4.05*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/20) + 1))'
+    e = Ray((1, 1), angle=4.02*pi)
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/50) + 1))'
 
 
 def test_expint():

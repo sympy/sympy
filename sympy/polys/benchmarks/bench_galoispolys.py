@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.galoistools import gf_from_dict, gf_factor, gf_factor_sqf
+from sympy.polys.galoistools import gf_from_dict, gf_factor_sqf
 from sympy.polys.domains import ZZ
 from sympy import pi, nextprime
 from sympy.core.compatibility import xrange

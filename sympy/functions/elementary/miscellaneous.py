@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify
 from sympy.core.add import Add
-from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -163,10 +162,9 @@ def cbrt(arg):
     return C.Pow(arg, C.Rational(1, 3))
 
 
-def root(arg, n):
-    """The n-th root function (a shortcut for ``arg**(1/n)``)
-
-    root(x, n) -> Returns the principal n-th root of x.
+def root(arg, n, k=0):
+    """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
+    principle root (k=0).
 
 
     Examples
@@ -187,6 +185,10 @@ def root(arg, n):
     >>> root(x, -Rational(2, 3))
     x**(-3/2)
 
+    To get the k-th n-th root, specify k:
+
+    >>> root(-2, 3, 2)
+    -(-1)**(2/3)*2**(1/3)
 
     To get all n n-th roots you can use the RootOf function.
     The following examples show the roots of unity for n
@@ -194,13 +196,13 @@ def root(arg, n):
 
     >>> from sympy import RootOf, I
 
-    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    >>> [ RootOf(x**2 - 1, i) for i in range(2) ]
     [-1, 1]
 
-    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    >>> [ RootOf(x**3 - 1,i) for i in range(3) ]
     [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
 
-    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    >>> [ RootOf(x**4 - 1,i) for i in range(4) ]
     [-1, 1, -I, I]
 
     SymPy, like other symbolic algebra systems, returns the
@@ -212,13 +214,19 @@ def root(arg, n):
     >>> root(-8, 3)
     2*(-1)**(1/3)
 
-    The real_root function can be used to either make such a result
-    real or simply return the real root in the first place:
+    The real_root function can be used to either make the principle
+    result real (or simply to return the real root directly):
 
     >>> from sympy import real_root
     >>> real_root(_)
     -2
     >>> real_root(-32, 5)
+    -2
+
+    Alternatively, the n//2-th n-th root of a negative number can be
+    computed with root:
+
+    >>> root(-32, 5, 5//2)
     -2
 
     See Also
@@ -239,12 +247,16 @@ def root(arg, n):
 
     """
     n = sympify(n)
+    if k:
+        return C.Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
     return C.Pow(arg, 1/n)
 
 
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
-    all instances of -1**(1/odd) will be changed to -1.
+    all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
+    will only create a real root of a principle root -- the presence of
+    other factors may cause the result to not be real.
 
     Examples
     ========
@@ -259,6 +271,15 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
+    If one creates a non-principle root and applies real_root, the
+    result will not be real (so use with caution):
+
+    >>> root(-8, 3, 2)
+    -2*(-1)**(2/3)
+    >>> real_root(_)
+    -2*(-1)**(2/3)
+
+
     See Also
     ========
 
@@ -267,16 +288,26 @@ def real_root(arg, n=None):
     root, sqrt
     """
     if n is not None:
-        n = as_int(n)
-        rv = C.Pow(arg, Rational(1, n))
-        if n % 2 == 0:
-            return rv
+        try:
+            n = as_int(n)
+            arg = sympify(arg)
+            if arg.is_positive or arg.is_negative:
+                rv = root(arg, n)
+            else:
+                raise ValueError
+        except ValueError:
+            return root(arg, n)*C.Piecewise(
+                (S.One, ~C.Equality(C.im(arg), 0)),
+                (C.Pow(S.NegativeOne, S.One/n)**(2*C.floor(n/2)), C.And(
+                    C.Equality(n % 2, 1),
+                    arg < 0)),
+                (S.One, True))
     else:
         rv = sympify(arg)
-    n1pow = Transform(lambda x: S.NegativeOne,
+    n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and
-                      x.base is S.NegativeOne and
+                      x.base.is_negative and
                       x.exp.is_Rational and
                       x.exp.p == 1 and x.exp.q % 2)
     return rv.xreplace(n1pow)

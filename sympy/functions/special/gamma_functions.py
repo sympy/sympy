@@ -8,7 +8,6 @@ from .error_functions import erf
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import csc
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
@@ -133,6 +132,9 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
+        if arg.is_integer and arg.is_nonpositive:
+            return S.ComplexInfinity
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
@@ -157,10 +159,22 @@ class gamma(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        x = self.args[0]
+        if x.is_positive or x.is_noninteger:
+            return True
+
+    def _eval_is_positive(self):
+        x = self.args[0]
+        if x.is_positive:
+            return True
+        elif x.is_noninteger:
+            return floor(x).is_even
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
+
+    def _eval_rewrite_as_factorial(self, z):
+        return C.factorial(z - 1)
 
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
@@ -296,7 +310,7 @@ class lowergamma(Function):
                     return (cls(a + 1, x) + x**a * C.exp(-x))/a
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)
@@ -395,7 +409,7 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         a = self.args[0]._to_mpmath(prec)
         z = self.args[1]._to_mpmath(prec)
@@ -916,6 +930,10 @@ class loggamma(Function):
             return polygamma(0, self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.log_gamma(self.args[0]._sage_())
 
 
 def digamma(x):

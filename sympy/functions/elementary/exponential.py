@@ -90,7 +90,7 @@ class ExpBase(Function):
         if s.func == self.func:
             if s.exp is S.Zero:
                 return True
-            elif s.exp.is_rational:
+            elif s.exp.is_rational and s.exp.is_nonzero:
                 return False
         else:
             return s.is_rational
@@ -157,7 +157,11 @@ class exp_polar(ExpBase):
         """ Careful! any evalf of polar numbers is flaky """
         from sympy import im, pi, re
         i = im(self.args[0])
-        if i <= -pi or i > pi:
+        try:
+            bad = (i <= -pi or i > pi)
+        except TypeError:
+            bad = True
+        if bad:
             return self  # cannot evalf for this argument
         res = exp(self.args[0])._eval_evalf(prec)
         if i > 0 and im(res) < 0:
@@ -271,7 +275,6 @@ class exp(ExpBase):
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
         elif arg.is_Matrix:
-            from sympy import Matrix
             return arg.exp()
 
     @property
@@ -419,10 +422,6 @@ class exp(ExpBase):
     def _eval_rewrite_as_tanh(self, arg):
         return (1 + C.tanh(arg/2))/(1 - C.tanh(arg/2))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.exp(self.args[0]._sage_())
-
 
 class log(Function):
     """
@@ -553,9 +552,11 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy import unpolarify
+        from sympy import unpolarify, expand_log
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
+        if (len(self.args) == 2):
+            return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
         if arg.is_Integer:
             # remove perfect powers
@@ -596,7 +597,9 @@ class log(Function):
         return self.func(arg)
 
     def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import expand_log, logcombine, simplify
+        from sympy.simplify.simplify import expand_log, simplify
+        if (len(self.args) == 2):
+            return simplify(self.func(*self.args), ratio=ratio, measure=measure)
         expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=measure)
@@ -638,7 +641,7 @@ class log(Function):
         if s.func == self.func:
             if (self.args[0] - 1).is_zero:
                 return True
-            if s.args[0].is_rational:
+            if s.args[0].is_rational and (self.args[0] - 1).is_nonzero:
                 return False
         else:
             return s.is_rational
@@ -687,8 +690,6 @@ class log(Function):
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
         if r is not None:
-            #k = r.get(r, S.One)
-            #l = r.get(l, S.Zero)
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
                 r = log(k) + l*logx  # XXX true regardless of assumptions?
@@ -714,10 +715,6 @@ class log(Function):
         if arg is S.One:
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.log(self.args[0]._sage_())
 
 
 class LambertW(Function):
@@ -780,6 +777,8 @@ class LambertW(Function):
                 return -S.ImaginaryUnit*S.Pi/2
             elif x == -1/S.Exp1:
                 return S.NegativeOne
+            elif x == -2*exp(-2):
+                return -C.Integer(2)
 
     def fdiff(self, argindex=1):
         """
@@ -804,13 +803,18 @@ class LambertW(Function):
         else:
             k = self.args[1]
         if k.is_zero:
-            return (x + 1/S.Exp1).is_positive
+            if (x + 1/S.Exp1).is_positive:
+                return True
+            elif (x + 1/S.Exp1).is_nonpositive:
+                return False
         elif (k + 1).is_zero:
-            from sympy.core.logic import fuzzy_and
-            return fuzzy_and([x.is_negative, (x + 1/S.Exp1).is_positive])
+            if x.is_negative and (x + 1/S.Exp1).is_positive:
+                return True
+            elif x.is_nonpositive or (x + 1/S.Exp1).is_nonnegative:
+                return False
         elif k.is_nonzero and (k + 1).is_nonzero:
-            return False
-
+            if x.is_real:
+                return False
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)

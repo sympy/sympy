@@ -354,7 +354,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     "Handbook of computational group theory"
 
     """
-    from sympy.combinatorics.perm_groups import PermutationGroup, _orbit
+    from sympy.combinatorics.perm_groups import _orbit
     base_len = len(base)
     degree = strong_gens[0].size
     if strong_gens_distr is None:

@@ -13,9 +13,8 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im, Abs, cos, acos, sin, Piecewise
+from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
-from sympy.functions.elementary.complexes import sign
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -24,7 +23,7 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
-from sympy.utilities import default_sort_key, public
+from sympy.utilities import public
 
 from sympy.core.compatibility import reduce, xrange
 
@@ -206,7 +205,6 @@ def _roots_quartic_euler(p, q, r, a):
     >>> _roots_quartic_euler(p, q, r, S(0))[0]
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
-    from sympy.solvers import solve
     # solve the resolvent equation
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2

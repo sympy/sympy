@@ -8,7 +8,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, xrange
-from sympy.mpmath.libmp import mpf_log, prec_to_dps
+from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
@@ -369,7 +369,7 @@ class Expr(Basic, EvalfMixin):
                            for zi in free])))
             try:
                 nmag = abs(self.evalf(2, subs=reps))
-            except TypeError:
+            except (ValueError, TypeError):
                 # if an out of range value resulted in evalf problems
                 # then return None -- XXX is there a way to know how to
                 # select a good random number for a given expression?
@@ -388,7 +388,7 @@ class Expr(Basic, EvalfMixin):
             # increase the precision up to the default maximum
             # precision to see if we can get any significance
 
-            from sympy.mpmath.libmp.libintmath import giant_steps
+            from mpmath.libmp.libintmath import giant_steps
             from sympy.core.evalf import DEFAULT_MAXPREC as target
 
             # evaluate
@@ -593,7 +593,7 @@ class Expr(Basic, EvalfMixin):
         if not diff:
             return True
 
-        if not diff.has(Add):
+        if not diff.has(Add, Mod):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
@@ -663,6 +663,10 @@ class Expr(Basic, EvalfMixin):
         if failing_expression:
             return diff
         return None
+
+    def _eval_is_composite(self):
+        if self.is_integer and self.is_positive and self.is_prime is False:
+            return True
 
     def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
@@ -744,7 +748,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN) or A.has(S.Infinity) or A.has(S.NegativeInfinity):
+            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -755,7 +759,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN) or B.has(S.Infinity) or B.has(S.NegativeInfinity):
+            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
                 B = limit(self, x, b)
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
@@ -2404,7 +2408,9 @@ class Expr(Basic, EvalfMixin):
         from sympy import collect
         if x is None:
             syms = self.atoms(C.Symbol)
-            if len(syms) > 1:
+            if not syms:
+                return self
+            elif len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
@@ -3070,9 +3076,15 @@ class Expr(Basic, EvalfMixin):
         if dps is not None and allow > dps:
             allow = dps
         mag = Pow(10, p)  # magnitude needed to bring digit p to units place
+        xwas = x
         x += 1/(2*mag)  # add the half for rounding
         i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
-        rv = Integer(i10)//10
+        if i10.is_negative:
+            x = xwas - 1/(2*mag)  # should have gone the other way
+            i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
+            rv = -(Integer(-i10)//10)
+        else:
+            rv = Integer(i10)//10
         q = 1
         if p > 0:
             q = mag
@@ -3150,7 +3162,7 @@ def _mag(x):
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, expand_mul, Function
+from .function import Derivative, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

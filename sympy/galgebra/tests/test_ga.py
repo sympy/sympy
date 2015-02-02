@@ -107,7 +107,7 @@ def test_metrics():
     """
     Test specific metrics (diagpq, arbitrary_metric, arbitrary_metric_conformal)
     """
-    from sympy.galgebra.ga import diagpq, arbitrary_metric, arbitrary_metric_conformal
+    from sympy.galgebra.ga import diagpq, arbitrary_metric
     metric = diagpq(3)
     p1, p2, p3 = MV.setup('p1 p2 p3', metric, debug=0)
     x1, y1, z1 = symbols('x1 y1 z1')

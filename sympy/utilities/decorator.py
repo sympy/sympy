@@ -81,7 +81,7 @@ def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to
     the value it had before the function was run."""
     import functools
-    from sympy import mpmath
+    import mpmath
 
     def func_wrapper():
         dps = mpmath.mp.dps
@@ -150,13 +150,13 @@ def public(obj):
 
     By using this decorator on functions or classes you achieve the same goal
     as by filling ``__all__`` variables manually, you just don't have to repeat
-    your self (object's name). You also know if object is public at definition
+    yourself (object's name). You also know if object is public at definition
     site, not at some random location (where ``__all__`` was set).
 
-    Note that in multiple decorator setup, in almost all cases, ``@public``
+    Note that in multiple decorator setup (in almost all cases) ``@public``
     decorator must be applied before any other decorators, because it relies
     on the pointer to object's global namespace. If you apply other decorators
-    first, ``@public`` may end up modifying wrong namespace.
+    first, ``@public`` may end up modifying the wrong namespace.
 
     Example::
 

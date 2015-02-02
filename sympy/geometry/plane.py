@@ -7,20 +7,14 @@ Plane
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols, Symbol, Rational
+from sympy.core import S, C, Dummy, Symbol, Rational
 from sympy.core.compatibility import is_sequence
-from sympy.core.function import expand_mul
-from sympy.core.logic import fuzzy_and
-from sympy.core.exprtools import factor_terms
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff,
-    sqrt)
+from sympy.functions.elementary.trigonometric import sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
 
-from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .point import Point

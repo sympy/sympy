@@ -10,18 +10,18 @@ the separate 'factorials' module.
 from __future__ import print_function, division
 
 from sympy.core.function import Function, expand_mul
-from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
+from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.cache import cacheit
-from sympy.core.numbers import pi
+from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 
-from sympy.mpmath import bernfrac, workprec
-from sympy.mpmath.libmp import ifib as _ifib
+from mpmath import bernfrac, workprec
+from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
@@ -292,6 +292,10 @@ class bernoulli(Function):
                 raise ValueError("Bernoulli numbers are defined only"
                                  " for nonnegative integer indices.")
 
+        if sym is None:
+            if n.is_odd and (n - 1).is_positive:
+                return S.Zero
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -422,6 +426,16 @@ class bell(Function):
             else:
                 r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
+
+    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
+        if (k_sym is not None) or (symbols is not None):
+            return self
+
+        # Dobinski's formula
+        if not n.is_nonnegative:
+            return self
+        k = C.Dummy('k', integer=True, nonnegative=True)
+        return 1 / E * C.Sum(k**n / factorial(k), (k, 0, S.Infinity))
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -704,7 +718,7 @@ class euler(Function):
         if m.is_odd:
             return S.Zero
         if m.is_Integer and m.is_nonnegative:
-            from sympy.mpmath import mp
+            from mpmath import mp
             m = m._to_mpmath(mp.prec)
             res = mp.eulernum(m, exact=True)
             return Integer(res)
@@ -723,7 +737,7 @@ class euler(Function):
         m = self.args[0]
 
         if m.is_Integer and m.is_nonnegative:
-            from sympy.mpmath import mp
+            from mpmath import mp
             from sympy import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
@@ -830,12 +844,21 @@ class catalan(Function):
     def _eval_rewrite_as_binomial(self, n):
         return C.binomial(2*n, n)/(n + 1)
 
+    def _eval_rewrite_as_factorial(self, n):
+        return factorial(2*n) / (factorial(n+1) * factorial(n))
+
     def _eval_rewrite_as_gamma(self, n):
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
 
     def _eval_rewrite_as_hyper(self, n):
         return C.hyper([1 - n, -n], [2], 1)
+
+    def _eval_rewrite_as_Product(self, n):
+        if not (n.is_integer and n.is_nonnegative):
+            return self
+        k = Dummy('k', integer=True, positive=True)
+        return C.Product((n + k) / k, (k, 2, n))
 
     def _eval_evalf(self, prec):
         if self.args[0].is_number:

@@ -2,7 +2,7 @@
 
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
     log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
-    I)
+    I, Matrix)
 
 from sympy.printing.python import python
 
@@ -176,11 +176,10 @@ def test_python_integrals():
     assert python(f_6) == "x = Symbol('x')\ny = Symbol('y')\ne = Integral(x**2*y**2, x, y)"
 
 
-# Not implemented yet
-#def test_python_matrix():
-#    p = python(Matrix([[x**2+1, 1], [y, x+y]]))
-#    s = ''
-#    assert p == s
+def test_python_matrix():
+    p = python(Matrix([[x**2+1, 1], [y, x+y]]))
+    s = "x = Symbol('x')\ny = Symbol('y')\ne = MutableDenseMatrix([[x**2 + 1, 1], [y, x + y]])"
+    assert p == s
 
 def test_python_limits():
     assert python(limit(x, x, oo)) == 'e = oo'

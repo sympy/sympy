@@ -1,8 +1,8 @@
 import string
 
 from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, zoo, pi, I, simplify,
-    expand_func, diff, EulerGamma, cancel, re, im)
+    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
+    expand_func, diff, EulerGamma, cancel, re, im, Product)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
     gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
@@ -38,6 +38,14 @@ def test_bernoulli():
 
     b = bernoulli(10**6, evaluate=False).evalf()
     assert str(b) == '-2.23799235765713e+4767529'
+
+    # Issue #8527
+    l = Symbol('l', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
+    n = Symbol('n', integer=True, positive=True)
+    assert isinstance(bernoulli(2 * l + 1), bernoulli)
+    assert isinstance(bernoulli(2 * m + 1), bernoulli)
+    assert bernoulli(2 * n + 1) == 0
 
 
 def test_fibonacci():
@@ -77,6 +85,17 @@ def test_bell():
 
     X = (1, 2, 3, 5)
     assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
+
+    # Dobinski's formula
+    n = Symbol('n', integer=True, nonnegative=True)
+    # For large numbers, this is too slow
+    # For nonintegers, there are significant precision errors
+    for i in [0, 2, 3, 7, 13, 42, 55]:
+        assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
+
+    # For negative numbers, the formula does not hold
+    m = Symbol('m', integer=True)
+    assert bell(-1).evalf() == bell(m).rewrite(Sum).evalf(subs={m: -1})
 
 
 def test_harmonic():
@@ -136,8 +155,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 11818877030/S(4286604231) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(-sqrt(5)/2 + 1/S(2)) )
-
+             + 11818877030/S(4286604231) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
 
     Heoo = harmonic(ne + po/qo)
     Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -162,7 +180,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 486853480/S(186374097) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(2*(-sqrt(5)/4 + 1/S(4))))
+             + 486853480/S(186374097) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
 
     Hooo = harmonic(no + po/qo)
     Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -264,17 +282,28 @@ def test_euler_failing():
 
 
 def test_catalan():
-    assert catalan(1) == 1
-    assert catalan(2) == 2
-    assert catalan(3) == 5
-    assert catalan(4) == 14
+    n = Symbol('n', integer=True)
+    m = Symbol('n', integer=True, positive=True)
+
+    catalans = [1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, 16796, 58786]
+    for i, c in enumerate(catalans):
+        assert catalan(i) == c
+        assert catalan(n).rewrite(factorial).subs(n, i) == c
+        assert catalan(n).rewrite(Product).subs(n, i).doit() == c
 
     assert catalan(x) == catalan(x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
+    assert catalan(Rational(1, 2)).rewrite(factorial).rewrite(gamma) ==\
+        8 / (3 * pi)
     assert catalan(3*x).rewrite(gamma) == 4**(
         3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
+
+    assert catalan(n).rewrite(factorial) == factorial(2*n) / (factorial(n + 1)
+                                                              * factorial(n))
+    assert isinstance(catalan(n).rewrite(Product), catalan)
+    assert isinstance(catalan(m).rewrite(Product), Product)
 
     assert diff(catalan(x), x) == (polygamma(
         0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
