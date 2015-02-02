@@ -888,4 +888,5 @@ def test_digitslist():
     assert all([digitslist(n, 16) == [int(d, 16) for d in format(n, 'x')]
                 for n in range(20)])
     assert digitslist(2345, 34) == [2, 0, 33]
+    assert digitslist(384753, 71) == [1, 5, 23, 4]
     assert digitslist(93409) == [9, 3, 4, 0, 9]

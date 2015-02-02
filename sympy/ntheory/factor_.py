@@ -1507,8 +1507,9 @@ def digitslist(n, b=10):
             x, y = n, []
             while x >= b:
                 x, r = divmod(x, b)
-                y.insert(0, r)
-            y.insert(0, x)
+                y.append(r)
+            y.append(x)
+            y.reverse()
             return y
     else:
         raise ValueError("b and n must be integers")
