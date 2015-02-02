@@ -1071,3 +1071,4 @@ def test_issue_7827():
         Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
     assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
         Piecewise((0, Eq(n, 0)), (Sum(Piecewise((-x/n, Eq(n, 0)), (-sin(n*x)/n**2, True)), (n, 1, N)), True))
+    assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
