@@ -1072,3 +1072,5 @@ def test_issue_7827():
     assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
         Piecewise((0, Eq(n, 0)), (Sum(Piecewise((-x/n, Eq(n, 0)), (-sin(n*x)/n**2, True)), (n, 1, N)), True))
     assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
+    assert integrate(Sum(x, (x, 1, y)), x) == x*Sum(x, (x, 1, y))
+    assert integrate(Sum(x, (x, y, n)), y) == Integral(Sum(x, (x, y, n)), y)
