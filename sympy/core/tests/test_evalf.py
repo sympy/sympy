@@ -3,7 +3,7 @@ from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
                    integrate, log, Mul, N, oo, pi, Pow, product, Product,
                    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part)
+    scaled_zero, get_integer_part, as_mpmath)
 from sympy.core.compatibility import long
 from mpmath import inf, ninf
 from sympy.abc import n, x, y
@@ -225,6 +225,9 @@ def test_evalf_bugs():
     assert (5-sin(oo)).n() == S.NaN
     assert (5+E**(oo)).n() == S.Infinity
     assert (5-E**(oo)).n() == S.NegativeInfinity
+
+    #issue 7416
+    assert as_mpmath(0.0, 10, {'chop': True}) == 0
 
 
 def test_evalf_integer_parts():

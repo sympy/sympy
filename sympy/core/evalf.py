@@ -853,7 +853,7 @@ def evalf_bernoulli(expr, prec, options):
 
 def as_mpmath(x, prec, options):
     x = sympify(x)
-    if isinstance(x, C.Zero):
+    if isinstance(x, C.Zero) or x == 0:
         return mpf(0)
     if isinstance(x, C.Infinity):
         return mpf('inf')
