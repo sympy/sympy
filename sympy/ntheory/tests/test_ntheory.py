@@ -890,3 +890,4 @@ def test_digitslist():
     assert digitslist(2345, 34) == [2, 0, 33]
     assert digitslist(384753, 71) == [1, 5, 23, 4]
     assert digitslist(93409) == [9, 3, 4, 0, 9]
+    assert digitslist(-92838, 11) == ['-', 6, 3, 8, 2, 9]

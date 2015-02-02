@@ -1485,6 +1485,7 @@ def digitslist(n, b=10):
     Return a list of the digits of n in base b.
 
     digitslist(n, 2) is equivalent to [int(d) for d in format(n,'b')]
+    if n is negative, then the first item in the returned list is '-'
 
     Examples
     ========
@@ -1496,6 +1497,8 @@ def digitslist(n, b=10):
     [1, 1, 0, 1, 1]
     >>> digitslist(65536,256)
     [1, 0, 0]
+    >>> digitslist(-3958,27)
+    ['-', 5, 11, 16]
     """
 
     b = sympify(b)
@@ -1504,12 +1507,12 @@ def digitslist(n, b=10):
         if b <= 1:
             raise ValueError("b must be >= 2")
         else:
-            x, y = n, []
+            x, y = abs(n), []
             while x >= b:
                 x, r = divmod(x, b)
                 y.append(r)
             y.append(x)
             y.reverse()
-            return y
+            return ['-'] + y if n.is_negative else y
     else:
         raise ValueError("b and n must be integers")
