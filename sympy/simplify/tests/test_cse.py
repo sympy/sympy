@@ -7,7 +7,8 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.matrices import eye, SparseMatrix
+from sympy.matrices import eye, SparseMatrix, MutableDenseMatrix, MutableSparseMatrix
+
 
 w, x, y, z = symbols('w,x,y,z')
 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
@@ -68,7 +69,7 @@ def test_cse_single2():
     substs, reduced = cse(e)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
-    assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
+    assert isinstance(cse(Matrix([[1]]))[1], Matrix)
 
 
 def test_cse_not_possible():
@@ -366,8 +367,7 @@ def test_issue_8891():
     m = [x + y, m1, m2]
     r,e = cse(m)
 
-    ans = ([(x0, x + y)], [x0, [Matrix([[x0, 0], [0, x0]])], [Matrix([[x0, 0], [0, 0]])]])
+    ans = ([(x0, x + y)], [x0, Matrix([[x0, 0], [0, x0]]), Matrix([[x0, 0], [0, 0]])])
     assert cse(m) == ans
 
-    ans = ['MutableDenseMatrix', 'MutableSparseMatrix']
-    assert [e[1][0].__class__.__name__, e[2][0].__class__.__name__] == ans
+    assert isinstance(e[1], MutableDenseMatrix) and isinstance(e[2], MutableSparseMatrix)
