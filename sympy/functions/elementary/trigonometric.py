@@ -189,6 +189,9 @@ class sin(TrigonometricFunction):
     1
     >>> sin(pi/6)
     1/2
+    >>> sin(pi/12)
+    -sqrt(2)/4 + sqrt(6)/4
+
 
     See Also
     ========
@@ -413,6 +416,8 @@ class cos(TrigonometricFunction):
     0
     >>> cos(2*pi/3)
     -1/2
+    >>> cos(pi/12)
+    sqrt(2)/4 + sqrt(6)/4
 
     See Also
     ========
@@ -479,8 +484,8 @@ class cos(TrigonometricFunction):
             # cosine formula #####################
             # https://github.com/sympy/sympy/issues/6048
             # explicit calculations are preformed for
-            # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
-            # Some other exact values like cos(k pi/15) can be
+            # cos(k pi/n) for n = 8,10,12,15,20,24,30,40,60,120
+            # Some other exact values like cos(k pi/240) can be
             # calculated using a partial-fraction decomposition
             # by calling cos( X ).rewrite(sqrt)
             cst_table_some = {
@@ -498,8 +503,26 @@ class cos(TrigonometricFunction):
                     return -cls(narg)
 
                 # If nested sqrt's are worse than un-evaluation
-                # you can require q in (1, 2, 3, 4, 6)
-                # q <= 12 returns expressions with 2 or fewer nestings.
+                # you can require q to be in (1, 2, 3, 4, 6, 12)
+                # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
+                # expressions with 2 or fewer sqrt nestings.
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                if q in table2:
+                    a, b = p*S.Pi/table2[q][0], p*S.Pi/table2[q][1]
+                    nvala, nvalb = cls(a), cls(b)
+                    if None == nvala or None == nvalb:
+                        return None
+                    return nvala*nvalb + cls(S.Pi/2 - a)*cls(S.Pi/2 - b)
+
                 if q > 12:
                     return None
 
@@ -746,12 +769,14 @@ class tan(TrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import tan
+    >>> from sympy import tan, pi
     >>> from sympy.abc import x
     >>> tan(x**2).diff(x)
     2*x*(tan(x**2)**2 + 1)
     >>> tan(1).diff(x)
     0
+    >>> tan(pi/8).expand()
+    -1 + sqrt(2)
 
     See Also
     ========
@@ -806,6 +831,31 @@ class tan(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                if not pi_coeff.q % 2:
+                    narg = pi_coeff*S.Pi*2
+                    cresult, sresult = cos(narg), cos(narg - S.Pi/2)
+                    if not isinstance(cresult, cos) \
+                            and not isinstance(sresult, cos):
+                        if sresult == 0:
+                            return S.ComplexInfinity
+                        return (1 - cresult)/sresult
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                q = pi_coeff.q
+                p = pi_coeff.p % q
+                if q in table2:
+                    nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
+                    if None == nvala or None == nvalb:
+                        return None
+                    return (nvala - nvalb)/(1 + nvala*nvalb)
                 narg = ((pi_coeff + S.Half) % 1 - S.Half)*S.Pi
                 # see cos() to specify which expressions should  be
                 # expanded automatically in terms of radicals
@@ -975,12 +1025,14 @@ class cot(TrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import cot
+    >>> from sympy import cot, pi
     >>> from sympy.abc import x
     >>> cot(x**2).diff(x)
     2*x*(-cot(x**2)**2 - 1)
     >>> cot(1).diff(x)
     0
+    >>> cot(pi/12)
+    sqrt(3) + 2
 
     See Also
     ========
@@ -1035,6 +1087,29 @@ class cot(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                if pi_coeff.q > 2 and not pi_coeff.q % 2:
+                    narg = pi_coeff*S.Pi*2
+                    cresult, sresult = cos(narg), cos(narg - S.Pi/2)
+                    if not isinstance(cresult, cos) \
+                            and not isinstance(sresult, cos):
+                        return (1 + cresult)/sresult
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                q = pi_coeff.q
+                p = pi_coeff.p % q
+                if q in table2:
+                    nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
+                    if None == nvala or None == nvalb:
+                        return None
+                    return (1 + nvala*nvalb)/(nvalb - nvala)
                 narg = (((pi_coeff + S.Half) % 1) - S.Half)*S.Pi
                 # see cos() to specify which expressions should be
                 # expanded automatically in terms of radicals

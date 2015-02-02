@@ -35,7 +35,8 @@ from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
-    degree, PolynomialError)
+    degree)
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -740,14 +741,12 @@ def solve(f, *symbols, **flags):
         >>> expr = root(x, 3) - root(x, 5)
 
     We will construct a known value for this expression at x = 3 by selecting
-    a non-principle root for each (i.e. multiplying by a power of the same
-    root of -1):
+    the 1-th root for each radical:
 
-        >>> expr1 = root(x, 3)*root(-1, 3)**2 - root(x, 5)*root(-1, 5)**2
+        >>> expr1 = root(x, 3, 1) - root(x, 5, 1)
         >>> v = expr1.subs(x, -3)
 
-    The solve function is unable to find any exact roots to this equation in
-    either form:
+    The solve function is unable to find any exact roots to this equation:
 
         >>> eq = Eq(expr, v); eq1 = Eq(expr1, v)
         >>> solve(eq, check=False), solve(eq1, check=False)
@@ -1383,9 +1382,15 @@ def _solve(f, *symbols, **flags):
         # as a polynomial, followed (perhaps) by a change of variables if the
         # generator is not a symbol
 
-        poly = Poly(f_num)
-        if poly is None:
-            raise ValueError('could not convert %s to Poly' % f_num)
+        try:
+            poly = Poly(f_num)
+            if poly is None:
+                raise ValueError('could not convert %s to Poly' % f_num)
+        except GeneratorsNeeded:
+            simplified_f = simplify(f_num)
+            if simplified_f != f_num:
+                return _solve(simplified_f, symbol, **flags)
+            raise ValueError('expression appears to be a constant')
 
         gens = [g for g in poly.gens if g.has(symbol)]
 
@@ -2962,8 +2967,8 @@ def unrad(eq, *syms, **flags):
             cov = [p.xreplace(rep), e.xreplace(rep)]
 
         # remove constants and powers of factors since these don't change
-        # the location of the root
-        eq = factor_terms(eq.as_numer_denom()[0])
+        # the location of the root; XXX should factor or factor_terms be used?
+        eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True))
         if eq.is_Mul:
             args = []
             for f in eq.args:
@@ -2973,9 +2978,7 @@ def unrad(eq, *syms, **flags):
                     args.append(f.base)
                 else:
                     args.append(f)
-            eq = Mul(*args)
-        # fully expand the result
-        eq = _mexpand(eq, recursive=True)
+            eq = Mul(*args)  # leave as Mul for more efficient solving
 
         # make the sign canonical
         free = eq.free_symbols
@@ -3117,10 +3120,105 @@ def unrad(eq, *syms, **flags):
         else:
             # no longer consider integer powers as generators
             gens = [g for g in gens if _Q(g) != 1]
+
         if len(rterms) == 2:
             if not others:
                 eq = rterms[0]**lcm - (-rterms[1])**lcm
                 ok = True
+            elif not log(lcm, 2).is_Integer:
+                # the lcm-is-power-of-two case is handled below
+                r0, r1 = rterms
+                if flags.get('_reverse', False):
+                    r1, r0 = r0, r1
+                i0 = _rads0, _bases0, lcm0 = _rads_bases_lcm(r0.as_poly())
+                i1 = _rads1, _bases1, lcm1 = _rads_bases_lcm(r1.as_poly())
+                for reverse in range(2):
+                    if reverse:
+                        i0, i1 = i1, i0
+                        r0, r1 = r1, r0
+                    _rads1, _, lcm1 = i1
+                    _rads1 = Mul(*_rads1)
+                    t1 = _rads1**lcm1
+                    c = covsym**lcm1 - t1
+                    for x in syms:
+                        try:
+                            sol = _solve(c, x, **uflags)
+                            if not sol:
+                                raise NotImplementedError
+                            neweq = r0.subs(x, sol[0]) + covsym*r1/_rads1 + \
+                                others
+                            tmp = unrad(neweq, covsym)
+                            if tmp:
+                                eq, newcov = tmp
+                                if newcov:
+                                    newp, newc = newcov
+                                    _cov(newp, c.subs(covsym,
+                                        _solve(newc, covsym, **uflags)[0]))
+                                else:
+                                    _cov(covsym, c)
+                            else:
+                                eq = neweq
+                                _cov(covsym, c)
+                            ok = True
+                            break
+                        except NotImplementedError:
+                            if reverse:
+                                raise NotImplementedError(
+                                    'no successful change of variable found')
+                            else:
+                                pass
+                    if ok:
+                        break
+        elif len(rterms) == 3:
+            # two cube roots and another with order less than 5
+            # (so an analytical solution can be found) or a base
+            # that matches one of the cube root bases
+            info = [_rads_bases_lcm(i.as_poly()) for i in rterms]
+            RAD = 0
+            BASES = 1
+            LCM = 2
+            if info[0][LCM] != 3:
+                info.append(info.pop(0))
+                rterms.append(rterms.pop(0))
+            elif info[1][LCM] != 3:
+                info.append(info.pop(1))
+                rterms.append(rterms.pop(1))
+            if info[0][LCM] == info[1][LCM] == 3:
+                if info[1][BASES] != info[2][BASES]:
+                    info[0], info[1] = info[1], info[0]
+                    rterms[0], rterms[1] = rterms[1], rterms[0]
+                if info[1][BASES] == info[2][BASES]:
+                    eq = rterms[0]**3 + (rterms[1] + rterms[2] + others)**3
+                    ok = True
+                elif info[2][LCM] < 5:
+                    # a*root(A, 3) + b*root(B, 3) + others = c
+                    a, b, c, d, A, B = [Dummy(i) for i in 'abcdAB']
+                    # zz represents the unraded expression into which the
+                    # specifics for this case are substituted
+                    zz = (c - d)*(A**3*a**9 + 3*A**2*B*a**6*b**3 -
+                        3*A**2*a**6*c**3 + 9*A**2*a**6*c**2*d - 9*A**2*a**6*c*d**2 +
+                        3*A**2*a**6*d**3 + 3*A*B**2*a**3*b**6 + 21*A*B*a**3*b**3*c**3 -
+                        63*A*B*a**3*b**3*c**2*d + 63*A*B*a**3*b**3*c*d**2 -
+                        21*A*B*a**3*b**3*d**3 + 3*A*a**3*c**6 - 18*A*a**3*c**5*d +
+                        45*A*a**3*c**4*d**2 - 60*A*a**3*c**3*d**3 + 45*A*a**3*c**2*d**4 -
+                        18*A*a**3*c*d**5 + 3*A*a**3*d**6 + B**3*b**9 - 3*B**2*b**6*c**3 +
+                        9*B**2*b**6*c**2*d - 9*B**2*b**6*c*d**2 + 3*B**2*b**6*d**3 +
+                        3*B*b**3*c**6 - 18*B*b**3*c**5*d + 45*B*b**3*c**4*d**2 -
+                        60*B*b**3*c**3*d**3 + 45*B*b**3*c**2*d**4 - 18*B*b**3*c*d**5 +
+                        3*B*b**3*d**6 - c**9 + 9*c**8*d - 36*c**7*d**2 + 84*c**6*d**3 -
+                        126*c**5*d**4 + 126*c**4*d**5 - 84*c**3*d**6 + 36*c**2*d**7 -
+                        9*c*d**8 + d**9)
+                    def _t(i):
+                        b = Mul(*info[i][RAD])
+                        return cancel(rterms[i]/b), Mul(*info[i][BASES])
+                    aa, AA = _t(0)
+                    bb, BB = _t(1)
+                    cc = -rterms[2]
+                    dd = others
+                    eq = zz.xreplace(dict(zip(
+                        (a, A, b, B, c, d),
+                        (aa, AA, bb, BB, cc, dd))))
+                    ok = True
         # handle power-of-2 cases
         if not ok:
             if log(lcm, 2).is_Integer and (not others and
