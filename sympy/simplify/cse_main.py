@@ -419,7 +419,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     Examples
     ========
 
-    >>> from sympy import cse
+    >>> from sympy import cse, Matrix
     >>> from sympy.abc import x, y, z, w
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
     ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
@@ -429,40 +429,13 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
      >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
      ([(x0, w + x)], [(w - y - z)*(x0 + y + z)/x0**3])
 
-    Matrices:
-
-    >>> from sympy import Matrix, SparseMatrix, MutableDenseMatrix, MutableSparseMatrix
-    >>> m1 = Matrix([x + y, x + y])
-    >>> cse(m1)
-    ([(x0, x + y)], Matrix([
-    [x0],
-    [x0]]))
-    >>> isinstance(cse(m1)[1], MutableDenseMatrix)
-    True
-
-    >>> m2 = SparseMatrix.zeros(2)
-    >>> m2[0, 0] = x + y; m2[1, 1] = x + y
-    >>> cse(m2)
-    ([(x0, x + y)], Matrix([
-    [x0,  0],
-    [ 0, x0]]))
-    >>> isinstance(cse(m2)[1], MutableSparseMatrix)
-    True
-
     List of expressions with recursive substitutions:
 
-    >>> cse([(x+y)**2, x + y + z, y + z, x + z + y])
-    ([(x0, x + y), (x1, x0 + z)], [x0**2, x1, y + z, x1])
-
-    List with expression and matrices:
-
-    >>> cse([x + y, m1, m2])
-    ([(x0, x + y)], [x0, Matrix([
+    >>> m = Matrix([x + y, x + y + z])
+    >>> cse([(x+y)**2, x + y + z, y + z, x + z + y, m])
+    ([(x0, x + y), (x1, x0 + z)], [x0**2, x1, y + z, x1, Matrix([
     [x0],
-    [x0]]), Matrix([
-    [x0,  0],
-    [ 0, x0]])])
-
+    [x1]])])
     """
     from sympy.matrices import Matrix, SparseMatrix
 
@@ -523,20 +496,13 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
                      for e in reduced_exprs]
 
     # Get the matrices back
-    temp = []
-    i = 0
-    for e in exprs:
+    for i, e in enumerate(exprs):
         if isinstance(e, Matrix):
-            temp.append(e.__class__(e.rows, e.cols, reduced_exprs[i]))
+            reduced_exprs[i] = e.__class__(e.rows, e.cols, reduced_exprs[i])
         elif isinstance(e, SparseMatrix):
-            temp.append(e.__class__(e.rows, e.cols, {}))
-            for k,v in reduced_exprs[i]:
-                temp[-1][k] = v
-        else:
-            temp.append(reduced_exprs[i])
-        i = i + 1
-    reduced_exprs = temp
-    del temp
+            m = reduced_exprs[i] = e.__class__(e.rows, e.cols, {})
+            for k, v in reduced_exprs[i]:
+                m[k] = v
 
     # In case of single matrix, there is no need for a list
     if is_singlematrix is True:
