@@ -687,7 +687,7 @@ def test_make_perm():
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])
 
 
-def test_cosets():
+def test_issue_7127():
     a = Permutation(1, 2)
     b = Permutation(0, 1)
     G = PermutationGroup([Permutation(1, 2), Permutation(2)(0, 1)])
