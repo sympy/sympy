@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy import S, symbols, Function
 from sympy.calculus.finite_diff import (
     apply_finite_diff, finite_diff_weights, as_finite_diff

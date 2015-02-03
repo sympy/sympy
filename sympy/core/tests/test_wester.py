@@ -48,6 +48,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
+from sympy.core.compatibility import range
 from itertools import islice, takewhile
 
 

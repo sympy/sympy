@@ -1,6 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols, Q
+from sympy.core.compatibility import range
 from sympy.logic.boolalg import And, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB

@@ -6,7 +6,7 @@ from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
@@ -231,7 +231,7 @@ class ExprWithLimits(Expr):
         reps = {}
         f = self.function
         limits = list(self.limits)
-        for i in xrange(-1, -len(limits) - 1, -1):
+        for i in range(-1, -len(limits) - 1, -1):
             xab = list(limits[i])
             if len(xab) == 1:
                 continue

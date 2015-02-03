@@ -11,7 +11,7 @@ from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
 from .logic import fuzzy_bool
-from .compatibility import as_int, xrange
+from .compatibility import as_int, range
 from .evaluate import global_evaluate
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
@@ -1142,7 +1142,7 @@ class Pow(Expr):
                     dn = 0
 
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling((n - dn)/l*cf)):
+                for m in range(1, ceiling((n - dn)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -1285,7 +1285,7 @@ class Pow(Expr):
         else:
             l = []
             g = None
-            for i in xrange(n + 2):
+            for i in range(n + 2):
                 g = self._taylor_term(i, z, g)
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)

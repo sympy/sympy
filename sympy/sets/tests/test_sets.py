@@ -5,6 +5,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Eq, Pow, Contains, Sum, RootOf, SymmetricDifference)
 from mpmath import mpi
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 

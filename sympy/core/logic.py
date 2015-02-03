@@ -8,6 +8,8 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
+
 
 def _fuzzy_group(args, quick_exit=False):
     """Return True if all args are True, None if there is any None else False

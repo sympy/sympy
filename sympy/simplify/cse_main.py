@@ -6,7 +6,7 @@ from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
-from sympy.core.compatibility import iterable, xrange
+from sympy.core.compatibility import iterable, range
 from sympy.utilities.iterables import filter_symbols, \
     numbered_symbols, sift, topological_sort, ordered
 
@@ -216,8 +216,8 @@ def opt_cse(exprs, order='canonical'):
             funcs = sorted(funcs, key=lambda x: len(x.args))
 
         func_args = [set(e.args) for e in funcs]
-        for i in xrange(len(func_args)):
-            for j in xrange(i + 1, len(func_args)):
+        for i in range(len(func_args)):
+            for j in range(i + 1, len(func_args)):
                 com_args = func_args[i].intersection(func_args[j])
                 if len(com_args) > 1:
                     com_func = Func(*com_args)
@@ -236,7 +236,7 @@ def opt_cse(exprs, order='canonical'):
                     opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
                                               evaluate=False)
 
-                    for k in xrange(j + 1, len(func_args)):
+                    for k in range(j + 1, len(func_args)):
                         if not com_args.difference(func_args[k]):
                             diff_k = func_args[k].difference(com_args)
                             func_args[k] = diff_k | set([com_func])

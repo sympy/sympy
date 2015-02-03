@@ -8,6 +8,7 @@ from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import raises
 from sympy.core.mod import Mod
+from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
 

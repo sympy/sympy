@@ -7,6 +7,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
 from sympy.utilities.pytest import XFAIL
+from sympy.core.compatibility import range
 
 from sympy import octave_code as mcode
 

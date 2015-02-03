@@ -7,7 +7,7 @@ Demonstrates matrix computations using the Vandermonde matrix.
 """
 
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def symbol_gen(sym_str):
@@ -100,7 +100,7 @@ def gen_poly(points, order, syms):
     V_pts = V.subs(subs_dict)
     V_inv = V_pts.inv()
 
-    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in xrange(num_pts)]))
+    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in range(num_pts)]))
 
     f = 0
     for j, term in enumerate(terms):

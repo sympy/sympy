@@ -1,6 +1,6 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
 from sympy.core.compatibility import (
-    combinations_with_replacement, iterable)
+    combinations_with_replacement, iterable, range)
 
 
 def euler_equations(L, funcs=(), vars=()):

@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)

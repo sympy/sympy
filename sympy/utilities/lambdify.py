@@ -9,7 +9,7 @@ import inspect
 import textwrap
 
 from sympy.external import import_module
-from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
+from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

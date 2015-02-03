@@ -37,7 +37,7 @@ from __future__ import print_function, division
 from sympy.simplify import simplify
 from sympy.core import Add, C, S
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence)
+    is_sequence, range)
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols

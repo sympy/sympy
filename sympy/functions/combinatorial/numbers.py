@@ -11,7 +11,7 @@ from __future__ import print_function, division
 
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
-from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
 from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
@@ -26,7 +26,7 @@ from mpmath.libmp import ifib as _ifib
 
 def _product(a, b):
     p = 1
-    for k in xrange(a, b + 1):
+    for k in range(a, b + 1):
         p *= k
     return p
 
@@ -234,7 +234,7 @@ class bernoulli(Function):
     def _calc_bernoulli(n):
         s = 0
         a = int(C.binomial(n + 3, n - 6))
-        for j in xrange(1, n//6 + 1):
+        for j in range(1, n//6 + 1):
             s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
             a *= _product(n - 6 - 6*j + 1, n - 6*j)
@@ -277,7 +277,7 @@ class bernoulli(Function):
                     # To avoid excessive recursion when, say, bernoulli(1000) is
                     # requested, calculate and cache the entire sequence ... B_988,
                     # B_994, B_1000 in increasing order
-                    for i in xrange(highest_cached + 6, n + 6, 6):
+                    for i in range(highest_cached + 6, n + 6, 6):
                         b = cls._calc_bernoulli(i)
                         cls._cache[i] = b
                         cls._highest[case] = i
@@ -285,7 +285,7 @@ class bernoulli(Function):
                 # Bernoulli polynomials
                 else:
                     n, result = int(n), []
-                    for k in xrange(n + 1):
+                    for k in range(n + 1):
                         result.append(C.binomial(n, k)*cls(k)*sym**(n - k))
                     return Add(*result)
             else:
@@ -372,7 +372,7 @@ class bell(Function):
     def _bell(n, prev):
         s = 1
         a = 1
-        for k in xrange(1, n):
+        for k in range(1, n):
             a = a * (n - k) // k
             s += a * prev[k]
         return s
@@ -382,7 +382,7 @@ class bell(Function):
     def _bell_poly(n, prev):
         s = 1
         a = 1
-        for k in xrange(2, n + 1):
+        for k in range(2, n + 1):
             a = a * (n - k + 1) // (k - 1)
             s += a * prev[k - 1]
         return expand_mul(_sym * s)
@@ -410,7 +410,7 @@ class bell(Function):
             return S.Zero
         s = S.Zero
         a = S.One
-        for m in xrange(1, n - k + 2):
+        for m in range(1, n - k + 2):
             s += a * bell._bell_incomplete_poly(
                 n - m, k - 1, symbols) * symbols[m - 1]
             a = a * (n - m) / m
@@ -632,10 +632,10 @@ class harmonic(Function):
                 off = n.args[0]
                 nnew = n - off
                 if off.is_Integer and off.is_positive:
-                    result = [S.One/(nnew + i) for i in xrange(off, 0, -1)] + [harmonic(nnew)]
+                    result = [S.One/(nnew + i) for i in range(off, 0, -1)] + [harmonic(nnew)]
                     return Add(*result)
                 elif off.is_Integer and off.is_negative:
-                    result = [-S.One/(nnew + i) for i in xrange(0, off, -1)] + [harmonic(nnew)]
+                    result = [-S.One/(nnew + i) for i in range(0, off, -1)] + [harmonic(nnew)]
                     return Add(*result)
 
             if n.is_Rational:
