@@ -396,9 +396,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         if isinstance(self.function, Sum):
-            if self.variables[0] not in self.function.limits[0] \
-            and self.function.variables[0] not in self.limits[0]:
-                return Sum(integrate(self.function.function, self.variables[0]), self.function.limits)
+            for variable in self.variables:
+                if variable in self.function.limits[0] \
+                or variable in self.limits[0]:
+                    break
+            else:
+                return Sum(integrate(self.function.function.doit(), self.variables[0]).doit(), self.function.limits).doit()
         function = self.function
         if deep:
             function = function.doit(**hints)
