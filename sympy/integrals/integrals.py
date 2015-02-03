@@ -397,8 +397,7 @@ class Integral(AddWithLimits):
         # now compute and check the function
         if isinstance(self.function, Sum):
             for variable in self.variables:
-                if variable in self.function.limits[0] \
-                or variable in self.limits[0]:
+                if variable in self.function.limits[0]:
                     break
             else:
                 return Sum(Integral(self.function.function.doit(), self.variables[0]), self.function.limits).doit()
