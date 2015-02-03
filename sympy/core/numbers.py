@@ -32,6 +32,46 @@ rnd = mlib.round_nearest
 _LOG2 = math.log(2)
 
 
+def comp(z1, z2, tol=None):
+    """Return a bool indicating whether the error between z1 and z2 is <= tol.
+
+    If ``tol`` is None then True will be returned if there is a significant
+    difference between the numbers: ``abs(z1 - z2)*10**p <= 1/2`` where ``p``
+    is the lower of the precisions of the values. A comparison of strings will
+    be made if ``z1`` is a Number and a) ``z2`` is a string or b) ``tol`` is ''
+    and ``z2`` is a Number.
+
+    When ``tol`` is a nonzero value, if z2 is non-zero and ``|z1| > 1``
+    the error is normalized by ``|z1|``, so if you want to see if the
+    absolute error between ``z1`` and ``z2`` is <= ``tol`` then call this
+    as ``comp(z1 - z2, 0, tol)``.
+    """
+    if type(z2) is str:
+        if not isinstance(z1, Number):
+            raise ValueError('when z2 is a str z1 must be a Number')
+        return str(z1) == z2
+    if not z1:
+        z1, z2 = z2, z1
+    if not z1:
+        return True
+    if not tol:
+        if tol is None:
+            if type(z2) is str and getattr(z1, 'is_Number', False):
+                return str(z1) == z2
+            a, b = Float(z1), Float(z2)
+            return int(abs(a - b)*10**prec_to_dps(
+                min(a._prec, b._prec)))*2 <= 1
+        elif all(getattr(i, 'is_Number', False) for i in (z1, z2)):
+            return z1._prec == z2._prec and str(z1) == str(z2)
+        raise ValueError('exact comparison requires two Numbers')
+    diff = abs(z1 - z2)
+    az1 = abs(z1)
+    if z2 and az1 > 1:
+        return diff/az1 <= tol
+    else:
+        return diff <= tol
+
+
 def mpf_norm(mpf, prec):
     """Return the mpf tuple normalized appropriately for the indicated
     precision after doing a check to see if zero should be returned or
