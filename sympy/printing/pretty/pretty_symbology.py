@@ -461,6 +461,7 @@ atoms_table = {
     'Naturals':         U('DOUBLE-STRUCK CAPITAL N'),
     'Integers':         U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':            U('DOUBLE-STRUCK CAPITAL R'),
+    'Complex':          U('DOUBLE_STRUCK CAPITAL C'),
     'Union':            U('UNION'),
     'Intersection':     U('INTERSECTION'),
     'Ring':             U('RING OPERATOR')
