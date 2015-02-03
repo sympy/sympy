@@ -12,6 +12,7 @@ from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, le
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr

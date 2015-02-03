@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Basic, Dict, Symbol, Tuple
-from sympy.core.compatibility import xrange, iterable
+from sympy.core.compatibility import range, iterable
 from sympy.sets import Set, FiniteSet, EmptySet
 
 
@@ -274,7 +274,7 @@ class CompositeMorphism(Morphism):
         normalised_components = Tuple()
 
         # TODO: Fix the unpythonicity.
-        for i in xrange(len(components) - 1):
+        for i in range(len(components) - 1):
             current = components[i]
             following = components[i + 1]
 

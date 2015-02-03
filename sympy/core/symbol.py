@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 from .basic import Basic
 from .core import C
 from .sympify import sympify

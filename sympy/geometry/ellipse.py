@@ -11,6 +11,7 @@ from __future__ import print_function, division
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo, Rational
+from sympy.core.compatibility import range
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError

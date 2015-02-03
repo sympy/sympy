@@ -30,7 +30,7 @@ from __future__ import print_function
 
 import os
 import sys
-from sympy.core.compatibility import StringIO
+from sympy.core.compatibility import StringIO, range
 from sympy.core.decorators import deprecated
 
 from sympy import C, S, Basic, Symbol, Matrix

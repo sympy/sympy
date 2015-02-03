@@ -15,7 +15,7 @@ This module contain solvers for all kinds of equations:
 from __future__ import print_function, division
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, xrange)
+    default_sort_key, range)
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
 from sympy.core.exprtools import factor_terms
@@ -2119,7 +2119,7 @@ def solve_linear_system(system, *symbols, **flags):
         if not matrix[i, i]:
             # there is no pivot in current column
             # so try to find one in other columns
-            for k in xrange(i + 1, m):
+            for k in range(i + 1, m):
                 if matrix[i, k]:
                     break
             else:
@@ -2181,7 +2181,7 @@ def solve_linear_system(system, *symbols, **flags):
         # divide all elements in the current row by the pivot
         matrix.row_op(i, lambda x, _: x * pivot_inv)
 
-        for k in xrange(i + 1, matrix.rows):
+        for k in range(i + 1, matrix.rows):
             if matrix[k, i]:
                 coeff = matrix[k, i]
 
@@ -2204,7 +2204,7 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in xrange(k + 1, m):
+            for j in range(k + 1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             if do_simplify:
@@ -2224,11 +2224,11 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in xrange(k + 1, i):
+            for j in range(k + 1, i):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             # run back-substitution for parameters
-            for j in xrange(i, m):
+            for j in range(i, m):
                 content -= matrix[k, j]*syms[j]
 
             if do_simplify:

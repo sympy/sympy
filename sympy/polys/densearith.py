@@ -12,7 +12,7 @@ from sympy.polys.densebasic import (
     dmp_ground, dmp_zeros)
 
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 def dup_add_term(f, c, i, K):
     """
@@ -763,10 +763,10 @@ def dup_mul(f, g, K):
     if n < 100:
         h = []
 
-        for i in xrange(0, df + dg + 1):
+        for i in range(0, df + dg + 1):
             coeff = K.zero
 
-            for j in xrange(max(0, i - dg), min(df, i) + 1):
+            for j in range(max(0, i - dg), min(df, i) + 1):
                 coeff += f[j]*g[i - j]
 
             h.append(coeff)
@@ -824,10 +824,10 @@ def dmp_mul(f, g, u, K):
 
     h, v = [], u - 1
 
-    for i in xrange(0, df + dg + 1):
+    for i in range(0, df + dg + 1):
         coeff = dmp_zero(v)
 
-        for j in xrange(max(0, i - dg), min(df, i) + 1):
+        for j in range(max(0, i - dg), min(df, i) + 1):
             coeff = dmp_add(coeff, dmp_mul(f[j], g[i - j], v, K), v, K)
 
         h.append(coeff)
@@ -851,7 +851,7 @@ def dup_sqr(f, K):
     """
     df, h = len(f) - 1, []
 
-    for i in xrange(0, 2*df + 1):
+    for i in range(0, 2*df + 1):
         c = K.zero
 
         jmin = max(0, i - df)
@@ -861,7 +861,7 @@ def dup_sqr(f, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             c += f[j]*f[i - j]
 
         c += c
@@ -899,7 +899,7 @@ def dmp_sqr(f, u, K):
 
     h, v = [], u - 1
 
-    for i in xrange(0, 2*df + 1):
+    for i in range(0, 2*df + 1):
         c = dmp_zero(v)
 
         jmin = max(0, i - df)
@@ -909,7 +909,7 @@ def dmp_sqr(f, u, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             c = dmp_add(c, dmp_mul(f[j], f[i - j], v, K), v, K)
 
         c = dmp_mul_ground(c, K(2), v, K)

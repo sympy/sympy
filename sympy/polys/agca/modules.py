@@ -26,7 +26,7 @@ from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.domains.field import Field
 from sympy.polys.agca.ideals import Ideal
 
-from sympy.core.compatibility import iterable, reduce
+from sympy.core.compatibility import iterable, reduce, range
 
 # TODO
 # - module saturation

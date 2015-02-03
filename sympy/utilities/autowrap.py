@@ -77,7 +77,7 @@ from subprocess import STDOUT, CalledProcessError
 from string import Template
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import check_output
+from sympy.core.compatibility import check_output, range
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
