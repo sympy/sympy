@@ -1,16 +1,24 @@
 from sympy import (
-    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos,
+    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos, sinh, cosh, tanh,
     Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,
     I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
     sstr, Sum, Symbol, symbols, sympify, trigsimp,
+<<<<<<< HEAD
     Tuple, nan, And, Eq, re, im, summation, Sum
+=======
+    Tuple, nan, And, Eq, Ne, re, im, polar_lift, meijerg
+>>>>>>> master
 )
+from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
-from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.physics import units
+from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, raises, slow
 
-x, y, a, t, x_1, x_2, z = symbols('x y a t x_1 x_2 z')
+
+
+x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1062,15 +1070,25 @@ def test_issue_2708():
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
 
 
-def test_issue_7827():
-    x, n, N = symbols('x n N')
-    assert integrate(summation(x*n, (n, 1, N)), x) == x**2*(N**2/4 + N/4)
-    assert integrate(summation(x*sin(n), (n,1,N)), x) == \
-        Sum(x**2*sin(n)/2, (n, 1, N))
-    assert integrate(summation(sin(n*x), (n,1,N)), x) == \
-        Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
-    assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
-        Piecewise((0, Eq(n, 0)), (Sum(Piecewise((-x/n, Eq(n, 0)), (-sin(n*x)/n**2, True)), (n, 1, N)), True))
-    assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
-    assert integrate(Sum(x, (x, 1, y)), x) == x*Sum(x, (x, 1, y))
-    assert integrate(Sum(x, (x, y, n)), y) == Integral(Sum(x, (x, y, n)), y)
+<<<<<<< HEAD
+=======
+def test_issue_8368():
+    assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
+        Piecewise((pi*Piecewise((-s/(pi*(-s**2 + 1)), Abs(s**2) < 1),
+        (1/(pi*s*(1 - 1/s**2)), Abs(s**(-2)) < 1), (meijerg(((S(1)/2,), (0, 0)),
+        ((0, S(1)/2), (0,)), polar_lift(s)**2), True)),
+        And(Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
+        cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) -
+        1 > 0, Ne(s**2, 1))), (Integral(exp(-s*x)*cosh(x), (x, 0, oo)), True))
+    assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)) == \
+        Piecewise((-1/(s + 1)/2 - 1/(-s + 1)/2, And(Ne(1/s, 1),
+        Abs(periodic_argument(s, oo)) < pi/2, Abs(periodic_argument(s, oo)) <=
+        pi/2, cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
+        (Integral(exp(-s*x)*sinh(x), (x, 0, oo)), True))
+
+
+def test_issue_8901():
+    assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
+    assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
+    assert integrate(tanh(x)) == x - log(tanh(x) + 1)
+>>>>>>> master

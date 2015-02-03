@@ -8,6 +8,7 @@ from sympy.functions import (
     gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
     cos, cot, zeta)
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
@@ -155,8 +156,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 11818877030/S(4286604231) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(-sqrt(5)/2 + 1/S(2)) )
-
+             + 11818877030/S(4286604231) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
 
     Heoo = harmonic(ne + po/qo)
     Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -181,7 +181,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 486853480/S(186374097) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(2*(-sqrt(5)/4 + 1/S(4))))
+             + 486853480/S(186374097) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
 
     Hooo = harmonic(no + po/qo)
     Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -373,7 +373,7 @@ def test_nC_nP_nT():
         for j in range(1, i + 2):
             check = nT(range(i), j)
             tot += check
-            assert len(list(multiset_partitions(range(i), j))) == check
+            assert len(list(multiset_partitions(list(range(i)), j))) == check
         assert nT(range(i)) == tot
 
     for i in range(100):

@@ -9,7 +9,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import cmp_to_key, reduce, xrange
+from .compatibility import cmp_to_key, reduce, range
 from .expr import Expr
 
 # internal marker to indicate:
@@ -791,7 +791,7 @@ class Mul(Expr, AssocOp):
     def _eval_derivative(self, s):
         args = list(self.args)
         terms = []
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             d = args[i].diff(s)
             if d:
                 terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))

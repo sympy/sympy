@@ -7,7 +7,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, xrange
+from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -1205,7 +1205,7 @@ class Expr(Basic, EvalfMixin):
             if not l1 or not l2:
                 return []
             n = min(len(l1), len(l2))
-            for i in xrange(n):
+            for i in range(n):
                 if l1[i] != l2[i]:
                     return l1[:i]
             return l1[:]
@@ -1230,7 +1230,7 @@ class Expr(Basic, EvalfMixin):
             if not first:
                 l.reverse()
                 sub.reverse()
-            for i in xrange(0, len(l) - n + 1):
+            for i in range(0, len(l) - n + 1):
                 if all(l[i + j] == sub[j] for j in range(n)):
                     break
             else:
@@ -1301,7 +1301,7 @@ class Expr(Basic, EvalfMixin):
                 if ii is not None:
                     if not right:
                         gcdc = co[0][0]
-                        for i in xrange(1, len(co)):
+                        for i in range(1, len(co)):
                             gcdc = gcdc.intersection(co[i][0])
                             if not gcdc:
                                 break

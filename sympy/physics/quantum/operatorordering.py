@@ -3,6 +3,7 @@
 import warnings
 
 from sympy import Add, Mul, Pow, Integer
+from sympy.core.compatibility import range
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.fermion import FermionOp

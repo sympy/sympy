@@ -18,7 +18,7 @@ from .precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, xrange
+from sympy.core.compatibility import default_sort_key, range
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -1708,8 +1708,8 @@ class LatexPrinter(Printer):
     def _print_DiagramGrid(self, grid):
         latex_result = "\\begin{array}{%s}\n" % ("c" * grid.width)
 
-        for i in xrange(grid.height):
-            for j in xrange(grid.width):
+        for i in range(grid.height):
+            for j in range(grid.width):
                 if grid[i, j]:
                     latex_result += latex(grid[i, j])
                 latex_result += " "

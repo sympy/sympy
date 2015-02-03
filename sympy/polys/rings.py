@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.numbers import igcd, oo
 from sympy.core.sympify import CantSympify, sympify
-from sympy.core.compatibility import is_sequence, reduce, string_types, xrange
+from sympy.core.compatibility import is_sequence, reduce, string_types, range
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
@@ -239,7 +239,7 @@ class PolyRing(DefaultPrinting, IPolys):
         """Return a list of polynomial generators. """
         one = self.domain.one
         _gens = []
-        for i in xrange(self.ngens):
+        for i in range(self.ngens):
             expv = self.monomial_basis(i)
             poly = self.zero
             poly[expv] = one
@@ -759,7 +759,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 else:
                     scoeff = ''
             sexpv = []
-            for i in xrange(ngens):
+            for i in range(ngens):
                 exp = expv[i]
                 if not exp:
                     continue

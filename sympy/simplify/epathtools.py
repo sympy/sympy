@@ -1,7 +1,7 @@
 """Tools for manipulation of expressions using paths. """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 from sympy.core import Basic
 
@@ -203,7 +203,7 @@ class EPath(object):
                     else:
                         indices = [span]
                 else:
-                    indices = xrange(len(args))
+                    indices = range(len(args))
 
                 for i in indices:
                     try:

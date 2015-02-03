@@ -3,6 +3,7 @@ import warnings
 
 from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, tan, Derivative, asin, acos)
+from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection,
@@ -337,7 +338,9 @@ def test_line_geom():
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=4.05*pi) == Ray(Point(1, 1),
-               Point(2, 1 + C.tan(4.05*pi)))
+               Point(2, -sqrt(5)*sqrt(2*sqrt(5) + 10)/4 - sqrt(2*sqrt(5) + 10)/4 + 2 + sqrt(5)))
+    assert Ray((1, 1), angle=4.02*pi) == Ray(Point(1, 1),
+               Point(2, 1 + C.tan(4.02*pi)))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 

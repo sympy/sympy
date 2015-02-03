@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, range
 from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
@@ -991,14 +991,14 @@ def _laplace_transform(f, t, s_, simplify=True):
                 if not m:
                     m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) <= w2)
                 if m:
-                    if m[q] > 0 and m[w2]/m[p] == pi/2:
+                    if m[q].is_positive and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
                 m = d.match(
                     0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
                 if not m:
                     m = d.match(0 < cos(abs(
                         arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
-                if m and all(m[wild] > 0 for wild in [w1, w2, w3, w4, w5]):
+                if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
                     re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
