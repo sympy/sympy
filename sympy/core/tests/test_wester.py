@@ -2874,6 +2874,7 @@ def test_Y2():
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
     assert f == cos(t*w - t)
 
+
 @slow
 @XFAIL
 def test_Y3():
