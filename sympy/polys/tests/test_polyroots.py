@@ -241,8 +241,14 @@ def test_roots_binomial():
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
         p = Poly(a*x**n + s*b)
-        roots = roots_binomial(p)
-        assert roots == _nsort(roots)
+        ans = roots_binomial(p)
+        assert ans == _nsort(ans)
+
+    # issue 8813
+    assert roots(Poly(2*x**3 - 16*y**3, x)) == {
+        2*y*(-S(1)/2 - sqrt(3)*I/2): 1,
+        2*y: 1,
+        2*y*(-S(1)/2 + sqrt(3)*I/2): 1}
 
 
 def test_roots_preprocessing():
