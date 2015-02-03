@@ -401,7 +401,7 @@ class Integral(AddWithLimits):
                 or variable in self.limits[0]:
                     break
             else:
-                return Sum(integrate(self.function.function.doit(), self.variables[0]).doit(), self.function.limits).doit()
+                return Sum(Integral(self.function.function.doit(), self.variables[0]), self.function.limits).doit()
         function = self.function
         if deep:
             function = function.doit(**hints)
