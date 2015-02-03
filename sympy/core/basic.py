@@ -837,6 +837,12 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
 
+        if isinstance(self, sympy.core.symbol.Symbol) and isinstance(args[0], sympy.physics.vector.vector.Vector):
+            raise AttributeError("Substituting a scalar for sympy.physics.vector.Vector is not allowed")
+
+        if isinstance(self, sympy.physics.vector.vector.Vector) and isinstance(args[0], sympy.core.symbol.Symbol):
+            raise AttributeError("Substituting a sympy.physics.vector.Vector for a scalar is not allowed")
+
         sequence = list(sequence)
         for i in range(len(sequence)):
             o, n = sequence[i]
