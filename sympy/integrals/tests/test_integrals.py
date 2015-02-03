@@ -4,8 +4,7 @@ from sympy import (
     I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
     sstr, Sum, Symbol, symbols, sympify, trigsimp,
-    Tuple, nan, And, Eq, re, im, summation, Sum
-    Tuple, nan, And, Eq, Ne, re, im, polar_lift, meijerg
+    Tuple, nan, And, Eq, Ne, re, im, polar_lift, meijerg, summation, Sum
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
