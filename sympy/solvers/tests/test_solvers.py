@@ -676,8 +676,8 @@ def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
         set([(
-            -sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
-            (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))])
+            -sqrt(r*cos(t)**2), -1*sqrt(r*cos(t)**2)*tan(t)),
+            (sqrt(r*cos(t)**2), sqrt(r*cos(t)**2)*tan(t))])
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -1076,8 +1076,8 @@ def test_issue_5901():
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
                 h(a), g(a), set=True) == \
         ([g(a)], set([
-        (-sqrt(h(a)**2 + G/f(a)**2),),
-        (sqrt(h(a)**2 + G/f(a)**2),)]))
+        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
+        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)]))
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))])

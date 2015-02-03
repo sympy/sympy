@@ -12,6 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
+from sympy.core.exprtools import factor_terms
 
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
@@ -98,7 +99,7 @@ def roots_quadratic(f):
             d = _simplify(d)
             B = _simplify(B)
 
-        D = _sqrt(d)/A
+        D = factor_terms(_sqrt(d)/A)
         r0 = B - D
         r1 = B + D
         if a.is_negative:
