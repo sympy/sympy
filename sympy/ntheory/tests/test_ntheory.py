@@ -388,6 +388,7 @@ def test_totient():
     assert totient(5006) == 2502
     assert totient(5009) == 5008
     assert totient(2**100) == 2**99
+    assert totient(420378134765625) == totient(43046721)*totient(9765625) == 224201671875000
 
     m = Symbol("m", integer=True)
     assert totient(m)
