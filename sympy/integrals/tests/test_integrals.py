@@ -1070,8 +1070,6 @@ def test_issue_2708():
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
 
 
-<<<<<<< HEAD
-=======
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
         Piecewise((pi*Piecewise((-s/(pi*(-s**2 + 1)), Abs(s**2) < 1),
@@ -1091,4 +1089,17 @@ def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
->>>>>>> master
+
+
+def test_issue_7827():
+    x, n, N = symbols('x n N')
+    assert integrate(summation(x*n, (n, 1, N)), x) == x**2*(N**2/4 + N/4)
+    assert integrate(summation(x*sin(n), (n,1,N)), x) == \
+        Sum(x**2*sin(n)/2, (n, 1, N))
+    assert integrate(summation(sin(n*x), (n,1,N)), x) == \
+        Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
+    assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
+        Piecewise((0, Eq(n, 0)), (Sum(Piecewise((-x/n, Eq(n, 0)), (-sin(n*x)/n**2, True)), (n, 1, N)), True))
+    assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
+    assert integrate(Sum(x, (x, 1, y)), x) == x*Sum(x, (x, 1, y))
+    assert integrate(Sum(x, (x, y, n)), y) == Integral(Sum(x, (x, y, n)), y)
