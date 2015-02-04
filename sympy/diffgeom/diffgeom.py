@@ -4,6 +4,7 @@ from itertools import permutations
 
 from sympy.matrices import Matrix
 from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
@@ -95,6 +96,7 @@ class CoordSystem(Basic):
 
     >>> from sympy import symbols, sin, cos, pi
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
+    >>> from sympy.simplify import simplify
     >>> r, theta = symbols('r, theta')
     >>> m = Manifold('M', 2)
     >>> patch = Patch('P', m)
@@ -115,7 +117,7 @@ class CoordSystem(Basic):
     Matrix([
     [0],
     [2]])
-    >>> rect.coord_tuple_transform_to(polar, [1, 1])
+    >>> rect.coord_tuple_transform_to(polar, [1, 1]).applyfunc(simplify)
     Matrix([
     [sqrt(2)],
     [   pi/4]])

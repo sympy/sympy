@@ -29,7 +29,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
-from sympy.core.compatibility import reduce, xrange
+from sympy.core.compatibility import reduce, range
 from sympy.utilities.misc import debug
 
 
@@ -303,7 +303,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, -1, -1):  # [n, ..., 0]
+    for N in range(n, -1, -1):  # [n, ..., 0]
         for i in range(m):
             si = Q[i].nth(N + db)/b.LC()
             sitn = Poly(si*DE.t**N, DE.t)
@@ -337,7 +337,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, 0, -1):  # [n, ..., 1]
+    for N in range(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
             sitn = Poly(si*DE.t**N, DE.t)
@@ -823,7 +823,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     respolys, residues = list(zip(*roots)) or [[], []]
     # Note: this might be empty, but everything below should work find in that
     # case (it should be the same as if it were [[1, 1]])
-    residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for
+    residueterms = [(H[j][1].subs(z, i), i) for j in range(len(H)) for
         i in residues[j]]
 
     # TODO: finish writing this and write tests

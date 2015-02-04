@@ -55,7 +55,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, range
 
 
 @public
@@ -1937,6 +1937,8 @@ class Poly(Expr):
 
         """
         if hasattr(f.rep, 'nth'):
+            if len(N) != len(f.gens):
+                raise ValueError('exponent of each generator must be specified')
             result = f.rep.nth(*list(map(int, N)))
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')

@@ -11,7 +11,7 @@ Todo:
 from __future__ import print_function, division
 
 from sympy import floor, pi, sqrt, sympify
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, range
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace

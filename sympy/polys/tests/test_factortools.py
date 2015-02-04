@@ -11,7 +11,7 @@ from sympy.polys.specialpolys import f_polys, w_polys
 from sympy import nextprime, sin, sqrt, I
 from sympy.utilities.pytest import raises
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()
@@ -159,7 +159,7 @@ def test_dup_zz_factor():
 
     f = x**4 + x + 1
 
-    for i in xrange(0, 20):
+    for i in range(0, 20):
         assert R.dup_zz_factor(f) == (1, [(f, 1)])
 
     assert R.dup_zz_factor(x**2 + 2*x + 2) == \

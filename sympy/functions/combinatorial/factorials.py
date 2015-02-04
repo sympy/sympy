@@ -6,7 +6,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, as_int, xrange
+from sympy.core.compatibility import reduce, as_int, range
 from sympy.core.cache import cacheit
 
 from sympy.polys.polytools import poly_from_expr
@@ -447,14 +447,14 @@ class RisingFactorial(CombinatorialFunction):
                             return S.Infinity
                     else:
                         try:
-                             F, opt = poly_from_expr(x)
+                            F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return reduce(lambda r, i: r*(x + i), xrange(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return reduce(lambda r, i: r*(x + i), xrange(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
                         else:
                             v = opt.gens[0]
-                            return reduce(lambda r, i: r*(F.subs(v, v + i).expand()), xrange(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
@@ -462,14 +462,14 @@ class RisingFactorial(CombinatorialFunction):
                         return S.Infinity
                     else:
                         try:
-                             F, opt = poly_from_expr(x)
+                            F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return 1/reduce(lambda r, i: r*(x - i), xrange(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return 1/reduce(lambda r, i: r*(x - i), xrange(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
                         else:
                             v = opt.gens[0]
-                            return 1/reduce(lambda r, i: r*(F.subs(v, v - i).expand()), xrange(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return C.gamma(x + k) / C.gamma(x)
@@ -477,6 +477,10 @@ class RisingFactorial(CombinatorialFunction):
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
                           self.args[1].is_nonnegative))
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.rising_factorial(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class FallingFactorial(CombinatorialFunction):
@@ -540,14 +544,14 @@ class FallingFactorial(CombinatorialFunction):
                             return S.Infinity
                     else:
                         try:
-                             F, opt = poly_from_expr(x)
+                            F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return reduce(lambda r, i: r*(x - i), xrange(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return reduce(lambda r, i: r*(x - i), xrange(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
                         else:
                             v = opt.gens[0]
-                            return reduce(lambda r, i: r*(F.subs(v, v - i).expand()), xrange(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
@@ -555,14 +559,14 @@ class FallingFactorial(CombinatorialFunction):
                         return S.Infinity
                     else:
                         try:
-                             F, opt = poly_from_expr(x)
+                            F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return 1/reduce(lambda r, i: r*(x + i), xrange(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return 1/reduce(lambda r, i: r*(x + i), xrange(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
                         else:
                             v = opt.gens[0]
-                            return 1/reduce(lambda r, i: r*(F.subs(v, v + i).expand()), xrange(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
@@ -570,6 +574,10 @@ class FallingFactorial(CombinatorialFunction):
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
                           self.args[1].is_nonnegative))
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.falling_factorial(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 rf = RisingFactorial
@@ -696,7 +704,7 @@ class binomial(CombinatorialFunction):
                     return C.Integer(result)
                 elif n.is_Number:
                     result = n - k + 1
-                    for i in xrange(2, k + 1):
+                    for i in range(2, k + 1):
                         result *= n - k + i
                         result /= i
                     return result
@@ -733,7 +741,7 @@ class binomial(CombinatorialFunction):
             else:
                 n = self.args[0]
                 result = n - k + 1
-                for i in xrange(2, k + 1):
+                for i in range(2, k + 1):
                     result *= n - k + i
                     result /= i
                 return result

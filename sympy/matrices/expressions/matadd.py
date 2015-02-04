@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from functools import reduce
+from sympy.core.compatibility import reduce
 from operator import add
 
 from sympy.core import Add, Basic, sympify

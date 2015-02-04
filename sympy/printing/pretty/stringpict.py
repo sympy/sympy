@@ -15,7 +15,7 @@ TODO:
 from __future__ import print_function, division
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
-from sympy.core.compatibility import u, string_types, xrange
+from sympy.core.compatibility import u, string_types, range
 
 
 class stringPict(object):
@@ -443,7 +443,7 @@ class prettyForm(stringPict):
                 arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
-        for i in xrange(len_res):
+        for i in range(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)

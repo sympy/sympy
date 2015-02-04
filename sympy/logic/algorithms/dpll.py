@@ -9,6 +9,7 @@ References:
 """
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy import default_sort_key
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr, _find_predicates

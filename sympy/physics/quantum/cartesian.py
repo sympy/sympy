@@ -9,6 +9,7 @@ TODO:
 from __future__ import print_function, division
 
 from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
+from sympy.core.compatibility import range
 
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2

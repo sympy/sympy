@@ -11,7 +11,7 @@ from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, xrange, NotIterable
+from sympy.core.compatibility import is_sequence, default_sort_key, range, NotIterable
 
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -1249,13 +1249,13 @@ class MatrixBase(object):
         n = self.rows
         b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in xrange(n):
-            for j in xrange(i):
+        for i in range(n):
+            for j in range(i):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
         # backward substitution
-        for i in xrange(n - 1, -1, -1):
-            for j in xrange(i + 1, n):
+        for i in range(n - 1, -1, -1):
+            for j in range(i + 1, n):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
             scale = A[i, i]
@@ -2672,13 +2672,13 @@ class MatrixBase(object):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in xrange(r.cols):
+        for i in range(r.cols):
             if pivot == r.rows:
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-                for k in xrange(pivot, r.rows):
+                for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
@@ -2688,7 +2688,7 @@ class MatrixBase(object):
                     continue
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
-            for j in xrange(r.rows):
+            for j in range(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
@@ -3554,7 +3554,7 @@ class MatrixBase(object):
                 # So we will do the same procedure also for `s-1` and so on until 1 the lowest possible order
                 # where the jordanchain is of lenght 1 and just represented by the eigenvector.
 
-                for s in reversed(xrange(1, smax+1)):
+                for s in reversed(range(1, smax+1)):
                     S = Ms[s]
                     # We want the vectors in `Kernel((self-lI)^s)` (**),
                     # but without those in `Kernel(self-lI)^s-1` so we will add these as additional equations

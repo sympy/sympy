@@ -234,7 +234,7 @@ from collections import defaultdict
 from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
+from sympy.core.compatibility import ordered, iterable, is_sequence, range
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs, _mexpand)
@@ -374,7 +374,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 
     atom_set = set().union(*[i.free_symbols for i in eq])
     ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
-    Cs = [next(ncs) for i in xrange(num)]
+    Cs = [next(ncs) for i in range(num)]
     return (Cs[0] if num == 1 else tuple(Cs))
 
 
@@ -1407,7 +1407,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                 if func_coef[j,func,k]==0:
                     if k==0:
                         coef = eqs.as_independent(func)[1]
-                        for xr in xrange(1, ode_order(eqs,func)+1):
+                        for xr in range(1, ode_order(eqs,func)+1):
                             coef -= eqs.as_independent(diff(func,t,xr))[1]
                         if coef != 0:
                             is_linear_ = False
@@ -3942,7 +3942,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
+    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
 
     # A generator of constants
     constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
@@ -7160,7 +7160,7 @@ def _linear_2eq_order2_type6(x, y, t, r):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in xrange(Poly(chareq).degree())]
+    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
     z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
     z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
@@ -7205,7 +7205,7 @@ def _linear_2eq_order2_type7(x, y, t, r):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in xrange(Poly(chareq).degree())]
+    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
     F = C.Integral(f, t)
     z1 = C1*C.Integral(exp(k1*F), t) + C2
     z2 = C3*C.Integral(exp(k2*F), t) + C4

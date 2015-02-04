@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy.core import S, I, pi, oo, ilcm, Mod, C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, range
 from sympy.core.mul import Mul
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
@@ -300,6 +300,12 @@ class hyper(TupleParametersBase):
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
+
+    def _sage_(self):
+        import sage.all as sage
+        ap = [arg._sage_() for arg in self.args[0]]
+        bq = [arg._sage_() for arg in self.args[1]]
+        return sage.hypergeometric(ap, bq, self.argument._sage_())
 
 
 class meijerg(TupleParametersBase):

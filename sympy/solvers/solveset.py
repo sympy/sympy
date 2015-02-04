@@ -137,12 +137,12 @@ def invert_complex(f_x, y, x):
     the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
     Here, ``y`` is not necessarily a symbol.
 
-    Note that `invert_complex` and `invert_real` don't always produce the
+    Note that `invert\_complex` and `invert\_real` don't always produce the
     same result even for a seemingly simple function like ``exp(x)`` because
     the complex extension of real valued ``log`` is multivariate in the complex
     system and has infinitely many branches. If you are working with real
     values only or you are not sure with function to use you should use
-    `invert_real`.
+    `invert\_real`.
 
 
     Examples
@@ -228,13 +228,13 @@ def domain_check(f, symbol, p):
     >>> domain_check(1/x, x, oo)
     False
 
-    The function relies on the assumption that the original form
-    of the equation has not been changed by automatic simplification.
+    * The function relies on the assumption that the original form
+      of the equation has not been changed by automatic simplification.
 
     >>> domain_check(x/x, x, 0) # x/x is automatically simplified to 1
     True
 
-    To deal with automatic evaluations use evaluate=False:
+    * To deal with automatic evaluations use evaluate=False:
 
     >>> domain_check(Mul(x, 1/x, evaluate=False), x, 0)
     False
@@ -370,14 +370,14 @@ def solveset_real(f, symbol):
     >>> solveset_real(exp(x) - a, x)
     {log(a)}
 
-    In case the equation has infinitely many solutions an infinitely indexed
-    `ImageSet` is returned.
+    * In case the equation has infinitely many solutions an infinitely indexed
+      `ImageSet` is returned.
 
     >>> solveset_real(sin(x) - 1, x)
     ImageSet(Lambda(_n, 2*_n*pi + pi/2), Integers())
 
-    If the equation is true for any arbitrary value of the symbol a `S.Reals`
-    set is returned.
+    * If the equation is true for any arbitrary value of the symbol a `S.Reals`
+      set is returned.
 
     >>> solveset_real(x - x, x)
     (-oo, oo)
@@ -697,8 +697,9 @@ def solveset_complex(f, symbol):
     >>> solveset_complex(a*x**2 + b*x +c, x)
     {-b/(2*a) - sqrt(-4*a*c + b**2)/(2*a), -b/(2*a) + sqrt(-4*a*c + b**2)/(2*a)}
 
-    Due to the fact that complex extension of my real valued functions are
-    multivariate even some simple equations can have infinitely many solution.
+    * Due to the fact that complex extension of my real valued functions are
+      multivariate even some simple equations can have infinitely many
+      solution.
 
     >>> solveset_complex(exp(x) - 1, x)
     ImageSet(Lambda(_n, 2*_n*I*pi), Integers())
@@ -808,22 +809,25 @@ def solveset(f, symbol=None):
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy.abc import x
 
-    Symbols in Sympy are complex by default. A complex variable
-    will lead to the solving of the equation in complex domain
+    * Symbols in Sympy are complex by default. A complex variable
+      will lead to the solving of the equation in complex domain.
+
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
-    If you want to solve equation in real domain by the `solveset`
-    interface, then specify the variable to real. Alternatively use
-    `solveset_real`.
+    * If you want to solve equation in real domain by the `solveset`
+      interface, then specify the variable to real. Alternatively use
+      `solveset\_real`.
+
     >>> x = Symbol('x', real=True)
     >>> solveset(exp(x) - 1, x)
     {0}
     >>> solveset(Eq(exp(x), 1), x)
     {0}
 
-    Inequalities are always solved in the real domain irrespective of
-    the assumption on the variable for which the inequality is solved.
+    * Inequalities are always solved in the real domain irrespective of
+      the assumption on the variable for which the inequality is solved.
+
     >>> solveset(exp(x) > 1, x)
     (0, oo)
 
