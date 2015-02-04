@@ -56,6 +56,9 @@ def roots_quadratic(f):
     dom = f.get_domain()
 
     def _sqrt(d):
+        # remove squares from square root since both will be represented
+        # in the results; a similar thing is happening in roots() but
+        # must be duplicated here because not all quadratics are binomials
         co = []
         other = []
         for di in Mul.make_args(d):
@@ -872,13 +875,13 @@ def roots(f, *gens, **flags):
         f = Poly(poly, x, field=True)
     else:
         try:
-            expr = f
             f = Poly(f, *gens, **flags)
-            if not isinstance(expr, Poly) and f.length == 2 and f.degree() !=1:
-                # see if there are powers in the constant that match the degree
-                con = expr.as_independent(*gens)[0]
+            if f.length == 2 and f.degree() != 1:
+                # check for foo**n factors in the constant
                 n = f.degree()
                 npow_bases = []
+                expr = f.as_expr()
+                con = expr.as_independent(*gens)[0]
                 for p in Mul.make_args(con):
                     if p.is_Pow and not p.exp % n:
                         npow_bases.append(p.base**(p.exp/n))
@@ -887,7 +890,8 @@ def roots(f, *gens, **flags):
                     if npow_bases:
                         b = Mul(*npow_bases)
                         B = Dummy()
-                        d = roots(Poly(expr - con + B**n*Mul(*others), *gens, **flags), *gens, **flags)
+                        d = roots(Poly(expr - con + B**n*Mul(*others), *gens,
+                            **flags), *gens, **flags)
                         rv = {}
                         for k, v in d.items():
                             rv[k.subs(B, b)] = v
