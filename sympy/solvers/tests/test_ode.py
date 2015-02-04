@@ -1302,7 +1302,8 @@ def test_nth_linear_constant_coeff_homogeneous():
         C4*exp(-x*sqrt(a)))
     sol11 = Eq(f(x),
         C1*exp(x*(k - sqrt(k**2 + 2))) + C2*exp(x*(k + sqrt(k**2 + 2))))
-    sol12 = Eq(f(x), C1*exp(-6*k*x) + C2*exp(2*k*x))
+    sol12 = Eq(f(x),
+        C1*exp(2*x*(-2*abs(k) - k)) + C2*exp(2*x*(2*abs(k) - k)))
     sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
     sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))
