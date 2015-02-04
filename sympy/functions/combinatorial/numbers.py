@@ -907,41 +907,37 @@ class genocchi(Function):
         if n.is_integer and n.is_nonnegative:
             return 2 * (1 - S(2) ** n) * bernoulli(n)
 
-    def _eval_is_even(self):
-        n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
-        if n.is_even:
-            return False
-        return (n - 1).is_positive
-
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_positive:
             return True
 
     def _eval_is_negative(self):
         n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
-        if n.is_odd:
-            return False
-        return (n / 2).is_odd
-
-    def _eval_is_odd(self):
-        n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
-        if n.is_even:
-            return True
-        return fuzzy_not((n - 1).is_positive)
+        if n.is_integer and n.is_positive:
+            if n.is_odd:
+                return False
+            return (n / 2).is_odd
 
     def _eval_is_positive(self):
         n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
-        if n.is_odd:
+        if n.is_integer and n.is_positive:
+            if n.is_odd:
+                return fuzzy_not((n - 1).is_positive)
+            return (n / 2).is_even
+
+    def _eval_is_even(self):
+        n = self.args[0]
+        if n.is_integer and n.is_positive:
+            if n.is_even:
+                return False
+            return (n - 1).is_positive
+
+    def _eval_is_odd(self):
+        n = self.args[0]
+        if n.is_integer and n.is_positive:
+            if n.is_even:
+                return True
             return fuzzy_not((n - 1).is_positive)
-        return (n / 2).is_even
 
     def _eval_is_prime(self):
         n = self.args[0]
