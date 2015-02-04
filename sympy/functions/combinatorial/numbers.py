@@ -864,6 +864,116 @@ class catalan(Function):
         if self.args[0].is_number:
             return self.rewrite(C.gamma)._eval_evalf(prec)
 
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Genocchi numbers                                 #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class genocchi(Function):
+    r"""
+    Genocchi numbers
+
+    The Genocchi numbers are a sequence of integers G_n that satisfy the
+    relation::
+
+                           oo
+                         ____
+                         \   `
+                 2*t      \         n
+                ------ =   \   G_n*t
+                 t         /   ------
+                e  + 1    /      n!
+                         /___,
+                         n = 1
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.functions import genocchi
+    >>> [genocchi(n) for n in range(1, 9)]
+    [1, -1, 0, 1, 0, -3, 0, 17]
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> genocchi(2 * n + 1)
+    0
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Genocchi_number
+    .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    """
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_Number:
+            if (not n.is_Integer) or n.is_nonpositive:
+                raise ValueError("Genocchi numbers are defined only for " +
+                                 "positive integers")
+            return 2 * (1 - S(2) ** n) * bernoulli(n)
+
+        if n.is_odd and (n - 1).is_positive:
+            return S.Zero
+
+        if (n - 1).is_zero:
+            return S.One
+
+    def _eval_rewrite_as_bernoulli(self, n):
+        if n.is_integer and n.is_nonnegative:
+            return 2 * (1 - S(2) ** n) * bernoulli(n)
+
+    def _eval_is_even(self):
+        n = self.args[0]
+        if (not n.is_integer) or (not n.is_positive):
+            return None
+        if n.is_even:
+            return False
+        return (n - 1).is_positive
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer and self.args[0].is_positive:
+            return True
+
+    def _eval_is_negative(self):
+        n = self.args[0]
+        if (not n.is_integer) or (not n.is_positive):
+            return None
+        if n.is_odd:
+            return False
+        return (n / 2).is_odd
+
+    def _eval_is_odd(self):
+        n = self.args[0]
+        if (not n.is_integer) or (not n.is_positive):
+            return None
+        if n.is_even:
+            return True
+        return fuzzy_not((n - 1).is_positive)
+
+    def _eval_is_positive(self):
+        n = self.args[0]
+        if (not n.is_integer) or (not n.is_positive):
+            return None
+        if n.is_odd:
+            return fuzzy_not((n - 1).is_positive)
+        return (n / 2).is_even
+
+    def _eval_is_prime(self):
+        n = self.args[0]
+        if (not n.is_integer) or (not n.is_positive):
+            return None
+        return (n - 8).is_zero
+
+
+
 #######################################################################
 ###
 ### Functions for enumerating partitions, permutations and combinations
