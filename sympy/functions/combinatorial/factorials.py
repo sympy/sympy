@@ -658,15 +658,16 @@ class binomial(CombinatorialFunction):
                         result /= i
                     return result
 
-        elif k.is_negative:
+        if k.is_negative:
             return S.Zero
-        elif (n - k).simplify().is_negative:
-            return S.Zero
-        else:
-            d = n - k
 
-            if d.is_Integer:
-                return cls.eval(n, d)
+        if (n - k).simplify().is_negative:
+            return S.Zero
+
+        d = n - k
+
+        if d.is_Integer:
+            return cls.eval(n, d)
 
     def _eval_expand_func(self, **hints):
         """
