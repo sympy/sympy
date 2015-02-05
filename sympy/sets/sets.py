@@ -207,7 +207,7 @@ class Set(Basic):
             return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     def symmetric_difference(self, other):
-         return SymmetricDifference(self, other)
+        return SymmetricDifference(self, other)
 
     def _symmetric_difference(self, other):
         return Union(Complement(self, other), Complement(other, self))

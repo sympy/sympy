@@ -14,7 +14,7 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma)
+    Contains, divisor_sigma, SymmetricDifference)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -502,6 +502,11 @@ def test_latex_union():
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
+
+
+def test_latex_symmetric_difference():
+    assert latex(SymmetricDifference(Interval(2,5), Interval(4,7), \
+        evaluate = False)) == r'\left[2, 5\right] \triangle \left[4, 7\right]'
 
 
 def test_latex_Complement():

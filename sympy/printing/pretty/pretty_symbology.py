@@ -449,21 +449,22 @@ def xsym(sym):
 # SYMBOLS
 
 atoms_table = {
-    # class             how-to-display
-    'Exp1':             U('SCRIPT SMALL E'),
-    'Pi':               U('GREEK SMALL LETTER PI'),
-    'Infinity':         U('INFINITY'),
-    'NegativeInfinity': U('INFINITY') and ('-' + U('INFINITY')),  # XXX what to do here
-    #'ImaginaryUnit':    U('GREEK SMALL LETTER IOTA'),
-    #'ImaginaryUnit':    U('MATHEMATICAL ITALIC SMALL I'),
-    'ImaginaryUnit':    U('DOUBLE-STRUCK ITALIC SMALL I'),
-    'EmptySet':         U('EMPTY SET'),
-    'Naturals':         U('DOUBLE-STRUCK CAPITAL N'),
-    'Integers':         U('DOUBLE-STRUCK CAPITAL Z'),
-    'Reals':            U('DOUBLE-STRUCK CAPITAL R'),
-    'Union':            U('UNION'),
-    'Intersection':     U('INTERSECTION'),
-    'Ring':             U('RING OPERATOR')
+    # class                    how-to-display
+    'Exp1':                    U('SCRIPT SMALL E'),
+    'Pi':                      U('GREEK SMALL LETTER PI'),
+    'Infinity':                U('INFINITY'),
+    'NegativeInfinity':        U('INFINITY') and ('-' + U('INFINITY')),  # XXX what to do here
+    #'ImaginaryUnit':          U('GREEK SMALL LETTER IOTA'),
+    #'ImaginaryUnit':          U('MATHEMATICAL ITALIC SMALL I'),
+    'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'EmptySet':                U('EMPTY SET'),
+    'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
+    'Union':                   U('UNION'),
+    'SymmetricDifference':     U('INCREMENT'),
+    'Intersection':            U('INTERSECTION'),
+    'Ring':                    U('RING OPERATOR')
 }
 
 

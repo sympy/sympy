@@ -1471,6 +1471,14 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
 
+    def _print_SymmetricDifference(self, u):
+        if not self._use_unicode:
+            raise NotImplementedError("ASCII pretty printing of SymmetricDifference is not implemented")
+
+        sym_delimeter = ' %s ' % pretty_atom('SymmetricDifference')
+
+        return self._print_seq(u.args, None, None, sym_delimeter)
+
     def _print_Complement(self, u):
 
         delimiter = ' \ '

@@ -4830,6 +4830,15 @@ def test_pretty_Complement():
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
 
 
+def test_pretty_SymmetricDifference():
+    from sympy import SymmetricDifference, Interval
+    from sympy.utilities.pytest import raises
+    assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
+           evaluate = False)) == u('[2, 3] ∆ [3, 5]')
+    with raises(NotImplementedError):
+        pretty(SymmetricDifference(Interval(2,3), Interval(3,5), evaluate = False))
+
+
 def test_pretty_Contains():
     assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
     assert upretty(Contains(x, S.Integers)) == u('x ∈ ℤ')
