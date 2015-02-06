@@ -256,7 +256,6 @@ def fidelity(state1, state2):
     0
     >>> fidelity(up_dm, updown_dm).evalf().round(3)
     0.707
-
     References
     ==========
     .. [1] http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
@@ -277,6 +276,7 @@ def fidelity(state1, state2):
     sqrt_state1 = state1**Rational(1, 2)
     return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
     
+
 def bures_metric(state1, state2):
     """ Computes the Bures metric [1]_ between two quantum states
     The arguments provided to this function should be a square matrix or a
