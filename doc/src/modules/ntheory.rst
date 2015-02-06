@@ -53,6 +53,8 @@ Ntheory Functions Reference
 
 .. autofunction:: totient
 
+.. autofunction:: core
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue

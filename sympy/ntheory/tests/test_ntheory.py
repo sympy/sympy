@@ -15,7 +15,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p, \
-    antidivisors, antidivisor_count
+    antidivisors, antidivisor_count, core
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
@@ -880,3 +880,12 @@ def test_egyptian_fraction():
                                                      10, 11, 12, 27, 744, 893588,
                                                      1251493536607,
                                                      20361068938197002344405230]
+
+
+def test_core():
+    assert core(35**13, 10) == 42875
+    assert core(210**2) == 1
+    assert core(7776, 3) == 36
+    assert core(10**27, 22) == 10**5
+    assert core(537824) == 14
+    assert core(1, 6) == 1
