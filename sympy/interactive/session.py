@@ -71,7 +71,7 @@ def _make_message(ipython=True, quiet=False, source=None):
                 _source += '>>> ' + line + '\n'
 
         doc_version = sympy_version
-        if doc_version.find('-git') >= 0:
+        if doc_version.find('-git') >= 0 or doc_version.find('dev') >= 0:
             doc_version = "dev"
         else:
             doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
