@@ -893,7 +893,7 @@ def _simplifyconds(expr, s, a):
     >>> simp(Ne(1, x**3), x, 2)
     True
     >>> simp(Ne(1, x**3), x, 0)
-    1 != x**3
+    Ne(1, x**3)
     """
     from sympy.core.relational import ( StrictGreaterThan, StrictLessThan,
         Unequality )

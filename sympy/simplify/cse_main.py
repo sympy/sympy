@@ -49,8 +49,8 @@ def reps_toposort(r):
     >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
     ...     print(Eq(l, r))
     ...
-    y == 2
-    x == y + 1
+    Eq(y, 2)
+    Eq(x, y + 1)
 
     """
     r = sympify(r)
