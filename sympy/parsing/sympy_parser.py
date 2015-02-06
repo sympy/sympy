@@ -847,7 +847,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def flatten(self, args, func):
         result = []
         for arg in args:
-            if isinstance(arg, ast.Call) and arg.func.id == func:
+            if isinstance(arg, ast.Call) and hasattr(arg.func, 'id') and arg.func.id == func:
                 result.extend(self.flatten(arg.args, func))
             else:
                 result.append(arg)
