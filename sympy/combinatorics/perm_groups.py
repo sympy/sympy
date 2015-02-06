@@ -2574,11 +2574,7 @@ class PermutationGroup(Basic):
                 continue
             i -= 1
         # build the strong generating set
-        strong_gens = []
-        for gens in strong_gens_distr:
-            for gen in gens:
-                if gen not in strong_gens:
-                    strong_gens.append(gen)
+        strong_gens = list(uniq(i for gens in strong_gens_distr for i in gens))
         return _base, strong_gens
 
     def schreier_sims_random(self, base=None, gens=None, consec_succ=10,
