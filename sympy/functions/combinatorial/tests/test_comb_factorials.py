@@ -1,4 +1,4 @@
-from sympy import (Symbol, symbols, factorial, factorial2, binomial,
+from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, C, S, Product)
 from sympy.functions.combinatorial.factorials import subfactorial
@@ -230,9 +230,11 @@ def test_factorial2():
 
 def test_binomial():
     n = Symbol('n', integer=True)
+    nz = Symbol('nz', integer=True, nonzero=True)
     k = Symbol('k', integer=True)
+    kp = Symbol('kp', integer=True, positive=True)
     u = Symbol('v', negative=True)
-    v = Symbol('m', positive=True)
+    p = Symbol('p', positive=True)
 
     assert binomial(0, 0) == 1
     assert binomial(1, 1) == 1
@@ -240,10 +242,14 @@ def test_binomial():
     assert binomial(1, 2) == 0
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
+    assert binomial(-1, -1) == 1
+    assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1) == 0
-    assert binomial(n, 0) == 1
+    assert binomial(n, -1).func == binomial
+    assert binomial(kp, -1) == 0
+    assert binomial(nz, 0) == 1
+    assert binomial(n, 0).func == binomial
     assert expand_func(binomial(n, 1)) == n
     assert expand_func(binomial(n, 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
@@ -252,13 +258,16 @@ def test_binomial():
     assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
     assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
     assert binomial(n, n) == 1
-    assert binomial(n, n + 1) == 0
-    assert binomial(n, u) == 0
-    assert binomial(n, v).func == binomial
+    assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
+    assert binomial(kp, kp + 1) == 0
+    assert binomial(n, u).func == binomial
+    assert binomial(kp, u) == 0
+    assert binomial(n, p).func == binomial
     assert binomial(n, k).func == binomial
-    assert binomial(n, n + v) == 0
+    assert binomial(n, n + p).func == binomial
+    assert binomial(kp, kp + p) == 0
 
-    assert expand_func(binomial(n, n-3)) == n*(n - 2)*(n - 1)/6
+    assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
     assert binomial(n, k).is_integer
 

@@ -539,62 +539,73 @@ ff = FallingFactorial
 
 class binomial(CombinatorialFunction):
     """Implementation of the binomial coefficient. It can be defined
-       in two ways depending on its desired interpretation:
+    in two ways depending on its desired interpretation:
 
-           C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!
+        C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!
 
-       First, in a strict combinatorial sense it defines the
-       number of ways we can choose 'k' elements from a set of
-       'n' elements. In this case both arguments are nonnegative
-       integers and binomial is computed using an efficient
-       algorithm based on prime factorization.
+    First, in a strict combinatorial sense it defines the
+    number of ways we can choose 'k' elements from a set of
+    'n' elements. In this case both arguments are nonnegative
+    integers and binomial is computed using an efficient
+    algorithm based on prime factorization.
 
-       The other definition is generalization for arbitrary 'n',
-       however 'k' must also be nonnegative. This case is very
-       useful when evaluating summations.
+    The other definition is generalization for arbitrary 'n',
+    however 'k' must also be nonnegative. This case is very
+    useful when evaluating summations.
 
-       For the sake of convenience for negative 'k' this function
-       will return zero no matter what valued is the other argument.
+    For the sake of convenience for negative 'k' this function
+    will return zero no matter what valued is the other argument.
 
-       To expand the binomial when n is a symbol, use either
-       expand_func() or expand(func=True). The former will keep the
-       polynomial in factored form while the latter will expand the
-       polynomial itself. See examples for details.
+    To expand the binomial when n is a symbol, use either
+    expand_func() or expand(func=True). The former will keep the
+    polynomial in factored form while the latter will expand the
+    polynomial itself. See examples for details.
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy import Symbol, Rational, binomial, expand_func
-       >>> n = Symbol('n', integer=True)
+    >>> from sympy import Symbol, Rational, binomial, expand_func
+    >>> n = Symbol('n', integer=True, positive=True)
 
-       >>> binomial(15, 8)
-       6435
+    >>> binomial(15, 8)
+    6435
 
-       >>> binomial(n, -1)
-       0
+    >>> binomial(n, -1)
+    0
 
-       >>> [ binomial(0, i) for i in range(1)]
-       [1]
-       >>> [ binomial(1, i) for i in range(2)]
-       [1, 1]
-       >>> [ binomial(2, i) for i in range(3)]
-       [1, 2, 1]
-       >>> [ binomial(3, i) for i in range(4)]
-       [1, 3, 3, 1]
-       >>> [ binomial(4, i) for i in range(5)]
-       [1, 4, 6, 4, 1]
+    Rows of Pascal's triangle can be generated with the binomial function:
 
-       >>> binomial(Rational(5,4), 3)
-       -5/128
+    >>> for N in range(8):
+    ...     print([ binomial(N, i) for i in range(N + 1)])
+    ...
+    [1]
+    [1, 1]
+    [1, 2, 1]
+    [1, 3, 3, 1]
+    [1, 4, 6, 4, 1]
+    [1, 5, 10, 10, 5, 1]
+    [1, 6, 15, 20, 15, 6, 1]
+    [1, 7, 21, 35, 35, 21, 7, 1]
 
-       >>> binomial(n, 3)
-       binomial(n, 3)
+    As can a given diagonal, e.g. the 4th diagonal:
 
-       >>> binomial(n, 3).expand(func=True)
-       n**3/6 - n**2/2 + n/3
+    >>> N = -4
+    >>> [ binomial(N, i) for i in range(1 - N)]
+    [1, -4, 10, -20, 35]
 
-       >>> expand_func(binomial(n, 3))
-       n*(n - 2)*(n - 1)/6
+    >>> binomial(Rational(5, 4), 3)
+    -5/128
+    >>> binomial(Rational(-5, 4), 3)
+    -195/128
+
+    >>> binomial(n, 3)
+    binomial(n, 3)
+
+    >>> binomial(n, 3).expand(func=True)
+    n**3/6 - n**2/2 + n/3
+
+    >>> expand_func(binomial(n, 3))
+    n*(n - 2)*(n - 1)/6
 
     """
 
@@ -602,71 +613,75 @@ class binomial(CombinatorialFunction):
         if argindex == 1:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
             n, k = self.args
-            return binomial(n, k)*(C.polygamma(0, n + 1) - C.polygamma(0, n - k + 1))
+            return binomial(n, k)*(C.polygamma(0, n + 1) - \
+                C.polygamma(0, n - k + 1))
         elif argindex == 2:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
             n, k = self.args
-            return binomial(n, k)*(C.polygamma(0, n - k + 1) - C.polygamma(0, k + 1))
+            return binomial(n, k)*(C.polygamma(0, n - k + 1) - \
+                C.polygamma(0, k + 1))
         else:
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    def _eval(self, n, k):
+        # n.is_Number and k.is_Integer and k != 1 and n != k
+        if k.is_Integer:
+            if n.is_Integer and n >= 0:
+                n, k = int(n), int(k)
+
+                if k > n:
+                    return S.Zero
+                elif k > n // 2:
+                    k = n - k
+
+                M, result = int(_sqrt(n)), 1
+
+                for prime in sieve.primerange(2, n + 1):
+                    if prime > n - k:
+                        result *= prime
+                    elif prime > n // 2:
+                        continue
+                    elif prime > M:
+                        if n % prime < k % prime:
+                            result *= prime
+                    else:
+                        N, K = n, k
+                        exp = a = 0
+
+                        while N > 0:
+                            a = int((N % prime) < (K % prime + a))
+                            N, K = N // prime, K // prime
+                            exp = a + exp
+
+                        if exp > 0:
+                            result *= prime**exp
+                return C.Integer(result)
+            else:
+                d = result = n - k + 1
+                for i in range(2, k + 1):
+                    d += 1
+                    result *= d
+                    result /= i
+                return result
+
+    @classmethod
     def eval(cls, n, k):
         n, k = map(sympify, (n, k))
-
-        if k.is_Number:
-            if k.is_Integer:
-                if k < 0:
-                    return S.Zero
-                elif k == 0 or n == k:
-                    return S.One
-                elif n.is_Integer and n >= 0:
-                    n, k = int(n), int(k)
-
-                    if k > n:
-                        return S.Zero
-                    elif k > n // 2:
-                        k = n - k
-
-                    M, result = int(_sqrt(n)), 1
-
-                    for prime in sieve.primerange(2, n + 1):
-                        if prime > n - k:
-                            result *= prime
-                        elif prime > n // 2:
-                            continue
-                        elif prime > M:
-                            if n % prime < k % prime:
-                                result *= prime
-                        else:
-                            N, K = n, k
-                            exp = a = 0
-
-                            while N > 0:
-                                a = int((N % prime) < (K % prime + a))
-                                N, K = N // prime, K // prime
-                                exp = a + exp
-
-                            if exp > 0:
-                                result *= prime**exp
-
-                    return C.Integer(result)
-                elif n.is_Number:
-                    result = n - k + 1
-                    for i in range(2, k + 1):
-                        result *= n - k + i
-                        result /= i
-                    return result
-
-        elif k.is_negative:
-            return S.Zero
-        elif (n - k).simplify().is_negative:
-            return S.Zero
-        else:
-            d = n - k
-
-            if d.is_Integer:
-                return cls.eval(n, d)
+        d = n - k
+        if d.is_zero:
+            return S.One
+        elif d.is_zero is False:
+            if (k - 1).is_zero:
+                return n
+            elif k.is_negative:
+                return S.Zero
+            elif k.is_zero:
+                return S.One
+            elif n.is_integer and n.is_nonnegative and d.is_negative:
+                return S.Zero
+        if k.is_Integer and k > 0 and n.is_Number:
+            return cls._eval(n, k)
 
     def _eval_expand_func(self, **hints):
         """
