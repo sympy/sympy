@@ -1332,7 +1332,7 @@ def partitions(n, m=None, k=None, size=False):
     The numbers appearing in the partition (the key of the returned dict)
     are limited with k:
 
-    >>> for p in partitions(6, k=2):
+    >>> for p in partitions(6, k=2):  # doctest: +SKIP
     ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
@@ -1342,7 +1342,7 @@ def partitions(n, m=None, k=None, size=False):
     The maximum number of parts in the partion (the sum of the values in
     the returned dict) are limited with m:
 
-    >>> for p in partitions(6, m=2):
+    >>> for p in partitions(6, m=2):  # doctest: +SKIP
     ...     print(p)
     ...
     {6: 1}
@@ -1360,9 +1360,9 @@ def partitions(n, m=None, k=None, size=False):
     If you want to build a list of the returned dictionaries then
     make a copy of them:
 
-    >>> [p.copy() for p in partitions(6, k=2)]
+    >>> [p.copy() for p in partitions(6, k=2)]  # doctest: +SKIP
     [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
-    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]
+    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
     [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
     Reference:

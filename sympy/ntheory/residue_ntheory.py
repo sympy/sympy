@@ -577,7 +577,7 @@ def is_quad_residue(a, p):
     prime, an iterative method is used to make the determination:
 
     >>> from sympy.ntheory import is_quad_residue
-    >>> list(set([i**2 % 7 for i in range(7)]))
+    >>> sorted(set([i**2 % 7 for i in range(7)]))
     [0, 1, 2, 4]
     >>> [j for j in range(7) if is_quad_residue(j, 7)]
     [0, 1, 2, 4]
@@ -783,7 +783,7 @@ def legendre_symbol(a, p):
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
-    >>> list(set([i**2 % 7 for i in range(7)]))
+    >>> sorted(set([i**2 % 7 for i in range(7)]))
     [0, 1, 2, 4]
 
     See Also
