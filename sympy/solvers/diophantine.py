@@ -77,6 +77,10 @@ def diophantine(eq, param=symbols("t", integer=True)):
 
     terms = factor_list(eq)[1]
 
+    has_constant = True
+    if eq.as_coefficients_dict()[1] == 0:
+        has_constant = False
+
     sols = set([])
 
     for term in terms:
@@ -94,6 +98,9 @@ def diophantine(eq, param=symbols("t", integer=True)):
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
+
+        if not sols and not has_constant:
+            sols = set([(0,)*len(var)])
 
     return sols
 

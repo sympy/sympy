@@ -427,6 +427,10 @@ def test_diophantine():
     #assert check_solutions(y**2 - 7*x*y + 4*y*z)
     assert check_solutions(x**2 - 2*x + 1)
 
+    #Issue #8943
+    assert diophantine((3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x))) == set([(0, 0, 0)])
+    assert diophantine( x**2 + 4*x*y + 8*z ) == set([(0, 0, 0)])
+
 
 def test_general_pythagorean():
 
