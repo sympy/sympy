@@ -130,9 +130,6 @@ def postprocess_for_cse(expr, optimizations):
     expr : sympy expression
         The transformed expression.
     """
-    if optimizations is None:
-        # FIXME : cse_optimizations is not defined anywhere.
-        optimizations = cse_optimizations
     for pre, post in reversed(optimizations):
         if post is not None:
             expr = post(expr)
