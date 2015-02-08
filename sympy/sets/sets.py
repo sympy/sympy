@@ -165,6 +165,8 @@ class Set(Basic):
         >>> from sympy import Interval, S
         >>> Interval(0, 1).complement(S.Reals)
         (-oo, 0) U (1, oo)
+        >>> Interval(-1, 0).complement(S.Reals)
+        (-oo, -1) U (0, oo)
 
         >>> Interval(0, 1).complement(S.UniversalSet)
         UniversalSet() \ [0, 1]
