@@ -50,6 +50,7 @@ import sys
 import subprocess
 import os
 import shutil
+import glob
 
 PY3 = sys.version_info[0] > 2
 
@@ -189,6 +190,11 @@ class clean(Command):
                 os.remove(f)
             elif os.path.isdir(f):
                 shutil.rmtree(f)
+
+        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules", \
+                                           "physics", "vector", "*.pdf")):
+            if os.path.isfile(name):
+                os.remove(name)
 
         os.chdir(curr_dir)
 

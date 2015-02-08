@@ -55,6 +55,7 @@ doc/sphinx/
 
 # pdf files generated from svg files (cd doc; make latex)
 doc/src/modules/physics/mechanics/*.pdf
+doc/src/modules/physics/vector/*.pdf
 
 # Mac OS X Junk
 .DS_Store
@@ -67,3 +68,4 @@ sample.tex
 
 # IPython Notebook Checkpoints
 .ipynb_checkpoints/
+
