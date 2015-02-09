@@ -38,7 +38,7 @@ To get the git version do
 
     $ git clone git://github.com/sympy/sympy.git
 
-For other options (tarballs, debs, etc.), see See
+For other options (tarballs, debs, etc.), see
 http://docs.sympy.org/dev/install.html.
 
 Documentation and usage
