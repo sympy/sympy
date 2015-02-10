@@ -323,6 +323,28 @@ def fidelity(state1, state2):
     return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
 
 
+def bures_metric(state1, state2):
+    """ Computes the Bures metric [1]_ between two quantum states
+    The arguments provided to this function should be a square matrix or a
+    Density object. If it is a square matrix, it is assumed to be diagonalizable.
+    """
+    state1 = represent(state1) if isinstance(state1, Density) else state1
+    state2 = represent(state2) if isinstance(state2, Density) else state2
+
+    if (not isinstance(state1, Matrix) or
+            not isinstance(state2, Matrix)):
+        raise ValueError("state1 and state2 must be of type Density or Matrix "
+                         "received type=%s for state1 and type=%s for state2" %
+                         (type(state1), type(state2)))
+
+    if ( state1.shape != state2.shape and state1.is_square):
+        raise ValueError("The dimensions of both args should be equal and the "
+                         "matrix obtained should be a square matrix")
+
+    # the sqrt(2) is for normalization
+    return sqrt(2-2*sqrt(fidelity(state1,state2))) / sqrt(2)
+
+
 def bures_angle(state1, state2):
     """ Computes the Bures angle [1], [2] between two quantum states
 
