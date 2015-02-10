@@ -190,6 +190,12 @@ class clean(Command):
             elif os.path.isdir(f):
                 shutil.rmtree(f)
 
+        os.chdir(dir_setup + "/doc/src/modules/physics/vector")
+
+        for f in os.listdir(os.getcwd()):
+            if os.path.isfile(f) and f.endswith(".pdf"):
+                os.remove(f)
+
         os.chdir(curr_dir)
 
 
