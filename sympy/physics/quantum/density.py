@@ -348,10 +348,10 @@ def bures_metric(state1, state2):
     >>> phip_dm = phip * Dagger(phip)
     >>> phim_dm = phim * Dagger(phim)
     >>> # calculates the Bures metric between two orthogonal states (yields: 0)
-    >>> print bures_metric(phip_dm, phim_dm)
+    >>> bures_metric(phip_dm, phim_dm)
     1
     >>> # calculates the Bures metric between two identitcal states (yields: 1)
-    >>> print bures_metric(phip_dm, phip_dm)
+    >>> bures_metric(phip_dm, phip_dm)
     0
 
     References
@@ -410,10 +410,10 @@ def bures_angle(state1, state2):
     >>> phim_dm = phim * Dagger(phim)
 
     >>> # calculates the Bures angle between two orthogonal states (yields: 0)
-    >>> print bures_angle(phip_dm, phim_dm)
+    >>> bures_angle(phip_dm, phim_dm)
     1
     >>> # calculates the Bures angle between two identitcal states (yields: 1)
-    >>> print bures_angle(phip_dm, phip_dm)
+    >>> bures_angle(phip_dm, phip_dm)
     0
 
     References
