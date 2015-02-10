@@ -411,10 +411,10 @@ def bures_angle(state1, state2):
 
     >>> # calculates the Bures angle between two orthogonal states (yields: 0)
     >>> print bures_angle(phip_dm, phim_dm)
-    0
+    1
     >>> # calculates the Bures angle between two identitcal states (yields: 1)
     >>> print bures_angle(phip_dm, phip_dm)
-    1
+    0
 
     References
     ==========
