@@ -379,6 +379,12 @@ def test_sub_qdot2():
     # all velocities in terms of q, qdot. We check that the generalized active
     # forces are correctly computed if u terms are only defined in the
     # kinematic differential equations.
+    #
+    # This functionality was added in PR 8948. Without qdot/u substitution, the
+    # KanesMethod constructor will fail during the constraint initialization as
+    # the B matrix will be poorly formed and inversion of the dependent part
+    # will fail.
+
     g, m, Px, Py, Pz, R, t = symbols('g m Px Py Pz R t')
     q = dynamicsymbols('q:5')
     qd = dynamicsymbols('q:5', level=1)
