@@ -274,7 +274,6 @@ def fidelity(state1, state2):
 
     state1, state2 : a density matrix or Matrix
 
-
     Examples:
     =========
 
@@ -335,14 +334,13 @@ def bures_angle(state1, state2):
 
     state1, state2 : a density matrix or Matrix
 
-
     Examples:
     =========
 
     >>> from sympy.physics.quantum import TensorProduct, Ket, Dagger
     >>> from sympy.physics.quantum.density import bures_metric
     >>> from sympy import Matrix
-    >>> from math import sqrt
+    >>> from sympy import sqrt
 
     >>> # define qubits |0>, |1>, |00>, and |11>
     >>> q0 = Matrix([1,0])
@@ -371,6 +369,7 @@ def bures_angle(state1, state2):
     .. [1] http://en.wikipedia.org/wiki/Bures_metric
     .. [2] Quantum Computation and Quantum Information. M. Nielsen, I. Chuang,
            Cambridge University Press, (2001) (Eq. 9.82, pg 413).
+
     """
     state1 = represent(state1) if isinstance(state1, Density) else state1
     state2 = represent(state2) if isinstance(state2, Density) else state2
