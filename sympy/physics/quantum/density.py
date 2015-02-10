@@ -5,7 +5,7 @@ from itertools import product
 from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt, Rational
 from sympy.core.trace import Tr
 from sympy.core.compatibility import u
-from sympy.mpmath import acos, pi
+from sympy import acos, pi
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
@@ -350,7 +350,7 @@ def bures_angle(state1, state2):
     >>> q00 = TensorProduct(q0,q0)
     >>> q11 = TensorProduct(q1,q1)
 
-    >>> # create set of maximally entangled Bell states 
+    >>> # create set of maximally entangled Bell states
     >>> phip = 1/sqrt(2) * ( q00 + q11 )
     >>> phim = 1/sqrt(2) * ( q00 - q11 )
 
@@ -369,8 +369,8 @@ def bures_angle(state1, state2):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Bures_metric
-    .. [2] Quantum Computation and Quantum Information. M. Nielsen, I. Chuang, 
-           Cambridge University Press, (2001) (Eq. 9.82, pg 413). 
+    .. [2] Quantum Computation and Quantum Information. M. Nielsen, I. Chuang,
+           Cambridge University Press, (2001) (Eq. 9.82, pg 413).
     """
     state1 = represent(state1) if isinstance(state1, Density) else state1
     state2 = represent(state2) if isinstance(state2, Density) else state2
