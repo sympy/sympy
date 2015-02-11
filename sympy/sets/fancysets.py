@@ -298,7 +298,7 @@ def TransformationSet(*args, **kwargs):
     return ImageSet(*args, **kwargs)
 
 
-class Complex(with_metaclass(Singleton, ImageSet)):
+class ComplexPlane(with_metaclass(Singleton, ImageSet)):
 
     def __new__(cls):
         from sympy.core import Symbol
