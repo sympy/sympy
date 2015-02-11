@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    subfactorial, true, false, Equivalent, Xor, Complement)
+    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -715,3 +715,7 @@ def test_Xor():
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+
+def test_SymmetricDifference():
+    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
+           'SymmetricDifference([2, 3], [3, 4])'
