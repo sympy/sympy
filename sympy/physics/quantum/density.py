@@ -327,11 +327,15 @@ def bures_metric(state1, state2):
     """ Computes the Bures metric [1]_ between two quantum states
     The arguments provided to this function should be a square matrix or a
     Density object. If it is a square matrix, it is assumed to be diagonalizable.
+
     Parameters:
     ==========
+
     state1, state2 : a density matrix or Matrix
+
     Examples:
     =========
+
     >>> from sympy.physics.quantum import TensorProduct, Ket, Dagger
     >>> from sympy.physics.quantum.density import bures_metric
     >>> from sympy import Matrix
@@ -356,6 +360,7 @@ def bures_metric(state1, state2):
 
     References
     ==========
+
     .. [1] http://en.wikipedia.org/wiki/Bures_metric
 
     """
@@ -394,21 +399,17 @@ def bures_angle(state1, state2):
     >>> from sympy.physics.quantum.density import bures_angle
     >>> from sympy import Matrix
     >>> from sympy import sqrt
-
     >>> # define qubits |0>, |1>, |00>, and |11>
     >>> q0 = Matrix([1,0])
     >>> q1 = Matrix([0,1])
     >>> q00 = TensorProduct(q0,q0)
     >>> q11 = TensorProduct(q1,q1)
-
     >>> # create set of maximally entangled Bell states
     >>> phip = 1/sqrt(2) * ( q00 + q11 )
     >>> phim = 1/sqrt(2) * ( q00 - q11 )
-
     >>> # create the corresponding density matrices for the Bell states
     >>> phip_dm = phip * Dagger(phip)
     >>> phim_dm = phim * Dagger(phim)
-
     >>> # calculates the Bures angle between two orthogonal states (yields: 0)
     >>> bures_angle(phip_dm, phim_dm)
     1
