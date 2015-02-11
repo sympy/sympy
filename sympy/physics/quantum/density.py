@@ -341,7 +341,7 @@ def bures_metric(state1, state2):
     >>> q1 = Matrix([0,1])
     >>> q00 = TensorProduct(q0,q0)
     >>> q11 = TensorProduct(q1,q1)
-    >>> # create set of maximally entangled Bell states 
+    >>> # create set of maximally entangled Bell states
     >>> phip = 1/sqrt(2) * ( q00 + q11 )
     >>> phim = 1/sqrt(2) * ( q00 - q11 )
     >>> # create the corresponding density matrices for the Bell states
