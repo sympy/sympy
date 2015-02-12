@@ -951,7 +951,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             sign_change = +1 if (gener(rank) == rank) else -1
             data_swapped = data
             last_data = data
-            permute_axes = map(gener, range(rank))
+            permute_axes = list(map(gener, list(range(rank))))
             # the order of a permutation is the number of times to get the
             # identity by applying that permutation.
             for i in range(gener.order()-1):
