@@ -3,10 +3,11 @@ from __future__ import print_function, division
 from sympy.core import S, C, sympify, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
+from sympy.core.numbers import Integer
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, as_int, range
+from sympy.core.compatibility import reduce, range
 from sympy.core.cache import cacheit
 
 
@@ -159,7 +160,7 @@ class factorial(CombinatorialFunction):
 
                         result = cls._recursive(n)*2**(n - bits)
 
-                    return C.Integer(result)
+                    return Integer(result)
 
     def _eval_rewrite_as_gamma(self, n):
         return C.gamma(n + 1)
@@ -656,7 +657,7 @@ class binomial(CombinatorialFunction):
 
                         if exp > 0:
                             result *= prime**exp
-                return C.Integer(result)
+                return Integer(result)
             else:
                 d = result = n - k + 1
                 for i in range(2, k + 1):
@@ -713,7 +714,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
     def _eval_rewrite_as_factorial(self, n, k):
-        return C.factorial(n)/(C.factorial(k)*C.factorial(n - k))
+        return factorial(n)/(factorial(k)*factorial(n - k))
 
     def _eval_rewrite_as_gamma(self, n, k):
         return C.gamma(n + 1)/(C.gamma(k + 1)*C.gamma(n - k + 1))

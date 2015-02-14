@@ -9,16 +9,16 @@ the separate 'factorials' module.
 
 from __future__ import print_function, division
 
-from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
+from sympy.core.function import Function, expand_mul
 from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
-from sympy.functions.elementary.integers import floor
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.functions.combinatorial.factorials import factorial
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -233,7 +233,7 @@ class bernoulli(Function):
     @staticmethod
     def _calc_bernoulli(n):
         s = 0
-        a = int(C.binomial(n + 3, n - 6))
+        a = int(binomial(n + 3, n - 6))
         for j in range(1, n//6 + 1):
             s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
@@ -243,7 +243,7 @@ class bernoulli(Function):
             s = -Rational(n + 3, 6) - s
         else:
             s = Rational(n + 3, 3) - s
-        return s / C.binomial(n + 3, n)
+        return s / binomial(n + 3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
@@ -286,7 +286,7 @@ class bernoulli(Function):
                 else:
                     n, result = int(n), []
                     for k in range(n + 1):
-                        result.append(C.binomial(n, k)*cls(k)*sym**(n - k))
+                        result.append(binomial(n, k)*cls(k)*sym**(n - k))
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
@@ -434,7 +434,7 @@ class bell(Function):
         # Dobinski's formula
         if not n.is_nonnegative:
             return self
-        k = C.Dummy('k', integer=True, nonnegative=True)
+        k = Dummy('k', integer=True, nonnegative=True)
         return 1 / E * C.Sum(k**n / factorial(k), (k, 0, S.Infinity))
 
 #----------------------------------------------------------------------------#
@@ -618,7 +618,7 @@ class harmonic(Function):
         return self.rewrite(polygamma)
 
     def _eval_rewrite_as_Sum(self, n, m=None):
-        k = C.Dummy("k", integer=True)
+        k = Dummy("k", integer=True)
         if m is None:
             m = S.One
         return C.Sum(k**(-m), (k, 1, n))
@@ -725,10 +725,10 @@ class euler(Function):
 
     def _eval_rewrite_as_Sum(self, arg):
         if arg.is_even:
-            k = C.Dummy("k", integer=True)
-            j = C.Dummy("j", integer=True)
+            k = Dummy("k", integer=True)
+            j = Dummy("j", integer=True)
             n = self.args[0] / 2
-            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
+            Em = (S.ImaginaryUnit * C.Sum(C.Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
 
             return Em
@@ -842,7 +842,7 @@ class catalan(Function):
         return catalan(n)*(C.polygamma(0, n + Rational(1, 2)) - C.polygamma(0, n + 2) + C.log(4))
 
     def _eval_rewrite_as_binomial(self, n):
-        return C.binomial(2*n, n)/(n + 1)
+        return binomial(2*n, n)/(n + 1)
 
     def _eval_rewrite_as_factorial(self, n):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
@@ -1290,11 +1290,11 @@ def _stirling1(n, k):
     elif k == 1:
         return factorial(n1)
     elif k == n1:
-        return C.binomial(n, 2)
+        return binomial(n, 2)
     elif k == n - 2:
-        return (3*n - 1)*C.binomial(n, 3)/4
+        return (3*n - 1)*binomial(n, 3)/4
     elif k == n - 3:
-        return C.binomial(n, 2)*C.binomial(n, 4)
+        return binomial(n, 2)*binomial(n, 4)
 
     # general recurrence
     return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
@@ -1310,7 +1310,7 @@ def _stirling2(n, k):
 
     # some special values
     if k == n1:
-        return C.binomial(n, 2)
+        return binomial(n, 2)
     elif k == 2:
         return 2**n1 - 1
 
