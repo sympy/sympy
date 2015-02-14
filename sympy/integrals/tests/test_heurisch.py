@@ -1,6 +1,7 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum
+    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
+    besselj, besselk, bessely, jn
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 
@@ -251,10 +252,7 @@ def test_pmint_LambertW():
 
     assert heurisch(f, x) == g
 
-@XFAIL
 def test_pmint_besselj():
-    # TODO: in both cases heurisch() gives None. Wrong besselj() derivative?
-
     f = besselj(nu + 1, x)/besselj(nu, x)
     g = nu*log(x) - log(besselj(nu, x))
 
@@ -262,6 +260,28 @@ def test_pmint_besselj():
 
     f = (nu*besselj(nu, x) - x*besselj(nu + 1, x))/x
     g = besselj(nu, x)
+
+    assert heurisch(f, x) == g
+
+    f = jn(nu + 1, x)/jn(nu, x)
+    g = nu*log(x) - log(jn(nu, x))
+
+    assert heurisch(f, x) == g
+
+@slow
+def test_pmint_bessel_products():
+    # Note: Derivatives of Bessel functions have many forms.
+    # Recurrence relations are needed for comparisons.
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    f = x*besselj(nu, x)*bessely(nu, 2*x)
+    g = -2*x*besselj(nu, x)*bessely(nu - 1, 2*x)/3 + x*besselj(nu - 1, x)*bessely(nu, 2*x)/3
+
+    assert heurisch(f, x) == g
+
+    f = x*besselj(nu, x)*besselk(nu, 2*x)
+    g = -2*x*besselj(nu, x)*besselk(nu - 1, 2*x)/5 - x*besselj(nu - 1, x)*besselk(nu, 2*x)/5
 
     assert heurisch(f, x) == g
 
