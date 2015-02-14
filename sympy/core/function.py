@@ -40,6 +40,7 @@ from .core import BasicMeta, C
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
+from .operations import LatticeOp
 from .rules import Transform
 from .singleton import S
 from .sympify import sympify
@@ -448,7 +449,7 @@ class Function(Application, Expr):
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
             try:
-                return C.Float(self._imp_(*self.args), prec)
+                return Float(self._imp_(*self.args), prec)
             except (AttributeError, TypeError):
                 return
 
@@ -639,7 +640,7 @@ class Function(Application, Expr):
             raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
             # See issue 4624 and issue 4719 and issue 5600
-            arg_dummy = C.Dummy('xi_%i' % argindex)
+            arg_dummy = Dummy('xi_%i' % argindex)
             arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
                 self.subs(self.args[argindex - 1], arg_dummy),
@@ -1099,7 +1100,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if not is_symbol:
-                    new_v = C.Dummy('xi_%i' % i)
+                    new_v = Dummy('xi_%i' % i)
                     new_v.dummy_index = hash(v)
                     expr = expr.subs(v, new_v)
                     old_v = v
@@ -2341,7 +2342,7 @@ def count_ops(expr, visual=False):
 
                 o = C.Symbol(a.func.__name__.upper())
                 # count the args
-                if (a.is_Mul or isinstance(a, C.LatticeOp)):
+                if (a.is_Mul or isinstance(a, LatticeOp)):
                     ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
