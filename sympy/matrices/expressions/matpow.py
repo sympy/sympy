@@ -53,4 +53,17 @@ class MatPow(MatrixExpr):
         return T._entry(i, j)
 
 
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        base = args[0]
+        exp = args[1]
+        if isinstance(base, MatrixBase) and exp.is_Rational:
+            return base**exp
+        return MatPow(base, exp)
+
+
 from .matmul import MatMul
