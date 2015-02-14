@@ -53,8 +53,13 @@ class MatAdd(MatrixExpr):
         from trace import Trace
         return Trace(MatAdd(*self.args).doit())
 
-    def doit(self, **ignored):
-        return canonicalize(self)
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return canonicalize(MatAdd(*args))
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
