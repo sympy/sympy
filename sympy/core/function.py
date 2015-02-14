@@ -35,7 +35,7 @@ from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
+from .compatibility import iterable, is_sequence, as_int, ordered, PY3
 from .core import BasicMeta, C
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
@@ -708,6 +708,10 @@ class UndefinedFunction(FunctionClass):
     """
     def __new__(mcl, name, **kwargs):
         name=name.encode('ascii') # if user provides an UNICODE name
+        if PY3:
+            # in python3, above command produces a binary string. To correct it,
+            name=name.decode('ascii')
+
         ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
         ret.__module__ = None
         return ret

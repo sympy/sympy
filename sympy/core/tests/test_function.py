@@ -23,6 +23,11 @@ def test_f_expand_complex():
     assert exp(z).expand(complex=True) == cos(im(z))*exp(re(z)) + \
         I*sin(im(z))*exp(re(z))
 
+def test_unicode_name_support():
+    Function(u'k') # check if unicoded function names can be created
+
+    # check if unicoded function is same as its ascii counterpart
+    assert Function('k') == Function(u'k')
 
 def test_bug1():
     e = sqrt(-log(w))
