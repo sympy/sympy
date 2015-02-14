@@ -376,6 +376,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ted Dokos: implemented interleaving for unions
 #. Sunny Aggarwal: fix Integral.transform method
 #. Akshat Jain: nsimplify returns ints quickly
+#. Shivam Vats: Added ReciprocalHyperbolicFunction class and misc bug fixes
 #. Cody Herbst: modified Euler-MacLaurin to not exit when term == 0
 #. AMiT Kumar: fix sign error in unrad
 #. Nishith Shah: fix solving of Piecewise functions
