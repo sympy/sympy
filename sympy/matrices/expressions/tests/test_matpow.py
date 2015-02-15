@@ -20,6 +20,20 @@ def test_entry():
     assert isinstance(MatPow(C, 2)[0, 0], Sum)
 
 
+def test_as_explicit_symbol():
+    X = MatrixSymbol('X', 2, 2)
+    assert MatPow(X, 0).as_explicit() == ImmutableMatrix(Identity(2))
+    assert MatPow(X, 1).as_explicit() == X.as_explicit()
+    assert MatPow(X, 2).as_explicit() == (X.as_explicit())**2
+
+
+def test_as_explicit_nonsquare_symbol():
+    X = MatrixSymbol('X', 2, 3)
+    assert MatPow(X, 1).as_explicit() == X.as_explicit()
+    for r in [0, 2, S.Half, S.Pi]:
+        raises(ShapeError, lambda: MatPow(X, r).as_explicit())
+
+
 def test_as_explicit():
     A = ImmutableMatrix([[1, 2], [3, 4]])
     assert MatPow(A, 0).as_explicit() == ImmutableMatrix(Identity(2))
