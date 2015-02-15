@@ -1304,6 +1304,87 @@ def to_int_repr(clauses, symbols):
             for c in clauses]
 
 
+def term_to_integer(term):
+	"""
+	Constructs an integer from its base 2 digits.
+
+	Examples
+	========
+
+	>>> from sympy.logic.boolalg import term_to_integer
+	>>> term_to_integer([1, 0, 1, 1])
+	11
+	>>> terms = [[0, 0, 0, 1], [0, 0, 1, 1],
+	...			[0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
+	>>> map(term_to_integer, terms)
+	[1, 3, 7, 11, 15]
+
+	"""
+
+	term = list(term)
+	return int(''.join(map(str, term)), 2)
+
+
+def integer_to_term(i, n_bits=0):
+	"""
+	Gives a list of the base 2 digits in the integer i.
+	If additional n_bits argument is passed,
+	integer_to_term() extends list of digits with zeros.
+
+	Examples
+	========
+
+	>>> from sympy.logic.boolalg import integer_to_term
+	>>> integer_to_term(14)
+	[1, 1, 1, 0]
+	>>> integer_to_term(7, 5)
+	[0, 0, 1, 1, 1]
+	>>> truthtable = [1, 0, 0, 1, 1, 1, 0, 1]
+	>>> minterms = []
+	>>> n_bits = len(truthtable).bit_length() - 1
+	>>> for i, value in enumerate(truthtable):
+	...			if value:
+	...				minterms.append(integer_to_term(i, n_bits))
+	>>> minterms
+	[[0, 0, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 1]]
+
+	"""
+	n = i.bit_length() if i else 1
+	prefix = [0] * (n_bits - n if n_bits else 0)
+	return prefix + map(int, list('{0:b}'.format(i)))
+
+
+def truth_table(expr, variables):
+	"""
+	Gives a list of truth values of the boolean expression.
+
+	Examples
+	========
+	>>> from sympy.logic.boolalg import truth_table
+	>>> truth_table('a&b | b&c | c&a', ['a', 'b', 'c'])
+	[0, 0, 0, 1, 0, 1, 1, 1]
+	>>> truth_table('a >> b | c', ['a', 'b', 'c'])
+	[1, 1, 1, 1, 0, 1, 1, 1]
+	>>> from sympy.abc import x,y
+	>>> truth_table(x >> y, [y, x])
+	[1, 0, 1, 1]
+
+	"""
+	variables = [sympify(v) for v in variables]
+
+	expr = sympify(expr)
+	if not isinstance(expr, BooleanFunction):
+		return expr
+
+	truth_values = [0] * (2**len(variables))
+	for term in product([0, 1], repeat=len(variables)):
+		term = list(term)
+		if expr.xreplace(dict(zip(variables, term))) == True:
+			truth_values[term_to_integer(term)] = 1
+
+	return truth_values
+
+
 def _check_pair(minterm1, minterm2):
     """
     Checks if a pair of minterms differs by only one bit. If yes, returns
