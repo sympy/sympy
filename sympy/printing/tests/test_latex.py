@@ -222,9 +222,8 @@ def test_latex_functions():
 
     assert latex(binomial(2, k)) == r"{\binom{2}{k}}"
 
-    assert latex(
-        FallingFactorial(3, k)) == r"{\left(3\right)}_{\left(k\right)}"
-    assert latex(RisingFactorial(3, k)) == r"{\left(3\right)}^{\left(k\right)}"
+    assert latex(FallingFactorial(3, k)) == r"{\left(3\right)}_{k}"
+    assert latex(RisingFactorial(3, k)) == r"{3}^{\left(k\right)}"
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
