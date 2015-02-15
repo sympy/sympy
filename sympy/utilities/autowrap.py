@@ -219,7 +219,7 @@ class CythonCodeWrapper(CodeWrapper):
         "setup(\n"
         "    cmdclass = {{'build_ext': build_ext}},\n"
         "    ext_modules = [Extension({ext_args},\n"
-        "                             extra_compile_args=['-std=c99'])],\n"
+        "                             extra_compile_args=['-std=c99'{extra_compile_args}])],\n"
         "{np_includes}"
         "        )")
 
@@ -238,8 +238,9 @@ class CythonCodeWrapper(CodeWrapper):
         "{body}")
 
     def __init__(self, *args, **kwargs):
-        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        self.extra_compile_args = kwargs.pop('extra_compile_args', '')
         self._need_numpy = False
+        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -265,7 +266,8 @@ class CythonCodeWrapper(CodeWrapper):
         with open('setup.py', 'w') as f:
             f.write(self.setup_template.format(ext_args=", ".join(ext_args),
                                                np_import=np_import,
-                                               np_includes=np_includes))
+                                               np_includes=np_includes,
+                                               extra_compile_args=", '" + ", '".join(self.extra_compile_args) + "'"))
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
@@ -449,7 +451,7 @@ def _validate_backend_language(backend, language):
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
     expr, language=None, backend='f2py', tempdir=None, args=None, flags=None,
-    verbose=False, helpers=None):
+    verbose=False, helpers=None, **kwargs):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -500,7 +502,8 @@ def autowrap(
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
-    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
+    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose,
+                                    **kwargs)
     try:
         routine = make_routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
@@ -777,7 +780,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
 def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
-             flags=None, verbose=False, helpers=None):
+             flags=None, verbose=False, helpers=None, **kwargs):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
@@ -796,20 +799,21 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         'cython', or 'f2py'.
     tempdir : string, optional
         Path to directory for temporary files. If this argument is supplied,
-        the generated code and the wrapper input files are left intact in the
-        specified path.
+        the generated code and the wrapper input files are left intact in
+        the specified path.
     flags : iterable, optional
-        Additional option flags that will be passed to the backend
+        Additional option flags that will be passed to the backend.
     verbose : bool, optional
-        If True, autowrap will not mute the command line backends. This can be
-        helpful for debugging.
+        If True, autowrap will not mute the command line backends. This can
+        be helpful for debugging.
     helpers : iterable, optional
-        Used to define auxillary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be put
-        in the ``helpers`` iterable. Autowrap will then make sure that the
-        compiled main expression can link to the helper routine. Items should
-        be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
-        is mandatory to supply an argument sequence to helper routines.
+        Used to define auxillary expressions needed for the main expr. If
+        the main expression needs to call a specialized function it should
+        be put in the ``helpers`` iterable. Autowrap will then make sure
+        that the compiled main expression can link to the helper routine.
+        Items should be tuples with (<funtion_name>, <sympy_expression>,
+        <arguments>). It is mandatory to supply an argument sequence to
+        helper routines.
 
     Note
     ----
@@ -888,4 +892,4 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         args = [y] + indexed_args + [m]
         args_with_indices = [a[i] for a in indexed_args]
         return autowrap(Eq(y[i], f(*args_with_indices)), language, backend,
-                        tempdir, args, flags, verbose, helpers)
+                        tempdir, args, flags, verbose, helpers, **kwargs)
