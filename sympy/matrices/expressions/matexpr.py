@@ -322,6 +322,14 @@ class MatrixElement(Expr):
     j = property(lambda self: self.args[2])
     _diff_wrt = True
 
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return args[0][args[1], args[2]]
+
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
