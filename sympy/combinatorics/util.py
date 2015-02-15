@@ -334,8 +334,6 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     >>> from sympy.combinatorics.testutil import _verify_bsgs
     >>> S = SymmetricGroup(15)
     >>> base, strong_gens = S.schreier_sims_incremental()
-    >>> len(strong_gens)
-    26
     >>> new_gens = _remove_gens(base, strong_gens)
     >>> len(new_gens)
     14
