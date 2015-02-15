@@ -2750,6 +2750,21 @@ class MatrixBase(object):
                         basis[basiskey.index(j)][i, 0] = -v
         return [self._new(b) for b in basis]
 
+    def columnspace(self, simplify=False):
+        """Returns list of vectors (Matrix objects) that span columnspace of self
+        """
+
+        simpfunc = simplify if isinstance(
+            simplify, FunctionType) else _simplify
+        reduced, pivots = self.rref(simplify=simpfunc)
+
+        basis = []
+        # create a set of vectors for the basis
+        for i in range(self.cols):
+            if i in pivots:
+                basis.append(self.col(i))
+        return [self._new(b) for b in basis]
+
     def berkowitz(self):
         """The Berkowitz algorithm.
 
