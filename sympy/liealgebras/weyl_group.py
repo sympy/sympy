@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core import Basic, Rational
+from sympy.core.compatibility import range
 from sympy.core.numbers import igcd
 from .cartan_type import CartanType
 from mpmath import fac

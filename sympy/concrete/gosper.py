@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Dummy, symbols
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
@@ -67,7 +67,7 @@ def gosper_normal(f, g, n, polys=True):
         A = A.quo(d)
         B = B.quo(d.shift(-i))
 
-        for j in xrange(1, i + 1):
+        for j in range(1, i + 1):
             C *= d.shift(-j)
 
     A = A.mul_ground(Z)

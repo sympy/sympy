@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.special.hyper import hyper, meijerg
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -208,6 +208,7 @@ class erf(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                     self.func(x + x*sqrt(sq)))
         return (re, im)
+
 
 class erfc(Function):
     r"""
@@ -1266,6 +1267,10 @@ class expint(Function):
                 return f._eval_nseries(x, n, logx)
         return super(expint, self)._eval_nseries(x, n, logx)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.exp_integral_e(self.args[0]._sage_(), self.args[1]._sage_())
+
 
 def E1(z):
     """
@@ -1661,6 +1666,9 @@ class Si(TrigonometricIntegral):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sin_integral(self.args[0]._sage_())
 
 class Ci(TrigonometricIntegral):
     r"""
@@ -1754,6 +1762,10 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cos_integral(self.args[0]._sage_())
+
 
 class Shi(TrigonometricIntegral):
     r"""
@@ -1832,6 +1844,10 @@ class Shi(TrigonometricIntegral):
         from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sinh_integral(self.args[0]._sage_())
 
 
 class Chi(TrigonometricIntegral):
@@ -1935,6 +1951,11 @@ class Chi(TrigonometricIntegral):
     @staticmethod
     def _latex_no_arg(printer):
         return r'\operatorname{Chi}'
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cosh_integral(self.args[0]._sage_())
+
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
@@ -2136,10 +2157,10 @@ class fresnels(FresnelIntegral):
             # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
             p = [(-1)**k * C.factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
-                 for k in xrange(0, n)]
+                 for k in range(0, n)]
             q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
-                 for k in xrange(1, n)]
+                 for k in range(1, n)]
 
             p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
             q = [-sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
@@ -2267,10 +2288,10 @@ class fresnelc(FresnelIntegral):
             # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
             p = [(-1)**k * C.factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
-                 for k in xrange(0, n)]
+                 for k in range(0, n)]
             q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
-                 for k in xrange(1, n)]
+                 for k in range(1, n)]
 
             p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
             q = [ sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
@@ -2300,7 +2321,7 @@ class _erfs(Function):
         if point is S.Infinity:
             z = self.args[0]
             l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in range(0, n) ]
             o = C.Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
             return (Add(*l))._eval_nseries(x, n, logx) + o
@@ -2311,7 +2332,7 @@ class _erfs(Function):
             z = self.args[0]
             # TODO: is the series really correct?
             l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in range(0, n) ]
             o = C.Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
             return (Add(*l))._eval_nseries(x, n, logx) + o
@@ -2342,7 +2363,7 @@ class _eis(Function):
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ C.factorial(k) * (1/z)**(k + 1) for k in xrange(0, n) ]
+        l = [ C.factorial(k) * (1/z)**(k + 1) for k in range(0, n) ]
         o = C.Order(1/z**(n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o

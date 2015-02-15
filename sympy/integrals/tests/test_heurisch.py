@@ -277,6 +277,12 @@ def test_pmint_WrightOmega():
 
     assert heurisch(f, x) == g
 
+def test_RR():
+    # Make sure the algorithm does the right thing if the ring is RR. See
+    # issue 8685.
+    assert heurisch(sqrt(1 + 0.25*x**2), x, hints=[]) == \
+        0.5*x*sqrt(0.25*x**2 + 1) + 1.0*asinh(0.5*x)
+
 # TODO: convert the rest of PMINT tests:
 # Airy functions
 # f = (x - AiryAi(x)*AiryAi(1, x)) / (x**2 - AiryAi(x)**2)

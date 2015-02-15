@@ -46,7 +46,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, xrange
+from sympy.core.compatibility import string_types, with_metaclass, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
@@ -625,7 +625,7 @@ class Function(Application, Expr):
         cf = C.Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
             nterms = int(nterms / cf)
-        for i in xrange(nterms):
+        for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -673,6 +673,13 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
+    def _sage_(self):
+        import sage.all as sage
+        fname = self.func.__name__
+        func = getattr(sage, fname)
+        args = [arg._sage_() for arg in self.args]
+        return func(*args)
+
 
 class AppliedUndef(Function):
     """
@@ -688,6 +695,12 @@ class AppliedUndef(Function):
     def _eval_as_leading_term(self, x):
         return self
 
+    def _sage_(self):
+        import sage.all as sage
+        fname = str(self.func)
+        args = [arg._sage_() for arg in self.args]
+        func = sage.function(fname, *args)
+        return func
 
 class UndefinedFunction(FunctionClass):
     """
@@ -1047,7 +1060,7 @@ class Derivative(Expr):
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
         # after a few differentiations, then we won't need the other variables.
-        variablegen = (v for v, count in variable_count for i in xrange(count))
+        variablegen = (v for v, count in variable_count for i in range(count))
 
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
@@ -1303,6 +1316,11 @@ class Derivative(Expr):
 
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
+
+    def _sage_(self):
+        import sage.all as sage
+        args = [arg._sage_() for arg in self.args]
+        return sage.derivative(*args)
 
 
 class Lambda(Expr):

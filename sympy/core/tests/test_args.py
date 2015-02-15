@@ -10,6 +10,7 @@ import warnings
 import io
 
 from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -972,6 +973,11 @@ def test_sympy__functions__combinatorial__numbers__bernoulli():
 def test_sympy__functions__combinatorial__numbers__catalan():
     from sympy.functions.combinatorial.numbers import catalan
     assert _test_args(catalan(x))
+
+
+def test_sympy__functions__combinatorial__numbers__genocchi():
+    from sympy.functions.combinatorial.numbers import genocchi
+    assert _test_args(genocchi(x))
 
 
 def test_sympy__functions__combinatorial__numbers__euler():

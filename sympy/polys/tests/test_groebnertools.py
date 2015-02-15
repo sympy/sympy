@@ -16,6 +16,7 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy.utilities.pytest import slow
 from sympy.polys import polyconfig as config
+from sympy.core.compatibility import range
 
 def _do_test_groebner():
     R, x,y = ring("x,y", QQ, lex)

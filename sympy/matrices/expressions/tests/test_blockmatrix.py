@@ -5,6 +5,7 @@ from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.core import Tuple, symbols, Expr
+from sympy.core.compatibility import range
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)

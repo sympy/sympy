@@ -5,7 +5,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import u, xrange
+from sympy.core.compatibility import u, range
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -845,14 +845,14 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in xrange(len_args)])
+        maxw = [max([P[i, j].width() for i in range(len_args)])
                 for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
         # drawing result
         D = None
 
-        for i in xrange(len_args):
+        for i in range(len_args):
             D_row = None
             for j in range(2):
                 p = P[i, j]
@@ -1295,7 +1295,7 @@ class PrettyPrinter(Printer):
 
         # Convert to pretty forms. Add parens to Add instances if there
         # is more than one term in the numer/denom
-        for i in xrange(0, len(a)):
+        for i in range(0, len(a)):
             if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
                     isinstance(a[i], (Integral, Piecewise, Product, Sum))):
                 a[i] = prettyForm(*self._print(a[i]).parens())
@@ -1304,7 +1304,7 @@ class PrettyPrinter(Printer):
             else:
                 a[i] = self._print(a[i])
 
-        for i in xrange(0, len(b)):
+        for i in range(0, len(b)):
             if (b[i].is_Add and len(b) > 1) or (i != len(b) - 1 and
                     isinstance(b[i], (Integral, Piecewise, Product, Sum))):
                 b[i] = prettyForm(*self._print(b[i]).parens())
@@ -1470,6 +1470,14 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
+
+    def _print_SymmetricDifference(self, u):
+        if not self._use_unicode:
+            raise NotImplementedError("ASCII pretty printing of SymmetricDifference is not implemented")
+
+        sym_delimeter = ' %s ' % pretty_atom('SymmetricDifference')
+
+        return self._print_seq(u.args, None, None, sym_delimeter)
 
     def _print_Complement(self, u):
 
@@ -1838,8 +1846,8 @@ class PrettyPrinter(Printer):
         from sympy.matrices import Matrix
         from sympy import Symbol
         matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
-                          for j in xrange(grid.width)]
-                         for i in xrange(grid.height)])
+                          for j in range(grid.width)]
+                         for i in range(grid.height)])
         return self._print_matrix_contents(matrix)
 
     def _print_FreeModuleElement(self, m):

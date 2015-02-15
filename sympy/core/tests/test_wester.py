@@ -48,6 +48,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
+from sympy.core.compatibility import range
 from itertools import islice, takewhile
 
 
@@ -2871,7 +2872,7 @@ def test_Y2():
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*abs(w - 1))
+    assert f == cos(t*w - t)
 
 
 @slow

@@ -22,6 +22,7 @@ from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
 
 from sympy.core.compatibility import u_decode as u
+from sympy.core.compatibility import range
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -4297,8 +4298,8 @@ atan2⎜───────, ╲╱ x ⎟\n\
 def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
-    e = Ray((1, 1), angle=4.05*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/20) + 1))'
+    e = Ray((1, 1), angle=4.02*pi)
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/50) + 1))'
 
 
 def test_expint():
@@ -4828,6 +4829,15 @@ def test_issue_7180():
 def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
+
+
+def test_pretty_SymmetricDifference():
+    from sympy import SymmetricDifference, Interval
+    from sympy.utilities.pytest import raises
+    assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
+           evaluate = False)) == u('[2, 3] ∆ [3, 5]')
+    with raises(NotImplementedError):
+        pretty(SymmetricDifference(Interval(2,3), Interval(3,5), evaluate = False))
 
 
 def test_pretty_Contains():

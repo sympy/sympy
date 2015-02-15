@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy import cos, DiracDelta, Heaviside, Function, pi, S, sin, symbols
 from sympy.integrals.deltafunctions import change_mul, deltaintegrate
 

@@ -34,7 +34,7 @@ mpmath_version = '0.19'
 try:
     from setuptools import setup, Command
 except ImportError:
-    from distutils import setup, Command
+    from distutils.core import setup, Command
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
@@ -50,6 +50,7 @@ import sys
 import subprocess
 import os
 import shutil
+import glob
 
 PY3 = sys.version_info[0] > 2
 
@@ -189,6 +190,11 @@ class clean(Command):
                 os.remove(f)
             elif os.path.isdir(f):
                 shutil.rmtree(f)
+
+        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules", \
+                                           "physics", "vector", "*.pdf")):
+            if os.path.isfile(name):
+                os.remove(name)
 
         os.chdir(curr_dir)
 

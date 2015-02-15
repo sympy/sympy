@@ -17,7 +17,7 @@ from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .util import _symbol
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 
 class LinearEntity3D(GeometryEntity):
     """An base class for all linear entities (line, ray and segment)

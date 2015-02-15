@@ -14,7 +14,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import igcd, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
 from sympy.core.function import Function
 
@@ -1220,7 +1220,7 @@ def _divisors(n):
             yield 1
         else:
             pows = [1]
-            for j in xrange(factordict[ps[n]]):
+            for j in range(factordict[ps[n]]):
                 pows.append(pows[-1] * ps[n])
             for q in rec_gen(n + 1):
                 for p in pows:
@@ -1482,3 +1482,66 @@ class divisor_sigma(Function):
             else:
                 return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
                            else e + 1 for p, e in factorint(n).items()])
+
+
+def core(n, t=2):
+    """
+    Calculate core(n,t) = `core_t(n)` of a positive integer n
+
+    ``core_2(n)`` is equal to the squarefree part of n
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        core_t(n) = \prod_{i=1}^\omega p_i^{m_i \mod t}.
+
+    Parameters
+    ==========
+
+    t : core(n,t) calculates the t-th power free part of n
+
+        ``core(n, 2)`` is the squarefree part of ``n``
+        ``core(n, 3)`` is the cubefree part of ``n``
+
+        Default for t is 2.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import core
+    >>> core(24, 2)
+    6
+    >>> core(9424, 3)
+    1178
+    >>> core(379238)
+    379238
+    >>> core(15**11, 10)
+    15
+
+    See Also
+    ========
+
+    factorint
+    """
+
+    n = as_int(n)
+    t = as_int(t)
+    if n <= 0:
+        raise ValueError("n must be a positive integer")
+    elif t <= 1:
+        raise ValueError("t must be >= 2")
+    else:
+        y = 1
+        for p, e in factorint(n).items():
+            y *= p**(e % t)
+        return y

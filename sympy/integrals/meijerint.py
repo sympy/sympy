@@ -28,15 +28,20 @@ The main references for this are:
 from __future__ import print_function, division
 
 from sympy.core import oo, S, pi, Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
-from sympy.simplify import hyperexpand, powdenest
+from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+from sympy.functions.elementary.hyperbolic import \
+    _rewrite_hyperbolics_as_exp, HyperbolicFunction
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
@@ -44,6 +49,15 @@ from sympy.utilities import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')
+
+
+def _has(res, *f):
+    # return True if res has f; in the case of Piecewise
+    # only return True if *all* pieces have f
+    res = piecewise_fold(res)
+    if getattr(res, 'is_Piecewise', False):
+        return all(_has(i, *f) for i in res.args)
+    return res.has(*f)
 
 
 def _create_lookup_table(table):
@@ -356,7 +370,7 @@ def _functions(expr, x):
 
 def _find_splitting_points(expr, x):
     """
-    Find numbers a such that a linear substitution x --> x+a would
+    Find numbers a such that a linear substitution x -> x + a would
     (hopefully) simplify expr.
 
     >>> from sympy.integrals.meijerint import _find_splitting_points as fsp
@@ -456,9 +470,6 @@ def _mul_as_two_parts(f):
     not necessarily the best order to process the terms. For example,
     if the case of len(gs) == 2 is removed and multiset is allowed to
     sort the terms, some tests fail.
-
-    Examples
-    ========
 
     >>> from sympy.integrals.meijerint import _mul_as_two_parts
     >>> from sympy import sin, exp, ordered
@@ -792,7 +803,7 @@ def _check_antecedents_1(g, x, helper=False):
     # TODO altered cases 4-7
 
     # extra case from wofram functions site:
-    # (reproduced verbatim from prudnikov, section 2.24.2)
+    # (reproduced verbatim from Prudnikov, section 2.24.2)
     # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
     case_extra = []
     case_extra += [Eq(p, q), Eq(delta, 0), Eq(arg(eta), 0), Ne(eta, 0)]
@@ -813,7 +824,7 @@ def _check_antecedents_1(g, x, helper=False):
     conds += [case_extra_2]
     debug('  second extra case:', [case_extra_2])
 
-    # TODO This leaves only one case from the three listed by prudnikov.
+    # TODO This leaves only one case from the three listed by Prudnikov.
     #      Investigate if these indeed cover everything; if so, remove the rest.
 
     return Or(*conds)
@@ -962,46 +973,21 @@ def _check_antecedents(g1, g2, x):
            % (omega, m, n, p, q, cstar, mu))
     _debug('  phi=%s, eta=%s, psi=%s, theta=%s' % (phi, eta, psi, theta))
 
-    c1 = True
-    for g in [g1, g2]:
-        for a in g1.an:
-            for b in g1.bm:
-                diff = a - b
-                if (diff > 0) == True and diff.is_integer:
-                    c1 = False
-
-    tmp = []
-    for b in g1.bm:
-        for d in g2.bm:
-            tmp += [re(1 + b + d) > 0]
-    c2 = And(*tmp)
-
-    tmp = []
-    for a in g1.an:
-        for c in g2.an:
-            tmp += [re(1 + a + c) < 1 + 1]
-    c3 = And(*tmp)
-
-    tmp = []
-    for c in g1.an:
-        tmp += [(p - q)*re(1 + c - 1) - re(mu) > -S(3)/2]
-    c4 = And(*tmp)
-
-    tmp = []
-    for d in g1.bm:
-        tmp += [(p - q)*re(1 + d) - re(mu) > -S(3)/2]
-    c5 = And(*tmp)
-
-    tmp = []
-    for c in g2.an:
-        tmp += [(u - v)*re(1 + c - 1) - re(rho) > -S(3)/2]
-    c6 = And(*tmp)
-
-    tmp = []
-    for d in g2.bm:
-        tmp += [(u - v)*re(1 + d) - re(rho) > -S(3)/2]
-    c7 = And(*tmp)
-
+    def _c1():
+        for g in [g1, g2]:
+            for i in g.an:
+                for j in g.bm:
+                    diff = i - j
+                    if diff.is_integer and diff.is_positive:
+                        return False
+        return True
+    c1 = _c1()
+    c2 = And(*[re(1 + i + j) > 0 for i in g1.bm for j in g2.bm])
+    c3 = And(*[re(1 + i + j) < 1 + 1 for i in g1.an for j in g2.an])
+    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > -S(3)/2 for i in g1.an])
+    c5 = And(*[(p - q)*re(1 + i) - re(mu) > -S(3)/2 for i in g1.bm])
+    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > -S(3)/2 for i in g2.an])
+    c7 = And(*[(u - v)*re(1 + i) - re(rho) > -S(3)/2 for i in g2.bm])
     c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
     c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
@@ -1012,7 +998,7 @@ def _check_antecedents(g1, g2, x):
     c13 = Eq(abs(arg(omega)), cstar*pi)
 
     # The following condition is *not* implemented as stated on the wolfram
-    # function site. In the book of prudnikov there is an additional part
+    # function site. In the book of Prudnikov there is an additional part
     # (the And involving re()). However, I only have this book in russian, and
     # I don't read any russian. The following condition is what other people
     # have told me it means.
@@ -1133,7 +1119,7 @@ def _check_antecedents(g1, g2, x):
     pr(23)
 
     # The following case is from [Luke1969]. As far as I can tell, it is *not*
-    # covered by prudnikov's.
+    # covered by Prudnikov's.
     # Let G1 and G2 be the two G-functions. Suppose the integral exists from
     # 0 to a > 0 (this is easy the easy part), that G1 is exponential decay at
     # infinity, and that the mellin transform of G2 exists.
@@ -1331,7 +1317,7 @@ def _check_antecedents_inversion(g, x):
     # When p < q, we need to use the theorems of [L], 5.10.
 
     if p >= q:
-        _debug('  Using asymptotic slater expansion.')
+        _debug('  Using asymptotic Slater expansion.')
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
@@ -1465,7 +1451,7 @@ def _rewrite_single(f, x, recursive=True):
     # try recursive mellin transform
     if not recursive:
         return None
-    _debug('Trying recursive mellin transform method.')
+    _debug('Trying recursive Mellin transform method.')
     from sympy.integrals.transforms import (mellin_transform,
                                     inverse_mellin_transform, IntegralTransformError,
                                     MellinTransformStripError)
@@ -1516,7 +1502,7 @@ def _rewrite_single(f, x, recursive=True):
             except IntegralTransformError:
                 g = None
     if g is None or g.has(oo, nan, zoo):
-        _debug('Recursive mellin transform failed.')
+        _debug('Recursive Mellin transform failed.')
         return None
     args = Add.make_args(g)
     res = []
@@ -1530,7 +1516,7 @@ def _rewrite_single(f, x, recursive=True):
                                unpolarify(polarify(
                                    a, lift=True), exponents_only=True)
                                *x**b))]
-    _debug('Recursive mellin transform worked:', g)
+    _debug('Recursive Mellin transform worked:', g)
     return res, True
 
 
@@ -1582,6 +1568,9 @@ def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
 
+    Examples
+    ========
+
     >>> from sympy.integrals.meijerint import meijerint_indefinite
     >>> from sympy import sin
     >>> from sympy.abc import x
@@ -1589,14 +1578,25 @@ def meijerint_indefinite(f, x):
     -cos(x)
     """
     from sympy import hyper, meijerg
+
     results = []
     for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
-        if res is None:
+        if not res:
             continue
-        results.append(res.subs(x, x - a))
-        if not res.has(hyper, meijerg):
-            return results[-1]
+        res = res.subs(x, x - a)
+        if _has(res, hyper, meijerg):
+            results.append(res)
+        else:
+            return res
+    if f.has(HyperbolicFunction):
+        _debug('Try rewriting hyperbolics in terms of exp.')
+        rv = meijerint_indefinite(
+            _rewrite_hyperbolics_as_exp(f), x)
+        if rv:
+            if not type(rv) is list:
+                return collect(factor_terms(rv), rv.atoms(exp))
+            results.extend(rv)
     if results:
         return next(ordered(results))
 
@@ -1692,6 +1692,9 @@ def meijerint_definite(f, x, a, b):
 
     Return res, cond, where cond are convergence conditions.
 
+    Examples
+    ========
+
     >>> from sympy.integrals.meijerint import meijerint_definite
     >>> from sympy import exp, oo
     >>> from sympy.abc import x
@@ -1728,10 +1731,11 @@ def meijerint_definite(f, x, a, b):
     if a == b:
         return (S.Zero, True)
 
+    results = []
     if a == -oo and b != oo:
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
-    if a == -oo:
+    elif a == -oo:
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
@@ -1757,71 +1761,86 @@ def meijerint_definite(f, x, a, b):
                 continue
             res = res1 + res2
             return res, cond
-        return
 
-    if a == oo:
+    elif a == oo:
         return -meijerint_definite(f, x, b, oo)
 
-    if (a, b) == (0, oo):
+    elif (a, b) == (0, oo):
         # This is a common case - try it directly first.
         res = _meijerint_definite_2(f, x)
-        if res is not None and not res[0].has(meijerg):
-            return res
+        if res:
+            if _has(res[0], meijerg):
+                results.append(res)
+            else:
+                return res
 
-    results = []
-    if b == oo:
-        for split in _find_splitting_points(f, x):
-            if (a - split >= 0) == True:
-                _debug('Trying x --> x + %s' % split)
-                res = _meijerint_definite_2(f.subs(x, x + split)
-                                            *Heaviside(x + split - a), x)
-                if res is not None:
-                    if res[0].has(meijerg):
-                        results.append(res)
-                    else:
-                        return res
+    else:
+        if b == oo:
+            for split in _find_splitting_points(f, x):
+                if (a - split >= 0) == True:
+                    _debug('Trying x -> x + %s' % split)
+                    res = _meijerint_definite_2(f.subs(x, x + split)
+                                                *Heaviside(x + split - a), x)
+                    if res:
+                        if _has(res[0], meijerg):
+                            results.append(res)
+                        else:
+                            return res
 
-    f = f.subs(x, x + a)
-    b = b - a
-    a = 0
-    if b != oo:
-        phi = exp(I*arg(b))
-        b = abs(b)
-        f = f.subs(x, phi*x)
-        f *= Heaviside(b - x)*phi
-        b = oo
+        f = f.subs(x, x + a)
+        b = b - a
+        a = 0
+        if b != oo:
+            phi = exp(I*arg(b))
+            b = abs(b)
+            f = f.subs(x, phi*x)
+            f *= Heaviside(b - x)*phi
+            b = oo
 
-    _debug('Changed limits to', a, b)
-    _debug('Changed function to', f)
-    res = _meijerint_definite_2(f, x)
-    if res is not None:
-        if res[0].has(meijerg):
-            results.append(res)
-        else:
-            return res
+        _debug('Changed limits to', a, b)
+        _debug('Changed function to', f)
+        res = _meijerint_definite_2(f, x)
+        if res:
+            if _has(res[0], meijerg):
+                results.append(res)
+            else:
+                return res
+    if f_.has(HyperbolicFunction):
+        _debug('Try rewriting hyperbolics in terms of exp.')
+        rv = meijerint_definite(
+            _rewrite_hyperbolics_as_exp(f_), x_, a_, b_)
+        if rv:
+            if not type(rv) is list:
+                rv = (collect(factor_terms(rv[0]), rv[0].atoms(exp)),) + rv[1:]
+                return rv
+            results.extend(rv)
     if results:
-        return sorted(results, key=lambda x: count_ops(x[0]))[0]
+        return next(ordered(results))
 
 
 def _guess_expansion(f, x):
     """ Try to guess sensible rewritings for integrand f(x). """
     from sympy import expand_trig
     from sympy.functions.elementary.trigonometric import TrigonometricFunction
-    from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-    res = [(f, 'originial integrand')]
+    res = [(f, 'original integrand')]
 
-    expanded = expand_mul(res[-1][0])
-    if expanded != res[-1][0]:
+    orig = res[-1][0]
+    saw = set([orig])
+    expanded = expand_mul(orig)
+    if expanded not in saw:
         res += [(expanded, 'expand_mul')]
+        saw.add(expanded)
 
-    expanded = expand(res[-1][0])
-    if expanded != res[-1][0]:
+    expanded = expand(orig)
+    if expanded not in saw:
         res += [(expanded, 'expand')]
+        saw.add(expanded)
 
-    if res[-1][0].has(TrigonometricFunction, HyperbolicFunction):
-        expanded = expand_mul(expand_trig(res[-1][0]))
-        if expanded != res[-1][0]:
+    if orig.has(TrigonometricFunction, HyperbolicFunction):
+        expanded = expand_mul(expand_trig(orig))
+        if expanded not in saw:
             res += [(expanded, 'expand_trig, expand_mul')]
+            saw.add(expanded)
 
     return res
 
@@ -1841,6 +1860,7 @@ def _meijerint_definite_2(f, x):
     # _meijerint_definite_3 for (2) and (3) combined.
 
     # use a positive dummy - we integrate from 0 to oo
+    # XXX if a nonnegative symbol is used there will be test failures
     dummy = _dummy('x', 'meijerint-definite2', f, positive=True)
     f = f.subs(x, dummy)
     x = dummy
@@ -1851,7 +1871,7 @@ def _meijerint_definite_2(f, x):
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
         res = _meijerint_definite_3(g, x)
-        if res is not None and res[1] != False:
+        if res:
             return res
 
 
@@ -1863,7 +1883,7 @@ def _meijerint_definite_3(f, x):
     integral. If this fails, it tries using linearity.
     """
     res = _meijerint_definite_4(f, x)
-    if res is not None and res[1] != False:
+    if res and res[1] != False:
         return res
     if f.is_Add:
         _debug('Expanding and evaluating all terms.')
@@ -1910,11 +1930,13 @@ def _meijerint_definite_4(f, x, only_double=False):
                 C, f = _rewrite_saxena_1(fac*C, po*x**s, f, x)
                 res += C*_int0oo_1(f, x)
                 cond = And(cond, _check_antecedents_1(f, x))
+                if cond == False:
+                    break
             cond = _my_unpolarify(cond)
-            _debug('Result before branch substitutions is:', res)
             if cond == False:
                 _debug('But cond is always False.')
             else:
+                _debug('Result before branch substitutions is:', res)
                 return _my_unpolarify(hyperexpand(res)), cond
 
     # Try two G functions.
@@ -1934,12 +1956,17 @@ def _meijerint_definite_4(f, x, only_double=False):
                     C, f1_, f2_ = r
                     _debug('Saxena subst for yielded:', C, f1_, f2_)
                     cond = And(cond, _check_antecedents(f1_, f2_, x))
+                    if cond == False:
+                        break
                     res += C*_int0oo(f1_, f2_, x)
-            _debug('Result before branch substitutions is:', res)
+                else:
+                    continue
+                break
             cond = _my_unpolarify(cond)
             if cond == False:
                 _debug('But cond is always False (full_pb=%s).' % full_pb)
             else:
+                _debug('Result before branch substitutions is:', res)
                 if only_double:
                     return res, cond
                 return _my_unpolarify(hyperexpand(res)), cond
@@ -1953,6 +1980,9 @@ def meijerint_inversion(f, x, t):
     Note that ``t`` is always assumed real and positive.
 
     Return None if the integral does not exist or could not be evaluated.
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, t
     >>> from sympy.integrals.meijerint import meijerint_inversion
@@ -2018,6 +2048,8 @@ def meijerint_inversion(f, x, t):
             C, f = _rewrite_inversion(fac*C, po*x**s, f, x)
             res += C*_int_inversion(f, x, t)
             cond = And(cond, _check_antecedents_inversion(f, x))
+            if cond == False:
+                break
         cond = _my_unpolarify(cond)
         if cond == False:
             _debug('But cond is always False.')

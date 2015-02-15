@@ -16,6 +16,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import verify_numerically
+from sympy.core.compatibility import range
 import mpmath
 
 
@@ -33,10 +34,9 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
-
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
-         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
+        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c),
+         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c)]
 
     # check for simplification
     f = Poly(y*x**2 - 2*x - 2*y, x)
@@ -44,7 +44,7 @@ def test_roots_quadratic():
         [-sqrt(2*y**2 + 1)/y + 1/y, sqrt(2*y**2 + 1)/y + 1/y]
     f = Poly(x**2 + (-y**2 - 2)*x + y**2 + 1, x)
     assert roots_quadratic(f) == \
-        [y**2/2 - sqrt(y**4)/2 + 1, y**2/2 + sqrt(y**4)/2 + 1]
+        [1,y**2 + 1]
 
     f = Poly(sqrt(2)*x**2 - 1, x)
     r = roots_quadratic(f)
@@ -58,7 +58,6 @@ def test_roots_quadratic():
         f = Poly(_a*x**2 + _b*x + _c)
         roots = roots_quadratic(f)
         assert roots == _nsort(roots)
-
 
 def test_issue_8438():
     p = Poly([1, y, -2, -3], x).as_expr()
@@ -243,8 +242,14 @@ def test_roots_binomial():
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
         p = Poly(a*x**n + s*b)
-        roots = roots_binomial(p)
-        assert roots == _nsort(roots)
+        ans = roots_binomial(p)
+        assert ans == _nsort(ans)
+
+    # issue 8813
+    assert roots(Poly(2*x**3 - 16*y**3, x)) == {
+        2*y*(-S(1)/2 - sqrt(3)*I/2): 1,
+        2*y: 1,
+        2*y*(-S(1)/2 + sqrt(3)*I/2): 1}
 
 
 def test_roots_preprocessing():

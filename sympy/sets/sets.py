@@ -7,7 +7,7 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass, ordered
+from sympy.core.compatibility import iterable, with_metaclass, ordered, range
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
@@ -207,7 +207,7 @@ class Set(Basic):
             return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     def symmetric_difference(self, other):
-         return SymmetricDifference(self, other)
+        return SymmetricDifference(self, other)
 
     def _symmetric_difference(self, other):
         return Union(Complement(self, other), Complement(other, self))

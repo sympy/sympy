@@ -15,6 +15,7 @@ from sympy import (
 )
 
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
 

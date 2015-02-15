@@ -4,10 +4,11 @@ from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
     expand_func, diff, EulerGamma, cancel, re, im, Product)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
-    gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
-    cos, cot, zeta)
+    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
+    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
+    sin, cos, cot, zeta)
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
@@ -155,8 +156,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 11818877030/S(4286604231) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(-sqrt(5)/2 + 1/S(2)) )
-
+             + 11818877030/S(4286604231) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
 
     Heoo = harmonic(ne + po/qo)
     Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -181,7 +181,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 486853480/S(186374097) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(2*(-sqrt(5)/4 + 1/S(4))))
+             + 486853480/S(186374097) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
 
     Hooo = harmonic(no + po/qo)
     Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -315,6 +315,23 @@ def test_catalan():
     c = catalan(I).evalf(3)
     assert str((re(c), im(c))) == '(0.398, -0.0209)'
 
+
+def test_genocchi():
+    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    for n, g in enumerate(genocchis):
+        assert genocchi(n + 1) == g
+
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True, positive=True)
+    assert genocchi(m) == genocchi(m)
+    assert genocchi(n).rewrite(bernoulli) == 2 * (1 - 2 ** n) * bernoulli(n)
+    assert genocchi(2 * n).is_odd
+    assert genocchi(4 * n).is_positive
+    # This should work for 4 * n - 2, but fails due to some variation of issue
+    # 8632 ((4*n-2).is_positive returns None)
+    assert genocchi(4 * n + 2).is_negative
+
+
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
@@ -373,7 +390,7 @@ def test_nC_nP_nT():
         for j in range(1, i + 2):
             check = nT(range(i), j)
             tot += check
-            assert len(list(multiset_partitions(range(i), j))) == check
+            assert len(list(multiset_partitions(list(range(i)), j))) == check
         assert nT(range(i)) == tot
 
     for i in range(100):

@@ -11,7 +11,7 @@ from sympy.core.mul import Mul
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -157,7 +157,11 @@ class exp_polar(ExpBase):
         """ Careful! any evalf of polar numbers is flaky """
         from sympy import im, pi, re
         i = im(self.args[0])
-        if i <= -pi or i > pi:
+        try:
+            bad = (i <= -pi or i > pi)
+        except TypeError:
+            bad = True
+        if bad:
             return self  # cannot evalf for this argument
         res = exp(self.args[0])._eval_evalf(prec)
         if i > 0 and im(res) < 0:
@@ -392,7 +396,7 @@ class exp(ExpBase):
     def _taylor(self, x, n):
         l = []
         g = None
-        for i in xrange(n):
+        for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
             l.append(g)
@@ -417,10 +421,6 @@ class exp(ExpBase):
 
     def _eval_rewrite_as_tanh(self, arg):
         return (1 + C.tanh(arg/2))/(1 - C.tanh(arg/2))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.exp(self.args[0]._sage_())
 
 
 class log(Function):
@@ -704,7 +704,7 @@ class log(Function):
         p = cancel(s/(a*x**b) - 1)
         g = None
         l = []
-        for i in xrange(n + 2):
+        for i in range(n + 2):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -715,10 +715,6 @@ class log(Function):
         if arg is S.One:
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.log(self.args[0]._sage_())
 
 
 class LambertW(Function):
