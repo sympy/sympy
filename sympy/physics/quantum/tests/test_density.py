@@ -297,8 +297,7 @@ def test_bures_metric():
     updown_dm = represent(updown * Dagger(updown))
 
     assert abs(bures_metric(up_dm, up_dm)) < 1e-3
-    # COMMENT BACK IN TODO
-    #assert abs(bures_metric(up_dm, updown_dm)) < 1/2e-3
+    assert abs(bures_metric(up_dm, updown_dm)) < 1/2e-3
     assert abs(bures_metric(updown_dm, down_dm)) < 1/2e-3
 
     #check with density
