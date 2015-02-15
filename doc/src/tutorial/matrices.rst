@@ -299,11 +299,11 @@ To find the columnspace of a matrix, use ``columnspace``. ``columnspace`` return
 
     >>> M = Matrix([[1, 1, 2], [2 ,1 , 3], [3 , 1, 4]])
     >>> M
-    ⎡1   1   2 ⎤
-    ⎢          ⎥
-    ⎢2   1   3 ⎥
-    ⎢          ⎥
-    ⎣3   1   4 ⎦
+    ⎡1  1  2⎤
+    ⎢       ⎥
+    ⎢2  1  3⎥
+    ⎢       ⎥
+    ⎣3  1  4⎦
     >>> M.columnspace()
     ⎡⎡1⎤, ⎡1⎤⎤
     ⎢⎢ ⎥  ⎢ ⎥⎥
