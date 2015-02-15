@@ -104,7 +104,7 @@ class MatMul(MatrixExpr):
             return Inverse(self)
 
     def doit(self, **kwargs):
-        deep = kwargs.get('deep', False)
+        deep = kwargs.get('deep', True)
         if deep:
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
