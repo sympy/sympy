@@ -4,6 +4,9 @@ from __future__ import print_function, division
 from sympy.core import Function, S, C, sympify, pi
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.elementary.exponential import log
+
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -439,17 +442,17 @@ class zeta(Function):
             elif z.is_Integer:
                 if a.is_Integer:
                     if z.is_negative:
-                        zeta = (-1)**z * C.bernoulli(-z + 1)/(-z + 1)
+                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
                     elif z.is_even:
-                        B, F = C.bernoulli(z), C.factorial(z)
+                        B, F = bernoulli(z), factorial(z)
                         zeta = 2**(z - 1) * abs(B) * pi**z / F
                     else:
                         return
 
                     if a.is_negative:
-                        return zeta + C.harmonic(abs(a), z)
+                        return zeta + harmonic(abs(a), z)
                     else:
-                        return zeta - C.harmonic(a - 1, z)
+                        return zeta - harmonic(a - 1, z)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:
@@ -507,7 +510,7 @@ class dirichlet_eta(Function):
     @classmethod
     def eval(cls, s):
         if s == 1:
-            return C.log(2)
+            return log(2)
         z = zeta(s)
         if not z.has(zeta):
             return (1 - 2**(1 - s))*z

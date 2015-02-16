@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core.function import Function, C
+from sympy.core.function import Function
 from sympy.core import S, Integer
 from sympy.core.mul import prod
 from sympy.utilities.iterables import (has_dups, default_sort_key)
 from sympy.core.compatibility import range
+from sympy.functions.elementary.complexes import Abs
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -157,7 +158,7 @@ class KroneckerDelta(Function):
         if (i > j) is True:
             return cls(j, i)
 
-        diff = C.Abs(i - j)
+        diff = Abs(i - j)
         if diff == 0:
             return S.One
         elif diff.is_number:
