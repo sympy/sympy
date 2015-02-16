@@ -834,8 +834,15 @@ class catalan(Function):
 
     @classmethod
     def eval(cls, n):
-        if n.is_Integer and n.is_nonnegative:
+        if (n.is_Integer and n.is_nonnegative) or \
+           (n.is_noninteger and n.is_negative):
             return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
+
+        if (n.is_integer and n.is_negative):
+            if (n + 1).is_negative:
+                return S.Zero
+            if n == -S.One:
+                return -S.Half
 
     def fdiff(self, argindex=1):
         n = self.args[0]
