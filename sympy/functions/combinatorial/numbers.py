@@ -841,7 +841,7 @@ class catalan(Function):
         if (n.is_integer and n.is_negative):
             if (n + 1).is_negative:
                 return S.Zero
-            if n == -S.One:
+            if (n + 1).is_zero:
                 return -S.Half
 
     def fdiff(self, argindex=1):
