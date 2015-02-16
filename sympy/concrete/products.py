@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -236,7 +235,7 @@ class Product(ExprWithIntLimits):
     def _eval_product(self, term, limits):
         from sympy.concrete.delta import deltaproduct, _has_simple_delta
         from sympy.concrete.summations import summation
-        from sympy.functions import KroneckerDelta
+        from sympy.functions import KroneckerDelta, RisingFactorial
 
         (k, a, n) = limits
 
@@ -265,7 +264,7 @@ class Product(ExprWithIntLimits):
             M = 0
             for r, m in all_roots.items():
                 M += m
-                A *= C.RisingFactorial(a - r, n - a + 1)**m
+                A *= RisingFactorial(a - r, n - a + 1)**m
                 Q *= (n - r)**m
 
             if M < poly.degree():
