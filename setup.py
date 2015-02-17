@@ -35,7 +35,6 @@ import os
 import shutil
 import glob
 
-PY3 = sys.version_info[0] > 2
 mpmath_version = '0.19'
 
 try:
@@ -53,6 +52,7 @@ except ImportError:
         print("Please install the mpmath package with a version >= %s" % mpmath_version)
         sys.exit(-1)
 
+PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 6):
