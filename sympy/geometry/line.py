@@ -10,11 +10,11 @@ Segment
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy
+from sympy.core import S, sympify, Dummy
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
+from sympy.functions.elementary.trigonometric import (acos,
+     _pi_coeff as pi_coeff, sqrt, tan)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
@@ -339,7 +339,7 @@ class LinearEntity(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
@@ -1268,7 +1268,7 @@ class Ray(LinearEntity):
                 m = 2*c/S.Pi
                 left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
                 x = Piecewise((-1, left), (Piecewise((0, Eq(m % 1, 0)), (1, True)), True))
-                y = Piecewise((-C.tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (C.tan(c), True)), True))
+                y = Piecewise((-tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (tan(c), True)), True))
                 p2 = p1 + Point(x, y)
         else:
             raise ValueError('A 2nd point or keyword "angle" must be used.')
