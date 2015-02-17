@@ -738,11 +738,11 @@ class Float(Number):
         return (self._mpf_, self._prec)
 
     def floor(self):
-        return C.Integer(int(mlib.to_int(
+        return Integer(int(mlib.to_int(
             mlib.mpf_floor(self._mpf_, self._prec))))
 
     def ceiling(self):
-        return C.Integer(int(mlib.to_int(
+        return Integer(int(mlib.to_int(
             mlib.mpf_ceil(self._mpf_, self._prec))))
 
     @property
