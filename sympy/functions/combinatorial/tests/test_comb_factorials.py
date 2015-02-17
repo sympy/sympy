@@ -1,8 +1,9 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, C, S, Product)
+                   oo, zoo, simplify, expand_func, Product)
 from sympy.functions.combinatorial.factorials import subfactorial
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.functions.special.gamma_functions import uppergamma
+from sympy.utilities.pytest import XFAIL
 
 
 def test_rf_eval_apply():
@@ -313,8 +314,7 @@ def test_subfactorial():
     assert subfactorial(oo) == oo
 
     x = Symbol('x')
-    assert subfactorial(x).rewrite(C.uppergamma) == \
-        C.uppergamma(x + 1, -1)/S.Exp1
+    assert subfactorial(x).rewrite(uppergamma) == uppergamma(x + 1, -1)/S.Exp1
 
     tt = Symbol('tt', integer=True, nonnegative=True)
     tf = Symbol('tf', integer=True, nonnegative=False)
