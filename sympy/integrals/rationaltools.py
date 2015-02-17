@@ -6,6 +6,7 @@ from sympy import S, Symbol, symbols, I, log, atan, \
     roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, resultant, ZZ
+from sympy.polys.polytools import count_roots
 from sympy.core.compatibility import range
 
 

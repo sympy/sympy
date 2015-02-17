@@ -6,7 +6,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.symbol import Wild, Dummy
-from sympy.core.basic import C, sympify
+from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -14,6 +14,7 @@ from sympy.core.singleton import S
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf, erfi, li, Ei
+from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
 from sympy.logic.boolalg import And
@@ -421,7 +422,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             elif term.func is tanh:
                 special[1 + _substitute(term)] = False
                 special[1 - _substitute(term)] = False
-            elif term.func is C.LambertW:
+            elif term.func is LambertW:
                 special[_substitute(term)] = True
 
     F = _substitute(f)
