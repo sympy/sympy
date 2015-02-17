@@ -7,6 +7,7 @@ from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
 from sympy.core.mul import Mul
+from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
@@ -204,7 +205,7 @@ class hyper(TupleParametersBase):
 
     def _eval_rewrite_as_Sum(self, ap, bq, z):
         from sympy.functions import factorial, RisingFactorial, Piecewise
-        n = C.Dummy("n", integer=True)
+        n = Dummy("n", integer=True)
         rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
         rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
         coeff = Mul(*rfap) / Mul(*rfbq)
