@@ -4,11 +4,13 @@ from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
+from sympy.core.numbers import Integer
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.core.compatibility import range
@@ -299,7 +301,7 @@ class exp(ExpBase):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        return x**n/C.factorial()(n)
+        return x**n/factorial()(n)
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -442,7 +444,7 @@ class log(Function):
         """
         if argindex == 1:
             return 1/self.args[0]
-            s = C.Dummy('x')
+            s = Dummy('x')
             return Lambda(s**(-1), s)
         else:
             raise ArgumentIndexError(self, argindex)
@@ -778,7 +780,7 @@ class LambertW(Function):
             elif x == -1/S.Exp1:
                 return S.NegativeOne
             elif x == -2*exp(-2):
-                return -C.Integer(2)
+                return -Integer(2)
 
     def fdiff(self, argindex=1):
         """

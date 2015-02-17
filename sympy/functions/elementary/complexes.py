@@ -7,8 +7,10 @@ from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.expr import Expr
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
@@ -438,7 +440,7 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
-        if not isinstance(arg, C.Expr):
+        if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
@@ -469,9 +471,9 @@ class Abs(Function):
                     return Abs(base)**exponent
                 if base.is_positive == True:
                     return base**re(exponent)
-                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
-        if isinstance(arg, C.exp):
-            return C.exp(re(arg.args[0]))
+                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+        if isinstance(arg, exp):
+            return exp(re(arg.args[0]))
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_nonnegative:
@@ -579,7 +581,7 @@ class arg(Function):
         else:
             arg_ = arg
         x, y = re(arg_), im(arg_)
-        rv = C.atan2(y, x)
+        rv = atan2(y, x)
         if rv.is_number and not rv.atoms(AppliedUndef):
             return rv
         if arg_ != arg:

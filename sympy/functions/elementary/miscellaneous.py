@@ -3,15 +3,20 @@ from __future__ import print_function, division
 from sympy.core import S, C, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.power import Pow
+from sympy.core.relational import Equality
 from sympy.core.singleton import Singleton
+from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and
-
+from sympy.functions.elementary.integers import floor
+from sympy.logic.boolalg import And
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
@@ -29,7 +34,7 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
 
     def __new__(cls):
         from sympy.sets.sets import FiniteSet
-        x = C.Dummy('x')
+        x = Dummy('x')
         #construct "by hand" to avoid infinite loop
         obj = Expr.__new__(cls, Tuple(x), x)
         obj.nargs = FiniteSet(1)
@@ -108,7 +113,7 @@ def sqrt(arg):
 
     """
     # arg = sympify(arg) is handled by Pow
-    return C.Pow(arg, S.Half)
+    return Pow(arg, S.Half)
 
 
 
@@ -159,7 +164,7 @@ def cbrt(arg):
     * http://en.wikipedia.org/wiki/Principal_value
 
     """
-    return C.Pow(arg, C.Rational(1, 3))
+    return Pow(arg, Rational(1, 3))
 
 
 def root(arg, n, k=0):
@@ -248,8 +253,8 @@ def root(arg, n, k=0):
     """
     n = sympify(n)
     if k:
-        return C.Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
-    return C.Pow(arg, 1/n)
+        return Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
+    return Pow(arg, 1/n)
 
 
 def real_root(arg, n=None):
@@ -297,9 +302,9 @@ def real_root(arg, n=None):
                 raise ValueError
         except ValueError:
             return root(arg, n)*C.Piecewise(
-                (S.One, ~C.Equality(C.im(arg), 0)),
-                (C.Pow(S.NegativeOne, S.One/n)**(2*C.floor(n/2)), C.And(
-                    C.Equality(n % 2, 1),
+                (S.One, ~Equality(C.im(arg), 0)),
+                (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
+                    Equality(n % 2, 1),
                     arg < 0)),
                 (S.One, True))
     else:
@@ -553,7 +558,7 @@ class Max(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return C.Add(*[j*C.Mul(*[C.Heaviside(j - i) for i in args if i!=j]) \
+        return Add(*[j*Mul(*[C.Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
 
@@ -604,5 +609,5 @@ class Min(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return C.Add(*[j*C.Mul(*[C.Heaviside(i-j) for i in args if i!=j]) \
+        return Add(*[j*Mul(*[C.Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
