@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import collections
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C, Atom
+from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.logic import fuzzy_and
@@ -1924,7 +1924,7 @@ class MatrixBase(object):
             nr = b.rows
             l = b[0, 0]
             if nr == 1:
-                res = C.exp(l)
+                res = exp(l)
             else:
                 from sympy import eye
                 # extract the diagonal part
