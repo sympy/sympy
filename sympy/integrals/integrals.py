@@ -23,8 +23,10 @@ from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
+from sympy.functions.elementary.exponential import log
 from sympy.geometry import Curve
 from sympy.series import limit
+from sympy.series.order import Order
 
 
 class Integral(AddWithLimits):
@@ -810,11 +812,11 @@ class Integral(AddWithLimits):
 
                 if M is not None:
                     if g.exp == -1:
-                        h = C.log(g.base)
+                        h = log(g.base)
                     elif conds != 'piecewise':
                         h = g.base**(g.exp + 1) / (g.exp + 1)
                     else:
-                        h1 = C.log(g.base)
+                        h1 = log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
                         h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
 
@@ -945,7 +947,7 @@ class Integral(AddWithLimits):
                 symb = l[0]
                 break
         terms, order = expr.function.nseries(
-            x=symb, n=n, logx=logx).as_coeff_add(C.Order)
+            x=symb, n=n, logx=logx).as_coeff_add(Order)
         return integrate(terms, *expr.limits) + Add(*order)*x
 
     def as_sum(self, n, method="midpoint"):
