@@ -161,6 +161,8 @@ def _group_parentheses(recursor):
                 stacks[-1].append(token)
             else:
                 result.append(token)
+        if stacklevel:
+            raise TokenError("Mismatched parentheses")
         return result
     return _inner
 
