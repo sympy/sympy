@@ -174,8 +174,8 @@ the main SymPy documentation.  Be sure to make the Sphinx documentation by
 running ``make html`` from within the doc directory to verify that the
 docstring formats correctly.
 
-If your solution method involves integrating, use :py:meth:`C.Integral()
-<sympy.core.C.Integral>` instead of
+If your solution method involves integrating, use :py:meth:`Integral()
+<sympy.integrals.integrals.Integral>` instead of
 :py:meth:`~sympy.core.expr.Expr.integrate`.  This allows the user to bypass
 hard/slow integration by using the ``_Integral`` variant of your hint.  In
 most cases, calling :py:meth:`sympy.core.basic.Basic.doit` will integrate your
