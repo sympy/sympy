@@ -602,7 +602,79 @@ def factorial_notation(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
         prevtoken = tokval
+    return result
 
+
+def _transform_equality_operator(tokens, local_dict, global_dict):
+    """Transforms the equality operator ``==`` to instances of Eq.
+
+    This is a helper function for `convert_equality_operators`.
+    Works with expressions containing no parantheses.
+
+    Examples: 1==2     to Eq(1,2) which is False
+              1*2==x   to Eq(1*2, x)
+              1==2==3  to And(Eq(1,2),Eq(2,3)) which is False
+
+    """
+    result = []
+    split_tokens = [[]]
+    i = 0
+    if (OP, '==') in tokens:
+        for index, token in enumerate(tokens):
+            if token == (OP, '=='):
+                i += 1
+                split_tokens.append([])
+            else:
+                split_tokens[i].append(token)
+        if split_tokens[0] == [] or split_tokens[-1] == []:
+            raise TokenError
+        else:
+            begin = [(NAME, 'Eq'), (OP, '(')]
+            mid   = [(OP, ',')]
+            end   = [(OP, ')')]
+            for index, a in enumerate(split_tokens):
+                if index == i:
+                    continue
+                result.extend(begin + a + mid + split_tokens[index+1] + end)
+                if index != i-1:
+                    result.append((OP, '&'))
+        return result
+    else:
+        return tokens
+
+
+def convert_equality_operators(tokens, local_dict, global_dict):
+    """ Transforms the equality operators ``==`` to instances of Eq.
+
+    Parses the equality operators in the expression and returns
+    appropriate Eq instances.Also works with nested equality operators.
+
+    See also
+    ========
+    convert_equals_signs
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, convert_equality_operators)
+    >>> parse_expr("1*2==x", transformations = (
+    ... standard_transformations+
+    ... (convert_equality_operators, )))
+    Eq(2, x)
+    >>> parse_expr("(1*2==x)==False", transformations = (
+    ... standard_transformations+
+    ... (convert_equality_operators, )))
+    Eq(Eq(2, x), False)
+
+    """
+    result = tokens
+    for step in (_group_parentheses(convert_equality_operators),
+                  _apply_functions,
+                  _transform_equality_operator):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
     return result
 
 

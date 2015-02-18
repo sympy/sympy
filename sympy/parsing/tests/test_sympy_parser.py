@@ -1,4 +1,4 @@
-from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow
+from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, sin
 from sympy.logic import And
 from sympy.series import Limit
@@ -7,6 +7,7 @@ from sympy.utilities.pytest import raises
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication,
+    convert_equality_operators,
 )
 
 
@@ -112,7 +113,25 @@ def test_split_symbols_function():
     assert parse_expr("af(x+1)", transformations=transformations,
                       local_dict={'f':f}) == a*f(x+1)
 
+
 def test_match_parentheses_implicit_multiplication():
     transformations = standard_transformations + \
                       (implicit_multiplication,)
     raises(TokenError, lambda: parse_expr('(1,2),(3,4]',transformations=transformations))
+
+
+def test_convert_equality_operators():
+    transformations = standard_transformations + \
+                        (convert_equality_operators, )
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    a = Symbol('a')
+    assert parse_expr("1*2==x", transformations=transformations) == Eq(2, x)
+    assert parse_expr("y == x", transformations=transformations) == Eq(y, x)
+    assert parse_expr("(y==x) == False",
+        transformations=transformations) == Eq(Eq(y, x), False)
+    assert parse_expr("x*y==2==y",
+        transformations=transformations) == And(Eq(x*y, 2), Eq(2, y))
+    assert parse_expr("x == y == z == a",
+        transformations = transformations) == And(Eq(x, y), Eq(y, z), Eq(z, a))
