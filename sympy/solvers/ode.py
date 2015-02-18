@@ -6475,10 +6475,10 @@ def _linear_2eq_order1_type1(x, y, t, r):
     .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
-    l = Symbol('l')
+    l = Dummy('l')
     C1, C2, C3, C4 = symbols('C1:5')
-    l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], 0)
-    l2 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], 1)
+    l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
+    l2 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D > 0:
