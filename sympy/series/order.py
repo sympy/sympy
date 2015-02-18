@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
@@ -370,7 +370,8 @@ class Order(Expr):
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
                 l = ratio.limit(s, point)
-                if not isinstance(l, C.Limit):
+                from sympy.series.limits import Limit
+                if not isinstance(l, Limit):
                     l = l != 0
                 else:
                     l = None
