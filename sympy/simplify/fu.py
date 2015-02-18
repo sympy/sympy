@@ -192,10 +192,11 @@ from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
     _mexpand, bottom_up)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt)
-from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
+    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
+from sympy.functions.elementary.hyperbolic import (
+    cosh, sinh, tanh, coth, HyperbolicFunction)
 from sympy.core.compatibility import ordered, range
-from sympy.core.core import C
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.function import expand_mul, count_ops
@@ -424,7 +425,7 @@ def TR3(rv):
     #   Argument of type : 2k*pi +/- angle
 
     def f(rv):
-        if not isinstance(rv, C.TrigonometricFunction):
+        if not isinstance(rv, TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
@@ -1592,7 +1593,7 @@ def L(rv):
     >>> L(cos(x)+sin(x))
     2
     """
-    return S(rv.count(C.TrigonometricFunction))
+    return S(rv.count(TrigonometricFunction))
 
 
 # ============== end of basic Fu-like tools =====================
@@ -1706,7 +1707,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
-    if not isinstance(rv, C.Expr):
+    if not isinstance(rv, Expr):
         return rv.func(*[fu(a, measure=measure) for a in rv.args])
     rv = TR1(rv)
     if rv.has(tan, cot):
@@ -2035,7 +2036,7 @@ def _osborne(e, d):
     """
 
     def f(rv):
-        if not isinstance(rv, C.HyperbolicFunction):
+        if not isinstance(rv, HyperbolicFunction):
             return rv
         a = rv.args[0]
         a = a*d if not a.is_Add else Add._from_args([i*d for i in a.args])
@@ -2070,7 +2071,7 @@ def _osbornei(e, d):
     """
 
     def f(rv):
-        if not isinstance(rv, C.TrigonometricFunction):
+        if not isinstance(rv, TrigonometricFunction):
             return rv
         a = rv.args[0].xreplace({d: S.One})
         if rv.func is sin:
@@ -2120,7 +2121,7 @@ def hyper_as_trig(rv):
     from sympy.simplify.simplify import signsimp, collect
 
     # mask off trig functions
-    trigs = rv.atoms(C.TrigonometricFunction)
+    trigs = rv.atoms(TrigonometricFunction)
     reps = [(t, Dummy()) for t in trigs]
     masked = rv.xreplace(dict(reps))
 
