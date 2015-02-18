@@ -593,9 +593,9 @@ class RootOf(Expr):
                     # case and the interval will then be tightened -- and
                     # eventually the root will be found.
                     if self.is_real:
-                        if (a < root < b):
+                        if (a <= root <= b):
                             break
-                    elif (ax < root.real < bx and ay < root.imag < by):
+                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
                 except ValueError:
                     pass
