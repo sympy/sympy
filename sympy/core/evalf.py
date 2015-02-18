@@ -381,7 +381,6 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
-    from sympy.core.core import C
 
     terms = [t for t in terms if not iszero(t)]
     if not terms:
@@ -391,8 +390,9 @@ def add_terms(terms, prec, target_prec):
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
+    from sympy.core.numbers import Float
     for t in terms:
-        arg = C.Float._new(t[0], 1)
+        arg = Float._new(t[0], 1)
         if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
@@ -485,8 +485,6 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
-    from sympy.core.core import C
-
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -497,11 +495,12 @@ def evalf_mul(v, prec, options):
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
+    from sympy.core.numbers import Float
     for arg in args:
         arg = evalf(arg, prec, options)
         if arg[0] is None:
             continue
-        arg = C.Float._new(arg[0], 1)
+        arg = Float._new(arg[0], 1)
         if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
@@ -1173,46 +1172,60 @@ evalf_table = None
 
 def _create_evalf_table():
     global evalf_table
+    from sympy.functions.combinatorial.numbers import bernoulli
+    from sympy.concrete.products import Product
+    from sympy.concrete.summations import Sum
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.core.numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
+    from sympy.core.power import Pow
+    from sympy.core.symbol import Dummy, Symbol
+    from sympy.functions.elementary.complexes import Abs, im, re
+    from sympy.functions.elementary.exponential import exp, log
+    from sympy.functions.elementary.integers import ceiling, floor
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.functions.elementary.trigonometric import atan, cos, sin
+    from sympy.integrals.integrals import Integral
     evalf_table = {
-        C.Symbol: evalf_symbol,
-        C.Dummy: evalf_symbol,
-        C.Float: lambda x, prec, options: (x._mpf_, None, prec, None),
-        C.Rational: lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
-        C.Integer: lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
-        C.Zero: lambda x, prec, options: (None, None, prec, None),
-        C.One: lambda x, prec, options: (fone, None, prec, None),
-        C.Half: lambda x, prec, options: (fhalf, None, prec, None),
-        C.Pi: lambda x, prec, options: (mpf_pi(prec), None, prec, None),
-        C.Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
-        C.ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
-        C.NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
-        C.NaN : lambda x, prec, options: (fnan, None, prec, None),
+        Symbol: evalf_symbol,
+        Dummy: evalf_symbol,
+        Float: lambda x, prec, options: (x._mpf_, None, prec, None),
+        Rational: lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
+        Integer: lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
+        Zero: lambda x, prec, options: (None, None, prec, None),
+        One: lambda x, prec, options: (fone, None, prec, None),
+        Half: lambda x, prec, options: (fhalf, None, prec, None),
+        Pi: lambda x, prec, options: (mpf_pi(prec), None, prec, None),
+        Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
+        ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
+        NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
+        NaN : lambda x, prec, options: (fnan, None, prec, None),
 
-        C.exp: lambda x, prec, options: evalf_pow(C.Pow(S.Exp1, x.args[0],
-        evaluate=False), prec, options),
+        exp: lambda x, prec, options: evalf_pow(
+            Pow(S.Exp1, x.args[0], evaluate=False), prec, options),
 
-        C.cos: evalf_trig,
-        C.sin: evalf_trig,
+        cos: evalf_trig,
+        sin: evalf_trig,
 
-        C.Add: evalf_add,
-        C.Mul: evalf_mul,
-        C.Pow: evalf_pow,
+        Add: evalf_add,
+        Mul: evalf_mul,
+        Pow: evalf_pow,
 
-        C.log: evalf_log,
-        C.atan: evalf_atan,
-        C.Abs: evalf_abs,
+        log: evalf_log,
+        atan: evalf_atan,
+        Abs: evalf_abs,
 
-        C.re: evalf_re,
-        C.im: evalf_im,
-        C.floor: evalf_floor,
-        C.ceiling: evalf_ceiling,
+        re: evalf_re,
+        im: evalf_im,
+        floor: evalf_floor,
+        ceiling: evalf_ceiling,
 
-        C.Integral: evalf_integral,
-        C.Sum: evalf_sum,
-        C.Product: evalf_prod,
-        C.Piecewise: evalf_piecewise,
+        Integral: evalf_integral,
+        Sum: evalf_sum,
+        Product: evalf_prod,
+        Piecewise: evalf_piecewise,
 
-        C.bernoulli: evalf_bernoulli,
+        bernoulli: evalf_bernoulli,
     }
 
 
