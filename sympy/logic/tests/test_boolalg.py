@@ -684,3 +684,9 @@ def test_issue_8777():
     assert And(x >= 1, x < oo).as_set() == Interval(1, oo)
     assert (x < oo).as_set() == Interval(-oo, oo)
     assert (x > -oo).as_set() == Interval(-oo, oo)
+
+
+def test_issue_8975():
+    x = symbols('x')
+    assert Or(And(-oo < x, x <= -2), And(2 <= x, x < oo)).as_set() == \
+        Interval(-oo, -2) + Interval(2, oo)

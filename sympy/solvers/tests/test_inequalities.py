@@ -297,3 +297,8 @@ def test_issue_8545():
     assert reduce_abs_inequality(eq, '<', x) == ans
     eq = 1 - x - sqrt((1 - x)**2)
     assert reduce_inequalities(eq < 0) == ans
+
+
+def test_issue_8974():
+    assert isolve(-oo < x, x) == And(-oo < x, x < oo)
+    assert isolve(oo > x, x) == And(-oo < x, x < oo)
