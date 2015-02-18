@@ -87,10 +87,10 @@ modifier_dict = {
     'scr': lambda s: r'\mathscr{'+s+r'}',
     'frak': lambda s: r'\mathfrak{'+s+r'}',
     # Brackets
-    'norm': lambda s: r'\left\lVert{'+s+r'}\right\rVert',
+    'norm': lambda s: r'\left\|{'+s+r'}\right\|',
     'avg': lambda s: r'\left\langle{'+s+r'}\right\rangle',
-    'abs': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
-    'mag': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
+    'abs': lambda s: r'\left\|{'+s+r'}\right\|',
+    'mag': lambda s: r'\left\|{'+s+r'}\right\|',
 }
 
 greek_letters_set = frozenset(greeks)
@@ -753,7 +753,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_Abs(self, expr, exp=None):
-        tex = r"\left\lvert{%s}\right\rvert" % self._print(expr.args[0])
+        tex = r"\left\|{%s}\right\|" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
