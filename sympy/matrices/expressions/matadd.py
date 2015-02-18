@@ -51,7 +51,7 @@ class MatAdd(MatrixExpr):
 
     def _eval_trace(self):
         from trace import Trace
-        return MatAdd(*[Trace(arg) for arg in self.args]).doit()
+        return Trace(MatAdd(*self.args).doit())
 
     def doit(self, **ignored):
         return canonicalize(self)
