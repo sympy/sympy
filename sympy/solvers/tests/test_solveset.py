@@ -3,11 +3,13 @@ from sympy import (
     LambertW, Piecewise, Poly, Rational, S, Symbol,
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
-    tan, tanh, atan2, arg, C,
+    tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, oo)
 
 from sympy.core.function import nfloat
 from sympy.functions.elementary.complexes import im, re
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
@@ -112,57 +114,57 @@ def test_domain_check():
 
 def test_is_function_class_equation():
     from sympy.abc import x, a
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x), x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x) - 1, x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x) + sin(x), x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x) + sin(x) - a, x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        sin(x)*tan(x) + sin(x), x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        sin(x)*tan(x + a) + sin(x), x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        sin(x)*tan(x*a) + sin(x), x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        a*tan(x) - 1, x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x)**2 + sin(x) - 1, x) is True
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2), x) is False
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2) + sin(x), x) is False
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x)**sin(x), x) is False
-    assert _is_function_class_equation(C.TrigonometricFunction,
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(sin(x)) + sin(x), x) is False
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x), x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x) - 1, x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x) + sinh(x), x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x) + sinh(x) - a, x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        sinh(x)*tanh(x) + sinh(x), x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        sinh(x)*tanh(x + a) + sinh(x), x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        sinh(x)*tanh(x*a) + sinh(x), x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        a*tanh(x) - 1, x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x)**2 + sinh(x) - 1, x) is True
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x**2), x) is False
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x**2) + sinh(x), x) is False
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x)**sinh(x), x) is False
-    assert _is_function_class_equation(C.HyperbolicFunction,
+    assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(sinh(x)) + sinh(x), x) is False
 
 
