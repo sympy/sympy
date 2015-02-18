@@ -390,6 +390,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jayesh Lahori: remove uses of xrange
 #. harshil goel: simplify roots by removing some powers from radicals
 #. Lokesh Sharma: reorder setup.py file imports to correct NameError
+#. Sartaj Singh: use \left \| instead of \lvert for latex Abs
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
