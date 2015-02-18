@@ -1,7 +1,7 @@
 from sympy.core import Lambda, S, symbols
 from sympy.concrete import Sum
 from sympy.functions import adjoint, conjugate, transpose
-from sympy.matrices import eye, Matrix, ShapeError
+from sympy.matrices import eye, Matrix, ShapeError, ImmutableMatrix
 from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
     ZeroMatrix, trace, MatPow, MatAdd
@@ -53,12 +53,16 @@ def test_Trace_doit():
     assert Trace(q).doit(deep=False).arg == q
 
 
-@XFAIL
+def test_Trace_MatMul():
+    assert not trace(A*B) == trace(A)*trace(B)
+
+
 def test_Trace_MatAdd_doit():
-    # FIXME: Issue #9028.
-    X = Matrix([[1, 2], [3, 4]])
-    q = MatAdd(X, 2*X)
-    assert Trace(q).doit(deep=False).arg == q
+    X = ImmutableMatrix([[1, 2, 3]]*3)
+    Y = MatrixSymbol('Y', 3, 3)
+    q = MatAdd(X, 2*X, Y, -3*Y)
+    assert Trace(q).arg == q
+    assert Trace(q).doit() == 18 - 2*Trace(Y)
 
 
 @XFAIL
