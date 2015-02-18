@@ -9,7 +9,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, u
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -24,10 +24,10 @@ def test_f_expand_complex():
         I*sin(im(z))*exp(re(z))
 
 def test_unicode_name_support():
-    Function(u'k') # check if unicoded function names can be created
+    Function(u('k')) # check if unicoded function names can be created
 
     # check if unicoded function is same as its ascii counterpart
-    assert Function('k') == Function(u'k')
+    assert Function('k') == Function(u('k'))
 
 def test_bug1():
     e = sqrt(-log(w))
