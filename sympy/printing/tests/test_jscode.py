@@ -1,4 +1,4 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
+from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
@@ -6,7 +6,6 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-# import test
 from sympy import jscode
 
 x, y, z = symbols('x,y,z')
@@ -177,9 +176,6 @@ def test_jscode_loops_matrix_vector():
 
 
 def test_dummy_loops():
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')

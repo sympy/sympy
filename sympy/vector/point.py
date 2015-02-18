@@ -1,8 +1,8 @@
+from sympy.core.compatibility import range
 from sympy.core.basic import Basic
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.functions import express, _path
-from sympy.simplify import trigsimp
+from sympy.vector.functions import _path
 from sympy import Symbol
 from sympy.core.cache import cacheit
 

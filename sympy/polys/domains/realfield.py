@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-import math
-
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero

@@ -10,6 +10,7 @@ import itertools
 import copy
 
 from sympy import Symbol, S, Matrix, trigsimp, diff, expand
+from sympy.core.compatibility import range
 
 from sympy.galgebra.printing import GA_Printer
 from sympy.galgebra.stringarrays import str_array

@@ -1,15 +1,12 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
+from sympy import S, sqrt, sin, oo, Poly
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF,
-    PolynomialRing, FractionField, EX)
+from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
-
-from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
@@ -19,7 +16,7 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 

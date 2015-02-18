@@ -2,11 +2,9 @@
 
 import warnings
 
-from sympy.core.compatibility import u
-from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
-from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
-from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy import Add, Mul, Pow, Integer
+from sympy.core.compatibility import range
+from sympy.physics.quantum import Operator, Commutator, AntiCommutator
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.fermion import FermionOp
 

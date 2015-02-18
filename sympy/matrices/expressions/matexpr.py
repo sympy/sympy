@@ -2,8 +2,9 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
+from sympy.core.compatibility import range
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError

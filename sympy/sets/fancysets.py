@@ -1,12 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass
-from sympy.sets.sets import Set, Interval, Intersection, \
-    FiniteSet, Union, Complement, EmptySet
+from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.sets.sets import Set, Interval, Intersection, EmptySet
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import symbols
-from sympy.core.sympify import sympify, _sympify
+from sympy.core.sympify import _sympify
 from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
 

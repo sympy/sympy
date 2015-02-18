@@ -4,12 +4,11 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .matrices import MatrixBase, ShapeError, a2idx
 from .dense import Matrix
@@ -56,7 +55,8 @@ class SparseMatrix(MatrixBase):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = self._sympify(op(i, j))
+                        value = self._sympify(
+                            op(self._sympify(i), self._sympify(j)))
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
@@ -64,7 +64,7 @@ class SparseMatrix(MatrixBase):
                 for key in args[2].keys():
                     v = args[2][key]
                     if v:
-                        self._smat[key] = v
+                        self._smat[key] = self._sympify(v)
             elif is_sequence(args[2]):
                 if len(args[2]) != self.rows*self.cols:
                     raise ValueError(
@@ -96,7 +96,8 @@ class SparseMatrix(MatrixBase):
                 return self._smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    i = range(self.rows)[i]
+                    # XXX remove list() when PY2 support is dropped
+                    i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
                 else:
@@ -104,7 +105,8 @@ class SparseMatrix(MatrixBase):
                         raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
-                    j = range(self.cols)[j]
+                    # XXX remove list() when PY2 support is dropped
+                    j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
                 else:
@@ -137,7 +139,7 @@ class SparseMatrix(MatrixBase):
             return False
         if not all(self[i, i] == 1 for i in range(self.rows)):
             return False
-        return len(self) == self.rows
+        return len(self._smat) == self.rows
 
     def tolist(self):
         """Convert this sparse matrix into a list of nested Python lists.
@@ -222,7 +224,8 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(k))]
+        return [tuple(k + (self[k],)) for k in
+            sorted(list(self._smat.keys()), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 

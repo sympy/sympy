@@ -1,11 +1,11 @@
-from sympy import Rational
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import QQ
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term,
   rs_series_inversion, rs_series_from_list, rs_exp, rs_log, rs_newton,
   rs_hadamard_exp, rs_compose_add)
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 def test_ring_series1():
     R, x = ring('x', QQ)

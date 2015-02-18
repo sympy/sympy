@@ -31,12 +31,13 @@ from __future__ import print_function, division
 from itertools import permutations
 
 from sympy.polys.monomials import (
-    monomial_mul, monomial_lcm, monomial_div, monomial_deg, monomial_divides
+    monomial_mul, monomial_lcm, monomial_div, monomial_deg
 )
 
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy import S, sympify
+from sympy.core.compatibility import range
 
 # Additional monomial tools.
 

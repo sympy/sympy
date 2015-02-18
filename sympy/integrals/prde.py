@@ -20,7 +20,6 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
 
-from sympy import im, sqrt, re
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
@@ -30,7 +29,8 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
-from sympy.core.compatibility import reduce, xrange
+from sympy.core.compatibility import reduce, range
+from sympy.utilities.misc import debug
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -303,7 +303,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, -1, -1):  # [n, ..., 0]
+    for N in range(n, -1, -1):  # [n, ..., 0]
         for i in range(m):
             si = Q[i].nth(N + db)/b.LC()
             sitn = Poly(si*DE.t**N, DE.t)
@@ -337,7 +337,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, 0, -1):  # [n, ..., 1]
+    for N in range(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
             sitn = Poly(si*DE.t**N, DE.t)
@@ -383,10 +383,8 @@ def param_rischDE(fa, fd, G, DE):
         # it will always terminate no matter what n is.
         n = bound_degree(A, B, G, DE, parametric=True)
     except NotImplementedError:
-        # Useful for debugging:
-        # import warnings
-        # warnings.warn("param_rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
+        debug("param_rischDE: Proceeding with n = oo; may cause "
+              "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
@@ -522,7 +520,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             return None
 
         if Q.is_zero or v.is_zero:
-            # Q == 0 or v == 0.
             return None
 
         return (Q*N, Q*M, v)
@@ -560,7 +557,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     Q, v = Qv
 
     if Q.is_zero or v.is_zero:
-        # Q == 0 or v == 0.
         return None
 
     return (Q*N, Q*M, v)
@@ -804,7 +800,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     n, s = splitfactor(fd, DE)
     if not s.is_one:
         pass
-        #return None
 
     z = z or Dummy('z')
     H, b = residue_reduce(fa, fd, DE, z=z)
@@ -828,7 +823,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     respolys, residues = list(zip(*roots)) or [[], []]
     # Note: this might be empty, but everything below should work find in that
     # case (it should be the same as if it were [[1, 1]])
-    residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for
+    residueterms = [(H[j][1].subs(z, i), i) for j in range(len(H)) for
         i in residues[j]]
 
     # TODO: finish writing this and write tests
@@ -856,8 +851,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         n, e, u = A
         u *= DE.t**e
-#        raise NotImplementedError("The hyperexponential case is "
-#            "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
 
     elif case == 'primitive':
         with DecrementLevel(DE):

@@ -1,5 +1,5 @@
-from sympy.core import Dict, Tuple, Rational
-from sympy.sets import Set
+from sympy.core import Rational
+from sympy.core.compatibility import range
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 

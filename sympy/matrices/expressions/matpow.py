@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity
-from sympy import Pow, S, Basic
 from sympy.core.sympify import _sympify
+from sympy.core.compatibility import range
 from sympy.matrices import MatrixBase
 from sympy.core import S
 

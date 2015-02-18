@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import Dict, Tuple
-from sympy.sets import Set
 from .cartan_type import Standard_Cartan
+from sympy.core.compatibility import range
 from sympy.matrices import eye
 
 class TypeB(Standard_Cartan):

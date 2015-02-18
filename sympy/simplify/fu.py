@@ -194,7 +194,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, range
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -1072,7 +1072,7 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor, fraction
+    from sympy import factor
 
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):

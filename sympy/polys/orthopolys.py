@@ -16,14 +16,14 @@ from sympy.polys.densearith import (
 
 from sympy.polys.domains import ZZ, QQ
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def dup_jacobi(n, a, b, K):
     """Low-level implementation of Jacobi polynomials. """
     seq = [[K.one], [(a + b + K(2))/K(2), (a - b)/K(2)]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         den = K(i)*(a + b + i)*(a + b + K(2)*i - K(2))
         f0 = (a + b + K(2)*i - K.one) * (a*a - b*b) / (K(2)*den)
         f1 = (a + b + K(2)*i - K.one) * (a + b + K(2)*i - K(2)) * (a + b + K(2)*i) / (K(2)*den)
@@ -60,7 +60,7 @@ def dup_gegenbauer(n, a, K):
     """Low-level implementation of Gegenbauer polynomials. """
     seq = [[K.one], [K(2)*a, K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         f1 = K(2) * (i + a - K.one) / i
         f2 = (i + K(2)*a - K(2)) / i
         p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
@@ -94,7 +94,7 @@ def dup_chebyshevt(n, K):
     """Low-level implementation of Chebyshev polynomials of the 1st kind. """
     seq = [[K.one], [K.one, K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2), K)
         seq.append(dup_sub(a, seq[-2], K))
 
@@ -125,7 +125,7 @@ def dup_chebyshevu(n, K):
     """Low-level implementation of Chebyshev polynomials of the 2nd kind. """
     seq = [[K.one], [K(2), K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2), K)
         seq.append(dup_sub(a, seq[-2], K))
 
@@ -156,7 +156,7 @@ def dup_hermite(n, K):
     """Low-level implementation of Hermite polynomials. """
     seq = [[K.one], [K(2), K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         a = dup_lshift(seq[-1], 1, K)
         b = dup_mul_ground(seq[-2], K(i - 1), K)
 
@@ -190,7 +190,7 @@ def dup_legendre(n, K):
     """Low-level implementation of Legendre polynomials. """
     seq = [[K.one], [K.one, K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2*i - 1, i), K)
         b = dup_mul_ground(seq[-2], K(i - 1, i), K)
 
@@ -222,7 +222,7 @@ def dup_laguerre(n, alpha, K):
     """Low-level implementation of Laguerre polynomials. """
     seq = [[K.zero], [K.one]]
 
-    for i in xrange(1, n + 1):
+    for i in range(1, n + 1):
         a = dup_mul(seq[-1], [-K.one/i, alpha/i + K(2*i - 1)/i], K)
         b = dup_mul_ground(seq[-2], alpha/i + K(i - 1)/i, K)
 
@@ -260,7 +260,7 @@ def dup_spherical_bessel_fn(n, K):
     """ Low-level implementation of fn(n, x) """
     seq = [[K.one], [K.one, K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2*i - 1), K)
         seq.append(dup_sub(a, seq[-2], K))
 
@@ -271,7 +271,7 @@ def dup_spherical_bessel_fn_minus(n, K):
     """ Low-level implementation of fn(-n, x) """
     seq = [[K.one, K.zero], [K.zero]]
 
-    for i in xrange(2, n + 1):
+    for i in range(2, n + 1):
         a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(3 - 2*i), K)
         seq.append(dup_sub(a, seq[-2], K))
 

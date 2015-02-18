@@ -7,20 +7,14 @@ Plane
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols, Symbol, Rational
+from sympy.core import S, Dummy, Symbol, Rational
 from sympy.core.compatibility import is_sequence
-from sympy.core.function import expand_mul
-from sympy.core.logic import fuzzy_and
-from sympy.core.exprtools import factor_terms
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff,
-    sqrt)
+from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
 
-from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .point import Point
@@ -407,14 +401,14 @@ class Plane(GeometryEntity):
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
             e = sqrt(sum([i**2 for i in o.direction_ratio]))
-            return C.asin(c/(d*e))
+            return asin(c/(d*e))
         if isinstance(o, Plane):
             a = Matrix(self.normal_vector)
             b = Matrix(o.normal_vector)
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
             e = sqrt(sum([i**2 for i in o.normal_vector]))
-            return C.acos(c/(d*e))
+            return acos(c/(d*e))
 
 
     @staticmethod

@@ -11,7 +11,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
+from sympy import (Basic, Symbol, cacheit, sympify, Mul,
         And, Or, Tuple, Piecewise, Eq, Lambda)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
@@ -161,7 +161,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         else:
             raise NotImplementedError(
                 "Not implemented on multi-dimensional conditional domain")
-        #return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)

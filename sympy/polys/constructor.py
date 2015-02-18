@@ -7,7 +7,7 @@ from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.utilities import public
-from sympy.core import sympify, Symbol
+from sympy.core import sympify
 
 
 def _construct_simple(coeffs, opt):

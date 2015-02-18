@@ -1,9 +1,10 @@
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
+from sympy.core.compatibility import range
+from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor, cancel)
+        cancel)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, given, independent, dependent, where, FiniteRV, pspace, cdf,
+    density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment)
 from sympy.utilities.pytest import raises, slow
 from sympy.abc import p

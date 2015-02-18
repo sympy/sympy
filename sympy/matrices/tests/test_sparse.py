@@ -2,7 +2,6 @@ from sympy import S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
 from sympy.utilities.pytest import raises
 
-
 def test_sparse_matrix():
     def sparse_eye(n):
         return SparseMatrix.eye(n)

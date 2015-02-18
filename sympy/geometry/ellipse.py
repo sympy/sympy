@@ -8,17 +8,18 @@ Contains
 
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, pi, Dummy
+from sympy.core import S, C, sympify, pi
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo, zoo, Rational
+from sympy.core.numbers import oo, Rational
+from sympy.core.compatibility import range
+from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
 from sympy.polys import Poly, PolynomialError, DomainError
 from sympy.polys.polyutils import _nsort, _not_a_coeff
 from sympy.solvers import solve
-from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity
@@ -352,7 +353,7 @@ class Ellipse(GeometryEntity):
         if self.eccentricity == 1:
             return 2*pi*self.hradius
         else:
-            x = C.Dummy('x', real=True)
+            x = Dummy('x', real=True)
             return 4*self.major*C.Integral(
                 sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
 
@@ -912,8 +913,8 @@ class Ellipse(GeometryEntity):
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError(filldedent('Symbol %s already appears in object '
                 'and cannot be used as a parameter.' % t.name))
-        return Point(self.center.x + self.hradius*C.cos(t),
-                     self.center.y + self.vradius*C.sin(t))
+        return Point(self.center.x + self.hradius*cos(t),
+                     self.center.y + self.vradius*sin(t))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
@@ -1227,8 +1228,8 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = C.Dummy('x', real=True)
-            y = C.Dummy('y', real=True)
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero

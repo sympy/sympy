@@ -19,7 +19,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, AlgebraicNumber)
+    residue, Derivative, logcombine, Symbol)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -48,6 +48,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
+from sympy.core.compatibility import range
 from itertools import islice, takewhile
 
 
@@ -634,9 +635,11 @@ def test_I9():
 def test_I10():
     assert trigsimp((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1)) == nan
 
-#@XFAIL
-#def test_I11():
-#    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
+
+@SKIP("hangs")
+@XFAIL
+def test_I11():
+    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
 
 
 @XFAIL
@@ -931,7 +934,7 @@ def test_M15():
 
 
 def test_M16():
-    assert solve(sin(x) - tan(x), x) == [0, 2*pi]
+    assert solve(sin(x) - tan(x), x) == [0, -pi, pi, 2*pi]
 
 
 @XFAIL
@@ -965,9 +968,7 @@ def test_M23():
     x = symbols('x', complex=True)
 
     assert solve(x - 1/sqrt(1 + x**2)) == [
-        simplify(-I*sqrt((sqrt(5) + 1)/2)),
-        simplify(   sqrt((sqrt(5) - 1)/2)),
-    ]
+        -I*sqrt(S.Half + sqrt(5)/2), sqrt(-S.Half + sqrt(5)/2)]
 
 
 def test_M24():
@@ -2361,8 +2362,7 @@ def test_V13():
 @XFAIL
 def test_V14():
     r1 = integrate(log(abs(x**2 - y**2)), x)
-    # I.simplify() raises AttributeError
-    # https://github.com/sympy/sympy/issues/7158
+    # Piecewise result does not simplify to the desired result.
     assert (r1.simplify() == x*log(abs(x**2  - y**2))
                             + y*log(x + y) - y*log(x - y) - 2*x)
 
@@ -2872,7 +2872,7 @@ def test_Y2():
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*abs(w - 1))
+    assert f == cos(t*w - t)
 
 
 @slow

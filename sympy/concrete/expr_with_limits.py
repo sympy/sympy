@@ -1,15 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core.basic import C
+from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.relational import Eq
+from sympy.core.mul import Mul
+from sympy.core.relational import Equality
 from sympy.sets.sets import Interval
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Wild, Symbol)
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
@@ -66,10 +67,10 @@ class ExprWithLimits(Expr):
         # top level so that integration can go into piecewise mode at the
         # earliest possible moment.
         function = sympify(function)
-        if hasattr(function, 'func') and function.func is C.Equality:
+        if hasattr(function, 'func') and function.func is Equality:
             lhs = function.lhs
             rhs = function.rhs
-            return C.Equality(cls(lhs, *symbols, **assumptions), \
+            return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
         function = piecewise_fold(function)
 
@@ -232,7 +233,7 @@ class ExprWithLimits(Expr):
         reps = {}
         f = self.function
         limits = list(self.limits)
-        for i in xrange(-1, -len(limits) - 1, -1):
+        for i in range(-1, -len(limits) - 1, -1):
             xab = list(limits[i])
             if len(xab) == 1:
                 continue
@@ -277,6 +278,7 @@ class ExprWithLimits(Expr):
         change_index : Perform mapping on the sum and product dummy variables
 
         """
+        from sympy.core.function import AppliedUndef, UndefinedFunction
         func, limits = self.function, list(self.limits)
 
         # If one of the expressions we are replacing is used as a func index
@@ -290,7 +292,7 @@ class ExprWithLimits(Expr):
         # Reorder limits to match standard mathematical practice for scoping
         limits.reverse()
 
-        if not isinstance(old, C.Symbol) or \
+        if not isinstance(old, Symbol) or \
                 old.free_symbols.intersection(self.free_symbols):
             sub_into_func = True
             for i, xab in enumerate(limits):
@@ -300,7 +302,7 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old,C.AppliedUndef) or isinstance(old,C.UndefinedFunction):
+            if isinstance(old, AppliedUndef) or isinstance(old, UndefinedFunction):
                 sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
                 sy1 = set(self.variables).intersection(set(old.args))
                 if not sy2.issubset(sy1):
@@ -339,10 +341,10 @@ class AddWithLimits(ExprWithLimits):
         # This constructor only differs from ExprWithLimits
         # in the application of the orientation variable.  Perhaps merge?
         function = sympify(function)
-        if hasattr(function, 'func') and function.func is C.Equality:
+        if hasattr(function, 'func') and function.func is Equality:
             lhs = function.lhs
             rhs = function.rhs
-            return C.Equality(cls(lhs, *symbols, **assumptions), \
+            return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
         function = piecewise_fold(function)
 
@@ -396,20 +398,20 @@ class AddWithLimits(ExprWithLimits):
             if summand.is_Mul:
                 out = sift(summand.args, lambda w: w.is_commutative \
                     and not w.has(*self.variables))
-                return C.Mul(*out[True])*self.func(C.Mul(*out[False]), \
+                return Mul(*out[True])*self.func(Mul(*out[False]), \
                     *self.limits)
         else:
             summand = self.func(self.function, self.limits[0:-1]).factor()
             if not summand.has(self.variables[-1]):
                 return self.func(1, [self.limits[-1]]).doit()*summand
-            elif isinstance(summand, C.Mul):
+            elif isinstance(summand, Mul):
                 return self.func(summand, self.limits[-1]).factor()
         return self
 
     def _eval_expand_basic(self, **hints):
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
-            return C.Add(*[ self.func(i, *self.limits) for i in summand.args ])
+            return Add(*[ self.func(i, *self.limits) for i in summand.args ])
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

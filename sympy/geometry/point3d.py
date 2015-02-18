@@ -9,13 +9,11 @@ Point3D
 from __future__ import print_function, division
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, range
 from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
-from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.point import Point
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float

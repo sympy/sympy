@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, cos, Eq, Piecewise, factor)
+    Symbol, Lambda, sin, Eq, Piecewise, factor)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -234,7 +234,6 @@ def test_integrate_hyperexponential():
         Poly(t*(1 + t1**2), t)], 'Tfuncs': [tan, Lambda(i, exp(tan(i)))]})
     assert integrate_hyperexponential(a, d, DE) == \
         (exp(2*tan(x))*tan(x) + exp(tan(x)), 1 + t1**2, True)
-        # exp(2*tan(x))*tan(x) + tan(x) + exp(tan(x))
     a = Poly((t1**3 + (x + 1)*t1**2 + t1 + x + 2)*t, t)
     assert integrate_hyperexponential(a, d, DE) == \
         ((x + tan(x))*exp(tan(x)), 0, True)
@@ -254,7 +253,6 @@ def test_integrate_hyperexponential():
     d = Poly(25*t**6 + 35*t**4 + 11*t**2 + 1, t)
     assert integrate_hyperexponential(a, d, DE) == \
         (-(11 - 10*exp(x))/(5 + 25*exp(2*x)) + log(1 + exp(2*x)), -1, True)
-        # -(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0), Poly(t0*t, t)],
         'Tfuncs': [exp, Lambda(i, exp(exp(i)))]})
     assert integrate_hyperexponential(Poly(2*t0*t**2, t), Poly(1, t), DE) == (exp(2*exp(x)), 0, True)
@@ -358,7 +356,6 @@ def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
         'Tfuncs': [log]})
     assert integrate_primitive(Poly(t, t), Poly(1, t), DE) == (x*log(x), -1, True)
-    # (x*log(x) - x, True)
     assert integrate_primitive(Poly(x, t), Poly(t, t), DE) == (0, NonElementaryIntegral(x/log(x), x), False)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],

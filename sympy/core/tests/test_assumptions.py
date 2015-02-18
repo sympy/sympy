@@ -2,6 +2,7 @@ from sympy import I, sqrt, log, exp, sin, asin
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
+from sympy.core.compatibility import range
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -64,11 +65,7 @@ def test_one():
     assert z.is_comparable is True
     assert z.is_prime is False
     assert z.is_number is True
-
-
-@XFAIL
-def test_one_is_composite():
-    assert S(1).is_composite is False
+    assert z.is_composite is False  # issue 8807
 
 
 def test_negativeone():
@@ -119,7 +116,7 @@ def test_infinity():
     assert oo.is_finite is False
     assert oo.is_infinite is True
     assert oo.is_comparable is True
-    assert oo.is_prime is None
+    assert oo.is_prime is False
     assert oo.is_composite is None
     assert oo.is_number is True
 
@@ -481,6 +478,9 @@ def test_composite():
     assert S(2).is_composite is False
     assert S(17).is_composite is False
     assert S(4).is_composite is True
+    x = Dummy(integer=True, positive=True, prime=False)
+    assert x.is_composite
+    assert (x + 1).is_composite is None
 
 
 def test_prime_symbol():
@@ -745,6 +745,7 @@ def test_Mul_is_infinite():
 
 def test_special_is_rational():
     i = Symbol('i', integer=True)
+    i2 = Symbol('i2', integer=True)
     ni = Symbol('ni', integer=True, nonzero=True)
     r = Symbol('r', rational=True)
     rn = Symbol('r', rational=True, nonzero=True)
@@ -767,7 +768,8 @@ def test_special_is_rational():
     assert (sqrt(3) + S.Pi).is_rational is False
     assert (x**i).is_rational is None
     assert (i**i).is_rational is True
-    assert (r**i).is_rational is True
+    assert (i**i2).is_rational is None
+    assert (r**i).is_rational is None
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
     assert (nr**i).is_rational is None  # issue 8598

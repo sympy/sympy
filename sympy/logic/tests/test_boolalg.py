@@ -249,7 +249,7 @@ def test_bool_map():
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
-    from sympy.abc import a, b, c, w, x, y, z
+    from sympy.abc import a, b, w, x, y, z
     assert bool_map(Not(Not(a)), a) == (a, {a: a})
     assert bool_map(SOPform(['w', 'x', 'y', 'z'], minterms),
         POSform(['w', 'x', 'y', 'z'], minterms)) == \
@@ -272,6 +272,15 @@ def test_bool_symbol():
     assert And(A, True, False) is false
     assert Or(A, True) is true
     assert Or(A, False) == A
+
+
+def test_is_boolean():
+
+    assert true.is_Boolean
+    assert (A & B).is_Boolean
+    assert (A | B).is_Boolean
+    assert (~A).is_Boolean
+    assert (A ^ B).is_Boolean
 
 
 def test_subs():
@@ -667,3 +676,17 @@ def test_all_or_nothing():
 def test_canonical_atoms():
     assert true.canonical == true
     assert false.canonical == false
+
+
+def test_issue_8777():
+    x = symbols('x')
+    assert And(x > 2, x < oo).as_set() == Interval(2, oo, left_open=True)
+    assert And(x >= 1, x < oo).as_set() == Interval(1, oo)
+    assert (x < oo).as_set() == Interval(-oo, oo)
+    assert (x > -oo).as_set() == Interval(-oo, oo)
+
+
+def test_issue_8975():
+    x = symbols('x')
+    assert Or(And(-oo < x, x <= -2), And(2 <= x, x < oo)).as_set() == \
+        Interval(-oo, -2) + Interval(2, oo)

@@ -1,7 +1,8 @@
+from sympy.core.compatibility import range
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
-from sympy.combinatorics.permutations import Permutation, _af_rmuln
+from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
@@ -12,7 +13,6 @@ rmul = Permutation.rmul
 
 
 def test_has():
-    # return p in self.generators
     a = Permutation([1, 0])
     G = PermutationGroup([a])
     assert G.is_abelian

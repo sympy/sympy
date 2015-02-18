@@ -3,14 +3,10 @@ from __future__ import print_function, division
 from collections import deque
 from random import randint
 
+from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy import Mul, Basic, Number, Pow, Integer
-from sympy.matrices import Matrix, eye
-from sympy.physics.quantum.gate import (Gate, X, Y, Z, H, S, T, CNOT,
-        IdentityGate, gate_simp)
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.operator import (UnitaryOperator,
-        HermitianOperator)
 from sympy.physics.quantum.dagger import Dagger
 
 __all__ = [

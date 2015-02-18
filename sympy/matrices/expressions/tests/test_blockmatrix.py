@@ -1,10 +1,11 @@
 from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
         bc_transpose, blockcut, reblock_2x2, deblock)
-from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
+from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.core import Tuple, symbols, Expr
+from sympy.core.compatibility import range
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)

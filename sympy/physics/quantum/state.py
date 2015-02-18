@@ -4,8 +4,8 @@ from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.core.compatibility import u
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.core.compatibility import u, range
+from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [

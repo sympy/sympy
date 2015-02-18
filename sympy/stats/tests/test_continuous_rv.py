@@ -12,8 +12,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          WignerSemicircle, correlation, moment, cmoment,
                          smoment)
 
-from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
-                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor, expand_func)
@@ -24,7 +23,7 @@ from sympy.stats.rv import ProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 oo = S.Infinity
 
@@ -550,7 +549,7 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     for var in variables:
-        for i in xrange(niter):
+        for i in range(niter):
             assert sample(var) in var.pspace.domain.set
 
 

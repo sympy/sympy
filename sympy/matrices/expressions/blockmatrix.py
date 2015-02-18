@@ -1,21 +1,21 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Tuple, Basic, Add, sympify
-from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
+from sympy.core import Basic, Add, sympify
+from sympy.core.compatibility import range
+from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
-from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, eye, ShapeError
+from sympy.matrices import Matrix, ShapeError
 
 
 class BlockMatrix(MatrixExpr):

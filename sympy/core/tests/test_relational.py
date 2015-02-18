@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -322,9 +323,9 @@ def test_Not():
 
 
 def test_evaluate():
-    assert str(Eq(x, x, evaluate=False)) == 'x == x'
+    assert str(Eq(x, x, evaluate=False)) == 'Eq(x, x)'
     assert Eq(x, x, evaluate=False).doit() == S.true
-    assert str(Ne(x, x, evaluate=False)) == 'x != x'
+    assert str(Ne(x, x, evaluate=False)) == 'Ne(x, x)'
     assert Ne(x, x, evaluate=False).doit() == S.false
 
     assert str(Ge(x, x, evaluate=False)) == 'x >= x'

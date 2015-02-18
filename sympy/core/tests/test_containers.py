@@ -1,7 +1,7 @@
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
 from sympy.core.containers import tuple_wrapper
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import is_sequence, iterable, u
+from sympy.utilities.pytest import raises
+from sympy.core.compatibility import is_sequence, iterable, u, range
 
 
 def test_Tuple():

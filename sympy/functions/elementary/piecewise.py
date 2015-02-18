@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Expr
+from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
-from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not, Or,
     true, false)
-from sympy.core.compatibility import default_sort_key, xrange
+from sympy.core.compatibility import default_sort_key, range
 
 
 class ExprCondPair(Tuple):
@@ -353,7 +352,7 @@ class Piecewise(Function):
             # part 1b: Reduce (-)infinity to what was passed in.
             lower, upper = Max(a, lower), Min(b, upper)
 
-            for n in xrange(len(int_expr)):
+            for n in range(len(int_expr)):
                 # Part 2: remove any interval overlap.  For any conflicts, the
                 # iterval already there wins, and the incoming interval updates
                 # its bounds accordingly.
@@ -396,7 +395,7 @@ class Piecewise(Function):
         int_expr.sort(key=lambda x: x[0].sort_key(
         ) if x[0].is_number else S.Infinity.sort_key())
 
-        for n in xrange(len(int_expr)):
+        for n in range(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
                 if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:
                     newval = Min(*int_expr[n][:-1])

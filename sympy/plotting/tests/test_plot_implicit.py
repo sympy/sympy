@@ -1,5 +1,5 @@
 import warnings
-from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
+from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, exp, I,
                    tan, pi)
 from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile
@@ -57,9 +57,17 @@ def plot_and_save(name):
         assert issubclass(w[-1].category, UserWarning)
         assert 'No labeled objects found' in str(w[0].message)
 
+def test_line_color():
+    x, y = symbols('x, y')
+    p = plot_implicit(x**2 + y**2 - 1, line_color="green", show=False)
+    assert p._series[0].line_color == "green"
+    p = plot_implicit(x**2 + y**2 - 1, line_color='r', show=False)
+    assert p._series[0].line_color == "r"
+
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         plot_and_save('test')
+        test_line_color()
     else:
         skip("Matplotlib not the default backend")

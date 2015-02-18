@@ -1,5 +1,6 @@
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
+from sympy.core.compatibility import range
 
 theano = import_module('theano')
 if theano:
@@ -14,7 +15,7 @@ else:
 import sympy
 from sympy import S
 sy = sympy
-from sympy.abc import x, y, z, a, b, c
+from sympy.abc import x, y, z
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
 

@@ -53,6 +53,8 @@ Ntheory Functions Reference
 
 .. autofunction:: totient
 
+.. autofunction:: core
+
 .. autofunction:: digitslist
 
 .. module:: sympy.ntheory.modular
