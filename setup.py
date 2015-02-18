@@ -29,6 +29,12 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
+import sys
+import subprocess
+import os
+import shutil
+import glob
+
 mpmath_version = '0.19'
 
 try:
@@ -45,12 +51,6 @@ except ImportError:
     except ImportError:
         print("Please install the mpmath package with a version >= %s" % mpmath_version)
         sys.exit(-1)
-
-import sys
-import subprocess
-import os
-import shutil
-import glob
 
 PY3 = sys.version_info[0] > 2
 
