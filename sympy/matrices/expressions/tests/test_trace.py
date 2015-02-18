@@ -4,7 +4,7 @@ from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
-    ZeroMatrix, trace, MatPow
+    ZeroMatrix, trace, MatPow, MatAdd
 )
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -50,6 +50,14 @@ def test_Trace_doit():
     q = MatPow(X, 2)
     assert Trace(q).arg == q
     assert Trace(q).doit() == 29
+    assert Trace(q).doit(deep=False).arg == q
+
+
+@XFAIL
+def test_Trace_MatAdd_doit():
+    # FIXME: Issue #9028.
+    X = Matrix([[1, 2], [3, 4]])
+    q = MatAdd(X, 2*X)
     assert Trace(q).doit(deep=False).arg == q
 
 
