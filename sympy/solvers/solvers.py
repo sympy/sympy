@@ -24,11 +24,13 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Function, expand_power_exp, Lambda, _mexpand)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
+from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
+                                                      HyperbolicFunction)
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth
@@ -807,11 +809,11 @@ def solve(f, *symbols, **flags):
                 f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
-        elif isinstance(fi, (bool, C.BooleanAtom)) or fi.is_Relational:
+        elif isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
 
         # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: isinstance(w, C.HyperbolicFunction),
+        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
                 lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
@@ -1426,7 +1428,7 @@ def _solve(f, *symbols, **flags):
                 funcs = set(b for b in bases if b.is_Function)
 
                 trig = set([_ for _ in funcs if
-                    isinstance(_, C.TrigonometricFunction)])
+                    isinstance(_, TrigonometricFunction)])
                 other = funcs - trig
                 if not other and len(funcs.intersection(trig)) > 1:
                     newf = TR1(f_num).rewrite(tan)
