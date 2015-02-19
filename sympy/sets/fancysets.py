@@ -299,6 +299,9 @@ def TransformationSet(*args, **kwargs):
 
 
 class ComplexPlane(with_metaclass(Singleton, ImageSet)):
+    """
+    Represents all Complex Number.
+    """
 
     def __new__(cls):
         from sympy.core import Symbol
@@ -307,6 +310,20 @@ class ComplexPlane(with_metaclass(Singleton, ImageSet)):
         x = Symbol('x', real=True)
         y = Symbol('y', real=True)
         return ImageSet.__new__(cls,Lambda((x, y), x + I*y), S.Reals*S.Reals)
+
+    def _intersect(self, other):
+        if other is S.Complex:
+            return self
+        elif other in S.Reals:
+            return other
+        return None
+
+    def _contains(self, other):
+        from sympy.functions.elementary.complexes import re
+        from sympy.functions.elementary.complexes import im
+        if re(other) in S.Reals and im(other) in S.Reals and other.is_Symbol is False:
+            return True
+        return False
 
 class Range(Set):
     """
