@@ -1371,13 +1371,12 @@ def classify_sysode(eq, funcs=None, **kwargs):
                 if max_order < order_:
                     max_order = order_
                     eq_no = i
-        try:
-            if func_dict[eq_no]:
-                list_func = []
-                list_func.append(func_dict[eq_no])
-                list_func.append(func)
-                func_dict[eq_no] = list_func
-        except:
+        if eq_no in func_dict:
+            list_func = []
+            list_func.append(func_dict[eq_no])
+            list_func.append(func)
+            func_dict[eq_no] = list_func
+        else:
             func_dict[eq_no] = func
         order[func] = max_order
     funcs = [func_dict[i] for i in range(len(func_dict))]
