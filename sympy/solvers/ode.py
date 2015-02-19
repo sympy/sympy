@@ -1380,8 +1380,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
         except:
             func_dict[eq_no] = func
         order[func] = max_order
-    matching_hints['func'] = list(func_dict.values())
-    funcs = list(func_dict.values())
+    funcs = [func_dict[i] for i in range(len(func_dict))]
+    matching_hints['func'] = funcs
     for func in funcs:
         if isinstance(func, list):
             for func_elem in func:
