@@ -161,19 +161,21 @@ def grad(f, args, g=None, output_type=None):
         args = args.To_list()
     for i in indices:
         for j in indices:
-            array[
-                i] += (g_inv[i - idx_st, j - idx_st] * diff(f, args[j - idx_st]))
+            array[i] += (g_inv[i - idx_st, j - idx_st] * diff(f, args[j -
+                                                                      idx_st]))
 
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
         gradient = arraypy.To_tensor(array, 1)
     elif output_type == 'a' or output_type == Symbol('a'):
         gradient = array
-    elif output_type == 'l' or output_type == Symbol('l') or output_type is None:
+    elif output_type == 'l' or output_type == Symbol('l') or output_type is\
+            None:
         gradient = arraypy.To_list(array)
     else:
         raise TypeError(
-            "The third arguments must be 't'-tensor,'a'-massiv arraypy,'l'-list")
+            "The third arguments must be 't'-tensor,'a'-massiv arraypy, \
+            'l'-list")
 # Output
     return gradient
 
@@ -442,8 +444,8 @@ def LieXY(X, Y, args, output_type=None):
         indices = range(len(args))
         for i in indices:
             for k in indices:
-                Li[i + idx_st] += Add(diff(Y[i], args[k]) * X[k] - diff(X[i], args[k]) * Y[k])
-
+                Li[i + idx_st] += Add(diff(Y[i], args[k]) * X[k]
+                                      - diff(X[i], args[k]) * Y[k])
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
         Lie = arraypy.To_tensor(Li, 1)
@@ -453,7 +455,8 @@ def LieXY(X, Y, args, output_type=None):
         Lie = arraypy.To_list(Li)
     else:
         raise TypeError(
-            "The third arguments must be 't'-tensor,'a'-massiv arraypy,'l'-list")
+            "The third arguments must be 't'-tensor,'a'-massiv arraypy, \
+            'l'-list")
 
     # Output
     return Lie
@@ -532,8 +535,8 @@ def dw(omega, args):
         # list of tuple. example:[(0, 1), (0, 1), (0, 0)]
         tuple_list_indx = [NotNeedElement(idx, f) for f in range(len(idx))]
         for k in range(p + 1):
-            d_omega[
-                idx] += Add(((-1)**k) * diff(omega[tuple_list_indx[k]], args[idx[k] - idx_st]))
+            d_omega[idx] += Add(((-1)**k) * diff(omega[tuple_list_indx[k]],
+                                                 args[idx[k] - idx_st]))
         idx = d_omega.Next_index(idx)
 
 # Output
@@ -643,8 +646,8 @@ def Lie_w(omega, X, args):
                 NeedElementK(idx, f, k + idx_st) for f in range(len(idx))]
             diff_omega = diff(omega[idx], args[k]) * X[k]
             for j in range(len(idx)):
-                diff_Lie[
-                    idx] += diff(X[k], args[idx[j] - idx_st]) * omega[tuple_list_indx[j]]
+                diff_Lie[idx] += diff(X[k], args[idx[j] - idx_st]) *\
+                    omega[tuple_list_indx[j]]
             diff_Lie[idx] = diff_Lie[idx] + diff_omega
         idx = diff_Lie.Next_index(idx)
 # Output
