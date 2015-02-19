@@ -1555,7 +1555,7 @@ def digitslist(n, b=10):
     if n is negative, then the first item in the returned list is '-'
 
     Examples
-    =======
+    ========
 
     >>> from sympy.ntheory.factor_ import digitslist
     >>> digitslist(35)
