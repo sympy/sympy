@@ -488,9 +488,9 @@ def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
 
-def test_sympy__sets__fancysets__Complex():
-    from sympy.sets.fancysets import Complex
-    assert _test_args(Complex())
+def test_sympy__sets__fancysets__ComplexPlane():
+    from sympy.sets.fancysets import ComplexPlane
+    assert _test_args(ComplexPlane())
 
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet

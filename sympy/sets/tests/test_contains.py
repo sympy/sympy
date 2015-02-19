@@ -7,6 +7,7 @@ def test_contains_basic():
 
     i = Symbol('i', integer=True)
     assert Contains(i, S.Naturals) == Contains(i, S.Naturals, evaluate=False)
+    assert Contains(i, S.ComplexPlane) == Contains(i, S.ComplexPlane, evaluate=True)
 
 
 def test_issue_6194():
@@ -15,3 +16,4 @@ def test_issue_6194():
     assert Contains(x, FiniteSet(0)) != S.false
     assert Contains(x, Interval(1, 1)) != S.false
     assert Contains(x, S.Integers) != S.false
+    assert Contains(x, S.ComplexPlane) != S.true
