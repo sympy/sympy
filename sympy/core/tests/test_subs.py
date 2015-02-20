@@ -4,7 +4,8 @@ from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
         factor, nsimplify, zoo, Subs)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL,raises
+from sympy.physics.vector import frame
 from sympy.abc import x, y, z
 
 
@@ -640,3 +641,10 @@ def test_issue_5217():
     assert z.subs(sub) == 1 - s
     assert q == 4*x**2*y**2
     assert q.subs(sub) == 2*y**2*s
+
+
+def test_issue_8892():
+    s,t = symbols('s t')
+    A = frame.ReferenceFrame('A')
+    v = A.x
+    raises(TypeError, lambda: (s/t).subs(s,v))
