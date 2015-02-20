@@ -981,14 +981,24 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_RisingFactorial(self, expr, exp=None):
-        tex = r"{\left(%s\right)}^{\left(%s\right)}" % \
-            (self._print(expr.args[0]), self._print(expr.args[1]))
+        n, k = expr.args
+        if self._needs_brackets(n):
+            base = r"\left(%s\right)" % self._print(n)
+        else:
+            base = self._print(n)
+
+        tex = r"{%s}^{\left(%s\right)}" % (base, self._print(k))
 
         return self._do_exponent(tex, exp)
 
     def _print_FallingFactorial(self, expr, exp=None):
-        tex = r"{\left(%s\right)}_{\left(%s\right)}" % \
-            (self._print(expr.args[0]), self._print(expr.args[1]))
+        n, k = expr.args
+        if self._needs_brackets(k):
+            sub = r"\left(%s\right)" % self._print(k)
+        else:
+            sub = self._print(k)
+
+        tex = r"{\left(%s\right)}_{%s}" % (self._print(n), sub)
 
         return self._do_exponent(tex, exp)
 
