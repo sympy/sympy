@@ -7,7 +7,7 @@ from itertools import permutations
 
 """
 Module "arraypy" describes Tensor and it's bases - Multidimentional arrays.
-Module consists of Arraypy class, tensor class and converting functions: list2arraypy, matrix2arraypy, list2tensor, matrix2tensor.
+Module consists of Arraypy class, Tensor class and converting functions: list2arraypy, matrix2arraypy, list2tensor, matrix2tensor.
 """
 
 
@@ -568,13 +568,13 @@ class Arraypy(object):
 
     def To_tensor(self, ind_char):
         """
-        Convert Arraypy to tensor. Tensor uses Arraypy as base. The only parametrer is used to set valency of tensor. Valency tuple length must be equal to shape tuple legth.
+        Convert Arraypy to Tensor. Tensor uses Arraypy as base. The only parametrer is used to set valency of Tensor. Valency tuple length must be equal to shape tuple legth.
         >>> a = list2arraypy(range(9), (3,3))
         >>> b = a.To_tensor((-1,1))
         >>> type(b)
-        <class '__main__.tensor'>
+        <class '__main__.Tensor'>
         """
-        return tensor(self, ind_char)
+        return Tensor(self, ind_char)
 
     def To_list(self):
         """
@@ -598,11 +598,11 @@ class Arraypy(object):
         return res
 
 
-class tensor(Arraypy):
+class Tensor(Arraypy):
 
     def __init__(self, array, ind_char):
         """
-        Class tensor constructor.
+        Class Tensor constructor.
         Input:
         -array - Arraypy array
         -_ind_char - tuple type, index character (valency). For example (-1,1,1)
@@ -635,7 +635,7 @@ class tensor(Arraypy):
             raise ValueError(
                 'Length of Valency (ind_char) must be equal to length of Dimension of array')
 
-        if isinstance(array, tensor):
+        if isinstance(array, Tensor):
             raise TypeError('Wrong type. Fisrt argument must be array')
         elif isinstance(array, Arraypy):
             # overwriting parameters
@@ -669,7 +669,7 @@ class tensor(Arraypy):
 
         res_base = self.base + other.base
 
-        res_tensor = tensor(res_base, self._ind_char)
+        res_tensor = Tensor(res_base, self._ind_char)
 
         return res_tensor
 
@@ -689,7 +689,7 @@ class tensor(Arraypy):
 
         res_base = self.base - other.base
 
-        res_tensor = tensor(res_base, self._ind_char)
+        res_tensor = Tensor(res_base, self._ind_char)
 
         return res_tensor
 
@@ -698,8 +698,8 @@ class tensor(Arraypy):
         Overloads operator "*". Returns tensor product.
         Rank of resulted tensor is a summary rank of two tensors.
 
-        >>> a = tensor( Arraypy ('1..2', 'X'), 1)
-        >>> b = tensor( Arraypy ('1..2', 'Y'), -1)
+        >>> a = Tensor( Arraypy ('1..2', 'X'), 1)
+        >>> b = Tensor( Arraypy ('1..2', 'Y'), -1)
         >>> c = a * b
         >>> print c
         X[1]*Y[1] X[1]*Y[2]
@@ -714,8 +714,8 @@ class tensor(Arraypy):
         >>> c.ind_char
         (1, -1)
         """
-        if not isinstance(other, tensor):
-            raise TypeError('Second operand must be tensor')
+        if not isinstance(other, Tensor):
+            raise TypeError('Second operand must be Tensor')
 
         # forming list of tuples for Arraypy constructor of type a = Arraypy(
         # [(a, b), (c, d), ... , (y, z)] )
@@ -726,7 +726,7 @@ class tensor(Arraypy):
 
         # index charater of resulted tensor will be a concatination of two
         # index characters
-        res = tensor(Arraypy(arg), self.ind_char + other.ind_char)
+        res = Tensor(Arraypy(arg), self.ind_char + other.ind_char)
 
         # start indexes of: current tensor and other tensor
         cur_idx = self.start_index
@@ -749,7 +749,7 @@ class tensor(Arraypy):
     def __copy__(self):
         """
         Overload commom python function "copy". Makes right copy of Arraypy object.
-        a = tensor(Arraypy((2,2)), (1,1))
+        a = Tensor(Arraypy((2,2)), (1,1))
         b = copy(a)
         >>> c = a
         >>> id(a)
@@ -760,12 +760,12 @@ class tensor(Arraypy):
         29528496
         """
 
-        return tensor(copy(self.base), copy(self._ind_char))
+        return Tensor(copy(self.base), copy(self._ind_char))
 
     @property
     def type_pq(self):
         """
-        Returns tuple, that represents valency of the tensor in (P,Q) format, where P is upper (contrvarian) index and Q is lower (covariant).
+        Returns tuple, that represents valency of the Tensor in (P,Q) format, where P is upper (contrvarian) index and Q is lower (covariant).
         >>> a = Arraypy ((3,3,3,3,3)).To_tensor((1, 1, -1, 1, -1))
         >>> a.type_pq
         (3, 2)
@@ -791,7 +791,7 @@ class tensor(Arraypy):
 
     def Contract(self, idx1, idx2):
         """
-        Method returns new tensor instance, contract of current tensor. Result tensor rank will be current rank – 2 end valency will be (p - 1, q - 1).
+        Method returns new Tensor instance, contract of current tensor. Result tensor rank will be current rank – 2 end valency will be (p - 1, q - 1).
         Takes 2 parameters: first and second index number.
         Index numbers counts from “1”.
         >>> a = list2tensor(range(27), (3,3,3), (1, -1, 1))
@@ -947,7 +947,7 @@ class tensor(Arraypy):
             new_valency.pop(idx2)
 
         # creating tensor
-        res_tensor = tensor(res_array, tuple(new_valency))
+        res_tensor = Tensor(res_array, tuple(new_valency))
 
         return res_tensor
 
@@ -988,13 +988,13 @@ class tensor(Arraypy):
                     raise ValueError('!!!ind_char elements must be 1 or -1')
         # reshaping Arraypy and creating tensor with new base
         new_base = self.base.Reshape(new_shape)
-        new_tensor = tensor(new_base, ind_char)
+        new_tensor = Tensor(new_base, ind_char)
 
         return new_tensor
 
     def To_arraypy(self):
         """
-        Returns Arraypy - base of the current tensor object.
+        Returns Arraypy - base of the current Tensor object.
         >>> a = list2tensor (range(9), (3, 3), (1, -1))
         >>> b = a.To_arraypy
         >>> type(b)
@@ -1008,9 +1008,9 @@ class tensor(Arraypy):
 
     def To_tensor(self, ind_char):
         """
-        Convert Arraypy to tensor.
+        Convert Arraypy to Tensor.
 
-        Converting tensor to tensor is not required, so this method is not implemented.
+        Converting Tensor to Tensor is not required, so this method is not implemented.
         """
         raise NotImplementedError()
 
@@ -1045,7 +1045,7 @@ def matrix2arraypy(matrix):
 
 def matrix2tensor(matrix, ind_char=(-1, -1)):
     """
-    Convert Matrix to tensor.
+    Convert Matrix to Tensor.
     Function take 2 arguments. First is a Matrix. The second is a tuple that represents index character. By default it is (-1,-1).
     >>> a = Matrix(((1,2),(3,4)))
     >>> print (a)
@@ -1053,7 +1053,7 @@ def matrix2tensor(matrix, ind_char=(-1, -1)):
     [3, 4]
     >>> b = Matrix2Tensor(a, (1,-1))
     >>> type(b)
-    <class '__main__.tensor'>
+    <class '__main__.Tensor'>
     >>> print (b)
     1 2
     3 4
@@ -1062,7 +1062,7 @@ def matrix2tensor(matrix, ind_char=(-1, -1)):
         raise TypeError('Input attr must be Matrix type')
     else:
         n = matrix.shape
-        massiv = tensor(Arraypy(n), ind_char)
+        massiv = Tensor(Arraypy(n), ind_char)
 
         idx = massiv._start_index
         for i in range(len(matrix)):
@@ -1111,14 +1111,14 @@ def list2arraypy(list_arr, shape=0):
 
 def list2tensor(list_arr, shape=0, ind_char=0):
     """
-    Convert list to tensor.
+    Convert list to Tensor.
     It takes 3 arguments.
     -a list, which elements will be elements of the tensor base.
     -a tuple, shape of the new tensor (by default it is 0, which will mean that result tensor will be vector)
     -a tuple with index character (by default it feels with -1)
     >>> a = list2tensor([i*2 for i in range(9)], (3,3), (-1,1))
     >>> type(a)
-    <class '__main__.tensor'>
+    <class '__main__.Tensor'>
     >>> print (a)
     0 2 4
     6 8 10
@@ -1150,7 +1150,7 @@ def list2tensor(list_arr, shape=0, ind_char=0):
             ind_char = -1
 
     # creating new tensor and filling it with list elements
-    result = tensor(Arraypy(shape), ind_char)
+    result = Tensor(Arraypy(shape), ind_char)
     idx = result._start_index
     for i in range(len(list_arr)):
         result[idx] = list_arr[i]

@@ -16,7 +16,7 @@ def scal_prod(X, Y, g):
         >>> X = [1,2]
         >>> Y = [4,5]
         >>> A = Arraypy((2,2))
-        >>> g = tensor(A,(-1,-1))
+        >>> g = Tensor(A,(-1,-1))
         >>> g[0,0] = cos(x2)**2
         >>> g[0,1] = 0
         >>> g[1,0] = 0
@@ -26,12 +26,12 @@ def scal_prod(X, Y, g):
     """
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, tensor, Arraypy)):
+    if not isinstance(g, (Matrix, Tensor, Arraypy)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -40,27 +40,27 @@ def scal_prod(X, Y, g):
         raise ValueError('The metric tensor must be symmetric.')
 
     # Handling of a input arguments - vector or vector fields X
-    if not isinstance(X, (list, Arraypy, tensor)):
-        raise TypeError('The type of vector must be list, Arraypy or tensor')
-    if isinstance(X, (tensor, Arraypy)):
+    if not isinstance(X, (list, Arraypy, Tensor)):
+        raise TypeError('The type of vector must be list, Arraypy or Tensor')
+    if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
             raise ValueError("The dimension of X must be 1!")
-        if isinstance(X, tensor):
+        if isinstance(X, Tensor):
             if not X.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of X must be (+1)')
-    if isinstance(X, (tensor, Arraypy)):
+    if isinstance(X, (Tensor, Arraypy)):
         X = X.To_list()
 
     # Handling of a input arguments - vector or vector fields Y
-    if not isinstance(Y, (list, Arraypy, tensor)):
-        raise TypeError('The type of vector must be list, Arraypy or tensor')
-    if isinstance(Y, (tensor, Arraypy)):
+    if not isinstance(Y, (list, Arraypy, Tensor)):
+        raise TypeError('The type of vector must be list, Arraypy or Tensor')
+    if isinstance(Y, (Tensor, Arraypy)):
         if len(Y.shape) != 1:
             raise ValueError("The dimension of Y must be 1!")
-        if isinstance(Y, tensor):
+        if isinstance(Y, Tensor):
             if not Y.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of Y must be (+1)')
-    if isinstance(Y, (tensor, Arraypy)):
+    if isinstance(Y, (Tensor, Arraypy)):
         Y = Y.To_list()
 
     if not len(X) == len(Y):
@@ -89,7 +89,7 @@ def christoffel_1(g, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
+       >>> g = Tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -99,28 +99,28 @@ def christoffel_1(g, var, type_output='t'):
 
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, Arraypy, tensor)):
+    if not isinstance(g, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -167,7 +167,7 @@ def christoffel_1(g, var, type_output='t'):
         christoffel_1 = Ch
     else:
         raise ValueError(
-            "The parameter of type output result must 'a' - Arraypy or 't' and None - tensor.")
+            "The parameter of type output result must 'a' - Arraypy or 't' and None - Tensor.")
 
     # Output
     return christoffel_1
@@ -196,28 +196,28 @@ def christoffel_2(g, var, type_output='t'):
 
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, Arraypy, tensor)):
+    if not isinstance(g, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -274,7 +274,7 @@ def christoffel_2(g, var, type_output='t'):
         christoffel_2 = Ch
     else:
         raise ValueError(
-            "The parameter of type output result must 'a' - Arraypy or 't' and None - tensor.")
+            "The parameter of type output result must 'a' - Arraypy or 't' and None - Tensor.")
 
     # Output
     return christoffel_2
@@ -290,7 +290,7 @@ def covar_der(X, g, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
+       >>> g = Tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -300,29 +300,29 @@ def covar_der(X, g, var, type_output='t'):
        >>> covar_der(X, g, arg, 't')
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
 
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, Arraypy, tensor)):
+    if not isinstance(g, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -338,14 +338,14 @@ def covar_der(X, g, var, type_output='t'):
             idx_g = 0
 
     # Handling of a input argument - vector field X
-    if not isinstance(X, (list, Arraypy, tensor)):
+    if not isinstance(X, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector field must be list, tensor or Arraypy')
+            'The type of vector field must be list, Tensor or Arraypy')
     else:
-        if isinstance(X, (Arraypy, tensor)):
+        if isinstance(X, (Arraypy, Tensor)):
             if len(X.shape) != 1:
                 raise ValueError("The dimension of X must be 1!")
-            if isinstance(X, tensor):
+            if isinstance(X, Tensor):
                 if not X.type_pq == (1, 0):
                     raise ValueError(
                         'The valence or ind_char of vector field must be (+1)')
@@ -357,7 +357,7 @@ def covar_der(X, g, var, type_output='t'):
     [n1, n2] = g.shape
     if not n == n1:
         raise ValueError(
-            'The rank of the metric tensor does not coincide with the number of variables.')
+            'The rank of the metric Tensor does not coincide with the number of variables.')
 
     if (idx_g != idx_X):
         raise ValueError(
@@ -383,7 +383,7 @@ def covar_der(X, g, var, type_output='t'):
         cov_der = cov
     else:
         raise ValueError(
-            "The parameter of type output result must 'a' - Arraypy or 't' and None - tensor.")
+            "The parameter of type output result must 'a' - Arraypy or 't' and None - Tensor.")
 
     # Output
     return cov_der
@@ -398,7 +398,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
+       >>> g = Tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -409,29 +409,29 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
        >>> covar_der_XY(X, Y, g, arg, 't')
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
 
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, Arraypy, tensor)):
+    if not isinstance(g, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -447,14 +447,14 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
             idx_g = 0
 
     # Handling of a input argument - vector field X
-    if not isinstance(X, (list, Arraypy, tensor)):
+    if not isinstance(X, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector field must be list, tensor or Arraypy')
+            'The type of vector field must be list, Tensor or Arraypy')
     else:
-        if isinstance(X, (Arraypy, tensor)):
+        if isinstance(X, (Arraypy, Tensor)):
             if len(X.shape) != 1:
                 raise ValueError("The dimension of X must be 1!")
-            if isinstance(X, tensor):
+            if isinstance(X, Tensor):
                 if not X.type_pq == (1, 0):
                     raise ValueError(
                         'The valence or ind_char of vector field must be (+1)')
@@ -463,14 +463,14 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
             idx_X = 0
 
     # Handling of a input argument - vector field Y
-    if not isinstance(Y, (list, Arraypy, tensor)):
+    if not isinstance(Y, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector field must be list, tensor or Arraypy')
+            'The type of vector field must be list, Tensor or Arraypy')
     else:
-        if isinstance(Y, (Arraypy, tensor)):
+        if isinstance(Y, (Arraypy, Tensor)):
             if len(Y.shape) != 1:
                 raise ValueError("The dimension of Y must be 1!")
-            if isinstance(Y, tensor):
+            if isinstance(Y, Tensor):
                 if not Y.type_pq == (1, 0):
                     raise ValueError(
                         'The valence or ind_char of vector field must be (+1)')
@@ -513,7 +513,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
         cov_der_XY = nabla_XY
     else:
         raise ValueError(
-            "The parameter of type output result must 'a' - Arraypy or 't' and None - tensor.")
+            "The parameter of type output result must 'a' - Arraypy or 't' and None - Tensor.")
 
     # Output
     return cov_der_XY
@@ -530,7 +530,7 @@ def riemann(g, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
+       >>> g = Tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -539,29 +539,29 @@ def riemann(g, var, type_output='t'):
        >>> riemann(g, arg, 'a')
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
 
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, Arraypy, tensor)):
+    if not isinstance(g, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -619,7 +619,7 @@ def riemann(g, var, type_output='t'):
         riemann = R
     else:
         raise ValueError(
-            "The parameter of type output result must 'a' - Arraypy or 't' and None - tensor.")
+            "The parameter of type output result must 'a' - Arraypy or 't' and None - Tensor.")
 
     # Output
     return riemann
@@ -636,7 +636,7 @@ def ricci(riemann, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
+       >>> g = Tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -646,29 +646,29 @@ def ricci(riemann, var, type_output='t'):
        >>> r = ricci(cur, arg, 't')
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
 
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument Riemann curvature tensor - riemann
-    if not isinstance(riemann, (Matrix, Arraypy, tensor)):
+    if not isinstance(riemann, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of Riemann curvature tensor must be Matrix, Arraypy or tensor')
+            'The type of Riemann curvature tensor must be Matrix, Arraypy or Tensor')
     else:
-        if isinstance(riemann, (Arraypy, tensor)):
-            if isinstance(riemann, tensor):
+        if isinstance(riemann, (Arraypy, Tensor)):
+            if isinstance(riemann, Tensor):
                 if not riemann.type_pq == (1, 3):
                     raise ValueError(
                         'The valence or ind_char of Riemann curvature tensor must be (-1,-1,-1,+1)')
@@ -705,7 +705,7 @@ def ricci(riemann, var, type_output='t'):
         ricci = Ri
     else:
         raise ValueError(
-            "The parameter of type output result must 'a' - Arraypy or 't' and None - tensor.")
+            "The parameter of type output result must 'a' - Arraypy or 't' and None - Tensor.")
 
     # Output
     return ricci
@@ -722,7 +722,7 @@ def scal_curv(g, ricci, var):
         >>> x1, x2 = symbols('x1, x2')
         >>> arg = [x1, x2]
         >>> A = Arraypy((2,2))
-        >>> g = tensor(A,(-1,-1))
+        >>> g = Tensor(A,(-1,-1))
         >>> g[0,0] = cos(x2)**2
         >>> g[0,1] = 0
         >>> g[1,0] = 0
@@ -731,29 +731,29 @@ def scal_curv(g, ricci, var):
         >>> scal_curv(g, r, arg)
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
 
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, Arraypy, tensor)):
+    if not isinstance(g, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric Tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -764,12 +764,12 @@ def scal_curv(g, ricci, var):
     g_inv = g.inv()
 
     # Handling of a input argument tensor Ricci - ricci
-    if not isinstance(ricci, (Matrix, Arraypy, tensor)):
+    if not isinstance(ricci, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of tensor Ricci must be Matrix, tensor or Arraypy')
+            'The type of tensor Ricci must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(ricci, (Arraypy, tensor)):
-            if isinstance(ricci, tensor):
+        if isinstance(ricci, (Arraypy, Tensor)):
+            if isinstance(ricci, Tensor):
                 if not ricci.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of tensor Ricci must be (-1,-1)')
@@ -810,7 +810,7 @@ def k_sigma(X, Y, R, g, var):
        >>> X = [1,2]
        >>> Y = [3,4]
        >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
+       >>> g = Tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -820,29 +820,29 @@ def k_sigma(X, Y, R, g, var):
        >>> K_sig = k_sigma(X, Y, R, g, var)
     """
     # Handling of input vector arguments var
-    if not isinstance(var, (list, Arraypy, tensor)):
+    if not isinstance(var, (list, Arraypy, Tensor)):
         raise TypeError(
-            'The type of vector arguments(var) must be a list, Arraypy or tensor')
-    if isinstance(var, (tensor, Arraypy)):
+            'The type of vector arguments(var) must be a list, Arraypy or Tensor')
+    if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
             raise ValueError("The dimension of variables must be 1!")
-        if isinstance(var, tensor):
+        if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
-    if isinstance(var, (tensor, Arraypy)):
+    if isinstance(var, (Tensor, Arraypy)):
         var = var.To_list()
 
     # Definition of number of variables
     n = len(var)
 
     # Handling of a input argument - metric tensor g
-    if not isinstance(g, (Matrix, tensor, Arraypy)):
+    if not isinstance(g, (Matrix, Tensor, Arraypy)):
         raise TypeError(
-            'The type of metric tensor must be Matrix, tensor or Arraypy')
+            'The type of metric tensor must be Matrix, Tensor or Arraypy')
     else:
-        if isinstance(g, (Arraypy, tensor)):
-            if isinstance(g, tensor):
+        if isinstance(g, (Arraypy, Tensor)):
+            if isinstance(g, Tensor):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
@@ -851,27 +851,27 @@ def k_sigma(X, Y, R, g, var):
         raise ValueError('The metric tensor must be symmetric.')
 
     # Handling of a input arguments - vector or vector fields X
-    if not isinstance(X, (list, Arraypy, tensor)):
-        raise TypeError('The type of vector must be list, Arraypy or tensor')
-    if isinstance(X, (tensor, Arraypy)):
+    if not isinstance(X, (list, Arraypy, Tensor)):
+        raise TypeError('The type of vector must be list, Arraypy or Tensor')
+    if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
             raise ValueError("The dimension of X must be 1!")
-        if isinstance(X, tensor):
+        if isinstance(X, Tensor):
             if not X.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of X must be (+1)')
-    if isinstance(X, (tensor, Arraypy)):
+    if isinstance(X, (Tensor, Arraypy)):
         X = X.To_list()
 
     # Handling of a input arguments - vector or vector fields Y
-    if not isinstance(Y, (list, Arraypy, tensor)):
-        raise TypeError('The type of vector must be list, Arraypy or tensor')
-    if isinstance(Y, (tensor, Arraypy)):
+    if not isinstance(Y, (list, Arraypy, Tensor)):
+        raise TypeError('The type of vector must be list, Arraypy or Tensor')
+    if isinstance(Y, (Tensor, Arraypy)):
         if len(Y.shape) != 1:
             raise ValueError("The dimension of Y must be 1!")
-        if isinstance(Y, tensor):
+        if isinstance(Y, Tensor):
             if not Y.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of Y must be (+1)')
-    if isinstance(Y, (tensor, Arraypy)):
+    if isinstance(Y, (Tensor, Arraypy)):
         Y = Y.To_list()
 
     if not len(X) == len(Y):
@@ -881,12 +881,12 @@ def k_sigma(X, Y, R, g, var):
             'The vector fields and dimension of metric tensor must be identical length')
 
     # Handling of a input argument Riemann curvature tensor - R
-    if not isinstance(R, (Matrix, Arraypy, tensor)):
+    if not isinstance(R, (Matrix, Arraypy, Tensor)):
         raise TypeError(
-            'The type of Riemann curvature tensor must be Matrix, Arraypy or tensor')
+            'The type of Riemann curvature tensor must be Matrix, Arraypy or Tensor')
     else:
-        if isinstance(R, (Arraypy, tensor)):
-            if isinstance(R, tensor):
+        if isinstance(R, (Arraypy, Tensor)):
+            if isinstance(R, Tensor):
                 if not R.type_pq == (1, 3):
                     raise ValueError(
                         'The valence or ind_char of Riemann curvature tensor must be (-1,-1,-1,+1)')

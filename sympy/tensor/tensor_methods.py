@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from itertools import *
-from sympy.tensor1 import arraypy, tensor
+from sympy.tensor import Arraypy, Tensor
 from random import randint
 
 
 def symmetric(In_Arr):
     """
     Creates the symmetric form of input tensor.
-    Input: Arraypy or tensor with equal axes (array shapes).
-    Output: symmetric array. Output type - Arraypy or tensor, depends of input
+    Input: Arraypy or Tensor with equal axes (array shapes).
+    Output: symmetric array. Output type - Arraypy or Tensor, depends of input
 
     Examples:
     >>> a = list2arraypy(range(9), (3,3))
@@ -32,9 +32,9 @@ def symmetric(In_Arr):
     arg = [(In_Arr.start_index[i], In_Arr.end_index[i])
            for i in range(In_Arr.rank)]
 
-    # if In_Arr tensor, then ResArr will be tensor, else it will be Arraypy
-    if isinstance(In_Arr, tensor):
-        ResArr = tensor(Arraypy(arg), In_Arr.ind_char)
+    # if In_Arr Tensor, then ResArr will be Tensor, else it will be Arraypy
+    if isinstance(In_Arr, Tensor):
+        ResArr = Tensor(Arraypy(arg), In_Arr.ind_char)
     else:
         ResArr = Arraypy(arg)
 
@@ -56,8 +56,8 @@ def symmetric(In_Arr):
 def asymmetric(In_Arr):
     """
     Creates the asymmetric form of input tensor.
-    Input: Arraypy or tensor with equal axes (array shapes).
-    Output: asymmetric array. Output type - Arraypy or tensor, depends of input
+    Input: Arraypy or Tensor with equal axes (array shapes).
+    Output: asymmetric array. Output type - Arraypy or Tensor, depends of input
 
     Examples:
 
@@ -81,9 +81,9 @@ def asymmetric(In_Arr):
     arg = [(In_Arr.start_index[i], In_Arr.end_index[i])
            for i in range(In_Arr.rank)]
 
-    # if In_Arr tensor, then ResArr will be tensor, else it will be Arraypy
-    if isinstance(In_Arr, tensor):
-        ResArr = tensor(Arraypy(arg), In_Arr.ind_char)
+    # if In_Arr Tensor, then ResArr will be Tensor, else it will be Arraypy
+    if isinstance(In_Arr, Tensor):
+        ResArr = Tensor(Arraypy(arg), In_Arr.ind_char)
     else:
         ResArr = Arraypy(arg)
 
