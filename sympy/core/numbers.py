@@ -32,6 +32,46 @@ rnd = mlib.round_nearest
 _LOG2 = math.log(2)
 
 
+def comp(z1, z2, tol=None):
+    """Return a bool indicating whether the error between z1 and z2 is <= tol.
+
+    If ``tol`` is None then True will be returned if there is a significant
+    difference between the numbers: ``abs(z1 - z2)*10**p <= 1/2`` where ``p``
+    is the lower of the precisions of the values. A comparison of strings will
+    be made if ``z1`` is a Number and a) ``z2`` is a string or b) ``tol`` is ''
+    and ``z2`` is a Number.
+
+    When ``tol`` is a nonzero value, if z2 is non-zero and ``|z1| > 1``
+    the error is normalized by ``|z1|``, so if you want to see if the
+    absolute error between ``z1`` and ``z2`` is <= ``tol`` then call this
+    as ``comp(z1 - z2, 0, tol)``.
+    """
+    if type(z2) is str:
+        if not isinstance(z1, Number):
+            raise ValueError('when z2 is a str z1 must be a Number')
+        return str(z1) == z2
+    if not z1:
+        z1, z2 = z2, z1
+    if not z1:
+        return True
+    if not tol:
+        if tol is None:
+            if type(z2) is str and getattr(z1, 'is_Number', False):
+                return str(z1) == z2
+            a, b = Float(z1), Float(z2)
+            return int(abs(a - b)*10**prec_to_dps(
+                min(a._prec, b._prec)))*2 <= 1
+        elif all(getattr(i, 'is_Number', False) for i in (z1, z2)):
+            return z1._prec == z2._prec and str(z1) == str(z2)
+        raise ValueError('exact comparison requires two Numbers')
+    diff = abs(z1 - z2)
+    az1 = abs(z1)
+    if z2 and az1 > 1:
+        return diff/az1 <= tol
+    else:
+        return diff <= tol
+
+
 def mpf_norm(mpf, prec):
     """Return the mpf tuple normalized appropriately for the indicated
     precision after doing a check to see if zero should be returned or
@@ -935,7 +975,7 @@ class Float(Number):
             return other.__le__(self)
         if other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__gt__(self, other)
@@ -949,7 +989,7 @@ class Float(Number):
             return other.__lt__(self)
         if other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__ge__(self, other)
@@ -963,7 +1003,7 @@ class Float(Number):
             return other.__ge__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__lt__(self, other)
@@ -977,7 +1017,7 @@ class Float(Number):
             return other.__gt__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__le__(self, other)
@@ -1394,8 +1434,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__le__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__gt__(expr, other)
@@ -1414,8 +1452,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__lt__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__ge__(expr, other)
@@ -1434,8 +1470,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__ge__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__lt__(expr, other)
@@ -1454,8 +1488,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__gt__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__le__(expr, other)
@@ -2710,19 +2742,22 @@ class NaN(with_metaclass(Singleton, Number)):
     """
     Not a Number.
 
-    This represents the corresponding data type to floating point nan, which
-    is defined in the IEEE 754 floating point standard, and corresponds to the
-    Python ``float('nan')``.
-
-    NaN serves as a place holder for numeric values that are indeterminate.
+    This serves as a place holder for numeric values that are indeterminate.
     Most operations on NaN, produce another NaN.  Most indeterminate forms,
     such as ``0/0`` or ``oo - oo` produce NaN.  Two exceptions are ``0**0``
     and ``oo**0``, which all produce ``1`` (this is consistent with Python's
     float).
 
+    NaN is loosely related to floating point nan, which is defined in the
+    IEEE 754 floating point standard, and corresponds to the Python
+    ``float('nan')``.  Differences are noted below.
+
     NaN is mathematically not equal to anything else, even NaN itself.  This
     explains the initially counter-intuitive results with ``Eq`` and ``==`` in
     the examples below.
+
+    NaN is not comparable so inequalities raise a TypeError.  This is in
+    constrast with floating point nan where all inequalities are false.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
@@ -2809,33 +2844,11 @@ class NaN(with_metaclass(Singleton, Number)):
         # NaN is not mathematically equal to anything, even NaN
         return S.false
 
-    def __gt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        return S.false
-
-    def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        return S.false
-
-    def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        return S.false
-
-    def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        return S.false
+    # Expr will _sympify and raise TypeError
+    __gt__ = Expr.__gt__
+    __ge__ = Expr.__ge__
+    __lt__ = Expr.__lt__
+    __le__ = Expr.__le__
 
 nan = S.NaN
 

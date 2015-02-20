@@ -11,7 +11,7 @@ from sympy.core.mul import expand_2arg, Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, igcd
+from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.exprtools import factor_terms
 
 from sympy.ntheory import divisors, isprime, nextprime
@@ -20,7 +20,8 @@ from sympy.functions.elementary.miscellaneous import root
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
+from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
+    DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
@@ -554,8 +555,6 @@ def roots_quintic(f):
     order = quintic.order(theta, d)
     test = (order*delta.n()) - ( (l1.n() - l4.n())*(l2.n() - l3.n()) )
     # Comparing floats
-    # Problems importing on top
-    from sympy.utilities.randtest import comp
     if not comp(test, 0, tol):
         l2, l3 = l3, l2
 
