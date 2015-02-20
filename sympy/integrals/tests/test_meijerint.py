@@ -154,6 +154,7 @@ def test_meijerint():
 
     # Test substitutions to change limits
     assert meijerint_definite(exp(x), x, -oo, 2) == (exp(2), True)
+    # Note: causes a NaN in _check_antecedents
     assert expand(meijerint_definite(exp(x), x, 0, I)[0]) == exp(I) - 1
     assert expand(meijerint_definite(exp(-x), x, 0, x)[0]) == \
         1 - exp(-exp(I*arg(x))*abs(x))

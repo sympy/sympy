@@ -445,6 +445,20 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
+def test_nan_inequality_raise_errors():
+    # See discussion in pull request #7776.  We test inequalities with
+    # a set including examples of various classes.
+    for q in (x, S(0), S(10), S(1)/3, pi, S(1.3), oo, -oo, nan):
+        assert_all_ineq_raise_TypeError(q, nan)
+
+
+def test_nan_complex_inequalities():
+    # Comparisons of NaN with non-real raise errors, we're not too
+    # fussy whether its the NaN error or complex error.
+    for r in (I, Symbol('z', imaginary=True)):
+        assert_all_ineq_raise_TypeError(r, nan)
+
+
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # We test all combinations from a set
@@ -475,7 +489,6 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    # FIXME: add NaN here too later
     for a in (x, S(0), S(1)/3, pi, oo):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
