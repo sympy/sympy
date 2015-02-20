@@ -5,7 +5,7 @@ from sympy.tensor1 import arraypy, tensor
 from random import randint
 
 
-def Symmetric(In_Arr):
+def symmetric(In_Arr):
     """
     Creates the symmetric form of input tensor.
     Input: arraypy or tensor with equal axes (array shapes).
@@ -13,7 +13,7 @@ def Symmetric(In_Arr):
 
     Examples:
     >>> a = list2arraypy(range(9), (3,3))
-    >>> b = Symmetric(a)
+    >>> b = symmetric(a)
     >>> print (b)
     0.0 2.0 4.0
     2.0 4.0 6.0
@@ -53,7 +53,7 @@ def Symmetric(In_Arr):
     return ResArr
 
 
-def Asymmetric(In_Arr):
+def asymmetric(In_Arr):
     """
     Creates the asymmetric form of input tensor.
     Input: arraypy or tensor with equal axes (array shapes).
@@ -62,7 +62,7 @@ def Asymmetric(In_Arr):
     Examples:
 
     >>> a = list2arraypy(range(9), (3,3))
-    >>> b = Asymmetric(a)
+    >>> b = asymmetric(a)
     >>> print (b)
     0.0 -1.0 -2.0
     1.0 0.0 -1.0
@@ -90,7 +90,7 @@ def Asymmetric(In_Arr):
     signs = [0 for i in range(fac(In_Arr.rank))]
     temp_i = 0
     for p in permutations(range(In_Arr.rank)):
-        signs[temp_i] = PermParity(list(p))
+        signs[temp_i] = perm_parity(list(p))
         temp_i += 1
 
     index = [In_Arr.start_index[i] for i in range(In_Arr.rank)]
@@ -111,7 +111,7 @@ def Asymmetric(In_Arr):
     return ResArr
 
 
-def PermParity(lst):
+def perm_parity(lst):
     '''\
     THANKS TO Paddy McCarthy FROM http://code.activestate.com/ FOR THIS FUNCTION!
     Given a permutation of the digits 0..N in order as a list,
@@ -121,7 +121,7 @@ def PermParity(lst):
     >>> signs=zeros(6)
     >>> temp_i=0
     >>> for p in permutations(range(3)):
-            signs[temp_i]=PermParity(list(p))
+            signs[temp_i]=perm_parity(list(p))
             print(signs[temp_i], p)
             temp_i+=1
 
@@ -158,17 +158,3 @@ def fac(n):
     return fac(n - 1) * n
 
 #====================================================
-a = arraypy((2, 2), 'Py')
-b1 = Symmetric(a)
-
-a = arraypy((2, 2), 'Py')
-b = Asymmetric(a)
-print(a)
-print(b)
-print(b1)
-
-#from sympy.tensor1 import *
-#a = list2arraypy(range(9), (3,3))
-a = arraypy([2, 3, 1])
-b = Symmetric(a)
-print(b)
