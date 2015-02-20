@@ -8,8 +8,8 @@ from random import randint
 def symmetric(In_Arr):
     """
     Creates the symmetric form of input tensor.
-    Input: arraypy or tensor with equal axes (array shapes).
-    Output: symmetric array. Output type - arraypy or tensor, depends of input
+    Input: Arraypy or tensor with equal axes (array shapes).
+    Output: symmetric array. Output type - Arraypy or tensor, depends of input
 
     Examples:
     >>> a = list2arraypy(range(9), (3,3))
@@ -19,24 +19,24 @@ def symmetric(In_Arr):
     2.0 4.0 6.0
     4.0 6.0 8.0
     """
-    if not isinstance(In_Arr, arraypy):
-        raise TypeError('Input must be arraypy or Tensor type')
+    if not isinstance(In_Arr, Arraypy):
+        raise TypeError('Input must be Arraypy or Tensor type')
 
     flag = 0
     for j in range(0, In_Arr.rank):
         if (In_Arr.shape[0] != In_Arr.shape[j]):
             raise ValueError('Different size of arrays axes')
 
-    # forming list of tuples for arraypy constructor of type a = arraypy( [(a,
+    # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(In_Arr.start_index[i], In_Arr.end_index[i])
            for i in range(In_Arr.rank)]
 
-    # if In_Arr tensor, then ResArr will be tensor, else it will be arraypy
+    # if In_Arr tensor, then ResArr will be tensor, else it will be Arraypy
     if isinstance(In_Arr, tensor):
-        ResArr = tensor(arraypy(arg), In_Arr.ind_char)
+        ResArr = tensor(Arraypy(arg), In_Arr.ind_char)
     else:
-        ResArr = arraypy(arg)
+        ResArr = Arraypy(arg)
 
     index = [In_Arr.start_index[i] for i in range(In_Arr.rank)]
 
@@ -56,8 +56,8 @@ def symmetric(In_Arr):
 def asymmetric(In_Arr):
     """
     Creates the asymmetric form of input tensor.
-    Input: arraypy or tensor with equal axes (array shapes).
-    Output: asymmetric array. Output type - arraypy or tensor, depends of input
+    Input: Arraypy or tensor with equal axes (array shapes).
+    Output: asymmetric array. Output type - Arraypy or tensor, depends of input
 
     Examples:
 
@@ -68,24 +68,24 @@ def asymmetric(In_Arr):
     1.0 0.0 -1.0
     2.0 1.0 0.0
     """
-    if not isinstance(In_Arr, arraypy):
-        raise TypeError('Input must be arraypy or Tensor type')
+    if not isinstance(In_Arr, Arraypy):
+        raise TypeError('Input must be Arraypy or Tensor type')
 
     flag = 0
     for j in range(In_Arr.rank):
         if (In_Arr.shape[0] != In_Arr.shape[j]):
             raise ValueError('Different size of arrays axes')
 
-    # forming list of tuples for arraypy constructor of type a = arraypy( [(a,
+    # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(In_Arr.start_index[i], In_Arr.end_index[i])
            for i in range(In_Arr.rank)]
 
-    # if In_Arr tensor, then ResArr will be tensor, else it will be arraypy
+    # if In_Arr tensor, then ResArr will be tensor, else it will be Arraypy
     if isinstance(In_Arr, tensor):
-        ResArr = tensor(arraypy(arg), In_Arr.ind_char)
+        ResArr = tensor(Arraypy(arg), In_Arr.ind_char)
     else:
-        ResArr = arraypy(arg)
+        ResArr = Arraypy(arg)
 
     signs = [0 for i in range(fac(In_Arr.rank))]
     temp_i = 0
