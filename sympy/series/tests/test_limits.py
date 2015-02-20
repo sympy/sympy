@@ -106,6 +106,11 @@ def test_issue_3885():
     assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
 
+def test_issue_8167():
+    a = Symbol('a', zero=True)
+    assert limit(exp(x)**a, x, oo) == 1
+
+
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
     assert Limit(sin(x)/x, x, 0).doit() == 1
