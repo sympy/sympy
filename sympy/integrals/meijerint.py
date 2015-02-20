@@ -951,28 +951,6 @@ def _check_antecedents(g1, g2, x):
     eta = 1 - (v - u) - mu - rho
     psi = (pi*(q - m - n) + abs(arg(omega)))/(q - p)
     theta = (pi*(v - s - t) + abs(arg(sigma)))/(v - u)
-    lambda_c = (q - p)*abs(omega)**(1/(q - p))*cos(psi) \
-        + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
-    # `psi` could be NaN.  If that happens, `lambda_c` and `lambda_s`
-    # will be NaN.  `lambda_c` and `lambda_s` are used (only?) in the
-    # computation of `c15` below.  Two examples that activate this in
-    # test_integrals.py are 'test_issue_4992' and 'test_issue_6253'.
-    # FIXME: probably an expert on MeijerG should think about this!
-    #if psi is S.NaN:
-    #    raise NameError('psi is NaN, what to do?')
-
-
-    def lambda_s0(c1, c2):
-        return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
-            + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
-    lambda_s = Piecewise(
-        ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
-         And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
-        (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
-         And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
-        (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
-         And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
-        (lambda_s0(sign(arg(omega)), sign(arg(sigma))), True))
 
     _debug('Checking antecedents:')
     _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
@@ -1028,21 +1006,19 @@ def _check_antecedents(g1, g2, x):
                   Or(And(Ne(zos, 1), abs(arg_(1 - zos)) < pi),
                      And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
 
-        # Note: if `zso` is 1 then we get a NaN below.  This raises a
-        # TypeError on `NaN < pi`.  Previously this gave `False` so
-        # I've hardcoded that behaviour.
-
-        # FIXME: someone should check if this NaN is more serious!
-        # test_meijerint() in test_meijerint.py can hit this.
-        # Specifically: `meijerint_definite(exp(x), x, 0, I)`
-
-        tmp = abs(arg_(1 - zso))
-        if tmp is S.NaN:
-            absarg_1mzso_lt_pi = False
-        else:
-            absarg_1mzso_lt_pi = tmp < pi;
+        def _cond():
+            '''
+            Note: if `zso` is 1 then tmp will be NaN.  This raises a
+            TypeError on `NaN < pi`.  Previously this gave `False` so
+            this behavior has been hardcoded here but someone should
+            check if this NaN is more serious! This NaN is triggered by
+            test_meijerint() in test_meijerint.py:
+            `meijerint_definite(exp(x), x, 0, I)`
+            '''
+            tmp = abs(arg_(1 - zso))
+            return False if tmp is S.NaN else tmp < pi
         c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
-                  Or(And(Ne(zso, 1), absarg_1mzso_lt_pi),
+                  Or(And(Ne(zso, 1), _cond()),
                      And(re(mu + rho + q - p) < 1, Eq(zso, 1))))
 
         # Since r=k=l=1, in our case there is c14_alt which is the same as calling
@@ -1054,19 +1030,40 @@ def _check_antecedents(g1, g2, x):
         # Hence the following seems correct:
         c14 = Or(c14, c14_alt)
 
-    # Previously `NaN > 0` was False, which resulted in `c15` being
-    # False.  Now `NaN > 0` raises TypeError.  We hardcode `c15` to
-    # False in that case.  See discussion about `psi` being NaN above.
-    if lambda_c is S.NaN and lambda_s is S.NaN:
-        c15 = False;
-    else:
+    '''
+    When `c15` is NaN (e.g. from `psi` being NaN as happens during
+    'test_issue_4992' and/or `theta` is NaN as in 'test_issue_6253',
+    both in `test_integrals.py`) the comparison to 0 formerly gave False
+    whereas now an error is raised. To keep the old behavior, the value
+    of NaN is replaced with False but perhaps a closer look at this condition
+    should be made: XXX how should conditions leading to c15=NaN be handled?
+    '''
+    try:
+        lambda_c = (q - p)*abs(omega)**(1/(q - p))*cos(psi) \
+            + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
+
+        def lambda_s0(c1, c2):
+            return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
+                + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
+        lambda_s = Piecewise(
+            ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
+             And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
+            (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
+             And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
+            (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
+             And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
+            (lambda_s0(sign(arg(omega)), sign(arg(sigma))), True))
+        # the TypeError might be raised here, e.g. if lambda_c is NaN
         tmp = [lambda_c > 0,
                And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
                And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
         c15 = Or(*tmp)
         if _eval_cond(lambda_c > 0) != False:
             c15 = (lambda_c > 0)
-
+        if c15 is S.NaN or c15.has(S.ComplexInfinity):
+            raise TypeError  # handle in the except-clause
+    except TypeError:
+        c15 = False
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),
                     (c12, 12), (c13, 13), (c14, 14), (c15, 15)]:
