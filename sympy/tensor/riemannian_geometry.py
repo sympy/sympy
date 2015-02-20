@@ -79,7 +79,7 @@ def scal_prod(X, Y, g):
 
 # ---------------- Christoffel_1 --------------------------------
 
-def Christoffel_1(g, var, type_output='t'):
+def christoffel_1(g, var, type_output='t'):
     """Return the (-1,-1,-1)-tensor of Christoffel symbols for the given metric.
        This returns the Christoffel symbol of first kind that represents the
        Levi-Civita connection for the given metric.
@@ -95,7 +95,7 @@ def Christoffel_1(g, var, type_output='t'):
        >>> g[1,0] = 0
        >>> g[1,1] = 1
        >>> print g
-       >>> christoffel1=Christoffel_1(g, arg, 't')
+       >>> christoffel1=christoffel_1(g, arg, 't')
 
     """
     # Handling of input vector arguments var
@@ -162,20 +162,20 @@ def Christoffel_1(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        Christoffel_1 = Ch.To_tensor((-1, -1, -1))
+        christoffel_1 = Ch.To_tensor((-1, -1, -1))
     elif type_output == str('a') or type_output == Symbol('a'):
-        Christoffel_1 = Ch
+        christoffel_1 = Ch
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - arraypy or 't' and None - tensor.")
 
     # Output
-    return Christoffel_1
+    return christoffel_1
 
 
 # ---------------- Christoffel_2 --------------------------------
 
-def Christoffel_2(g, var, type_output='t'):
+def christoffel_2(g, var, type_output='t'):
     """Return the (-1, -1, +1) - tensor of Christoffel symbols for the given metric.
        This returns the Christoffel symbol of second kind that represents the
        Levi-Civita connection for the given metric.
@@ -186,13 +186,13 @@ def Christoffel_2(g, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
+       >>> g = tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
        >>> g[1,1] = 1
        >>> print g
-       >>> Christoffel_2(g,arg,'a')
+       >>> christoffel_2(g,arg,'a')
 
     """
     # Handling of input vector arguments var
@@ -261,28 +261,28 @@ def Christoffel_2(g, var, type_output='t'):
                                                                                                                  var[l - idx_start])) / 2 for l in indices])
 
     # Other variant calculation
-    """Christ_1 = Christoffel_1(g,arg)
+    """christ_1 = christoffel_1(g,arg)
     for i in indices:
 	for j in indices:
 	    for k in indices:
-		Ch[i,j,k] = Add(*[g_inv[k, l] *Christ_1[i,j,l] for l in indices])"""
+		Ch[i,j,k] = Add(*[g_inv[k, l] *christ_1[i,j,l] for l in indices])"""
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        Christoffel_2 = Ch.To_tensor((-1, -1, -1))
+        christoffel_2 = Ch.To_tensor((-1, -1, -1))
     elif type_output == str('a') or type_output == Symbol('a'):
-        Christoffel_2 = Ch
+        christoffel_2 = Ch
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - arraypy or 't' and None - tensor.")
 
     # Output
-    return Christoffel_2
+    return christoffel_2
 
 
 # ---------------- Covar_der --------------------------------
 
-def Covar_der(X, g, var, type_output='t'):
+def covar_der(X, g, var, type_output='t'):
     """Return the covariant derivative the vector field.
        nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k])
        Example:
@@ -297,7 +297,7 @@ def Covar_der(X, g, var, type_output='t'):
        >>> g[1,1] = 1
        >>> print g
        >>> X = [x1*x2**3,x1-cos(x2)]
-       >>> Covar_der(X, g, arg, 't')
+       >>> covar_der(X, g, arg, 't')
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, arraypy, tensor)):
@@ -368,37 +368,37 @@ def Covar_der(X, g, var, type_output='t'):
     indices = range(idx_start, idx_start + n)
 
     # Creating of output array with new indices
-    Cov = arraypy([2, n, idx_start])
-    ch_2 = Christoffel_2(g, var)
+    cov = arraypy([2, n, idx_start])
+    ch_2 = christoffel_2(g, var)
     # Calculation
     for i in indices:
         for j in indices:
-            Cov[i, j] = diff(X[j], var[i - idx_start]) + \
+            cov[i, j] = diff(X[j], var[i - idx_start]) + \
                 Add(*[ch_2[k, i, j] * X[k] for k in indices])
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        Cov_der = Cov.To_tensor((-1, 1))
+        cov_der = cov.To_tensor((-1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
-        Cov_der = Cov
+        cov_der = cov
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - arraypy or 't' and None - tensor.")
 
     # Output
-    return Cov_der
+    return cov_der
 
 
 # ---------------- Covar_der_XY --------------------------------
 
-def Covar_der_XY(X, Y, g, var, type_output='t'):
+def covar_der_XY(X, Y, g, var, type_output='t'):
     """Return the covariant derivative the vector field along another field.
        nabla_XY[i] = Sum_{i}(nabla X[i,j]*Y[i])
        Example:
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
+       >>> g = tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
@@ -406,7 +406,7 @@ def Covar_der_XY(X, Y, g, var, type_output='t'):
        >>> print g
        >>> X = [x1*x2**3, x1-cos(x2)]
        >>> Y = [1, 2, 3]
-       >>> Covar_der_XY(X, Y, g, arg, 't')
+       >>> covar_der_XY(X, Y, g, arg, 't')
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, arraypy, tensor)):
@@ -500,7 +500,7 @@ def Covar_der_XY(X, Y, g, var, type_output='t'):
 
     # Creating of output array with new indices
     nabla_XY = arraypy([1, n, idx_start])
-    nabla_X = Covar_der(X, g, var)
+    nabla_X = covar_der(X, g, var)
 
     # Calculation
     for j in indices:
@@ -508,20 +508,20 @@ def Covar_der_XY(X, Y, g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        Cov_der_XY = nabla_XY.To_tensor((1))
+        cov_der_XY = nabla_XY.To_tensor((1))
     elif type_output == str('a') or type_output == Symbol('a'):
-        Cov_der_XY = nabla_XY
+        cov_der_XY = nabla_XY
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - arraypy or 't' and None - tensor.")
 
     # Output
-    return Cov_der_XY
+    return cov_der_XY
 
 
 # ---------------- Riemann --------------------------------
 
-def Riemann(g, var, type_output='t'):
+def riemann(g, var, type_output='t'):
     """Return the Riemann curvature tensor of type (-1,-1,-1,+1)  for the given metric tensor.
        Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) +
        + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p]
@@ -536,7 +536,7 @@ def Riemann(g, var, type_output='t'):
        >>> g[1,0] = 0
        >>> g[1,1] = 1
        >>> print g
-       >>> Riemann(g, arg, 'a')
+       >>> riemann(g, arg, 'a')
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, arraypy, tensor)):
@@ -586,7 +586,7 @@ def Riemann(g, var, type_output='t'):
 
     # Creating of output array with new indices
     R = arraypy([4, n, idx_start])
-    ch_2 = Christoffel_2(g, var)
+    ch_2 = christoffel_2(g, var)
 
     # Calculation
     for i in indices:
@@ -614,20 +614,20 @@ def Riemann(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        Riemann = R.To_tensor((-1, -1, -1, 1))
+        riemann = R.To_tensor((-1, -1, -1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
-        Riemann = R
+        riemann = R
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - arraypy or 't' and None - tensor.")
 
     # Output
-    return Riemann
+    return riemann
 
 
 # ---------------- Ricci --------------------------------
 
-def Ricci(riemann, var, type_output='t'):
+def ricci(riemann, var, type_output='t'):
     """Return the tensor Ricci of type (-1,-1), is symmetric tensor
        for given Riemann curvature tensor.
        Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
@@ -636,14 +636,14 @@ def Ricci(riemann, var, type_output='t'):
        >>> x1, x2 = symbols('x1, x2')
        >>> arg = [x1, x2]
        >>> A = arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
+       >>> g = tensor(A,(-1,-1))
        >>> g[0,0] = cos(x2)**2
        >>> g[0,1] = 0
        >>> g[1,0] = 0
        >>> g[1,1] = 1
        >>> print g
-       >>> cur = Riemann(g, arg, 't')
-       >>> r = Ricci(cur, arg, 't')
+       >>> cur = riemann(g, arg, 't')
+       >>> r = ricci(cur, arg, 't')
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, arraypy, tensor)):
@@ -700,20 +700,20 @@ def Ricci(riemann, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        Ricci = Ri.To_tensor((-1, -1))
+        ricci = Ri.To_tensor((-1, -1))
     elif type_output == str('a') or type_output == Symbol('a'):
-        Ricci = Ri
+        ricci = Ri
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - arraypy or 't' and None - tensor.")
 
     # Output
-    return Ricci
+    return ricci
 
 
 # ---------------- Scal_curv --------------------------------
 
-def Scal_curv(g, ricci, var):
+def scal_curv(g, ricci, var):
     """ The scalar curvature (or the Ricci scalar)
         is the simplest curvature invariant of a Riemannian manifold.
         S=Ricci[j,k]*g_inv[j,k]
@@ -722,13 +722,13 @@ def Scal_curv(g, ricci, var):
         >>> x1, x2 = symbols('x1, x2')
         >>> arg = [x1, x2]
         >>> A = arraypy((2,2))
-        >>> g = Tensor(A,(-1,-1))
+        >>> g = tensor(A,(-1,-1))
         >>> g[0,0] = cos(x2)**2
         >>> g[0,1] = 0
         >>> g[1,0] = 0
         >>> g[1,1] = 1
         >>> print g
-        >>> Scal_curv(g, r, arg)
+        >>> scal_curv(g, r, arg)
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, arraypy, tensor)):
@@ -791,14 +791,14 @@ def Scal_curv(g, ricci, var):
     indices = range(n)
     for i in indices:
         for j in indices:
-            Scal_curv = g_inv[i, j] * ricci[i, j]
+            scal_curv = g_inv[i, j] * ricci[i, j]
     # Output
-    return Scal_curv
+    return scal_curv
 
 
 #-----------------K_sigma----------------------------
 
-def K_sigma(X, Y, R, g, var):
+def k_sigma(X, Y, R, g, var):
     """Return Sectional curvature of thу Riemannian space
        in the direction за two-dimensional area formed by
        vectors X, Y  for the given metric tensor.
@@ -816,8 +816,8 @@ def K_sigma(X, Y, R, g, var):
        >>> g[1,0] = 0
        >>> g[1,1] = 1
        >>> print g
-       >>> R = Riemann(g, arg)
-       >>> K_sig = K_sigma(X, Y, R, g, var)
+       >>> R = riemann(g, arg)
+       >>> K_sig = k_sigma(X, Y, R, g, var)
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, arraypy, tensor)):
@@ -918,7 +918,7 @@ def K_sigma(X, Y, R, g, var):
                      for r in indices
                      for s in indices])
 
-    K_sigma = simplify(numerator / Sc_pr)
+    k_sigma = simplify(numerator / Sc_pr)
 
     # Output
-    return K_sigma
+    return k_sigma
