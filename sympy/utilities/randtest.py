@@ -5,7 +5,12 @@ from __future__ import print_function, division
 from random import uniform
 import random
 
-from sympy import I, nsimplify, Tuple, Symbol
+from sympy.core.numbers import I
+from sympy.simplify.simplify import nsimplify
+from sympy.core.containers import Tuple
+from sympy.core.numbers import comp
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, as_int
 
 
@@ -20,24 +25,6 @@ def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
     if not rational:
         return A + I*B
     return nsimplify(A, rational=True) + I*nsimplify(B, rational=True)
-
-
-def comp(z1, z2, tol):
-    """Return a bool indicating whether the error between z1 and z2 is <= tol.
-
-    If z2 is non-zero and ``|z1| > 1`` the error is normalized by ``|z1|``, so
-    if you want the absolute error, call this as ``comp(z1 - z2, 0, tol)``.
-    """
-    if not z1:
-        z1, z2 = z2, z1
-    if not z1:
-        return True
-    diff = abs(z1 - z2)
-    az1 = abs(z1)
-    if z2 and az1 > 1:
-        return diff/az1 <= tol
-    else:
-        return diff <= tol
 
 
 def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
@@ -89,6 +76,7 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     f1 = f.diff(z).subs(z, z0)
     f2 = Derivative(f, z).doit_numerically(z0)
     return comp(f1.n(), f2.n(), tol)
+
 
 def _randrange(seed=None):
     """Return a randrange generator. ``seed`` can be
