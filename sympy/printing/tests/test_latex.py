@@ -232,7 +232,7 @@ def test_latex_functions():
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
-    assert latex(Abs(x)) == r"\left\|{x}\right\|"
+    assert latex(Abs(x)) == r"\left|{x}\right|"
     assert latex(re(x)) == r"\Re{x}"
     assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
@@ -1178,7 +1178,7 @@ def test_modifiers():
     assert latex(symbols("xDot")) == r"\dot{x}"
     assert latex(symbols("xBar")) == r"\bar{x}"
     assert latex(symbols("xVec")) == r"\vec{x}"
-    assert latex(symbols("xAbs")) == r"\left\|{x}\right\|"
+    assert latex(symbols("xAbs")) == r"\left|{x}\right|"
     assert latex(symbols("xMag")) == r"\left\lvert{x}\right\rvert"
     assert latex(symbols("xPrM")) == r"{x}'"
     assert latex(symbols("xBM")) == r"\boldsymbol{x}"
@@ -1208,7 +1208,7 @@ def test_modifiers():
     assert latex(symbols("xDotVec")) == r"\vec{\dot{x}}"
     assert latex(symbols("xHATNorm")) == r"\left\lVert{\hat{x}}\right\rVert"
     # Check a couple big, ugly combinations
-    assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left\|{\breve{z}}\right\|}_{{\check{y}}'}"
+    assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left|{\breve{z}}\right|}_{{\check{y}}'}"
     assert latex(symbols('alphadothat_nVECDOT__tTildePrime')) == r"\hat{\dot{\alpha}}^{{\tilde{t}}'}_{\dot{\vec{n}}}"
 
 

@@ -89,7 +89,7 @@ modifier_dict = {
     # Brackets
     'norm': lambda s: r'\left\lVert{'+s+r'}\right\rVert',
     'avg': lambda s: r'\left\langle{'+s+r'}\right\rangle',
-    'abs': lambda s: r'\left\|{'+s+r'}\right\|',
+    'abs': lambda s: r'\left|{'+s+r'}\right|',
     'mag': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
 }
 
@@ -753,7 +753,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_Abs(self, expr, exp=None):
-        tex = r"\left\|{%s}\right\|" % self._print(expr.args[0])
+        tex = r"\left|{%s}\right|" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
