@@ -51,7 +51,7 @@ class MatAdd(MatrixExpr):
 
     def _eval_trace(self):
         from trace import Trace
-        return Trace(MatAdd(*self.args).doit())
+        return Add(*[Trace(arg).doit() for arg in self.args])
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
