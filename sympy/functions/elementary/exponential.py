@@ -790,11 +790,28 @@ class LambertW(Function):
 
         if len(self.args) == 1:
             if argindex == 1:
-                return LambertW(x)/(x*(1 + LambertW(x)))
+                return 1/(LambertW(x) + 1)/exp(LambertW(x))
         else:
             k = self.args[1]
             if argindex == 1:
-                return LambertW(x, k)/(x*(1 + LambertW(x, k)))
+                return 1/(LambertW(x, k) + 1)/exp(LambertW(x, k))
+
+        raise ArgumentIndexError(self, argindex)
+
+    def fdiff_heurisch(self, argindex=1):
+        """
+        Return the first derivative of this function.
+        Derivative is heurisch specific.
+        """
+        x = self.args[0]
+
+        if len(self.args) == 1:
+            if argindex == 1:
+                return LambertW(x)/(x*(LambertW(x)+1))
+        else:
+            k = self.args[1]
+            if argindex == 1:
+                return LambertW(x, k)/(x*(LambertW(x, k)+1))
 
         raise ArgumentIndexError(self, argindex)
 

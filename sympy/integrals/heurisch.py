@@ -167,6 +167,15 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     return Piecewise(*pairs)
 
 
+def heurisch_diff(f, x):
+    """
+    Check if heurisch specific derivative exists
+    """
+    if hasattr(f, '_eval_heurisch_derivative'):
+        return f._eval_heurisch_derivative(x)
+    return f.diff(x)
+
+
 def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
              degree_offset=0, unnecessary_permutations=None):
     """
@@ -336,7 +345,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             terms |= set(hints)
 
     for g in set(terms):  # using copy of terms
-        terms |= components(cancel(g.diff(x)), x)
+        terms |= components(cancel(heurisch_diff(g, x)), x)
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
@@ -360,7 +369,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for mapping in mappings:
         mapping = list(mapping)
         mapping = mapping + unnecessary_permutations
-        diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
+        diffs = [ _substitute(cancel(heurisch_diff(g, x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
             denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
@@ -376,7 +385,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     numers = [ cancel(denom*g) for g in diffs ]
     def _derivation(h):
-        return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
+        return Add(*[ d * heurisch_diff(h, v) for d, v in zip(numers, V) ])
 
     def _deflation(p):
         for y in V:
@@ -385,7 +394,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
             if _derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
-                return _deflation(c)*gcd(q, q.diff(y)).as_expr()
+                return _deflation(c)*gcd(q, heurisch_diff(q, y)).as_expr()
         else:
             return p
 
@@ -400,7 +409,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 q = q.as_expr()
 
                 h = gcd(q, _derivation(q), y)
-                s = quo(h, gcd(q, q.diff(y), y), y)
+                s = quo(h, gcd(q, heurisch_diff(q, y), y), y)
 
                 c_split = _splitter(c)
 

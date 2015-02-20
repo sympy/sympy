@@ -504,6 +504,27 @@ class Function(Application, Expr):
             l.append(df * da)
         return Add(*l)
 
+    def _eval_heurisch_derivative(self, s):
+        i = 0
+        l = []
+        for a in self.args:
+            i += 1
+            if hasattr(a, 'fdiff_heurisch'):
+                da = a._eval_heurisch_derivative(s)
+            else:
+                da = a.diff(s)
+            if da is S.Zero:
+                continue
+            try:
+                try:
+                    df = self.fdiff_heurisch(i)
+                except AttributeError:
+                    df = self.fdiff(i)
+            except ArgumentIndexError:
+                df = Function.fdiff(self, i)
+            l.append(df * da)
+        return Add(*l)
+
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 

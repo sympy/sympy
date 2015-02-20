@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols
+    Function, log, sqrt, Symbol, Subs, pi, symbols, LambertW
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -126,6 +126,10 @@ def test_issue_4583():
 def test_issue_6318():
     eq = (1/x)**(S(2)/3)
     assert (eq + 1).as_leading_term(x) == eq
+
+
+def test_lambertw_issue_7259():
+    assert series(LambertW(x)) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
 
 
 def test_x_is_base_detection():
