@@ -81,12 +81,9 @@ class MatMul(MatrixExpr):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
 
     def _eval_trace(self):
-        factor, mmul = self.as_coeff_mmul()
-        if factor != 1:
-            from .trace import Trace
-            return factor * Trace(mmul)
-        else:
-            raise NotImplementedError("Can't simplify any further")
+        factor, matrices = self.as_coeff_matrices()
+        from .trace import Trace
+        return factor * Mul(*[Trace(mat) for mat in matrices])
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant
