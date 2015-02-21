@@ -455,8 +455,15 @@ def test_nan_inequality_raise_errors():
 def test_nan_complex_inequalities():
     # Comparisons of NaN with non-real raise errors, we're not too
     # fussy whether its the NaN error or complex error.
-    for r in (I, Symbol('z', imaginary=True)):
+    for r in (I, zoo, Symbol('z', imaginary=True)):
         assert_all_ineq_raise_TypeError(r, nan)
+
+
+def test_complex_infinity_inequalities():
+    raises(TypeError, lambda: zoo > 0)
+    raises(TypeError, lambda: zoo >= 0)
+    raises(TypeError, lambda: zoo < 0)
+    raises(TypeError, lambda: zoo <= 0)
 
 
 def test_inequalities_symbol_name_same():

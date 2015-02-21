@@ -916,7 +916,10 @@ def _simplifyconds(expr, s, a):
         if ex2.func is Abs:
             ex2 = ex2.args[0]
         if ex1.has(s):
-            return bigger(1/ex2, 1/ex1)
+            try:
+                return bigger(1/ex2, 1/ex1)
+            except TypeError:
+                return None
         n = power(ex2)
         if n is None:
             return None
