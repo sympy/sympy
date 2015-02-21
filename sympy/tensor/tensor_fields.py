@@ -23,7 +23,7 @@ def df(f, args, output_type='l'):
     >>> from sympy import *
     >>> x1, x2, x3= symbols('x1 x2 x3')
     >>> f=x1**2*x2+sin(x2*x3-x2)
-    >>> args_t=Arraypy([1,3,1]).To_tensor(1)
+    >>> args_t=Arraypy([1,3,1]).to_tensor(1)
     >>> args_t[1]=x1
     >>> args_t[2]=x2
     >>> args_t[3]=x3
@@ -56,7 +56,7 @@ def df(f, args, output_type='l'):
 
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
-        differential = Arraypy.To_tensor(array, -1)
+        differential = Arraypy.to_tensor(array, -1)
     elif output_type == 'a' or output_type == Symbol('a'):
         differential = array
     elif output_type == 'l' or output_type == Symbol('l'):
@@ -80,7 +80,7 @@ def grad(f, args, g=None, output_type=None):
     >>> from sympy import *
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> f=x1**2*x2+sin(x2*x3-x2)
-    >>> args_t=Arraypy([1,3,1]).To_tensor(1)
+    >>> args_t=Arraypy([1,3,1]).to_tensor(1)
     >>> args_t[1]=x1
     >>> args_t[2]=x2
     >>> args_t[3]=x3
@@ -92,7 +92,7 @@ def grad(f, args, g=None, output_type=None):
     >>> f=x1**2*x2+sin(x2*x3-x2)
     >>> var=[x1,x2,x3]
     >>> g=Arraypy([2,3,1])
-    >>> g_t=g.To_tensor((-1,-1))
+    >>> g_t=g.to_tensor((-1,-1))
     >>> g_t[1,1]=2
     >>> g_t[1,2]=1
     >>> g_t[1,3]=0
@@ -141,7 +141,7 @@ def grad(f, args, g=None, output_type=None):
                 must be equal")
 
         if isinstance(g, (Tensor, Arraypy)):
-            g = g.To_matrix()
+            g = g.to_matrix()
         if not g.is_symmetric():
             raise ValueError("The metric is not symmetric")
     # 2.if g is NULL
@@ -166,7 +166,7 @@ def grad(f, args, g=None, output_type=None):
 
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
-        gradient = Arraypy.To_tensor(array, 1)
+        gradient = Arraypy.to_tensor(array, 1)
     elif output_type == 'a' or output_type == Symbol('a'):
         gradient = array
     elif output_type == 'l' or output_type == Symbol('l') or output_type is\
@@ -264,7 +264,7 @@ def rot(X, args, output_type=None):
 
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
-        rotor = Arraypy.To_tensor(array, 1)
+        rotor = Arraypy.to_tensor(array, 1)
     elif output_type == 'a' or output_type == Symbol('a'):
         rotor = array
     elif output_type == 'l' or output_type == Symbol('l'):
@@ -327,7 +327,7 @@ def div(X, args, g=None):
                     if g.type_pq != (0, 2):
                         raise ValueError(
                             "The indices of tensor must be (-1,-1)")
-                g = g.To_matrix()
+                g = g.to_matrix()
             if not g.is_symmetric():
                 raise ValueError("The metric is not symmetric")
     else:
@@ -448,7 +448,7 @@ def LieXY(X, Y, args, output_type=None):
                                       - diff(X[i], args[k]) * Y[k])
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
-        Lie = Arraypy.To_tensor(Li, 1)
+        Lie = Arraypy.to_tensor(Li, 1)
     elif output_type == 'a' or output_type == Symbol('a'):
         Lie = Li
     elif output_type == 'l' or output_type == Symbol('l'):
@@ -485,7 +485,7 @@ def dw(omega, args):
 
     >>> from sympy import *
     >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> omega=Arraypy([2,3,1]).To_tensor((-1,-1))
+    >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
     >>> omega[1,2]=x3
     >>> omega[1,3]=-x2
     >>> omega[2,1]=-x3
@@ -524,7 +524,7 @@ def dw(omega, args):
     p = len(omega.shape)  # the rank of the input array
     a = Arraypy([p + 1, n, idx_st])
     valence_ind = [(-1) for k in range(p + 1)]
-    d_omega = a.To_tensor(valence_ind)
+    d_omega = a.to_tensor(valence_ind)
 
     # Calculation
     idx = d_omega.start_index
@@ -537,7 +537,7 @@ def dw(omega, args):
         for k in range(p + 1):
             d_omega[idx] += Add(((-1)**k) * diff(omega[tuple_list_indx[k]],
                                                  args[idx[k] - idx_st]))
-        idx = d_omega.Next_index(idx)
+        idx = d_omega.next_index(idx)
 
 # Output
     return d_omega
@@ -569,7 +569,7 @@ def Lie_w(omega, X, args):
 
     >>> from sympy import *
     >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> omega=Arraypy([2,3,1]).To_tensor((-1,-1))
+    >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
     >>> omega[1,2]=x3
     >>> omega[1,3]=-x2
     >>> omega[2,1]=-x3
@@ -631,7 +631,7 @@ def Lie_w(omega, X, args):
     r = len(omega.shape)  # the rank of the input array
     a = Arraypy([r, n, idx_st])
     valence_list = [(-1) for k in range(r)]
-    diff_Lie = a.To_tensor(valence_list)
+    diff_Lie = a.to_tensor(valence_list)
 
     # Calculation
     idx = diff_Lie.start_index
@@ -649,6 +649,6 @@ def Lie_w(omega, X, args):
                 diff_Lie[idx] += diff(X[k], args[idx[j] - idx_st]) *\
                     omega[tuple_list_indx[j]]
             diff_Lie[idx] = diff_Lie[idx] + diff_omega
-        idx = diff_Lie.Next_index(idx)
+        idx = diff_Lie.next_index(idx)
 # Output
     return diff_Lie

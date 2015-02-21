@@ -5,7 +5,7 @@ from sympy.tensor import Arraypy, Tensor
 from random import randint
 
 
-def symmetric(In_Arr):
+def symmetric(in_arr):
     """
     Creates the symmetric form of input tensor.
     Input: Arraypy or Tensor with equal axes (array shapes).
@@ -19,41 +19,41 @@ def symmetric(In_Arr):
     2.0 4.0 6.0
     4.0 6.0 8.0
     """
-    if not isinstance(In_Arr, Arraypy):
+    if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or Tensor type')
 
     flag = 0
-    for j in range(0, In_Arr.rank):
-        if (In_Arr.shape[0] != In_Arr.shape[j]):
+    for j in range(0, in_arr.rank):
+        if (in_arr.shape[0] != in_arr.shape[j]):
             raise ValueError('Different size of arrays axes')
 
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
-    arg = [(In_Arr.start_index[i], In_Arr.end_index[i])
-           for i in range(In_Arr.rank)]
+    arg = [(in_arr.start_index[i], in_arr.end_index[i])
+           for i in range(in_arr.rank)]
 
-    # if In_Arr Tensor, then ResArr will be Tensor, else it will be Arraypy
-    if isinstance(In_Arr, Tensor):
-        ResArr = Tensor(Arraypy(arg), In_Arr.ind_char)
+    # if in_arr Tensor, then res_arr will be Tensor, else it will be Arraypy
+    if isinstance(in_arr, Tensor):
+        res_arr = Tensor(Arraypy(arg), in_arr.ind_char)
     else:
-        ResArr = Arraypy(arg)
+        res_arr = Arraypy(arg)
 
-    index = [In_Arr.start_index[i] for i in range(In_Arr.rank)]
+    index = [in_arr.start_index[i] for i in range(in_arr.rank)]
 
-    for i in range(len(In_Arr)):
+    for i in range(len(in_arr)):
         perm = list(permutations(index))
         for temp_index in perm:
-            ResArr[tuple(index)] += In_Arr[tuple(temp_index)]
-        if isinstance(ResArr[tuple(index)], int):
-            ResArr[tuple(index)] = float(ResArr[tuple(index)])
-        ResArr[tuple(index)] /= fac(In_Arr.rank)
+            res_arr[tuple(index)] += in_arr[tuple(temp_index)]
+        if isinstance(res_arr[tuple(index)], int):
+            res_arr[tuple(index)] = float(res_arr[tuple(index)])
+        res_arr[tuple(index)] /= fac(in_arr.rank)
 
-        index = In_Arr.Next_index(index)
+        index = in_arr.next_index(index)
 
-    return ResArr
+    return res_arr
 
 
-def asymmetric(In_Arr):
+def asymmetric(in_arr):
     """
     Creates the asymmetric form of input tensor.
     Input: Arraypy or Tensor with equal axes (array shapes).
@@ -68,47 +68,47 @@ def asymmetric(In_Arr):
     1.0 0.0 -1.0
     2.0 1.0 0.0
     """
-    if not isinstance(In_Arr, Arraypy):
+    if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or Tensor type')
 
     flag = 0
-    for j in range(In_Arr.rank):
-        if (In_Arr.shape[0] != In_Arr.shape[j]):
+    for j in range(in_arr.rank):
+        if (in_arr.shape[0] != in_arr.shape[j]):
             raise ValueError('Different size of arrays axes')
 
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
-    arg = [(In_Arr.start_index[i], In_Arr.end_index[i])
-           for i in range(In_Arr.rank)]
+    arg = [(in_arr.start_index[i], in_arr.end_index[i])
+           for i in range(in_arr.rank)]
 
-    # if In_Arr Tensor, then ResArr will be Tensor, else it will be Arraypy
-    if isinstance(In_Arr, Tensor):
-        ResArr = Tensor(Arraypy(arg), In_Arr.ind_char)
+    # if in_arr Tensor, then res_arr will be Tensor, else it will be Arraypy
+    if isinstance(in_arr, Tensor):
+        res_arr = Tensor(Arraypy(arg), in_arr.ind_char)
     else:
-        ResArr = Arraypy(arg)
+        res_arr = Arraypy(arg)
 
-    signs = [0 for i in range(fac(In_Arr.rank))]
+    signs = [0 for i in range(fac(in_arr.rank))]
     temp_i = 0
-    for p in permutations(range(In_Arr.rank)):
+    for p in permutations(range(in_arr.rank)):
         signs[temp_i] = perm_parity(list(p))
         temp_i += 1
 
-    index = [In_Arr.start_index[i] for i in range(In_Arr.rank)]
+    index = [in_arr.start_index[i] for i in range(in_arr.rank)]
 
-    for i in range(len(In_Arr)):
+    for i in range(len(in_arr)):
         perm = list(permutations(index))
         perm_number = 0
         for temp_index in perm:
-            ResArr[tuple(index)] += signs[perm_number] * \
-                In_Arr[tuple(temp_index)]
+            res_arr[tuple(index)] += signs[perm_number] * \
+                in_arr[tuple(temp_index)]
             perm_number += 1
-        if isinstance(ResArr[tuple(index)], int):
-            ResArr[tuple(index)] = float(ResArr[tuple(index)])
-        ResArr[tuple(index)] /= fac(In_Arr.rank)
+        if isinstance(res_arr[tuple(index)], int):
+            res_arr[tuple(index)] = float(res_arr[tuple(index)])
+        res_arr[tuple(index)] /= fac(in_arr.rank)
 
-        index = In_Arr.Next_index(index)
+        index = in_arr.next_index(index)
 
-    return ResArr
+    return res_arr
 
 
 def perm_parity(lst):

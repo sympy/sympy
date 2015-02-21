@@ -35,7 +35,7 @@ def scal_prod(X, Y, g):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            g = g.To_matrix()
+            g = g.to_matrix()
     if not g.is_symmetric():
         raise ValueError('The metric tensor must be symmetric.')
 
@@ -124,7 +124,7 @@ def christoffel_1(g, var, type_output='t'):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            if not (g.To_matrix()).is_symmetric():
+            if not (g.to_matrix()).is_symmetric():
                 raise ValueError('The metric tensor must be symmetric.')
             if not (g.start_index[0] == g.start_index[1]):
                 raise ValueError(
@@ -162,7 +162,7 @@ def christoffel_1(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        christoffel_1 = Ch.To_tensor((-1, -1, -1))
+        christoffel_1 = Ch.to_tensor((-1, -1, -1))
     elif type_output == str('a') or type_output == Symbol('a'):
         christoffel_1 = Ch
     else:
@@ -221,13 +221,13 @@ def christoffel_2(g, var, type_output='t'):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            if not (g.To_matrix()).is_symmetric():
+            if not (g.to_matrix()).is_symmetric():
                 raise ValueError('The metric tensor must be symmetric.')
             if not (g.start_index[0] == g.start_index[1]):
                 raise ValueError(
                     'The starting indices of metric tensor must be identical')
             idx_start = g.start_index[0]
-            g_inv = (g.To_matrix()).inv()
+            g_inv = (g.to_matrix()).inv()
         elif isinstance(g, Matrix):
             if not g.is_symmetric():
                 raise ValueError('The metric tensor must be symmetric.')
@@ -269,7 +269,7 @@ def christoffel_2(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        christoffel_2 = Ch.To_tensor((-1, -1, -1))
+        christoffel_2 = Ch.to_tensor((-1, -1, -1))
     elif type_output == str('a') or type_output == Symbol('a'):
         christoffel_2 = Ch
     else:
@@ -326,7 +326,7 @@ def covar_der(X, g, var, type_output='t'):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            if not (g.To_matrix()).is_symmetric():
+            if not (g.to_matrix()).is_symmetric():
                 raise ValueError('The metric tensor must be symmetric.')
             if not (g.start_index[0] == g.start_index[1]):
                 raise ValueError(
@@ -378,7 +378,7 @@ def covar_der(X, g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        cov_der = cov.To_tensor((-1, 1))
+        cov_der = cov.to_tensor((-1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
         cov_der = cov
     else:
@@ -435,7 +435,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            if not (g.To_matrix()).is_symmetric():
+            if not (g.to_matrix()).is_symmetric():
                 raise ValueError('The metric tensor must be symmetric.')
             if not (g.start_index[0] == g.start_index[1]):
                 raise ValueError(
@@ -508,7 +508,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        cov_der_XY = nabla_XY.To_tensor((1))
+        cov_der_XY = nabla_XY.to_tensor((1))
     elif type_output == str('a') or type_output == Symbol('a'):
         cov_der_XY = nabla_XY
     else:
@@ -565,7 +565,7 @@ def riemann(g, var, type_output='t'):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            if not (g.To_matrix()).is_symmetric():
+            if not (g.to_matrix()).is_symmetric():
                 raise ValueError('The metric tensor must be symmetric.')
             if not (g.start_index[0] == g.start_index[1]):
                 raise ValueError(
@@ -614,7 +614,7 @@ def riemann(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        riemann = R.To_tensor((-1, -1, -1, 1))
+        riemann = R.to_tensor((-1, -1, -1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
         riemann = R
     else:
@@ -700,7 +700,7 @@ def ricci(riemann, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        ricci = Ri.To_tensor((-1, -1))
+        ricci = Ri.to_tensor((-1, -1))
     elif type_output == str('a') or type_output == Symbol('a'):
         ricci = Ri
     else:
@@ -757,7 +757,7 @@ def scal_curv(g, ricci, var):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            g = g.To_matrix()
+            g = g.to_matrix()
     if not g.is_symmetric():
         raise ValueError('The metric tensor must be symmetric.')
     # The definition of inverse matrix of the metric tensor
@@ -773,7 +773,7 @@ def scal_curv(g, ricci, var):
                 if not ricci.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of tensor Ricci must be (-1,-1)')
-            ricci = ricci.To_matrix()
+            ricci = ricci.to_matrix()
     if not ricci.is_symmetric():
         raise ValueError('The Ricci tensor must be symmetric.')
 
@@ -846,7 +846,7 @@ def k_sigma(X, Y, R, g, var):
                 if not g.type_pq == (0, 2):
                     raise ValueError(
                         'The valence or ind_char of metric tensor must be (-1,-1)')
-            g = g.To_matrix()
+            g = g.to_matrix()
     if not g.is_symmetric():
         raise ValueError('The metric tensor must be symmetric.')
 

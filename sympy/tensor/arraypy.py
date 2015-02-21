@@ -181,7 +181,7 @@ class Arraypy(object):
                         self._name + str(list(index)))
                 else:
                     self._output[tuple(index)] = self._name
-                index = self.Next_index(index)
+                index = self.next_index(index)
 
         self._dims = tuple(self._dims)
         self._start_index = tuple(self._start_index)
@@ -217,7 +217,7 @@ class Arraypy(object):
         # per elemental sum
         for i in range(self._loop_size):
             res[index] = self.__getitem__(index) + other[index]
-            index = self.Next_index(index)
+            index = self.next_index(index)
 
         return res
 
@@ -251,7 +251,7 @@ class Arraypy(object):
         # per elemental difference
         for i in range(self._loop_size):
             res[index] = self.__getitem__(index) - other[index]
-            index = self.Next_index(index)
+            index = self.next_index(index)
 
         return res
 
@@ -356,7 +356,7 @@ class Arraypy(object):
             else:
                 out_str += str(self._output[tuple(index)]) + ' '
 
-            # code below are equal to method .Next_index with few additions.
+            # code below are equal to method .next_index with few additions.
             j = self._rank - 1
             index[j] += 1
             if (index[j] == self._end_index[j]) and (j != 0):
@@ -395,7 +395,7 @@ class Arraypy(object):
 
         return res
 
-    def Next_index(self, index):
+    def next_index(self, index):
         """
         Returns tuple that represents next index of Arraypy instance.
         Input argument - current index.
@@ -404,7 +404,7 @@ class Arraypy(object):
         >>> for i in range(0, len(a)):
         ...     print (idx)
         ...     a[idx] = i*10
-        ...     idx = a.Next_index(idx)
+        ...     idx = a.next_index(idx)
         ...
         (0, 0, 0)
         (0, 0, 1)
@@ -417,7 +417,7 @@ class Arraypy(object):
 
         If input index will be last possible index, then result will be the first index(equal to ._start_index)
         >>> idx = (1,1,1)
-        >>> idx = a.Next_index(idx)
+        >>> idx = a.next_index(idx)
         >>> print idx
         (0, 0, 0)
         """
@@ -451,7 +451,7 @@ class Arraypy(object):
         index = tuple(index)
         return index
 
-    def Reshape(self, new_shape):
+    def reshape(self, new_shape):
         """
         Returns Arraypy instance with new shape. Elements number must be suitable to new shape.
         The only argument of method sets new shape.
@@ -463,7 +463,7 @@ class Arraypy(object):
         print (a)
         Py[1, 1] Py[1, 2] Py[1, 3]
         Py[2, 1] Py[2, 2] Py[2, 3]
-        >>> b = a.Reshape((3,2))
+        >>> b = a.reshape((3,2))
         >>> b.shape
         (3, 2)
         >>> b.start_index
@@ -489,8 +489,8 @@ class Arraypy(object):
 
             for i in range(self.__len__()):
                 new_base[idx2] = self._output[idx1]
-                idx2 = new_base.Next_index(idx2)
-                idx1 = self.Next_index(idx1)
+                idx2 = new_base.next_index(idx2)
+                idx1 = self.next_index(idx1)
 
         else:
             raise ValueError(
@@ -538,11 +538,11 @@ class Arraypy(object):
         """
         return self._rank
 
-    def To_matrix(self):
+    def to_matrix(self):
         """
         Converts Arraypy to Matrix. Can convert only 2-dim array, else will raise error.
         a = list2arraypy( [1 for i in range(9)], (3,3))
-        b = a.To_matrix()
+        b = a.to_matrix()
         print(b)
         [1, 1, 1]
         [1, 1, 1]
@@ -562,15 +562,15 @@ class Arraypy(object):
         idx = tuple(idx)
         for i in range(len(res_matrix)):
             res_matrix[i] = self.__getitem__(idx)
-            idx = self.Next_index(idx)
+            idx = self.next_index(idx)
 
         return res_matrix
 
-    def To_tensor(self, ind_char):
+    def to_tensor(self, ind_char):
         """
         Convert Arraypy to Tensor. Tensor uses Arraypy as base. The only parametrer is used to set valency of Tensor. Valency tuple length must be equal to shape tuple legth.
         >>> a = list2arraypy(range(9), (3,3))
-        >>> b = a.To_tensor((-1,1))
+        >>> b = a.to_tensor((-1,1))
         >>> type(b)
         <class '__main__.Tensor'>
         """
@@ -593,7 +593,7 @@ class Arraypy(object):
         idx = self._start_index
         for i in range(self.__len__()):
             res.append(self.__getitem__(idx))
-            idx = self.Next_index(idx)
+            idx = self.next_index(idx)
 
         return res
 
@@ -740,9 +740,9 @@ class Tensor(Arraypy):
                 res[cur_idx +
                     other_idx] = self.__getitem__(cur_idx) * other[other_idx]
                 # other tensor next index
-                other_idx = other.Next_index(other_idx)
+                other_idx = other.next_index(other_idx)
             # current tensor next index
-            cur_idx = self.Next_index(cur_idx)
+            cur_idx = self.next_index(cur_idx)
 
         return res
 
@@ -766,7 +766,7 @@ class Tensor(Arraypy):
     def type_pq(self):
         """
         Returns tuple, that represents valency of the Tensor in (P,Q) format, where P is upper (contrvarian) index and Q is lower (covariant).
-        >>> a = Arraypy ((3,3,3,3,3)).To_tensor((1, 1, -1, 1, -1))
+        >>> a = Arraypy ((3,3,3,3,3)).to_tensor((1, 1, -1, 1, -1))
         >>> a.type_pq
         (3, 2)
         """
@@ -806,7 +806,7 @@ class Tensor(Arraypy):
         (3,)
 
         >>> a = list2arraypy(range(9), (3,3))
-        >>> a = a.To_tensor((1,-1))
+        >>> a = a.to_tensor((1,-1))
         >>> print (a)
         0 1 2
         3 4 5
@@ -874,7 +874,7 @@ class Tensor(Arraypy):
                 old_index[idx2] += 1
 
             # Finding next index of the current tensor. the code below is
-            # similar to method .Next_index with few additions.
+            # similar to method .next_index with few additions.
             k = 1
             j = self._rank - 1
             # input index numbers will be passed (they are changing in code
@@ -894,7 +894,7 @@ class Tensor(Arraypy):
                             old_index[j] += 1
 
             # Finding next index of the result tensor. the code below is
-            # similar to method .Next_index with few additions.
+            # similar to method .next_index with few additions.
             j = len(new_dims) - 1
             if not new_index == []:
                 new_index[j] += 1
@@ -951,9 +951,9 @@ class Tensor(Arraypy):
 
         return res_tensor
 
-    def Reshape(self, new_shape, ind_char):
+    def reshape(self, new_shape, ind_char):
         """
-        Reshape method are overloaded and now requires 2 arguments.
+        reshape method are overloaded and now requires 2 arguments.
         -Shape of new tensor base
         -Index character of new tensor.
         >>> a = list2tensor(range(6), (3,2), (1, -1))
@@ -962,7 +962,7 @@ class Tensor(Arraypy):
         2 3
         4 5
 
-        >>> b = a.Reshape(6, 1)
+        >>> b = a.reshape(6, 1)
         >>> print b
         0 1 2 3 4 5
         b.shape
@@ -970,7 +970,7 @@ class Tensor(Arraypy):
         b.ind_char
         (1,)
 
-        >>> c = a.Reshape((2,3), (-1,-1))
+        >>> c = a.reshape((2,3), (-1,-1))
         >>> print c
         0 1 2
         3 4 5
@@ -987,7 +987,7 @@ class Tensor(Arraypy):
                 if i != 1 and i != -1:
                     raise ValueError('!!!ind_char elements must be 1 or -1')
         # reshaping Arraypy and creating tensor with new base
-        new_base = self.base.Reshape(new_shape)
+        new_base = self.base.reshape(new_shape)
         new_tensor = Tensor(new_base, ind_char)
 
         return new_tensor
@@ -1006,7 +1006,7 @@ class Tensor(Arraypy):
         """
         return copy(self.base)
 
-    def To_tensor(self, ind_char):
+    def to_tensor(self, ind_char):
         """
         Convert Arraypy to Tensor.
 
@@ -1038,7 +1038,7 @@ def matrix2arraypy(matrix):
         idx = massiv._start_index
         for i in range(len(matrix)):
             massiv[idx] = matrix[i]
-            idx = massiv.Next_index(idx)
+            idx = massiv.next_index(idx)
 
         return massiv
 
@@ -1067,7 +1067,7 @@ def matrix2tensor(matrix, ind_char=(-1, -1)):
         idx = massiv._start_index
         for i in range(len(matrix)):
             massiv[idx] = matrix[i]
-            idx = massiv.Next_index(idx)
+            idx = massiv.next_index(idx)
 
         return massiv
 
@@ -1105,7 +1105,7 @@ def list2arraypy(list_arr, shape=0):
     idx = result._start_index
     for i in range(len(list_arr)):
         result[idx] = list_arr[i]
-        idx = result.Next_index(idx)
+        idx = result.next_index(idx)
     return result
 
 
@@ -1154,7 +1154,7 @@ def list2tensor(list_arr, shape=0, ind_char=0):
     idx = result._start_index
     for i in range(len(list_arr)):
         result[idx] = list_arr[i]
-        idx = result.Next_index(idx)
+        idx = result.next_index(idx)
     return result
 
 
