@@ -413,7 +413,10 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     def valid(x):
         v = e.subs(gen, x)
-        r = expr.func(v, 0)
+        try:
+            r = expr.func(v, 0)
+        except TypeError:
+            r = S.false
         if r in (S.true, S.false):
             return r
         if v.is_real is False:
