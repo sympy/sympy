@@ -11,6 +11,7 @@ from sympy.core.function import AppliedUndef
 from .printer import Printer
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps, repr_dps
+from sympy.core.compatibility import range
 
 
 class ReprPrinter(Printer):
@@ -140,7 +141,13 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        d = expr._assumptions.generator
+        if d == {}:
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                                   self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))

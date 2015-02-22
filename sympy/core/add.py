@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from .basic import C, Basic
-from .compatibility import cmp_to_key, reduce, is_sequence
+from .compatibility import cmp_to_key, reduce, is_sequence, range
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
@@ -71,9 +71,6 @@ class Add(Expr, AssocOp):
     __slots__ = []
 
     is_Add = True
-
-    #identity = S.Zero
-    # cyclic import, so defined in numbers.py
 
     @classmethod
     def flatten(cls, seq):

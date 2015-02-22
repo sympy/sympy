@@ -10,8 +10,8 @@ _desolve
 """
 from __future__ import print_function, division
 
-from sympy.core.function import Function, Derivative, AppliedUndef
-from sympy.core.relational import Equality, Eq
+from sympy.core.function import Derivative, AppliedUndef
+from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
 def _preprocess(expr, func=None, hint='_Integral'):

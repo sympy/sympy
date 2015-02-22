@@ -8,7 +8,7 @@ Authors:
 from __future__ import print_function, division
 
 from sympy import Basic, Interval, oo, sympify
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -99,7 +99,6 @@ class HilbertSpace(Basic):
         return u('H')
 
     def _pretty(self, printer, *args):
-        # u = u('\u2108') # script
         ustr = u('\N{LATIN CAPITAL LETTER H}')
         return prettyForm(ustr)
 
@@ -174,7 +173,6 @@ class ComplexSpace(HilbertSpace):
         return "C(%s)" % printer._print(self.dimension, *args)
 
     def _pretty(self, printer, *args):
-        # u = u('\u2102') # script
         ustr = u('\N{LATIN CAPITAL LETTER C}')
         pform_exp = printer._print(self.dimension, *args)
         pform_base = prettyForm(ustr)
@@ -274,7 +272,6 @@ class FockSpace(HilbertSpace):
         return "F"
 
     def _pretty(self, printer, *args):
-        # u = u('\u2131') # script
         ustr = u('\N{LATIN CAPITAL LETTER F}')
         return prettyForm(ustr)
 

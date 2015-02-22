@@ -165,7 +165,7 @@ class GeometryEntity(Basic):
         return self.func(*newargs)
 
     def reflect(self, line):
-        from sympy import atan, Line, Point, Dummy, oo
+        from sympy import atan, Point, Dummy, oo
 
         g = self
         l = line

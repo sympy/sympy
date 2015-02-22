@@ -3,13 +3,13 @@
 from __future__ import division
 
 from sympy import (
-    integrate, Integral, exp, I, oo, pi, sign, sqrt, Rational, Symbol, sin, cos,
-    tan, S, log, Function, gamma, sinh,
+    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
+    tan, S, log, gamma, sinh,
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
-from sympy.abc import x, k, c, y, R, b, h, a, m, A, z, t
+from sympy.abc import x, k, c, y, R, b, h, a, m
 
 import signal
 

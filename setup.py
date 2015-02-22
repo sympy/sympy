@@ -29,12 +29,18 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
+import sys
+import subprocess
+import os
+import shutil
+import glob
+
 mpmath_version = '0.19'
 
 try:
     from setuptools import setup, Command
 except ImportError:
-    from distutils import setup, Command
+    from distutils.core import setup, Command
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
@@ -45,10 +51,6 @@ except ImportError:
     except ImportError:
         print("Please install the mpmath package with a version >= %s" % mpmath_version)
         sys.exit(-1)
-
-import sys
-import subprocess
-import os
 
 PY3 = sys.version_info[0] > 2
 
@@ -173,14 +175,28 @@ class clean(Command):
         pass
 
     def run(self):
-        import os
-        os.system("find . -name '*.pyc' | xargs rm -f")
-        os.system("rm -f python-build-stamp-2.4")
-        os.system("rm -f MANIFEST")
-        os.system("rm -rf build")
-        os.system("rm -rf dist")
-        os.system("rm -rf doc/_build")
-        os.system("rm -f sample.tex")
+        dir_setup = os.path.dirname(os.path.realpath(__file__))
+        curr_dir = os.getcwd()
+        for root, dirs, files in os.walk(dir_setup):
+            for file in files:
+                if file.endswith('.pyc') and os.path.isfile:
+                    os.remove(os.path.join(root, file))
+
+        os.chdir(dir_setup)
+        names = ["python-build-stamp-2.4", "MANIFEST", "build", "dist", "doc/_build", "sample.tex"]
+
+        for f in names:
+            if os.path.isfile(f):
+                os.remove(f)
+            elif os.path.isdir(f):
+                shutil.rmtree(f)
+
+        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules", \
+                                           "physics", "vector", "*.pdf")):
+            if os.path.isfile(name):
+                os.remove(name)
+
+        os.chdir(curr_dir)
 
 
 class test_sympy(Command):

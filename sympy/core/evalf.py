@@ -21,11 +21,10 @@ from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from mpmath.libmp.gammazeta import mpf_bernoulli
 
-from .compatibility import SYMPY_INTS
+from .compatibility import SYMPY_INTS, range
 from .sympify import sympify
 from .core import C
 from .singleton import S
-from .containers import Tuple
 
 from sympy.utilities.iterables import is_sequence
 
@@ -321,7 +320,7 @@ def get_integer_part(expr, no, options, return_ints=False):
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
         n, c, p, b = nexpr
-        if c != 1 and p != 0:
+        if (c != 1 and p != 0) or p < 0:
             expr = C.Add(expr, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(expr, 10, options)
             try:
@@ -382,7 +381,6 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
-    from sympy.core.core import C
 
     terms = [t for t in terms if not iszero(t)]
     if not terms:
@@ -392,8 +390,9 @@ def add_terms(terms, prec, target_prec):
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
+    from sympy.core.numbers import Float
     for t in terms:
-        arg = C.Float._new(t[0], 1)
+        arg = Float._new(t[0], 1)
         if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
@@ -440,7 +439,6 @@ def add_terms(terms, prec, target_prec):
     sum_accuracy = sum_exp + sum_bc - absolute_error
     r = normalize(sum_sign, sum_man, sum_exp, sum_bc, target_prec,
         rnd), sum_accuracy
-    #print "returning", to_str(r[0],50), r[1]
     return r
 
 
@@ -487,8 +485,6 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
-    from sympy.core.core import C
-
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -499,11 +495,12 @@ def evalf_mul(v, prec, options):
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
+    from sympy.core.numbers import Float
     for arg in args:
         arg = evalf(arg, prec, options)
         if arg[0] is None:
             continue
-        arg = C.Float._new(arg[0], 1)
+        arg = Float._new(arg[0], 1)
         if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
@@ -855,7 +852,7 @@ def evalf_bernoulli(expr, prec, options):
 
 def as_mpmath(x, prec, options):
     x = sympify(x)
-    if isinstance(x, C.Zero):
+    if isinstance(x, C.Zero) or x == 0:
         return mpf(0)
     if isinstance(x, C.Infinity):
         return mpf('inf')
@@ -1175,46 +1172,60 @@ evalf_table = None
 
 def _create_evalf_table():
     global evalf_table
+    from sympy.functions.combinatorial.numbers import bernoulli
+    from sympy.concrete.products import Product
+    from sympy.concrete.summations import Sum
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.core.numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
+    from sympy.core.power import Pow
+    from sympy.core.symbol import Dummy, Symbol
+    from sympy.functions.elementary.complexes import Abs, im, re
+    from sympy.functions.elementary.exponential import exp, log
+    from sympy.functions.elementary.integers import ceiling, floor
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.functions.elementary.trigonometric import atan, cos, sin
+    from sympy.integrals.integrals import Integral
     evalf_table = {
-        C.Symbol: evalf_symbol,
-        C.Dummy: evalf_symbol,
-        C.Float: lambda x, prec, options: (x._mpf_, None, prec, None),
-        C.Rational: lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
-        C.Integer: lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
-        C.Zero: lambda x, prec, options: (None, None, prec, None),
-        C.One: lambda x, prec, options: (fone, None, prec, None),
-        C.Half: lambda x, prec, options: (fhalf, None, prec, None),
-        C.Pi: lambda x, prec, options: (mpf_pi(prec), None, prec, None),
-        C.Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
-        C.ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
-        C.NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
-        C.NaN : lambda x, prec, options: (fnan, None, prec, None),
+        Symbol: evalf_symbol,
+        Dummy: evalf_symbol,
+        Float: lambda x, prec, options: (x._mpf_, None, prec, None),
+        Rational: lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
+        Integer: lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
+        Zero: lambda x, prec, options: (None, None, prec, None),
+        One: lambda x, prec, options: (fone, None, prec, None),
+        Half: lambda x, prec, options: (fhalf, None, prec, None),
+        Pi: lambda x, prec, options: (mpf_pi(prec), None, prec, None),
+        Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
+        ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
+        NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
+        NaN : lambda x, prec, options: (fnan, None, prec, None),
 
-        C.exp: lambda x, prec, options: evalf_pow(C.Pow(S.Exp1, x.args[0],
-        evaluate=False), prec, options),
+        exp: lambda x, prec, options: evalf_pow(
+            Pow(S.Exp1, x.args[0], evaluate=False), prec, options),
 
-        C.cos: evalf_trig,
-        C.sin: evalf_trig,
+        cos: evalf_trig,
+        sin: evalf_trig,
 
-        C.Add: evalf_add,
-        C.Mul: evalf_mul,
-        C.Pow: evalf_pow,
+        Add: evalf_add,
+        Mul: evalf_mul,
+        Pow: evalf_pow,
 
-        C.log: evalf_log,
-        C.atan: evalf_atan,
-        C.Abs: evalf_abs,
+        log: evalf_log,
+        atan: evalf_atan,
+        Abs: evalf_abs,
 
-        C.re: evalf_re,
-        C.im: evalf_im,
-        C.floor: evalf_floor,
-        C.ceiling: evalf_ceiling,
+        re: evalf_re,
+        im: evalf_im,
+        floor: evalf_floor,
+        ceiling: evalf_ceiling,
 
-        C.Integral: evalf_integral,
-        C.Sum: evalf_sum,
-        C.Product: evalf_prod,
-        C.Piecewise: evalf_piecewise,
+        Integral: evalf_integral,
+        Sum: evalf_sum,
+        Product: evalf_prod,
+        Piecewise: evalf_piecewise,
 
-        C.bernoulli: evalf_bernoulli,
+        bernoulli: evalf_bernoulli,
     }
 
 
@@ -1343,13 +1354,11 @@ class EvalfMixin(object):
         re, im, re_acc, im_acc = result
         if re:
             p = max(min(prec, re_acc), 1)
-            #re = mpf_pos(re, p, rnd)
             re = C.Float._new(re, p)
         else:
             re = S.Zero
         if im:
             p = max(min(prec, im_acc), 1)
-            #im = mpf_pos(im, p, rnd)
             im = C.Float._new(im, p)
             return re + im*S.ImaginaryUnit
         else:

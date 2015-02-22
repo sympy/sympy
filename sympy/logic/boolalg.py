@@ -13,7 +13,7 @@ from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application
-from sympy.core.compatibility import ordered, xrange, with_metaclass
+from sympy.core.compatibility import ordered, range, with_metaclass
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 
@@ -122,6 +122,7 @@ class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
     """
+    is_Boolean = True
     @property
     def canonical(self):
         return self
@@ -528,7 +529,7 @@ class Not(BooleanFunction):
 
         if func == Xor:
             result = []
-            for i in xrange(1, len(args)+1, 2):
+            for i in range(1, len(args)+1, 2):
                 for neg in combinations(args, i):
                     clause = [~s if s in neg else s for s in args]
                     result.append(Or(*clause))
@@ -635,7 +636,7 @@ class Xor(BooleanFunction):
 
     def to_nnf(self, simplify=True):
         args = []
-        for i in xrange(0, len(self.args)+1, 2):
+        for i in range(0, len(self.args)+1, 2):
             for neg in combinations(self.args, i):
                 clause = [~s if s in neg else s for s in self.args]
                 args.append(Or(*clause))
@@ -1292,7 +1293,7 @@ def to_int_repr(clauses, symbols):
     """
 
     # Convert the symbol list into a dict
-    symbols = dict(list(zip(symbols, list(xrange(1, len(symbols) + 1)))))
+    symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
         if arg.func is Not:
@@ -1573,8 +1574,6 @@ def SOPform(variables, minterms, dontcares=None):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    from sympy.core.symbol import Symbol
-
     variables = [sympify(v) for v in variables]
     if minterms == []:
         return false
@@ -1625,8 +1624,6 @@ def POSform(variables, minterms, dontcares=None):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    from sympy.core.symbol import Symbol
-
     variables = [sympify(v) for v in variables]
     if minterms == []:
         return false

@@ -5,6 +5,16 @@ from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 
 from sympy.functions.elementary.miscellaneous import sqrt
 
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+
+
+def _rewrite_hyperbolics_as_exp(expr):
+    expr = sympify(expr)
+    return expr.xreplace(dict([(h, h.rewrite(exp))
+        for h in expr.atoms(HyperbolicFunction)]))
+
+
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
@@ -107,7 +117,7 @@ class sinh(HyperbolicFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n - 1))
             else:
-                return x**(n) / C.factorial(n)
+                return x**(n) / factorial(n)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -150,10 +160,10 @@ class sinh(HyperbolicFunction):
         return sinh(arg)
 
     def _eval_rewrite_as_tractable(self, arg):
-        return (C.exp(arg) - C.exp(-arg)) / 2
+        return (exp(arg) - exp(-arg)) / 2
 
     def _eval_rewrite_as_exp(self, arg):
-        return (C.exp(arg) - C.exp(-arg)) / 2
+        return (exp(arg) - exp(-arg)) / 2
 
     def _eval_rewrite_as_cosh(self, arg):
         return -S.ImaginaryUnit*cosh(arg + S.Pi*S.ImaginaryUnit/2)
@@ -181,10 +191,6 @@ class sinh(HyperbolicFunction):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sinh(self.args[0]._sage_())
 
 
 class cosh(HyperbolicFunction):
@@ -257,7 +263,7 @@ class cosh(HyperbolicFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n - 1))
             else:
-                return x**(n)/C.factorial(n)
+                return x**(n)/factorial(n)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -298,10 +304,10 @@ class cosh(HyperbolicFunction):
         return cosh(arg)
 
     def _eval_rewrite_as_tractable(self, arg):
-        return (C.exp(arg) + C.exp(-arg)) / 2
+        return (exp(arg) + exp(-arg)) / 2
 
     def _eval_rewrite_as_exp(self, arg):
-        return (C.exp(arg) + C.exp(-arg)) / 2
+        return (exp(arg) + exp(-arg)) / 2
 
     def _eval_rewrite_as_sinh(self, arg):
         return -S.ImaginaryUnit*sinh(arg + S.Pi*S.ImaginaryUnit/2)
@@ -329,10 +335,6 @@ class cosh(HyperbolicFunction):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cosh(self.args[0]._sage_())
 
 
 class tanh(HyperbolicFunction):
@@ -413,7 +415,7 @@ class tanh(HyperbolicFunction):
             a = 2**(n + 1)
 
             B = C.bernoulli(n + 1)
-            F = C.factorial(n + 1)
+            F = factorial(n + 1)
 
             return a*(a - 1) * B/F * x**n
 
@@ -435,11 +437,11 @@ class tanh(HyperbolicFunction):
         return (sinh(re)*cosh(re)/denom, C.sin(im)*C.cos(im)/denom)
 
     def _eval_rewrite_as_tractable(self, arg):
-        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
     def _eval_rewrite_as_exp(self, arg):
-        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
@@ -466,10 +468,6 @@ class tanh(HyperbolicFunction):
         arg = self.args[0]
         if arg.is_real:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.tanh(self.args[0]._sage_())
 
 
 class coth(HyperbolicFunction):
@@ -545,7 +543,7 @@ class coth(HyperbolicFunction):
             x = sympify(x)
 
             B = C.bernoulli(n + 1)
-            F = C.factorial(n + 1)
+            F = factorial(n + 1)
 
             return 2**(n + 1) * B/F * x**n
 
@@ -567,11 +565,11 @@ class coth(HyperbolicFunction):
         return (sinh(re)*cosh(re)/denom, -C.sin(im)*C.cos(im)/denom)
 
     def _eval_rewrite_as_tractable(self, arg):
-        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_exp(self, arg):
-        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
@@ -590,10 +588,6 @@ class coth(HyperbolicFunction):
             return 1/arg
         else:
             return self.func(arg)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.coth(self.args[0]._sage_())
 
 
 class ReciprocalHyperbolicFunction(HyperbolicFunction):
@@ -705,7 +699,7 @@ class csch(ReciprocalHyperbolicFunction):
             x = sympify(x)
 
             B = C.bernoulli(n + 1)
-            F = C.factorial(n + 1)
+            F = factorial(n + 1)
 
             return 2 * (1 - 2**n) * B/F * x**n
 
@@ -745,7 +739,7 @@ class sech(ReciprocalHyperbolicFunction):
             return S.Zero
         else:
             x = sympify(x)
-            return C.euler(n) / C.factorial(n) * x**(n)
+            return C.euler(n) / factorial(n) * x**(n)
 
     def _eval_rewrite_as_sinh(self, arg):
         return S.ImaginaryUnit / sinh(arg + S.ImaginaryUnit * S.Pi /2)
@@ -792,9 +786,9 @@ class asinh(Function):
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.One:
-                return C.log(sqrt(2) + 1)
+                return log(sqrt(2) + 1)
             elif arg is S.NegativeOne:
-                return C.log(sqrt(2) - 1)
+                return log(sqrt(2) - 1)
             elif arg.is_negative:
                 return -cls(-arg)
         else:
@@ -821,8 +815,8 @@ class asinh(Function):
                 return -p * (n - 2)**2/(n*(n - 1)) * x**2
             else:
                 k = (n - 1) // 2
-                R = C.RisingFactorial(S.Half, k)
-                F = C.factorial(k)
+                R = RisingFactorial(S.Half, k)
+                F = factorial(k)
                 return (-1)**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -838,10 +832,6 @@ class asinh(Function):
         Returns the inverse of this function.
         """
         return sinh
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.asinh(self.args[0]._sage_())
 
 
 class acosh(Function):
@@ -882,8 +872,8 @@ class acosh(Function):
 
         if arg.is_number:
             cst_table = {
-                S.ImaginaryUnit: C.log(S.ImaginaryUnit*(1 + sqrt(2))),
-                -S.ImaginaryUnit: C.log(-S.ImaginaryUnit*(1 + sqrt(2))),
+                S.ImaginaryUnit: log(S.ImaginaryUnit*(1 + sqrt(2))),
+                -S.ImaginaryUnit: log(-S.ImaginaryUnit*(1 + sqrt(2))),
                 S.Half: S.Pi/3,
                 -S.Half: 2*S.Pi/3,
                 sqrt(2)/2: S.Pi/4,
@@ -936,8 +926,8 @@ class acosh(Function):
                 return p * (n - 2)**2/(n*(n - 1)) * x**2
             else:
                 k = (n - 1) // 2
-                R = C.RisingFactorial(S.Half, k)
-                F = C.factorial(k)
+                R = RisingFactorial(S.Half, k)
+                F = factorial(k)
                 return -R / F * S.ImaginaryUnit * x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -953,10 +943,6 @@ class acosh(Function):
         Returns the inverse of this function.
         """
         return cosh
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acosh(self.args[0]._sage_())
 
 
 class atanh(Function):
@@ -1031,10 +1017,6 @@ class atanh(Function):
         """
         return tanh
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.atanh(self.args[0]._sage_())
-
 
 class acoth(Function):
     """
@@ -1104,7 +1086,3 @@ class acoth(Function):
         Returns the inverse of this function.
         """
         return coth
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acoth(self.args[0]._sage_())

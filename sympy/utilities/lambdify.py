@@ -7,10 +7,9 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
-import warnings
 
 from sympy.external import import_module
-from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
+from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -371,7 +370,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     flat = '__flatten_args__'
 
     if flat in lstr:
-        import itertools
         namespace.update({flat: flatten})
     func = eval(lstr, namespace)
     # Apply the docstring

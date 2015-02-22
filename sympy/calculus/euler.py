@@ -1,6 +1,6 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
 from sympy.core.compatibility import (
-    combinations_with_replacement, iterable)
+    combinations_with_replacement, iterable, range)
 
 
 def euler_equations(L, funcs=(), vars=()):
@@ -48,12 +48,12 @@ def euler_equations(L, funcs=(), vars=()):
     >>> t = Symbol('t')
     >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
     >>> euler_equations(L, x(t), t)
-    [-x(t) - Derivative(x(t), t, t) == 0]
+    [Eq(-x(t) - Derivative(x(t), t, t), 0)]
     >>> u = Function('u')
     >>> x = Symbol('x')
     >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
     >>> euler_equations(L, u(t, x), [t, x])
-    [-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0]
+    [Eq(-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x), 0)]
 
     References
     ==========

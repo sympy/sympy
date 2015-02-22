@@ -1,14 +1,13 @@
-from sympy.diffgeom.rn import R2, R2_p, R2_r, R3, R3_r, R3_c, R3_s
-from sympy.diffgeom import (Manifold, Patch, CoordSystem, Point, Commutator,
-        BaseScalarField, BaseVectorField, Differential, TensorProduct,
+from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s
+from sympy.diffgeom import (Commutator, Differential, TensorProduct,
         WedgeProduct, BaseCovarDerivativeOp, CovarDerivativeOp, LieDerivative,
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
         metric_to_Ricci_components, intcurve_diffequ, intcurve_series)
-from sympy.core import Symbol, symbols, Function, Derivative, S
+from sympy.core import Symbol, symbols
 from sympy.simplify import trigsimp, simplify
-from sympy.functions import sqrt, atan2, sin, cos
-from sympy.matrices import Matrix, eye
+from sympy.functions import sqrt, atan2, sin
+from sympy.matrices import Matrix
 from sympy.utilities.pytest import raises
 
 TP = TensorProduct

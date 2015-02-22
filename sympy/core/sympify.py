@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from inspect import getmro
 
 from .core import all_classes as sympy_classes
-from .compatibility import iterable, string_types
+from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
 

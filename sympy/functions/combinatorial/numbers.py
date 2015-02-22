@@ -9,16 +9,16 @@ the separate 'factorials' module.
 
 from __future__ import print_function, division
 
-from sympy.core.function import Function, expand_mul
-from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
-from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
+from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
-from sympy.core.numbers import pi
+from sympy.core.function import Function, expand_mul
+from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
-from sympy.functions.elementary.integers import floor
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.functions.combinatorial.factorials import factorial
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -26,7 +26,7 @@ from mpmath.libmp import ifib as _ifib
 
 def _product(a, b):
     p = 1
-    for k in xrange(a, b + 1):
+    for k in range(a, b + 1):
         p *= k
     return p
 
@@ -233,8 +233,8 @@ class bernoulli(Function):
     @staticmethod
     def _calc_bernoulli(n):
         s = 0
-        a = int(C.binomial(n + 3, n - 6))
-        for j in xrange(1, n//6 + 1):
+        a = int(binomial(n + 3, n - 6))
+        for j in range(1, n//6 + 1):
             s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
             a *= _product(n - 6 - 6*j + 1, n - 6*j)
@@ -243,7 +243,7 @@ class bernoulli(Function):
             s = -Rational(n + 3, 6) - s
         else:
             s = Rational(n + 3, 3) - s
-        return s / C.binomial(n + 3, n)
+        return s / binomial(n + 3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
@@ -277,7 +277,7 @@ class bernoulli(Function):
                     # To avoid excessive recursion when, say, bernoulli(1000) is
                     # requested, calculate and cache the entire sequence ... B_988,
                     # B_994, B_1000 in increasing order
-                    for i in xrange(highest_cached + 6, n + 6, 6):
+                    for i in range(highest_cached + 6, n + 6, 6):
                         b = cls._calc_bernoulli(i)
                         cls._cache[i] = b
                         cls._highest[case] = i
@@ -285,12 +285,16 @@ class bernoulli(Function):
                 # Bernoulli polynomials
                 else:
                     n, result = int(n), []
-                    for k in xrange(n + 1):
-                        result.append(C.binomial(n, k)*cls(k)*sym**(n - k))
+                    for k in range(n + 1):
+                        result.append(binomial(n, k)*cls(k)*sym**(n - k))
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
                                  " for nonnegative integer indices.")
+
+        if sym is None:
+            if n.is_odd and (n - 1).is_positive:
+                return S.Zero
 
 
 #----------------------------------------------------------------------------#
@@ -368,7 +372,7 @@ class bell(Function):
     def _bell(n, prev):
         s = 1
         a = 1
-        for k in xrange(1, n):
+        for k in range(1, n):
             a = a * (n - k) // k
             s += a * prev[k]
         return s
@@ -378,7 +382,7 @@ class bell(Function):
     def _bell_poly(n, prev):
         s = 1
         a = 1
-        for k in xrange(2, n + 1):
+        for k in range(2, n + 1):
             a = a * (n - k + 1) // (k - 1)
             s += a * prev[k - 1]
         return expand_mul(_sym * s)
@@ -406,7 +410,7 @@ class bell(Function):
             return S.Zero
         s = S.Zero
         a = S.One
-        for m in xrange(1, n - k + 2):
+        for m in range(1, n - k + 2):
             s += a * bell._bell_incomplete_poly(
                 n - m, k - 1, symbols) * symbols[m - 1]
             a = a * (n - m) / m
@@ -422,6 +426,16 @@ class bell(Function):
             else:
                 r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
+
+    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
+        if (k_sym is not None) or (symbols is not None):
+            return self
+
+        # Dobinski's formula
+        if not n.is_nonnegative:
+            return self
+        k = Dummy('k', integer=True, nonnegative=True)
+        return 1 / E * C.Sum(k**n / factorial(k), (k, 0, S.Infinity))
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -604,7 +618,7 @@ class harmonic(Function):
         return self.rewrite(polygamma)
 
     def _eval_rewrite_as_Sum(self, n, m=None):
-        k = C.Dummy("k", integer=True)
+        k = Dummy("k", integer=True)
         if m is None:
             m = S.One
         return C.Sum(k**(-m), (k, 1, n))
@@ -618,10 +632,10 @@ class harmonic(Function):
                 off = n.args[0]
                 nnew = n - off
                 if off.is_Integer and off.is_positive:
-                    result = [S.One/(nnew + i) for i in xrange(off, 0, -1)] + [harmonic(nnew)]
+                    result = [S.One/(nnew + i) for i in range(off, 0, -1)] + [harmonic(nnew)]
                     return Add(*result)
                 elif off.is_Integer and off.is_negative:
-                    result = [-S.One/(nnew + i) for i in xrange(0, off, -1)] + [harmonic(nnew)]
+                    result = [-S.One/(nnew + i) for i in range(0, off, -1)] + [harmonic(nnew)]
                     return Add(*result)
 
             if n.is_Rational:
@@ -711,10 +725,10 @@ class euler(Function):
 
     def _eval_rewrite_as_Sum(self, arg):
         if arg.is_even:
-            k = C.Dummy("k", integer=True)
-            j = C.Dummy("j", integer=True)
+            k = Dummy("k", integer=True)
+            j = Dummy("j", integer=True)
             n = self.args[0] / 2
-            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
+            Em = (S.ImaginaryUnit * C.Sum(C.Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
 
             return Em
@@ -820,15 +834,25 @@ class catalan(Function):
 
     @classmethod
     def eval(cls, n):
-        if n.is_Integer and n.is_nonnegative:
+        if (n.is_Integer and n.is_nonnegative) or \
+           (n.is_noninteger and n.is_negative):
             return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
+
+        if (n.is_integer and n.is_negative):
+            if (n + 1).is_negative:
+                return S.Zero
+            if (n + 1).is_zero:
+                return -S.Half
 
     def fdiff(self, argindex=1):
         n = self.args[0]
         return catalan(n)*(C.polygamma(0, n + Rational(1, 2)) - C.polygamma(0, n + 2) + C.log(4))
 
     def _eval_rewrite_as_binomial(self, n):
-        return C.binomial(2*n, n)/(n + 1)
+        return binomial(2*n, n)/(n + 1)
+
+    def _eval_rewrite_as_factorial(self, n):
+        return factorial(2*n) / (factorial(n+1) * factorial(n))
 
     def _eval_rewrite_as_gamma(self, n):
         # The gamma function allows to generalize Catalan numbers to complex n
@@ -837,9 +861,121 @@ class catalan(Function):
     def _eval_rewrite_as_hyper(self, n):
         return C.hyper([1 - n, -n], [2], 1)
 
+    def _eval_rewrite_as_Product(self, n):
+        if not (n.is_integer and n.is_nonnegative):
+            return self
+        k = Dummy('k', integer=True, positive=True)
+        return C.Product((n + k) / k, (k, 2, n))
+
     def _eval_evalf(self, prec):
         if self.args[0].is_number:
             return self.rewrite(C.gamma)._eval_evalf(prec)
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Genocchi numbers                                 #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class genocchi(Function):
+    r"""
+    Genocchi numbers
+
+    The Genocchi numbers are a sequence of integers G_n that satisfy the
+    relation::
+
+                           oo
+                         ____
+                         \   `
+                 2*t      \         n
+                ------ =   \   G_n*t
+                 t         /   ------
+                e  + 1    /      n!
+                         /___,
+                         n = 1
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.functions import genocchi
+    >>> [genocchi(n) for n in range(1, 9)]
+    [1, -1, 0, 1, 0, -3, 0, 17]
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> genocchi(2 * n + 1)
+    0
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Genocchi_number
+    .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    """
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_Number:
+            if (not n.is_Integer) or n.is_nonpositive:
+                raise ValueError("Genocchi numbers are defined only for " +
+                                 "positive integers")
+            return 2 * (1 - S(2) ** n) * bernoulli(n)
+
+        if n.is_odd and (n - 1).is_positive:
+            return S.Zero
+
+        if (n - 1).is_zero:
+            return S.One
+
+    def _eval_rewrite_as_bernoulli(self, n):
+        if n.is_integer and n.is_nonnegative:
+            return 2 * (1 - S(2) ** n) * bernoulli(n)
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer and self.args[0].is_positive:
+            return True
+
+    def _eval_is_negative(self):
+        n = self.args[0]
+        if n.is_integer and n.is_positive:
+            if n.is_odd:
+                return False
+            return (n / 2).is_odd
+
+    def _eval_is_positive(self):
+        n = self.args[0]
+        if n.is_integer and n.is_positive:
+            if n.is_odd:
+                return fuzzy_not((n - 1).is_positive)
+            return (n / 2).is_even
+
+    def _eval_is_even(self):
+        n = self.args[0]
+        if n.is_integer and n.is_positive:
+            if n.is_even:
+                return False
+            return (n - 1).is_positive
+
+    def _eval_is_odd(self):
+        n = self.args[0]
+        if n.is_integer and n.is_positive:
+            if n.is_even:
+                return True
+            return fuzzy_not((n - 1).is_positive)
+
+    def _eval_is_prime(self):
+        n = self.args[0]
+        if (not n.is_integer) or (not n.is_positive):
+            return None
+        return (n - 8).is_zero
+
+
 
 #######################################################################
 ###
@@ -1161,11 +1297,11 @@ def _stirling1(n, k):
     elif k == 1:
         return factorial(n1)
     elif k == n1:
-        return C.binomial(n, 2)
+        return binomial(n, 2)
     elif k == n - 2:
-        return (3*n - 1)*C.binomial(n, 3)/4
+        return (3*n - 1)*binomial(n, 3)/4
     elif k == n - 3:
-        return C.binomial(n, 2)*C.binomial(n, 4)
+        return binomial(n, 2)*binomial(n, 4)
 
     # general recurrence
     return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
@@ -1181,7 +1317,7 @@ def _stirling2(n, k):
 
     # some special values
     if k == n1:
-        return C.binomial(n, 2)
+        return binomial(n, 2)
     elif k == 2:
         return 2**n1 - 1
 

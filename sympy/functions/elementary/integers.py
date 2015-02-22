@@ -5,7 +5,10 @@ from sympy.core.singleton import S
 from sympy.core.function import Function
 from sympy.core import Add
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.core.relational import Gt, Lt, Ge, Le, Eq
+from sympy.core.numbers import Integer
+from sympy.core.relational import Gt, Lt, Ge, Le
+from sympy.core.symbol import Symbol
+
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
@@ -38,7 +41,7 @@ class RoundFunction(Function):
         for t in terms:
             if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
                 ipart += t
-            elif t.has(C.Symbol):
+            elif t.has(Symbol):
                 spart += t
             else:
                 npart += t
@@ -52,9 +55,9 @@ class RoundFunction(Function):
             npart.is_real and (spart.is_imaginary or (S.ImaginaryUnit*spart).is_real) or
                 npart.is_imaginary and spart.is_real):
             try:
-                re, im = get_integer_part(
+                r, i = get_integer_part(
                     npart, cls._dir, {}, return_ints=True)
-                ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
+                ipart += Integer(r) + Integer(i)*S.ImaginaryUnit
                 npart = S.Zero
             except (PrecisionExhausted, NotImplementedError):
                 pass
@@ -109,13 +112,13 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                return C.Integer(arg.p // arg.q)
+                return Integer(arg.p // arg.q)
             elif arg.is_Float:
-                return C.Integer(int(arg.floor()))
+                return Integer(int(arg.floor()))
             else:
                 return arg
         if arg.is_NumberSymbol:
-            return arg.approximation_interval(C.Integer)[0]
+            return arg.approximation_interval(Integer)[0]
 
     def _eval_nseries(self, x, n, logx):
         r = self.subs(x, 0)
@@ -173,13 +176,13 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                return -C.Integer(-arg.p // arg.q)
+                return -Integer(-arg.p // arg.q)
             elif arg.is_Float:
-                return C.Integer(int(arg.ceiling()))
+                return Integer(int(arg.ceiling()))
             else:
                 return arg
         if arg.is_NumberSymbol:
-            return arg.approximation_interval(C.Integer)[1]
+            return arg.approximation_interval(Integer)[1]
 
     def _eval_nseries(self, x, n, logx):
         r = self.subs(x, 0)

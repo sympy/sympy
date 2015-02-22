@@ -1,6 +1,4 @@
 from sympy.liealgebras.weyl_group import WeylGroup
-from sympy.liealgebras.type_a import TypeA
-from sympy.liealgebras.type_b import TypeB
 from sympy.matrices import Matrix
 
 def test_weyl_group():

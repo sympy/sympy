@@ -1,6 +1,6 @@
 from sympy.matrices.densetools import eye
 from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
-from sympy import ZZ, QQ
+from sympy import ZZ
 
 
 def test_add():

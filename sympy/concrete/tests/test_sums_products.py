@@ -6,9 +6,9 @@ from sympy import (
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
-from sympy.utilities.pytest import XFAIL, raises
-from sympy import simplify
+from sympy.utilities.pytest import raises
 from sympy.core.mod import Mod
+from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
 
@@ -572,7 +572,7 @@ def test_eval_diff():
 
 
 def test_hypersum():
-    from sympy import simplify, sin, hyper
+    from sympy import sin
     assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
     assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
     assert simplify(summation((-1)**n*x**(2*n + 1) /

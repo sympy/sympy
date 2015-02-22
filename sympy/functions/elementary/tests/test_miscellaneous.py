@@ -1,6 +1,5 @@
-from sympy.core.add import Add
 from sympy.core.function import Function
-from sympy.core.numbers import Float, I, oo, pi, Rational
+from sympy.core.numbers import I, oo, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root,
@@ -184,8 +183,9 @@ def test_issue_8413():
 
 
 def test_root():
-    from sympy.abc import x, y, z
+    from sympy.abc import x
     n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
 
     assert root(2, 2) == sqrt(2)
     assert root(2, 1) == 2
@@ -207,6 +207,8 @@ def test_root():
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
 
+    assert root(x, n, k) == x**(1/n)*(-1)**(2*k/n)
+
 
 def test_real_root():
     assert real_root(-8, 3) == -2
@@ -218,10 +220,21 @@ def test_real_root():
     r3 = root(-1, 4)
     assert real_root(r1 + r2 + r3) == -1 + r2 + r3
     assert real_root(root(-2, 3)) == -root(2, 3)
+    assert real_root(-8., 3) == -2
+    x = Symbol('x')
+    n = Symbol('n')
+    g = real_root(x, n)
+    assert g.subs(dict(x=-8, n=3)) == -2
+    assert g.subs(dict(x=8, n=3)) == 2
+    # give principle root if there is no real root -- if this is not desired
+    # then maybe a Root class is needed to raise an error instead
+    assert g.subs(dict(x=I, n=3)) == cbrt(I)
+    assert g.subs(dict(x=-8, n=2)) == sqrt(-8)
+    assert g.subs(dict(x=I, n=2)) == sqrt(I)
 
 
 def test_rewrite_MaxMin_as_Heaviside():
-    from sympy.abc import x, y, z
+    from sympy.abc import x
     assert Max(0, x).rewrite(Heaviside) == x*Heaviside(x)
     assert Max(3, x).rewrite(Heaviside) == x*Heaviside(x - 3) + \
         3*Heaviside(-x + 3)

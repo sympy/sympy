@@ -5,9 +5,9 @@ from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
-from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi
-from sympy import I, S, C, denom
+from sympy.functions.elementary.exponential import exp, log
+from sympy import I
 
 
 class AskIntegerHandler(CommonHandler):
@@ -231,7 +231,7 @@ class AskRealHandler(CommonHandler):
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
 
-        if expr.base.func == C.exp:
+        if expr.base.func == exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return True
@@ -252,7 +252,7 @@ class AskRealHandler(CommonHandler):
                 return
 
         if ask(Q.imaginary(expr.exp), assumptions):
-            imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
+            imlog = ask(Q.imaginary(log(expr.base)), assumptions)
             if imlog is not None:
                 # I**i -> real, log(I) is imag;
                 # (2*I)**i -> complex, log(2*I) is not imag
@@ -474,7 +474,7 @@ class AskImaginaryHandler(CommonHandler):
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
 
-        if expr.base.func == C.exp:
+        if expr.base.func == exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return False
@@ -490,7 +490,7 @@ class AskImaginaryHandler(CommonHandler):
                 return
 
         if ask(Q.imaginary(expr.exp), assumptions):
-            imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
+            imlog = ask(Q.imaginary(log(expr.base)), assumptions)
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
@@ -514,13 +514,13 @@ class AskImaginaryHandler(CommonHandler):
     def log(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             if ask(Q.positive(expr.args[0]), assumptions):
-               return False
+                return False
             return
         # XXX it should be enough to do
         # return ask(Q.nonpositive(expr.args[0]), assumptions)
         # but ask(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
         # it should return True since exp(x) will be either 0 or complex
-        if expr.args[0].func == C.exp:
+        if expr.args[0].func == exp:
             if expr.args[0].args[0] in [I, -I]:
                 return True
         im = ask(Q.imaginary(expr.args[0]), assumptions)

@@ -41,15 +41,14 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log, besseli, Lambda, Basic)
+                   Lambda, Basic)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from sympy.core.decorators import _sympifyit
 import random
 
 oo = S.Infinity

@@ -9,6 +9,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -603,10 +604,11 @@ def test_nfloat():
     eq = x**(S(4)/3) + 4*x**(x/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
     big = 12345678901234567890
-    Float_big = Float(big)
-    assert _aresame(nfloat(x**big, exponent=True),
-                    x**Float_big)
+    # specify precision to match value used in nfloat
+    Float_big = Float(big, 15)
     assert _aresame(nfloat(big), Float_big)
+    assert _aresame(nfloat(big*x), Float_big*x)
+    assert _aresame(nfloat(x**big, exponent=True), x**Float_big)
     assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
@@ -670,7 +672,6 @@ def test_issue_7687():
 
 def test_issue_7688():
     from sympy.core.function import Function, UndefinedFunction
-    from sympy.abc import x
 
     f = Function('f')  # actually an UndefinedFunction
     clear_cache()

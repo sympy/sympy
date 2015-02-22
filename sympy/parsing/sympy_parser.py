@@ -14,7 +14,7 @@ import unicodedata
 
 import sympy
 from sympy.core.compatibility import exec_, StringIO
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
@@ -161,6 +161,8 @@ def _group_parentheses(recursor):
                 stacks[-1].append(token)
             else:
                 result.append(token)
+        if stacklevel:
+            raise TokenError("Mismatched parentheses")
         return result
     return _inner
 

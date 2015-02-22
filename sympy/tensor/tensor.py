@@ -31,13 +31,12 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-import functools
 from collections import defaultdict
 from sympy import Matrix, Rational
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, sympify, Add, S
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, reduce, range
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -920,7 +919,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             # to .data_product_tensor(...)
             return data, TensMul.from_TIDS(S.One, TIDS(components, free, dum))
 
-        return functools.reduce(data_mul, zip(data_list, tensmul_list))
+        return reduce(data_mul, zip(data_list, tensmul_list))
 
     def _assign_data_to_tensor_expr(self, key, data):
         if isinstance(key, TensAdd):
@@ -932,6 +931,36 @@ class _TensorDataLazyEvaluator(CantSympify):
         newdata = self.data_tensorhead_from_tensmul(data, key, tensorhead)
         return tensorhead, newdata
 
+    def _check_permutations_on_data(self, tens, data):
+        import numpy
+
+        if isinstance(tens, TensorHead):
+            rank = tens.rank
+            generators = tens.symmetry.generators
+        elif isinstance(tens, Tensor):
+            rank = tens.rank
+            generators = tens.components[0].symmetry.generators
+        elif isinstance(tens, TensorIndexType):
+            rank = tens.metric.rank
+            generators = tens.metric.symmetry.generators
+
+        # Every generator is a permutation, check that by permuting the array
+        # by that permutation, the array will be the same, except for a
+        # possible sign change if the permutation admits it.
+        for gener in generators:
+            sign_change = +1 if (gener(rank) == rank) else -1
+            data_swapped = data
+            last_data = data
+            permute_axes = list(map(gener, list(range(rank))))
+            # the order of a permutation is the number of times to get the
+            # identity by applying that permutation.
+            for i in range(gener.order()-1):
+                data_swapped = numpy.transpose(data_swapped, permute_axes)
+                # if any value in the difference array is non-zero, raise an error:
+                if (last_data - sign_change*data_swapped).any():
+                    raise ValueError("Component data symmetry structure error")
+                last_data = data_swapped
+
     def __setitem__(self, key, value):
         """
         Set the components data of a tensor object/expression.
@@ -941,6 +970,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         cannot be uniquely identified, it will raise an error.
         """
         data = _TensorDataLazyEvaluator.parse_data(value)
+        self._check_permutations_on_data(key, data)
 
         # TensorHead and TensorIndexType can be assigned data directly, while
         # TensMul must first convert data to a fully contravariant form, and
@@ -1462,6 +1492,9 @@ class TensorIndexType(Basic):
 
     @data.setter
     def data(self, data):
+        # This assignment is a bit controversial, should metric components be assigned
+        # to the metric only or also to the TensorIndexType object? The advantage here
+        # is the ability to assign a 1D array and transform it to a 2D diagonal array.
         numpy = import_module('numpy')
         data = _TensorDataLazyEvaluator.parse_data(data)
         if data.ndim > 2:
@@ -2012,11 +2045,9 @@ class TensorHead(Basic):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorType
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1], [1])
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> A = S2('A')
+    >>> A = tensorhead('A', [Lorentz, Lorentz], [[1],[1]])
 
     Examples with ndarray values, the components data assigned to the
     ``TensorHead`` object are assumed to be in a fully-contravariant
@@ -2090,7 +2121,12 @@ class TensorHead(Basic):
     >>> from sympy import symbols
     >>> Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
     >>> c = symbols('c', positive=True)
-    >>> A(-i0, -i1).data = [
+
+    Let's define `F`, an antisymmetric tensor, we have to assign an
+    antisymmetric matrix to it, because `[[2]]` stands for the Young tableau
+    representation of an antisymmetric set of two elements:
+    >>> F = tensorhead('A', [Lorentz, Lorentz], [[2]])
+    >>> F(-i0, -i1).data = [
     ... [0, Ex/c, Ey/c, Ez/c],
     ... [-Ex/c, 0, -Bz, By],
     ... [-Ey/c, Bz, 0, -Bx],
@@ -2099,7 +2135,7 @@ class TensorHead(Basic):
     Now it is possible to retrieve the contravariant form of the Electromagnetic
     tensor:
 
-    >>> A(i0, i1).data
+    >>> F(i0, i1).data
     [[0 -E_x/c -E_y/c -E_z/c]
      [E_x/c 0 -B_z B_y]
      [E_y/c B_z 0 -B_x]
@@ -2107,7 +2143,7 @@ class TensorHead(Basic):
 
     and the mixed contravariant-covariant form:
 
-    >>> A(i0, -i1).data
+    >>> F(i0, -i1).data
     [[0 E_x/c E_y/c E_z/c]
      [E_x/c 0 B_z -B_y]
      [E_y/c -B_z 0 B_x]
@@ -2116,7 +2152,7 @@ class TensorHead(Basic):
     To convert the numpy's ndarray to a sympy matrix, just cast:
 
     >>> from sympy import Matrix
-    >>> Matrix(A.data)
+    >>> Matrix(F.data)
     Matrix([
     [    0, -E_x/c, -E_y/c, -E_z/c],
     [E_x/c,      0,   -B_z,    B_y],
@@ -3335,12 +3371,12 @@ class TensMul(TensExpr):
                     if not isinstance(arg, Tensor):
                         continue
                     is_canon_bp = kw_args.get('is_canon_bp', arg._is_canon_bp)
-            tids = functools.reduce(lambda a, b: a*b, tids_list)
+            tids = reduce(lambda a, b: a*b, tids_list)
 
         if any([isinstance(arg, TensAdd) for arg in args]):
             add_args = TensAdd._tensAdd_flatten(args)
             return TensAdd(*add_args)
-        coeff = functools.reduce(lambda a, b: a*b, [S.One] + [arg for arg in args if not isinstance(arg, TensExpr)])
+        coeff = reduce(lambda a, b: a*b, [S.One] + [arg for arg in args if not isinstance(arg, TensExpr)])
         args = tids.get_tensors()
         if coeff != 1:
             args = [coeff] + args

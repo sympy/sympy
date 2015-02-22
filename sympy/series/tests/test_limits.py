@@ -2,7 +2,7 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
+    atan, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial)
 
 from sympy.series.limits import heuristics
@@ -340,9 +340,8 @@ def test_extended_real_line():
 
 @XFAIL
 def test_order_oo():
-    from sympy import C
     x = Symbol('x', positive=True, finite=True)
-    assert C.Order(x)*oo != C.Order(1, x)
+    assert Order(x)*oo != Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
 

@@ -1,9 +1,9 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
+    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, \
     factorial as fac, pi, GoldenRatio as phi, sqrt
-from sympy.core.numbers import Integer, igcd, Rational
-from sympy.core.compatibility import long
+from sympy.core.numbers import Integer, Rational
+from sympy.core.compatibility import long, range
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -15,7 +15,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p, \
-    antidivisors, antidivisor_count
+    antidivisors, antidivisor_count, core
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
@@ -26,8 +26,6 @@ from sympy.ntheory.continued_fraction import \
      continued_fraction_convergents as cf_c,
      continued_fraction_reduce as cf_r)
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
-
-from fractions import Fraction
 
 from sympy.core.add import Add
 
@@ -381,6 +379,7 @@ def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == set([1,2,4])
 
+
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
         [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
@@ -393,6 +392,9 @@ def test_totient():
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
     assert summation(totient(m), (m, 1, 11)) == 42
+
+    n = Symbol("n", integer=True, positive=True)
+    assert totient(n).is_integer
 
 
 def test_divisor_sigma():
@@ -878,3 +880,12 @@ def test_egyptian_fraction():
                                                      10, 11, 12, 27, 744, 893588,
                                                      1251493536607,
                                                      20361068938197002344405230]
+
+
+def test_core():
+    assert core(35**13, 10) == 42875
+    assert core(210**2) == 1
+    assert core(7776, 3) == 36
+    assert core(10**27, 22) == 10**5
+    assert core(537824) == 14
+    assert core(1, 6) == 1

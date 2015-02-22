@@ -2,11 +2,16 @@ import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
-                   IndexedBase, Idx, MatrixSymbol, Piecewise, O)
+                   IndexedBase, Idx, Piecewise, O)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
+    MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+
+from sympy.core.compatibility import range
+
 
 w, x, y, z = symbols('w,x,y,z')
 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
@@ -67,7 +72,8 @@ def test_cse_single2():
     substs, reduced = cse(e)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
-    assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
+    substs, reduced = cse(Matrix([[1]]))
+    assert isinstance(reduced[0], Matrix)
 
 
 def test_cse_not_possible():
@@ -138,6 +144,7 @@ def test_multiple_expressions():
     assert cse([x*y, z + x*y, x*y*z + 3]) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
+
 @XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
@@ -145,6 +152,7 @@ def test_non_commutative_cse():
     assert cse(l) == ([], l)
     l = [A*B*C, A*B]
     assert cse(l) == ([(x0, A*B)], [x0*C, x0])
+
 
 # Test if CSE of non-commutative Mul terms is disabled
 def test_bypass_non_commutatives():
@@ -156,12 +164,14 @@ def test_bypass_non_commutatives():
     l = [B*C, A*B*C]
     assert cse(l) == ([], l)
 
+
 @XFAIL # CSE fails when replacing non-commutative sub-expressions
 def test_non_commutative_order():
     A, B, C = symbols('A B C', commutative=False)
     x0 = symbols('x0', commutative=False)
     l = [B+C, A*(B+C)]
     assert cse(l) == ([(x0, B+C)], [x0, A*x0])
+
 
 @XFAIL
 def test_powers():
@@ -269,6 +279,7 @@ def test_issue_6169():
     # mechanism
     assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y
 
+
 def test_cse_Indexed():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
@@ -281,6 +292,7 @@ def test_cse_Indexed():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
+
 @XFAIL
 def test_cse_MatrixSymbol():
     from sympy import MatrixSymbol
@@ -292,15 +304,18 @@ def test_cse_MatrixSymbol():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
+
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
     actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
+
 def test_ignore_order_terms():
     eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
     assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+
 
 def test_name_conflict():
     z1 = x0 + y
@@ -309,6 +324,7 @@ def test_name_conflict():
     substs, reduced = cse(l)
     assert [e.subs(reversed(substs)) for e in reduced] == l
 
+
 def test_name_conflict_cust_symbols():
     z1 = x0 + y
     z2 = x2 + x3
@@ -316,11 +332,13 @@ def test_name_conflict_cust_symbols():
     substs, reduced = cse(l, symbols("x:10"))
     assert [e.subs(reversed(substs)) for e in reduced] == l
 
+
 def test_symbols_exhausted_error():
     l = cos(x+y)+x+y+cos(w+y)+sin(w+y)
     sym = [x, y, z]
     with raises(ValueError) as excinfo:
         cse(l, symbols=sym)
+
 
 def test_issue_7840():
     # daveknippers' example
@@ -357,3 +375,13 @@ def test_issue_7840():
     assert new_eqn[0] == expr
     # there should not be any replacements
     assert len(substitutions) < 1
+
+
+def test_issue_8891():
+    for cls in (MutableDenseMatrix, MutableSparseMatrix,
+            ImmutableDenseMatrix, ImmutableSparseMatrix):
+        m = cls(2, 2, [x + y, 0, 0, 0])
+        res = cse([x + y, m])
+        ans = ([(x0, x + y)], [x0, cls([[x0, 0], [0, 0]])])
+        assert res == ans
+        assert isinstance(res[1][-1], cls)

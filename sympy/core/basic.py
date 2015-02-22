@@ -6,7 +6,7 @@ from .cache import cacheit
 from .core import BasicType, C
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest)
+    string_types, with_metaclass, zip_longest, range)
 from .decorators import deprecated
 from .singleton import S
 

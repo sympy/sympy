@@ -2,7 +2,6 @@
 
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import RootOf, RootSum
-from sympy.polys.orthopolys import legendre_poly
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -11,15 +10,14 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
+    S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
     solve, legendre_poly
 )
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
-from sympy.abc import a, b, c, d, x, y, z, r
-
-import warnings
+from sympy.abc import a, b, x, y, z, r
 
 
 def test_RootOf___new__():
@@ -235,6 +233,11 @@ def test_RootOf_evalf():
     # issue 8617
     ans = [w.n(2) for w in solve(x**3 - x - 4)]
     assert RootOf(exp(x)**3 - exp(x) - 4, 0).n(2) in ans
+    # issue 9019
+    r0 = RootOf(x**2 + 1, 0, radicals=False)
+    r1 = RootOf(x**2 + 1, 1, radicals=False)
+    assert r0.n(4) == -1.0*I
+    assert r1.n(4) == 1.0*I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(RootOf(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'

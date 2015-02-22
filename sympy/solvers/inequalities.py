@@ -9,11 +9,10 @@ from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
 from sympy.core.singleton import S
 
-from sympy.functions import re, im, Abs
+from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
 def solve_poly_inequality(poly, rel):
@@ -205,14 +204,14 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> x = Symbol('x', real=True)
 
     >>> reduce_rational_inequalities([[x**2 <= 0]], x)
-    x == 0
+    Eq(x, 0)
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
     And(-2 < x, x < oo)
     >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
     And(-2 < x, x < oo)
     >>> reduce_rational_inequalities([[x + 2]], x)
-    x == -2
+    Eq(x, -2)
     """
     exact = True
     eqs = []
@@ -411,9 +410,13 @@ def solve_univariate_inequality(expr, gen, relational=True):
             singularities.extend(solve(d, gen))
 
     include_x = expr.func(0, 0)
+
     def valid(x):
         v = e.subs(gen, x)
-        r = expr.func(v, 0)
+        try:
+            r = expr.func(v, 0)
+        except TypeError:
+            r = S.false
         if r in (S.true, S.false):
             return r
         if v.is_real is False:
@@ -433,10 +436,10 @@ def solve_univariate_inequality(expr, gen, relational=True):
     for x in reals:
         end = x
 
-        if ((end is S.NegativeInfinity and expr.rel_op in ['>', '>=']) or
-           (end is S.Infinity and expr.rel_op in ['<', '<='])):
-            sol_sets.append(Interval(start, S.Infinity, True, True))
-            break
+        if end in [S.NegativeInfinity, S.Infinity]:
+            if valid(S(0)):
+                sol_sets.append(Interval(start, S.Infinity, True, True))
+                break
 
         if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
             sol_sets.append(Interval(start, end, True, True))

@@ -19,8 +19,16 @@ def eqs_to_matrix(eqs, ring):
 
     return M
 
-def solve_lin_sys(eqs, ring):
-    """Solve a system of linear equations. """
+def solve_lin_sys(eqs, ring, _raw=True):
+    """Solve a system of linear equations.
+
+    If ``_raw`` is False, the keys and values in the returned dictionary
+    will be of type Expr (and the unit of the field will be removed from
+    the keys) otherwise the low-level polys types will be returned, e.g.
+    PolyElement: PythonRational.
+    """
+    as_expr = not _raw
+
     assert ring.domain.has_Field
 
     # transform from equations to matrix form
@@ -30,17 +38,28 @@ def solve_lin_sys(eqs, ring):
     echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions
-    xs = ring.gens
+    keys = ring.symbols if as_expr else ring.gens
 
-    if pivots[-1] == len(xs):
+    if pivots[-1] == len(keys):
         return None
-    elif len(pivots) == len(xs):
-        sol = [ ring.ground_new(s) for s in echelon[:, -1] ]
-        return dict(zip(xs, sol))
+
+    if len(pivots) == len(keys):
+        sol = []
+        for s in echelon[:, -1]:
+            a = ring.ground_new(s)
+            if as_expr:
+                a = a.as_expr()
+            sol.append(a)
+        sols = dict(zip(keys, sol))
     else:
         sols = {}
+        g = ring.gens
+        _g = [[-i] for i in g]
         for i, p in enumerate(pivots):
-            vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[ring.one]])
-            sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
+            vect = RawMatrix(_g[p + 1:] + [[ring.one]])
+            v = (echelon[i, p + 1:]*vect)[0]
+            if as_expr:
+                v = v.as_expr()
+            sols[keys[p]] = v
 
-        return sols
+    return sols
