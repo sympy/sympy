@@ -2,7 +2,7 @@
 
 from sympy.matrices import *
 from sympy import Add, diff, symbols, simplify, sqrt
-from sympy.tensor.Arraypy import *
+from sympy.tensor.arraypy import *
 
 # ---------------- df --------------------------------
 

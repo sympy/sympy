@@ -3,6 +3,7 @@
 from itertools import *
 from sympy.tensor import Arraypy, Tensor
 from random import randint
+# from sympy.mpmath import fac
 
 
 def symmetric(in_arr):
@@ -10,8 +11,10 @@ def symmetric(in_arr):
     Creates the symmetric form of input tensor.
     Input: Arraypy or Tensor with equal axes (array shapes).
     Output: symmetric array. Output type - Arraypy or Tensor, depends of input
-
-    Examples:
+            
+    Examples
+    ========
+    
     >>> a = list2arraypy(range(9), (3,3))
     >>> b = symmetric(a)
     >>> print (b)
@@ -58,9 +61,10 @@ def asymmetric(in_arr):
     Creates the asymmetric form of input tensor.
     Input: Arraypy or Tensor with equal axes (array shapes).
     Output: asymmetric array. Output type - Arraypy or Tensor, depends of input
-
-    Examples:
-
+            
+    Examples
+    ========
+    
     >>> a = list2arraypy(range(9), (3,3))
     >>> b = asymmetric(a)
     >>> print (b)
@@ -116,8 +120,10 @@ def perm_parity(lst):
     THANKS TO Paddy McCarthy FROM http://code.activestate.com/ FOR THIS FUNCTION!
     Given a permutation of the digits 0..N in order as a list,
     returns its parity (or sign): +1 for even parity; -1 for odd.
-
-    Example:
+            
+    Examples
+    ========
+    
     >>> signs=zeros(6)
     >>> temp_i=0
     >>> for p in permutations(range(3)):
@@ -140,12 +146,13 @@ def perm_parity(lst):
             lst[i], lst[mn] = lst[mn], lst[i]
     return parity
 
-
 def fac(n):
     """
     Finds factorial of n
-
-    Examples:
+            
+    Examples
+    ========
+    
     >>> fac(1)
     1
     >>> fac(3)
@@ -156,5 +163,4 @@ def fac(n):
     if n == 0:
         return 1
     return fac(n - 1) * n
-
 #====================================================
