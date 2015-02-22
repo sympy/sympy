@@ -1322,7 +1322,7 @@ def term_to_integer(term):
     11
     >>> terms = [[0, 0, 0, 1], [0, 0, 1, 1],
     ...     [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
-    >>> map(term_to_integer, terms)
+    >>> list(map(term_to_integer, terms))
     [1, 3, 7, 11, 15]
     >>> term_to_integer('10101')
     21
@@ -1357,17 +1357,18 @@ def integer_to_term(k, n_bits=0):
     >>> minterms = []
     >>> n_bits = 3
     >>> for i, value in enumerate(truthvalues):
-    ...	    if value:
-    ...	        minterms.append(integer_to_term(i, n_bits))
+    ...         if value:
+    ...             minterms.append(integer_to_term(i, n_bits))
     >>> minterms
     [[0, 0, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 1]]
 
     """
 
-    # TODO: replace with `n = i.bit_length() if i else 1` when 2.X support is dropped
+    # TODO: replace with `n = k.bit_length() if k else 1` when 2.X support is dropped
     n = len(bin(k).lstrip('-0b')) if k else 1
     prefix = [0] * (n_bits - n if n_bits else 0)
-    return prefix + map(int, '{0:b}'.format(k))
+    digits = map(int, '{0:b}'.format(k))
+    return prefix + digits
 
 
 def truth_table(expr, variables, input=True):
@@ -1389,14 +1390,14 @@ def truth_table(expr, variables, input=True):
     >>> from sympy.abc import x,y
     >>> table = truth_table(x >> y, [x, y])
     >>> for t in table:
-    ...     print t[0], '->', t[1]
+    ...     print('{0} -> {1}'.format(t[0], t[1]))
     [0, 0] -> True
     [0, 1] -> True
     [1, 0] -> False
     [1, 1] -> True
 
     >>> table = truth_table('x | y', ['x', 'y'])
-    >>> print list(table)
+    >>> list(table)
     [([0, 0], False), ([0, 1], True), ([1, 0], True), ([1, 1], True)]
 
     If input is false, truth_table returns only a list of truth values.
@@ -1407,11 +1408,11 @@ def truth_table(expr, variables, input=True):
     >>> vars = [y, x]
     >>> values = truth_table(x >> y, vars, input=False)
     >>> values = list(values)
-    >>> print values
+    >>> values
     [True, False, True, True]
 
     >>> for i, value in enumerate(values):
-    ...     print zip(vars, integer_to_term(i, len(vars))), '->', value
+    ...     print('{0} -> {1}'.format(zip(vars, integer_to_term(i, len(vars))), value))
     [(y, 0), (x, 0)] -> True
     [(y, 0), (x, 1)] -> False
     [(y, 1), (x, 0)] -> True

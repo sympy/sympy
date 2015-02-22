@@ -5,7 +5,7 @@ from sympy.logic.boolalg import (
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
     simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal
+    BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table
 )
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
@@ -703,7 +703,7 @@ def test_integer_to_term():
     assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0]
 
 
-def truth_table():
+def test_truth_table():
     x, y = symbols('x,y')
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
