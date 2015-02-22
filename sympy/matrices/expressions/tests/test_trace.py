@@ -53,12 +53,10 @@ def test_Trace_doit():
     assert Trace(q).doit(deep=False).arg == q
 
 
-@XFAIL
 def test_Trace_MatAdd_doit():
-    # FIXME: Issue #9028.
-    X = Matrix([[1, 2], [3, 4]])
+    X = ImmutableMatrix([[1, 2], [3, 4]])
     q = MatAdd(X, 2*X)
-    assert Trace(q).doit(deep=False).arg == q
+    assert Trace(q).doit(deep=False) == Trace(X) + Trace(2*X)
 
 
 @XFAIL
