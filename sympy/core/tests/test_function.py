@@ -29,6 +29,20 @@ def test_unicode_name_support():
     # check if unicoded function is same as its ascii counterpart
     assert Function('k') == Function(u('k'))
 
+def test_greek_name_support():
+    Function('α')
+    Function(u('α'))
+    Function('α') == Function(u('α'))
+
+    Function('αβ')
+    Function(u('αβ'))
+    Function('αβ') == Function(u('αβ'))
+
+    Function('aαβ')
+    Function(u('aαβ'))
+    Function('aαβ') == Function(u('aαβ'))
+
+
 def test_bug1():
     e = sqrt(-log(w))
     assert e.subs(log(w), -x) == sqrt(x)

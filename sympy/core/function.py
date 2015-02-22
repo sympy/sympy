@@ -707,10 +707,10 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name, **kwargs):
-        name=name.encode('ascii') # if user provides an UNICODE name
         if PY3:
-            # in python3, above command produces a binary string. To correct it,
-            name=name.decode('ascii')
+            name=str(name)
+        elif isinstance(name, unicode):
+            name=name.encode('utf-8')
 
         ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
         ret.__module__ = None
