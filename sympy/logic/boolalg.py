@@ -1305,84 +1305,133 @@ def to_int_repr(clauses, symbols):
 
 
 def term_to_integer(term):
-	"""
-	Constructs an integer from its base 2 digits.
+    """
+    Constructs an integer from its base 2 digits.
 
-	Examples
-	========
+    Parameters
+    ==========
 
-	>>> from sympy.logic.boolalg import term_to_integer
-	>>> term_to_integer([1, 0, 1, 1])
-	11
-	>>> terms = [[0, 0, 0, 1], [0, 0, 1, 1],
-	...			[0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
-	>>> map(term_to_integer, terms)
-	[1, 3, 7, 11, 15]
+    term : string or a list of ones and zeros
 
-	"""
+    Examples
+    ========
 
-	term = list(term)
-	return int(''.join(map(str, term)), 2)
+    >>> from sympy.logic.boolalg import term_to_integer
+    >>> term_to_integer([1, 0, 1, 1])
+    11
+    >>> terms = [[0, 0, 0, 1], [0, 0, 1, 1],
+    ...     [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
+    >>> map(term_to_integer, terms)
+    [1, 3, 7, 11, 15]
+    >>> term_to_integer('10101')
+    21
 
+    """
 
-def integer_to_term(i, n_bits=0):
-	"""
-	Gives a list of the base 2 digits in the integer i.
-	If additional n_bits argument is passed,
-	integer_to_term() extends list of digits with zeros.
-
-	Examples
-	========
-
-	>>> from sympy.logic.boolalg import integer_to_term
-	>>> integer_to_term(14)
-	[1, 1, 1, 0]
-	>>> integer_to_term(7, 5)
-	[0, 0, 1, 1, 1]
-	>>> truthtable = [1, 0, 0, 1, 1, 1, 0, 1]
-	>>> minterms = []
-	>>> n_bits = len(truthtable).bit_length() - 1
-	>>> for i, value in enumerate(truthtable):
-	...			if value:
-	...				minterms.append(integer_to_term(i, n_bits))
-	>>> minterms
-	[[0, 0, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 1]]
-
-	"""
-	n = i.bit_length() if i else 1
-	prefix = [0] * (n_bits - n if n_bits else 0)
-	return prefix + map(int, list('{0:b}'.format(i)))
+    term = list(term)
+    return int(''.join(map(str, term)), 2)
 
 
-def truth_table(expr, variables):
-	"""
-	Gives a list of truth values of the boolean expression.
+def integer_to_term(k, n_bits=0):
+    """
+    Gives a list of the base 2 digits in the integer k.
 
-	Examples
-	========
-	>>> from sympy.logic.boolalg import truth_table
-	>>> truth_table('a&b | b&c | c&a', ['a', 'b', 'c'])
-	[0, 0, 0, 1, 0, 1, 1, 1]
-	>>> truth_table('a >> b | c', ['a', 'b', 'c'])
-	[1, 1, 1, 1, 0, 1, 1, 1]
-	>>> from sympy.abc import x,y
-	>>> truth_table(x >> y, [y, x])
-	[1, 0, 1, 1]
+    Parameters
+    ==========
 
-	"""
-	variables = [sympify(v) for v in variables]
+    k : int
+    n_bits : int (default 0)
+        If n_bits more than the number of bits necessary to represent
+        the integer k in binary, then zeros prepended to the list of digits.
 
-	expr = sympify(expr)
-	if not isinstance(expr, BooleanFunction):
-		return expr
+    Examples
+    ========
 
-	truth_values = [0] * (2**len(variables))
-	for term in product([0, 1], repeat=len(variables)):
-		term = list(term)
-		if expr.xreplace(dict(zip(variables, term))) == True:
-			truth_values[term_to_integer(term)] = 1
+    >>> from sympy.logic.boolalg import integer_to_term
+    >>> integer_to_term(14)
+    [1, 1, 1, 0]
+    >>> integer_to_term(7, 5)
+    [0, 0, 1, 1, 1]
+    >>> truthvalues = [1, 0, 0, 1, 1, 1, 0, 1]
+    >>> minterms = []
+    >>> n_bits = 3
+    >>> for i, value in enumerate(truthvalues):
+    ...	    if value:
+    ...	        minterms.append(integer_to_term(i, n_bits))
+    >>> minterms
+    [[0, 0, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 1]]
 
-	return truth_values
+    """
+
+    # TODO: replace with `n = i.bit_length() if i else 1` when 2.X support is dropped
+    n = len(bin(k).lstrip('-0b')) if k else 1
+    prefix = [0] * (n_bits - n if n_bits else 0)
+    return prefix + map(int, '{0:b}'.format(k))
+
+
+def truth_table(expr, variables, input=True):
+    """
+    Gives a generator of all possible configurations of the input variables,
+    and the result of the boolean expression for those values.
+
+    Parameters
+    ==========
+
+    expr : string or boolean expression
+    variables : list of variables
+    input : boolean (default True)
+        indicates whether to return the input combinations.
+
+    Examples
+    ========
+    >>> from sympy.logic.boolalg import truth_table
+    >>> from sympy.abc import x,y
+    >>> table = truth_table(x >> y, [x, y])
+    >>> for t in table:
+    ...     print t[0], '->', t[1]
+    [0, 0] -> True
+    [0, 1] -> True
+    [1, 0] -> False
+    [1, 1] -> True
+
+    >>> table = truth_table('x | y', ['x', 'y'])
+    >>> print list(table)
+    [([0, 0], False), ([0, 1], True), ([1, 0], True), ([1, 1], True)]
+
+    If input is false, truth_table returns only a list of truth values.
+    In this case, the corresponding input values of variables can be
+    deduced from the index of a given output.
+
+    >>> from sympy.logic.boolalg import integer_to_term
+    >>> vars = [y, x]
+    >>> values = truth_table(x >> y, vars, input=False)
+    >>> values = list(values)
+    >>> print values
+    [True, False, True, True]
+
+    >>> for i, value in enumerate(values):
+    ...     print zip(vars, integer_to_term(i, len(vars))), '->', value
+    [(y, 0), (x, 0)] -> True
+    [(y, 0), (x, 1)] -> False
+    [(y, 1), (x, 0)] -> True
+    [(y, 1), (x, 1)] -> True
+
+    """
+    variables = [sympify(v) for v in variables]
+
+    expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction) and not is_literal(expr):
+        return
+
+    table = product([0, 1], repeat=len(variables))
+    for term in table:
+        term = list(term)
+        value = expr.xreplace(dict(zip(variables, term)))
+
+        if input:
+            yield term, value
+        else:
+            yield value
 
 
 def _check_pair(minterm1, minterm2):

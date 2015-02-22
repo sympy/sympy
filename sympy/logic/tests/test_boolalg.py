@@ -675,3 +675,21 @@ def test_issue_8777():
     assert And(x >= 1, x < oo).as_set() == Interval(1, oo)
     assert (x < oo).as_set() == Interval(-oo, oo)
     assert (x > -oo).as_set() == Interval(-oo, oo)
+
+
+def test_term_to_integer():
+    assert term_to_integer([1, 0, 1, 0, 0, 1, 0]) == 82
+    assert term_to_integer('0010101000111001') == 10809
+
+
+def test_integer_to_term():
+    assert integer_to_term(777) == [1, 1, 0, 0, 0, 0, 1, 0, 0, 1]
+    assert integer_to_term(123, 3) == [1, 1, 1, 1, 0, 1, 1]
+    assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0]
+
+
+def truth_table():
+    x, y = symbols('x,y')
+    assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
+    assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
+    assert list(truth_table('x >> y', ['x', 'y'], input=False)) == [True, True, False, True]
