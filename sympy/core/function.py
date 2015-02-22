@@ -707,9 +707,7 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name, **kwargs):
-        if PY3:
-            name=str(name)
-        elif isinstance(name, unicode):
+        if not PY3 and isinstance(name, unicode):
             name=name.encode('utf-8')
 
         ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
