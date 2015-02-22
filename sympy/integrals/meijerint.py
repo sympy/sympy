@@ -1041,27 +1041,25 @@ def _check_antecedents(g1, g2, x):
     try:
         lambda_c = (q - p)*abs(omega)**(1/(q - p))*cos(psi) \
             + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
-
-        def lambda_s0(c1, c2):
-            return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
-                + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
-        lambda_s = Piecewise(
-            ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
-             And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
-            (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
-             And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
-            (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
-             And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
-            (lambda_s0(sign(arg(omega)), sign(arg(sigma))), True))
         # the TypeError might be raised here, e.g. if lambda_c is NaN
-        tmp = [lambda_c > 0,
-               And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
-               And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
-        c15 = Or(*tmp)
         if _eval_cond(lambda_c > 0) != False:
             c15 = (lambda_c > 0)
-        if c15 is S.NaN or c15.has(S.ComplexInfinity):
-            raise TypeError  # handle in the except-clause
+        else:
+            def lambda_s0(c1, c2):
+                return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
+                    + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
+            lambda_s = Piecewise(
+                ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
+                 And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
+                (lambda_s0(sign(arg(omega)), +1)*lambda_s0(sign(arg(omega)), -1),
+                 And(Eq(arg(sigma), 0), Ne(arg(omega), 0))),
+                (lambda_s0(+1, sign(arg(sigma)))*lambda_s0(-1, sign(arg(sigma))),
+                 And(Ne(arg(sigma), 0), Eq(arg(omega), 0))),
+                (lambda_s0(sign(arg(omega)), sign(arg(sigma))), True))
+            tmp = [lambda_c > 0,
+                   And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
+                   And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
+            c15 = Or(*tmp)
     except TypeError:
         c15 = False
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
