@@ -1122,6 +1122,7 @@ def test_sincos_rewrite_sqrt():
                     assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
                     assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
     assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
+    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
 
 
 @slow
