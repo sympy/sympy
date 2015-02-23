@@ -273,7 +273,14 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_r') ) == u('Fᵣ')
     assert upretty( Symbol('F_v') ) == u('Fᵥ')
     assert upretty( Symbol('F_x') ) == u('Fₓ')
+
     assert upretty( Symbol('F_h') ) == u('Fₕ')
+    assert upretty( Symbol('F_k') ) == u('Fₖ')
+    assert upretty( Symbol('F_l') ) == u('Fₗ')
+    assert upretty( Symbol('F_m') ) == u('Fₘ')
+    assert upretty( Symbol('F_n') ) == u('Fₙ')
+    assert upretty( Symbol('F_p') ) == u('Fₚ')
+    assert upretty( Symbol('F_s') ) == u('Fₛ')
     assert upretty( Symbol('F_t') ) == u('Fₜ')
 
 def test_upretty_modifiers():
