@@ -27,6 +27,8 @@ class Arraypy(object):
     self._loop_size - Counts number of elements in array.
     self._output - dictionary. Dictionary key is an element index. 
     Dictionary value - is array value.
+    self._current_index - current index (used in iterator)
+    self._iterator_index_count - count of indices (in iterator)
 
     index - list, represent current index in calculating process.
     [0,0,0]; [0,0,1]; [0,0,2] etc (for 3-dim array).
@@ -336,7 +338,8 @@ class Arraypy(object):
                     i] or index[i] < self._start_index[i]:
                 raise ValueError('Value ' + str(i) + ' out of border')
 
-        # setting element. If array is sparse, index in dictionary and value is 0 then poping it from dictionary
+        # setting element. If array is sparse, index in dictionary and value is 
+        # 0 then poping it from dictionary
         # If array is sparse, index NOT in dictionary and value is 0 then do
         # nothing
         try:
@@ -428,6 +431,44 @@ class Arraypy(object):
         res._output = copy(self._output)
 
         return res
+    
+    def __iter__(self):
+        """Arraypy iterator"""
+        self._current_index = self._start_index
+        self._iterator_index_number = 0
+        
+        return self
+    
+    def __next__(self):
+        """
+        Next elemenet in Arraypy in iteration process.
+        Allows to use Arraypy instance in for loop
+        
+        Examples
+        ========
+        
+        >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
+        >>> for i in a:
+        ...     print (i)
+        ... 
+        1
+        2
+        3
+        4
+        5
+        6
+        7
+        8
+        
+        """
+        if (self._iterator_index_number == self._loop_size):
+            raise StopIteration
+        else:
+            self._iterator_index_number += 1
+            temp_index = self._current_index
+            self._current_index = self.next_index(self._current_index)
+            return self[temp_index]
+        
 
     def next_index(self, index):
         """
@@ -454,7 +495,8 @@ class Arraypy(object):
         (1, 1, 0)
         (1, 1, 1)
 
-        If input index will be last possible index, then result will be the first index(equal to ._start_index)
+        If input index will be last possible index, then result will be the 
+        first index(equal to ._start_index)
         >>> idx = (1,1,1)
         >>> idx = a.next_index(idx)
         >>> print idx
@@ -471,7 +513,8 @@ class Arraypy(object):
         # increasing index by 1. (0, 0, 0) -> (0, 0, 1)
         index[j] += 1
 
-        # in index exceeds top border, then index changes thiw way (self._start_index = (0, 0, 0) и self._end_index = (2, 2, 2)):
+        # in index exceeds top border, then index changes this way 
+        # ( self._start_index = (0, 0, 0) и self._end_index = (2, 2, 2) ):
         # (0, 0, 1) -> (0, 0, 2) -> (0, 1, 0)
         # (0, 1, 0) -> (0, 1, 1)
         # (0, 1, 1) -> (0, 1, 2) - > (0, 2, 0) -> (1, 0, 0)
@@ -1305,11 +1348,4 @@ def fac(n):
 
 #--------------------------------------------------------------
 #--------------------------------------------------------------
-'''
-a = list2tensor([1, 3, 5], 3, 1)
-print(a)
-b = list2tensor(range(4), (2, 2), (-1, 1))
-print(b)
-c = a * b
-print(c)
-'''
+

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from itertools import *
-from sympy.tensor import Arraypy, Tensor
+from sympy.tensor.arraypy import Arraypy, Tensor
 from random import randint
 # from sympy.mpmath import fac
 
