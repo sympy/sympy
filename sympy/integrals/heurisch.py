@@ -569,12 +569,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 factorization = factor(poly, greedy=True)
             except PolynomialError:
                 factorization = poly
-            factorization = poly
 
             if factorization.is_Mul:
-                reducibles |= set(factorization.args)
+                factors = factorization.args
             else:
-                reducibles.add(factorization)
+                factors = (factorization, )
+
+            for fact in factors:
+                if fact.is_Pow:
+                    reducibles.add(fact.base)
+                else:
+                    reducibles.add(fact)
 
     def _integrate(field=None):
         irreducibles = set()

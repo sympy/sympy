@@ -231,10 +231,7 @@ def test_pmint_trig():
 @slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
     f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
-    g = log(x**2 + 2*x*exp(x) + 2*x*log(x) + exp(2*x) + 2*exp(x)*log(x) + log(x)**2)/2 + 1/(x + exp(x) + log(x))
-
-    # TODO: Optimal solution is g = 1/(x + log(x) + exp(x)) + log(x + log(x) + exp(x)),
-    # but SymPy requires a lot of guidance to properly simplify heurisch() output.
+    g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
 
     assert ratsimp(heurisch(f, x)) == g
 
