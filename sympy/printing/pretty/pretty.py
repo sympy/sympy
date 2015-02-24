@@ -640,12 +640,13 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[', ']'))
         return D
 
+
     def _print_Trace(self, e):
-        mat = e._args[0]
-        D = self._print_MatrixBase(mat)
+        D = self._print(e.arg)
         D = prettyForm(*D.parens('(', ')'))
         D = prettyForm(*D.left('\n'*(D.height()//2) + 'tr'))
         return D
+
 
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
