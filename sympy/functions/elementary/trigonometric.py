@@ -656,10 +656,10 @@ class cos(TrigonometricFunction):
             return None
 
         def f1(a, b):
-            return (a+sqrt(a**2+b))/2, (a-sqrt(a**2+b))/2
+            return (a + sqrt(a**2 + b))/2, (a - sqrt(a**2 + b))/2
 
         def f2(a, b):
-            return (a-sqrt(a**2+b))/2
+            return (a - sqrt(a**2 + b))/2
 
         def cospi257():
             """ Express cos(pi/257) explicitly as a function of radicals
