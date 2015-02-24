@@ -1547,25 +1547,26 @@ def core(n, t=2):
         return y
 
 
-def digitslist(n, b=10):
+def digits(n, b=10):
     """
-    Return a list of the digits of n in base b.
+    Return a list of the digits of n in base b. First item in list is base hint.
 
-    digitslist(n, 2) is equivalent to [int(d) for d in format(n,'b')]
-    if n is negative, then the first item in the returned list is '-'
+    The first item in the list is b if n >= 0, otherwise the first item is -b
+    digitslist(n, 2)[1:] is equivalent to [int(d) for d in format(n,'b')]
+    if n is negative, then the first item in the returned list is -b
 
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import digitslist
-    >>> digitslist(35)
-    [3, 5]
-    >>> digitslist(27,2)
-    [1, 1, 0, 1, 1]
-    >>> digitslist(65536,256)
-    [1, 0, 0]
-    >>> digitslist(-3958,27)
-    ['-', 5, 11, 16]
+    >>> from sympy.ntheory.factor_ import digits
+    >>> digits(35)
+    [10, 3, 5]
+    >>> digits(27, 2)
+    [2, 1, 1, 0, 1, 1]
+    >>> digits(65536, 256)
+    [256, 1, 0, 0]
+    >>> digits(-3958, 27)
+    [-27, 5, 11, 16]
     """
 
     b = as_int(b)
@@ -1578,5 +1579,6 @@ def digitslist(n, b=10):
             x, r = divmod(x, b)
             y.append(r)
         y.append(x)
+        y.append(-b if n < 0 else b)
         y.reverse()
-        return ['-'] + y if n < 0 else y
+        return y

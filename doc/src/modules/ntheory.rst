@@ -55,7 +55,7 @@ Ntheory Functions Reference
 
 .. autofunction:: core
 
-.. autofunction:: digitslist
+.. autofunction:: digits
 
 .. module:: sympy.ntheory.modular
 
