@@ -655,152 +655,43 @@ class cos(TrigonometricFunction):
         if not pi_coeff.is_Rational:
             return None
 
+        def f1(a, b):
+            return (a+sqrt(a**2+b))/2, (a-sqrt(a**2+b))/2
+
+        def f2(a, b):
+            return (a-sqrt(a**2+b))/2
+
         def cospi257():
             """ Express cos(pi/257) explicitly as a function of radicals
                 Based upon the equations in
-                http://www.susqu.edu/brakke/constructions/257-gon.m.txt
-                See also http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
+                http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
+                See also http://www.susqu.edu/brakke/constructions/257-gon.m.txt
             """
-            x0 = sqrt(257)
-            x1 = sqrt(514)
-            x2 = sqrt(-x0 + 257)
-            x3 = x1*x2
-            x4 = 2*x3
-            x5 = sqrt(2)
-            x6 = x2*x5
-            x7 = 28*x6
-            x8 = 4*x3
-            x9 = 30*x0
-            x10 = x9 + 514
-            x11 = 15*x6
-            x12 = sqrt(x10 + x11 + x3)
-            x13 = x1*x12
-            x14 = 2*x13
-            x15 = x12*x2
-            x16 = 4*x15
-            x17 = sqrt(x0 + 257)
-            x18 = x17*x5
-            x19 = -x9 + 514
-            x20 = 15*x18
-            x21 = x1*x17
-            x22 = sqrt(x19 + x20 - x21)
-            x23 = x22*x5
-            x24 = -64*x23
-            x25 = x12*x5
-            x26 = sqrt(x10 - x11 - x3)
-            x27 = x26*x5
-            x28 = 32*x27
-            x29 = -x28
-            x30 = 56*x6
-            x31 = 8*x3
-            x32 = 4*x13
-            x33 = 8*x15
-            x34 = 36*x0
-            x35 = 14*x18
-            x36 = 2*x21
-            x37 = 32*x6
-            x38 = x34 + x35 - x36 + x37 + 1028
-            x39 = sqrt(x19 - x20 + x21)
-            x40 = x39*x5
-            x41 = 16*x40
-            x42 = x1*x22
-            x43 = 17*x23
-            x44 = x17*x22
-            x45 = 2*x44
-            x46 = sqrt(x28 + x38 + x41 + x42 + x43 - x45)
-            x47 = x46*x5
-            x48 = 64*x5
-            x49 = sqrt(x29 + x38 - x41 - x42 - x43 + x45)
-            x50 = -x34
-            x51 = 32*x18
-            x52 = 14*x6
-            x53 = x4 + x50 - x51 + x52 + 1028
-            x54 = 32*x23
-            x55 = -x54
-            x56 = 17*x25
-            x57 = 16*x27
-            x58 = 2*x15
-            x59 = sqrt(x13 + x53 + x55 - x56 - x57 + x58)
-            x60 = x5*x59
-            x61 = x1*x59
-            x62 = 2*x61
-            x63 = -x4 + x50 + x51 - x52 + 1028
-            x64 = 32*x40
-            x65 = 16*x25
-            x66 = x1*x26
-            x67 = 17*x27
-            x68 = 2*x2
-            x69 = x26*x68
-            x70 = sqrt(x63 - x64 + x65 + x66 - x67 - x69)
-            x71 = 4*x59
-            x72 = x2*x71
-            x73 = x12*x71
-            x74 = 256*x0
-            x75 = x34 - x35 + x36 - x37 + 1028
-            x76 = 17*x40
-            x77 = x1*x39
-            x78 = 16*x23
-            x79 = 32*x25
-            x80 = x17*x39
-            x81 = 2*x80
-            x82 = sqrt(x75 - x76 - x77 + x78 + x79 - x81)
-            x83 = x5*x82
-            x84 = 128*x5
-            x85 = 8*x0
-            x86 = 28*x18
-            x87 = 4*x21
-            x88 = 96*x6
-            x89 = 48*x23 - 50*x40 - 2*x77 + x79 - 4*x80 + x85 - x86 + x87 - x88 + 2056
-            x90 = 33*x83
-            x91 = x1*x82
-            x92 = 32*x5
-            x93 = x46*x92
-            x94 = 2*x17
-            x95 = x82*x94
-            x96 = x59*x92
-            x97 = x92*sqrt(-x13 + x53 + x54 + x56 + x57 - x58)
-            x98 = 2*x39*x82
-            x99 = 50*x23 + x28 + 48*x40 + 2*x42 - 4*x44 + x85 + x86 - x87 + x88 + 2056
-            x100 = x92*sqrt(x75 + x76 + x77 - x78 - x79 + x81)
-            x101 = 33*x47
-            x102 = x1*x46
-            x103 = x46*x94
-            x104 = x70*x92
-            x105 = -x104
-            x106 = x92*sqrt(x63 + x64 - x65 - x66 + x67 + x69)
-            x107 = 2*x22*x46
-            x108 = -x85
-            x109 = -96*x18
-            x110 = -50*x25
-            x111 = -48*x27
-            x112 = -x93
-            x113 = x49*x92
-            x114 = 33*x60
-            x115 = x59*x68
-            x116 = 2*x12
-            x117 = x116*x59
-            x118 = x0 + x25 - x5*sqrt(x105 + x108 + x109 + x110 + x111 + x112
-                - x113 - x114 + x115 + x117 + x14 + x16 + x55 + x61 + x7 + x8
-                + 2056) + x6 + x60 - 1
-            x119 = sqrt(x118**2 + 128*x23 - 128*x40 - 128*x47 + x74 - 128*x83 +
-                x84*sqrt(-x100 - x101 - x102 + x103 + x105 + x106 - x107 + x99)
-                + x84*sqrt(x89 - x90 - x91 + x93 - x95 + x96 + x97 + x98) + 256)
-            x120 = x104 + x113
-            x121 = sqrt(x108 + x109 + x110 + x111 + x114 - x115 - x117 + x120
-                + x14 + x16 + x55 - x61 + x7 + x8 + x93 + 2056)
-            x122 = x121*x5
-            return -2*(2*((x0 + x119 + sqrt(-2*x0 + 514) + sqrt(60*x0 + x4
-                + 30*x6 + 1028) - sqrt(256*x122 - 256*x25 - 256*x5*sqrt(112*x0
-                - x1*x121 - x116*x121 + x120 + 2*x121*x59 - x121*x68 + x122
-                - 128*x18 - 68*x25 - 64*x27 + x30 + x31 + x32 + x33 - 64*x40
-                + 96*x47 + x48*sqrt(x100 + x101 + x102 - x103 + x104 - x106
-                + x107 + x99) + x48*sqrt(x112 + x89 + x90 + x91 + x95 - x96
-                - x97 - x98) + 34*x60 - x62 - x72 - x73 + 64*x83 + 4112)
-                - 256*x6 + 256*x60 - x74 + (x118 + x119)**2 + 256)
-                + sqrt(-72*x0 + x14 + x16 - 64*x18 + x24 - 34*x25 + x29 + x7
-                + x8 + 2056) - sqrt(-16*x0 - 192*x18 + x24 - 100*x25 - 96*x27
-                + x30 + x31 + x32 + x33 - 64*x47 - x48*x49 - x48*x70 - 66*x60
-                + x62 + x72 + x73 + 4112) - 1)/S(256))**2 - 1)**2 + 1
+            t1, t2 = f1(-1, 256)
+            z1, z3 = f1(t1, 64)
+            z2, z4 = f1(t2, 64)
+            y1, y5 = f1(z1, 4*(5 + t1 + 2*z1))
+            y6, y2 = f1(z2, 4*(5 + t2 + 2*z2))
+            y3, y7 = f1(z3, 4*(5 + t1 + 2*z3))
+            y8, y4 = f1(z4, 4*(5 + t2 + 2*z4))
+            x1, x9 = f1(y1, -4*(t1 + y1 + y3 + 2*y6))
+            x2, x10 = f1(y2, -4*(t2 + y2 + y4 + 2*y7))
+            x3, x11 = f1(y3, -4*(t1 + y3 + y5 + 2*y8))
+            x4, x12 = f1(y4, -4*(t2 + y4 + y6 + 2*y1))
+            x5, x13 = f1(y5, -4*(t1 + y5 + y7 + 2*y2))
+            x6, x14 = f1(y6, -4*(t2 + y6 + y8 + 2*y3))
+            x15, x7 = f1(y7, -4*(t1 + y7 + y1 + 2*y4))
+            x8, x16 = f1(y8, -4*(t2 + y8 + y2 + 2*y5))
+            v1 = f2(x1, -4*(x1 + x2 + x3 + x6))
+            v2 = f2(x2, -4*(x2 + x3 + x4 + x7))
+            v3 = f2(x8, -4*(x8 + x9 + x10 + x13))
+            v4 = f2(x9, -4*(x9 + x10 + x11 + x14))
+            v5 = f2(x10, -4*(x10 + x11 + x12 + x15))
+            v6 = f2(x16, -4*(x16 + x1 + x2 + x5))
+            u1 = -f2(-v1, -4*(v2 + v3))
+            u2 = -f2(-v4, -4*(v5 + v6))
+            w2 = f2(u1, -4*u2)
+            return (1-2*(w2**2/2-1)**2)
 
         cst_table_some = {
             3: S.Half,
