@@ -1549,11 +1549,8 @@ def core(n, t=2):
 
 def digits(n, b=10):
     """
-    Return a list of the digits of n in base b. First item in list is base hint.
-
-    The first item in the list is b if n >= 0, otherwise the first item is -b
-    digitslist(n, 2)[1:] is equivalent to [int(d) for d in format(n,'b')]
-    if n is negative, then the first item in the returned list is -b
+    Return a list of the digits of n in base b. The first element in the list
+    is b (or -b if n is negative).
 
     Examples
     ========
