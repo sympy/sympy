@@ -688,10 +688,10 @@ class cos(TrigonometricFunction):
             v4 = f2(x9, -4*(x9 + x10 + x11 + x14))
             v5 = f2(x10, -4*(x10 + x11 + x12 + x15))
             v6 = f2(x16, -4*(x16 + x1 + x2 + x5))
-            u1 = -f2(-v1, -4*(v2 + v3))
-            u2 = -f2(-v4, -4*(v5 + v6))
-            w2 = f2(u1, -4*u2)
-            return (1-2*(w2**2/2-1)**2)
+            u1 = f2(-v1, -4*(v2 + v3))
+            u2 = f2(-v4, -4*(v5 + v6))
+            w1 = f2(u1, 4*u2)
+            return sqrt(2 + sqrt(2 - w1))/2
 
         cst_table_some = {
             3: S.Half,
