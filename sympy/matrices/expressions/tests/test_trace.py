@@ -64,7 +64,6 @@ def test_Trace_MatAdd_doit():
     assert s.doit() == 18 - 2 * Trace(Y)
     
     
-
 @XFAIL
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)
