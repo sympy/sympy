@@ -59,6 +59,7 @@ def test_Trace_MatAdd_doit():
     q = MatAdd(X, 2*X, Y, -3*Y)
     r = Trace(q)
     s = trace(q)
+    assert r.arg == q
     assert r.doit(deep=False) == Trace(X) + Trace(2*X) + Trace(Y) + Trace(-3*Y)
     assert s == Trace(3*X) + Trace(-2*Y)
     assert s.doit() == 18 - 2 * Trace(Y)
