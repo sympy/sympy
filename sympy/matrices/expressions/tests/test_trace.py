@@ -54,11 +54,16 @@ def test_Trace_doit():
 
 
 def test_Trace_MatAdd_doit():
-    X = ImmutableMatrix([[1, 2], [3, 4]])
-    q = MatAdd(X, 2*X)
-    assert Trace(q).doit(deep=False) == Trace(X) + Trace(2*X)
-    assert Trace(q).doit() == 15
-
+    X = ImmutableMatrix([[1, 2, 3]]*3)
+    Y = MatrixSymbol('Y', 3, 3)
+    q = MatAdd(X, 2*X, Y, -3*Y)
+    r = Trace(q)
+    s = trace(q)
+    assert r.doit(deep=False) == Trace(X) + Trace(2*X) + Trace(Y) + Trace(-3*Y)
+    assert s == Trace(3*X) + Trace(-2*Y)
+    assert s.doit() == 18 - 2 * Trace(Y)
+    
+    
 
 @XFAIL
 def test_rewrite():

@@ -50,7 +50,7 @@ class MatAdd(MatrixExpr):
         return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
     def _eval_trace(self):
-        from trace import Trace
+        from .trace import Trace
         return Add(*[Trace(arg) for arg in self.args])
 
     def doit(self, **kwargs):
