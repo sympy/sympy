@@ -53,18 +53,30 @@ def test_Trace_doit():
     assert Trace(q).doit(deep=False).arg == q
 
 
+def test_Trace_MatMul():
+    assert not trace(A*B) == trace(A) * trace(B)
+
+
 def test_Trace_MatAdd_doit():
     X = ImmutableMatrix([[1, 2, 3]]*3)
     Y = MatrixSymbol('Y', 3, 3)
     q = MatAdd(X, 2*X, Y, -3*Y)
     r = Trace(q)
-    s = trace(q)
     assert r.arg == q
-    assert r.doit(deep=False) == Trace(X) + Trace(2*X) + Trace(Y) + Trace(-3*Y)
-    assert s == Trace(3*X) + Trace(-2*Y)
-    assert s.doit() == 18 - 2 * Trace(Y)
-    
-    
+    assert r.doit() == 18 - 2 * Trace(Y)
+
+
+@XFAIL
+def test_Trace_doit_deep():
+    X = Matrix([[1, 2, 3]]*3) # FIXES: Issue #9043
+    Y = MatrixSymbol('Y', 3, 3)
+    q = MatAdd(X, 2*X, Y, -3*Y)
+    r = Trace(q)
+    # assert trace(X) + trace(-X) == (TO DO)
+    # assert Trace(X) + Trace(-X) == (TO DO)
+    # assert r.doit(deep = False) == (TO DO)
+
+
 @XFAIL
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)
