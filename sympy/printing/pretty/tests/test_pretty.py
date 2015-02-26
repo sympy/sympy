@@ -18,7 +18,7 @@ from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.trace import Tr
 
 from sympy.core.compatibility import u_decode as u
@@ -4915,7 +4915,37 @@ u("""\
     assert upretty(e) == ucode_str
 
 
+@XFAIL
+def test_issue_9057():
+    from sympy.functions import beta
+    # beta function should take 2 arguments
+    raises(TypeError, lambda: beta(2))
+
+    # now beta is a pure Symbol
+    from sympy.abc import alpha, phi, beta, t
+
+    # as expected, no errors raised by these
+    alpha(2)
+    alpha(2.5)
+    alpha(t)
+    beta(2)
+    beta(t)
+    phi(2)
+    phi(t)
+
+    # but this raises TypeError (became the beta function )
+    beta(2.5)
+
+
+def test_issue_9057_phi():
+    from sympy.abc import phi
+    # similar to above, but segfaults on my system
+    phi(2.5)
+
+
 def test_issue_6134():
+    # FIXME: this segfaults for me---as in test_issue_9057_phi---probably
+    # because somewhere it tries numerical quadrature on the integral).
     from sympy.abc import lamda, phi, t
 
     e = lamda*x*Integral(phi(t)*pi*sin(pi*t), (t, 0, 1)) + lamda*x**2*Integral(phi(t)*2*pi*sin(2*pi*t), (t, 0, 1))
