@@ -479,7 +479,7 @@ class prettyForm(stringPict):
         if a.binding == prettyForm.FUNC:
             #         2
             #  sin  +   + (x)
-            b.baseline = a.prettyFunc.baseline + 1
+            b.baseline = a.prettyFunc.baseline + b.height()
             func = stringPict(*a.prettyFunc.right(b))
             return prettyForm(*func.right(a.prettyArgs))
         else:
