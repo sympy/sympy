@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from sympy.matrices import *
-from sympy import Add, diff, symbols, simplify, sqrt
-from sympy.tensor.arraypy import *
+from sympy.matrices import Matrix, eye
+from sympy import Add, diff, Symbol, simplify, sqrt
+from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
+    matrix2tensor, list2arraypy, list2tensor
 
 # ---------------- df --------------------------------
 
@@ -13,14 +14,16 @@ def df(f, args, output_type='l'):
     Examples:
     =========
 
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import df
+    >>> from sympy import symbols, sin
     >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
     >>> f=x1**2*x2+sin(x2*x3-x2)
     >>> args=[x1, x2, x3]
     >>> df(f, args, a)
 
     =========
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import df
+    >>> from sympy import symbols, sin
     >>> x1, x2, x3= symbols('x1 x2 x3')
     >>> f=x1**2*x2+sin(x2*x3-x2)
     >>> args_t=Arraypy([1,3,1]).to_tensor(1)
@@ -72,12 +75,13 @@ def df(f, args, output_type='l'):
 
 
 def grad(f, args, g=None, output_type=None):
-    """ Return the vector field Gradient(f(x)) of a function f(x).
+    """Return the vector field Gradient(f(x)) of a function f(x).
 
     Examples:
     =========
 
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import grad
+    >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> f=x1**2*x2+sin(x2*x3-x2)
     >>> args_t=Arraypy([1,3,1]).to_tensor(1)
@@ -87,7 +91,8 @@ def grad(f, args, g=None, output_type=None):
     >>> grad(f,args_t,output_type='t')
 
     =========
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import grad
+    >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> f=x1**2*x2+sin(x2*x3-x2)
     >>> var=[x1,x2,x3]
@@ -190,7 +195,8 @@ def rot(X, args, output_type=None):
     Examples:
     =========
 
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import rot
+    >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> X=Arraypy(3)
     >>> X_t=Tensor(X,(1))
@@ -279,13 +285,14 @@ def rot(X, args, output_type=None):
 
 
 def div(X, args, g=None):
-    """Return the divergence of a vector field X.
-    Compute divergence of vector field consisting of N elements.
+    """Return the divergence of a vector field X. Compute divergence of vector
+    field consisting of N elements.
 
     Examples:
     =========
 
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import div
+    >>> from sympy import symbols, cos
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
     >>> g=Matrix([[2,1,0],[1,3,0],[0,0,1]])
@@ -345,12 +352,13 @@ def div(X, args, g=None):
 # ------------------LieXY-------------------------------
 
 def LieXY(X, Y, args, output_type=None):
-    """Return the vector field [X,Y], Lie bracket (commutator) of
-    a vector fields X and Y
+    """Return the vector field [X,Y], Lie bracket (commutator) of a vector
+    fields X and Y.
 
     Examples:
     =========
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import LieXY
+    >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> X=[-x**3,9*y**2,5*z, 8*h+x]
     >>> Y=[x1**3*x2**3,x2*x3-sin(x1*x3),x3**3-x1**2]
@@ -444,8 +452,11 @@ def LieXY(X, Y, args, output_type=None):
         indices = range(len(args))
         for i in indices:
             for k in indices:
-                Li[i + idx_st] += Add(diff(Y[i], args[k]) * X[k]
-                                      - diff(X[i], args[k]) * Y[k])
+                Li[i +
+                   idx_st] += Add(diff(Y[i], args[k]) *
+                                  X[k] -
+                                  diff(X[i], args[k]) *
+                                  Y[k])
     # Handling of an output array
     if output_type == 't' or output_type == Symbol('t'):
         Lie = Arraypy.to_tensor(Li, 1)
@@ -466,8 +477,7 @@ def LieXY(X, Y, args, output_type=None):
 
 def NotNeedElement(_list, index):
     """The function returns a tuple containing the remainder of the input list
-    after you remove the element at the specified index.
-    """
+    after you remove the element at the specified index."""
     res = []
     for i in range(len(_list)):
         if i != index:
@@ -477,13 +487,14 @@ def NotNeedElement(_list, index):
 
 # ---------------- dw --------------------------------
 def dw(omega, args):
-    """ Returns the exterior product of a vector fields
-    (or "exterior differential"?)
+    """Returns the exterior product of a vector fields (or "exterior
+    differential"?)
 
     Examples:
     =========
 
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import dw
+    >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
     >>> omega[1,2]=x3
@@ -547,7 +558,9 @@ def dw(omega, args):
 
 def NeedElementK(_list, index, k):
     """The function replaces the item "index" on the element "k".
+
     The result is a tuple.
+
     """
     output = []
     for i in range(len(_list)):
@@ -561,13 +574,14 @@ def NeedElementK(_list, index, k):
 # ---------------- Lie_omega --------------------------------
 
 def Lie_w(omega, X, args):
-    """Returns the exterior product of a vector fields
-    (or "exterior differential"?)
+    """Returns the exterior product of a vector fields (or "exterior
+    differential"?)
 
     Examples:
     =========
 
-    >>> from sympy import *
+    >>> from sympy.tensor.tensor_fields import Lie_w
+    >>> from sympy import symbols, cos
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
     >>> omega[1,2]=x3
