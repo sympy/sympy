@@ -1753,3 +1753,17 @@ def test_issue_8828():
 
     p, q, r = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in [A, B, C]]
     assert p == q == r
+
+
+def test_issue_2840():
+    assert solve(sin(3*x) + sin(6*x)) == [
+        0, -pi, pi, 2*pi, -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
+        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-S(1)/2 -
+        sqrt(3)*I/2), -2*I*log(-S(1)/2 + sqrt(3)*I/2), -2*I*log(S(1)/2 -
+        sqrt(3)*I/2), -2*I*log(S(1)/2 + sqrt(3)*I/2), -2*I*log(-sqrt(3)/2 - I/2),
+        -2*I*log(-sqrt(3)/2 + I/2), -2*I*log(sqrt(3)/2 - I/2),
+        -2*I*log(sqrt(3)/2 + I/2), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
+        -2*I*log(-sin(pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) -
+        I*cos(pi/18)), -2*I*log(sin(pi/18) + I*cos(pi/18)),
+        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
+        -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
