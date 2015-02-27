@@ -1278,31 +1278,36 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
-    Returns a list of parameters defining the system of ordinary differential equations
-    in form of dictionary. The dictionary returned is further used in
-    :py:meth:`~sympy.solvers.ode.dsolve` for solving system of ODEs.
+    Returns a dictionary of parameter names and values that define the system
+    of ordinary differential equations in ``eq``.
+    The parameters are further used in
+    :py:meth:`~sympy.solvers.ode.dsolve` for solving that system.
 
-    It returns seven parameters, first parameter is 'is_linear' which tells
-    whether given equation is linear or Non-linear based on the coefficients
-    of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc
-    which itself is a parameter named 'func_coeff'.
+    The parameter names and values are:
+
+    'is_linear' (boolean), which tells whether the given system is linear.
     Note that "linear" here refers to the operator: terms such as ``x*diff(x,t)`` are
     nonlinear, whereas terms like ``sin(t)*diff(x,t)`` are still linear operators.
-    Second parameter is order of equation, it provides information about order
-    of differential equations provided. The third parameters is the number of equation
-    in the system.
-    The forth parameter is 'func_coeff' which has list of coefficient of all function and its
-    differentials. Each is described by three elements, first is equation number,
-    second is function and third is order of function whose coefficients we are calculating.
-    The other two parameters are the equations of ODEs and its functions.
-    The other parameter which tells whether given system of ODEs are solvable by current
-    solving engine. If it returns a type the it is solvable and result can be obtained
-    using dsolve otherwise None is returned.
 
-    The type returned is just a number assigned to set of each equation classified under
-    common characteristics based on linearity, number of equation and order. Similarly
-    there are different sets based on above parameters. The type number sequence implemented
-    is same as is given references.
+    'func' (list) contains the :py:class:`~sympy.core.function.Function`s that
+    appear with a derivative in the ODE, i.e. those that we are trying to solve
+    the ODE for.
+
+    'order' (dict) with the maximum derivative for each element of the 'func'
+    parameter.
+
+    'func_coeff' (dict) with the coefficient for each triple ``(equation number,
+    function, order)```. The coefficients are those subexpressions that do not
+    appear in 'func', and hence can be considered constant for purposes of ODE
+    solving.
+
+    'eq' (list) with the equations from ``eq``, sympified and transformed into
+    expressions (we are solving for these expressions to be zero).
+
+    'no_of_equations' (int) is the number of equations (same as ``len(eq)``).
+
+    'type_of_equation' (string) is an internal classification of the type of
+    ODE.
 
     References
     ==========
@@ -1346,8 +1351,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
     if i==0:
-        raise ValueError("classify_sysode() woks for systems of ODEs. For"
-        " single ODE equation solving classify_ode should be used")
+        raise ValueError("classify_sysode() works for systems of ODEs. "
+        "For scalar ODEs, classify_ode should be used")
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     # find all the functions if not given
