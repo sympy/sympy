@@ -2307,6 +2307,9 @@ class Expr(Basic, EvalfMixin):
         See also is_algebraic_expr().
 
         """
+        if self is S.NaN:
+            return False
+
         if syms:
             syms = set(map(sympify, syms))
         else:
