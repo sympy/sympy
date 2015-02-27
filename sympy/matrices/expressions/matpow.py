@@ -69,4 +69,25 @@ class MatPow(MatrixExpr):
         return MatPow(base, exp)
 
 
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        base = args[0]
+        exp = args[1]
+        if isinstance(base, MatrixBase) and exp.is_number:
+            if exp is S.One:
+                return base
+            return base**exp
+        # Note: just evaluate cases we know, return unevaluated on others.
+        # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
+        if exp.is_zero and base.is_square:
+            return Identity(base.shape[0])
+        elif exp is S.One:
+            return base
+        return MatPow(base, exp)
+
+
 from .matmul import MatMul
