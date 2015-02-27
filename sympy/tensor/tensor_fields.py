@@ -63,7 +63,7 @@ def df(f, args, output_type='l'):
     elif output_type == 'a' or output_type == Symbol('a'):
         differential = array
     elif output_type == 'l' or output_type == Symbol('l'):
-        differential = Arraypy.To_list(array)
+        differential = Arraypy.to_list(array)
     else:
         raise TypeError(
             "The third arguments must be 't'-tensor,'a'-massiv Arraypy, \
@@ -163,7 +163,7 @@ def grad(f, args, g=None, output_type=None):
     # Calculating
     g_inv = g.inv()
     if isinstance(args, (Tensor, Arraypy)):
-        args = args.To_list()
+        args = args.to_list()
     for i in indices:
         for j in indices:
             array[i] += (g_inv[i - idx_st, j - idx_st] * diff(f, args[j -
@@ -176,7 +176,7 @@ def grad(f, args, g=None, output_type=None):
         gradient = array
     elif output_type == 'l' or output_type == Symbol('l') or output_type is\
             None:
-        gradient = Arraypy.To_list(array)
+        gradient = Arraypy.to_list(array)
     else:
         raise TypeError(
             "The third arguments must be 't'-tensor,'a'-massiv Arraypy, \
@@ -260,9 +260,9 @@ def rot(X, args, output_type=None):
 
     # Calculation
     if isinstance(X, (Tensor, Arraypy)):
-        X = X.To_list()
+        X = X.to_list()
     if isinstance(args, (Tensor, Arraypy)):
-        args = args.To_list()
+        args = args.to_list()
 
     array[idx_st] = (diff(X[2], args[1]) - diff(X[1], args[2]))
     array[idx_st + 1] = diff(X[0], args[2]) - diff(X[2], args[0])
@@ -274,7 +274,7 @@ def rot(X, args, output_type=None):
     elif output_type == 'a' or output_type == Symbol('a'):
         rotor = array
     elif output_type == 'l' or output_type == Symbol('l'):
-        rotor = Arraypy.To_list(array)
+        rotor = Arraypy.to_list(array)
     else:
         raise TypeError(
             "The third arguments must be 't'-tensor,'a'-massiv Arraypy, \
@@ -310,7 +310,7 @@ def div(X, args, g=None):
         if isinstance(args, Tensor):
             if args.type_pq != (1, 0):
                 raise ValueError("The valency of tensor must be (+1)")
-        args = args.To_list()
+        args = args.to_list()
 
     # Handling of a vector field
     if not isinstance(X, (list, Tensor, Arraypy)):
@@ -322,7 +322,7 @@ def div(X, args, g=None):
         if isinstance(X, Tensor):
             if X.type_pq != (1, 0):
                 raise ValueError("The valency of tensor must be (+1)")
-        X = X.To_list()
+        X = X.to_list()
 
     # Handling of the metric tensor
     if g is not None:
@@ -440,11 +440,11 @@ def LieXY(X, Y, args, output_type=None):
 
     # Calculating
     if isinstance(Y, (Tensor, Arraypy)):
-        Y = Y.To_list()
+        Y = Y.to_list()
     if isinstance(X, (Tensor, Arraypy)):
-        X = X.To_list()
+        X = X.to_list()
     if isinstance(args, (Tensor, Arraypy)):
-        args = args.To_list()
+        args = args.to_list()
 
     if X == Y:
         return 0
@@ -463,7 +463,7 @@ def LieXY(X, Y, args, output_type=None):
     elif output_type == 'a' or output_type == Symbol('a'):
         Lie = Li
     elif output_type == 'l' or output_type == Symbol('l'):
-        Lie = Arraypy.To_list(Li)
+        Lie = Arraypy.to_list(Li)
     else:
         raise TypeError(
             "The third arguments must be 't'-tensor,'a'-massiv Arraypy, \
@@ -540,7 +540,7 @@ def dw(omega, args):
     # Calculation
     idx = d_omega.start_index
     if isinstance(args, (Tensor, Arraypy)):
-        args = args.To_list()
+        args = args.to_list()
 
     for i in range(len(d_omega)):
         # list of tuple. example:[(0, 1), (0, 1), (0, 0)]
@@ -650,9 +650,9 @@ def Lie_w(omega, X, args):
     # Calculation
     idx = diff_Lie.start_index
     if isinstance(args, (Tensor, Arraypy)):
-        args = args.To_list()
+        args = args.to_list()
     if isinstance(X, (Tensor, Arraypy)):
-        X = X.To_list()
+        X = X.to_list()
 
     for p in range(len(diff_Lie)):
         for k in range(len(idx) + 1):
