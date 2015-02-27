@@ -30,7 +30,7 @@ def test_Trace():
     # Some easy simplifications
     assert trace(Identity(5)) == 5
     assert trace(ZeroMatrix(5, 5)) == 0
-    assert trace(2*A*B) == 2 * trace(A*B)
+    assert trace(2*A*B) == 2*Trace(A*B)
     assert trace(A.T) == trace(A)
 
     i, j = symbols('i j')
@@ -51,10 +51,6 @@ def test_Trace_doit():
     assert Trace(q).arg == q
     assert Trace(q).doit() == 29
     assert Trace(q).doit(deep=False).arg == q
-
-
-def test_Trace_MatMul():
-    assert not trace(A*B) == trace(A)*trace(B)
 
 
 def test_Trace_MatAdd_doit():
