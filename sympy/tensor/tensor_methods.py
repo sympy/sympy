@@ -3,8 +3,7 @@
 from itertools import *
 from sympy.tensor.arraypy import Arraypy, Tensor
 from random import randint
-# from sympy.mpmath import fac
-
+from sympy.functions.combinatorial.factorials import factorial
 
 def symmetric(in_arr):
     """
@@ -49,7 +48,7 @@ def symmetric(in_arr):
             res_arr[tuple(index)] += in_arr[tuple(temp_index)]
         if isinstance(res_arr[tuple(index)], int):
             res_arr[tuple(index)] = float(res_arr[tuple(index)])
-        res_arr[tuple(index)] /= fac(in_arr.rank)
+        res_arr[tuple(index)] /= factorial(in_arr.rank)
 
         index = in_arr.next_index(index)
 
@@ -91,7 +90,7 @@ def asymmetric(in_arr):
     else:
         res_arr = Arraypy(arg)
 
-    signs = [0 for i in range(fac(in_arr.rank))]
+    signs = [0 for i in range(factorial(in_arr.rank))]
     temp_i = 0
     for p in permutations(range(in_arr.rank)):
         signs[temp_i] = perm_parity(list(p))
@@ -108,7 +107,7 @@ def asymmetric(in_arr):
             perm_number += 1
         if isinstance(res_arr[tuple(index)], int):
             res_arr[tuple(index)] = float(res_arr[tuple(index)])
-        res_arr[tuple(index)] /= fac(in_arr.rank)
+        res_arr[tuple(index)] /= factorial(in_arr.rank)
 
         index = in_arr.next_index(index)
 
@@ -145,22 +144,4 @@ def perm_parity(lst):
             mn = min(range(i, len(lst)), key=lst.__getitem__)
             lst[i], lst[mn] = lst[mn], lst[i]
     return parity
-
-def fac(n):
-    """
-    Finds factorial of n
-            
-    Examples
-    ========
-    
-    >>> fac(1)
-    1
-    >>> fac(3)
-    6
-    >>> fac(12)
-    479001600
-    """
-    if n == 0:
-        return 1
-    return fac(n - 1) * n
 #====================================================

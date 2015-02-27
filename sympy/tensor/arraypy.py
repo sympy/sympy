@@ -420,9 +420,9 @@ class Arraypy(object):
         # forming output string
         for i in range(self._loop_size):
             if self._sparse and not (tuple(index) in self._output):
-                out_str += '0' + ' '
+                out_str += '0' + '  '
             else:
-                out_str += str(self._output[tuple(index)]) + ' '
+                out_str += str(self._output[tuple(index)]) + '  '
 
             # code below are equal to method .next_index with few additions.
             j = self._rank - 1
@@ -1392,25 +1392,5 @@ def list2tensor(list_arr, shape=0, ind_char=0):
         result[idx] = list_arr[i]
         idx = result.next_index(idx)
     return result
-
-
-def fac(n):
-    """
-    Finds factorial of n
-            
-    Examples
-    ========
-    
-    >>> fac(1)
-    1
-    >>> fac(3)
-    6
-    >>> fac(12)
-    479001600
-    """
-    if n == 0:
-        return 1
-    return fac(n - 1) * n
-
 #--------------------------------------------------------------
 #--------------------------------------------------------------
