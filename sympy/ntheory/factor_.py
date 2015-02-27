@@ -237,6 +237,9 @@ def multiplicity(p, n):
     if p == n:
         return 1
 
+    if n == 0:
+        raise ValueError('n cannot be zero, but got %s' % n)
+
     m = 0
     n, rem = divmod(n, p)
     while not rem:
