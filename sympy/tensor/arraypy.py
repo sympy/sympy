@@ -271,6 +271,41 @@ class Arraypy(object):
             index = self.next_index(index)
 
         return res
+    
+    def __eq__(self, other):
+        """
+        Overloads '=='.
+        Arraypy instances can be compared to each other.
+        Instances equal if they have same shape, indexes and data.
+        
+        Examples
+        ========
+        
+        >>> from sympy import Arraypy
+        >>> a = Arraypy((2, 3))
+        >>> b = Arraypy((2, 3))
+        >>> a == b
+        True
+        >>> c = a.reshape((3,2))
+        >>> c == b
+        False
+        >>> a[0,0] = 1
+        >>> b[0,0] = 2
+        >>> a == b
+        False
+        """
+        if not isinstance(other, Arraypy):
+            raise TypeError('Compared instances must be Arraypy type')
+        if (self.shape != other.shape or self.start_index != other.start_index
+            or self.end_index != other.end_index):
+            return False
+        idx = self.start_index
+        for i in range(len(self)):
+            if (self[idx] != other[idx]):
+                return False
+            idx = self.next_index(idx)
+        
+        return True
 
     def __getitem__(self, index):
         """
@@ -820,6 +855,37 @@ class Tensor(Arraypy):
         res_tensor = Tensor(res_base, self._ind_char)
 
         return res_tensor
+    
+    def __eq__(self, other):
+            """
+            Overloads '=='.
+            Tensor instances can be compared to each other.
+            Instances equal if they have same shape, indexes and data.
+            
+            Examples
+            ========
+            
+            >>> from sympy import Arraypy, Tensor, list2tensor  
+            >>> a = list2tensor ([i for i in range(9)], (3, 3), (1, -1))
+            >>> b = list2tensor ([i for i in range(9)], (3, 3), (1, 1))
+            >>> c = list2tensor ([0 for i in range(9)], (3, 3), (1, -1))
+            >>> d = list2tensor ([i for i in range(9)], 9, -1)
+            >>> e = list2tensor ([i for i in range(9)], (3, 3), (1, -1))
+            >>> a == b
+            False
+            >>> a == c
+            False
+            >>> a == d
+            False
+            >>> a == e
+            True
+            """
+            if not isinstance(other, Tensor):
+                raise TypeError('Compared instances must be Tensor type')
+            if (self._ind_char != other._ind_char or self.base != other.base):               
+                return False
+            
+            return True    
 
     def __mul__(self, other):
         """
@@ -1348,4 +1414,3 @@ def fac(n):
 
 #--------------------------------------------------------------
 #--------------------------------------------------------------
-
