@@ -650,23 +650,25 @@ class cos(TrigonometricFunction):
         if pi_coeff is None:
             return None
 
-        assert not pi_coeff.is_integer, "should have been simplified already"
+        if pi_coeff.is_integer:
+            # it was unevaluated
+            return self.func(pi_coeff*S.Pi)
 
         if not pi_coeff.is_Rational:
             return None
 
-        def f1(a, b):
-            return (a + sqrt(a**2 + b))/2, (a - sqrt(a**2 + b))/2
-
-        def f2(a, b):
-            return (a - sqrt(a**2 + b))/2
-
-        def cospi257():
+        def _cospi257():
             """ Express cos(pi/257) explicitly as a function of radicals
                 Based upon the equations in
                 http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
                 See also http://www.susqu.edu/brakke/constructions/257-gon.m.txt
             """
+            def f1(a, b):
+                return (a + sqrt(a**2 + b))/2, (a - sqrt(a**2 + b))/2
+
+            def f2(a, b):
+                return (a - sqrt(a**2 + b))/2
+
             t1, t2 = f1(-1, 256)
             z1, z3 = f1(t1, 64)
             z2, z4 = f1(t2, 64)
@@ -688,10 +690,10 @@ class cos(TrigonometricFunction):
             v4 = f2(x9, -4*(x9 + x10 + x11 + x14))
             v5 = f2(x10, -4*(x10 + x11 + x12 + x15))
             v6 = f2(x16, -4*(x16 + x1 + x2 + x5))
-            u1 = f2(-v1, -4*(v2 + v3))
-            u2 = f2(-v4, -4*(v5 + v6))
-            w1 = f2(u1, 4*u2)
-            return sqrt(2 + sqrt(2 - w1))/2
+            u1 = -f2(-v1, -4*(v2 + v3))
+            u2 = -f2(-v4, -4*(v5 + v6))
+            w1 = -2*f2(-u1, -4*u2)
+            return sqrt(sqrt(2)*sqrt(w1 + 4)/8 + S.Half)
 
         cst_table_some = {
             3: S.Half,
@@ -699,47 +701,39 @@ class cos(TrigonometricFunction):
             17: sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) +
                 sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17))
                 *sqrt(17 - sqrt(17))) + 6*sqrt(17) + 34))/32),
-            257: cospi257()
-            # 65537 is the only other known Fermat prime
-            # Please add if you would like
+            257: _cospi257()
+            # 65537 is the only other known Fermat prime and the very
+            # large expression is intentionally omitted from SymPy; see
+            # http://www.susqu.edu/brakke/constructions/65537-gon.m.txt
         }
 
-        def fermatCoords(n):
-            if not isinstance(n, int):
-                raise TypeError("n is not an integer")
-            if n <= 0:
-                raise ValueError("n has to be greater than 0")
-            if n == 1 or 0 == n % 2:
+        def _fermatCoords(n):
+            # if n can be factored in terms of Fermat primes with
+            # multiplicity of each being 1, return those primes, else
+            # False
+            primes = []
+            for p_i in cst_table_some:
+                n, r = divmod(n, p_i)
+                if not r:
+                    primes.append(p_i)
+            if n != 1:
                 return False
-            primes = dict( [(p, 0) for p in cst_table_some ] )
-            assert 1 not in primes
-            for p_i in primes:
-                while 0 == n % p_i:
-                    n = n/p_i
-                    primes[p_i] += 1
-            if 1 != n:
-                return False
-            if max(primes.values()) > 1:
-                return False
-            return tuple([ p for p in primes if primes[p] == 1])
-
-        if pi_coeff.q == 257:
-            return C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q])
+            return tuple(primes)
 
         if pi_coeff.q in cst_table_some:
-            return C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q]).expand()
+            rv = C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q])
+            if pi_coeff.q < 257:
+                rv = rv.expand()
+            return rv
 
-        if 0 == pi_coeff.q % 2:  # recursively remove powers of 2
-            narg = (pi_coeff*2)*S.Pi
-            nval = cos(narg)
-            if None == nval:
-                return None
-            nval = nval.rewrite(sqrt)
-            x = (2*pi_coeff + 1)/2
-            sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+        if not pi_coeff.q % 2:  # recursively remove factors of 2
+            pico2 = pi_coeff*2
+            nval = cos(pico2*S.Pi).rewrite(sqrt)
+            x = (pico2 + 1)/2
+            sign_cos = -1 if int(x) % 2 else 1
             return sign_cos*sqrt( (1 + nval)/2 )
 
-        FC = fermatCoords(pi_coeff.q)
+        FC = _fermatCoords(pi_coeff.q)
         if FC:
             decomp = ipartfrac(pi_coeff, FC)
             X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
