@@ -13,7 +13,7 @@ from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application
-from sympy.core.compatibility import ordered, range, with_metaclass
+from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 
@@ -1307,73 +1307,57 @@ def to_int_repr(clauses, symbols):
 
 def term_to_integer(term):
     """
-    Constructs an integer from its base 2 digits.
+    Return an integer corresponding to the base-2 digits given by ``term``.
 
     Parameters
     ==========
 
-    term : string or a list of ones and zeros
+    term : a string or list of ones and zeros
 
     Examples
     ========
 
     >>> from sympy.logic.boolalg import term_to_integer
-    >>> term_to_integer([1, 0, 1, 1])
-    11
-    >>> terms = [[0, 0, 0, 1], [0, 0, 1, 1],
-    ...     [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
-    >>> list(map(term_to_integer, terms))
-    [1, 3, 7, 11, 15]
-    >>> term_to_integer('10101')
-    21
+    >>> term_to_integer([1, 0, 0])
+    4
+    >>> term_to_integer('100')
+    4
 
     """
 
-    term = list(term)
-    return int(''.join(list(map(str, term))), 2)
+    return int(''.join(list(map(str, list(term)))), 2)
 
 
-def integer_to_term(k, n_bits=0):
+def integer_to_term(k, n_bits=None):
     """
-    Gives a list of the base 2 digits in the integer k.
+    Return a list of the base-2 digits in the integer, ``k``.
 
     Parameters
     ==========
 
     k : int
-    n_bits : int (default 0)
-        If n_bits more than the number of bits necessary to represent
-        the integer k in binary, then zeros prepended to the list of digits.
+    n_bits : int
+        If ``n_bits`` is given and the number of digits in the binary
+        representation of ``k`` is smaller than ``n_bits`` then left-pad the
+        list with 0s.
 
     Examples
     ========
 
     >>> from sympy.logic.boolalg import integer_to_term
-    >>> integer_to_term(14)
-    [1, 1, 1, 0]
-    >>> integer_to_term(7, 5)
-    [0, 0, 1, 1, 1]
-    >>> truthvalues = [1, 0, 0, 1, 1, 1, 0, 1]
-    >>> minterms = []
-    >>> n_bits = 3
-    >>> for i, value in enumerate(truthvalues):
-    ...    if value:
-    ...        minterms.append(integer_to_term(i, n_bits))
-    >>> minterms
-    [[0, 0, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 1]]
-
+    >>> integer_to_term(4)
+    [1, 0, 0]
+    >>> integer_to_term(4, 6)
+    [0, 0, 0, 1, 0, 0]
     """
 
-    # TODO: replace with `n = k.bit_length() if k else 1` when 2.X support is dropped
-    n = len(bin(k).lstrip('-0b')) if k else 1
-    prefix = [0] * (n_bits - n if n_bits else 0)
-    digits = list(map(int, '{0:b}'.format(k)))
-    return prefix + digits
+    s = '{0:0{1}b}'.format(abs(as_int(k)), as_int(abs(n_bits or 0)))
+    return list(map(int, s))
 
 
 def truth_table(expr, variables, input=True):
     """
-    Gives a generator of all possible configurations of the input variables,
+    Return a generator of all possible configurations of the input variables,
     and the result of the boolean expression for those values.
 
     Parameters
@@ -1386,11 +1370,12 @@ def truth_table(expr, variables, input=True):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import truth_table
     >>> from sympy.abc import x,y
     >>> table = truth_table(x >> y, [x, y])
     >>> for t in table:
-    ...     print('{0} -> {1}'.format(t[0], t[1]))
+    ...     print('{0} -> {1}'.format(*t))
     [0, 0] -> True
     [0, 1] -> True
     [1, 0] -> False
@@ -1412,7 +1397,8 @@ def truth_table(expr, variables, input=True):
     [True, False, True, True]
 
     >>> for i, value in enumerate(values):
-    ...     print('{0} -> {1}'.format(list(zip(vars, integer_to_term(i, len(vars)))), value))
+    ...     print('{0} -> {1}'.format(list(zip(
+    ...     vars, integer_to_term(i, len(vars)))), value))
     [(y, 0), (x, 0)] -> True
     [(y, 0), (x, 1)] -> False
     [(y, 1), (x, 0)] -> True
