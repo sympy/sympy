@@ -91,11 +91,19 @@ class FourierSeries(Expr):
         n = Symbol('n', integer=True, positive=True)
         a0 = 2 * (integrate(f, int_tuple) / L)
 
-        cos_term = cos(2*n*pi*x / L)
-        seq_an = SeqFormula((2*integrate(f * cos_term, int_tuple) / L), n, (1, oo))
+        fsubbed = f.subs(x, -x) # to check odd or even
 
-        sin_term = sin(2*n*pi*x / L)
-        seq_bn = SeqFormula((2*integrate(f * sin_term, int_tuple) / L), n, (1, oo))
+        if fsubbed == -f:
+            seq_an = SeqFormula(0, n, (1, oo)) # if odd
+        else:
+            cos_term = cos(2*n*pi*x / L)
+            seq_an = SeqFormula((2*integrate(f * cos_term, int_tuple) / L), n, (1, oo))
+
+        if fsubbed == f:
+            seq_bn = SeqFormula(0, n, (1, oo)) # if even
+        else:
+            sin_term = sin(2*n*pi*x / L)
+            seq_bn = SeqFormula((2*integrate(f * sin_term, int_tuple) / L), n, (1, oo))
 
         obj = Expr.__new__(cls, f, x)
         obj.x, obj.n, obj.bounds, obj.L = x, n, bounds, L
