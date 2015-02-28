@@ -16,21 +16,15 @@ def df(f, args, output_type='l'):
 
     >>> from sympy.tensor.tensor_fields import df
     >>> from sympy import symbols, sin
-    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
-    >>> f=x1**2*x2+sin(x2*x3-x2)
-    >>> args=[x1, x2, x3]
-    >>> df(f, args, a)
-
-    =========
-    >>> from sympy.tensor.tensor_fields import df
-    >>> from sympy import symbols, sin
     >>> x1, x2, x3= symbols('x1 x2 x3')
-    >>> f=x1**2*x2+sin(x2*x3-x2)
+    >>> f=x1**2*x2 + sin(x2*x3 - x2)
     >>> args_t=Arraypy([1,3,1]).to_tensor(1)
     >>> args_t[1]=x1
     >>> args_t[2]=x2
     >>> args_t[3]=x3
-    >>> df(f, args_t, 't')
+    >>> d = df(f, args_t, 't')
+    >>> print (d)
+    2*x1*x2 x1**2 + (x3 - 1)*cos(x2*x3 - x2) x2*cos(x2*x3 - x2)
 
     """
     # Handling of a vector of arguments
@@ -79,22 +73,11 @@ def grad(f, args, g=None, output_type=None):
 
     Examples:
     =========
-
+    
     >>> from sympy.tensor.tensor_fields import grad
     >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> f=x1**2*x2+sin(x2*x3-x2)
-    >>> args_t=Arraypy([1,3,1]).to_tensor(1)
-    >>> args_t[1]=x1
-    >>> args_t[2]=x2
-    >>> args_t[3]=x3
-    >>> grad(f,args_t,output_type='t')
-
-    =========
-    >>> from sympy.tensor.tensor_fields import grad
-    >>> from sympy import symbols, sin
-    >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> f=x1**2*x2+sin(x2*x3-x2)
+    >>> f=x1**2*x2 + sin(x2*x3 - x2)
     >>> var=[x1,x2,x3]
     >>> g=Arraypy([2,3,1])
     >>> g_t=g.to_tensor((-1,-1))
@@ -107,7 +90,9 @@ def grad(f, args, g=None, output_type=None):
     >>> g_t[3,1]=0
     >>> g_t[3,2]=0
     >>> g_t[3,3]=1
-    >>> m=grad(f,var,g_t,'a')
+    >>> gr=grad(f,var,g_t,'a')
+    >>> print(gr)
+    -x1**2/5 + 6*x1*x2/5 - (x3 - 1)*cos(x2*x3 - x2)/5 2*x1**2/5 - 2*x1*x2/5 + 2*(x3 - 1)*cos(x2*x3 - x2)/5 x2*cos(x2*x3 - x2)
 
     """
     # Handling of a vector of arguments
@@ -205,6 +190,8 @@ def rot(X, args, output_type=None):
     >>> X_t[2]=x3**3-x1
     >>> arg=[x1,x2,x3]
     >>> r=rot(X_t,arg,'t')
+    >>> print(r)
+    -sin(x3) 1 -3*x1*x2**2
 
     """
     # Handling of a vector of arguments
@@ -294,10 +281,11 @@ def div(X, args, g=None):
     >>> from sympy.tensor.tensor_fields import div
     >>> from sympy import symbols, cos
     >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
-    >>> g=Matrix([[2,1,0],[1,3,0],[0,0,1]])
-    >>> arg=[x1, x2, x3]
-    >>> div(X,arg,g)
+    >>> X = [x1*x2**3,x2-cos(x3),x3**3-x1]
+    >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
+    >>> arg = [x1, x2, x3]
+    >>> dv = div(X,arg,g)
+    x2**3 + 3*x3**2 + 1
 
     """
     # Handling of a vector of arguments
@@ -360,10 +348,12 @@ def LieXY(X, Y, args, output_type=None):
     >>> from sympy.tensor.tensor_fields import LieXY
     >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> X=[-x**3,9*y**2,5*z, 8*h+x]
-    >>> Y=[x1**3*x2**3,x2*x3-sin(x1*x3),x3**3-x1**2]
-    >>> arg=[x1, x2, x3]
-    >>> LieXY(X,Y,arg,'a')
+    >>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
+    >>> Y = [x1**3*x2**3, x2*x3 - sin(x1*x3), x3**3 - x1**2]
+    >>> arg = [x1, x2, x3]
+    >>> lie = LieXY(X, Y, arg,'a')
+    >>> print(lie)
+    2*x1**3*x2**6 + 3*x1**3*x2**2*(x2 - cos(x3)) - 3*x1*x2**2*(x2*x3 - sin(x1*x3)) -x1*x2**3*x3*cos(x1*x3) - x2*x3 + x3*(x2 - cos(x3)) + (-x1 + x3**3)*(-x1*cos(x1*x3) + x2) - (-x1**2 + x3**3)*sin(x3) + sin(x1*x3) x1**3*x2**3 - 2*x1**2*x2**3 + 3*x3**2*(-x1 + x3**3) - 3*x3**2*(-x1**2 + x3**3)
 
     """
     # Handling of a vector of arguments
@@ -504,6 +494,16 @@ def dw(omega, args):
     >>> omega[3,1]=x2
     >>> omega[3,2]=-x1
     >>> domega=dw(omega, [x1,x2,x3])
+    >>> print(domega)
+    0 0 0 
+    0 0 3 
+    0 -3 0 
+    0 0 -3 
+    0 0 0 
+    3 0 0 
+    0 3 0 
+    -3 0 0 
+    0 0 0
 
     """
 # Handling of a vector of arguments
@@ -590,9 +590,13 @@ def Lie_w(omega, X, args):
     >>> omega[2,3]=x1
     >>> omega[3,1]=x2
     >>> omega[3,2]=-x1
-    >>> arg=[x1, x2, x3]
-    >>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
-    >>> Lie_w(omega,X,arg)
+    >>> arg = [x1, x2, x3]
+    >>> X = [x1*x2**3,x2-cos(x3),x3**3-x1]
+    >>> li = Lie_w(omega,X,arg)
+    >>> print(li)
+    0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3) 
+    -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1 
+    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - 3*x1*x3**2 - x1 0 
 
     """
 # Handling of a vector of arguments
