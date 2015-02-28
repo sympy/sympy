@@ -49,7 +49,7 @@ def scal_prod(X, Y, g):
             if not X.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of X must be (+1)')
     if isinstance(X, (Tensor, Arraypy)):
-        X = X.To_list()
+        X = X.to_list()
 
     # Handling of a input arguments - vector or vector fields Y
     if not isinstance(Y, (list, Arraypy, Tensor)):
@@ -61,7 +61,7 @@ def scal_prod(X, Y, g):
             if not Y.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of Y must be (+1)')
     if isinstance(Y, (Tensor, Arraypy)):
-        Y = Y.To_list()
+        Y = Y.to_list()
 
     if not len(X) == len(Y):
         raise ValueError('The vectors must be identical length')
@@ -110,7 +110,7 @@ def christoffel_1(g, var, type_output='t'):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
     # Definition of number of variables
     n = len(var)
 
@@ -207,7 +207,7 @@ def christoffel_2(g, var, type_output='t'):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
     # Definition of number of variables
     n = len(var)
 
@@ -311,7 +311,7 @@ def covar_der(X, g, var, type_output='t'):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
 
     # Definition of number of variables
     n = len(var)
@@ -420,7 +420,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
 
     # Definition of number of variables
     n = len(var)
@@ -550,7 +550,7 @@ def riemann(g, var, type_output='t'):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
 
     # Definition of number of variables
     n = len(var)
@@ -657,7 +657,7 @@ def ricci(riemann, var, type_output='t'):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
 
     # Definition of number of variables
     n = len(var)
@@ -742,7 +742,7 @@ def scal_curv(g, ricci, var):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
 
     # Definition of number of variables
     n = len(var)
@@ -831,7 +831,7 @@ def k_sigma(X, Y, R, g, var):
                 raise ValueError(
                     'The valence or ind_char of vector variables must be (+1)')
     if isinstance(var, (Tensor, Arraypy)):
-        var = var.To_list()
+        var = var.to_list()
 
     # Definition of number of variables
     n = len(var)
@@ -860,7 +860,7 @@ def k_sigma(X, Y, R, g, var):
             if not X.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of X must be (+1)')
     if isinstance(X, (Tensor, Arraypy)):
-        X = X.To_list()
+        X = X.to_list()
 
     # Handling of a input arguments - vector or vector fields Y
     if not isinstance(Y, (list, Arraypy, Tensor)):
@@ -872,7 +872,7 @@ def k_sigma(X, Y, R, g, var):
             if not Y.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of Y must be (+1)')
     if isinstance(Y, (Tensor, Arraypy)):
-        Y = Y.To_list()
+        Y = Y.to_list()
 
     if not len(X) == len(Y):
         raise ValueError('The vectors must be identical length')
