@@ -164,7 +164,7 @@ sub = {}    # symb -> subscript symbol
 sup = {}    # symb -> superscript symbol
 
 # latin subscripts
-for l in 'aeioruvx':
+for l in 'aeioruvxhklmnpst':
     sub[l] = LSUB(l)
 
 for l in 'in':
