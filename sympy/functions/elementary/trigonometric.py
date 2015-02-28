@@ -716,9 +716,9 @@ class cos(TrigonometricFunction):
                 n, r = divmod(n, p_i)
                 if not r:
                     primes.append(p_i)
-            if n != 1:
-                return False
-            return tuple(primes)
+                    if n == 1:
+                        return tuple(primes)
+            return False
 
         if pi_coeff.q in cst_table_some:
             rv = C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q])
