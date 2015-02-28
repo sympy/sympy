@@ -393,6 +393,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sartaj Singh: use \left \| instead of \lvert for latex Abs
 #. Chris Swierczewski: RootOf.evalf watches for root on interval boundary
 #. Konstantin Togoi: added truth_table and binary digit utilities to boolalg
+#. Param Singh: added missing units from mks system
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
