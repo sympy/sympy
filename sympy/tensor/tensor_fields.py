@@ -25,6 +25,10 @@ def df(f, args, output_type='l'):
     >>> d = df(f, args_t, 't')
     >>> print (d)
     2*x1*x2 x1**2 + (x3 - 1)*cos(x2*x3 - x2) x2*cos(x2*x3 - x2)
+    >>> print (d.type_pq)
+    (0, 1)
+    >>> print (d1._output)
+    {(2,): x1**2 + (x3 - 1)*cos(x2*x3 - x2), (3,): x2*cos(x2*x3 - x2), (1,): 2*x1*x2}
 
     """
     # Handling of a vector of arguments
