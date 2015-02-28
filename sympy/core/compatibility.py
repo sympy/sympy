@@ -500,7 +500,7 @@ def default_sort_key(item, order=None):
     See Also
     ========
 
-    sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+    ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
 
     """
 
