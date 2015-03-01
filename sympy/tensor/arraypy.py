@@ -113,9 +113,8 @@ class Arraypy(object):
 
                     self._start_index = [temp[k][0] for k in range(self._rank)]
                     self._end_index = [
-                        temp[k][1] +
-                        1 for k in range(
-                            self._rank)]
+                        temp[k][1] +1 
+                        for k in range(self._rank)]
 
                 # a = Arraypy('Py')
                 else:
@@ -797,6 +796,9 @@ class Tensor(Arraypy):
         """
         if isinstance(ind_char, int):
             ind_char = (ind_char,)
+            
+        if isinstance(ind_char, list):
+            ind_char = tuple(ind_char)
 
         if not isinstance(ind_char, (list, tuple)):
             raise TypeError('Wrong type. ind_char must be list or tuple.')
