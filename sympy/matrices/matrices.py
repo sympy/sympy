@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import collections
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C, Atom
+from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.logic import fuzzy_and
@@ -11,7 +11,7 @@ from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, xrange, NotIterable
+from sympy.core.compatibility import is_sequence, default_sort_key, range, NotIterable
 
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -20,7 +20,6 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -130,87 +129,92 @@ class MatrixBase(object):
         """
         from sympy.matrices.sparse import SparseMatrix
 
-        # Matrix(SparseMatrix(...))
-        if len(args) == 1 and isinstance(args[0], SparseMatrix):
-            return args[0].rows, args[0].cols, flatten(args[0].tolist())
+        flat_list = None
 
-        # Matrix(Matrix(...))
-        if len(args) == 1 and isinstance(args[0], MatrixBase):
-            return args[0].rows, args[0].cols, args[0]._mat
+        if len(args) == 1:
+            # Matrix(SparseMatrix(...))
+            if isinstance(args[0], SparseMatrix):
+                return args[0].rows, args[0].cols, flatten(args[0].tolist())
 
-        # Matrix(MatrixSymbol('X', 2, 2))
-        if len(args) == 1 and isinstance(args[0], Basic) and args[0].is_Matrix:
-            return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+            # Matrix(Matrix(...))
+            elif isinstance(args[0], MatrixBase):
+                return args[0].rows, args[0].cols, args[0]._mat
 
-        if len(args) == 3:
+            # Matrix(MatrixSymbol('X', 2, 2))
+            elif isinstance(args[0], Basic) and args[0].is_Matrix:
+                return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+
+            # Matrix(numpy.ones((2, 2)))
+            elif hasattr(args[0], "__array__"):
+                # NumPy array or matrix or some other object that implements
+                # __array__. So let's first use this method to get a
+                # numpy.array() and then make a python list out of it.
+                arr = args[0].__array__()
+                if len(arr.shape) == 2:
+                    rows, cols = arr.shape[0], arr.shape[1]
+                    flat_list = [cls._sympify(i) for i in arr.ravel()]
+                    return rows, cols, flat_list
+                elif len(arr.shape) == 1:
+                    rows, cols = arr.shape[0], 1
+                    flat_list = [S.Zero]*rows
+                    for i in range(len(arr)):
+                        flat_list[i] = cls._sympify(arr[i])
+                    return rows, cols, flat_list
+                else:
+                    raise NotImplementedError(
+                        "SymPy supports just 1D and 2D matrices")
+
+            # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
+            elif is_sequence(args[0])\
+                    and not isinstance(args[0], DeferredVector):
+                in_mat = []
+                ncol = set()
+                for row in args[0]:
+                    if isinstance(row, MatrixBase):
+                        in_mat.extend(row.tolist())
+                        if row.cols or row.rows:  # only pay attention if it's not 0x0
+                            ncol.add(row.cols)
+                    else:
+                        in_mat.append(row)
+                        try:
+                            ncol.add(len(row))
+                        except TypeError:
+                            ncol.add(1)
+                if len(ncol) > 1:
+                    raise ValueError("Got rows of variable lengths: %s" %
+                        sorted(list(ncol)))
+                cols = ncol.pop() if ncol else 0
+                rows = len(in_mat) if cols else 0
+                if rows:
+                    if not is_sequence(in_mat[0]):
+                        cols = 1
+                        flat_list = [cls._sympify(i) for i in in_mat]
+                        return rows, cols, flat_list
+                flat_list = []
+                for j in range(rows):
+                    for i in range(cols):
+                        flat_list.append(cls._sympify(in_mat[j][i]))
+
+        elif len(args) == 3:
             rows = as_int(args[0])
             cols = as_int(args[1])
 
-        # Matrix(2, 2, lambda i, j: i+j)
-        if len(args) == 3 and isinstance(args[2], collections.Callable):
-            operation = args[2]
-            flat_list = []
-            for i in range(rows):
-                flat_list.extend([cls._sympify(operation(cls._sympify(i), j))
-                    for j in range(cols)])
+            # Matrix(2, 2, lambda i, j: i+j)
+            if len(args) == 3 and isinstance(args[2], collections.Callable):
+                op = args[2]
+                flat_list = []
+                for i in range(rows):
+                    flat_list.extend(
+                        [cls._sympify(op(cls._sympify(i), cls._sympify(j)))
+                        for j in range(cols)])
 
-        # Matrix(2, 2, [1, 2, 3, 4])
-        elif len(args) == 3 and is_sequence(args[2]):
-            flat_list = args[2]
-            if len(flat_list) != rows*cols:
-                raise ValueError('List length should be equal to rows*columns')
-            flat_list = [cls._sympify(i) for i in flat_list]
+            # Matrix(2, 2, [1, 2, 3, 4])
+            elif len(args) == 3 and is_sequence(args[2]):
+                flat_list = args[2]
+                if len(flat_list) != rows*cols:
+                    raise ValueError('List length should be equal to rows*columns')
+                flat_list = [cls._sympify(i) for i in flat_list]
 
-        # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"):
-            # NumPy array or matrix or some other object that implements
-            # __array__. So let's first use this method to get a
-            # numpy.array() and then make a python list out of it.
-            arr = args[0].__array__()
-            if len(arr.shape) == 2:
-                rows, cols = arr.shape[0], arr.shape[1]
-                flat_list = [cls._sympify(i) for i in arr.ravel()]
-                return rows, cols, flat_list
-            elif len(arr.shape) == 1:
-                rows, cols = arr.shape[0], 1
-                flat_list = [S.Zero]*rows
-                for i in range(len(arr)):
-                    flat_list[i] = cls._sympify(arr[i])
-                return rows, cols, flat_list
-            else:
-                raise NotImplementedError(
-                    "SymPy supports just 1D and 2D matrices")
-
-        # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
-        elif len(args) == 1 and is_sequence(args[0])\
-                and not isinstance(args[0], DeferredVector):
-            in_mat = []
-            ncol = set()
-            for row in args[0]:
-                if isinstance(row, MatrixBase):
-                    in_mat.extend(row.tolist())
-                    if row.cols or row.rows:  # only pay attention if it's not 0x0
-                        ncol.add(row.cols)
-                else:
-                    in_mat.append(row)
-                    try:
-                        ncol.add(len(row))
-                    except TypeError:
-                        ncol.add(1)
-            if len(ncol) > 1:
-                raise ValueError("Got rows of variable lengths: %s" %
-                    sorted(list(ncol)))
-            cols = ncol.pop() if ncol else 0
-            rows = len(in_mat) if cols else 0
-            if rows:
-                if not is_sequence(in_mat[0]):
-                    cols = 1
-                    flat_list = [cls._sympify(i) for i in in_mat]
-                    return rows, cols, flat_list
-            flat_list = []
-            for j in range(rows):
-                for i in range(cols):
-                    flat_list.append(cls._sympify(in_mat[j][i]))
 
         # Matrix()
         elif len(args) == 0:
@@ -218,7 +222,7 @@ class MatrixBase(object):
             rows = cols = 0
             flat_list = []
 
-        else:
+        if flat_list is None:
             raise TypeError("Data type not understood")
 
         return rows, cols, flat_list
@@ -494,20 +498,6 @@ class MatrixBase(object):
         matrix_multiply_elementwise
         """
         if getattr(other, 'is_Matrix', False):
-            # The following implmentation is equivalent, but about 5% slower
-            #ma, na = A.shape
-            #mb, nb = B.shape
-            #
-            #if na != mb:
-            #    raise ShapeError()
-            #product = Matrix(ma, nb, lambda i, j: 0)
-            #for i in range(ma):
-            #    for j in range(nb):
-            #        s = 0
-            #        for k in range(na):
-            #            s += A[i, k]*B[k, j]
-            #        product[i, j] = s
-            #return product
             A = self
             B = other
             if A.cols != B.rows:
@@ -1259,13 +1249,13 @@ class MatrixBase(object):
         n = self.rows
         b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in xrange(n):
-            for j in xrange(i):
+        for i in range(n):
+            for j in range(i):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
         # backward substitution
-        for i in xrange(n - 1, -1, -1):
-            for j in xrange(i + 1, n):
+        for i in range(n - 1, -1, -1):
+            for j in range(i + 1, n):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
             scale = A[i, i]
@@ -1934,7 +1924,7 @@ class MatrixBase(object):
             nr = b.rows
             l = b[0, 0]
             if nr == 1:
-                res = C.exp(l)
+                res = exp(l)
             else:
                 from sympy import eye
                 # extract the diagonal part
@@ -2682,13 +2672,13 @@ class MatrixBase(object):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in xrange(r.cols):
+        for i in range(r.cols):
             if pivot == r.rows:
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-                for k in xrange(pivot, r.rows):
+                for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
@@ -2698,7 +2688,7 @@ class MatrixBase(object):
                     continue
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
-            for j in xrange(r.rows):
+            for j in range(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
@@ -3405,9 +3395,6 @@ class MatrixBase(object):
         self._is_symbolic = self.is_symbolic()
         self._is_symmetric = self.is_symmetric()
         self._eigenvects = None
-        #if self._is_symbolic:
-        #    self._diagonalize_clear_subproducts()
-        #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
         self._eigenvects = self.eigenvects(simplify=True)
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
@@ -3567,7 +3554,7 @@ class MatrixBase(object):
                 # So we will do the same procedure also for `s-1` and so on until 1 the lowest possible order
                 # where the jordanchain is of lenght 1 and just represented by the eigenvector.
 
-                for s in reversed(xrange(1, smax+1)):
+                for s in reversed(range(1, smax+1)):
                     S = Ms[s]
                     # We want the vectors in `Kernel((self-lI)^s)` (**),
                     # but without those in `Kernel(self-lI)^s-1` so we will add these as additional equations

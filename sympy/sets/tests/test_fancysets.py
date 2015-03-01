@@ -1,7 +1,8 @@
+from sympy.core.compatibility import range
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt, Eq, tan, log, Abs)
+        Rational, sqrt, tan, log, Abs)
 from sympy.utilities.pytest import XFAIL, raises
 import itertools
 

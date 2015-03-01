@@ -376,10 +376,24 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ted Dokos: implemented interleaving for unions
 #. Sunny Aggarwal: fix Integral.transform method
 #. Akshat Jain: nsimplify returns ints quickly
+#. Shivam Vats: Added ReciprocalHyperbolicFunction class and misc bug fixes
 #. Cody Herbst: modified Euler-MacLaurin to not exit when term == 0
 #. AMiT Kumar: fix sign error in unrad
 #. Nishith Shah: fix solving of Piecewise functions
 #. Guillaume Gay: bugfix for LagrangesMethod
+#. Ray Cathcart: improve error handling in _random
+#. Mihir Wadwekar: watch for duplicate bases in powsimp
+#. Tuan Manh Lai: correct SparseMatrix.is_Identity property
+#. Darshan Chaudhary: cross platform support in setup.py options
+#. Alec Kalinin: fixed simplify and expand_log so base of log is not dropped
+#. Aaditya Nair: import fix
+#. Jayesh Lahori: remove uses of xrange
+#. harshil goel: simplify roots by removing some powers from radicals
+#. Lokesh Sharma: reorder setup.py file imports to correct NameError
+#. Sartaj Singh: use \left \| instead of \lvert for latex Abs
+#. Chris Swierczewski: RootOf.evalf watches for root on interval boundary
+#. Konstantin Togoi: added truth_table and binary digit utilities to boolalg
+#. Param Singh: added missing units from mks system
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

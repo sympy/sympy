@@ -1,12 +1,13 @@
 from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
-    parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
-    ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean, sum_of_four_squares, sum_of_three_squares,
+    square_factor, pairwise_prime, descent,
+    ldescent, diophantine, transformation_to_normal, sum_of_four_squares, sum_of_three_squares,
     prime_as_sum_of_two_squares, partition, power_representation)
 
-from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
+from sympy import symbols, Integer, Matrix, simplify, Subs, S, factor_list
 from sympy.core.function import _mexpand
+from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import sin
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.utilities.pytest import slow, raises
 from sympy.utilities import default_sort_key
 
 x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", integer=True)

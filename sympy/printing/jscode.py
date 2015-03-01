@@ -9,10 +9,10 @@ Math object where possible.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core import S
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).

@@ -1,14 +1,13 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
-from sympy.functions import Piecewise, sqrt, Abs, ceiling, exp, sin, cos
+from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
-from sympy.integrals import Integral
-from sympy.concrete import Sum
 from sympy.utilities.pytest import XFAIL
+from sympy.core.compatibility import range
 
 from sympy import octave_code as mcode
 

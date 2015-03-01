@@ -33,7 +33,6 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # arithmetic.
 from __future__ import print_function, division
 
-from sympy.external import import_module
 from sympy.simplify.simplify import nsimplify
 
 

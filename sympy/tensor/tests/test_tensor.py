@@ -11,6 +11,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
+from sympy.core.compatibility import range
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
@@ -655,6 +656,15 @@ def test_mul():
     assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
     assert t.components == [A]
 
+    ts = A(a, b)
+    assert str(ts) == 'A(a, b)'
+    assert ts.types == [Lorentz]
+    assert ts.rank == 2
+    assert ts.dum == []
+    assert ts.coeff == 1
+    assert sorted(ts.free) == [(a, 0, 0), (b, 1, 0)]
+    assert ts.components == [A]
+
     t = A(-b, a)*B(-a, c)*A(-c, d)
     t1 = tensor_mul(*t.split())
     assert t == t(-b, d)
@@ -1187,7 +1197,7 @@ def test_hidden_indices_for_matrix_multiplication():
     B1 = B(m1)
 
     assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
-    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, -S.auto_right))
+    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, S.auto_left))
     assert _is_equal((A0*B0), A(m0, S.auto_left, s0)*B(-m0, -s0))
 
     C = tensorhead('C', [L, L], [[1]*2])
@@ -1620,7 +1630,7 @@ def test_contract_automatrix_and_data():
 
     L = TensorIndexType('L')
     S = TensorIndexType('S')
-    G = tensorhead('G', [L, S, S], [[1] * 3], matrix_behavior=True)
+    G = tensorhead('G', [L, S, S], [[1]]*3, matrix_behavior=True)
 
     def G_data():
         G.data = [[[1]]]
@@ -1658,3 +1668,38 @@ def test_contract_automatrix_and_data():
     assert L.data is None
     assert S.data is None
     assert G.data is None
+
+
+def test_valued_components_with_wrong_symmetry():
+    numpy = import_module("numpy")
+    if numpy is None:
+        return
+
+    IT = TensorIndexType('IT', dim=3)
+    i0, i1, i2, i3 = tensor_indices('i0:4', IT)
+    IT.data = [1, 1, 1]
+    A_nosym = tensorhead('A', [IT]*2, [[1]]*2)
+    A_sym = tensorhead('A', [IT]*2, [[1]*2])
+    A_antisym = tensorhead('A', [IT]*2, [[2]])
+
+    mat_nosym = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+    mat_sym = mat_nosym + mat_nosym.T
+    mat_antisym = mat_nosym - mat_nosym.T
+
+    A_nosym.data = mat_nosym
+    A_nosym.data = mat_sym
+    A_nosym.data = mat_antisym
+
+    def assign(A, dat):
+        A.data = dat
+
+    A_sym.data = mat_sym
+    raises(ValueError, lambda: assign(A_sym, mat_nosym))
+    raises(ValueError, lambda: assign(A_sym, mat_antisym))
+
+    A_antisym.data = mat_antisym
+    raises(ValueError, lambda: assign(A_antisym, mat_sym))
+    raises(ValueError, lambda: assign(A_antisym, mat_nosym))
+
+    A_sym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]

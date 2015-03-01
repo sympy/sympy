@@ -1,12 +1,10 @@
 from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan, cbrt, Dummy, factorial
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
+        sign, im, nan, Dummy, factorial, comp
 )
-from sympy.core.evalf import PrecisionExhausted
-from sympy.core.tests.test_evalf import NS
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
@@ -14,6 +12,11 @@ from sympy.utilities.randtest import verify_numerically
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
+
+
+def same_and_same_prec(a, b):
+    # stricter matching for Floats
+    return a == b and a._prec == b._prec
 
 
 def test_bug1():
@@ -1473,17 +1476,15 @@ def test_Mod():
     assert Mod(-3.3, 1) == 1 - point3
     assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
-    point3 = Float._new(Float(.3)._mpf_, 51)
-    assert e == point3 and e.is_Float
+    assert comp(e, .3) and e.is_Float
     e = Mod(1.3, .7)
-    point6 = Float._new(Float(.6)._mpf_, 51)
-    assert e == point6 and e.is_Float
+    assert comp(e, .6) and e.is_Float
     e = Mod(1.3, Rational(7, 10))
-    assert e == point6 and e.is_Float
+    assert comp(e, .6) and e.is_Float
     e = Mod(Rational(13, 10), 0.7)
-    assert e == point6 and e.is_Float
+    assert comp(e, .6) and e.is_Float
     e = Mod(Rational(13, 10), Rational(7, 10))
-    assert e == .6 and e.is_Rational
+    assert comp(e, .6) and e.is_Rational
 
     # check that sign is right
     r2 = sqrt(2)
@@ -1503,7 +1504,6 @@ def test_Mod():
     for i in [-3, -2, 2, 3]:
         for j in [-3, -2, 2, 3]:
             for k in range(3):
-                # print i, j, k
                 assert Mod(Mod(k, i), j) == (k % i) % j
 
     # known difference
@@ -1547,6 +1547,12 @@ def test_Mod():
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
     assert (factorial(n) % n).equals(0) is not False
+
+    # symbolic with known parity
+    n = Symbol('n', even=True)
+    assert Mod(n, 2) == 0
+    n = Symbol('n', odd=True)
+    assert Mod(n, 2) == 1
 
 
 def test_Mod_is_integer():
@@ -1689,8 +1695,8 @@ def test_float_int():
         112345678901234567890123456789000192
     assert Integer(Float('123456789012345678901234567890e5', '')) == \
         12345678901234567890123456789000000
-    assert Float('123000e-2','') == Float('1230.00', '')
-    assert Float('123000e2','') == Float('12300000', '')
+    assert same_and_same_prec(Float('123000e-2',''), Float('1230.00', ''))
+    assert same_and_same_prec(Float('123000e2',''), Float('12300000', ''))
 
     assert int(1 + Rational('.9999999999999999999999999')) == 1
     assert int(pi/1e20) == 0

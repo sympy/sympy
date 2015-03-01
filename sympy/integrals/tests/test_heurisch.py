@@ -1,5 +1,5 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
+    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
     LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
@@ -276,6 +276,12 @@ def test_pmint_WrightOmega():
     g = log(x + LambertW(exp(x))) + sin(LambertW(exp(x)))
 
     assert heurisch(f, x) == g
+
+def test_RR():
+    # Make sure the algorithm does the right thing if the ring is RR. See
+    # issue 8685.
+    assert heurisch(sqrt(1 + 0.25*x**2), x, hints=[]) == \
+        0.5*x*sqrt(0.25*x**2 + 1) + 1.0*asinh(0.5*x)
 
 # TODO: convert the rest of PMINT tests:
 # Airy functions

@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 import operator
 
-from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
 

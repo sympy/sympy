@@ -1,11 +1,10 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
-    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S, C,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
+    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
+    Interval, comp
 )
 from sympy.utilities.pytest import XFAIL, raises
-
-from sympy.utilities.randtest import comp
 
 
 def N_equals(a, b):
@@ -308,7 +307,7 @@ def test_sign_issue_3068():
 
 
 def test_Abs():
-    raises(TypeError, lambda: Abs(C.Interval(2, 3)))  # issue 8717
+    raises(TypeError, lambda: Abs(Interval(2, 3)))  # issue 8717
 
     x, y = symbols('x,y')
     assert sign(sign(x)) == sign(x)

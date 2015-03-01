@@ -110,7 +110,6 @@ def operators_to_state(operators, **options):
                    or issubclass(s, Operator)):
                 raise NotImplementedError("Set is not all Operators!")
 
-        #ops = tuple(operators)
         ops = frozenset(operators)
 
         if ops in op_mapping:  # ops is a list of classes in this case

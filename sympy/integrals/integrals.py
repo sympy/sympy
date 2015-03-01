@@ -3,13 +3,12 @@ from __future__ import print_function, division
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -19,14 +18,15 @@ from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.utilities import xthreaded, flatten
+from sympy.utilities import xthreaded
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
+from sympy.functions.elementary.exponential import log
 from sympy.geometry import Curve
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
+from sympy.series.order import Order
 
 
 class Integral(AddWithLimits):
@@ -365,7 +365,7 @@ class Integral(AddWithLimits):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((2, log(x) == 0), (x**3/log(x) - x/log(x), True))
+        Piecewise((2, Eq(log(x), 0)), (x**3/log(x) - x/log(x), True))
 
         See Also
         ========
@@ -429,7 +429,7 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
-            # There are a number of tradeoffs in using the meijer g method.
+            # There are a number of tradeoffs in using the Meijer G method.
             # It can sometimes be a lot faster than other methods, and
             # sometimes slower. And there are certain types of integrals for
             # which it is more likely to work than others.
@@ -471,12 +471,12 @@ class Integral(AddWithLimits):
                 else:
                     meijerg1 = False
 
-            # If the special meijerg code did not succeed finding a definite
+            # If the special meijerg code did not succeed in finding a definite
             # integral, then the code using meijerint_indefinite will not either
             # (it might find an antiderivative, but the answer is likely to be
             #  nonsensical).
-            # Thus if we are requested to only use meijer g-function methods,
-            # we give up at this stage. Otherwise we just disable g-function
+            # Thus if we are requested to only use Meijer G-function methods,
+            # we give up at this stage. Otherwise we just disable G-function
             # methods.
             if meijerg1 is False and meijerg is True:
                 antideriv = None
@@ -705,8 +705,8 @@ class Integral(AddWithLimits):
              it can be very slow.  It is still used because not enough of the
              full Risch algorithm is implemented, so that there are still some
              integrals that can only be computed using this method.  The goal
-             is to implement enough of the Risch and Meijer G methods so that
-             this can be deleted.
+             is to implement enough of the Risch and Meijer G-function methods
+             so that this can be deleted.
 
         """
         from sympy.integrals.risch import risch_integrate
@@ -812,11 +812,11 @@ class Integral(AddWithLimits):
 
                 if M is not None:
                     if g.exp == -1:
-                        h = C.log(g.base)
+                        h = log(g.base)
                     elif conds != 'piecewise':
                         h = g.base**(g.exp + 1) / (g.exp + 1)
                     else:
-                        h1 = C.log(g.base)
+                        h1 = log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
                         h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
 
@@ -947,7 +947,7 @@ class Integral(AddWithLimits):
                 symb = l[0]
                 break
         terms, order = expr.function.nseries(
-            x=symb, n=n, logx=logx).as_coeff_add(C.Order)
+            x=symb, n=n, logx=logx).as_coeff_add(Order)
         return integrate(terms, *expr.limits) + Add(*order)*x
 
     def as_sum(self, n, method="midpoint"):
@@ -1070,6 +1070,30 @@ class Integral(AddWithLimits):
             result += self.function.subs(sym, xi)
         return result*dx
 
+    def _sage_(self):
+        import sage.all as sage
+        f, limits = self.function._sage_(), list(self.limits)
+        for limit in limits:
+            if len(limit) == 1:
+                x = limit[0]
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    hold=True)
+            elif len(limit) == 2:
+                x, b = limit
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    b._sage_(),
+                                    hold=True)
+            else:
+                x, a, b = limit
+                f = sage.integral(f,
+                                  (x._sage_(),
+                                    a._sage_(),
+                                    b._sage_()),
+                                    hold=True)
+        return f
+
 
 @xthreaded
 def integrate(*args, **kwargs):
@@ -1160,8 +1184,8 @@ def integrate(*args, **kwargs):
 
     - Try to find an antiderivative, using all available methods, ordered
       by performance (that is try fastest method first, slowest last; in
-      particular polynomial integration is tried first, meijer
-      g-functions second to last, and heuristic risch last).
+      particular polynomial integration is tried first, Meijer
+      G-functions second to last, and heuristic Risch last).
 
     - If still not successful, try G-functions irrespective of the
       limits.

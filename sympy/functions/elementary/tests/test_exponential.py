@@ -1,7 +1,7 @@
 from sympy import (
     symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-    LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify, Eq)
+    LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
+    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
 
 
 def test_exp_values():
@@ -349,6 +349,7 @@ def test_lambertw():
     assert LambertW(0, 42) == -oo
     assert LambertW(-pi/2, -1) == -I*pi/2
     assert LambertW(-1/E, -1) == -1
+    assert LambertW(-2*exp(-2), -1) == -2
 
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
     assert LambertW(x, k).diff(x) == LambertW(x, k)/x/(1 + LambertW(x, k))
@@ -438,3 +439,16 @@ def test_log_product():
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+
+def test_issue_8866():
+    x = Symbol('x')
+    assert simplify(log(x, 10, evaluate=False)) == simplify(log(x, 10))
+    assert expand_log(log(x, 10, evaluate=False)) == expand_log(log(x, 10))
+
+    y = Symbol('y', positive=True)
+    l1 = log(exp(y), exp(10))
+    b1 = log(exp(y), exp(5))
+    l2 = log(exp(y), exp(10), evaluate=False)
+    b2 = log(exp(y), exp(5), evaluate=False)
+    assert simplify(log(l1, b1)) == simplify(log(l2, b2))
+    assert expand_log(log(l1, b1)) == expand_log(log(l2, b2))

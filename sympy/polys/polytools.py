@@ -55,7 +55,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, xrange
+from sympy.core.compatibility import iterable, range
 
 
 @public
@@ -1937,6 +1937,8 @@ class Poly(Expr):
 
         """
         if hasattr(f.rep, 'nth'):
+            if len(N) != len(f.gens):
+                raise ValueError('exponent of each generator must be specified')
             result = f.rep.nth(*list(map(int, N)))
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')
@@ -4001,20 +4003,20 @@ class Poly(Expr):
         d = len(c)
         m = [0]*d
         a = [0]*d
-        for i in xrange(d):
-            for j in xrange(i, d):
+        for i in range(d):
+            for j in range(i, d):
                 a[i] += binomial(j, i)*c[d-j-1]*x0**(j-i)
             a[i] *= dx**i
         m[d-1] = a[0]
-        for r in xrange(1, d):
-            for j in xrange(r, d):
+        for r in range(1, d):
+            for j in range(r, d):
                 t = 0
-                for i in xrange(1, r+1):
+                for i in range(1, r+1):
                     t += (-1)**(i+j)*i**j*binomial(r, i)
                 m[d-r-1] += a[j]*t
         yield m[-1]
         while True:
-            for i in xrange(d-1):
+            for i in range(d-1):
                 m[i+1] += m[i]
             yield m[-1]
 

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.combinatorics.permutations import Permutation, _af_rmul, _af_rmuln,\
+from sympy.core.compatibility import range
+from sympy.combinatorics.permutations import Permutation, _af_rmul, \
     _af_invert, _af_new
 from sympy.combinatorics.perm_groups import PermutationGroup, _orbit, \
     _orbit_transversal

@@ -52,7 +52,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from .logic import Logic, And, Or, Not
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 
 
 def _base_fact(atom):
