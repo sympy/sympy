@@ -343,19 +343,19 @@ def div(X, args, g=None):
 
 # ------------------LieXY-------------------------------
 
-def LieXY(X, Y, args, output_type=None):
+def lie_xy(X, Y, args, output_type=None):
     """Return the vector field [X,Y], Lie bracket (commutator) of a vector
     fields X and Y.
 
     Examples:
     =========
-    >>> from sympy.tensor.tensor_fields import LieXY
+    >>> from sympy.tensor.tensor_fields import lie_xy
     >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
     >>> Y = [x1**3*x2**3, x2*x3 - sin(x1*x3), x3**3 - x1**2]
     >>> arg = [x1, x2, x3]
-    >>> lie = LieXY(X, Y, arg,'a')
+    >>> lie = lie_xy(X, Y, arg,'a')
     >>> print(lie)
     2*x1**3*x2**6 + 3*x1**3*x2**2*(x2 - cos(x3)) - 3*x1*x2**2*(x2*x3 - sin(x1*x3)) -x1*x2**3*x3*cos(x1*x3) - x2*x3 + x3*(x2 - cos(x3)) + (-x1 + x3**3)*(-x1*cos(x1*x3) + x2) - (-x1**2 + x3**3)*sin(x3) + sin(x1*x3) x1**3*x2**3 - 2*x1**2*x2**3 + 3*x3**2*(-x1 + x3**3) - 3*x3**2*(-x1**2 + x3**3)
 
@@ -577,14 +577,14 @@ def NeedElementK(_list, index, k):
 
 # ---------------- Lie_omega --------------------------------
 
-def Lie_w(omega, X, args):
+def lie_w(omega, X, args):
     """Returns the exterior product of a vector fields (or "exterior
     differential"?)
 
     Examples:
     =========
 
-    >>> from sympy.tensor.tensor_fields import Lie_w
+    >>> from sympy.tensor.tensor_fields import lie_w
     >>> from sympy import symbols, cos
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
@@ -596,7 +596,7 @@ def Lie_w(omega, X, args):
     >>> omega[3,2]=-x1
     >>> arg = [x1, x2, x3]
     >>> X = [x1*x2**3,x2-cos(x3),x3**3-x1]
-    >>> li = Lie_w(omega,X,arg)
+    >>> li = lie_w(omega,X,arg)
     >>> print(li)
     0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3) 
     -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1 
