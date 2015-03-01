@@ -1540,9 +1540,9 @@ class TrigonometricIntegral(Function):
         if z == 0:
             return cls._atzero
         elif z is S.Infinity:
-            return cls._atinf
+            return cls._atinf()
         elif z is S.NegativeInfinity:
-            return cls._atneginf
+            return cls._atneginf()
 
         nz = z.extract_multiplicatively(polar_lift(I))
         if nz is None and cls._trigfunc(0) == 0:
@@ -1655,8 +1655,14 @@ class Si(TrigonometricIntegral):
 
     _trigfunc = sin
     _atzero = S(0)
-    _atinf = pi*S.Half
-    _atneginf = -pi*S.Half
+
+    @classmethod
+    def _atinf(cls):
+        return pi*S.Half
+
+    @classmethod
+    def _atneginf(cls):
+        return -pi*S.Half
 
     @classmethod
     def _minusfactor(cls, z):
@@ -1752,8 +1758,14 @@ class Ci(TrigonometricIntegral):
 
     _trigfunc = cos
     _atzero = S.ComplexInfinity
-    _atinf = S.Zero
-    _atneginf = I*pi
+
+    @classmethod
+    def _atinf(cls):
+        return S.Zero
+
+    @classmethod
+    def _atneginf(cls):
+        return I*pi
 
     @classmethod
     def _minusfactor(cls, z):
@@ -1833,8 +1845,14 @@ class Shi(TrigonometricIntegral):
 
     _trigfunc = sinh
     _atzero = S(0)
-    _atinf = S.Infinity
-    _atneginf = S.NegativeInfinity
+
+    @classmethod
+    def _atinf(cls):
+        return S.Infinity
+
+    @classmethod
+    def _atneginf(cls):
+        return S.NegativeInfinity
 
     @classmethod
     def _minusfactor(cls, z):
@@ -1927,8 +1945,14 @@ class Chi(TrigonometricIntegral):
 
     _trigfunc = cosh
     _atzero = S.ComplexInfinity
-    _atinf = S.Infinity
-    _atneginf = S.Infinity
+
+    @classmethod
+    def _atinf(cls):
+        return S.Infinity
+
+    @classmethod
+    def _atneginf(cls):
+        return S.Infinity
 
     @classmethod
     def _minusfactor(cls, z):
