@@ -1,30 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from sympy.matrices import *
-from sympy.tensor.arraypy import *
-from sympy import Add, diff, count, symbols, simplify
+from sympy.matrices import Matrix
+from sympy import Add, diff, symbols, simplify
+from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
+    matrix2tensor, list2arraypy, list2tensor
 
+# ---------------- scal_prod --------------------------------
 
-# ---------------- scal_prod g(X,Y)--------------------------------
 
 def scal_prod(X, Y, g):
-    """ Returns scalar product of vectors
-        g(X,Y)=sum_{i,j}([g[i,j]*X[i]*Y[j])
-        Example:
-        ========
-        >>> x1, x2 = symbols('x1, x2')
-        >>> X = [1,2]
-        >>> Y = [4,5]
-        >>> A = Arraypy((2,2))
-        >>> g = Tensor(A,(-1,-1))
-        >>> g[0,0] = cos(x2)**2
-        >>> g[0,1] = 0
-        >>> g[1,0] = 0
-        >>> g[1,1] = 1
-        >>> print g
-        >>> skal = scal_prod(X, Y, g)
+    """Returns scalar product of vectors g(X,Y)=sum_{i,j}([g[i,j]*X[i]*Y[j]).
+        
+    Examples:
+    =========
+        
+    >>> from sympy.tensor.riemannian_geometry import scal_prod
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> X = [1,2]
+    >>> Y = [4,5]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> sk = scal_prod(X, Y, g)
+    >>> print(sk)
+    
     """
-
     # Handling of a input argument - metric tensor g
     if not isinstance(g, (Matrix, Tensor, Arraypy)):
         raise TypeError(
@@ -44,7 +48,7 @@ def scal_prod(X, Y, g):
         raise TypeError('The type of vector must be list, Arraypy or Tensor')
     if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
-            raise ValueError("The dimension of X must be 1!")
+            raise ValueError("The dimension of X must be 1")
         if isinstance(X, Tensor):
             if not X.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of X must be (+1)')
@@ -56,7 +60,7 @@ def scal_prod(X, Y, g):
         raise TypeError('The type of vector must be list, Arraypy or Tensor')
     if isinstance(Y, (Tensor, Arraypy)):
         if len(Y.shape) != 1:
-            raise ValueError("The dimension of Y must be 1!")
+            raise ValueError("The dimension of Y must be 1")
         if isinstance(Y, Tensor):
             if not Y.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of Y must be (+1)')
@@ -79,23 +83,28 @@ def scal_prod(X, Y, g):
 
 # ---------------- Christoffel_1 --------------------------------
 
+
 def christoffel_1(g, var, type_output='t'):
     """Return the (-1,-1,-1)-tensor of Christoffel symbols for the given metric.
-       This returns the Christoffel symbol of first kind that represents the
-       Levi-Civita connection for the given metric.
-       christoffel_1[i,j,k] = (diff(g[j,k],x[i])+diff(g[i,k],x[j])-diff(g[i,j],x[k]))/2.
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> A = Arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> christoffel1=christoffel_1(g, arg, 't')
+    This returns the Christoffel symbol of first kind that represents the
+    Levi-Civita connection for the given metric.
+    christoffel_1[i,j,k] = (diff(g[j,k],x[i])+diff(g[i,k],x[j])-diff(g[i,j],x[k]))/2.
+       
+    Examples:
+    =========
+    
+    >>> from sympy.tensor.riemannian_geometry import christoffel_1
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> ch_1 = christoffel_1(g, arg, 't')
+    >>> print(christoffel1)
 
     """
     # Handling of input vector arguments var
@@ -104,7 +113,7 @@ def christoffel_1(g, var, type_output='t'):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -177,22 +186,26 @@ def christoffel_1(g, var, type_output='t'):
 
 def christoffel_2(g, var, type_output='t'):
     """Return the (-1, -1, +1) - tensor of Christoffel symbols for the given metric.
-       This returns the Christoffel symbol of second kind that represents the
-       Levi-Civita connection for the given metric.
-       christoffel_2[i,j,k] =
-       = Sum_{l}(g^{-1}[k,l]/2*(diff(g[j, l],x[i])+diff(g[i,l],x[j])-diff(g[i,j],x[l]))/2
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> A = Arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> christoffel_2(g,arg,'a')
+    This returns the Christoffel symbol of second kind that represents the
+    Levi-Civita connection for the given metric.
+    christoffel_2[i,j,k] =
+    = Sum_{l}(g^{-1}[k,l]/2*(diff(g[j, l],x[i])+diff(g[i,l],x[j])-diff(g[i,j],x[l]))/2
+    
+    Examples:
+    =========
+    
+    >>> from sympy.tensor.riemannian_geometry import christoffel_2
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> ch_2 = christoffel_2(g, arg, 'a')
+    >>> print(ch_2)
 
     """
     # Handling of input vector arguments var
@@ -201,7 +214,7 @@ def christoffel_2(g, var, type_output='t'):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -284,20 +297,25 @@ def christoffel_2(g, var, type_output='t'):
 
 def covar_der(X, g, var, type_output='t'):
     """Return the covariant derivative the vector field.
-       nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k])
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> A = Arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> X = [x1*x2**3,x1-cos(x2)]
-       >>> covar_der(X, g, arg, 't')
+    nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k]).
+    
+    Examples:
+    =========
+    
+    >>> from sympy.tensor.riemannian_geometry import covar_der
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> X = [x1*x2**3,x1-cos(x2)]
+    >>> c_v = covar_der(X, g, arg, 't')
+    >>> print(c_v)
+    
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -305,7 +323,7 @@ def covar_der(X, g, var, type_output='t'):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -344,7 +362,7 @@ def covar_der(X, g, var, type_output='t'):
     else:
         if isinstance(X, (Arraypy, Tensor)):
             if len(X.shape) != 1:
-                raise ValueError("The dimension of X must be 1!")
+                raise ValueError("The dimension of X must be 1")
             if isinstance(X, Tensor):
                 if not X.type_pq == (1, 0):
                     raise ValueError(
@@ -393,20 +411,26 @@ def covar_der(X, g, var, type_output='t'):
 
 def covar_der_XY(X, Y, g, var, type_output='t'):
     """Return the covariant derivative the vector field along another field.
-       nabla_XY[i] = Sum_{i}(nabla X[i,j]*Y[i])
-       Example:
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> A = Arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> X = [x1*x2**3, x1-cos(x2)]
-       >>> Y = [1, 2, 3]
-       >>> covar_der_XY(X, Y, g, arg, 't')
+    nabla_XY[i] = Sum_{i}(nabla X[i,j]*Y[i]).
+    
+    Examples:
+    =========
+
+    >>> from sympy.tensor.riemannian_geometry import covar_der_XY
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> X = [x1*x2**3, x1-cos(x2)]
+    >>> Y = [1, 2, 3]
+    >>> c_v_XY = covar_der_XY(X, Y, g, arg, 't')
+    >>> print(c_v_XY)
+    
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -453,7 +477,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     else:
         if isinstance(X, (Arraypy, Tensor)):
             if len(X.shape) != 1:
-                raise ValueError("The dimension of X must be 1!")
+                raise ValueError("The dimension of X must be 1")
             if isinstance(X, Tensor):
                 if not X.type_pq == (1, 0):
                     raise ValueError(
@@ -469,7 +493,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     else:
         if isinstance(Y, (Arraypy, Tensor)):
             if len(Y.shape) != 1:
-                raise ValueError("The dimension of Y must be 1!")
+                raise ValueError("The dimension of Y must be 1")
             if isinstance(Y, Tensor):
                 if not Y.type_pq == (1, 0):
                     raise ValueError(
@@ -523,20 +547,25 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
 
 def riemann(g, var, type_output='t'):
     """Return the Riemann curvature tensor of type (-1,-1,-1,+1)  for the given metric tensor.
-       Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) +
-       + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p]
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> A = Arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> riemann(g, arg, 'a')
+    Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) +
+    + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p].
+    
+    Examples:
+    =========
+    
+    >>> from sympy.tensor.riemannian_geometry import riemann
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> r = riemann(g, arg, 'a')
+    >>> print(r)
+    
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -544,7 +573,7 @@ def riemann(g, var, type_output='t'):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -629,21 +658,26 @@ def riemann(g, var, type_output='t'):
 
 def ricci(riemann, var, type_output='t'):
     """Return the tensor Ricci of type (-1,-1), is symmetric tensor
-       for given Riemann curvature tensor.
-       Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> A = Arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> cur = riemann(g, arg, 't')
-       >>> r = ricci(cur, arg, 't')
+    for given Riemann curvature tensor.
+    Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
+       
+    Examples:
+    =========
+    
+    >>> from sympy.tensor.riemannian_geometry import ricci
+    >>> from sympy import symbols, cos   
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> cur = riemann(g, arg, 't')
+    >>> r = ricci(cur, arg, 't')
+    >>> print(r)
+    
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -651,7 +685,7 @@ def ricci(riemann, var, type_output='t'):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -673,9 +707,8 @@ def ricci(riemann, var, type_output='t'):
                     raise ValueError(
                         'The valence or ind_char of Riemann curvature tensor must be (-1,-1,-1,+1)')
                 if not (
-                    count(
-                        riemann.start_index.count(
-                            riemann.start_index[0]) == 4)):
+                    riemann.start_index.count(
+                        riemann.start_index[0]) == 4)):
                     raise ValueError(
                         'The starting indices of Riemann curvature tensor must be identical')
             idx_start = riemann.start_index[0]
@@ -714,21 +747,26 @@ def ricci(riemann, var, type_output='t'):
 # ---------------- Scal_curv --------------------------------
 
 def scal_curv(g, ricci, var):
-    """ The scalar curvature (or the Ricci scalar)
-        is the simplest curvature invariant of a Riemannian manifold.
-        S=Ricci[j,k]*g_inv[j,k]
-        Example:
-        ========
-        >>> x1, x2 = symbols('x1, x2')
-        >>> arg = [x1, x2]
-        >>> A = Arraypy((2,2))
-        >>> g = Tensor(A,(-1,-1))
-        >>> g[0,0] = cos(x2)**2
-        >>> g[0,1] = 0
-        >>> g[1,0] = 0
-        >>> g[1,1] = 1
-        >>> print g
-        >>> scal_curv(g, r, arg)
+    """The scalar curvature (or the Ricci scalar)
+    is the simplest curvature invariant of a Riemannian manifold.
+    S=Ricci[j,k]*g_inv[j,k]
+        
+    Examples:
+    =========
+      
+    >>> from sympy.tensor.riemannian_geometry import scal_curv
+    >>> from sympy import symbols, cos  
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> sc_c = scal_curv(g, r, arg)
+    >>> print(sc_c)
+    
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -736,7 +774,7 @@ def scal_curv(g, ricci, var):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -800,24 +838,29 @@ def scal_curv(g, ricci, var):
 
 def k_sigma(X, Y, R, g, var):
     """Return Sectional curvature of thу Riemannian space
-       in the direction за two-dimensional area formed by
-       vectors X, Y  for the given metric tensor.
-       K_sigma = Sum_{i,j,k,r,s}( g[r,s]*Riemann[i,j,k,r] *X[i]*Y[j]*Y[k]X[s])/ (scal_prod(X,X,g)*scal_prod(Y,Y,g) - scal_prod(X,Y,g)^2
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> arg = [x1, x2]
-       >>> X = [1,2]
-       >>> Y = [3,4]
-       >>> A = Arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> R = riemann(g, arg)
-       >>> K_sig = k_sigma(X, Y, R, g, var)
+    in the direction за two-dimensional area formed by
+    vectors X, Y  for the given metric tensor.
+    K_sigma = Sum_{i,j,k,r,s}( g[r,s]*Riemann[i,j,k,r] *X[i]*Y[j]*Y[k]X[s])/ (scal_prod(X,X,g)*scal_prod(Y,Y,g) - scal_prod(X,Y,g)^2
+       
+    Examples:
+    =========
+       
+    >>> from sympy.tensor.riemannian_geometry import k_sigma
+    >>> from sympy import symbols, cos
+    >>> x1, x2 = symbols('x1, x2')
+    >>> arg = [x1, x2]
+    >>> X = [1,2]
+    >>> Y = [3,4]
+    >>> A = Arraypy((2,2))
+    >>> g = Tensor(A,(-1,-1))
+    >>> g[0,0] = cos(x2)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> R = riemann(g, arg)
+    >>> k_sig = k_sigma(X, Y, R, g, var)
+    >>> print(k_sig)
+    
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -825,7 +868,7 @@ def k_sigma(X, Y, R, g, var):
             'The type of vector arguments(var) must be a list, Arraypy or Tensor')
     if isinstance(var, (Tensor, Arraypy)):
         if len(var.shape) != 1:
-            raise ValueError("The dimension of variables must be 1!")
+            raise ValueError("The dimension of variables must be 1")
         if isinstance(var, Tensor):
             if not var.type_pq == (1, 0):
                 raise ValueError(
@@ -855,7 +898,7 @@ def k_sigma(X, Y, R, g, var):
         raise TypeError('The type of vector must be list, Arraypy or Tensor')
     if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
-            raise ValueError("The dimension of X must be 1!")
+            raise ValueError("The dimension of X must be 1")
         if isinstance(X, Tensor):
             if not X.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of X must be (+1)')
@@ -867,7 +910,7 @@ def k_sigma(X, Y, R, g, var):
         raise TypeError('The type of vector must be list, Arraypy or Tensor')
     if isinstance(Y, (Tensor, Arraypy)):
         if len(Y.shape) != 1:
-            raise ValueError("The dimension of Y must be 1!")
+            raise ValueError("The dimension of Y must be 1")
         if isinstance(Y, Tensor):
             if not Y.type_pq == (1, 0):
                 raise ValueError('The valence or ind_char of Y must be (+1)')
