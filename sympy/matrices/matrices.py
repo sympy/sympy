@@ -562,7 +562,7 @@ class MatrixBase(object):
             blst = B.tolist()
             ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
-                ret[i] = list(map(lambda j, k: j + k, alst[i], blst[i]))
+                ret[i] = [j + k for j, k in zip(alst[i], blst[i])]
             rv = classof(A, B)._new(ret)
             if 0 in A.shape:
                 rv = rv.reshape(*A.shape)

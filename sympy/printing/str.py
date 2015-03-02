@@ -280,8 +280,8 @@ class StrPrinter(Printer):
 
         a = a or [S.One]
 
-        a_str = list(map(lambda x: self.parenthesize(x, prec), a))
-        b_str = list(map(lambda x: self.parenthesize(x, prec), b))
+        a_str = [self.parenthesize(x, prec) for x in a]
+        b_str = [self.parenthesize(x, prec) for x in b]
 
         if len(b) == 0:
             return sign + '*'.join(a_str)

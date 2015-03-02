@@ -285,14 +285,14 @@ class MV(object):
                 if self.fct:
                     base_lst = str_combinations(base, MV.coords, rank=1, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[1])))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=1, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=1, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[1])))
             else:
                 result = S.Zero
                 for (coef, base) in zip(base, MV.blades[1]):
@@ -316,14 +316,14 @@ class MV(object):
                 if self.fct:
                     base_lst = str_combinations(base, MV.coords, rank=n, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[n])))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=n, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=n, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[n])))
             else:
                 raise TypeError('Cannot make_grade for base = %s' % base)
             self.igrade = n
@@ -335,14 +335,14 @@ class MV(object):
                 if self.fct:
                     base_lst = str_combinations(base, MV.coords, rank=2, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[2]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[2])))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=2, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=2, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[2]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[2])))
             else:
                 raise TypeError('!!!!Cannot make_grade2 for base = ' + str(base) + '!!!!\n')
             self.igrade = 2
@@ -354,14 +354,14 @@ class MV(object):
                 if self.fct:
                     base_lst = str_combinations(base, MV.coords, rank=MV.dim, mode='__')
                     fct_lst = fct_sym_array(base_lst, MV.coords)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[MV.dim]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[MV.dim])))
                 else:
                     if MV.coords is not None:
                         base_lst = str_combinations(base, MV.coords, rank=MV.dim, mode='__')
                     else:
                         base_lst = str_combinations(base, MV.subscripts, rank=MV.dim, mode='__')
                     fct_lst = fct_sym_array(base_lst, None)
-                    self.obj = reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[MV.dim]))))
+                    self.obj = reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[MV.dim])))
             else:
                 raise TypeError('!!!!Cannot make_pseudo for base = ' + str(base) + '!!!!\n')
             self.igrade = MV.dim
@@ -378,14 +378,14 @@ class MV(object):
                     if self.fct:
                         base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, MV.coords)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        self.obj += reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[rank])))
                     else:
                         if MV.coords is not None:
                             base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         else:
                             base_lst = str_combinations(base, MV.subscripts, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, None)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        self.obj += reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[rank])))
             else:
                 raise TypeError('Cannot make_mv for base = %s' % base)
             self.igrade = -1
@@ -402,14 +402,14 @@ class MV(object):
                     if self.fct:
                         base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, MV.coords)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        self.obj += reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[rank])))
                     else:
                         if MV.coords is not None:
                             base_lst = str_combinations(base, MV.coords, rank=rank, mode='__')
                         else:
                             base_lst = str_combinations(base, MV.subscripts, rank=rank, mode='__')
                         fct_lst = fct_sym_array(base_lst, None)
-                        self.obj += reduce(operator.add, tuple(map(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
+                        self.obj += reduce(operator.add, tuple(x0 * x1 for x0, x1 in zip(fct_lst, MV.blades[rank])))
             else:
                 raise TypeError('!!!!Cannot make_mv for base = ' + str(base) + '!!!!\n')
             self.igrade = -1
