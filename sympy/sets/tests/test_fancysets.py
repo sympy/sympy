@@ -1,7 +1,8 @@
+from sympy.core.compatibility import range
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt, Eq, tan)
+        Rational, sqrt, tan, log, Abs)
 from sympy.utilities.pytest import XFAIL, raises
 import itertools
 
@@ -21,12 +22,15 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5)) == Range(1, 6)
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
+    assert N.boundary == N
+
     assert N.inf == 1
     assert N.sup == oo
 
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
+    assert -1 not in N
     assert next(iter(N)) == 0
 
 def test_integers():
@@ -45,6 +49,8 @@ def test_integers():
     assert Z.inf == -oo
     assert Z.sup == oo
 
+    assert Z.boundary == Z
+
 
 def test_ImageSet():
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
@@ -60,8 +66,9 @@ def test_ImageSet():
 
     harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
-    assert .25 in harmonics
-    assert .3 not in harmonics
+    assert Rational(.25) in harmonics
+    assert 0.25 not in harmonics
+    assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
 
@@ -105,6 +112,8 @@ def test_Range():
     assert list(Range(0, 5)) == list(range(5))
     assert list(Range(5, 0, -1)) == list(range(1, 6))
 
+    assert Range(0, 10, -1) == S.EmptySet
+
     assert Range(5, 15).sup == 14
     assert Range(5, 15).inf == 5
     assert Range(15, 5, -1).sup == 15
@@ -119,6 +128,7 @@ def test_Range():
     raises(ValueError, lambda: Range(0, oo, oo))
     raises(ValueError, lambda: Range(-oo, oo))
     raises(ValueError, lambda: Range(-oo, oo, 2))
+    raises(ValueError, lambda: Range(0, pi, 1))
 
     assert 5 in Range(0, oo, 5)
     assert -5 in Range(-oo, 0, 5)
@@ -132,6 +142,14 @@ def test_Range():
 
     it = iter(Range(-oo, 0, 2))
     assert (next(it), next(it)) == (-2, -4)
+
+    assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
+
+    assert Range(1, 10, 1)._ith_element(5) == 6 # the index starts from zero
+    assert Range(1, 10, 1)._last_element == 9
+
+    assert Range(1, 10, 1).boundary == Range(1, 10, 1)
 
 
 def test_range_interval_intersection():
@@ -208,6 +226,16 @@ def test_infinitely_indexed_set_2():
     assert imageset(Lambda(n, 2*n + pi), S.Integers) == ImageSet(Lambda(n, 2*n + pi), S.Integers)
     assert imageset(Lambda(n, pi*n + pi), S.Integers) == ImageSet(Lambda(n, pi*n + pi), S.Integers)
     assert imageset(Lambda(n, exp(n)), S.Integers) != imageset(Lambda(n, n), S.Integers)
+
+
+def test_imageset_intersect_real():
+    from sympy import I
+    from sympy.abc import n
+    assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == \
+            FiniteSet(-1, 1)
+
+    s = ImageSet(Lambda(n, -I*(I*(2*pi*n - pi/4) + log(Abs(sqrt(-I))))), S.Integers)
+    assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
 
 
 @XFAIL

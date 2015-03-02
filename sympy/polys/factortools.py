@@ -76,7 +76,7 @@ from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def dup_trial_division(f, factors, K):
@@ -276,7 +276,7 @@ def dup_zz_zassenhaus(f, K):
     # choose a prime number `p` such that `f` be square free in Z_p
     # if there are many factors in Z_p, choose among a few different `p`
     # the one with fewer factors
-    for px in xrange(3, bound + 1):
+    for px in range(3, bound + 1):
         if not isprime(px) or b % px == 0:
             continue
 
@@ -321,8 +321,8 @@ def dup_zz_zassenhaus(f, K):
                 for i in S:
                     G = dup_mul(G, g[i], K)
                 G = dup_trunc(G, pl, K)
-                G1 = dup_primitive(G, K)[1]
-                q = G1[-1]
+                G = dup_primitive(G, K)[1]
+                q = G[-1]
                 if q and fc % q != 0:
                     continue
 
@@ -419,10 +419,10 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     n = dup_degree(f)
     g, h = [], []
 
-    for i in xrange(n, -1, -2):
+    for i in range(n, -1, -2):
         g.insert(0, f[i])
 
-    for i in xrange(n - 1, -1, -2):
+    for i in range(n - 1, -1, -2):
         h.insert(0, f[i])
 
     g = dup_sqr(dup_strip(g), K)
@@ -470,7 +470,7 @@ def _dup_cyclotomic_decompose(n, K):
         Q = [ dup_quo(dup_inflate(h, p, K), h, K) for h in H ]
         H.extend(Q)
 
-        for i in xrange(1, k):
+        for i in range(1, k):
             Q = [ dup_inflate(q, p, K) for q in Q ]
             H.extend(Q)
 
@@ -676,7 +676,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
         c = dmp_one(v, K)
         d = dup_LC(h, K)*cs
 
-        for i in reversed(xrange(len(E))):
+        for i in reversed(range(len(E))):
             k, e, (t, _) = 0, E[i], T[i]
 
             while not (d % e):
@@ -811,7 +811,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         m = dmp_nest([K.one, -a], n, K)
         M = dmp_one(n, K)
 
-        for k in K.map(xrange(0, d)):
+        for k in K.map(range(0, d)):
             if dmp_zero_p(c, u):
                 break
 
@@ -850,7 +850,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
     d = max(dmp_degree_list(f, u)[1:])
 
-    for j, s, a in zip(xrange(2, n + 2), S, A):
+    for j, s, a in zip(range(2, n + 2), S, A):
         G, w = list(H), j - 1
 
         I, J = A[:j - 2], A[j - 1:]
@@ -866,7 +866,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
         dj = dmp_degree_in(s, w, w)
 
-        for k in K.map(xrange(0, dj)):
+        for k in K.map(range(0, dj)):
             if dmp_zero_p(c, w):
                 break
 
@@ -956,8 +956,8 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     eez_mod_step = query('EEZ_MODULUS_STEP')
 
     while len(configs) < eez_num_configs:
-        for _ in xrange(eez_num_tries):
-            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
+        for _ in range(eez_num_tries):
+            A = [ K(randint(-mod, mod)) for _ in range(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))

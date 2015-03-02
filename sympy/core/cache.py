@@ -141,6 +141,7 @@ def __cacheit_nocache(func):
 def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
+        from .decorators import wraps
 
         cfunc = __cacheit(maxsize)(func)
 
@@ -179,7 +180,7 @@ USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
 # special cases :
 #  SYMPY_CACHE_SIZE=0    -> No caching
 #  SYMPY_CACHE_SIZE=None -> Unbounded caching
-scs = _getenv('SYMPY_CACHE_SIZE','500')
+scs = _getenv('SYMPY_CACHE_SIZE','1000')
 if scs.lower() == 'none':
     SYMPY_CACHE_SIZE = None
 else:

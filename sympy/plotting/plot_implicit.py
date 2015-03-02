@@ -45,7 +45,8 @@ class ImplicitSeries(BaseSeries):
     is_implicit = True
 
     def __init__(self, expr, var_start_end_x, var_start_end_y,
-            has_equality, use_interval_math, depth, nb_of_points):
+            has_equality, use_interval_math, depth, nb_of_points,
+            line_color):
         super(ImplicitSeries, self).__init__()
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
@@ -60,6 +61,7 @@ class ImplicitSeries(BaseSeries):
         self.nb_of_points = nb_of_points
         self.use_interval_math = use_interval_math
         self.depth = 4 + depth
+        self.line_color = line_color
 
     def __str__(self):
         return ('Implicit equation: %s for '
@@ -231,6 +233,11 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     - ``ylabel`` string. The label for the y-axis
 
+    Aesthetics options:
+
+    - ``line_color``: float or string. Specifies the color for the plot.
+        See ``Plot`` to see how to set color for the plots.
+
     plot_implicit, by default, uses interval arithmetic to plot functions. If
     the expression cannot be plotted using interval arithmetic, it defaults to
     a generating a contour using a mesh grid of fixed number of points. By
@@ -278,6 +285,13 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     Plotting Using boolean conjunctions.
 
     >>> p7 = plot_implicit(And(y > x, y > -x))
+
+    When plotting an expression with a single variable (y - 1, for example),
+    specify the x or the y variable explicitly:
+
+    >>> p8 = plot_implicit(y - 1, y_var=y)
+    >>> p9 = plot_implicit(x - 1, x_var=x)
+
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
@@ -338,6 +352,7 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     use_interval = kwargs.pop('adaptive', True)
     nb_of_points = kwargs.pop('points', 300)
     depth = kwargs.pop('depth', 0)
+    line_color = kwargs.pop('line_color', "blue")
     #Check whether the depth is greater than 4 or less than 0.
     if depth > 4:
         depth = 4
@@ -346,7 +361,7 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
                                     has_equality, use_interval, depth,
-                                    nb_of_points)
+                                    nb_of_points, line_color)
     show = kwargs.pop('show', True)
 
     #set the x and y limits

@@ -6,11 +6,11 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff, O)
+    exp_polar, expand, diff, O, Heaviside, Si, Max)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -161,6 +161,7 @@ def test_ibasic():
 
 
 def test_relational():
+    from sympy import Lt
     assert (pi < 3) is S.false
     assert (pi <= 3) is S.false
     assert (pi > 3) is S.true
@@ -169,7 +170,9 @@ def test_relational():
     assert (-pi <= 3) is S.true
     assert (-pi > 3) is S.false
     assert (-pi >= 3) is S.false
-    assert (x - 2 < x - 3) is S.false
+    r = Symbol('r', real=True)
+    assert (r - 2 < r - 3) is S.false
+    assert Lt(x + I, x + I + 2).func == Lt  # issue 8288
 
 
 def test_relational_assumptions():
@@ -198,10 +201,10 @@ def test_relational_assumptions():
     assert (m2 <= 0) is S.true
     assert (m3 > 0) is S.true
     assert (m4 >= 0) is S.true
-    m1 = Symbol("m1", negative=False)
-    m2 = Symbol("m2", nonpositive=False)
-    m3 = Symbol("m3", positive=False)
-    m4 = Symbol("m4", nonnegative=False)
+    m1 = Symbol("m1", negative=False, real=True)
+    m2 = Symbol("m2", nonpositive=False, real=True)
+    m3 = Symbol("m3", positive=False, real=True)
+    m4 = Symbol("m4", nonnegative=False, real=True)
     assert (m1 < 0) is S.false
     assert (m2 <= 0) is S.false
     assert (m3 > 0) is S.false
@@ -536,7 +539,7 @@ def test_as_numer_denom():
     assert (a/x + b/2/x + c/.5/x).as_numer_denom() == \
         (2*a + b + 4.0*c, 2*x)
     # this should take no more than a few seconds
-    assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
+    assert int(log(Add(*[Dummy()/i/x for i in range(1, 705)]
                        ).as_numer_denom()[1]/x).n(4)) == 705
     for i in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
         assert (i + x/3).as_numer_denom() == \
@@ -603,6 +606,13 @@ def test_as_independent():
     # issue 5784
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
+
+
+@XFAIL
+def test_call_2():
+    # TODO UndefinedFunction does not subclass Expr
+    f = Function('f')
+    assert (2*f)(x) == 2*f(x)
 
 
 def test_replace():
@@ -925,16 +935,21 @@ def test_as_coeff_mul():
     assert S(2).as_coeff_mul() == (2, ())
     assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
     assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
+    assert S(-3.0).as_coeff_mul(rational=False) == (-S(3.0), ())
     assert x.as_coeff_mul() == (1, (x,))
     assert (-x).as_coeff_mul() == (-1, (x,))
     assert (2*x).as_coeff_mul() == (2, (x,))
     assert (x*y).as_coeff_mul(y) == (x, (y,))
+    assert (3 + x).as_coeff_mul() == (1, (3 + x,))
     assert (3 + x).as_coeff_mul(y) == (3 + x, ())
     # don't do expansion
     e = exp(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
     e = 2**(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
+    assert (1.1*x).as_coeff_mul(rational=False) == (1.1, (x,))
+    assert (1.1*x).as_coeff_mul() == (1, (1.1, x))
+    assert (-oo*x).as_coeff_mul(rational=True) == (-1, (oo, x))
 
 
 def test_as_coeff_exponent():
@@ -1257,6 +1272,7 @@ def test_as_coeff_Mul():
 
     assert (x).as_coeff_Mul() == (S.One, x)
     assert (x*y).as_coeff_Mul() == (S.One, x*y)
+    assert (-oo*x).as_coeff_Mul(rational=True) == (-1, oo*x)
 
 
 def test_as_coeff_Add():
@@ -1385,7 +1401,13 @@ def test_issue_4199():
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
     raises(ValueError, lambda: x._eval_interval(x, None, None))
+    a = -y*Heaviside(x - y)
+    assert a._eval_interval(x, -oo, oo) == -y
+    assert a._eval_interval(x, oo, -oo) == y
 
+def test_eval_interval_zoo():
+    # Test that limit is used when zoo is returned
+    assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1516,6 +1538,9 @@ def test_random():
     assert posify(x)[0]._random() is not None
     assert lucas(n)._random(2, -2, 0, -1, 1) is None
 
+    # issue 8662
+    assert Piecewise((Max(x, y), z))._random() is None
+
 
 def test_round():
     from sympy.abc import x
@@ -1594,6 +1619,33 @@ def test_round():
     # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
+    # issue 8720
+    assert S(-123.6).round() == -124.
+    assert S(-1.5).round() == -2.
+    assert S(-100.5).round() == -101.
+    assert S(-1.5 - 10.5*I).round() == -2.0 - 11.0*I
+
+    # issue 7961
+    assert str(S(0.006).round(2)) == '0.01'
+    assert str(S(0.00106).round(4)) == '0.0011'
+
+    # issue 8147
+    assert S.NaN.round() == S.NaN
+    assert S.Infinity.round() == S.Infinity
+    assert S.NegativeInfinity.round() == S.NegativeInfinity
+    assert S.ComplexInfinity.round() == S.ComplexInfinity
+
+def test_round_exception_nostr():
+    # Don't use the string form of the expression in the round exception, as
+    # it's too slow
+    s = Symbol('bad')
+    try:
+        s.round()
+    except TypeError as e:
+        assert 'bad' not in str(e)
+    else:
+        # Did not raise
+        raise AssertionError("Did not raise")
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)

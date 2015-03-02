@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def binomial_coefficients(n):
@@ -22,7 +22,7 @@ def binomial_coefficients(n):
     """
     d = {(0, n): 1, (n, 0): 1}
     a = 1
-    for k in xrange(1, n//2 + 1):
+    for k in range(1, n//2 + 1):
         a = (a * (n - k + 1))//k
         d[k, n - k] = d[n - k, k] = a
     return d
@@ -46,7 +46,7 @@ def binomial_coefficients_list(n):
     """
     d = [1] * (n + 1)
     a = 1
-    for k in xrange(1, n//2 + 1):
+    for k in range(1, n//2 + 1):
         a = (a * (n - k + 1))//k
         d[k] = d[n - k] = a
     return d
@@ -92,9 +92,9 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     r = {_tuple(aa*n for aa in s0): 1}
     l = [0] * (n*(m - 1) + 1)
     l[0] = r.items()
-    for k in xrange(1, n*(m - 1) + 1):
+    for k in range(1, n*(m - 1) + 1):
         d = defaultdict(int)
-        for i in xrange(1, min(m, k + 1)):
+        for i in range(1, min(m, k + 1)):
             nn = (n + 1)*i - k
             if not nn:
                 continue
@@ -168,7 +168,7 @@ def multinomial_coefficients(m, n):
             t[j] += 1
         # compute the value
         # NB: the initialization of v was done above
-        for k in xrange(start, m):
+        for k in range(start, m):
             if t[k]:
                 t[k] -= 1
                 v += r[tuple(t)]

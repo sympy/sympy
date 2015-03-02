@@ -8,18 +8,18 @@ Special - gamma, zeta,spherical harmonics...
 from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial, subfactorial)
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas, harmonic,
-        bernoulli, bell, euler, catalan)
+        bernoulli, bell, euler, catalan, genocchi)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
         principal_branch, transpose, adjoint)
-from sympy.functions.elementary.trigonometric import (tan, cos, sin,
-        asin, acos, atan, atan2, acot, cot, sec, csc)
+from sympy.functions.elementary.trigonometric import (sin, cos, tan,
+        sec, csc, cot, asin, acos, atan, asec, acsc, acot, atan2)
 from sympy.functions.elementary.exponential import (exp_polar, exp, log,
         LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
-        asinh, acosh, atanh, acoth)
+        sech, csch, asinh, acosh, atanh, acoth)
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,

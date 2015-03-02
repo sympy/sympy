@@ -5,8 +5,8 @@ from .assumptions import ManagedProperties
 from .cache import cacheit
 from .core import BasicType, C
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import (reduce, iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest)
+from .compatibility import (iterable, Iterator, ordered,
+    string_types, with_metaclass, zip_longest, range)
 from .decorators import deprecated
 from .singleton import S
 
@@ -48,6 +48,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 ]
 
     # To be overridden with True in the appropriate subclasses
+    is_number = False
     is_Atom = False
     is_Symbol = False
     is_Dummy = False
@@ -308,10 +309,10 @@ class Basic(with_metaclass(ManagedProperties)):
                 return False
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
-            while isinstance(self, C.Pow) and self.exp == 1:
-                self = self.base
-            while isinstance(other, C.Pow) and other.exp == 1:
-                other = other.base
+            if isinstance(self, C.Pow) and self.exp == 1:
+                return self.base == other
+            if isinstance(other, C.Pow) and other.exp == 1:
+                return self == other.base
             try:
                 other = _sympify(other)
             except SympifyError:
@@ -490,8 +491,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Any other method that uses bound variables should implement a symbols
         method."""
-        union = set.union
-        return reduce(union, [arg.free_symbols for arg in self.args], set())
+        return set().union(*[a.free_symbols for a in self.args])
 
     @property
     def canonical_variables(self):
@@ -559,19 +559,6 @@ class Basic(with_metaclass(ManagedProperties)):
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
         return hypersimp(self, k) is not None
-
-    @property
-    def is_number(self):
-        """Returns ``True`` if 'self' contains no free symbols.
-
-        See Also
-        ========
-        is_comparable
-        sympy.core.expr.is_number
-
-        """
-        # should be overriden by subclasses
-        return False
 
     @property
     def is_comparable(self):
@@ -1600,6 +1587,20 @@ class Basic(with_metaclass(ManagedProperties)):
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
                 else:
                     return self
+
+    @property
+    @deprecated(useinstead="is_finite", issue=8071, deprecated_since_version="0.7.6")
+    def is_bounded(self):
+        return super(Basic, self).__getattribute__('is_finite')
+
+    @property
+    @deprecated(useinstead="is_infinite", issue=8071, deprecated_since_version="0.7.6")
+    def is_unbounded(self):
+        return super(Basic, self).__getattribute__('is_infinite')
+
+    @deprecated(useinstead="is_zero", issue=8071, deprecated_since_version="0.7.6")
+    def is_infinitesimal(self):
+        return super(Basic, self).__getattribute__('is_zero')
 
 
 class Atom(Basic):

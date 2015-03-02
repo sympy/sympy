@@ -3,17 +3,13 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, C, Expr, Rational,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
+    S, C, Rational, AlgebraicNumber,
+    Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
-)
-
-from sympy.polys.polyclasses import (
-    ANP, DMP,
 )
 
 from sympy.polys.polyerrors import (
@@ -44,17 +40,14 @@ from sympy.utilities import (
 )
 
 from sympy.core.exprtools import Factors
-from sympy.simplify.simplify import _mexpand, _is_sum_surds
+from sympy.core.function import _mexpand
+from sympy.simplify.simplify import _is_sum_surds, _split_gcd
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
-from sympy.mpmath import pslq, mp
+from mpmath import pslq, mp
 
 from sympy.core.compatibility import reduce
-from sympy.core.compatibility import xrange
-
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
+from sympy.core.compatibility import range
 
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
@@ -121,7 +114,6 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.simplify.simplify import _split_gcd, _mexpand
     from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
@@ -253,7 +245,6 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     [2] I.M. Isaacs, Proc. Amer. Math. Soc. 25 (1970), 638
     "Degrees of sums in a separable field extension".
     """
-    from sympy import gcd
     y = Dummy(str(x))
     if mp1 is None:
         mp1 = _minpoly_compose(ex1, x, dom)
@@ -401,7 +392,6 @@ def _minpoly_sin(ex, x):
     Returns the minimal polynomial of ``sin(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
-    from sympy.functions.combinatorial.factorials import binomial
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
@@ -552,7 +542,7 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_add(x, dom, *ex.args)
     elif ex.is_Mul:
         f = Factors(ex).factors
-        r = sift(f.items(), lambda itx: itx[0].is_rational and itx[1].is_rational)
+        r = sift(f.items(), lambda itx: itx[0].is_Rational and itx[1].is_Rational)
         if r[True] and dom == QQ:
             ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
             r1 = r[True]
@@ -641,6 +631,9 @@ def minimal_polynomial(ex, x=None, **args):
     dom = args.get('domain', None)
 
     ex = sympify(ex)
+    if ex.is_number:
+        # not sure if it's always needed but try it for numbers (issue 8354)
+        ex = _mexpand(ex, recursive=True)
     for expr in preorder_traversal(ex):
         if expr.is_AlgebraicNumber:
             compose = False
@@ -934,7 +927,7 @@ def field_isomorphism_pslq(a, b):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
 
         dps, mp.dps = mp.dps, n
         coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
@@ -1064,114 +1057,6 @@ def to_number_field(extension, theta=None, **args):
             raise IsomorphismFailed(
                 "%s is not in a subfield of %s" % (root, theta.root))
 
-@public
-class AlgebraicNumber(Expr):
-    """Class for representing algebraic numbers in SymPy. """
-
-    __slots__ = ['rep', 'root', 'alias', 'minpoly']
-
-    is_AlgebraicNumber = True
-
-    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
-        """Construct a new algebraic number. """
-        expr = sympify(expr)
-
-        if isinstance(expr, (tuple, Tuple)):
-            minpoly, root = expr
-
-            if not minpoly.is_Poly:
-                minpoly = Poly(minpoly)
-        elif expr.is_AlgebraicNumber:
-            minpoly, root = expr.minpoly, expr.root
-        else:
-            minpoly, root = minimal_polynomial(
-                expr, args.get('gen'), polys=True), expr
-
-        dom = minpoly.get_domain()
-
-        if coeffs != Tuple():
-            if not isinstance(coeffs, ANP):
-                rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
-                scoeffs = Tuple(*coeffs)
-            else:
-                rep = DMP.from_list(coeffs.to_list(), 0, dom)
-                scoeffs = Tuple(*coeffs.to_list())
-
-            if rep.degree() >= minpoly.degree():
-                rep = rep.rem(minpoly.rep)
-
-            sargs = (root, scoeffs)
-
-        else:
-            rep = DMP.from_list([1, 0], 0, dom)
-
-            if ask(Q.negative(root)):
-                rep = -rep
-
-            sargs = (root, coeffs)
-
-        if alias is not None:
-            if not isinstance(alias, Symbol):
-                alias = Symbol(alias)
-            sargs = sargs + (alias,)
-
-        obj = Expr.__new__(cls, *sargs)
-
-        obj.rep = rep
-        obj.root = root
-        obj.alias = alias
-        obj.minpoly = minpoly
-
-        return obj
-
-    def __hash__(self):
-        return super(AlgebraicNumber, self).__hash__()
-
-    def _eval_evalf(self, prec):
-        return self.as_expr()._evalf(prec)
-
-    @property
-    def is_aliased(self):
-        """Returns ``True`` if ``alias`` was set. """
-        return self.alias is not None
-
-    def as_poly(self, x=None):
-        """Create a Poly instance from ``self``. """
-        if x is not None:
-            return Poly.new(self.rep, x)
-        else:
-            if self.alias is not None:
-                return Poly.new(self.rep, self.alias)
-            else:
-                return PurePoly.new(self.rep, Dummy('x'))
-
-    def as_expr(self, x=None):
-        """Create a Basic expression from ``self``. """
-        return self.as_poly(x or self.root).as_expr().expand()
-
-    def coeffs(self):
-        """Returns all SymPy coefficients of an algebraic number. """
-        return [ self.rep.dom.to_sympy(c) for c in self.rep.all_coeffs() ]
-
-    def native_coeffs(self):
-        """Returns all native coefficients of an algebraic number. """
-        return self.rep.all_coeffs()
-
-    def to_algebraic_integer(self):
-        """Convert ``self`` to an algebraic integer. """
-        f = self.minpoly
-
-        if f.LC() == 1:
-            return self
-
-        coeff = f.LC()**(f.degree() - 1)
-        poly = f.compose(Poly(f.gen/f.LC()))
-
-        minpoly = poly*coeff
-        root = f.LC()*self.root
-
-        return AlgebraicNumber((minpoly, root), self.coeffs())
-
 
 class IntervalPrinter(LambdaPrinter):
     """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
@@ -1193,7 +1078,7 @@ def isolate(alg, eps=None, fast=False):
 
     if alg.is_Rational:
         return (alg, alg)
-    elif not ask(Q.real(alg)):
+    elif not alg.is_real:
         raise NotImplementedError(
             "complex algebraic numbers are not supported")
 

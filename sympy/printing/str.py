@@ -6,12 +6,11 @@ from __future__ import print_function, division
 
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
-from sympy.core.numbers import Integer
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import prec_to_dps
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps
 
 from sympy.utilities import default_sort_key
 
@@ -287,10 +286,7 @@ class StrPrinter(Printer):
         if len(b) == 0:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
-            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/" % a_str[0] + '*'.join(b_str)
-            else:
-                return sign + '*'.join(a_str) + "/%s" % b_str[0]
+            return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
@@ -365,6 +361,9 @@ class StrPrinter(Printer):
         return expr._print()
 
     def _print_TensorHead(self, expr):
+        return expr._print()
+
+    def _print_Tensor(self, expr):
         return expr._print()
 
     def _print_TensMul(self, expr):
@@ -485,7 +484,8 @@ class StrPrinter(Printer):
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
                 return "1/sqrt(%s)" % self._print(expr.base)
-            if expr.exp == -1:
+            if expr.exp is -S.One:
+                # Similarly to the S.Half case, don't test with "==" here.
                 return '1/%s' % self.parenthesize(expr.base, PREC)
 
         e = self.parenthesize(expr.exp, PREC)
@@ -554,6 +554,15 @@ class StrPrinter(Printer):
         return rv
 
     def _print_Relational(self, expr):
+
+        charmap = {
+            "==": "Eq",
+            "!=": "Ne",
+        }
+
+        if expr.rel_op in charmap:
+            return '%s(%s, %s)' % (charmap[expr.rel_op], expr.lhs, expr.rhs)
+
         return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
@@ -726,7 +735,7 @@ def sstr(expr, **settings):
     >>> from sympy import symbols, Eq, sstr
     >>> a, b = symbols('a b')
     >>> sstr(Eq(a + b, 0))
-    'a + b == 0'
+    'Eq(a + b, 0)'
     """
 
     p = StrPrinter(settings)

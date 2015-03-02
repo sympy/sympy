@@ -41,15 +41,14 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log, besseli, Lambda, Basic)
+                   Lambda, Basic)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from sympy.core.decorators import _sympifyit
 import random
 
 oo = S.Infinity
@@ -2150,16 +2149,13 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def compute_cdf(self, **kwargs):
         from sympy import Lambda, Min
-        z = Dummy('z', real=True, bounded=True)
-        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
-        result = result(z).subs({Min(z, self.right): z,
-                                 Min(z, self.left, self.right): self.left,
-                                 Min(z, self.left): self.left})
-        # XXX debug statement to figure out why the substitution may fail
-        margs = z, self.left, self.right, -z, -self.left, -self.right
-        min = self.atoms(Min)
-        if min and all(a in margs for m in min for a in m.args):
-            print(min)
+        z = Dummy('z', real=True, finite=True)
+        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)(z)
+        reps = {
+            Min(z, self.right): z,
+            Min(z, self.left, self.right): self.left,
+            Min(z, self.left): self.left}
+        result = result.subs(reps)
         return Lambda(z, result)
 
     def expectation(self, expr, var, **kwargs):
@@ -2214,7 +2210,7 @@ def Uniform(name, left, right):
     >>> density(X)(z)
     Piecewise((1/(-a + b), And(a <= z, z <= b)), (0, True))
 
-    >>> cdf(X)(z)
+    >>> cdf(X)(z)  # doctest: +SKIP
     -a/(-a + b) + z/(-a + b)
 
     >>> simplify(E(X))

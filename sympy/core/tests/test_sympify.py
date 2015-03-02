@@ -1,17 +1,17 @@
-from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,\
-    Pow, And, Or, Xor, Not, true, false
+from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Pow, Or, true, false, Abs, pi)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY
 
-from sympy import mpmath
+import mpmath
 
 
 def test_issue_3538():
@@ -97,15 +97,15 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 12
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) == True
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) == False
 
     mpmath.mp.dps = 6
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) == True
     assert sympify(
-        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
@@ -225,7 +225,7 @@ def test_sage():
     assert hasattr(log(x), "_sage_")
 
 
-def test_bug496():
+def test_issue_3595():
     assert sympify("a_") == Symbol("a_")
     assert sympify("_a") == Symbol("_a")
 
@@ -486,3 +486,9 @@ def test_issue_5596():
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'And(C, Q)'
+
+
+def test_issue_8821_highprec_from_str():
+    s = str(pi.evalf(128))
+    p = sympify(s)
+    assert Abs(sin(p)) < 1e-127

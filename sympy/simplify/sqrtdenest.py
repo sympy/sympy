@@ -1,16 +1,13 @@
 from __future__ import print_function, division
 
 from sympy.functions import sqrt, sign, root
-from sympy.core import S, Wild, sympify, Mul, Add, Expr
-from sympy.core.function import expand_multinomial, expand_mul
+from sympy.core import S, sympify, Mul, Add, Expr
+from sympy.core.function import expand_mul
+from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, _mexpand
 from sympy.utilities import default_sort_key
-
-
-def _mexpand(expr):
-    return expand_mul(expand_multinomial(expr))
 
 
 def is_sqrt(expr):
@@ -207,7 +204,6 @@ def _sqrt_match(p):
                             a1.append(x[1])
             a = Add(*a1)
             b = Add(*b1)
-            #a = Add._from_args(pargs)
             res = (a, b, r**2)
     else:
         b, r = p.as_coeff_Mul()
@@ -576,7 +572,6 @@ def _denester(nested, av0, h, max_depth_level):
             nested2 = [_mexpand(v[0]**2) -
                        _mexpand(R*v[1]**2) for v in values] + [R]
         d, f = _denester(nested2, av0, h + 1, max_depth_level)
-        #d = sqrtdenest(d)
         if not f:
             return None, None
         if not any(f[i] for i in range(len(nested))):

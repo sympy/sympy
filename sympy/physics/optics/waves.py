@@ -10,8 +10,8 @@ from __future__ import print_function, division
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, simplify, Symbol, S, C, I,
-    symbols, Derivative)
+from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
+    symbols, Derivative, atan2)
 from sympy.core.expr import Expr
 from sympy.physics.units import c
 
@@ -61,11 +61,12 @@ class TWave(Expr):
     >>> w2 = TWave(A2, f, phi2)
     >>> w3 = w1 + w2  # Superposition of two waves
     >>> w3
-    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f, phi1 + phi2)
+    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f,
+        atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)))
     >>> w3.amplitude
     sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)
     >>> w3.phase
-    phi1 + phi2
+    atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))
     >>> w3.speed
     299792458*m/(n*s)
     >>> w3.angular_velocity
@@ -256,8 +257,14 @@ class TWave(Expr):
                                   self.amplitude*other.amplitude*cos(
                                       self._phase - other.phase)),
                              self.frequency,
-                             self._phase + other._phase
+                             atan2(self._amplitude*cos(self._phase)
+                             +other._amplitude*cos(other._phase),
+                             self._amplitude*sin(self._phase)
+                             +other._amplitude*sin(other._phase))
                              )
+            else:
+                raise NotImplementedError("Interference of waves with different frequencies"
+                    " has not been implemented.")
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
 

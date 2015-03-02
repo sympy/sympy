@@ -1,12 +1,11 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    cos, sin, Mul, Pow, cse, O)
+    cos, sin, Mul, Pow, O)
 from sympy.simplify.simplify import expand_numer, expand
-from sympy.core.function import (
-    expand_power_base, expand_multinomial)
+from sympy.core.function import expand_multinomial, expand_power_base
+from sympy.core.compatibility import range
 
 from sympy.utilities.pytest import raises
-from sympy.core.function import expand_power_base
-from sympy.utilities.randtest import test_numerically
+from sympy.utilities.randtest import verify_numerically
 
 from sympy.abc import x, y, z
 
@@ -133,10 +132,7 @@ def test_expand_frac():
 
 def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
-    assert cse((eq).expand(complex=True), optimizations='basic') \
-        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2),
-        (x3, sin(x2)), (x4, cos(x2))], [sqrt(2)*(x3 + I*x3 - x4 +
-        I*x4)/(8*pi**(3/2)*(x0**2 + x1**2)**(1/4))])''')
+    assert eq.expand(complex=True)  # does not give oo recursion
 
 
 def test_expand_power_base():
@@ -288,7 +284,7 @@ def test_issues_5919_6830():
     # coverage
     def ok(a, b, n):
         e = (a + I*b)**n
-        return test_numerically(e, expand_multinomial(e))
+        return verify_numerically(e, expand_multinomial(e))
 
     for a in [2, S.Half]:
         for b in [3, S(1)/3]:

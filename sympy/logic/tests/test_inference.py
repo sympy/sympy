@@ -1,6 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols, Q
+from sympy.core.compatibility import range
 from sympy.logic.boolalg import And, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -143,6 +144,13 @@ def test_pl_true():
     assert pl_true(Equivalent(A, B), {A: None}) is None
     assert pl_true(Equivalent(A, B), {A: True, B: None}) is None
 
+    # Test for deep
+    assert pl_true(A | B, {A: False}, deep=True) is None
+    assert pl_true(~A & ~B, {A: False}, deep=True) is None
+    assert pl_true(A | B, {A: False, B: False}, deep=True) is False
+    assert pl_true(A & B & (~A | ~B), {A: True}, deep=True) is False
+    assert pl_true((C >> A) >> (B >> A), {C: True}, deep=True) is True
+
 
 def test_pl_true_wrong_input():
     from sympy import pi
@@ -210,3 +218,36 @@ def test_satisfiable_bool():
     assert satisfiable(S.true) == {true: true}
     assert satisfiable(false) is False
     assert satisfiable(S.false) is False
+
+
+def test_satisfiable_all_models():
+    from sympy.abc import A, B
+    assert next(satisfiable(False, all_models=True)) is False
+    assert list(satisfiable((A >> ~A) & A , all_models=True)) == [False]
+    assert list(satisfiable(True, all_models=True)) == [{true: true}]
+
+    models = [{A: True, B: False}, {A: False, B: True}]
+    result = satisfiable(A ^ B, all_models=True)
+    models.remove(next(result))
+    models.remove(next(result))
+    raises(StopIteration, lambda: next(result))
+    assert not models
+
+    assert list(satisfiable(Equivalent(A, B), all_models=True)) == \
+    [{A: False, B: False}, {A: True, B: True}]
+
+    models = [{A: False, B: False}, {A: False, B: True}, {A: True, B: True}]
+    for model in satisfiable(A >> B, all_models=True):
+        models.remove(model)
+    assert not models
+
+    # This is a santiy test to check that only the required number
+    # of solutions are generated. The expr below has 2**100 - 1 models
+    # which would time out the test if all are generated at once.
+    from sympy import numbered_symbols
+    from sympy.logic.boolalg import Or
+    sym = numbered_symbols()
+    X = [next(sym) for i in range(100)]
+    result = satisfiable(Or(*X), all_models=True)
+    for i in range(10):
+        assert next(result)

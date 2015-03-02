@@ -1,18 +1,16 @@
-from sympy import I, Integer, sqrt, symbols, Matrix
+from sympy import I, Integer, sqrt, symbols
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import H
-from sympy.physics.quantum.operator import Operator, UnitaryOperator
+from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
 from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.gate import UGate
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
 from sympy.physics.quantum.tensorproduct import TensorProduct
 

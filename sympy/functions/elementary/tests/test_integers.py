@@ -7,6 +7,7 @@ from sympy.utilities.pytest import XFAIL
 def test_floor():
 
     x = Symbol('x')
+    i = Symbol('i', imaginary=True)
     y = Symbol('y', real=True)
     k, n = symbols('k,n', integer=True)
 
@@ -43,6 +44,8 @@ def test_floor():
 
     assert floor(I) == I
     assert floor(-I) == -I
+    e = floor(i)
+    assert e.func is floor and e.args[0] == i
 
     assert floor(oo*I) == oo*I
     assert floor(-oo*I) == -oo*I
@@ -101,10 +104,18 @@ def test_floor():
     assert floor(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336800
 
+    assert (floor(y) <= y) == True
+    assert (floor(y) > y) == False
+    assert (floor(x) <= x).is_Relational  # x could be non-real
+    assert (floor(x) > x).is_Relational
+    assert (floor(x) <= y).is_Relational  # arg is not same as rhs
+    assert (floor(x) > y).is_Relational
+
 
 def test_ceiling():
 
     x = Symbol('x')
+    i = Symbol('i', imaginary=True)
     y = Symbol('y', real=True)
     k, n = symbols('k,n', integer=True)
 
@@ -141,6 +152,8 @@ def test_ceiling():
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I
+    e = ceiling(i)
+    assert e.func is ceiling and e.args[0] == i
 
     assert ceiling(oo*I) == oo*I
     assert ceiling(-oo*I) == -oo*I
@@ -198,6 +211,13 @@ def test_ceiling():
 
     assert ceiling(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336801
+
+    assert (ceiling(y) >= y) == True
+    assert (ceiling(y) < y) == False
+    assert (ceiling(x) >= x).is_Relational  # x could be non-real
+    assert (ceiling(x) < x).is_Relational
+    assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
+    assert (ceiling(x) < y).is_Relational
 
 
 def test_series():

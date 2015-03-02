@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 import inspect
 
-from sympy.utilities import default_sort_key
 from sympy.external import import_module
 
 from sympy.printing.printer import Printer
+from sympy.core.compatibility import range
 import sympy
 from functools import partial
 
@@ -12,7 +12,6 @@ theano = import_module('theano')
 if theano:
     ts = theano.scalar
     tt = theano.tensor
-    from theano import sandbox
     from theano.sandbox import linalg as tlinalg
 
     mapping = {
@@ -104,7 +103,6 @@ class TheanoPrinter(Printer):
 
     def _print_MatrixSymbol(self, X, dtypes={}, **kwargs):
         dtype = dtypes.get(X, 'floatX')
-        # shape = [self._print(d, dtypes) for d in X.shape]
         key = (X.name, dtype, type(X))
         if key in self.cache:
             return self.cache[key]

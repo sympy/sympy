@@ -35,14 +35,12 @@ more information on each (run help(pde)):
 from __future__ import print_function, division
 
 from sympy.simplify import simplify
-from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core import Add, C, S
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence)
-from sympy.core.function import (Function, Derivative,
-    expand, diff, AppliedUndef, Subs)
-from sympy.core.numbers import Rational
+    is_sequence, range)
+from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, Dummy, symbols
+from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
 from sympy.utilities.iterables import has_dups
 
@@ -155,7 +153,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     >>> uy = u.diff(y)
     >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
     >>> pdsolve(eq)
-    f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)
+    Eq(f(x, y), F(3*x - 2*y)*exp(-2*x/13 - 3*y/13))
 
     """
 
@@ -436,7 +434,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
-            funcs = reduce(set.union, funcs, set())
+            funcs = set().union(funcs)
             if len(funcs) != 1:
                 raise ValueError(
                     'must pass func arg to checkpdesol for this case.')
@@ -528,7 +526,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     >>> from sympy.abc import x,y
     >>> f = Function('f')
     >>> pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y))
-    f(x, y) == F(x - y)*exp(-x/2 - y/2)
+    Eq(f(x, y), F(x - y)*exp(-x/2 - y/2))
     >>> pprint(pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)))
                           x   y
                         - - - -
@@ -626,7 +624,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
     >>> pdsolve(eq)
-    f(x, y) == (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y)
+    Eq(f(x, y), (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y))
 
     References
     ==========
@@ -704,7 +702,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
     >>> pdsolve(eq)
-    f(x, y) == F(x*y)*exp(y**2/2) + 1
+    Eq(f(x, y), F(x*y)*exp(y**2/2) + 1)
 
     References
     ==========

@@ -25,9 +25,7 @@ from __future__ import print_function
 
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
-from sympy.utilities.codegen import(
-    codegen, Routine, InputArgument, Result, get_code_generator
-)
+from sympy.utilities.codegen import codegen, make_routine, get_code_generator
 import sys
 import os
 import tempfile
@@ -244,7 +242,7 @@ def fortranize_double_constants(code_string):
 
 def is_feasible(language, commands):
     # This test should always work, otherwise the compiler is not present.
-    routine = Routine("test", x)
+    routine = make_routine("test", x)
     numerical_tests = [
         ("test", ( 1.0,), 1.0, 1e-15),
         ("test", (-1.0,), -1.0, 1e-15),

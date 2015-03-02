@@ -6,7 +6,7 @@ from sympy.polys.polyoptions import (
     Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
 from sympy.polys.orderings import lex
-from sympy.polys.domains import FF, GF, ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, GF, ZZ, QQ, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 

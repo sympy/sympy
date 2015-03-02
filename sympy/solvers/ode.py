@@ -174,8 +174,8 @@ the main SymPy documentation.  Be sure to make the Sphinx documentation by
 running ``make html`` from within the doc directory to verify that the
 docstring formats correctly.
 
-If your solution method involves integrating, use :py:meth:`C.Integral()
-<sympy.core.C.Integral>` instead of
+If your solution method involves integrating, use :py:meth:`Integral()
+<sympy.integrals.integrals.Integral>` instead of
 :py:meth:`~sympy.core.expr.Expr.integrate`.  This allows the user to bypass
 hard/slow integration by using the ``_Integral`` variant of your hint.  In
 most cases, calling :py:meth:`sympy.core.basic.Basic.doit` will integrate your
@@ -234,29 +234,31 @@ from collections import defaultdict
 from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
-from sympy.core.exprtools import factor_terms, gcd_terms
+from sympy.core.compatibility import ordered, iterable, is_sequence, range
+from sympy.core.containers import Tuple
+from sympy.core.exprtools import factor_terms
+from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand, expand_mul, Subs)
+    expand, expand_mul, Subs, _mexpand)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN, zoo, I
+from sympy.core.numbers import NaN, zoo, I, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    sign, Piecewise, atan2, conjugate
+    atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div, lcm
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, lcm
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction, posify, cse
-from sympy.simplify.simplify import _mexpand, collect_const, powdenest
+    simplify, trigsimp, denom, posify, cse
+from sympy.simplify.simplify import collect_const, powdenest
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -354,7 +356,7 @@ def sub_func_doit(eq, func, new):
     reps = {}
     repu = {}
     for d in eq.atoms(Derivative):
-        u = C.Dummy('u')
+        u = Dummy('u')
         repu[u] = d.subs(func, new).doit()
         reps[d] = u
 
@@ -367,14 +369,14 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     in eq already.
     """
 
-    if isinstance(eq, C.Expr):
+    if isinstance(eq, Expr):
         eq = [eq]
     elif not is_iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
-    atom_set = set.union(*[i.free_symbols for i in eq])
+    atom_set = set().union(*[i.free_symbols for i in eq])
     ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
-    Cs = [next(ncs) for i in xrange(num)]
+    Cs = [next(ncs) for i in range(num)]
     return (Cs[0] if num == 1 else tuple(Cs))
 
 
@@ -556,24 +558,23 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
-    f(x) == C1*sin(3*x) + C2*cos(3*x)
+    Eq(f(x), C1*sin(3*x) + C2*cos(3*x))
 
     >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
     >>> dsolve(eq, hint='1st_exact')
-    [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
-    f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
     >>> dsolve(eq)
-    [x(t) == C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t),
-    y(t) == C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
-    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0)]
+    [Eq(x(t), C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t)),
+    Eq(y(t), C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
+    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0))]
     >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
     >>> dsolve(eq)
-    set([x(t) == -exp(C1)/(C2*exp(C1) - cos(t)), y(t) == -1/(C1 - cos(t))])
+    set([Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))])
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -676,7 +677,7 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         sols = solvefunc(eq, func, order, match)
         free = eq.free_symbols
         cons = lambda s: s.free_symbols.difference(free)
-        if isinstance(sols, C.Expr):
+        if isinstance(sols, Expr):
             return odesimp(sols, func, order, cons(sols), hint)
         return [odesimp(s, func, order, cons(s), hint) for s in sols]
     else:
@@ -1354,7 +1355,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
         funcs = []
         for eqs in eq:
             derivs = eqs.atoms(Derivative)
-            func = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 order[func_] = 0
                 funcs.append(func_)
@@ -1370,17 +1371,16 @@ def classify_sysode(eq, funcs=None, **kwargs):
                 if max_order < order_:
                     max_order = order_
                     eq_no = i
-        try:
-            if func_dict[eq_no]:
-                list_func = []
-                list_func.append(func_dict[eq_no])
-                list_func.append(func)
-                func_dict[eq_no] = list_func
-        except:
+        if eq_no in func_dict:
+            list_func = []
+            list_func.append(func_dict[eq_no])
+            list_func.append(func)
+            func_dict[eq_no] = list_func
+        else:
             func_dict[eq_no] = func
         order[func] = max_order
-    matching_hints['func'] = list(func_dict.values())
-    funcs = list(func_dict.values())
+    funcs = [func_dict[i] for i in range(len(func_dict))]
+    matching_hints['func'] = funcs
     for func in funcs:
         if isinstance(func, list):
             for func_elem in func:
@@ -1407,7 +1407,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                 if func_coef[j,func,k]==0:
                     if k==0:
                         coef = eqs.as_independent(func)[1]
-                        for xr in xrange(1, ode_order(eqs,func)+1):
+                        for xr in range(1, ode_order(eqs,func)+1):
                             coef -= eqs.as_independent(diff(func,t,xr))[1]
                         if coef != 0:
                             is_linear_ = False
@@ -1917,7 +1917,7 @@ def checksysodesol(eqs, sols, func=None):
         funcs = []
         for eq in eqs:
             derivs = eq.atoms(Derivative)
-            func = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 funcs.append(func_)
         funcs = list(set(funcs))
@@ -2195,7 +2195,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
-            funcs = reduce(set.union, funcs, set())
+            funcs = set().union(*funcs)
             if len(funcs) != 1:
                 raise ValueError(
                     'must pass func arg to checkodesol for this case.')
@@ -2418,9 +2418,9 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     >>> eq1 = Eq(f(x)/tan(f(x)/(2*x)), C1)
     >>> eq2 = Eq(f(x)/tan(f(x)/(2*x) + f(x)), C2)
     >>> [ode_sol_simplicity(eq, f(x)) for eq in [eq1, eq2]]
-    [26, 33]
+    [28, 35]
     >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
-    f(x)/tan(f(x)/(2*x)) == C1
+    Eq(f(x)/tan(f(x)/(2*x)), C1)
 
     """
     # TODO: if two solutions are solved for f(x), we still want to be
@@ -2527,12 +2527,12 @@ def __remove_linear_redundancies(expr, Cs):
 
     if expr.func is Equality:
         lhs, rhs = [_recursive_walk(i) for i in expr.args]
-        f = lambda i: isinstance(i, C.Number) or i in Cs
+        f = lambda i: isinstance(i, Number) or i in Cs
         if lhs.func is Symbol and lhs in Cs:
             rhs, lhs = lhs, rhs
         if lhs.func in (Add, Symbol) and rhs.func in (Add, Symbol):
-            dlhs = sift([lhs] if isinstance(lhs, C.AtomicExpr) else lhs.args, f)
-            drhs = sift([rhs] if isinstance(rhs, C.AtomicExpr) else rhs.args, f)
+            dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
+            drhs = sift([rhs] if isinstance(rhs, AtomicExpr) else rhs.args, f)
             for i in [True, False]:
                 for hs in [dlhs, drhs]:
                     if i not in hs:
@@ -2541,7 +2541,7 @@ def __remove_linear_redundancies(expr, Cs):
             lhs = Add(*dlhs[False]) - Add(*drhs[False])
             rhs = Add(*drhs[True]) - Add(*dlhs[True])
         elif lhs.func in (Mul, Symbol) and rhs.func in (Mul, Symbol):
-            dlhs = sift([lhs] if isinstance(lhs, C.AtomicExpr) else lhs.args, f)
+            dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
             if True in dlhs:
                 if False not in dlhs:
                     dlhs[False] = [1]
@@ -2763,7 +2763,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 constants_found[newstartnumber] = expr
                 newstartnumber += 1
             return expr
-        elif expr.is_Function or expr.is_Pow or isinstance(expr, C.Tuple):
+        elif expr.is_Function or expr.is_Pow or isinstance(expr, Tuple):
             return expr.func(
                 *[_constant_renumber(x) for x in expr.args])
         else:
@@ -2849,7 +2849,7 @@ def ode_1st_exact(eq, func, order, match):
     >>> f = Function('f')
     >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
     ... f(x), hint='1st_exact')
-    x*cos(f(x)) + f(x)**3/3 == C1
+    Eq(x*cos(f(x)) + f(x)**3/3, C1)
 
     References
     ==========
@@ -3529,7 +3529,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
-    n = Dummy("n")
+    n = Dummy("n", integer=True)
     s = Wild("s")
     k = Wild("k", exclude=[x])
     x0 = match.get('x0')
@@ -3887,7 +3887,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
     ... hint='nth_linear_euler_eq_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-        f(x) == sqrt(x)*(C1 + C2*log(x))
+    Eq(f(x), sqrt(x)*(C1 + C2*log(x)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_euler_eq_homogeneous_Integral`` hint.
@@ -3942,7 +3942,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
+    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
 
     # A generator of constants
     constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
@@ -4044,7 +4044,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
     >>> dsolve(eq, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients').expand()
-    f(x) == C1*x + C2*x**2 + log(x)/2 + 3/4
+    Eq(f(x), C1*x + C2*x**2 + log(x)/2 + 3/4)
 
     """
     x = func.args[0]
@@ -4121,7 +4121,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**4
     >>> dsolve(eq, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters').expand()
-    f(x) == C1*x + C2*x**2 + x**4/6
+    Eq(f(x), C1*x + C2*x**2 + x**4/6)
 
     """
     x = func.args[0]
@@ -4186,7 +4186,7 @@ def ode_almost_linear(eq, func, order, match):
     >>> d = f(x).diff(x)
     >>> eq = x*d + x*f(x) + 1
     >>> dsolve(eq, f(x), hint='almost_linear')
-    f(x) == (C1 - Ei(x))*exp(-x)
+    Eq(f(x), (C1 - Ei(x))*exp(-x))
     >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                          -x
     f(x) = (C1 - Ei(x))*e
@@ -4322,7 +4322,7 @@ def ode_linear_coefficients(eq, func, order, match):
     >>> df = f(x).diff(x)
     >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
     >>> dsolve(eq, hint='linear_coefficients')
-    [f(x) == -x - sqrt(C1 + 7*x**2) - 1, f(x) == -x + sqrt(C1 + 7*x**2) - 1]
+    [Eq(f(x), -x - sqrt(C1 + 7*x**2) - 1), Eq(f(x), -x + sqrt(C1 + 7*x**2) - 1)]
     >>> pprint(dsolve(eq, hint='linear_coefficients'))
                       ___________                     ___________
                    /         2                     /         2
@@ -4387,7 +4387,7 @@ def ode_separable_reduced(eq, func, order, match):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
+    [Eq(f(x), (-sqrt(C1*x**2 + 1) + 1)/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
                  ___________                ___________
                 /     2                    /     2
@@ -4523,11 +4523,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
+    Eq(f(x), C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
     C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) +
     C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) +
     C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4))
+    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.
@@ -4910,12 +4910,6 @@ def _undetermined_coefficients_match(expr, x):
             Similar to expr.as_independent(x)[1], except it only works
             multiplicatively.
             """
-            # I was using the below match, but it doesn't always put all of the
-            # coefficient in c.  c.f. 2**x*6*exp(x)*log(2)
-            # The below code is probably cleaner anyway.
-#            c = Wild('c', exclude=[x])
-#            t = Wild('t')
-#            r = expr.match(c*t)
             term = S.One
             if expr.is_Mul:
                 for i in expr.args:
@@ -7166,7 +7160,7 @@ def _linear_2eq_order2_type6(x, y, t, r):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in xrange(Poly(chareq).degree())]
+    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
     z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
     z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
@@ -7211,7 +7205,7 @@ def _linear_2eq_order2_type7(x, y, t, r):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in xrange(Poly(chareq).degree())]
+    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
     F = C.Integral(f, t)
     z1 = C1*C.Integral(exp(k1*F), t) + C2
     z2 = C3*C.Integral(exp(k2*F), t) + C4

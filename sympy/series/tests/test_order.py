@@ -1,7 +1,7 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
     Function)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
 
@@ -214,10 +214,6 @@ def test_issue_3468():
     assert x.is_positive is None
     assert y.is_positive is False
     assert z.is_positive is None
-
-    assert x.is_infinitesimal is None
-    assert y.is_infinitesimal is None
-    assert z.is_infinitesimal is None
 
 
 def test_leading_order():

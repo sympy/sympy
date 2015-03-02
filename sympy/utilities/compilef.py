@@ -86,6 +86,7 @@ import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
 from sympy.external import import_module
+from sympy.core.compatibility import range
 
 libtccpath = './libtcc.so'
 dps = 17  # decimal places of float precision
@@ -244,7 +245,6 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
     __run(libtcc.tcc_set_output_type(tccstate, 0))  # output to memory
-    ##print libtcc.tcc_add_library_path(tccstate, mathh) # could be dropped
     __run(libtcc.tcc_add_library(tccstate, 'm'))  # use math.h FIXME: Windows
     # compile string
     __run(libtcc.tcc_compile_string(tccstate, code))
@@ -426,10 +426,6 @@ void evalonarray(double *array, int length)
 from sympy import sqrt, pi, lambdify
 from math import exp as _exp, cos as _cos, sin as _sin
 
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
-
 
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
@@ -444,7 +440,7 @@ def test_clambdify():
     f1 = sqrt(x*y)
     pf1 = lambdify((x, y), f1, 'math')
     cf1 = clambdify((x, y), f1)
-    for i in xrange(10):
+    for i in range(10):
         if cf1(i, 10 - i) != pf1(i, 10 - i):
             raise ValueError("Values should be equal")
     f2 = (x - y) / z * pi
@@ -462,7 +458,7 @@ def test_frange():
     args = range(30, 168, 3)
     if len(a) != len(args):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if a[i] != f(args[i]):
             raise ValueError("Values should be equal")
     if len(frange('lambda x: x', 0, -10000)) != 0:
@@ -473,21 +469,21 @@ def test_frange():
     b = range(-50, 50)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if int(round(a[i]*10)) != b[i]:
             raise ValueError("Values should be equal")
     a = frange('lambda x: x', 17, -9, -3)
     b = range(17, -9, -3)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if a[i] != b[i]:
             raise ValueError("a and b should be equal")
     a = frange('lambda x: x', 2.7, -3.1, -1.01)
     b = range(270, -310, -101)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if int(round(a[i]*100)) != b[i]:
             raise ValueError("Values should be equal")
     assert frange('lambda x: x', 0.2, 0.1, -0.1)[0] == 0.2
@@ -516,9 +512,6 @@ def test_evalonarray_ctypes():
         if _sin(i) != j:
             raise ValueError("Values should be equal")
 # TODO: test for ctypes pointers
-##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
-##    for i, j in enumerater(a):
-##        print j
 
 
 def test_evalonarray_numpy():
@@ -538,7 +531,7 @@ def test_use_cse():
     b = frange(*args, **kwargs)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if a[i] != b[i]:
             raise ValueError("a and b should be equal")
 
@@ -583,7 +576,7 @@ def benchmark():
             print('Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20)))
 
     print('big function:')
-    from sympy import _exp, _sin, _cos, pi, lambdify
+    from sympy import _exp, _sin, _cos, pi
     x = Symbol('x')
 ##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
 ##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \

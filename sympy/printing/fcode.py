@@ -22,7 +22,7 @@ from __future__ import print_function, division
 import string
 
 from sympy.core import S, C, Add, N
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 

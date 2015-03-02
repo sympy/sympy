@@ -565,8 +565,6 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
-    skip_paths = ['mpmath']
-
     usage = "usage: ./bin/doctest_coverage.py PATHS"
 
     parser = ArgumentParser(

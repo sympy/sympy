@@ -9,11 +9,12 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
+from sympy import hyper, I, S, meijerg, Piecewise
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
-from sympy.utilities.randtest import test_numerically as tn
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.randtest import verify_numerically as tn
+from sympy.utilities.pytest import XFAIL, slow
+from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar)
@@ -188,7 +189,6 @@ def test_meijerg_formulae():
             closed_form = formula.closed_form.subs(rep)
             z = formula.z
             assert tn(g, closed_form, z)
-            #print closed_form
 
             # now test the computed matrix
             cl = (formula.C * formula.B)[0].subs(rep)

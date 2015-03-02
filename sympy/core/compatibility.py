@@ -9,7 +9,6 @@ import operator
 from collections import defaultdict
 from sympy.external import import_module
 
-
 """
 Python 2 and Python 3 compatible imports
 
@@ -91,9 +90,9 @@ if PY3:
     from io import StringIO
     cStringIO = StringIO
 
-    exec_ = getattr(builtins, "exec")
+    exec_=getattr(builtins, "exec")
 
-    xrange = range
+    range=range
 else:
     import codecs
     import types
@@ -136,8 +135,7 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-
-    xrange = xrange
+    range=xrange
 
 def with_metaclass(meta, *bases):
     """
@@ -412,7 +410,7 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key, sin, cos, sqrt
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
@@ -490,10 +488,19 @@ def default_sort_key(item, order=None):
     The order of terms obtained when using these keys is the order that would
     be obtained if those terms were *factors* in a product.
 
+    Although it is useful for quickly putting expressions in canonical order,
+    it does not sort expressions based on their complexity defined by the
+    number of operations, power of variables and others:
+
+    >>> sorted([sin(x)*cos(x), sin(x)], key=default_sort_key)
+    [sin(x)*cos(x), sin(x)]
+    >>> sorted([x, x**2, sqrt(x), x**3], key=default_sort_key)
+    [sqrt(x), x, x**2, x**3]
+
     See Also
     ========
 
-    sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+    ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
 
     """
 
@@ -647,7 +654,6 @@ def ordered(seq, keys=None, default=True, warn=False):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
         keys = list(keys)
-
         f = keys.pop(0)
         for a in seq:
             d[f(a)].append(a)

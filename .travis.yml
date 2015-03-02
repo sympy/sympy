@@ -7,7 +7,7 @@ env:
   - SPLIT="3/4"
   - SPLIT="4/4"
   global:
-    secure: uJycOcgT3Rg9TsU6ID2UMHc56Fh6Q70p1/mFiod8r97g8zER9kWTZ2GVDSRiw1Nfh0Wojcy04PAG3t5m9bwM08YF8qZy1PJkCb/pu7PN8Hzt+6FSBb84gGEXMiv1xuZWSQ0pUuBa1Lfcxuq6m2/eA8aNfgoqnpLgR8zeg/2xhFw=
+    secure: "SyoeHaDi9vRPJ5X0JFY5/nQif66u+fehtqUg7F8ILoNrwugJcs+u4VZm1sJ7Cv2h6uGoNRAfkkrahxxj2mKCgpqbY2MdDAZ+ru5wn5R0NjYjTpEz7ET4Xq5o+gca+mhFMkiutYihM73+AaIKCX0vfC9yb8WBPXzbbrv8vVvQr6Y="
 python:
   - 2.6
   - 2.7
@@ -62,6 +62,17 @@ matrix:
     - python: 3.4
       env:
         - TEST_THEANO="true"
+    - python: 2.7
+      env:
+        - TEST_AUTOWRAP="true"
+      virtualenv:
+        system_site_packages: true
+    - python: 2.7
+      env:
+        - TEST_ASCII="true"
+    - python: 3.4
+      env:
+        - TEST_ASCII="true"
   allow_failures:
     - python: 3.3 # Dummy value
       env:
@@ -72,7 +83,12 @@ matrix:
         - SPLIT="4/4"
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
-      pip install "fastcache==0.4.0";
+      pip install fastcache;
+    fi
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y numpy;
+      sudo apt-get update;
+      sudo apt-get install gfortran gcc python-numpy cython;
     fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
@@ -101,12 +117,20 @@ before_install:
       sudo apt-get install sagemath-upstream-binary;
     fi
 install:
-  - if [[ "${TEST_SAGE}" != "true" ]]; then
+#The install cycle below is to test installation on systems without setuptools.
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y setuptools;
+      python setup.py install;
+      pip uninstall -y sympy;
+      pip install setuptools;
+      python setup.py install;
+    elif [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
 script:
   - bin/test_travis.sh
+#  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+#      bin/deploy_doc.sh;
+#    fi
 notifications:
   email: false
-after_success:
-  - bin/build_doc.sh

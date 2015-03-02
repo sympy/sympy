@@ -18,7 +18,7 @@ for:
 """
 
 from sympy import S
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, range
 
 
 def finite_diff_weights(order, x_list, x0):
@@ -110,7 +110,7 @@ def finite_diff_weights(order, x_list, x0):
     If weights for a finite difference approximation
     of the 3rd order derivative is wanted, weights for 0th, 1st
     and 2nd order are calculated "for free", so are formulae using
-    fewer and fewer of the paramters. This is something one can
+    fewer and fewer of the parameters. This is something one can
     take advantage of to save computational cost.
 
     See also
@@ -123,13 +123,13 @@ def finite_diff_weights(order, x_list, x0):
     ==========
 
     .. [1] Generation of Finite Difference Formulas on Arbitrarily Spaced
-            Grids, Bengt Fornberg; Mathematics of compuation; 51; 184;
+            Grids, Bengt Fornberg; Mathematics of computation; 51; 184;
             (1988); 699-706; doi:10.1090/S0025-5718-1988-0935077-0
 
     """
     # The notation below closely corresponds to the one used in the paper.
     if order < 0:
-        raise ValueError("Negtive derivative order illegal.")
+        raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
         raise ValueError("Non-integer order illegal")
     M = order
@@ -158,7 +158,7 @@ def finite_diff_weights(order, x_list, x0):
 
 def apply_finite_diff(order, x_list, y_list, x0):
     """
-    Calculates the finite difference approxiamtion of
+    Calculates the finite difference approximation of
     the derivative of requested order at x0 from points
     provided in x_list and y_list.
 
@@ -265,7 +265,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
         difference weights.
         If it is a coefficient, it will be used as the step-size
         for generating an equidistant sequence of length order+1
-        centered around x0. defult: 1 (step-size 1)
+        centered around x0. default: 1 (step-size 1)
 
     x0: number or Symbol, optional
         the value of the independent variable (wrt) at which the

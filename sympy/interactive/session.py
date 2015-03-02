@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
@@ -17,7 +18,7 @@ init_printing()
 verbose_message = """\
 These commands were executed:
 %(source)s
-Documentation can be found at http://www.sympy.org
+Documentation can be found at http://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\
@@ -69,7 +70,14 @@ def _make_message(ipython=True, quiet=False, source=None):
             else:
                 _source += '>>> ' + line + '\n'
 
-        message += '\n' + verbose_message % {'source': _source}
+        doc_version = sympy_version
+        if doc_version.find('-git') >= 0:
+            doc_version = "dev"
+        else:
+            doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
+
+        message += '\n' + verbose_message % {'source': _source,
+                                             'version': doc_version}
 
     return message
 
@@ -124,43 +132,6 @@ def int_to_Integer(s):
         else:
             result.append((toknum, tokval))
     return untokenize(result)
-
-# XXX: Something like this might be used, but it only works on single line
-# inputs.  See
-# http://mail.scipy.org/pipermail/ipython-user/2012-August/010846.html and
-# https://github.com/ipython/ipython/issues/1491.  So instead we are forced to
-# just monkey-patch run_cell until IPython builds a better API.
-#
-# class IntTransformer(object):
-#     """
-#     IPython command line transformer that recognizes and replaces int
-#     literals.
-#
-#     Based on
-#     https://bitbucket.org/birkenfeld/ipython-physics/src/71b2d850da00/physics.py.
-#
-#     """
-#     priority = 99
-#     enabled = True
-#     def transform(self, line, continue_prompt):
-#         import re
-#         from tokenize import TokenError
-#         leading_space = re.compile(' *')
-#         spaces = re.match(leading_space, line).span()[1]
-#         try:
-#             return ' '*spaces + int_to_Integer(line)
-#         except TokenError:
-#             return line
-#
-# int_transformer = IntTransformer()
-#
-# def enable_automatic_int_sympification(app):
-#     """
-#     Allow IPython to automatically convert integer literals to Integer.
-#
-#     This lets things like 1/2 be executed as (essentially) Rational(1, 2).
-#     """
-#     app.shell.prefilter_manager.register_transformer(int_transformer)
 
 
 def enable_automatic_int_sympification(app):

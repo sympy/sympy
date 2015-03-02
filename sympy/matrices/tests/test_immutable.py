@@ -1,4 +1,5 @@
-from sympy import ImmutableMatrix, Matrix, eye, zeros, S, Equality, Unequality
+from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
+        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify)
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -38,7 +39,10 @@ def test_subs():
 
 def test_as_immutable():
     X = Matrix([[1, 2], [3, 4]])
-    assert X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
+    assert sympify(X) == X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
+    X = SparseMatrix(5, 5, {})
+    assert sympify(X) == X.as_immutable() == ImmutableSparseMatrix(
+            [[0 for i in range(5)] for i in range(5)])
 
 
 def test_function_return_types():

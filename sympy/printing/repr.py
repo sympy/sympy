@@ -9,8 +9,9 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from .printer import Printer
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import prec_to_dps, repr_dps
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps, repr_dps
+from sympy.core.compatibility import range
 
 
 class ReprPrinter(Printer):
@@ -79,6 +80,12 @@ class ReprPrinter(Printer):
         return "[%s]" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
+        # special case for some empty matrices
+        if (expr.rows == 0) ^ (expr.cols == 0):
+            return '%s(%s, %s, %s)' % (expr.__class__.__name__,
+                                       self._print(expr.rows),
+                                       self._print(expr.cols),
+                                       self._print([]))
         l = []
         for i in range(expr.rows):
             l.append([])
@@ -134,7 +141,13 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        d = expr._assumptions.generator
+        if d == {}:
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                                   self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))

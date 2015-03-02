@@ -2,13 +2,14 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core.basic import C, Basic
-from sympy.core.compatibility import cmp_to_key, reduce, is_sequence
-from sympy.core.singleton import S
-from sympy.core.operations import AssocOp
-from sympy.core.cache import cacheit
-from sympy.core.numbers import ilcm, igcd
-from sympy.core.expr import Expr
+from .basic import C, Basic
+from .compatibility import cmp_to_key, reduce, is_sequence, range
+from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
+from .singleton import S
+from .operations import AssocOp
+from .cache import cacheit
+from .numbers import ilcm, igcd
+from .expr import Expr
 
 
 # Key for sorting commutative args in canonical order
@@ -71,9 +72,6 @@ class Add(Expr, AssocOp):
 
     is_Add = True
 
-    #identity = S.Zero
-    # cyclic import, so defined in numbers.py
-
     @classmethod
     def flatten(cls, seq):
         """
@@ -129,7 +127,7 @@ class Add(Expr, AssocOp):
             # 3 or NaN
             elif o.is_Number:
                 if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_bounded is False):
+                        o.is_finite is False):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number:
@@ -140,7 +138,7 @@ class Add(Expr, AssocOp):
                 continue
 
             elif o is S.ComplexInfinity:
-                if coeff.is_bounded is False:
+                if coeff.is_finite is False:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 coeff = S.ComplexInfinity
@@ -215,24 +213,22 @@ class Add(Expr, AssocOp):
         # oo, -oo
         if coeff is S.Infinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonnegative or f.is_real and
-                       (f.is_bounded or f.is_infinitesimal))]
+                      (f.is_nonnegative or f.is_real and f.is_finite)]
 
         elif coeff is S.NegativeInfinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonpositive or f.is_real and
-                       (f.is_bounded or f.is_infinitesimal))]
+                      (f.is_nonpositive or f.is_real and f.is_finite)]
 
         if coeff is S.ComplexInfinity:
             # zoo might be
-            #   unbounded_real + bounded_im
-            #   bounded_real + unbounded_im
-            #   unbounded_real + unbounded_im
-            # addition of a bounded real or imaginary number won't be able to
-            # change the zoo nature; if unbounded a NaN condition could result
-            # if the unbounded symbol had sign opposite of the unbounded
-            # portion of zoo, e.g., unbounded_real - unbounded_real.
-            newseq = [c for c in newseq if not (c.is_bounded and
+            #   infinite_real + finite_im
+            #   finite_real + infinite_im
+            #   infinite_real + infinite_im
+            # addition of a finite real or imaginary number won't be able to
+            # change the zoo nature; adding an infinite qualtity would result
+            # in a NaN condition if it had sign opposite of the infinite
+            # portion of zoo, e.g., infinite_real - infinite_real.
+            newseq = [c for c in newseq if not (c.is_finite and
                                                 c.is_real is not None)]
 
         # process O(x)
@@ -348,8 +344,9 @@ class Add(Expr, AssocOp):
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 5524.
 
+    @cacheit
     def _eval_derivative(self, s):
-        return self.func(*[f.diff(s) for f in self.args])
+        return self.func(*[a.diff(s) for a in self.args])
 
     def _eval_nseries(self, x, n, logx):
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
@@ -446,24 +443,34 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr(
-        'is_real', when_multiple=None)
-    _eval_is_complex = lambda self: self._eval_template_is_attr(
-        'is_complex', when_multiple=None)
-    _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
-        'is_antihermitian', when_multiple=None)
-    _eval_is_bounded = lambda self: self._eval_template_is_attr(
-        'is_bounded', when_multiple=None)
-    _eval_is_hermitian = lambda self: self._eval_template_is_attr(
-        'is_hermitian', when_multiple=None)
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
-        'is_imaginary', when_multiple=None)
-    _eval_is_integer = lambda self: self._eval_template_is_attr(
-        'is_integer', when_multiple=None)
-    _eval_is_rational = lambda self: self._eval_template_is_attr(
-        'is_rational', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr(
-        'is_commutative')
+    _eval_is_real = lambda self: _fuzzy_group(
+        (a.is_real for a in self.args), quick_exit=True)
+    _eval_is_complex = lambda self: _fuzzy_group(
+        (a.is_complex for a in self.args), quick_exit=True)
+    _eval_is_antihermitian = lambda self: _fuzzy_group(
+        (a.is_antihermitian for a in self.args), quick_exit=True)
+    _eval_is_finite = lambda self: _fuzzy_group(
+        (a.is_finite for a in self.args), quick_exit=True)
+    _eval_is_hermitian = lambda self: _fuzzy_group(
+        (a.is_hermitian for a in self.args), quick_exit=True)
+    _eval_is_integer = lambda self: _fuzzy_group(
+        (a.is_integer for a in self.args), quick_exit=True)
+    _eval_is_rational = lambda self: _fuzzy_group(
+        (a.is_rational for a in self.args), quick_exit=True)
+    _eval_is_algebraic = lambda self: _fuzzy_group(
+        (a.is_algebraic for a in self.args), quick_exit=True)
+    _eval_is_commutative = lambda self: _fuzzy_group(
+        a.is_commutative for a in self.args)
+
+    def _eval_is_imaginary(self):
+        rv = _fuzzy_group(a.is_imaginary for a in self.args)
+        if rv is False:
+            return rv
+        iargs = [a*S.ImaginaryUnit for a in self.args]
+        r = _fuzzy_group(a.is_real for a in iargs)
+        if r:
+            s = self.func(*iargs, evaluate=False)
+            return fuzzy_not(s.is_zero)
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even is True)]
@@ -489,17 +496,17 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super(Add, self)._eval_is_positive()
         pos = nonneg = nonpos = unknown_sign = False
-        unbounded = set()
+        saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
         if not args:
             return False
         for a in args:
             ispos = a.is_positive
-            ubound = a.is_unbounded
-            if ubound:
-                unbounded.add(ispos)
-                if len(unbounded) > 1:
-                    return None
+            infinite = a.is_infinite
+            if infinite:
+                saw_INF.add(fuzzy_or((ispos, a.is_nonnegative)))
+                if True in saw_INF and False in saw_INF:
+                    return
             if ispos:
                 pos = True
                 continue
@@ -509,26 +516,17 @@ class Add(Expr, AssocOp):
             elif a.is_nonpositive:
                 nonpos = True
                 continue
-            elif a.is_zero:
-                continue
 
-            if ubound is None:
-                # sign is unknown; if we don't know the boundedness
-                # we're done: we don't know. That is technically true,
-                # but the only option is that we have something like
-                # oo - oo which is NaN and it really doesn't matter
-                # what sign we apply to that because it (when finally
-                # computed) will trump any sign. So instead of returning
-                # None, we pass.
-                pass
-            else:
-                return None
+            if infinite is None:
+                return
             unknown_sign = True
 
-        if unbounded:
-            return unbounded.pop()
+        if saw_INF:
+            if len(saw_INF) > 1:
+                return
+            return saw_INF.pop()
         elif unknown_sign:
-            return None
+            return
         elif not nonpos and not nonneg and pos:
             return True
         elif not nonpos and pos:
@@ -540,17 +538,17 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super(Add, self)._eval_is_negative()
         neg = nonpos = nonneg = unknown_sign = False
-        unbounded = set()
+        saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
         if not args:
             return False
         for a in args:
             isneg = a.is_negative
-            ubound = a.is_unbounded
-            if ubound:
-                unbounded.add(isneg)
-                if len(unbounded) > 1:
-                    return None
+            infinite = a.is_infinite
+            if infinite:
+                saw_INF.add(fuzzy_or((isneg, a.is_nonpositive)))
+                if True in saw_INF and False in saw_INF:
+                    return
             if isneg:
                 neg = True
                 continue
@@ -560,24 +558,17 @@ class Add(Expr, AssocOp):
             elif a.is_nonnegative:
                 nonneg = True
                 continue
-            elif a.is_zero:
-                continue
 
-            if ubound is None:
-                # sign is unknown; if we don't know the boundedness
-                # we're done: we don't know. That is technically true,
-                # but the only option is that we have something like
-                # oo - oo which is NaN and it really doesn't matter
-                # what sign we apply to that because it (when finally
-                # computed) will trump any sign. So instead of returning
-                # None, we pass.
-                pass
+            if infinite is None:
+                return
             unknown_sign = True
 
-        if unbounded:
-            return unbounded.pop()
+        if saw_INF:
+            if len(saw_INF) > 1:
+                return
+            return saw_INF.pop()
         elif unknown_sign:
-            return None
+            return
         elif not nonneg and not nonpos and neg:
             return True
         elif not nonneg and neg:
@@ -667,7 +658,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex numbers
+        returns a tuple representing a complex number
 
         Examples
         ========
@@ -693,30 +684,30 @@ class Add(Expr, AssocOp):
 
         old = self
 
-        self = expand_mul(self)
-        if not self.is_Add:
-            return self.as_leading_term(x)
+        expr = expand_mul(self)
+        if not expr.is_Add:
+            return expr.as_leading_term(x)
 
-        unbounded = [t for t in self.args if t.is_unbounded]
+        infinite = [t for t in expr.args if t.is_infinite]
 
-        self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
-        if not self:
+        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
+        if not expr:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
-        elif self is S.NaN:
-            return old.func._from_args(unbounded)
-        elif not self.is_Add:
-            return self
+        elif expr is S.NaN:
+            return old.func._from_args(infinite)
+        elif not expr.is_Add:
+            return expr
         else:
-            plain = self.func(*[s for s, _ in self.extract_leading_order(x)])
+            plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)
             rv_simplify = rv.simplify()
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
             if x not in rv_simplify.free_symbols:
                 if rv_simplify.is_zero and plain.is_zero is not True:
-                    return (self - plain)._eval_as_leading_term(x)
+                    return (expr - plain)._eval_as_leading_term(x)
                 return rv_simplify
             return rv
 
@@ -886,7 +877,7 @@ class Add(Expr, AssocOp):
     @property
     def _sorted_args(self):
         from sympy.core.compatibility import default_sort_key
-        return sorted(self.args, key=lambda w: default_sort_key(w))
+        return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

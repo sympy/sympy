@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import zeros, eye, Symbol, solve_linear_system
+from sympy.core.compatibility import range
 
 N = 8
 M = zeros(N, N + 1)

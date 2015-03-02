@@ -1,7 +1,6 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
         expand_complex)
-from sympy.utilities.pytest import XFAIL
 
 
 def test_complex():
@@ -76,8 +75,8 @@ def test_evalc():
 
     assert tan(I*x).expand(complex=True) == tanh(x) * I
     assert tan(x + I*y).expand(complex=True) == (
-        (sin(x)*cos(x) + I*cosh(y)*sinh(y)) /
-        (cos(x)**2 + sinh(y)**2)).expand()
+        sin(2*x)/(cos(2*x) + cosh(2*y)) +
+        I*sinh(2*y)/(cos(2*x) + cosh(2*y)))
 
     assert sinh(I*x).expand(complex=True) == I * sin(x)
     assert sinh(x + I*y).expand(complex=True) == sinh(x)*cos(y) + \
@@ -187,6 +186,9 @@ def test_real_imag():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
     assert (i*r*x).as_real_imag() == (I*i*r*im(x), -I*i*r*re(x))
+    assert (i*r*x*(y + 2)).as_real_imag() == (
+        I*i*r*(re(y) + 2)*im(x) + I*i*r*re(x)*im(y),
+        -I*i*r*(re(y) + 2)*re(x) + I*i*r*im(x)*im(y))
 
     # issue 7106:
     assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)

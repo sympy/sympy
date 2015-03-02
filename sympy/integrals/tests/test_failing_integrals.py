@@ -3,13 +3,13 @@
 from __future__ import division
 
 from sympy import (
-    integrate, Integral, exp, I, oo, pi, sign, sqrt, Rational, Symbol, sin, cos,
-    tan, S, log, Function, gamma, sinh,
+    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
+    tan, S, log, gamma, sinh,
 )
 
-from sympy.utilities.pytest import XFAIL, SKIP, slow
+from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
-from sympy.abc import x, k, c, y, R, b, h, a, m, A, z, t
+from sympy.abc import x, k, c, y, R, b, h, a, m
 
 import signal
 
@@ -74,9 +74,12 @@ def test_issue_4525():
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)
 
 
+
 @XFAIL
 @slow
 def test_issue_4540():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     # Note, this integral is probably nonelementary
     assert not integrate(
         (sin(1/x) - x*exp(x)) /
@@ -129,6 +132,8 @@ def test_issue_4895d():
 @XFAIL
 @slow
 def test_issue_4941():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     assert not integrate(sqrt(1 + sinh(x/20)**2), (x, -25, 25)).has(Integral)
 
 

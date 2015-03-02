@@ -1,7 +1,7 @@
 from sympy.core.facts import (deduce_alpha_implications,
         apply_beta_to_alpha_route, rules_2prereq, FactRules, FactKB)
 from sympy.core.logic import And, Not
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 T = True
 F = False
@@ -17,18 +17,19 @@ def test_deduce_alpha_implications():
 
     # transitivity
     I, P = D([('a', 'b'), ('b', 'c')])
-    assert I == {'a': set(['b', 'c']), 'b': set(['c'])}
-    assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
+    assert I == {'a': set(['b', 'c']), 'b': set(['c']), Not('b'):
+        set([Not('a')]), Not('c'): set([Not('a'), Not('b')])}
+    assert P == {'a': set(['b', 'c']), 'b': set(['a', 'c']), 'c': set(['a', 'b'])}
 
-    # see if the output does not contain repeated implications
+    # Duplicate entry
     I, P = D([('a', 'b'), ('b', 'c'), ('b', 'c')])
-    assert I == {'a': set(['b', 'c']), 'b': set(['c'])}
-    assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
+    assert I == {'a': set(['b', 'c']), 'b': set(['c']), Not('b'): set([Not('a')]), Not('c'): set([Not('a'), Not('b')])}
+    assert P == {'a': set(['b', 'c']), 'b': set(['a', 'c']), 'c': set(['a', 'b'])}
 
     # see if it is tolerant to cycles
     assert D([('a', 'a'), ('a', 'a')]) == ({}, {})
     assert D([('a', 'b'), ('b', 'a')]) == (
-        {'a': set(['b']), 'b': set(['a'])},
+        {'a': set(['b']), 'b': set(['a']), Not('a'): set([Not('b')]), Not('b'): set([Not('a')])},
         {'a': set(['b']), 'b': set(['a'])})
 
     # see if it catches inconsistency
@@ -37,11 +38,33 @@ def test_deduce_alpha_implications():
     raises(ValueError, lambda: D([('a', 'b'), ('b', 'c'), ('b', 'na'),
            ('na', Not('a'))]))
 
+    # see if it handles implications with negations
+    I, P = D([('a', Not('b')), ('c', 'b')])
+    assert I == {'a': set([Not('b'), Not('c')]), 'b': set([Not('a')]), 'c': set(['b', Not('a')]), Not('b'): set([Not('c')])}
+    assert P == {'a': set(['b', 'c']), 'b': set(['a', 'c']), 'c': set(['a', 'b'])}
+    I, P = D([(Not('a'), 'b'), ('a', 'c')])
+    assert I == {'a': set(['c']), Not('a'): set(['b']), Not('b'): set(['a',
+    'c']), Not('c'): set([Not('a'), 'b']),}
+    assert P == {'a': set(['b', 'c']), 'b': set(['a', 'c']), 'c': set(['a', 'b'])}
+
+
+    # Long deductions
+    I, P = D([('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'e')])
+    assert I == {'a': set(['b', 'c', 'd', 'e']), 'b': set(['c', 'd', 'e']),
+        'c': set(['d', 'e']), 'd': set(['e']), Not('b'): set([Not('a')]),
+        Not('c'): set([Not('a'), Not('b')]), Not('d'): set([Not('a'), Not('b'),
+            Not('c')]), Not('e'): set([Not('a'), Not('b'), Not('c'), Not('d')])}
+    assert P == {'a': set(['b', 'c', 'd', 'e']), 'b': set(['a', 'c', 'd',
+        'e']), 'c': set(['a', 'b', 'd', 'e']), 'd': set(['a', 'b', 'c', 'e']),
+        'e': set(['a', 'b', 'c', 'd'])}
+
     # something related to real-world
     I, P = D([('rat', 'real'), ('int', 'rat')])
 
-    assert I == {'int': set(['rat', 'real']), 'rat': set(['real'])}
-    assert P == {'rat': set(['int']), 'real': set(['int', 'rat'])}
+    assert I == {'int': set(['rat', 'real']), 'rat': set(['real']),
+        Not('real'): set([Not('rat'), Not('int')]), Not('rat'): set([Not('int')])}
+    assert P == {'rat': set(['int', 'real']), 'real': set(['int', 'rat']),
+        'int': set(['rat', 'real'])}
 
 
 # TODO move me to appropriate place

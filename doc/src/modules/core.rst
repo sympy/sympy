@@ -9,6 +9,11 @@ sympify
 ^^^^^^^
 .. autofunction:: sympify
 
+assumptions
+-----------
+
+.. automodule:: sympy.core.assumptions
+
 cache
 -------
 .. module:: sympy.core.cache

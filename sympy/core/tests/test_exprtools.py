@@ -2,7 +2,7 @@
 
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
-                   root, exp)
+                   root, exp, cos)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc)
@@ -285,7 +285,7 @@ def test_factor_nc():
     n, m, o = symbols('n,m,o', commutative=False)
 
     # mul and multinomial expansion is needed
-    from sympy.simplify.simplify import _mexpand
+    from sympy.core.function import _mexpand
     e = x*(1 + y)**2
     assert _mexpand(e) == x + x*2*y + x*y**2
 
@@ -348,3 +348,9 @@ def test_issue_6360():
     apb = a + b
     eq = apb + apb**2*(-2*a - 2*b)
     assert factor_terms(sub_pre(eq)) == a + b - 2*(a + b)**3
+
+
+def test_issue_7903():
+    a = symbols(r'a', real=True)
+    t = exp(I*cos(a)) + exp(-I*sin(a))
+    assert t.simplify()
