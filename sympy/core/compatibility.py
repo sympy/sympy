@@ -355,6 +355,32 @@ except ImportError:  # <= Python 2.6
             indices[i:] = [indices[i] + 1] * (r - i)
             yield tuple(pool[i] for i in indices)
 
+try:
+    from itertools import accumulate
+except ImportError:  # < Python 3.2
+    def accumulate(iterable, func=operator.add):
+        """
+        Return running totals
+        from https://docs.python.org/3/library/itertools.html#itertools.accumulate
+
+        Examples
+        ========
+
+        >>> from sympy.core.compatibility import accumulate
+        >>> import operator
+        >>> list(accumulate([1,2,3,4,5]))
+        [1, 3, 6, 10, 15]
+        >>> list(accumulate([1,2,3,4,5], operator.mul))
+        [1, 2, 6, 24, 120]
+        """
+
+        it = iter(iterable)
+        total = next(it)
+        yield total
+        for element in it:
+            total = func(total, element)
+            yield total
+
 
 def as_int(n):
     """

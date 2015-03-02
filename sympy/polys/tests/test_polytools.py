@@ -50,7 +50,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
+    S, Integer, Rational, Float, Sum, Mul, Symbol, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.basic import _aresame

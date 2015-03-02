@@ -55,7 +55,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable, range, accumulate
 
 
 @public
@@ -4016,8 +4016,7 @@ class Poly(Expr):
                 m[d-r-1] += a[j]*t
         yield m[-1]
         while True:
-            for i in range(d-1):
-                m[i+1] += m[i]
+            m = list(accumulate(m))
             yield m[-1]
 
     def eval_grid(f, x0, dx, n, gen, generator=False):
@@ -4026,7 +4025,8 @@ class Poly(Expr):
         Implements Nuttall's algorithm for efficiency when n is large,
         especially when n is larger than deg(f)**2.
         If generator is True a generator is returned and the argument n is
-        ignored.
+        ignored. Care must be taken when using floating point arithmetic as
+        error can accumulate.
 
         References
         ==========
