@@ -1335,3 +1335,7 @@ def test_issue_7117():
     assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
     q = Pow(e, 2, evaluate=False)
     assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
+
+
+def test_issue_2934():
+    assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
