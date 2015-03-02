@@ -510,7 +510,7 @@ def pretty_symbol(symb_name):
             if pretty is None:
                 try:  # match by separate characters
                     pretty = ''.join([mapping[c] for c in s])
-                except KeyError:
+                except (TypeError, KeyError):
                     return None
             result.append(pretty)
         return result
