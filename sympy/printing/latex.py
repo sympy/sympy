@@ -1240,7 +1240,31 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        return self._deal_with_super_sub(expr.name)
+        # process anything in braces for super/subscripts first
+        s = expr.name
+        # get a token holder
+        tok = '~'
+        while tok in s:
+            tok += "~"
+        tok = tok + "%i" + tok
+        # recursively swap out the brace-surrounded expressions
+        i = 0
+        subs = {}
+        while True:
+            braced = set(re.findall(r'(\{ *[^{}]+\})', s))
+            if not braced:
+                break
+            for b in braced:
+                v = tok % i
+                subs[i] = (v, self._deal_with_super_sub(b))
+                s = s.replace(b, v)
+                i += 1
+        # now deal with the symbol as a "name"
+        s = self._deal_with_super_sub(s)
+        # and restore braced expressions
+        for k in subs:
+            s = s.replace(*subs[k])
+        return s
 
     _print_RandomSymbol = _print_Symbol
     _print_MatrixSymbol = _print_Symbol
