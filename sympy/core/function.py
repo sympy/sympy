@@ -1299,7 +1299,7 @@ class Derivative(Expr):
                 if match:
                     variables = self_vars_front + self_vars
                     return Derivative(new, *variables)
-        return Derivative(*map(lambda x: x._subs(old, new), self.args))
+        return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
         dx = self.args[1:]

@@ -584,7 +584,7 @@ class ProductSet(Set):
         if len(self.args) != len(other.args):
             return false
 
-        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
 
     def _contains(self, element):
         """
@@ -1698,7 +1698,7 @@ class FiniteSet(Set, EvalfMixin):
         if len(self) != len(other):
             return false
 
-        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
 
     def __iter__(self):
         return iter(self.args)

@@ -82,8 +82,7 @@ class re(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
 
@@ -178,8 +177,7 @@ class im(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
 

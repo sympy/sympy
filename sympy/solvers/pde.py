@@ -443,8 +443,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # If the given solution is in the form of a list or a set
     # then return a list or set of tuples.
     if is_sequence(sol, set):
-        return type(sol)(map(lambda i: checkpdesol(pde, i,
-            solve_for_func=solve_for_func), sol))
+        return type(sol)([checkpdesol(pde, i, solve_for_func=solve_for_func) for i in sol])
 
     # Convert solution into an equation
     if not isinstance(sol, Equality):
