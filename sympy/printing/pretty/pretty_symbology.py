@@ -54,9 +54,21 @@ def pretty_use_unicode(flag=None):
         return _use_unicode
 
     if flag and unicode_warnings:
-        # print warnings (if any) on first unicode usage
-        warnings.warn(unicode_warnings)
-        unicode_warnings = ''
+        # we know that some letters are not supported in Python 2.X so
+        # ignore those warnings:
+        lines = unicode_warnings.splitlines()
+        if lines:
+            known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
+            keep = []
+            for l in lines:
+                if any(i in l for i in known):
+                    continue
+                keep.append(l)
+        if keep:
+            unicode_warnings = '\n'.join(keep)
+            # print warnings (if any) on first unicode usage
+            warnings.warn(unicode_warnings)
+            unicode_warnings = ''
 
     use_unicode_prev = _use_unicode
     _use_unicode = flag
