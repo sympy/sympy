@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Symbol
-from sympy.matrices import *
+from sympy.matrices import Matrix, MatrixSymbol
 from copy import copy
 from itertools import permutations
 
@@ -1035,7 +1035,7 @@ class Tensor(Arraypy):
         ========
         
         from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
-        >>> a = list2tensor(range(27), (3,3,3), (1, -1, 1))
+        >>> a = list2tensor(list(range(27)), (3,3,3), (1, -1, 1))
         >>> b = a.contract(1,2)
         >>> print (b)
         36 39 42
@@ -1046,7 +1046,7 @@ class Tensor(Arraypy):
         >>> b.shape
         (3,)
 
-        >>> a = list2arraypy(range(9), (3,3))
+        >>> a = list2arraypy(list(range(9)), (3,3))
         >>> a = a.to_tensor((1,-1))
         >>> print (a)
         0 1 2
@@ -1086,7 +1086,7 @@ class Tensor(Arraypy):
             if i != idx1 and i != idx2:
                 new_index.append(self._start_index[i])
         if new_index == []:
-            new_index.append(1)
+            new_index.append(0)
 
         # new_dims will be a shape of result tensor
         new_dims = copy(list(self._dims))
@@ -1097,7 +1097,7 @@ class Tensor(Arraypy):
             new_dims.pop(idx2)
 
         # number of elements of new tensor
-        new_loop_size = self._loop_size / self._dims[idx1] / self._dims[idx2]
+        new_loop_size = int(self._loop_size / self._dims[idx1] / self._dims[idx2])
 
         # elements of contracted tensor will be assigned to this dictionary
         new_output = {}
@@ -1162,7 +1162,7 @@ class Tensor(Arraypy):
         new_start_index = copy(list(self._start_index))
         new_start_index .pop(idx1)
         if len(new_start_index) == 1:
-            new_start_index = (1,)
+            new_start_index = (0,)
         else:
             new_start_index.pop(idx2)
         res_array._start_index = tuple(new_start_index)

@@ -14,7 +14,7 @@ def symmetric(in_arr):
     Examples
     ========
     
-    >>> a = list2arraypy(range(9), (3,3))
+    >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = symmetric(a)
     >>> print (b)
     0.0 2.0 4.0
@@ -64,7 +64,7 @@ def asymmetric(in_arr):
     Examples
     ========
     
-    >>> a = list2arraypy(range(9), (3,3))
+    >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = asymmetric(a)
     >>> print (b)
     0.0 -1.0 -2.0
