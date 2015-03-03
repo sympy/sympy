@@ -20,7 +20,6 @@ from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
 from sympy.logic.boolalg import And
-from sympy.solvers.solvers import solve, denoms
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
@@ -122,6 +121,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     heurisch
     """
+    from sympy.solvers.solvers import solve, denoms
     f = sympify(f)
     if x not in f.free_symbols:
         return f*x

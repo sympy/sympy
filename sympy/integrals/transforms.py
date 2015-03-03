@@ -84,7 +84,6 @@ class IntegralTransform(Function):
         raise NotImplementedError
 
     def _collapse_extra(self, extra):
-        from sympy import And
         cond = And(*extra)
         if cond == False:
             raise IntegralTransformError(self.__class__.name, None, '')
@@ -295,11 +294,10 @@ class MellinTransform(IntegralTransform):
         return _mellin_transform(f, x, s, **hints)
 
     def _as_integral(self, f, x, s):
-        from sympy import Integral
         return Integral(f*x**(s - 1), (x, 0, oo))
 
     def _collapse_extra(self, extra):
-        from sympy import And, Max, Min
+        from sympy import Max, Min
         a = []
         b = []
         cond = []
@@ -703,7 +701,7 @@ def _rewrite_gamma(f, s, a, b):
 def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
     """ A helper for the real inverse_mellin_transform function, this one here
         assumes x to be real and positive. """
-    from sympy import (expand, expand_mul, hyperexpand, meijerg, And, Or,
+    from sympy import (expand, expand_mul, hyperexpand, meijerg,
                        arg, pi, re, factor, Heaviside, gamma, Add)
     x = _dummy('t', 'inverse-mellin-transform', F, positive=True)
     # Actually, we won't try integration at all. Instead we use the definition
@@ -807,7 +805,7 @@ class InverseMellinTransform(IntegralTransform):
         return _inverse_mellin_transform(F, s, x, strip, **hints)
 
     def _as_integral(self, F, s, x):
-        from sympy import Integral, I, oo
+        from sympy import I
         c = self.__class__._c
         return Integral(F*x**(-s), (s, c - I*oo, c + I*oo))
 
@@ -1068,11 +1066,11 @@ class LaplaceTransform(IntegralTransform):
         return _laplace_transform(f, t, s, **hints)
 
     def _as_integral(self, f, t, s):
-        from sympy import Integral, exp
+        from sympy import exp
         return Integral(f*exp(-s*t), (t, 0, oo))
 
     def _collapse_extra(self, extra):
-        from sympy import And, Max
+        from sympy import Max
         conds = []
         planes = []
         for plane, cond in extra:
@@ -1223,7 +1221,7 @@ class InverseLaplaceTransform(IntegralTransform):
         return _inverse_laplace_transform(F, s, t, self.fundamental_plane, **hints)
 
     def _as_integral(self, F, s, t):
-        from sympy import I, Integral, exp
+        from sympy import I, exp
         c = self.__class__._c
         return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))
 
@@ -1284,7 +1282,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     For suitable choice of a and b, this reduces to the standard Fourier
     and inverse Fourier transforms.
     """
-    from sympy import exp, I, oo
+    from sympy import exp, I
     F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
 
     if not F.has(Integral):
@@ -1301,19 +1299,25 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
 
 
 class FourierTypeTransform(IntegralTransform):
-    """ Base class for Fourier transforms.
-        Specify cls._a and cls._b.
-    """
+    """ Base class for Fourier transforms."""
+
+    def a(self):
+        raise NotImplementedError(
+            "Class %s must implement a(self) but does not" % self.__class__)
+
+    def b(self):
+        raise NotImplementedError(
+            "Class %s must implement b(self) but does not" % self.__class__)
 
     def _compute_transform(self, f, x, k, **hints):
         return _fourier_transform(f, x, k,
-                                  self.__class__._a, self.__class__._b,
+                                  self.a(), self.b(),
                                   self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral, exp, I
-        a = self.__class__._a
-        b = self.__class__._b
+        from sympy import exp, I
+        a = self.a()
+        b = self.b()
         return Integral(a*f*exp(b*I*x*k), (x, -oo, oo))
 
 
@@ -1328,8 +1332,12 @@ class FourierTransform(FourierTypeTransform):
     """
 
     _name = 'Fourier'
-    _a = 1
-    _b = -2*S.Pi
+
+    def a(self):
+        return 1
+
+    def b(self):
+        return -2*S.Pi
 
 
 def fourier_transform(f, x, k, **hints):
@@ -1379,8 +1387,12 @@ class InverseFourierTransform(FourierTypeTransform):
     """
 
     _name = 'Inverse Fourier'
-    _a = 1
-    _b = 2*S.Pi
+
+    def a(self):
+        return 1
+
+    def b(self):
+        return 2*S.Pi
 
 
 def inverse_fourier_transform(F, k, x, **hints):
@@ -1423,7 +1435,7 @@ def inverse_fourier_transform(F, k, x, **hints):
 # Fourier Sine and Cosine Transform
 ##########################################################################
 
-from sympy import sin, cos, sqrt, pi, I, oo
+from sympy import sin, cos, sqrt, pi
 
 
 @_noconds_(True)
@@ -1454,19 +1466,27 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
 class SineCosineTypeTransform(IntegralTransform):
     """
     Base class for sine and cosine transforms.
-    Specify cls._a and cls._b and cls._kern.
+    Specify cls._kern.
     """
+
+    def a(self):
+        raise NotImplementedError(
+            "Class %s must implement a(self) but does not" % self.__class__)
+
+    def b(self):
+        raise NotImplementedError(
+            "Class %s must implement b(self) but does not" % self.__class__)
+
 
     def _compute_transform(self, f, x, k, **hints):
         return _sine_cosine_transform(f, x, k,
-                                      self.__class__._a, self.__class__._b,
+                                      self.a(), self.b(),
                                       self.__class__._kern,
                                       self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral
-        a = self.__class__._a
-        b = self.__class__._b
+        a = self.a()
+        b = self.b()
         K = self.__class__._kern
         return Integral(a*f*K(b*x*k), (x, 0, oo))
 
@@ -1483,8 +1503,12 @@ class SineTransform(SineCosineTypeTransform):
 
     _name = 'Sine'
     _kern = sin
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def sine_transform(f, x, k, **hints):
@@ -1532,8 +1556,12 @@ class InverseSineTransform(SineCosineTypeTransform):
 
     _name = 'Inverse Sine'
     _kern = sin
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def inverse_sine_transform(F, k, x, **hints):
@@ -1582,8 +1610,12 @@ class CosineTransform(SineCosineTypeTransform):
 
     _name = 'Cosine'
     _kern = cos
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def cosine_transform(f, x, k, **hints):
@@ -1631,8 +1663,12 @@ class InverseCosineTransform(SineCosineTypeTransform):
 
     _name = 'Inverse Cosine'
     _kern = cos
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def inverse_cosine_transform(F, k, x, **hints):
@@ -1679,7 +1715,7 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
     """
-    from sympy import besselj, oo
+    from sympy import besselj
     F = integrate(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     if not F.has(Integral):
@@ -1711,7 +1747,7 @@ class HankelTypeTransform(IntegralTransform):
         return _hankel_transform(f, r, k, nu, self._name, **hints)
 
     def _as_integral(self, f, r, k, nu):
-        from sympy import Integral, besselj, oo
+        from sympy import besselj
         return Integral(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     @property

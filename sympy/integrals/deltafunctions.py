@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import Mul
 from sympy.functions import DiracDelta, Heaviside
-from sympy.solvers import solve
 from sympy.core.compatibility import default_sort_key
 
 
@@ -136,6 +135,7 @@ def deltaintegrate(f, x):
         return None
 
     from sympy.integrals import Integral, integrate
+    from sympy.solvers import solve
 
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
