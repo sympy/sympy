@@ -708,7 +708,7 @@ def ricci(riemann, var, type_output='t'):
                         'The valence or ind_char of Riemann curvature tensor must be (-1,-1,-1,+1)')
                 if not (
                     riemann.start_index.count(
-                        riemann.start_index[0]) == 4)):
+                        riemann.start_index[0]) == 4):
                     raise ValueError(
                         'The starting indices of Riemann curvature tensor must be identical')
             idx_start = riemann.start_index[0]
