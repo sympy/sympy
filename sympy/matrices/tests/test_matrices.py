@@ -1,7 +1,7 @@
 import collections
 
 from sympy import (
-    Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
+    Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, sstr)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
@@ -2443,3 +2443,8 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+
+def test_doit():
+    a = Matrix([[Add(x,x, evaluate=False)]])
+    assert a[0] != 2*x
+    assert a.doit() == Matrix([[2*x]])
