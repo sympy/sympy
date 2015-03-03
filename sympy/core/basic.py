@@ -817,6 +817,8 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         from sympy.core.containers import Dict
         from sympy.utilities import default_sort_key
+        from sympy.core.symbol import Symbol
+        from sympy.physics.vector.vector import Vector
 
         unordered = False
         if len(args) == 1:
@@ -836,6 +838,12 @@ class Basic(with_metaclass(ManagedProperties)):
             sequence = [args]
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
+
+        if isinstance(self, Symbol) and isinstance(args[1], Vector):
+            raise AttributeError("Substituting a scalar for sympy.physics.vector.Vector is not allowed")
+
+        if isinstance(self, Vector) and isinstance(args[1], Symbol):
+            raise AttributeError("Substituting a sympy.physics.vector.Vector for a scalar is not allowed")
 
         sequence = list(sequence)
         for i in range(len(sequence)):
