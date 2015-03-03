@@ -2716,6 +2716,27 @@ class MatrixBase(object):
 
     def nullspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
+        >>> m
+        Matrix([
+        [ 1,  3, 0],
+        [-2, -6, 0],
+        [ 3,  9, 6]])
+        >>> m.nullspace()
+        [Matrix([
+        [-3],
+        [ 1],
+        [ 0]])]
+
+        See Also
+        ========
+
+        columnspace
         """
         from sympy.matrices import zeros
 
@@ -2748,6 +2769,44 @@ class MatrixBase(object):
                             raise NotImplementedError(
                                 "Could not compute the nullspace of `self`.")
                         basis[basiskey.index(j)][i, 0] = -v
+        return [self._new(b) for b in basis]
+
+    def columnspace(self, simplify=False):
+        """Returns list of vectors (Matrix objects) that span columnspace of self
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
+        >>> m
+        Matrix([
+        [ 1,  3, 0],
+        [-2, -6, 0],
+        [ 3,  9, 6]])
+        >>> m.columnspace()
+        [Matrix([
+        [ 1],
+        [-2],
+        [ 3]]), Matrix([
+        [0],
+        [0],
+        [6]])]
+
+        See Also
+        ========
+
+        nullspace
+        """
+        simpfunc = simplify if isinstance(
+            simplify, FunctionType) else _simplify
+        reduced, pivots = self.rref(simplify=simpfunc)
+
+        basis = []
+        # create a set of vectors for the basis
+        for i in range(self.cols):
+            if i in pivots:
+                basis.append(self.col(i))
         return [self._new(b) for b in basis]
 
     def berkowitz(self):
