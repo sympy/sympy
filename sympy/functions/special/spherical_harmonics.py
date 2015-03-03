@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError

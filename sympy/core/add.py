@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from .basic import C, Basic
+from .basic import Basic
 from .compatibility import cmp_to_key, reduce, is_sequence, range
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -636,11 +636,12 @@ class Add(Expr, AssocOp):
         ((x, O(x)),)
 
         """
+        from sympy import Order
         lst = []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
         if not point:
             point = [0]*len(symbols)
-        seq = [(f, C.Order(f, *zip(symbols, point))) for f in self.args]
+        seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
                 if o.contains(of) and o != of:

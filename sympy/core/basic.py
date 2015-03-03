@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
-from .core import BasicType, C
+from .core import BasicType
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
@@ -296,7 +296,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
-
+        from sympy import Pow
         if self is other:
             return True
 
@@ -309,9 +309,9 @@ class Basic(with_metaclass(ManagedProperties)):
                 return False
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
-            if isinstance(self, C.Pow) and self.exp == 1:
+            if isinstance(self, Pow) and self.exp == 1:
                 return self.base == other
-            if isinstance(other, C.Pow) and other.exp == 1:
+            if isinstance(other, Pow) and other.exp == 1:
                 return self == other.base
             try:
                 other = _sympify(other)
@@ -509,6 +509,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> Lambda(x, 2*x).canonical_variables
         {x: 0_}
         """
+        from sympy import Symbol
         if not hasattr(self, 'variables'):
             return {}
         u = "_"
@@ -516,7 +517,7 @@ class Basic(with_metaclass(ManagedProperties)):
             u += "_"
         name = '%%i%s' % u
         V = self.variables
-        return dict(list(zip(V, [C.Symbol(name % i, **v.assumptions0)
+        return dict(list(zip(V, [Symbol(name % i, **v.assumptions0)
             for i, v in enumerate(V)])))
 
 
@@ -539,13 +540,14 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @staticmethod
     def _recursive_call(expr_to_call, on_args):
+        from sympy import Symbol
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
                 if '__call__' in cls.__dict__:
                     return cls != Basic
 
         if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
+            if isinstance(expr_to_call, Symbol):  # XXX When you call a Symbol it is
                 return expr_to_call               # transformed into an UndefFunction
             else:
                 return expr_to_call(*on_args)
@@ -817,6 +819,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         from sympy.core.containers import Dict
         from sympy.utilities import default_sort_key
+        from sympy import Dummy, Symbol
 
         unordered = False
         if len(args) == 1:
@@ -843,7 +846,7 @@ class Basic(with_metaclass(ManagedProperties)):
             so, sn = sympify(o), sympify(n)
             if not isinstance(so, Basic):
                 if type(o) is str:
-                    so = C.Symbol(o)
+                    so = Symbol(o)
             sequence[i] = (so, sn)
             if _aresame(so, sn):
                 sequence[i] = None
@@ -874,9 +877,9 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             kwargs['hack2'] = True
-            m = C.Dummy()
+            m = Dummy()
             for old, new in sequence:
-                d = C.Dummy(commutative=new.is_commutative)
+                d = Dummy(commutative=new.is_commutative)
                 # using d*m so Subs will be used on dummy variables
                 # in things like Derivative(f(x, y), x) in which x
                 # is both free and bound
