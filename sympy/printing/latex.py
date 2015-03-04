@@ -4,10 +4,11 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C, Add, Symbol
+from sympy.core import S, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
+from sympy.core.operations import AssocOp
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
@@ -547,7 +548,7 @@ class LatexPrinter(Printer):
 
             tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
 
-        if isinstance(expr.expr, C.AssocOp):
+        if isinstance(expr.expr, AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
         else:
             return r"%s %s" % (tex, self._print(expr.expr))
@@ -602,7 +603,7 @@ class LatexPrinter(Printer):
         else:
             tex += r"%s^%s}" % (self._print(z0), self._print(dir))
 
-        if isinstance(e, C.AssocOp):
+        if isinstance(e, AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(e))
         else:
             return r"%s %s" % (tex, self._print(e))
