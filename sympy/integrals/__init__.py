@@ -9,7 +9,11 @@
     >>> integrate(sin(x),x)
     -cos(x)
 """
+from .deltafunctions import deltaintegrate
+from .heurisch import heurisch, heurisch_wrapper
 from .integrals import integrate, Integral, line_integrate
+from .manualintegrate import manualintegrate, integral_steps
+from .rationaltools import ratint
 from .transforms import (mellin_transform, inverse_mellin_transform,
                         MellinTransform, InverseMellinTransform,
                         laplace_transform, inverse_laplace_transform,
@@ -22,3 +26,4 @@ from .transforms import (mellin_transform, inverse_mellin_transform,
                         CosineTransform, InverseCosineTransform,
                         hankel_transform, inverse_hankel_transform,
                         HankelTransform, InverseHankelTransform)
+from .trigonometry import trigintegrate
