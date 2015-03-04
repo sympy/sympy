@@ -29,15 +29,18 @@ def test_unicode_name_support():
     # check if unicoded function is same as its ascii counterpart
     assert Function('k') == Function(u('k'))
 
-def test_greek_name_support():
+def test_unicode_characters_support():
+    # For single character names (unicode)
     Function('α')
     Function(u('α'))
     Function('α') == Function(u('α'))
-
+    
+    # For multi-character names (all unicode)
     Function('αβ')
     Function(u('αβ'))
     Function('αβ') == Function(u('αβ'))
 
+    # For a combination of unicode and ASCII characters
     Function('aαβ')
     Function(u('aαβ'))
     Function('aαβ') == Function(u('aαβ'))
