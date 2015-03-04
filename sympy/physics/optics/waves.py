@@ -283,7 +283,6 @@ class TWave(Expr):
         return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
 
     def _eval_rewrite_as_exp(self, *args):
-        from sympy import C, I
-        exp = C.exp
+        from sympy import exp, I
         return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase))
