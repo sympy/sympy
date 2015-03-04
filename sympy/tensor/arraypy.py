@@ -4,6 +4,7 @@ from sympy import Symbol
 from sympy.matrices import Matrix, MatrixSymbol
 from copy import copy
 from itertools import permutations
+from sympy.core.basic import Basic
 
 """
 Module "arraypy" describes Tensor and it's bases - Multidimentional arrays.
@@ -11,7 +12,7 @@ Module consists of Arraypy class, Tensor class and converting functions: list2ar
 """
 
 
-class Arraypy(object):
+class Arraypy(Basic):
     """
     N-dimentional array.
     
