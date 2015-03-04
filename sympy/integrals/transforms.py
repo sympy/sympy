@@ -920,10 +920,13 @@ def _simplifyconds(expr, s, a):
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) == True:
-            return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) == True:
-            return True
+        try:
+            if n > 0 and (abs(ex1) <= abs(a)**n) == True:
+                return False
+            if n < 0 and (abs(ex1) >= abs(a)**n) == True:
+                return True
+        except TypeError:
+            pass
 
     def replie(x, y):
         """ simplify x < y """
