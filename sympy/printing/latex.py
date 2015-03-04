@@ -1240,7 +1240,8 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        return self._deal_with_super_sub(expr.name)
+        return self._deal_with_super_sub(expr.name) if \
+            '\\' not in expr.name else expr.name
 
     _print_RandomSymbol = _print_Symbol
     _print_MatrixSymbol = _print_Symbol
@@ -1449,7 +1450,7 @@ class LatexPrinter(Printer):
 
     def _print_LeviCivita(self, expr, exp=None):
         indices = map(self._print, expr.args)
-        if all(map(lambda x: x.is_Atom, expr.args)):
+        if all(x.is_Atom for x in expr.args):
             tex = r'\varepsilon_{%s}' % " ".join(indices)
         else:
             tex = r'\varepsilon_{%s}' % ", ".join(indices)

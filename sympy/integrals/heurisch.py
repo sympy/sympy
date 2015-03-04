@@ -14,11 +14,12 @@ from sympy.core.singleton import S
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf, erfi, li, Ei
+from sympy.functions import besselj, bessely, besseli, besselk
+from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
 from sympy.logic.boolalg import And
-from sympy.solvers.solvers import solve, denoms
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
@@ -36,7 +37,7 @@ def components(f, x):
     """
     Returns a set of all functional components of the given expression
     which includes symbols, function applications and compositions and
-    non-integer powers. Fractional powers are collected with with
+    non-integer powers. Fractional powers are collected with
     minimal, positive exponents.
 
     >>> from sympy import cos, sin
@@ -120,6 +121,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     heurisch
     """
+    from sympy.solvers.solvers import solve, denoms
     f = sympify(f)
     if x not in f.free_symbols:
         return f*x
@@ -166,6 +168,92 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                            degree_offset, unnecessary_permutations), True))
     return Piecewise(*pairs)
 
+class BesselTable(object):
+    """
+    Derivatives of Bessel functions of orders n and n-1
+    in terms of each other.
+
+    See the docstring of DiffCache.
+    """
+
+    def __init__(self):
+        self.table = {}
+        self.n = Dummy('n')
+        self.z = Dummy('z')
+        self._create_table()
+
+    def _create_table(t):
+        table, n, z = t.table, t.n, t.z
+        for f in (besselj, bessely, hankel1, hankel2):
+            table[f] = (f(n-1, z) - n*f(n, z)/z,
+                        (n-1)*f(n-1, z)/z - f(n, z))
+
+        f = besseli
+        table[f] = (f(n-1, z) - n*f(n, z)/z,
+                    (n-1)*f(n-1, z)/z + f(n, z))
+        f = besselk
+        table[f] = (-f(n-1, z) - n*f(n, z)/z,
+                    (n-1)*f(n-1, z)/z - f(n, z))
+
+        for f in (jn, yn):
+            table[f] = (f(n-1, z) - (n+1)*f(n, z)/z,
+                        (n-1)*f(n-1, z)/z - f(n, z))
+
+    def diffs(t, f, n, z):
+        if f in t.table:
+            diff0, diff1 = t.table[f]
+            repl = [(t.n, n), (t.z, z)]
+            return (diff0.subs(repl), diff1.subs(repl))
+
+    def has(t, f):
+        return f in t.table
+
+_bessel_table = None
+
+class DiffCache(object):
+    """
+    Store for derivatives of expressions.
+
+    The standard form of the derivative of a Bessel function of order n
+    contains two Bessel functions of orders n-1 and n+1, respectively.
+    Such forms cannot be used in parallel Risch algorithm, because
+    there is a linear recurrence relation between the three functions
+    while the algorithm expects that functions and derivatives are
+    represented in terms of algebraically independent transcendentals.
+
+    The solution is to take two of the functions, e.g., those of orders
+    n and n-1, and to express the derivatives in terms of the pair.
+    To guarantee that the proper form is used the two derivatives are
+    cached as soon as one is encountered.
+
+    Derivatives of other functions are also cached at no extra cost.
+    All derivatives are with respect to the same variable `x`.
+    """
+
+    def __init__(self, x):
+        self.cache = {}
+        self.x = x
+
+        global _bessel_table
+        if not _bessel_table:
+            _bessel_table = BesselTable()
+
+    def get_diff(self, f):
+        cache = self.cache
+
+        if f in cache:
+            pass
+        elif (not hasattr(f, 'func') or
+            not _bessel_table.has(f.func)):
+            cache[f] = cancel(f.diff(self.x))
+        else:
+            n, z = f.args
+            d0, d1 = _bessel_table.diffs(f.func, n, z)
+            dz = self.get_diff(z)
+            cache[f] = d0*dz
+            cache[f.func(n-1, z)] = d1*dz
+
+        return cache[f]
 
 def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
              degree_offset=0, unnecessary_permutations=None):
@@ -335,8 +423,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         else:
             terms |= set(hints)
 
+    dcache = DiffCache(x)
+
     for g in set(terms):  # using copy of terms
-        terms |= components(cancel(g.diff(x)), x)
+        terms |= components(dcache.get_diff(g), x)
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
@@ -360,7 +450,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for mapping in mappings:
         mapping = list(mapping)
         mapping = mapping + unnecessary_permutations
-        diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
+        diffs = [ _substitute(dcache.get_diff(g)) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
             denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
@@ -479,12 +569,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 factorization = factor(poly, greedy=True)
             except PolynomialError:
                 factorization = poly
-            factorization = poly
 
             if factorization.is_Mul:
-                reducibles |= set(factorization.args)
+                factors = factorization.args
             else:
-                reducibles.add(factorization)
+                factors = (factorization, )
+
+            for fact in factors:
+                if fact.is_Pow:
+                    reducibles.add(fact.base)
+                else:
+                    reducibles.add(fact)
 
     def _integrate(field=None):
         irreducibles = set()

@@ -36,6 +36,10 @@ Atom
 .. autoclass:: Atom
    :members:
 
+core
+----
+.. module:: sympy.core.core
+
 C
 ^
 .. autoclass:: C

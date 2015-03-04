@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy
+from sympy.core import S, sympify, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer
@@ -77,8 +77,9 @@ class factorial(CombinatorialFunction):
     """
 
     def fdiff(self, argindex=1):
+        from sympy import gamma, polygamma
         if argindex == 1:
-            return C.gamma(self.args[0] + 1)*C.polygamma(0, self.args[0] + 1)
+            return gamma(self.args[0] + 1)*polygamma(0, self.args[0] + 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -163,12 +164,14 @@ class factorial(CombinatorialFunction):
                     return Integer(result)
 
     def _eval_rewrite_as_gamma(self, n):
-        return C.gamma(n + 1)
+        from sympy import gamma
+        return gamma(n + 1)
 
     def _eval_rewrite_as_Product(self, n):
+        from sympy import Product
         if n.is_nonnegative and n.is_integer:
             i = Dummy('i', integer=True)
-            return C.Product(i, (i, 1, n))
+            return Product(i, (i, 1, n))
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
@@ -260,7 +263,8 @@ class subfactorial(CombinatorialFunction):
             return True
 
     def _eval_rewrite_as_uppergamma(self, arg):
-        return C.uppergamma(arg + 1, -1)/S.Exp1
+        from sympy import uppergamma
+        return uppergamma(arg + 1, -1)/S.Exp1
 
     def _eval_is_nonnegative(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
@@ -447,7 +451,8 @@ class RisingFactorial(CombinatorialFunction):
                         return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
-        return C.gamma(x + k) / C.gamma(x)
+        from sympy import gamma
+        return gamma(x + k) / gamma(x)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -519,7 +524,8 @@ class FallingFactorial(CombinatorialFunction):
                         return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
-        return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
+        from sympy import gamma
+        return (-1)**k * gamma(-x + k) / gamma(-x)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -611,16 +617,17 @@ class binomial(CombinatorialFunction):
     """
 
     def fdiff(self, argindex=1):
+        from sympy import polygamma
         if argindex == 1:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
             n, k = self.args
-            return binomial(n, k)*(C.polygamma(0, n + 1) - \
-                C.polygamma(0, n - k + 1))
+            return binomial(n, k)*(polygamma(0, n + 1) - \
+                polygamma(0, n - k + 1))
         elif argindex == 2:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
             n, k = self.args
-            return binomial(n, k)*(C.polygamma(0, n - k + 1) - \
-                C.polygamma(0, k + 1))
+            return binomial(n, k)*(polygamma(0, n - k + 1) - \
+                polygamma(0, k + 1))
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -717,7 +724,8 @@ class binomial(CombinatorialFunction):
         return factorial(n)/(factorial(k)*factorial(n - k))
 
     def _eval_rewrite_as_gamma(self, n, k):
-        return C.gamma(n + 1)/(C.gamma(k + 1)*C.gamma(n - k + 1))
+        from sympy import gamma
+        return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
