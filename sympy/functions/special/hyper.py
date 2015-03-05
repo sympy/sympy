@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, I, pi, oo, ilcm, Mod, C
+from sympy.core import S, I, pi, oo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
@@ -205,11 +205,12 @@ class hyper(TupleParametersBase):
 
     def _eval_rewrite_as_Sum(self, ap, bq, z):
         from sympy.functions import factorial, RisingFactorial, Piecewise
+        from sympy import Sum
         n = Dummy("n", integer=True)
         rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
         rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
         coeff = Mul(*rfap) / Mul(*rfbq)
-        return Piecewise((C.Sum(coeff * z**n / factorial(n), (n, 0, oo)),
+        return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
     @property
