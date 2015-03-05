@@ -8,7 +8,7 @@ Contains
 
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, pi
+from sympy.core import S, sympify, pi
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo, Rational
 from sympy.core.compatibility import range
@@ -350,11 +350,12 @@ class Ellipse(GeometryEntity):
         12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
 
         """
+        from sympy import Integral
         if self.eccentricity == 1:
             return 2*pi*self.hradius
         else:
             x = Dummy('x', real=True)
-            return 4*self.major*C.Integral(
+            return 4*self.major*Integral(
                 sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
 
     @property
