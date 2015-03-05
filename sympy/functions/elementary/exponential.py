@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import C, sympify
+from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
@@ -328,11 +328,12 @@ class exp(ExpBase):
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
+        import sympy
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
             im = im.expand(deep, **hints)
-        cos, sin = C.cos(im), C.sin(im)
+        cos, sin = sympy.cos(im), sympy.sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
     def _eval_subs(self, old, new):
@@ -378,7 +379,7 @@ class exp(ExpBase):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, powsimp
+        from sympy import limit, oo, Order, powsimp
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -391,38 +392,43 @@ class exp(ExpBase):
         o = exp_series.getO()
         exp_series = exp_series.removeO()
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
-        r += C.Order(o.expr.subs(t, (arg_series - arg0)), x)
+        r += Order(o.expr.subs(t, (arg_series - arg0)), x)
         r = r.expand()
         return powsimp(r, deep=True, combine='exp')
 
     def _taylor(self, x, n):
+        from sympy import Order
         l = []
         g = None
         for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
             l.append(g)
-        return Add(*l) + C.Order(x**n, x)
+        return Add(*l) + Order(x**n, x)
 
     def _eval_as_leading_term(self, x):
+        from sympy import Order
         arg = self.args[0]
         if arg.is_Add:
             return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
         arg = self.args[0].as_leading_term(x)
-        if C.Order(1, x).contains(arg):
+        if Order(1, x).contains(arg):
             return S.One
         return exp(arg)
 
     def _eval_rewrite_as_sin(self, arg):
+        from sympy import sin
         I = S.ImaginaryUnit
-        return C.sin(I*arg + S.Pi/2) - I*C.sin(I*arg)
+        return sin(I*arg + S.Pi/2) - I*sin(I*arg)
 
     def _eval_rewrite_as_cos(self, arg):
+        from sympy import cos
         I = S.ImaginaryUnit
-        return C.cos(I*arg) + I*C.cos(I*arg + S.Pi/2)
+        return cos(I*arg) + I*cos(I*arg + S.Pi/2)
 
     def _eval_rewrite_as_tanh(self, arg):
-        return (1 + C.tanh(arg/2))/(1 - C.tanh(arg/2))
+        from sympy import tanh
+        return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
 
 class log(Function):
@@ -626,12 +632,13 @@ class log(Function):
         (log(Abs(x)), arg(I*x))
 
         """
+        from sympy import Abs, arg
         if deep:
-            abs = C.Abs(self.args[0].expand(deep, **hints))
-            arg = C.arg(self.args[0].expand(deep, **hints))
+            abs = Abs(self.args[0].expand(deep, **hints))
+            arg = arg(self.args[0].expand(deep, **hints))
         else:
-            abs = C.Abs(self.args[0])
-            arg = C.arg(self.args[0])
+            abs = Abs(self.args[0])
+            arg = arg(self.args[0])
         if hints.get('log', False):  # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
@@ -683,7 +690,7 @@ class log(Function):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import cancel
+        from sympy import cancel, Order
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -710,7 +717,7 @@ class log(Function):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
-        return log(a) + b*logx + Add(*l) + C.Order(p**n, x)
+        return log(a) + b*logx + Add(*l) + Order(p**n, x)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
