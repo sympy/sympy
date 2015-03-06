@@ -301,7 +301,7 @@ class exp(ExpBase):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        return x**n/factorial()(n)
+        return x**n/factorial(n)
 
     def as_real_imag(self, deep=True, **hints):
         """
