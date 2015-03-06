@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from sympy.matrices import Matrix, eye
-from sympy import Add, diff, Symbol, simplify, sqrt
+from sympy.core import diff, Add, Symbol
+from sympy.simplify import simplify
+from sympy import sqrt
 from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
     matrix2tensor, list2arraypy, list2tensor
+
+"""Module tensor_fields contains functions for working with the tensor fields: 
+-the calculation of the differential and the gradient of the function; 
+-curl and divergence of a vector field;
+-the calculation of the derivative of Li and the external differentiation of differential forms. 
+Functions are work with the multidimensional arrays arraypy and tensors, 
+classes and methods which are contained in the module arraypy.
+
+"""
+
 
 # ---------------- df --------------------------------
 
