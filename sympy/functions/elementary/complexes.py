@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core import S
 from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
@@ -365,8 +365,9 @@ class sign(Function):
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, arg):
+        from sympy import Heaviside
         if arg.is_real:
-            return C.Heaviside(arg)*2-1
+            return Heaviside(arg)*2-1
 
     def _eval_simplify(self, ratio, measure):
         return self.func(self.args[0].factor())
@@ -551,15 +552,17 @@ class Abs(Function):
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
+        from sympy import Heaviside
         if arg.is_real:
-            return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+            return arg*(Heaviside(arg) - Heaviside(-arg))
 
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg):
-        return arg/C.sign(arg)
+        from sympy import sign
+        return arg/sign(arg)
 
 
 class arg(Function):
