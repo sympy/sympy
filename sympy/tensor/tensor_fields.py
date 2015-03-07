@@ -225,15 +225,15 @@ def grad(f, args, g=None, output_type=None):
 # ---------------- rot --------------------------------
 
 
-def rot(X, args, output_type=None):
-    """Return the vorticity vector field rot(X) of a vector field X in R^3
+def curl(X, args, output_type=None):
+    """Return the vorticity vector field curl(X) of a vector field X in R^3
     (curl, rotation, rotor, vorticity).
     A rotor can be calculated for only in three-dimensional Euclidean space.
 
     Examples:
     =========
 
-    >>> from sympy.tensor.tensor_fields import rot
+    >>> from sympy.tensor.tensor_fields import curl
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> X=Arraypy(3)
@@ -242,7 +242,7 @@ def rot(X, args, output_type=None):
     >>> X_t[1]=x2-cos(x3)
     >>> X_t[2]=x3**3-x1
     >>> arg=[x1,x2,x3]
-    >>> r=rot(X_t,arg,'t')
+    >>> r=curl(X_t,arg,'t')
     >>> r
     -sin(x3) 1 -3*x1*x2**2
 
