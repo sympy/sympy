@@ -2678,25 +2678,11 @@ class MatrixBase(object):
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-<<<<<<< HEAD
-                max1, ind = 0, 0
-                for k in range(pivot, r.rows):
-                    if simplify and k > pivot:
-                        r[k, i] = simpfunc(r[k, i])
-                    if max1 < abs(r[k, i]):
-=======
-                """for k in range(pivot, r.rows):
-                    if simplify and k > pivot:
-                        r[k, i] = simpfunc(r[k, i])
-                    if not iszerofunc(r[k, i]):
-                        r.row_swap(pivot, k)
-                        break"""
                 max1, ind = 0, 0
                 for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if max1 < r[k, i]:
->>>>>>> e106b5c63775cd858c086704fb45897e9b12b349
                         max1 = r[k, i]
                         ind = k
                 if not iszerofunc(r[ind, i]):
