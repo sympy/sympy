@@ -543,7 +543,7 @@ def dw(omega, args):
 
     # Define the start index in the output tensor
     if isinstance(omega, type(args)) and idx_omega != idx_args:
-        raise ValueError("Raznie indeksi!!!")
+        raise ValueError("The starting indices must be identical")
     idx_st = idx_omega
 
     # Creating the output array in accordance with start indexes
