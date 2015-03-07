@@ -168,7 +168,7 @@ def grad(f, args, g=None, output_type=None):
         if output_type is None:
             output_type = 't'
         if not isinstance(g, (Tensor, Matrix, Arraypy)):
-            raise ValueError("Type must be Matrix or Tensor or Arraypy")
+            raise ValueError("Type must be Matrix, Tensor or Arraypy")
         if isinstance(g, Tensor):
             if g.type_pq != (0, 2):
                 raise ValueError("The indices of tensor must be (-1,-1)")
@@ -252,7 +252,7 @@ def curl(X, args, output_type=None):
         raise ValueError(
             "The type of arguments vector must be list, Tensor or Arraypy")
     if len(args) != 3:
-        raise ValueError("ERROW:three variables are required")
+        raise ValueError("Three variables are required")
     if isinstance(args, (Tensor, Arraypy)):
         if len(args.shape) != 1:
             raise ValueError("The lenght of argument must be 1")
@@ -268,11 +268,11 @@ def curl(X, args, output_type=None):
         raise ValueError(
             "The type of vector fields must be list, Tensor or Arraypy")
     if len(X) != 3:
-        raise ValueError("ERROW:a three-dimensional vector is necessary")
+        raise ValueError("A three-dimensional vector is necessary")
 
     if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
-            raise ValueError("The dim of argument must be 1")
+            raise ValueError("The dimension of argument must be 1")
         if isinstance(X, Tensor):
             out_t = 't'
             if X.type_pq != (1, 0):
@@ -349,7 +349,7 @@ def div(X, args, g=None):
             "The type of arguments vector must be list, Tensor or Arraypy")
     if isinstance(args, (Tensor, Arraypy)):
         if len(args.shape) != 1:
-            raise ValueError("The lenght of argument must be 1")
+            raise ValueError("The dimension of argument must be 1")
         if isinstance(args, Tensor):
             if args.type_pq != (1, 0):
                 raise ValueError("The valency of tensor must be (+1)")
@@ -361,7 +361,7 @@ def div(X, args, g=None):
             "The type of vector fields must be list, Tensor or Arraypy")
     if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
-            raise ValueError("The dim of argument must be 1")
+            raise ValueError("The dimension of argument must be 1")
         if isinstance(X, Tensor):
             if X.type_pq != (1, 0):
                 raise ValueError("The valency of tensor must be (+1)")
@@ -370,7 +370,7 @@ def div(X, args, g=None):
     # Handling of the metric tensor
     if g is not None:
         if not isinstance(g, (Tensor, Matrix, Arraypy)):
-            raise ValueError("Type must be Matrix or Tensor or Arraypy")
+            raise ValueError("Type must be Matrix, Tensor or Arraypy")
         else:
             if isinstance(g, (Tensor, Arraypy)):
                 if isinstance(g, Tensor):
@@ -435,7 +435,7 @@ def lie_xy(X, Y, args, output_type=None):
             "The type of vector fields must be list, Tensor or Arraypy")
     if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
-            raise ValueError("The dim of argument must be 1")
+            raise ValueError("The dimension of argument must be 1")
         if isinstance(X, Tensor):
             out_t = 't'
             if X.type_pq != (1, 0):
@@ -451,7 +451,7 @@ def lie_xy(X, Y, args, output_type=None):
             "The type of vector fields must be list, Tensor or Arraypy")
     if isinstance(Y, (Tensor, Arraypy)):
         if len(Y.shape) != 1:
-            raise ValueError("The dim of argument must be 1")
+            raise ValueError("The dimension of argument must be 1")
         if isinstance(Y, Tensor):
             if Y.type_pq != (1, 0):
                 raise ValueError("The valency of tensor must be (+1)")
@@ -584,12 +584,13 @@ def dw(omega, args):
 
 # Handling of a differential form
     if not isinstance(omega, (Tensor, Arraypy)):
-        raise ValueError("Type must be Tensor or Arraypy")
+        raise ValueError("The type of tensor must be Tensor or Arraypy")
     idx_omega = omega.start_index[0]
 
     # Define the start index in the output tensor
     if isinstance(omega, type(args)) and idx_omega != idx_args:
-        raise ValueError("The starting indices must be identical")
+        raise ValueError("The start index of the tensor and vector of arguments \
+                must be equal")
     idx_st = idx_omega
 
     # Creating the output array in accordance with start indexes
@@ -688,7 +689,7 @@ def lie_w(omega, X, args):
             "The type of vector fields must be list, Tensor or Arraypy")
     if isinstance(X, (Tensor, Arraypy)):
         if len(X.shape) != 1:
-            raise ValueError("The dim of argument must be 1")
+            raise ValueError("The dimension of argument must be 1")
         if isinstance(X, Tensor):
             if X.type_pq != (1, 0):
                 raise ValueError("The valency of tensor must be (+1)")
@@ -698,7 +699,7 @@ def lie_w(omega, X, args):
 
 # Handling of a differential form
     if not isinstance(omega, (Tensor, Arraypy)):
-        raise ValueError("Type must be Tensor or Arraypy")
+        raise ValueError("The type of differential form must be Tensor or Arraypy")
     idx_omega = omega.start_index[0]
 
 
