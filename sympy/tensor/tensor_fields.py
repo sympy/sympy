@@ -7,11 +7,13 @@ from sympy import sqrt
 from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
     matrix2tensor, list2arraypy, list2tensor
 
-"""Module tensor_fields contains functions for working with the tensor fields: 
--the calculation of the differential and the gradient of the function; 
+"""Module tensor_fields contains functions for working with the tensor fields:
+-the calculation of the differential and the gradient of the function;
 -curl and divergence of a vector field;
--the calculation of the derivative of Li and the external differentiation of differential forms. 
-Functions are work with the multidimensional arrays arraypy and tensors, 
+-the calculation of the derivative of Li and the external differentiation
+of differential forms.
+
+Functions are work with the multidimensional arrays arraypy and tensors,
 classes and methods which are contained in the module arraypy.
 
 """
@@ -30,17 +32,33 @@ def df(f, args, output_type='l'):
     >>> from sympy import symbols, sin
     >>> x1, x2, x3= symbols('x1 x2 x3')
     >>> f=x1**2*x2 + sin(x2*x3 - x2)
+
+    args it’s a list of symbol arguments of the function f. It can be in list,
+    array of arraypy or contravariant tensor.
+    Indexing the returned object will not begin from scratch and depends on
+    the initial index of the argument array args:
+
     >>> args_t=Arraypy([1,3,1]).to_tensor(1)
     >>> args_t[1]=x1
     >>> args_t[2]=x2
     >>> args_t[3]=x3
+
+    output _ type  it is an optional parameter accepting  symbol value of
+    'l', 'a' or  't' and indicative on the type of result of calculations:
+    'l' it is  a result as a list(list);
+    'a' it is a result as an unidimensional array of arraypy;
+    't' it is a result as an unidimensional covariant tensor.
+
+    Differentials:
+
     >>> d = df(f, args_t, 't')
-    >>> print (d)
+    >>> d
     2*x1*x2 x1**2 + (x3 - 1)*cos(x2*x3 - x2) x2*cos(x2*x3 - x2)
-    >>> print (d.type_pq)
+
+    The valence of the returned tensor:
+
+    >>> d.type_pq
     (0, 1)
-    >>> print (d1._output)
-    {(2,): x1**2 + (x3 - 1)*cos(x2*x3 - x2), (3,): x2*cos(x2*x3 - x2), (1,): 2*x1*x2}
 
     """
     # Handling of a vector of arguments
@@ -89,12 +107,22 @@ def grad(f, args, g=None, output_type=None):
 
     Examples:
     =========
-    
+
     >>> from sympy.tensor.tensor_fields import grad
     >>> from sympy import symbols, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> f=x1**2*x2 + sin(x2*x3 - x2)
-    >>> var=[x1,x2,x3]
+
+    args it’s a list of symbol arguments of function of f.
+    It can be in list, array of arraypy or contravariant tensor.
+    Indexing of the returned object may be not begining from scratch and
+    depends on the initial index of the metric tensor:
+
+    >>> args=[x1,x2,x3]
+
+    g - optional parameter, metric tensor, which can be a matrix "Matrix",
+    array of arraypy or covariant tensor:
+
     >>> g=Arraypy([2,3,1])
     >>> g_t=g.to_tensor((-1,-1))
     >>> g_t[1,1]=2
@@ -106,9 +134,18 @@ def grad(f, args, g=None, output_type=None):
     >>> g_t[3,1]=0
     >>> g_t[3,2]=0
     >>> g_t[3,3]=1
-    >>> gr=grad(f,var,g_t,'a')
-    >>> print(gr)
-    -x1**2/5 + 6*x1*x2/5 - (x3 - 1)*cos(x2*x3 - x2)/5 2*x1**2/5 - 2*x1*x2/5 + 2*(x3 - 1)*cos(x2*x3 - x2)/5 x2*cos(x2*x3 - x2)
+
+    output _ type  it is an optional parameter accepting  symbol value of
+    'l', 'a' or  't' and indicative on the type of result of calculations:
+    'l' it is  a result as a list(list);
+    'a' it is a result as an unidimensional array of arraypy;
+    't' it is a result as an unidimensional covariant tensor.
+
+    Gradient:
+    >>> gr=grad(f,args,g_t,'a')
+    >>> gr
+    -x1**2/5 + 6*x1*x2/5 - (x3 - 1)*cos(x2*x3 - x2)/5 2*x1**2/5 - 2*x1*x2/5 + \
+    2*(x3 - 1)*cos(x2*x3 - x2)/5 x2*cos(x2*x3 - x2)
 
     """
     # Handling of a vector of arguments
@@ -188,15 +225,15 @@ def grad(f, args, g=None, output_type=None):
 # ---------------- rot --------------------------------
 
 
-def rot(X, args, output_type=None):
-    """Return the vorticity vector field rot(X) of a vector field X in R^3
+def curl(X, args, output_type=None):
+    """Return the vorticity vector field curl(X) of a vector field X in R^3
     (curl, rotation, rotor, vorticity).
     A rotor can be calculated for only in three-dimensional Euclidean space.
 
     Examples:
     =========
 
-    >>> from sympy.tensor.tensor_fields import rot
+    >>> from sympy.tensor.tensor_fields import curl
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1 x2 x3')
     >>> X=Arraypy(3)
@@ -205,8 +242,8 @@ def rot(X, args, output_type=None):
     >>> X_t[1]=x2-cos(x3)
     >>> X_t[2]=x3**3-x1
     >>> arg=[x1,x2,x3]
-    >>> r=rot(X_t,arg,'t')
-    >>> print(r)
+    >>> r=curl(X_t,arg,'t')
+    >>> r
     -sin(x3) 1 -3*x1*x2**2
 
     """
@@ -284,6 +321,8 @@ def rot(X, args, output_type=None):
             'l'-list")
     # Output
     return rotor
+
+
 # ---------------- div --------------------------------
 
 
@@ -353,7 +392,7 @@ def div(X, args, g=None):
     return divergenc
 
 
-# ------------------LieXY-------------------------------
+# ------------------ lie_xy -------------------------------
 
 def lie_xy(X, Y, args, output_type=None):
     """Return the vector field [X,Y], Lie bracket (commutator) of a vector
@@ -368,8 +407,12 @@ def lie_xy(X, Y, args, output_type=None):
     >>> Y = [x1**3*x2**3, x2*x3 - sin(x1*x3), x3**3 - x1**2]
     >>> arg = [x1, x2, x3]
     >>> lie = lie_xy(X, Y, arg,'a')
-    >>> print(lie)
-    2*x1**3*x2**6 + 3*x1**3*x2**2*(x2 - cos(x3)) - 3*x1*x2**2*(x2*x3 - sin(x1*x3)) -x1*x2**3*x3*cos(x1*x3) - x2*x3 + x3*(x2 - cos(x3)) + (-x1 + x3**3)*(-x1*cos(x1*x3) + x2) - (-x1**2 + x3**3)*sin(x3) + sin(x1*x3) x1**3*x2**3 - 2*x1**2*x2**3 + 3*x3**2*(-x1 + x3**3) - 3*x3**2*(-x1**2 + x3**3)
+    >>> lie
+    2*x1**3*x2**6 + 3*x1**3*x2**2*(x2 - cos(x3)) - 3*x1*x2**2*(x2*x3 - \
+    sin(x1*x3))
+    -x1*x2**3*x3*cos(x1*x3) - x2*x3 + x3*(x2 - cos(x3)) + \
+    (-x1 + x3**3)*(-x1*cos(x1*x3) + x2) - (-x1**2 + x3**3)*sin(x3) + sin(x1*x3)
+    x1**3*x2**3 - 2*x1**2*x2**3 + 3*x3**2*(-x1 + x3**3) - 3*x3**2*(-x1**2 + x3**3)
 
     """
     # Handling of a vector of arguments
@@ -492,9 +535,12 @@ def NotNeedElement(_list, index):
 
 
 # ---------------- dw --------------------------------
+
 def dw(omega, args):
-    """Returns the exterior product of a vector fields (or "exterior
-    differential"?)
+    """Return a skew-symmetric tensor of type (0,p+1).
+    Indexes the output tensor will start as well as the input tensor (array).
+    If the input parameters of the same type, they must be equal to the initial
+    indexes.
 
     Examples:
     =========
@@ -510,15 +556,15 @@ def dw(omega, args):
     >>> omega[3,1]=x2
     >>> omega[3,2]=-x1
     >>> domega=dw(omega, [x1,x2,x3])
-    >>> print(domega)
-    0 0 0 
-    0 0 3 
-    0 -3 0 
-    0 0 -3 
-    0 0 0 
-    3 0 0 
-    0 3 0 
-    -3 0 0 
+    >>> domega
+    0 0 0
+    0 0 3
+    0 -3 0
+    0 0 -3
+    0 0 0
+    3 0 0
+    0 3 0
+    -3 0 0
     0 0 0
 
     """
@@ -587,11 +633,18 @@ def NeedElementK(_list, index, k):
     return (tuple(output))
 
 
-# ---------------- Lie_omega --------------------------------
+# ---------------- lie_w --------------------------------
 
 def lie_w(omega, X, args):
-    """Returns the exterior product of a vector fields (or "exterior
-    differential"?)
+    """Return a skew-symmetric tensor of type (0,p).
+    Indexes the output tensor will start as well as the input tensor (array).
+    If the tensor and vector field of the same type, they must be equal to the
+    initial indexes.
+    If all the input parameters of the same type, they must be equal to the
+    initial indexes.
+
+    Function lie_w calculates all the components of the Lie
+    derivative differential forms in a symbolic form.
 
     Examples:
     =========
@@ -609,10 +662,10 @@ def lie_w(omega, X, args):
     >>> arg = [x1, x2, x3]
     >>> X = [x1*x2**3,x2-cos(x3),x3**3-x1]
     >>> li = lie_w(omega,X,arg)
-    >>> print(li)
-    0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3) 
-    -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1 
-    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - 3*x1*x3**2 - x1 0 
+    >>> li
+    0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
+    -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1
+    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - 3*x1*x3**2 - x1 0
 
     """
 # Handling of a vector of arguments
