@@ -717,21 +717,15 @@ def test_to_anf():
     assert to_anf(And(x, y)) == And(x, y)
     assert to_anf(Or(x, y)) == Xor(x, y, And(x, y))
     assert to_anf(Xor(x, y)) == Xor(x, y)
-    expr = to_anf(Not(x))
-    assert isinstance(expr, Xor) and expr.args == (x, True)
-    expr = to_anf(Nand(x, y))
-    assert isinstance(expr, Xor) and expr.args == (True, And(x, y))
-    expr = to_anf(Nor(x, y))
-    assert isinstance(expr, Xor) and expr.args == (x, y, True, And(x, y))
-    expr = to_anf(Implies(x, y))
-    assert isinstance(expr, Xor) and expr.args == (x, True, And(x, y))
-    expr = to_anf(Equivalent(x, y))
-    assert isinstance(expr, Xor) and expr.args == (x, y, True)
-
-    expr = to_anf(Nand(x | y, x >> y), deep=False)
-    assert isinstance(expr, Xor) and expr.args == (True, And(Or(x, y), Implies(x, y)))
-    expr = to_anf(Nor(x ^ y, x & y), deep=False)
-    assert isinstance(expr, Xor) and expr.args == (True, Or(Xor(x, y), And(x, y)))
+    assert to_anf(Not(x)) == Xor(x, True, remove_true=False)
+    assert to_anf(Nand(x, y)) == Xor(True, And(x, y), remove_true=False)
+    assert to_anf(Nor(x, y)) == Xor(x, y, True, And(x, y), remove_true=False)
+    assert to_anf(Implies(x, y)) == Xor(x, True, And(x, y), remove_true=False)
+    assert to_anf(Equivalent(x, y)) == Xor(x, y, True, remove_true=False)
+    assert to_anf(Nand(x | y, x >> y), deep=False) == \
+           Xor(True, And(Or(x, y), Implies(x, y)), remove_true=False)
+    assert to_anf(Nor(x ^ y, x & y), deep=False) == \
+           Xor(True, Or(Xor(x, y), And(x, y)), remove_true=False)
 
 
 def test_is_anf():

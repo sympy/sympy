@@ -655,14 +655,9 @@ class Xor(BooleanFunction):
             return false
         elif len(argset) == 1:
             return argset.pop()
-        elif True in argset:
-            if remove_true:
-                argset.remove(True)
-                return Not(Xor(*argset))
-            else:
-                obj._args = tuple(ordered(argset))
-                obj._argset = frozenset(argset)
-                return obj
+        elif True in argset and remove_true:
+            argset.remove(True)
+            return Not(Xor(*argset))
         else:
             obj._args = tuple(ordered(argset))
             obj._argset = frozenset(argset)
