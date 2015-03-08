@@ -19,9 +19,6 @@ classes and methods which are contained in the module arraypy.
 """
 
 
-# ---------------- df --------------------------------
-
-
 def df(f, args, output_type='l'):
     """Return an the 1-form df, differential of function f(x).
 
@@ -30,13 +27,15 @@ def df(f, args, output_type='l'):
 
     >>> from sympy.tensor.tensor_fields import df
     >>> from sympy import symbols, sin
+    >>> from sympy.tensor.arraypy import Arraypy
     >>> x1, x2, x3= symbols('x1 x2 x3')
+
+    f it’s a function the differential of that is calculated:
+
     >>> f=x1**2*x2 + sin(x2*x3 - x2)
 
     args it’s a list of symbol arguments of the function f. It can be in list,
-    array of arraypy or contravariant tensor.
-    Indexing the returned object will not begin from scratch and depends on
-    the initial index of the argument array args:
+    array of arraypy or contravariant tensor:
 
     >>> args_t=Arraypy([1,3,1]).to_tensor(1)
     >>> args_t[1]=x1
@@ -45,9 +44,9 @@ def df(f, args, output_type='l'):
 
     output _ type  it is an optional parameter accepting  symbol value of
     'l', 'a' or  't' and indicative on the type of result of calculations:
-    'l' it is  a result as a list(list);
-    'a' it is a result as an unidimensional array of arraypy;
-    't' it is a result as an unidimensional covariant tensor.
+    - 'l' it is  a result as a list(list);
+    - 'a' it is a result as an unidimensional array of arraypy;
+    - 't' it is a result as an unidimensional covariant tensor.
 
     Differentials:
 
@@ -99,8 +98,6 @@ def df(f, args, output_type='l'):
     # Output
     return differential
 
-# ---------------- grad --------------------------------
-
 
 def grad(f, args, g=None, output_type=None):
     """Return the vector field Gradient(f(x)) of a function f(x).
@@ -110,13 +107,14 @@ def grad(f, args, g=None, output_type=None):
 
     >>> from sympy.tensor.tensor_fields import grad
     >>> from sympy import symbols, sin
+    >>> from sympy.tensor.arraypy import Arraypy
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+    f it’s a function the differential of that is calculated:
+
     >>> f=x1**2*x2 + sin(x2*x3 - x2)
 
     args it’s a list of symbol arguments of function of f.
-    It can be in list, array of arraypy or contravariant tensor.
-    Indexing of the returned object may be not begining from scratch and
-    depends on the initial index of the metric tensor:
+    It can be in list, array of arraypy or contravariant tensor:
 
     >>> args=[x1,x2,x3]
 
@@ -137,9 +135,9 @@ def grad(f, args, g=None, output_type=None):
 
     output _ type  it is an optional parameter accepting  symbol value of
     'l', 'a' or  't' and indicative on the type of result of calculations:
-    'l' it is  a result as a list(list);
-    'a' it is a result as an unidimensional array of arraypy;
-    't' it is a result as an unidimensional covariant tensor.
+    - 'l' it is  a result as a list(list);
+    - 'a' it is a result as an unidimensional array of arraypy;
+    - 't' it is a result as an unidimensional covariant tensor.
 
     Gradient:
     >>> gr=grad(f,args,g_t,'a')
@@ -212,7 +210,7 @@ def grad(f, args, g=None, output_type=None):
         gradient = Arraypy.to_tensor(array, 1)
     elif output_type == 'a' or output_type == Symbol('a'):
         gradient = array
-    elif output_type == 'l' or output_type == Symbol('l') or output_type is\
+    elif output_type == 'l' or output_type == Symbol('l') or output_type is \
             None:
         gradient = Arraypy.to_list(array)
     else:
@@ -221,8 +219,6 @@ def grad(f, args, g=None, output_type=None):
             'l'-list")
 # Output
     return gradient
-
-# ---------------- rot --------------------------------
 
 
 def curl(X, args, output_type=None):
@@ -234,8 +230,13 @@ def curl(X, args, output_type=None):
     =========
 
     >>> from sympy.tensor.tensor_fields import curl
-    >>> from sympy import symbols
+    >>> from sympy import symbols, cos
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+
+    X is a vector field, args it’s a list of symbol arguments of a vector field
+    X. They can be a list, array arraypy or contravariant tensor:
+
     >>> X=Arraypy(3)
     >>> X_t=Tensor(X,(1))
     >>> X_t[0]=x1*x2**3
@@ -245,6 +246,8 @@ def curl(X, args, output_type=None):
     >>> r=curl(X_t,arg,'t')
     >>> r
     -sin(x3) 1 -3*x1*x2**2
+    >>> r.type_pq
+    (1, 0)
 
     """
     # Handling of a vector of arguments
@@ -323,9 +326,6 @@ def curl(X, args, output_type=None):
     return rotor
 
 
-# ---------------- div --------------------------------
-
-
 def div(X, args, g=None):
     """Return the divergence of a vector field X. Compute divergence of vector
     field consisting of N elements.
@@ -335,10 +335,20 @@ def div(X, args, g=None):
 
     >>> from sympy.tensor.tensor_fields import div
     >>> from sympy import symbols, cos
+    >>> from sympy.matrices import Matrix
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+
+    X is a vector field, args it’s a list of symbol arguments of the vector
+    field X. It's can be in list, array of arraypy or contravariant tensor:
+
     >>> X = [x1*x2**3,x2-cos(x3),x3**3-x1]
-    >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> arg = [x1, x2, x3]
+
+    g - optional parameter, metric tensor, which can be a matrix "Matrix",
+    array of arraypy or covariant tensor:
+
+    >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
+
     >>> dv = div(X,arg,g)
     x2**3 + 3*x3**2 + 1
 
@@ -401,18 +411,26 @@ def lie_xy(X, Y, args, output_type=None):
     Examples:
     =========
     >>> from sympy.tensor.tensor_fields import lie_xy
-    >>> from sympy import symbols, sin
+    >>> from sympy import symbols, cos, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+
+    X, Y is a vector field, args it’s a list of symbol arguments.
+    It's can be a list, array arraypy or contravariant tensor:
+
     >>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
     >>> Y = [x1**3*x2**3, x2*x3 - sin(x1*x3), x3**3 - x1**2]
     >>> arg = [x1, x2, x3]
+
+    The Lie brackets of two vector fields:
+
     >>> lie = lie_xy(X, Y, arg,'a')
     >>> lie
     2*x1**3*x2**6 + 3*x1**3*x2**2*(x2 - cos(x3)) - 3*x1*x2**2*(x2*x3 - \
     sin(x1*x3))
     -x1*x2**3*x3*cos(x1*x3) - x2*x3 + x3*(x2 - cos(x3)) + \
     (-x1 + x3**3)*(-x1*cos(x1*x3) + x2) - (-x1**2 + x3**3)*sin(x3) + sin(x1*x3)
-    x1**3*x2**3 - 2*x1**2*x2**3 + 3*x3**2*(-x1 + x3**3) - 3*x3**2*(-x1**2 + x3**3)
+    x1**3*x2**3 - 2*x1**2*x2**3 + 3*x3**2*(-x1 + x3**3) - \
+    3*x3**2*(-x1**2 + x3**3)
 
     """
     # Handling of a vector of arguments
@@ -547,7 +565,12 @@ def dw(omega, args):
 
     >>> from sympy.tensor.tensor_fields import dw
     >>> from sympy import symbols
+    >>> from sympy.tensor.arraypy import Arraypy
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+
+    omega - differential form, differential which is calculated.
+    It's can be a skew-symmetric tensor of type (0,p) or an array arraypy:
+
     >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
     >>> omega[1,2]=x3
     >>> omega[1,3]=-x2
@@ -555,6 +578,12 @@ def dw(omega, args):
     >>> omega[2,3]=x1
     >>> omega[3,1]=x2
     >>> omega[3,2]=-x1
+
+    args it’s a list of symbol arguments of differential form.
+    It's can be in list, array of arraypy or contravariant tensor.
+
+    External differential of a differential forms:
+
     >>> domega=dw(omega, [x1,x2,x3])
     >>> domega
     0 0 0
@@ -566,6 +595,8 @@ def dw(omega, args):
     0 3 0
     -3 0 0
     0 0 0
+    >>> domega.type_pq
+    (0, 3)
 
     """
 # Handling of a vector of arguments
@@ -634,25 +665,26 @@ def NeedElementK(_list, index, k):
     return (tuple(output))
 
 
-# ---------------- lie_w --------------------------------
-
 def lie_w(omega, X, args):
     """Return a skew-symmetric tensor of type (0,p).
-    Indexes the output tensor will start as well as the input tensor (array).
-    If the tensor and vector field of the same type, they must be equal to the
-    initial indexes.
-    If all the input parameters of the same type, they must be equal to the
-    initial indexes.
+    Function lie_w calculates all the components of the Lie derivative
+    differential forms in a symbolic form.
 
-    Function lie_w calculates all the components of the Lie
-    derivative differential forms in a symbolic form.
+    Indexes the output tensor will start as well as the input tensor (array)
+    "omega". If all the input parameters of the same type, they must be equal
+    to the initial indexes.
 
     Examples:
     =========
 
     >>> from sympy.tensor.tensor_fields import lie_w
     >>> from sympy import symbols, cos
+    >>> from sympy.tensor.arraypy import Arraypy
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+
+    omega - skew-symmetric tensor. Can be a tensor of type (0,p) or an array
+    arraypy:
+
     >>> omega=Arraypy([2,3,1]).to_tensor((-1,-1))
     >>> omega[1,2]=x3
     >>> omega[1,3]=-x2
@@ -660,13 +692,26 @@ def lie_w(omega, X, args):
     >>> omega[2,3]=x1
     >>> omega[3,1]=x2
     >>> omega[3,2]=-x1
-    >>> arg = [x1, x2, x3]
+
+    X - the vector field along which the derivative is calculated:
+
     >>> X = [x1*x2**3,x2-cos(x3),x3**3-x1]
+
+    args it’s a list of symbol arguments.
+    It's can be in list, array of arraypy or contravariant tensor:
+
+    >>> arg = [x1, x2, x3]
+
+    Lie derivative of a differential form:
+
     >>> li = lie_w(omega,X,arg)
     >>> li
     0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
     -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1
-    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - 3*x1*x3**2 - x1 0
+    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - \
+    3*x1*x3**2 - x1 0
+    >>> li.type_pq
+    (0, 2)
 
     """
 # Handling of a vector of arguments
@@ -699,7 +744,8 @@ def lie_w(omega, X, args):
 
 # Handling of a differential form
     if not isinstance(omega, (Tensor, Arraypy)):
-        raise ValueError("The type of differential form must be Tensor or Arraypy")
+        raise ValueError(
+            "The type of differential form must be Tensor or Arraypy")
     idx_omega = omega.start_index[0]
 
 
