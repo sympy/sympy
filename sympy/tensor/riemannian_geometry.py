@@ -30,17 +30,28 @@ def scal_prod(X, Y, g):
     >>> from sympy.tensor.riemannian_geometry import scal_prod
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> X = [1,2]
-    >>> Y = [3,4]
-    >>> A = Arraypy((2,2))
-    >>> g = Tensor(A,(-1,-1))
+
+    X, Y is a vector or a vector field. They can be a list, 
+    one-dimensional arraypy or Tensor with valence of indices (+1):
+
+    >>> X = [1, 2]
+    >>> Y = [3, 4]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence of indices (-1, -1):
+
+    >>> A = Arraypy((2, 2))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
+
+    The scalar product:
     >>> sc = scal_prod(X, Y, g)
     >>> print(sc)
     3*cos(x2)**2 + 8
+
     """
     # Handling of a input argument - metric tensor g
     if not isinstance(g, (Matrix, Tensor, Arraypy)):
@@ -109,19 +120,38 @@ def christoffel_1(g, var, type_output='t'):
     >>> from sympy.tensor.riemannian_geometry import christoffel_1
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
-    >>> A = Arraypy((2,2))
-    >>> g = Tensor(A,(-1,-1))
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1, -1):
+
+    >>> A = Arraypy((2, 2))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> ch_1 = christoffel_1(g, arg, 't')
-    >>> print(christoffel1)
+
+    type_output is optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match tensor;
+    - symbol 'a' means that the type of the result will be arraypy;
+    - default function takes a parameter 't', so that the result will be a tensor:
+
+    The Christoffel symbols of the first kind:
+    >>> ch_1 = christoffel_1(g, var, 't')
+    >>> print(ch_1)
     0  sin(x2)*cos(x2)
     -sin(x2)*cos(x2)  0
     -sin(x2)*cos(x2)  0
     0  0
+    >>> christoffel1.type_pq
+    (0, 3)
+
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -213,19 +243,36 @@ def christoffel_2(g, var, type_output='t'):
     >>> from sympy.tensor.riemannian_geometry import christoffel_2
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
-    >>> A = Arraypy((2,2))
-    >>> g = tensor(A,(-1,-1))
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1,-1):
+
+    >>> A = Arraypy((2, 2))
+    >>> g = tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> ch_2 = christoffel_2(g, arg, 'a')
+
+    type_output is optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match tensor;
+    - symbol 'a' means that the type of the result will be arraypy;
+    - default function takes a parameter 't', so that the result will be a tensor:
+
+    The Christoffel symbols of the second kind:
+    >>> ch_2 = christoffel_2(g, var, 'a')
     >>> print(ch_2)
     0  sin(x2)*cos(x2)
     -sin(x2)/cos(x2)  0  
     -sin(x2)/cos(x2)  0  
     0  0
+
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -293,11 +340,16 @@ def christoffel_2(g, var, type_output='t'):
                                                                                                                  var[l - idx_start])) / 2 for l in indices])
 
     # Other variant calculation
-    """christ_1 = christoffel_1(g,arg)
-    for i in indices:
-        for j in indices:
-	    for k in indices:
-                Ch[i,j,k] = Add(*[g_inv[k, l] *christ_1[i,j,l] for l in indices])"""
+    # christ_1 = christoffel_1(g, var)
+    # for i in indices:
+        # for j in indices:
+            # for k in indices:
+                # Ch[i,
+                # j,
+                # k] = Add(*[g_inv[k,
+                # l] *christ_1[i,
+                # j,
+                # l] for l in indices])
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
@@ -324,18 +376,41 @@ def covar_der(X, g, var, type_output='t'):
     >>> from sympy.tensor.riemannian_geometry import covar_der
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
-    >>> A = Arraypy((2,2))
-    >>> g = Tensor(A,(-1,-1))
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1, -1):
+
+    >>> A = Arraypy((2, 2))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> X = [x1*x2**3,x1-cos(x2)]
-    >>> c_v = covar_der(X, g, arg, 't')
+
+    X is vector field can be a list, one-dimensional arraypy, or one-dimensional
+    tensor with valences of indices (+1):
+
+    >>> X = [x1 * x2**3, x1 - cos(x2)]
+
+    type_output is optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match tensor;
+    - symbol 'a' means that the type of the result will be arraypy;
+    - default function takes a parameter 't', so that the result will be a tensor:
+
+    The covariant derivative:
+    >>> c_v = covar_der(X, g, var, 't')
     >>> print(c_v)
     x2**3 - (x1 - cos(x2))*sin(x2)/cos(x2)  x1*x2**3*sin(x2)*cos(x2) + 1  
     -x1*x2**3*sin(x2)/cos(x2) + 3*x1*x2**2  sin(x2) 
+    >>>c_v.type_pq
+    (1, 1)
+
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -439,18 +514,39 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     >>> from sympy.tensor.riemannian_geometry import covar_der_XY
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
-    >>> A = Arraypy((2,2))
-    >>> g = Tensor(A,(-1,-1))
+
+    var is a list of symbolic arguments. May be a list, one-dimensional arraypy 
+    or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valences indices (-1, -1):
+
+    >>> A = Arraypy((2, 2))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> X = [x1*x2**3, x1-cos(x2)]
+
+    X, Y is vector fields may be lists, one-dimensional arraypy, 
+    or one-dimensional tensor indices with valences (+ 1):
+
+    >>> X = [x1 * x2**3, x1 - cos(x2)]
     >>> Y = [1, 2]
-    >>> c_v_XY = covar_der_XY(X, Y, g, arg, 't')
+
+    type_output is optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match tensor;
+    - symbol 'a' means that the type of the result will be arraypy;
+    - default function takes a parameter 't', so that the result will be a tensor:
+
+    The covariant derivative along another vector field:
+    >>> c_v_XY = covar_der_XY(X, Y, g, var, 't')
     >>> print(c_v_XY)
     -2*x1*x2**3*sin(x2)/cos(x2) + 6*x1*x2**2 + x2**3 - (x1 - cos(x2))*sin(x2)/cos(x2)  x1*x2**3*sin(x2)*cos(x2) + 2*sin(x2) + 1 
+
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -576,14 +672,30 @@ def riemann(g, var, type_output='t'):
     >>> from sympy.tensor.riemannian_geometry import riemann
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
-    >>> A = Arraypy((2,2))
-    >>> g = Tensor(A,(-1,-1))
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1, -1):
+
+    >>> A = Arraypy((2, 2))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> r = riemann(g, arg, 'a')
+
+    type_output is optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match tensor;
+    - symbol 'a' means that the type of the result will be arraypy;
+    - default function takes a parameter 't', so that the result will be a tensor:
+
+    The curvature tensor:
+    >>> r = riemann(g, var, 'a')
     >>> print(r)
     0  0  
     0  0  
@@ -593,6 +705,7 @@ def riemann(g, var, type_output='t'):
     -1  0  
     0  0  
     0  0
+
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -694,17 +807,40 @@ def ricci(riemann, var, type_output='t'):
     >>> from sympy.tensor.riemannian_geometry import ricci
     >>> from sympy import symbols, cos   
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1, -1):
+
     >>> A = Arraypy((2,2))
     >>> g = Tensor(A,(-1,-1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> cur = riemann(g, arg, 't')
-    >>> r = ricci(cur, arg, 't')
-    >>> print(r)
 
+    riemann is a Riemann curvature tensor must be symmetric matrix, 
+    arraypy or tensor with valences indices (-1, -1, -1, 1):
+
+    >>> cur = riemann(g, var, 't')
+
+    type_output is optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match tensor;
+    - symbol 'a' means that the type of the result will be arraypy;
+    - default function takes a parameter 't', so that the result will be a tensor:
+
+    The Ricci tensor:
+    >>> r = ricci(cur, var, 't')
+    >>> print(r)
+    cos(x2)**2  0  
+    0  1 
+    >>> r.type_pq
+    (0, 2)
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -784,17 +920,32 @@ def scal_curv(g, ricci, var):
     >>> from sympy.tensor.riemannian_geometry import scal_curv
     >>> from sympy import symbols, cos  
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1, -1):
+
     >>> A = Arraypy((2,2))
     >>> g = Tensor(A,(-1,-1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> r = ricci(g, arg, 't')
-    >>> sc_c = scal_curv(g, r, arg)
+
+    ricci is Ricci tensor must be a matrix, arraypy or valences with 
+    tensor indices (-1, -1):
+
+    >>> r = ricci(g, var, 't')
+
+    The Ricci tensor for the Riemann curvature tensor:
+    >>> sc_c = scal_curv(g, r, var)
     >>> print(sc_c)
     1
+
     """
     # Handling of input vector arguments var
     if not isinstance(var, (list, Arraypy, Tensor)):
@@ -876,16 +1027,34 @@ def k_sigma(X, Y, R, g, var):
     >>> from sympy.tensor.riemannian_geometry import k_sigma
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
-    >>> arg = [x1, x2]
+
+    var is a list of symbolic arguments. May be a list, one-dimensional 
+    arraypy or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    X, Y is a vector or a vector field. They can be a list, one-dimensional 
+    arraypy or tensor with valence of indices (+1):
+
     >>> X = [1,2]
     >>> Y = [3,4]
+
+    g is a metric tensor must be symmetric matrix, arraypy or tensor 
+    with valence indices (-1, -1):
+
     >>> A = Arraypy((2,2))
     >>> g = Tensor(A,(-1,-1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
     >>> g[1,1] = 1
-    >>> R = riemann(g, arg)
+
+    R is a Riemann curvature tensor must be symmetric matrix, arraypy or tensor
+    with valences indices (-1, -1, -1, 1):
+
+    >>> R = riemann(g, var)
+
+    The sectional curvature:
     >>> k_sig = k_sigma(X, Y, R, g, var)
     >>> print(k_sig)
     1
