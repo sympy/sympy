@@ -324,12 +324,14 @@ def test_genocchi():
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
     assert genocchi(m) == genocchi(m)
-    assert genocchi(n).rewrite(bernoulli) == 2 * (1 - 2 ** n) * bernoulli(n)
+    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
     assert genocchi(2 * n).is_odd
     assert genocchi(4 * n).is_positive
-    # This should work for 4 * n - 2, but fails due to some variation of issue
-    # 8632 ((4*n-2).is_positive returns None)
+    # these are the only 2 prime Genocchi numbers
+    assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
+    assert genocchi(8, evaluate=False).is_prime
     assert genocchi(4 * n + 2).is_negative
+    assert genocchi(4 * n - 2).is_negative
 
 
 def test_nC_nP_nT():

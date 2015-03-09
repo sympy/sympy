@@ -154,6 +154,7 @@ from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types, with_metaclass
 
+
 from random import shuffle
 
 
