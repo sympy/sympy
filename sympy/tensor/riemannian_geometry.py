@@ -236,7 +236,7 @@ def christoffel_2(g, var, type_output='t'):
     """Return the (-1, -1, +1) - tensor of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
-    
+
     Examples:
     =========
 
@@ -367,7 +367,7 @@ def christoffel_2(g, var, type_output='t'):
 
 def covar_der(X, g, var, type_output='t'):
     """Return the covariant derivative the vector field.
-    
+
     Examples:
     =========
 
@@ -660,7 +660,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
 def riemann(g, var, type_output='t'):
     """Return the Riemann curvature tensor of type (-1, -1, -1, +1)  
     for the given metric tensor.
-    
+
     Examples:
     =========
 
@@ -906,7 +906,7 @@ def ricci(riemann, var, type_output='t'):
 def scal_curv(g, ricci, var):
     """The scalar curvature (or the Ricci scalar)
     is the simplest curvature invariant of a Riemannian manifold.
-    
+
     Examples:
     =========
 
