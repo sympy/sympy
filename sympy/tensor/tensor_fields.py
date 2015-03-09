@@ -10,8 +10,16 @@ from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
 """Module tensor_fields contains functions for working with the tensor fields:
 -the calculation of the differential and the gradient of the function;
 -curl and divergence of a vector field;
--the calculation of the derivative of Li and the external differentiation
-of differential forms.
+-the calculation of the derivative of Li;
+-the calculation the Lie brackets of two vector fields;
+-the calculation the external differentiation of differential forms.
+
+All functions can be operated with input arguments specified as a tensor.
+Some of the input arguments of functions can be a list, matrix or array of
+arraypy. The starting index of tensor may not be equal to 0. In such instance,
+the object, which returns the function will have the starting index
+corresponding to the conditions of the call.
+Also lie_w function and dw involves working with multidimensional arrays.
 
 Functions are work with the multidimensional arrays arraypy and tensors,
 classes and methods which are contained in the module arraypy.
