@@ -93,13 +93,6 @@ API reference
 
 .. autofunction:: sympy.integrals.integrate
 .. autofunction:: sympy.integrals.line_integrate
-.. autofunction:: sympy.integrals.deltaintegrate
-.. autofunction:: sympy.integrals.ratint
-.. autofunction:: sympy.integrals.heurisch
-.. autofunction:: sympy.integrals.heurisch_wrapper
-.. autofunction:: sympy.integrals.trigintegrate
-.. autofunction:: sympy.integrals.manualintegrate
-.. autofunction:: sympy.integrals.manualintegrate.integral_steps
 
 The class `Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
 
