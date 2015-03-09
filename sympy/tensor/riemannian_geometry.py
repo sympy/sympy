@@ -13,6 +13,14 @@ from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
 - the Ricci tensor;
 - scalar and sectional curvature.
 
+To implement the functions used modules: matrices and tensor 
+(with classes arraypy and tensor). All functions take arguments, 
+the types of which may be such as list, matrix, or array arraypy tensor. 
+Some functions have optional parameter indicating the type of the function result. 
+Starting index of arguments with type Arraypy or Tensor is not necessarily 
+and by default equal to 0. The function determines the range of the index 
+in array to return the object with the same range of index.
+
 Functions are work with multidimensional arrays arraypy and tensors,
 classes and methods are contained in the module arraypy.
 
