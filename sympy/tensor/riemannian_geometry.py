@@ -18,8 +18,6 @@ classes and methods are contained in the module arraypy.
 
 """
 
-# ---------------- scal_prod --------------------------------
-
 
 def scal_prod(X, Y, g):
     """Returns scalar product of vectors g(X,Y).
@@ -29,6 +27,7 @@ def scal_prod(X, Y, g):
 
     >>> from sympy.tensor.riemannian_geometry import scal_prod
     >>> from sympy import symbols, cos
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> x1, x2 = symbols('x1, x2')
 
     X, Y is a vector or a vector field. They can be a list, 
@@ -105,19 +104,16 @@ def scal_prod(X, Y, g):
     return scal
 
 
-# ---------------- christoffel_1 --------------------------------
-
-
 def christoffel_1(g, var, type_output='t'):
-    """Return the (-1,-1,-1)-tensor of Christoffel symbols for the given metric.
+    """Return the (-1,-1,-1) - tensor of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of first kind that represents the
     Levi-Civita connection for the given metric.
-    christoffel_1[i,j,k] = (diff(g[j,k],x[i])+diff(g[i,k],x[j])-diff(g[i,j],x[k]))/2.
 
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import christoffel_1
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -140,7 +136,7 @@ def christoffel_1(g, var, type_output='t'):
     result and receiving the character or string value:
     - symbol 't' means that the type of the result will match tensor;
     - symbol 'a' means that the type of the result will be arraypy;
-    - default function takes a parameter 't', so that the result will be a tensor:
+    - default function takes a parameter 't', so that the result will be a tensor.
 
     The Christoffel symbols of the first kind:
     >>> ch_1 = christoffel_1(g, var, 't')
@@ -228,19 +224,16 @@ def christoffel_1(g, var, type_output='t'):
     return christoffel_1
 
 
-# ---------------- christoffel_2 --------------------------------
-
 def christoffel_2(g, var, type_output='t'):
     """Return the (-1, -1, +1) - tensor of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
-    christoffel_2[i,j,k] =
-    = Sum_{l}(g^{-1}[k,l]/2*(diff(g[j, l],x[i])+diff(g[i,l],x[j])-diff(g[i,j],x[l]))/2
-
+    
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import christoffel_2
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -250,10 +243,10 @@ def christoffel_2(g, var, type_output='t'):
     >>> var = [x1, x2]
 
     g is a metric tensor must be symmetric matrix, arraypy or tensor 
-    with valence indices (-1,-1):
+    with valence indices (-1, -1):
 
     >>> A = Arraypy((2, 2))
-    >>> g = tensor(A,(-1, -1))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
@@ -263,7 +256,7 @@ def christoffel_2(g, var, type_output='t'):
     result and receiving the character or string value:
     - symbol 't' means that the type of the result will match tensor;
     - symbol 'a' means that the type of the result will be arraypy;
-    - default function takes a parameter 't', so that the result will be a tensor:
+    - default function takes a parameter 't', so that the result will be a tensor.
 
     The Christoffel symbols of the second kind:
     >>> ch_2 = christoffel_2(g, var, 'a')
@@ -364,16 +357,14 @@ def christoffel_2(g, var, type_output='t'):
     return christoffel_2
 
 
-# ---------------- covar_der --------------------------------
-
 def covar_der(X, g, var, type_output='t'):
     """Return the covariant derivative the vector field.
-    nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k]).
-
+    
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import covar_der
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -401,7 +392,7 @@ def covar_der(X, g, var, type_output='t'):
     result and receiving the character or string value:
     - symbol 't' means that the type of the result will match tensor;
     - symbol 'a' means that the type of the result will be arraypy;
-    - default function takes a parameter 't', so that the result will be a tensor:
+    - default function takes a parameter 't', so that the result will be a tensor.
 
     The covariant derivative:
     >>> c_v = covar_der(X, g, var, 't')
@@ -502,16 +493,14 @@ def covar_der(X, g, var, type_output='t'):
     return cov_der
 
 
-# ---------------- covar_der_XY --------------------------------
-
 def covar_der_XY(X, Y, g, var, type_output='t'):
     """Return the covariant derivative the vector field along another field.
-    nabla_XY[i] = Sum_{i}(nabla X[i,j]*Y[i]).
 
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import covar_der_XY
+    >>> from sympy.tensot.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -540,12 +529,13 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     result and receiving the character or string value:
     - symbol 't' means that the type of the result will match tensor;
     - symbol 'a' means that the type of the result will be arraypy;
-    - default function takes a parameter 't', so that the result will be a tensor:
+    - default function takes a parameter 't', so that the result will be a tensor.
 
     The covariant derivative along another vector field:
     >>> c_v_XY = covar_der_XY(X, Y, g, var, 't')
     >>> print(c_v_XY)
-    -2*x1*x2**3*sin(x2)/cos(x2) + 6*x1*x2**2 + x2**3 - (x1 - cos(x2))*sin(x2)/cos(x2)  x1*x2**3*sin(x2)*cos(x2) + 2*sin(x2) + 1 
+    -2*x1*x2**3*sin(x2)/cos(x2) + 6*x1*x2**2 + x2**3 - (x1 - cos(x2)) \
+    *sin(x2)/cos(x2)  x1*x2**3*sin(x2)*cos(x2) + 2*sin(x2) + 1 
 
     """
     # Handling of input vector arguments var
@@ -659,17 +649,15 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     return cov_der_XY
 
 
-# ---------------- riemann --------------------------------
-
 def riemann(g, var, type_output='t'):
-    """Return the Riemann curvature tensor of type (-1,-1,-1,+1)  for the given metric tensor.
-    Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) +
-    + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p].
-
+    """Return the Riemann curvature tensor of type (-1, -1, -1, +1)  
+    for the given metric tensor.
+    
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import riemann
+    >>> from sympy.tensot.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -692,7 +680,7 @@ def riemann(g, var, type_output='t'):
     result and receiving the character or string value:
     - symbol 't' means that the type of the result will match tensor;
     - symbol 'a' means that the type of the result will be arraypy;
-    - default function takes a parameter 't', so that the result will be a tensor:
+    - default function takes a parameter 't', so that the result will be a tensor.
 
     The curvature tensor:
     >>> r = riemann(g, var, 'a')
@@ -794,17 +782,15 @@ def riemann(g, var, type_output='t'):
     return riemann
 
 
-# ---------------- ricci --------------------------------
-
 def ricci(riemann, var, type_output='t'):
-    """Return the tensor Ricci of type (-1,-1), is symmetric tensor
+    """Return the tensor Ricci of type (-1, -1), is symmetric tensor
     for given Riemann curvature tensor.
-    Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
 
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import ricci
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos   
     >>> x1, x2 = symbols('x1, x2')
 
@@ -832,7 +818,7 @@ def ricci(riemann, var, type_output='t'):
     result and receiving the character or string value:
     - symbol 't' means that the type of the result will match tensor;
     - symbol 'a' means that the type of the result will be arraypy;
-    - default function takes a parameter 't', so that the result will be a tensor:
+    - default function takes a parameter 't', so that the result will be a tensor.
 
     The Ricci tensor:
     >>> r = ricci(cur, var, 't')
@@ -912,12 +898,12 @@ def ricci(riemann, var, type_output='t'):
 def scal_curv(g, ricci, var):
     """The scalar curvature (or the Ricci scalar)
     is the simplest curvature invariant of a Riemannian manifold.
-    S=Ricci[j,k]*g_inv[j,k]
-
+    
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import scal_curv
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos  
     >>> x1, x2 = symbols('x1, x2')
 
@@ -1019,12 +1005,12 @@ def k_sigma(X, Y, R, g, var):
     """Return Sectional curvature of thу Riemannian space
     in the direction за two-dimensional area formed by
     vectors X, Y  for the given metric tensor.
-    K_sigma = Sum_{i,j,k,r,s}( g[r,s]*Riemann[i,j,k,r] *X[i]*Y[j]*Y[k]X[s])/ (scal_prod(X,X,g)*scal_prod(Y,Y,g) - scal_prod(X,Y,g)^2
 
     Examples:
     =========
 
     >>> from sympy.tensor.riemannian_geometry import k_sigma
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -1036,14 +1022,14 @@ def k_sigma(X, Y, R, g, var):
     X, Y is a vector or a vector field. They can be a list, one-dimensional 
     arraypy or tensor with valence of indices (+1):
 
-    >>> X = [1,2]
-    >>> Y = [3,4]
+    >>> X = [1, 2]
+    >>> Y = [3, 4]
 
     g is a metric tensor must be symmetric matrix, arraypy or tensor 
     with valence indices (-1, -1):
 
-    >>> A = Arraypy((2,2))
-    >>> g = Tensor(A,(-1,-1))
+    >>> A = Arraypy((2, 2))
+    >>> g = Tensor(A,(-1, -1))
     >>> g[0,0] = cos(x2)**2
     >>> g[0,1] = 0
     >>> g[1,0] = 0
