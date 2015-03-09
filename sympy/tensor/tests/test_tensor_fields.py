@@ -9,20 +9,24 @@ def test_df_varlist():
 
     print('test_df_varlist_l  <=== actual test code')
     assert df(f, var_list) == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(df(f, var_list), list)
     assert df(f, var_list, 'l') == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(df(f, var_list, 'l'), list)
 
     print('test_df_varlist_a  <=== actual test code')
     assert df(f, var_list, 'a') == list2arraypy(
-        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)])
+        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+         cos(x2 * x3 - x2)])
     assert isinstance(df(f, var_list, 'a'), Arraypy)
 
     print('test_df_varlist_t  <=== actual test code')
     assert df(f, var_list, 't') == list2tensor(
-        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)])
+        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+         cos(x2 * x3 - x2)])
     assert isinstance(df(f, var_list, 't'), Tensor)
     assert df(f, var_list, 't').type_pq == (0, 1)
 
@@ -37,23 +41,27 @@ def test_df_var_tnsr0():
 
     print('test_df_var_tnsr0  <=== actual test code')
     assert df(f, var_tnsr0) == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(df(f, var_tnsr0), list)
 
     print('test_df_var_tnsr0_l  <=== actual test code')
     assert df(f, var_tnsr0, 'l') == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(df(f, var_tnsr0, 'l'), list)
 
     print(
         'test_df_var_tnsr0_a  <=== actual test code')
     assert df(f, var_tnsr0, 'a') == list2arraypy(
-        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)])
+        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+         cos(x2 * x3 - x2)])
     assert isinstance(df(f, var_tnsr0, 'a'), Arraypy)
 
     print('test_df_var_tnsr0_t  <=== actual test code')
     assert df(f, var_tnsr0, 't') == list2tensor(
-        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)])
+        [2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+         cos(x2 * x3 - x2)])
     assert isinstance(df(f, var_tnsr0, 't'), Tensor)
     assert df(f, var_tnsr0, 't').type_pq == (0, 1)
 
@@ -75,12 +83,14 @@ def test_df_var_tnsr1():
 
     print('test_df_var_tnsr1  <=== actual test code')
     assert df(f, var_tnsr1) == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(df(f, var_tnsr1), list)
 
     print('test_df_var_tnsr1_l  <=== actual test code')
     assert df(f, var_tnsr1, 'l') == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(df(f, var_tnsr1, 'l'), list)
 
     print('test_df_var_tnsr1_a  <=== actual test code')
@@ -151,11 +161,13 @@ def test_grad_varlist():
 
     print('test_grad_l <=== actual test code')
     assert grad(f, var1, output_type='l') == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(grad(f, var1, output_type='l'), list)
 
     assert grad(f, var1) == [
-        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 * cos(x2 * x3 - x2)]
+        2 * x1 * x2, x1**2 + (x3 - 1) * cos(x2 * x3 - x2), x2 *
+        cos(x2 * x3 - x2)]
     assert isinstance(grad(f, var1), list)
 
     print('test_grad_a  <=== actual test code')
@@ -293,7 +305,8 @@ def test_lie_xy():
     res_ar[0] = 2 * x1**3 * x2**6 + 3 * x1**3 * x2**2 * \
         (x2 - cos(x3)) - 3 * x1 * x2**2 * (x2 * x3 - sin(x1 * x3))
     res_ar[1] = -x1 * x2**3 * x3 * cos(x1 * x3) - x2 * x3 + x3 * (x2 - cos(
-        x3)) + (-x1 + x3**3) * (-x1 * cos(x1 * x3) + x2) - (-x1**2 + x3**3) * sin(x3) + sin(x1 * x3)
+        x3)) + (-x1 + x3**3) * (-x1 * cos(x1 * x3) + x2) - (-x1**2 + x3**3) * \
+        sin(x3) + sin(x1 * x3)
     res_ar[2] = x1**3 * x2**3 - 2 * x1**2 * x2**3 + 3 * \
         x3**2 * (-x1 + x3**3) - 3 * x3**2 * (-x1**2 + x3**3)
     res_ten = res_ar.to_tensor(1)
@@ -364,7 +377,7 @@ def test_lie_xy():
     assert lie_xy(X, Y, arg, 't').type_pq == (1, 0)
 
 
-def test_rot():
+def test_curl():
     x1, x2, x3 = symbols('x1 x2 x3')
     X = [x1 * x2**3, x2 - cos(x3), x3**3 - x1]
     arg = [x1, x2, x3]
@@ -400,37 +413,37 @@ def test_rot():
     s1[2] = 1
     s1[3] = -3 * x1 * x2**2
 
-    print('test_rot_l <=== actual test code')
-    assert rot(X, arg) == [-sin(x3), 1, -3 * x1 * x2**2]
-    assert isinstance(rot(X, arg), list)
+    print('test_curl_l <=== actual test code')
+    assert curl(X, arg) == [-sin(x3), 1, -3 * x1 * x2**2]
+    assert isinstance(curl(X, arg), list)
 
-    print('test_rot_a <=== actual test code')
-    assert rot(X, arg, 'a') == list2arraypy([-sin(x3), 1, -3 * x1 * x2**2])
-    assert isinstance(rot(X, arg, 'a'), Arraypy)
+    print('test_curl_a <=== actual test code')
+    assert curl(X, arg, 'a') == list2arraypy([-sin(x3), 1, -3 * x1 * x2**2])
+    assert isinstance(curl(X, arg, 'a'), Arraypy)
 
-    print('test_rot_t <=== actual test code')
-    assert rot(X, arg, 't') == s0
-    assert isinstance(rot(X, arg, 't'), Tensor)
-    assert rot(X, arg, 't').type_pq == (1, 0)
+    print('test_curl_t <=== actual test code')
+    assert curl(X, arg, 't') == s0
+    assert isinstance(curl(X, arg, 't'), Tensor)
+    assert curl(X, arg, 't').type_pq == (1, 0)
 
-    print('test_rot_Xt_l <=== actual test code')
-    assert rot(k0, arg) == s0
-    assert isinstance(rot(k0, arg), Tensor)
-    assert rot(X, arg, 't').type_pq == (1, 0)
+    print('test_curl_Xt_l <=== actual test code')
+    assert curl(k0, arg) == s0
+    assert isinstance(curl(k0, arg), Tensor)
+    assert curl(X, arg, 't').type_pq == (1, 0)
 
-    print('test_rot_Xt_a <=== actual test code')
-    assert rot(k0, arg, 'a') == list2arraypy([-sin(x3), 1, -3 * x1 * x2**2])
-    assert isinstance(rot(k0, arg, 'a'), Arraypy)
+    print('test_curl_Xt_a <=== actual test code')
+    assert curl(k0, arg, 'a') == list2arraypy([-sin(x3), 1, -3 * x1 * x2**2])
+    assert isinstance(curl(k0, arg, 'a'), Arraypy)
 
-    print('test_rot_t <=== actual test code')
-    assert rot(k0, arg, 't') == s0
-    assert isinstance(rot(k0, arg, 't'), Tensor)
-    assert rot(X, arg, 't').type_pq == (1, 0)
+    print('test_curl_t <=== actual test code')
+    assert curl(k0, arg, 't') == s0
+    assert isinstance(curl(k0, arg, 't'), Tensor)
+    assert curl(X, arg, 't').type_pq == (1, 0)
 
-    print('test_rot_t <=== actual test code')
-    assert rot(k1, v1, 't') == s1
-    assert isinstance(rot(k1, v1, 't'), Tensor)
-    assert rot(k1, v1, 't').type_pq == (1, 0)
+    print('test_curl_t <=== actual test code')
+    assert curl(k1, v1, 't') == s1
+    assert isinstance(curl(k1, v1, 't'), Tensor)
+    assert curl(k1, v1, 't').type_pq == (1, 0)
 
 
 def test_lie_w():
