@@ -22,7 +22,6 @@ tests = [
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.specfun.tests',
-    'sympy.statistics.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
     ]

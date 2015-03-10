@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-    BooleanFunction, true, false, BooleanAtom)
+    BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -25,6 +25,8 @@ class Q:
     integer = Predicate('integer')
     irrational = Predicate('irrational')
     rational = Predicate('rational')
+    algebraic = Predicate('algebraic')
+    transcendental = Predicate('transcendental')
     negative = Predicate('negative')
     nonzero = Predicate('nonzero')
     positive = Predicate('positive')
@@ -71,6 +73,9 @@ def _extract_facts(expr, symbol):
             return expr.func
         else:
             return
+    if isinstance(expr, Not) and expr.args[0].func in (And, Or):
+        cls = Or if expr.args[0] == And else And
+        expr = cls(*[~arg for arg in expr.args[0].args])
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
         args = [x for x in args if x is not None]
@@ -331,6 +336,7 @@ known_facts = And(
     Implies(Q.integer, Q.rational),
     Implies(Q.rational, Q.algebraic),
     Implies(Q.algebraic, Q.complex),
+    Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
     Implies(Q.imaginary, Q.complex & ~Q.real),
     Implies(Q.imaginary, Q.antihermitian),
     Implies(Q.antihermitian, ~Q.hermitian),

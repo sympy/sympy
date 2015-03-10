@@ -1,14 +1,24 @@
 from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
-    parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
-    ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean, sum_of_four_squares, sum_of_three_squares,
+    square_factor, pairwise_prime, descent,
+    ldescent, diophantine, transformation_to_normal, sum_of_four_squares, sum_of_three_squares,
     prime_as_sum_of_two_squares, partition, power_representation)
 
-from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
-from sympy.utilities.pytest import XFAIL, slow
+from sympy import symbols, Integer, Matrix, simplify, Subs, S, factor_list
+from sympy.core.function import _mexpand
+from sympy.core.compatibility import range
+from sympy.functions.elementary.trigonometric import sin
+from sympy.utilities.pytest import slow, raises
 from sympy.utilities import default_sort_key
-from sympy.simplify.simplify import _mexpand
 
-x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
+x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", integer=True)
+
+def test_input_format():
+    raises(TypeError, lambda: diophantine(sin(x)))
+
+def test_univariate():
+
+    assert diop_solve((x - 1)*(x - 2)**2) == set([(Integer(1),), (Integer(2),)])
+    assert diop_solve((x - 1)*(x - 2)) == set([(Integer(1),), (Integer(2),)])
 
 
 def test_linear():
@@ -523,6 +533,22 @@ def test_power_representation():
 
             except StopIteration:
                 break
+
+
+def test_assumptions():
+    """
+    Test whether diophantine respects the assumptions.
+    """
+    #Test case taken from the below so question regarding assumptions in diophantine module
+    #http://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
+    m, n = symbols('m n', integer=True, positive=True)
+    diof = diophantine(n ** 2 + m * n - 500)
+    assert diof == set([(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)])
+
+    a, b = symbols('a b', integer=True, positive=False)
+    diof = diophantine(a*b + 2*a + 3*b - 6)
+    assert diof == set([(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)])
+
 
 
 def check_solutions(eq):

@@ -4,11 +4,11 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import is_sequence, as_int, range
+from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .matrices import MatrixBase, ShapeError, a2idx
 from .dense import Matrix
@@ -55,7 +55,8 @@ class SparseMatrix(MatrixBase):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = self._sympify(op(i, j))
+                        value = self._sympify(
+                            op(self._sympify(i), self._sympify(j)))
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
@@ -63,7 +64,7 @@ class SparseMatrix(MatrixBase):
                 for key in args[2].keys():
                     v = args[2][key]
                     if v:
-                        self._smat[key] = v
+                        self._smat[key] = self._sympify(v)
             elif is_sequence(args[2]):
                 if len(args[2]) != self.rows*self.cols:
                     raise ValueError(
@@ -95,7 +96,8 @@ class SparseMatrix(MatrixBase):
                 return self._smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    i = range(self.rows)[i]
+                    # XXX remove list() when PY2 support is dropped
+                    i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
                 else:
@@ -103,7 +105,8 @@ class SparseMatrix(MatrixBase):
                         raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
-                    j = range(self.cols)[j]
+                    # XXX remove list() when PY2 support is dropped
+                    j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
                 else:
@@ -136,7 +139,7 @@ class SparseMatrix(MatrixBase):
             return False
         if not all(self[i, i] == 1 for i in range(self.rows)):
             return False
-        return len(self) == self.rows
+        return len(self._smat) == self.rows
 
     def tolist(self):
         """Convert this sparse matrix into a list of nested Python lists.
@@ -221,7 +224,8 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(k))]
+        return [tuple(k + (self[k],)) for k in
+            sorted(list(self._smat.keys()), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
@@ -539,6 +543,49 @@ class SparseMatrix(MatrixBase):
         return rv
     extract.__doc__ = MatrixBase.extract.__doc__
 
+    @property
+    def is_hermitian(self):
+        """Checks if the matrix is Hermitian.
+
+        In a Hermitian matrix element i,j is the complex conjugate of
+        element j,i.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> a = SparseMatrix([[1, I], [-I, 1]])
+        >>> a
+        Matrix([
+        [ 1, I],
+        [-I, 1]])
+        >>> a.is_hermitian
+        True
+        >>> a[0, 0] = 2*I
+        >>> a.is_hermitian
+        False
+        >>> a[0, 0] = x
+        >>> a.is_hermitian
+        >>> a[0, 1] = a[1, 0]*I
+        >>> a.is_hermitian
+        False
+        """
+        def cond():
+            d = self._smat
+            yield self.is_square
+            if len(d) <= self.rows:
+                yield fuzzy_and(
+                    d[i, i].is_real for i, j in d if i == j)
+            else:
+                yield fuzzy_and(
+                    d[i, i].is_real for i in range(self.rows) if (i, i) in d)
+            yield fuzzy_and(
+                    ((self[i, j] - self[j, i].conjugate()).is_zero
+                    if (j, i) in d else False) for (i, j) in d)
+        return fuzzy_and(i for i in cond())
+
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
 
@@ -654,8 +701,7 @@ class SparseMatrix(MatrixBase):
 
         Symbolic Sparse Cholesky Factorization using Elimination Trees,
         Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582,
-        downloaded from http://tinyurl.com/9o2jsxj
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
         """
         # Algorithm 2.4, p 17 of reference
 
@@ -699,8 +745,7 @@ class SparseMatrix(MatrixBase):
 
         Symbolic Sparse Cholesky Factorization using Elimination Trees,
         Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582,
-        downloaded from http://tinyurl.com/9o2jsxj
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
         """
 
         R, parent = self.liupc()
@@ -1069,7 +1114,7 @@ class SparseMatrix(MatrixBase):
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
-        from immutable import ImmutableSparseMatrix
+        from .immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
 
     def nnz(self):
@@ -1079,15 +1124,7 @@ class SparseMatrix(MatrixBase):
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=6480, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
+        c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
         return cls(r, c, {})

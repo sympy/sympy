@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-import math
-
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -45,7 +43,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def tolerance(self):
         return self._context.tolerance
 
-    def __init__(self, prec=_default_precision, dps=None, tol=False):
+    def __init__(self, prec=_default_precision, dps=None, tol=None):
         context = MPContext(prec, dps, tol)
         context._parent = self
         self._context = context

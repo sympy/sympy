@@ -23,6 +23,12 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
+.. image:: https://pypip.in/v/sympy/badge.png
+    :target: https://pypi.python.org/pypi/sympy
+
+.. image:: https://pypip.in/d/sympy/badge.png
+    :target: https://pypi.python.org/pypi/sympy
+
 Get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
 
@@ -32,7 +38,7 @@ To get the git version do
 
     $ git clone git://github.com/sympy/sympy.git
 
-For other options (tarballs, debs, etc.), see See
+For other options (tarballs, debs, etc.), see
 http://docs.sympy.org/dev/install.html.
 
 Documentation and usage
@@ -75,7 +81,13 @@ if SymPy is installed.
 Installation
 ------------
 
-To install SymPy, simply run::
+SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`
+library (version >= 0.19).  You should install it first, please refer to
+the mpmath installation guide:
+
+https://github.com/fredrik-johansson/mpmath#1-download--installation
+
+To install SymPy itself, then simply run::
 
     $ python setup.py install
 

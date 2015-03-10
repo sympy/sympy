@@ -13,22 +13,78 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
-from sympy.core.compatibility import string_types
-from sympy.printing.codeprinter import CodePrinter
+from sympy.core import S
+from sympy.core.compatibility import string_types, range
+from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
 known_functions = {
-    "ceiling": [(lambda x: True, "ceil")],
     "Abs": [(lambda x: not x.is_integer, "fabs")],
+    "gamma": "tgamma",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "asin": "asin",
+    "acos": "acos",
+    "atan": "atan",
+    "atan2": "atan2",
+    "exp": "exp",
+    "log": "log",
+    "erf": "erf",
+    "sinh": "sinh",
+    "cosh": "cosh",
+    "tanh": "tanh",
+    "asinh": "asinh",
+    "acosh": "acosh",
+    "atanh": "atanh",
+    "floor": "floor",
+    "ceiling": "ceil",
 }
+
+# These are the core reserved words in the C language. Taken from:
+# http://crasseux.com/books/ctutorial/Reserved-words-in-C.html
+
+reserved_words = ['auto',
+                  'if',
+                  'break',
+                  'int',
+                  'case',
+                  'long',
+                  'char',
+                  'register',
+                  'continue',
+                  'return',
+                  'default',
+                  'short',
+                  'do',
+                  'sizeof',
+                  'double',
+                  'static',
+                  'else',
+                  'struct',
+                  'entry',
+                  'switch',
+                  'extern',
+                  'typedef',
+                  'float',
+                  'union',
+                  'for',
+                  'unsigned',
+                  'goto',
+                  'while',
+                  'enum',
+                  'void',
+                  'const',
+                  'signed',
+                  'volatile']
 
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
+    language = "C"
 
     _default_settings = {
         'order': None,
@@ -37,84 +93,39 @@ class CCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': True,
+        'dereference': set(),
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
     }
 
     def __init__(self, settings={}):
-        """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
-        for k, v in userfuncs.items():
-            if not isinstance(v, list):
-                userfuncs[k] = [(lambda *x: True, v)]
         self.known_functions.update(userfuncs)
+        self._dereference = set(settings.get('dereference', []))
+        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
-        """function to calculate score based on position among indices
-
-        This method is used to sort loops in an optimized order, see
-        CodePrinter._sort_optimized()
-        """
         return p*5
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
-    def doprint(self, expr, assign_to=None):
-        """
-        Actually format the expression as C code.
-        """
+    def _get_comment(self, text):
+        return "// {0}".format(text)
 
-        if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("CCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
+    def _declare_number_const(self, name, value):
+        return "double const {0} = {1};".format(name, value)
 
-        # keep a set of expressions that are not strictly translatable to C
-        # and number constants that must be declared and initialized
-        not_c = self._not_supported = set()
-        self._number_symbols = set()
+    def _format_code(self, lines):
+        return self.indent_code(lines)
 
-        # We treat top level Piecewise here to get if tests outside loops
-        lines = []
-        if isinstance(expr, C.Piecewise):
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
-                    lines.append("else {")
-                else:
-                    lines.append("else if (%s) {" % self._print(c))
-                code0 = self._doprint_a_piece(e, assign_to)
-                lines.extend(code0)
-                lines.append("}")
-        else:
-            code0 = self._doprint_a_piece(expr, assign_to)
-            lines.extend(code0)
-
-        # format the output
-        if self._settings["human"]:
-            frontlines = []
-            if len(not_c) > 0:
-                frontlines.append("// Not C:")
-                for expr in sorted(not_c, key=str):
-                    frontlines.append("// %s" % repr(expr))
-            for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("double const %s = %s;" % (name, value))
-            lines = frontlines + lines
-            lines = "\n".join(lines)
-            result = self.indent_code(lines)
-        else:
-            lines = self.indent_code("\n".join(lines))
-            result = self._number_symbols, not_c, lines
-        del self._not_supported
-        del self._number_symbols
-        return result
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _get_loop_opening_ending(self, indices):
-        """Returns a tuple (open_lines, close_lines) containing lists of codelines
-        """
         open_lines = []
         close_lines = []
         loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"
@@ -128,6 +139,8 @@ class CCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_Pow(self, expr):
+        if "Pow" in self.known_functions:
+            return self._print_Function(expr)
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
@@ -167,30 +180,52 @@ class CCodePrinter(CodePrinter):
         return '-HUGE_VAL'
 
     def _print_Piecewise(self, expr):
-        # This method is called only for inline if constructs
-        # Top level piecewise is handled in doprint()
-        ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
-                   for e, c in expr.args[:-1]]
-        last_line = ""
-        if expr.args[-1].cond == True:
-            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
+        lines = []
+        if expr.has(Assignment):
+            for i, (e, c) in enumerate(expr.args):
+                if i == 0:
+                    lines.append("if (%s) {" % self._print(c))
+                elif i == len(expr.args) - 1 and c == True:
+                    lines.append("else {")
+                else:
+                    lines.append("else if (%s) {" % self._print(c))
+                code0 = self._print(e)
+                lines.append(code0)
+                lines.append("}")
+            return "\n".join(lines)
         else:
-            ecpairs.append("(%s) ? (\n%s\n" %
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
-        code = "%s" + last_line
-        return code % ": ".join(ecpairs) + " )"
+            # The piecewise was used in an expression, need to do inline
+            # operators. This has the downside that inline operators will
+            # not work for statements that span multiple lines (Matrix or
+            # Indexed expressions).
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+                    for e, c in expr.args[:-1]]
+            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+            return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
-    def _print_Function(self, expr):
-        if expr.func.__name__ in self.known_functions:
-            cond_cfunc = self.known_functions[expr.func.__name__]
-            for cond, cfunc in cond_cfunc:
-                if cond(*expr.args):
-                    return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
-        if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
-            # inlined function
-            return self._print(expr._imp_(*expr.args))
-        return CodePrinter._print_Function(self, expr)
+    def _print_MatrixElement(self, expr):
+        return "{0}[{1}]".format(expr.parent, expr.j +
+                expr.i*expr.parent.shape[1])
+
+    def _print_Symbol(self, expr):
+
+        name = super(CCodePrinter, self)._print_Symbol(expr)
+
+        if expr in self._dereference:
+            return '(*{0})'.format(name)
+        else:
+            return name
+
+    def _print_sign(self, func):
+        return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -222,60 +257,118 @@ class CCodePrinter(CodePrinter):
 
 
 def ccode(expr, assign_to=None, **settings):
-    r"""Converts an expr to a string of c code
+    """Converts an expr to a string of c code
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        expr : sympy.core.Expr
-            a sympy expression to be converted
-        precision : optional
-            the precision for numbers such as pi [default=15]
-        user_functions : optional
-            A dictionary where keys are FunctionClass instances and values
-            are their string representations.  Alternatively, the
-            dictionary value can be a list of tuples i.e. [(argument_test,
-            cfunction_string)].  See below for examples.
-        human : optional
-            If True, the result is a single string that may contain some
-            constant declarations for the number symbols. If False, the
-            same information is returned in a more programmer-friendly
-            data structure.
-        contract: optional
-            If True, `Indexed` instances are assumed to obey
-            tensor contraction rules and the corresponding nested
-            loops over indices are generated. Setting contract = False
-            will not generate loops, instead the user is responsible
-            to provide values for the indices in the code. [default=True]
+    expr : Expr
+        A sympy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+    user_functions : dict, optional
+        A dictionary where the keys are string representations of either
+        ``FunctionClass`` or ``UndefinedFunction`` instances and the values
+        are their desired C string representations. Alternatively, the
+        dictionary value can be a list of tuples i.e. [(argument_test,
+        cfunction_string)].  See below for examples.
+    dereference : iterable, optional
+        An iterable of symbols that should be dereferenced in the printed code
+        expression. These would be values passed by address to the function.
+        For example, if ``dereference=[a]``, the resulting code would print
+        ``(*a)`` instead of ``a``.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols. If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text). [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
 
+    Examples
+    ========
 
-        Examples
-        ========
+    >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs, Function
+    >>> x, tau = symbols("x, tau")
+    >>> ccode((2*tau)**Rational(7, 2))
+    '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
+    >>> ccode(sin(x), assign_to="s")
+    's = sin(x);'
 
-        >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
-        >>> x, tau = symbols(["x", "tau"])
-        >>> ccode((2*tau)**Rational(7,2))
-        '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
-        >>> ccode(sin(x), assign_to="s")
-        's = sin(x);'
-        >>> custom_functions = {
-        ...   "ceiling": "CEIL",
-        ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
-        ...           (lambda x: x.is_integer, "ABS")]
-        ... }
-        >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
-        'fabs(x) + CEIL(x)'
-        >>> from sympy import Eq, IndexedBase, Idx
-        >>> len_y = 5
-        >>> y = IndexedBase('y', shape=(len_y,))
-        >>> t = IndexedBase('t', shape=(len_y,))
-        >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
-        >>> i = Idx('i', len_y-1)
-        >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-        >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
-        'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+    Simple custom printing can be defined for certain types by passing a
+    dictionary of {"type" : "function"} to the ``user_functions`` kwarg.
+    Alternatively, the dictionary value can be a list of tuples i.e.
+    [(argument_test, cfunction_string)].
 
+    >>> custom_functions = {
+    ...   "ceiling": "CEIL",
+    ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
+    ...           (lambda x: x.is_integer, "ABS")],
+    ...   "func": "f"
+    ... }
+    >>> func = Function('func')
+    >>> ccode(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
+    'f(fabs(x) + CEIL(x))'
+
+    ``Piecewise`` expressions are converted into conditionals. If an
+    ``assign_to`` variable is provided an if statement is created, otherwise
+    the ternary operator is used. Note that if the ``Piecewise`` lacks a
+    default term, represented by ``(expr, True)`` then an error will be thrown.
+    This is to prevent generating an expression that may not evaluate to
+    anything.
+
+    >>> from sympy import Piecewise
+    >>> expr = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(ccode(expr, tau))
+    if (x > 0) {
+    tau = x + 1;
+    }
+    else {
+    tau = x;
+    }
+
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+
+    >>> from sympy import Eq, IndexedBase, Idx
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+
+    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    must be provided to ``assign_to``. Note that any expression that can be
+    generated normally can also exist inside a Matrix:
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> A = MatrixSymbol('A', 3, 1)
+    >>> print(ccode(mat, A))
+    A[0] = pow(x, 2);
+    if (x > 0) {
+       A[1] = x + 1;
+    }
+    else {
+       A[1] = x;
+    }
+    A[2] = sin(x);
     """
+
     return CCodePrinter(settings).doprint(expr, assign_to)
 
 

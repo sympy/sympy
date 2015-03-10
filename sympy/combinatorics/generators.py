@@ -4,7 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def symmetric(n):
@@ -44,7 +44,7 @@ def cyclic(n):
     dihedral
     """
     gen = list(range(n))
-    for i in xrange(n):
+    for i in range(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
 
@@ -100,7 +100,7 @@ def dihedral(n):
         yield Permutation([3, 2, 1, 0])
     else:
         gen = list(range(n))
-        for i in xrange(n):
+        for i in range(n):
             yield Permutation(gen)
             yield Permutation(gen[::-1])
             gen = rotate_left(gen, 1)
@@ -255,7 +255,7 @@ def rubik(n):
     g = []  # container for the group's permutations
     I = list(range(6*n**2))  # the identity permutation used for checking
 
-    # define permutations corresonding to cw rotations of the planes
+    # define permutations corresponding to cw rotations of the planes
     # up TO the last plane from that direction; by not including the
     # last plane, the orientation of the cube is maintained.
 
@@ -276,7 +276,7 @@ def rubik(n):
         # record
         perm()
         # restore
-        # bring face to fron
+        # bring face to front
         UCW()
         fccw(i)
     # restore

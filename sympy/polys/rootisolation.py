@@ -30,7 +30,8 @@ from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+
 
 def dup_sturm(f, K):
     """
@@ -71,8 +72,8 @@ def dup_sturm(f, K):
     return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
-    """Compute the LMQ upper bound for `f`'s positive roots,
-       which was developed by Akritas-Strzebonski-Vigklas.
+    """Compute the LMQ upper bound for the positive roots of `f`;
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
        Reference:
        ==========
@@ -80,33 +81,34 @@ def dup_root_upper_bound(f, K):
            Values of the Positive Roots of Polynomials"
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
-    n, t, P = len(f), K.one, []
-
+    n, P = len(f), []
+    t = n * [K.one]
     if dup_LC(f, K) < 0:
         f = dup_neg(f, K)
-
     f = list(reversed(f))
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         if f[i] >= 0:
             continue
 
-        a, Q = K.log(-f[i], 2), []
+        a, QL = K.log(-f[i], 2), []
 
-        for j in xrange(i + 1, n):
+        for j in range(i + 1, n):
 
             if f[j] <= 0:
                 continue
 
-            q = t + a - K.log(f[j], 2)
-            Q.append(q // (j - i))
+            q = t[j] + a - K.log(f[j], 2)
+            QL.append([q // (j - i) , j])
 
-            t += 1
-
-        if not Q:
+        if not QL:
             continue
 
-        P.append(min(Q))
+        q = min(QL)
+
+        t[q[1]] = t[q[1]] + 1
+
+        P.append(q[0])
 
     if not P:
         return None
@@ -114,7 +116,8 @@ def dup_root_upper_bound(f, K):
         return K.get_field()(2)**(max(P) + 1)
 
 def dup_root_lower_bound(f, K):
-    """Compute LMQ lower bound for `f`'s positive roots.
+    """Compute the LMQ lower bound for the positive roots of `f`;
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
        Reference:
        ==========
@@ -209,7 +212,7 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fas
             d), K, fast=fast)
 
     if eps is not None and steps is not None:
-        for i in xrange(0, steps):
+        for i in range(0, steps):
             if abs(F(a, c) - F(b, d)) >= eps:
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
             else:
@@ -220,7 +223,7 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fas
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
         if steps is not None:
-            for i in xrange(0, steps):
+            for i in range(0, steps):
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
     if disjoint is not None:
@@ -735,6 +738,12 @@ A3 = 'A3'  # Axis #3 (-0): re < 0 and im = 0
 A4 = 'A4'  # Axis #4 (0-): re = 0 and im < 0
 
 _rules_simple = {
+    # Q --> Q (same) => no change
+    (Q1, Q1): 0,
+    (Q2, Q2): 0,
+    (Q3, Q3): 0,
+    (Q4, Q4): 0,
+
     # A -- CCW --> Q => +1/4 (CCW)
     (A1, Q1): 1,
     (A2, Q2): 1,
@@ -911,6 +920,7 @@ _rules_ambiguous = {
 }
 
 _values = {
+    0: [( 0, 1)],
     1: [(+1, 4)],
     2: [(-1, 4)],
     3: [(+1, 4)],
@@ -1302,7 +1312,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L1_L.append(((a, b), indices, h))
-                else:
+                if a >= x:
                     I_L1_R.append(((a, b), indices, h))
 
     for I in I_L3:
@@ -1326,7 +1336,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L3_L.append(((b, a), indices, h))
-                else:
+                if a >= x:
                     I_L3_R.append(((b, a), indices, h))
 
     Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
@@ -1408,7 +1418,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L2_B.append(((a, b), indices, h))
-                else:
+                if a >= y:
                     I_L2_U.append(((a, b), indices, h))
 
     for I in I_L4:
@@ -1432,7 +1442,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L4_B.append(((b, a), indices, h))
-                else:
+                if a >= y:
                     I_L4_U.append(((b, a), indices, h))
 
     Q_L1_B = Q_L1
@@ -1678,20 +1688,22 @@ class RealInterval(object):
         a, b, c, d = self.mobius
 
         if not self.neg:
-            return field(a, c)
+            if a*d < b*c:
+                return field(a, c)
+            return field(b, d)
         else:
+            if a*d > b*c:
+                return -field(a, c)
             return -field(b, d)
 
     @property
     def b(self):
         """Return the position of the right end. """
-        field = self.dom.get_field()
-        a, b, c, d = self.mobius
-
-        if not self.neg:
-            return field(b, d)
-        else:
-            return -field(a, c)
+        was = self.neg
+        self.neg = not was
+        rv = -self.a
+        self.neg = was
+        return rv
 
     @property
     def dx(self):
@@ -1726,35 +1738,40 @@ class RealInterval(object):
 
     def refine_disjoint(self, other):
         """Refine an isolating interval until it is disjoint with another one. """
-        while not self.is_disjoint(other):
-            self, other = self._inner_refine(), other._inner_refine()
+        expr = self
+        while not expr.is_disjoint(other):
+            expr, other = expr._inner_refine(), other._inner_refine()
 
-        return self, other
+        return expr, other
 
     def refine_size(self, dx):
         """Refine an isolating interval until it is of sufficiently small size. """
-        while not (self.dx < dx):
-            self = self._inner_refine()
+        expr = self
+        while not (expr.dx < dx):
+            expr = expr._inner_refine()
 
-        return self
+        return expr
 
     def refine_step(self, steps=1):
         """Perform several steps of real root refinement algorithm. """
-        for _ in xrange(steps):
-            self = self._inner_refine()
+        expr = self
+        for _ in range(steps):
+            expr = expr._inner_refine()
 
-        return self
+        return expr
 
     def refine(self):
         """Perform one step of real root refinement algorithm. """
         return self._inner_refine()
 
 class ComplexInterval(object):
-    """A fully qualified representation of a complex isolation interval. """
+    """A fully qualified representation of a complex isolation interval.
+    The printed form is shown as (x1, y1) x (x2, y2): the southwest x northeast
+    coordinates of the interval's rectangle."""
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
         """Initialize new complex interval with complete information. """
-        self.a, self.b = a, b
+        self.a, self.b = a, b  # the southwest and northeast corner: (x1, y1), (x2, y2)
         self.I, self.Q = I, Q
 
         self.f1, self.F1 = f1, F1
@@ -1818,8 +1835,13 @@ class ComplexInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return ((self.conj != other.conj) or ((self.bx <= other.ax or other.bx <= self.ax) or
-                                              (self.by <= other.ay or other.by <= self.ay)))
+        if self.conj != other.conj:
+            return True
+        re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
+        if re_distinct:
+            return True
+        im_distinct = (self.by <= other.ay or other.by <= self.ay)
+        return im_distinct
 
     def _inner_refine(self):
         """Internal one step complex root refinement procedure. """
@@ -1851,27 +1873,29 @@ class ComplexInterval(object):
 
     def refine_disjoint(self, other):
         """Refine an isolating interval until it is disjoint with another one. """
-        while not self.is_disjoint(other):
-            self, other = self._inner_refine(), other._inner_refine()
+        expr = self
+        while not expr.is_disjoint(other):
+            expr, other = expr._inner_refine(), other._inner_refine()
 
-        return self, other
+        return expr, other
 
     def refine_size(self, dx, dy=None):
         """Refine an isolating interval until it is of sufficiently small size. """
         if dy is None:
             dy = dx
+        expr = self
+        while not (expr.dx < dx and expr.dy < dy):
+            expr = expr._inner_refine()
 
-        while not (self.dx < dx and self.dy < dy):
-            self = self._inner_refine()
-
-        return self
+        return expr
 
     def refine_step(self, steps=1):
         """Perform several steps of complex root refinement algorithm. """
-        for _ in xrange(steps):
-            self = self._inner_refine()
+        expr = self
+        for _ in range(steps):
+            expr = expr._inner_refine()
 
-        return self
+        return expr
 
     def refine(self):
         """Perform one step of complex root refinement algorithm. """

@@ -1,4 +1,4 @@
-from sympy.core.compatibility import default_sort_key, as_int, ordered
+from sympy.core.compatibility import default_sort_key, as_int, ordered, iterable
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
 
@@ -13,6 +13,16 @@ def test_default_sort_key():
 def test_as_int():
     raises(ValueError, lambda : as_int(1.1))
     raises(ValueError, lambda : as_int([]))
+    raises(ValueError, lambda : as_int(S.NaN))
+    raises(ValueError, lambda : as_int(S.Infinity))
+    raises(ValueError, lambda : as_int(S.NegativeInfinity))
+    raises(ValueError, lambda : as_int(S.ComplexInfinity))
+
+
+def test_iterable():
+    assert iterable(0) is False
+    assert iterable(1) is False
+    assert iterable(None) is False
 
 
 def test_ordered():

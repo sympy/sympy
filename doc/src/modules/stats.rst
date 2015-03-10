@@ -80,7 +80,7 @@ Mechanics
 SymPy Stats employs a relatively complex class hierarchy.
 
 ``RandomDomain``\s are a mapping of variables to possible values. For example we
-might say that the symbol ``Symbol('x')`` can take on the values 
+might say that the symbol ``Symbol('x')`` can take on the values
 `\{1,2,3,4,5,6\}`.
 
 .. class:: RandomDomain

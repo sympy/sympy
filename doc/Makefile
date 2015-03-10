@@ -9,7 +9,7 @@ SPHINXVER    = 0.5
 SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
 PAPER        =
 
-SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/*.svg)
+SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
 ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
@@ -19,7 +19,7 @@ ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
 
 .PHONY: changes cheatsheet clean help html html-errors \
         htmlapi htmlhelp info latex linkcheck livehtml \
-        texinfo web logo
+        texinfo web logo man
 
 .SUFFIXES: .pdf .svg
 
@@ -39,6 +39,7 @@ help:
 	@echo "  texinfo     to make Texinfo files"
 	@echo "  web         to make files usable by Sphinx.web"
 	@echo "  logo        generate logos from src/logo/sympy.svg"
+	@echo "  man         build manpage"
 
 clean:
 	-rm -rf _build
@@ -107,14 +108,19 @@ linkcheck:
 	      "or in _build/linkcheck/output.txt."
 
 livehtml:
-	livereload -b _build/html
+	livereload _build/html
 
-cheatsheet: _build/cheatsheet/cheatsheet.pdf
+cheatsheet: _build/cheatsheet/cheatsheet.pdf _build/cheatsheet/combinatoric_cheatsheet.pdf
 
 _build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
+
+_build/cheatsheet/cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
+	mkdir -p _build/cheatsheet
+	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
+	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
 
 texinfo:
 	mkdir -p _build/texinfo
@@ -130,6 +136,9 @@ info:
 	@echo "Running Texinfo files through makeinfo..."
 	make -C _build/texinfo info
 	@echo "makeinfo finished; the Info files are in _build/texinfo."
+
+man: man/isympy.xml
+	docbook2x-man --to-stdout $< > man/isympy.1
 
 _build/logo/sympy-notailtext-favicon.ico: logo
 

@@ -1,10 +1,11 @@
-from sympy.core import (Rational, Symbol, S, Float, Integer, Number, Pow,
-Basic, I, nan)
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.exponential import exp
+from sympy.core import (
+    Rational, Symbol, S, Float, Integer, Number, Pow,
+    Basic, I, nan, pi, symbols, oo, zoo)
+from sympy.core.tests.test_evalf import NS
+from sympy.functions.elementary.miscellaneous import sqrt, cbrt
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.series.order import O
-from sympy.utilities.pytest import XFAIL, slow
 
 
 def test_rational():
@@ -125,7 +126,7 @@ def test_issue_4362():
     eq = eqn(npos, dpos, pow)
     assert eq.is_Pow and eq.as_numer_denom() == (npos**pow, dpos**pow)
     eq = eqn(npos, dneg, pow)
-    assert eq.is_Pow and eq.as_numer_denom() == ((-npos)**pow, (-dneg)**pow)
+    assert eq.is_Pow is False and eq.as_numer_denom() == ((-npos)**pow, (-dneg)**pow)
     eq = eqn(nneg, dpos, pow)
     assert not eq.is_Pow or eq.as_numer_denom() == (nneg**pow, dpos**pow)
     eq = eqn(nneg, dneg, pow)
@@ -133,7 +134,7 @@ def test_issue_4362():
     eq = eqn(npos, dpos, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == (dpos**pow, npos**pow)
     eq = eqn(npos, dneg, -pow)
-    assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-npos)**pow)
+    assert eq.is_Pow is False and eq.as_numer_denom() == (-(-npos)**pow*(-dneg)**pow, npos)
     eq = eqn(nneg, dpos, -pow)
     assert not eq.is_Pow or eq.as_numer_denom() == (dpos**pow, nneg**pow)
     eq = eqn(nneg, dneg, -pow)
@@ -186,7 +187,7 @@ def test_issue_4362():
 
 
 def test_Pow_signs():
-    """Cf. issues 1496 and 2151"""
+    """Cf. issues 4595 and 5250"""
     x = Symbol('x')
     y = Symbol('y')
     n = Symbol('n', even=True)
@@ -225,6 +226,8 @@ def test_pow_as_base_exp():
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
+    # issue 8344:
+    assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
 def test_issue_6100():
@@ -290,18 +293,7 @@ def test_issue_6782():
 
 def test_issue_6653():
     x = Symbol('x')
-    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 7) == \
-        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**7)
-    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 8) == \
-        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**8)
-
-
-@slow
-def test_issue_6653s():
-    x = Symbol('x')
-    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 15) == \
-        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + 4039*x**8/5760 - 5393*x**10/6720 + \
-        13607537*x**12/14515200 - 532056047*x**14/479001600 + O(x**15)
+    assert (1 / sqrt(1 + sin(x**2))).series(x, 0, 3) == 1 - x**2/2 + O(x**3)
 
 
 def test_issue_6429():
@@ -312,3 +304,50 @@ def test_issue_6429():
     assert f.taylor_term(0, x) == (c**2)**0.5
     assert f.taylor_term(1, x) == 0.5*x*(c**2)**(-0.5)
     assert f.taylor_term(2, x) == -0.125*x**2*(c**2)**(-1.5)
+
+
+def test_issue_7638():
+    f = pi/log(sqrt(2))
+    assert ((1 + I)**(I*f/2))**0.3 == (1 + I)**(0.15*I*f)
+    # if 1/3 -> 1.0/3 this should fail since it cannot be shown that the
+    # sign will be +/-1; for the previous "small arg" case, it didn't matter
+    # that this could not be proved
+    assert (1 + I)**(4*I*f) == ((1 + I)**(12*I*f))**(S(1)/3)
+
+    assert (((1 + I)**(I*(1 + 7*f)))**(S(1)/3)).exp == S(1)/3
+    r = symbols('r', real=True)
+    assert sqrt(r**2) == abs(r)
+    assert cbrt(r**3) != r
+    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(5/S(4))
+    p = symbols('p', positive=True)
+    assert cbrt(p**2) == p**(2/S(3))
+    assert NS(((0.2 + 0.7*I)**(0.7 + 1.0*I))**(0.5 - 0.1*I), 1) == '0.4 + 0.2*I'
+    assert sqrt(1/(1 + I)) == sqrt((1 - I)/2)  # or 1/sqrt(1 + I)
+    e = 1/(1 - sqrt(2))
+    assert sqrt(e) == I/sqrt(-1 + sqrt(2))
+    assert e**-S.Half == -I*sqrt(-1 + sqrt(2))
+    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp == S.Half
+    assert sqrt(r**(4/S(3))) != r**(2/S(3))
+    assert sqrt((p + I)**(4/S(3))) == (p + I)**(2/S(3))
+    assert sqrt((p - p**2*I)**2) == p - p**2*I
+    assert sqrt((p + r*I)**2) != p + r*I
+    e = (1 + I/5)
+    assert sqrt(e**5) == e**(5*S.Half)
+    assert sqrt(e**6) == e**3
+    assert sqrt((1 + I*r)**6) != (1 + I*r)**3
+
+
+def test_issue_8582():
+    assert 1**oo is nan
+    assert 1**(-oo) is nan
+    assert 1**zoo is nan
+    assert 1**(oo + I) is nan
+    assert 1**(1 + I*oo) is nan
+    assert 1**(oo + I*oo) is nan
+
+
+def test_issue_8650():
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert (n**n).is_positive is True
+    x = 5*n+5
+    assert (x**(5*(n+1))).is_positive is True

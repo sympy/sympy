@@ -1,15 +1,14 @@
 import copy
 import pickle
 import warnings
-import sys
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta, BasicType, ClassRegistry
+from sympy.core.core import BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer, Number,
-        NumberSymbol, Rational, Float)
+from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
+        Rational, Float)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
         StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.add import Add
@@ -17,10 +16,8 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
     WildFunction
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
-from sympy.functions import exp
-#from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 from sympy.core.compatibility import HAS_GMPY, PY3
 from sympy.utilities.exceptions import SymPyDeprecationWarning

@@ -5,7 +5,7 @@ from sympy import (
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
-                                      test_numerically as tn)
+                                      verify_numerically as tn)
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -55,7 +55,6 @@ def test_gamma():
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
 
     assert conjugate(gamma(x)) == gamma(conjugate(x))
-    assert gamma(w).is_real is True
 
     assert expand_func(gamma(x + Rational(3, 2))) == \
         (x + Rational(1, 2))*gamma(x + Rational(1, 2))
@@ -69,14 +68,23 @@ def test_gamma():
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
     assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
 
+    # Issue 8526
+    k = Symbol('k', integer=True, nonnegative=True)
+    assert isinstance(gamma(k), gamma)
+    assert gamma(-k) == zoo
+
+
+def test_gamma_rewrite():
+    assert gamma(n).rewrite(factorial) == factorial(n - 1)
+
 
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - EulerGamma*x + x**2*(EulerGamma**2/2 + pi**2/12) + O(x**3)
     assert gamma(x).series(x, -1, 3) == \
-        -1/x + EulerGamma - 1 + x*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma) \
-        + x**2*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma**3/6 -
-        polygamma(2, 1)/6 + EulerGamma*pi**2/12 + EulerGamma) + O(x**3)
+        -1/(x + 1) + EulerGamma - 1 + (x + 1)*(-1 - pi**2/12 - EulerGamma**2/2 + \
+       EulerGamma) + (x + 1)**2*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma**3/6 - \
+       polygamma(2, 1)/6 + EulerGamma*pi**2/12 + EulerGamma) + O((x + 1)**3, (x, -1))
 
 
 def tn_branch(s, func):
@@ -293,6 +301,54 @@ def test_polygamma_expand_func():
 def test_loggamma():
     raises(TypeError, lambda: loggamma(2, 3))
     raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
+
+    assert loggamma(-1) == oo
+    assert loggamma(-2) == oo
+    assert loggamma(0) == oo
+    assert loggamma(1) == 0
+    assert loggamma(2) == 0
+    assert loggamma(3) == log(2)
+    assert loggamma(4) == log(6)
+
+    n = Symbol("n", integer=True, positive=True)
+    assert loggamma(n) == log(gamma(n))
+    assert loggamma(-n) == oo
+    assert loggamma(n/2) == log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + S.Half))
+
+    from sympy import I
+
+    assert loggamma(oo) == oo
+    assert loggamma(-oo) == zoo
+    assert loggamma(I*oo) == zoo
+    assert loggamma(-I*oo) == zoo
+    assert loggamma(zoo) == zoo
+    assert loggamma(nan) == nan
+
+    L = loggamma(S(16)/3)
+    E = -5*log(3) + loggamma(S(1)/3) + log(4) + log(7) + log(10) + log(13)
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(19/S(4))
+    E = -4*log(4) + loggamma(S(3)/4) + log(3) + log(7) + log(11) + log(15)
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(S(23)/7)
+    E = -3*log(7) + log(2) + loggamma(S(2)/7) + log(9) + log(16)
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(19/S(4)-7)
+    E = -log(9) - log(5) + loggamma(S(3)/4) + 3*log(4) - 3*I*pi
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(23/S(7)-6)
+    E = -log(19) - log(12) - log(5) + loggamma(S(2)/7) + 3*log(7) - 3*I*pi
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
     assert loggamma(x).diff(x) == polygamma(0, x)
     s1 = loggamma(1/(x + sin(x)) + cos(x)).nseries(x, n=4)
     s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2) + \
@@ -337,3 +393,33 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+
+
+def test_issue_8657():
+    n = Symbol('n', negative=True, integer=True)
+    m = Symbol('m', integer=True)
+    o = Symbol('o', positive=True)
+    p = Symbol('p', negative=True, integer=False)
+    assert gamma(n).is_real is None
+    assert gamma(m).is_real is None
+    assert gamma(o).is_real is True
+    assert gamma(p).is_real is True
+    assert gamma(w).is_real is None
+
+
+def test_issue_8524():
+    x = Symbol('x', positive=True)
+    y = Symbol('y', negative=True)
+    z = Symbol('z', positive=False)
+    p = Symbol('p', negative=False)
+    q = Symbol('q', integer=True)
+    r = Symbol('r', integer=False)
+    e = Symbol('e', even=True, negative=True)
+    assert gamma(x).is_positive is True
+    assert gamma(y).is_positive is None
+    assert gamma(z).is_positive is None
+    assert gamma(p).is_positive is None
+    assert gamma(q).is_positive is None
+    assert gamma(r).is_positive is None
+    assert gamma(e + S.Half).is_positive is True
+    assert gamma(e - S.Half).is_positive is False

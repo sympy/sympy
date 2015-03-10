@@ -3,12 +3,14 @@
 Installation
 ------------
 
-The SymPy CAS can be installed on virtually any computer with Python 2.6 or
-above. SymPy does not require any special Python modules: let us know if you
-have any problems with SymPy on a standard Python install. The current
-recommended method of installation is directly from the source files.
-Alternatively, executables are available for Windows, and some Linux
-distributions have SymPy packages available.
+The SymPy CAS can be installed on virtually any computer with Python
+2.6 or above. SymPy does require `mpmath`_ Python library to be
+installed first.  The current recommended method of installation is
+directly from the source files.  Alternatively, executables are
+available for Windows, and some Linux distributions have SymPy
+packages available.
+
+SymPy officially supports Python 2.6, 2.7, 3.2, 3.3, 3.4, and PyPy.
 
 Source
 ======
@@ -17,10 +19,6 @@ SymPy currently recommends that users install directly from the source files.
 You will first have to download the source files via the archive. Download the
 latest release (tar.gz) from the `downloads site`_ and open it with your
 operating system's standard decompression utility.
-
-When downloading the archive, make sure to get the correct version (Python 2 or
-Python 3). If you're not sure which one to use, you probably want the Python 2
-version. Note that you can install both if you want.
 
 After the download is complete, you should have a folder called "sympy". From
 your favorite command line terminal, change directory into that folder and
@@ -76,7 +74,7 @@ only enabled when certain libraries are installed.  For example, without
 Matplotlib, only simple text-based plotting is enabled.  With the IPython
 notebook or qtconsole, you can get nicer `\LaTeX` printing by running
 ``init_printing()``.  An easy way to get all these libraries in addition to
-SymPy is to install `Anaconda <http://continuum.io/downloads.html>`_, which is
+SymPy is to install `Anaconda <http://continuum.io/downloads>`_, which is
 a free Python distribution from Continuum Analytics that includes SymPy,
 Matplotlib, IPython, NumPy, and many more useful packages for scientific
 computing.
@@ -122,3 +120,4 @@ an `issue ticket`_.
 .. _Gitter: https://gitter.im/sympy/sympy
 .. _issue ticket: https://github.com/sympy/sympy/issues
 .. _mailing list: http://groups.google.com/group/sympy
+.. _mpmath: http://mpmath.org/

@@ -10,7 +10,7 @@ from sympy.matrices.expressions import MatrixExpr
 
 
 def sympify_matrix(arg):
-    return ImmutableMatrix(arg)
+    return arg.as_immutable()
 sympify_converter[MatrixBase] = sympify_matrix
 
 class ImmutableMatrix(MatrixExpr, DenseMatrix):
@@ -75,6 +75,9 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
         """
         if not hasattr(other, 'shape') or self.shape != other.shape:
             return S.false
+        if isinstance(other, MatrixExpr) and not isinstance(
+                other, ImmutableMatrix):
+            return None
         diff = self - other
         return sympify(diff.is_zero)
 

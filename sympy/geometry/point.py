@@ -39,16 +39,10 @@ class Point(GeometryEntity):
     Raises
     ======
 
-    NotImplementedError
-        When trying to create a point with more than two dimensions.
-        When `intersection` is called with object other than a Point.
     TypeError
         When trying to add or subtract points with different dimensions.
-
-    Notes
-    =====
-
-    Currently only 2-dimensional points are supported.
+        When trying to create a point with more than two dimensions.
+        When `intersection` is called with object other than a Point.
 
     See Also
     ========
@@ -88,7 +82,7 @@ class Point(GeometryEntity):
             if iterable(args[0]):
                 args = args[0]
             if len(args) != 2:
-                raise NotImplementedError(
+                raise ValueError(
                     "Only two dimensional points currently supported")
         coords = Tuple(*args)
         if check:
@@ -99,18 +93,6 @@ class Point(GeometryEntity):
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))
         return GeometryEntity.__new__(cls, *coords)
-
-    def __hash__(self):
-        return super(Point, self).__hash__()
-
-    def __eq__(self, other):
-        ts, to = type(self), type(other)
-        if ts is not to:
-            return False
-        return self.args == other.args
-
-    def __lt__(self, other):
-        return self.args < other.args
 
     def __contains__(self, item):
         return item == self
@@ -219,7 +201,7 @@ class Point(GeometryEntity):
         # Use only unique points.
         points = list(set(points))
         if not all(isinstance(p, Point) for p in points):
-            raise TypeError('Must pass only Point objects')
+            raise TypeError('Must pass only 3D Point objects')
 
         if len(points) == 0:
             return False
@@ -398,10 +380,7 @@ class Point(GeometryEntity):
         Point(0.5, 1.5)
 
         """
-        if prec is None:
-            coords = [x.evalf(**options) for x in self.args]
-        else:
-            coords = [x.evalf(prec, **options) for x in self.args]
+        coords = [x.evalf(prec, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     n = evalf

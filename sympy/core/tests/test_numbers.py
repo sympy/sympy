@@ -1,14 +1,20 @@
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple, latex)
-from sympy.core.basic import _aresame
+                   Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
+                   AlgebraicNumber, simplify)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
-from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
-from sympy.mpmath import mpf
-from sympy.utilities.pytest import XFAIL, slow, raises
-from sympy import mpmath
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+    mpf_norm, comp)
+from mpmath import mpf
+from sympy.utilities.pytest import XFAIL, raises
+import mpmath
+
+
+def same_and_same_prec(a, b):
+    # stricter matching for Floats
+    return a == b and a._prec == b._prec
 
 
 def test_integers_cache():
@@ -332,10 +338,10 @@ def test_Rational_cmp():
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
-    assert (n1 < S.NaN) is S.false
-    assert (n1 <= S.NaN) is S.false
-    assert (n1 > S.NaN) is S.false
-    assert (n1 <= S.NaN) is S.false
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Float():
@@ -367,26 +373,29 @@ def test_Float():
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
-    assert Float('+inf').is_bounded is False
     assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
     assert Float('+inf').is_positive is True
-    assert Float('+inf').is_unbounded is True
+    assert Float('+inf').is_infinite is True
     assert Float('+inf').is_zero is False
 
-    assert Float('-inf').is_bounded is False
     assert Float('-inf').is_finite is False
     assert Float('-inf').is_negative is True
     assert Float('-inf').is_positive is False
-    assert Float('-inf').is_unbounded is True
+    assert Float('-inf').is_infinite is True
     assert Float('-inf').is_zero is False
 
-    assert Float('0.0').is_bounded is True
-    assert Float('0.0').is_finite is False
+    assert Float('0.0').is_finite is True
     assert Float('0.0').is_negative is False
     assert Float('0.0').is_positive is False
-    assert Float('0.0').is_unbounded is False
+    assert Float('0.0').is_infinite is False
     assert Float('0.0').is_zero is True
+
+    # rationality properties
+    assert Float(1).is_rational is None
+    assert Float(1).is_irrational is None
+    assert sqrt(2).n(15).is_rational is None
+    assert sqrt(2).n(15).is_irrational is None
 
     # do not automatically evalf
     def teq(a):
@@ -399,11 +408,13 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
+    # long integer
     i = 12345678901234567890
-    assert _aresame(Float(12, ''), Float('12', ''))
-    assert _aresame(Float(Integer(i), ''), Float(i, ''))
-    assert _aresame(Float(i, ''), Float(str(i), 20))
-    assert not _aresame(Float(str(i)), Float(i, ''))
+    assert same_and_same_prec(Float(12, ''), Float('12', ''))
+    assert same_and_same_prec(Float(Integer(i), ''), Float(i, ''))
+    assert same_and_same_prec(Float(i, ''), Float(str(i), 20))
+    assert same_and_same_prec(Float(str(i)), Float(i, ''))
+    assert same_and_same_prec(Float(i), Float(i, ''))
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
@@ -442,6 +453,15 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
+
+    assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+
+
+def test_Float_default_to_highprec_from_str():
+    s = str(pi.evalf(128))
+    assert same_and_same_prec(Float(s), Float(s, ''))
+
 
 def test_Float_eval():
     a = Float(3.2)
@@ -698,6 +718,27 @@ def test_Infinity_inequations():
     raises(TypeError, lambda: I > -oo)
     raises(TypeError, lambda: I >= -oo)
 
+    assert oo > -oo and oo >= -oo
+    assert (oo < -oo) == False and (oo <= -oo) == False
+    assert -oo < oo and -oo <= oo
+    assert (-oo > oo) == False and (-oo >= oo) == False
+
+    assert (oo < oo) == False  # issue 7775
+    assert (oo > oo) == False
+    assert (-oo > -oo) == False and (-oo < -oo) == False
+    assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
+
+    x = Symbol('x')
+    b = Symbol('b', finite=True, real=True)
+    assert (x < oo) == Lt(x, oo)  # issue 7775
+    assert b < oo and b > -oo and b <= oo and b >= -oo
+    assert oo > b and oo >= b and (oo < b) == False and (oo <= b) == False
+    assert (-oo > b) == False and (-oo >= b) == False and -oo < b and -oo <= b
+    assert (oo < x) == Lt(oo, x) and (oo > x) == Gt(oo, x)
+    assert (oo <= x) == Le(oo, x) and (oo >= x) == Ge(oo, x)
+    assert (-oo < x) == Lt(-oo, x) and (-oo > x) == Gt(-oo, x)
+    assert (-oo <= x) == Le(-oo, x) and (-oo >= x) == Ge(-oo, x)
+
 
 def test_NaN():
     assert nan == nan
@@ -715,14 +756,14 @@ def test_NaN():
     assert 1/nan == nan
     assert 1/(-nan) == nan
     assert 8/nan == nan
-    assert not nan > 0
-    assert not nan < 0
-    assert not nan >= 0
-    assert not nan <= 0
-    assert not 0 < nan
-    assert not 0 > nan
-    assert not 0 <= nan
-    assert not 0 >= nan
+    raises(TypeError, lambda: nan > 0)
+    raises(TypeError, lambda: nan < 0)
+    raises(TypeError, lambda: nan >= 0)
+    raises(TypeError, lambda: nan <= 0)
+    raises(TypeError, lambda: 0 < nan)
+    raises(TypeError, lambda: 0 > nan)
+    raises(TypeError, lambda: 0 <= nan)
+    raises(TypeError, lambda: 0 >= nan)
     assert S.One + nan == nan
     assert S.One - nan == nan
     assert S.One*nan == nan
@@ -733,6 +774,8 @@ def test_NaN():
     assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
     assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
+    # test Pow._eval_power's handling of NaN
+    assert Pow(nan, 0, evaluate=False)**2 == 1
 
 
 def test_special_numbers():
@@ -990,7 +1033,7 @@ def test_bug_sqrt():
 
 
 def test_pi_Pi():
-    "Test, that pi (instance) is imported, but Pi (class) is not"
+    "Test that pi (instance) is imported, but Pi (class) is not"
     from sympy import pi
     with raises(ImportError):
         from sympy import Pi
@@ -1022,8 +1065,7 @@ def test_issue_3423():
 
 
 def test_issue_3449():
-    x = Symbol("x", real=True)
-    assert sqrt(x**2) == abs(x)
+    x = Symbol("x")
     assert sqrt(x - 1).subs(x, 5) == 2
 
 
@@ -1217,23 +1259,23 @@ def test_Rational_int():
 
 
 def test_zoo():
-    b = Symbol('b', bounded=True)
+    b = Symbol('b', finite=True)
     nz = Symbol('nz', nonzero=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     im = Symbol('i', imaginary=True)
     c = Symbol('c', complex=True)
-    pb = Symbol('pb', positive=True, bounded=True)
-    nb = Symbol('nb', negative=True, bounded=True)
-    imb = Symbol('ib', imaginary=True, bounded=True)
+    pb = Symbol('pb', positive=True, finite=True)
+    nb = Symbol('nb', negative=True, finite=True)
+    imb = Symbol('ib', imaginary=True, finite=True)
     for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
               b, nz, p, n, im, pb, nb, imb, c]:
-        if i.is_bounded and (i.is_real or i.is_imaginary):
+        if i.is_finite and (i.is_real or i.is_imaginary):
             assert i + zoo is zoo
             assert i - zoo is zoo
             assert zoo + i is zoo
             assert zoo - i is zoo
-        elif i.is_bounded is not False:
+        elif i.is_finite is not False:
             assert (i + zoo).is_Add
             assert (i - zoo).is_Add
             assert (zoo + i).is_Add
@@ -1279,37 +1321,21 @@ def test_zoo():
 def test_issue_4122():
     x = Symbol('x', nonpositive=True)
     assert (oo + x).is_Add
-    x = Symbol('x', bounded=True)
-    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', finite=True)
-    assert (oo + x).is_Add  # x could be imaginary
-    x = Symbol('x', infinitesimal=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
-    x = Symbol('x', bounded=True, real=True)
-    assert oo + x == oo
     x = Symbol('x', finite=True, real=True)
-    assert oo + x == oo
-    x = Symbol('x', infinitesimal=True, real=True)
     assert oo + x == oo
 
     # similarily for negative infinity
     x = Symbol('x', nonnegative=True)
     assert (-oo + x).is_Add
-    x = Symbol('x', bounded=True)
-    assert (-oo + x).is_Add
     x = Symbol('x', finite=True)
-    assert (-oo + x).is_Add
-    x = Symbol('x', infinitesimal=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
     assert -oo + x == -oo
-    x = Symbol('x', bounded=True, real=True)
-    assert -oo + x == -oo
     x = Symbol('x', finite=True, real=True)
-    assert -oo + x == -oo
-    x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo
 
 
@@ -1342,8 +1368,8 @@ def test_issue_4172():
 
 @XFAIL
 def test_mpmath_issues():
-    from sympy.mpmath.libmp.libmpf import _normalize
-    import sympy.mpmath.libmp as mlib
+    from mpmath.libmp.libmpf import _normalize
+    import mpmath.libmp as mlib
     rnd = mlib.round_nearest
     mpf = (0, long(0), -123, -1, 53, rnd)  # nan
     assert _normalize(mpf, 53) != (0, long(0), 0, 0)
@@ -1352,7 +1378,7 @@ def test_mpmath_issues():
     mpf = (1, long(0), -789, -3, 53, rnd)  # -inf
     assert _normalize(mpf, 53) != (0, long(0), 0, 0)
 
-    from sympy.mpmath.libmp.libmpf import fnan
+    from mpmath.libmp.libmpf import fnan
     assert mlib.mpf_eq(fnan, fnan)
 
 
@@ -1383,8 +1409,7 @@ def test_int_NumberSymbols():
 
 
 def test_issue_6640():
-    from sympy.mpmath.libmp.libmpf import (
-        _normalize as mpf_normalize, finf, fninf, fzero)
+    from mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False
@@ -1412,3 +1437,45 @@ def test_latex():
     assert latex(zoo) == r"\tilde{\infty}"
     assert latex(nan) == r"\mathrm{NaN}"
     assert latex(I) == r"i"
+
+
+def test_issue_7742():
+    assert -oo % 1 == nan
+
+
+def test_simplify_AlgebraicNumber():
+    A = AlgebraicNumber
+    e = 3**(S(1)/6)*(3 + (135 + 78*sqrt(3))**(S(2)/3))/(45 + 26*sqrt(3))**(S(1)/3)
+    assert simplify(A(e)) == A(12)  # wester test_C20
+
+    e = (41 + 29*sqrt(2))**(S(1)/5)
+    assert simplify(A(e)) == A(1 + sqrt(2))  # wester test_C21
+
+    e = (3 + 4*I)**(Rational(3, 2))
+    assert simplify(A(e)) == A(2 + 11*I)  # issue 4401
+
+
+def test_Float_idempotence():
+    x = Float('1.23', '')
+    y = Float(x)
+    z = Float(x, 15)
+    assert same_and_same_prec(y, x)
+    assert not same_and_same_prec(z, x)
+    x = Float(10**20)
+    y = Float(x)
+    z = Float(x, 15)
+    assert same_and_same_prec(y, x)
+    assert not same_and_same_prec(z, x)
+
+
+def test_comp():
+    # sqrt(2) = 1.414213 5623730950...
+    a = sqrt(2).n(7)
+    assert comp(a, 1.41421346) is False
+    assert comp(a, 1.41421347)
+    assert comp(a, 1.41421366)
+    assert comp(a, 1.41421367) is False
+    assert comp(sqrt(2).n(2), '1.4')
+    assert comp(sqrt(2).n(2), Float(1.4, 2), '')
+    raises(ValueError, lambda: comp(sqrt(2).n(2), 1.4, ''))
+    assert comp(sqrt(2).n(2), Float(1.4, 3), '') is False

@@ -1,8 +1,13 @@
 from __future__ import print_function, division
 
+try:
+    from pyglet.gl.gl import c_float
+except ImportError:
+    pass
+
 from pyglet.gl import *
 from sympy.core import S
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
@@ -69,7 +74,7 @@ def model_to_screen(x, y, z):
 
 
 def vec_subs(a, b):
-    return tuple(a[i] - b[i] for i in xrange(len(a)))
+    return tuple(a[i] - b[i] for i in range(len(a)))
 
 
 def billboard_matrix():
@@ -141,7 +146,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     if abs(r_min - r_max) < 0.001:
         return []
     try:
-        xrange(int(r_min - r_max))
+        range(int(r_min - r_max))
     except TypeError:
         return []
     if r_min > r_max:
@@ -155,7 +160,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     r_steps = int((r_max - r_min)/stride)
     if max_steps and r_steps > max_steps:
         return strided_range(o_min, o_max, stride*2)
-    return [r_min] + list(r_min + e*stride for e in xrange(1, r_steps + 1)) + [r_max]
+    return [r_min] + list(r_min + e*stride for e in range(1, r_steps + 1)) + [r_max]
 
 
 def parse_option_string(s):

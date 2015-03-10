@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from sympy import sqrt, exp, S, Float, Symbol, pi, I
+from sympy import sqrt, exp, S, pi, I
 from sympy.physics.quantum.constants import hbar
 
 
@@ -29,6 +29,13 @@ def wavefunction(n, x):
     1
     >>> integrate(wavefunction(4, x)*wavefunction(-4, x), (x, 0, 2*pi))
     1
+
+    References
+    ==========
+
+    .. [1] Atkins, Peter W.; Friedman, Ronald (2005). Molecular Quantum
+           Mechanics (4th ed.).  Pages 71-73.
+
     """
     # sympify arguments
     n, x = S(n), S(x)
@@ -56,6 +63,12 @@ def energy(n, m, r):
     2*hbar**2/(m*r**2)
     >>> energy(-2, 2.0, 3.0)
     0.111111111111111*hbar**2
+
+    References
+    ==========
+
+    .. [1] Atkins, Peter W.; Friedman, Ronald (2005). Molecular Quantum
+           Mechanics (4th ed.).  Pages 71-73.
 
     """
     n, m, r = S(n), S(m), S(r)

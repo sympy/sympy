@@ -1,12 +1,11 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
-from sympy.physics.mechanics import (Dyadic, Particle, Point, ReferenceFrame,
+from sympy import sin, cos, tan, pi, symbols, Matrix
+from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody, Vector)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
-                                     kinetic_energy, linear_momentum, \
-                                     outer, potential_energy)
-from sympy.physics.mechanics.functions import _mat_inv_mul
-from sympy.utilities.pytest import raises
+                                     kinetic_energy, linear_momentum,
+                                     outer, potential_energy, msubs,
+                                     find_dynamicsymbols)
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -130,20 +129,31 @@ def test_potential_energy():
     assert potential_energy(A, Pa) == m * g * h + M * g * H
 
 
-def test_mat_inv_mul():
-    # Uses SymPy generated primes as matrix entries, so each entry in
-    # each matrix should be symbolic and unique, allowing proper comparison.
-    # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
-    from sympy import Matrix, prime
+def test_msubs():
+    a, b = symbols('a, b')
+    x, y, z = dynamicsymbols('x, y, z')
+    # Test simple substitution
+    expr = Matrix([[a*x + b, x*y.diff() + y],
+                   [x.diff().diff(), z + sin(z.diff())]])
+    sol = Matrix([[a + b, y],
+                  [x.diff().diff(), 1]])
+    sd = {x: 1, z: 1, z.diff(): 0, y.diff(): 0}
+    assert msubs(expr, sd) == sol
+    # Test smart substitution
+    expr = cos(x + y)*tan(x + y) + b*x.diff()
+    sd = {x: 0, y: pi/2, x.diff(): 1}
+    assert msubs(expr, sd, smart=True) == b + 1
 
-    # going to form 3 matrices
-    # 1 n x n
-    # different n x n
-    # 1 n x 2n
-    n = 3
-    m1 = Matrix(n, n, lambda i, j: prime(i * n + j + 2))
-    m2 = Matrix(n, n, lambda i, j: prime(i * n + j + 5))
-    m3 = Matrix(n, n, lambda i, j: prime(i + j * n + 2))
 
-    assert _mat_inv_mul(m1, m2) == m1.inv() * m2
-    assert _mat_inv_mul(m1, m3) == m1.inv() * m3
+def test_find_dynamicsymbols():
+    a, b = symbols('a, b')
+    x, y, z = dynamicsymbols('x, y, z')
+    expr = Matrix([[a*x + b, x*y.diff() + y],
+                   [x.diff().diff(), z + sin(z.diff())]])
+    # Test finding all dynamicsymbols
+    sol = set([x, y.diff(), y, x.diff().diff(), z, z.diff()])
+    assert find_dynamicsymbols(expr) == sol
+    # Test finding all but those in sym_list
+    exclude = [x, y, z]
+    sol = set([y.diff(), x.diff().diff(), z.diff()])
+    assert find_dynamicsymbols(expr, exclude) == sol

@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Tuple, FiniteSet
-from sympy.core.compatibility import as_int
+from sympy.core import Basic, Tuple
+from sympy.sets import FiniteSet
+from sympy.core.compatibility import as_int, range
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
@@ -380,7 +381,7 @@ class Polyhedron(Basic):
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
         obj._corners = tuple(corners)  # in order given
-        obj._faces = FiniteSet(faces)
+        obj._faces = FiniteSet(*faces)
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
         # use the identity permutation if none are given

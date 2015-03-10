@@ -21,7 +21,7 @@ Credits and Copyright
 
 This code was taken from Sage with the permission of all authors:
 
-http://groups.google.com/group/sage-devel/browse_thread/thread/33835976efbb3b7f
+https://groups.google.com/forum/#!topic/sage-devel/M4NZdu-7O38
 
 AUTHORS:
 
@@ -34,8 +34,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 from __future__ import print_function, division
 
 from sympy import Integer, pi, sqrt, sympify
-#from sage.rings.complex_number import ComplexNumber
-#from sage.rings.finite_rings.integer_mod import Mod
+from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients

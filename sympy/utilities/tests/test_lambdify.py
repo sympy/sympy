@@ -1,9 +1,9 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
-    symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
-    Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
+    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
+    Float, Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy import mpmath
+import mpmath
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -11,9 +11,11 @@ from sympy.external import import_module
 import math
 import sympy
 
+
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+numexpr = import_module('numexpr')
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -54,8 +56,6 @@ def test_own_namespace():
 def test_own_module():
     f = lambdify(x, sin(x), math)
     assert f(0) == 0.0
-    f = lambdify(x, sympy.ceiling(x), math)
-    raises(NameError, lambda: f(4.5))
 
 
 def test_bad_args():
@@ -96,7 +96,7 @@ def test_math_lambda():
     f = lambdify(x, sin(x), "math")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    raises(ValueError, lambda: f(x))
+    raises(TypeError, lambda: f(x))
            # if this succeeds, it can't be a python math function
 
 
@@ -156,6 +156,29 @@ def test_numpy_translation_abs():
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
+
+def test_numexpr_printer():
+    if not numexpr:
+        skip("numexpr not installed.")
+
+    # if translation/printing is done incorrectly then evaluating
+    # a lambdified numexpr expression will throw an exception
+    from sympy.printing.lambdarepr import NumExprPrinter
+    from sympy import S
+
+    blacklist = ('where', 'complex', 'contains')
+    arg_tuple = (x, y, z) # some functions take more than one argument
+    for sym in NumExprPrinter._numexpr_functions.keys():
+        if sym in blacklist:
+            continue
+        ssym = S(sym)
+        if hasattr(ssym, '_nargs'):
+            nargs = ssym._nargs[0]
+        else:
+            nargs = 1
+        args = arg_tuple[:nargs]
+        f = lambdify(args, ssym(*args), modules='numexpr')
+        assert f(*(1, )*nargs) is not None
 
 #================== Test some functions ============================
 
@@ -263,16 +286,40 @@ def test_numpy_matrix():
     if not numpy:
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
-    sol_mat = numpy.matrix([[1, 2], [numpy.sin(3) + 4, 1]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     #Lambdify array first, to ensure return to matrix as default
-    f_arr = lambdify((x, y, z), A, use_array=True)(1, 2, 3)
-    f_mat = lambdify((x, y, z), A)(1, 2, 3)
-    numpy.testing.assert_allclose(f_mat, sol_mat)
-    numpy.testing.assert_allclose(f_arr, sol_arr)
+    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.array}, 'numpy'])
+    numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     #Check that the types are arrays and matrices
-    assert isinstance(f_mat, numpy.matrix)
-    assert isinstance(f_arr, numpy.ndarray)
+    assert isinstance(f(1, 2, 3), numpy.ndarray)
+
+def test_numpy_numexpr():
+    if not numpy:
+        skip("numpy not installed.")
+    if not numexpr:
+        skip("numexpr not installed.")
+    a, b, c = numpy.random.randn(3, 128, 128)
+    # ensure that numpy and numexpr return same value for complicated expression
+    expr = sin(x) + cos(y) + tan(z)**2 + Abs(z-y)*acos(sin(y*z)) + \
+           Abs(y-z)*acosh(2+exp(y-x))- sqrt(x**2+I*y**2)
+    npfunc = lambdify((x, y, z), expr, modules='numpy')
+    nefunc = lambdify((x, y, z), expr, modules='numexpr')
+    assert numpy.allclose(npfunc(a, b, c), nefunc(a, b, c))
+
+def test_numexpr_userfunctions():
+    if not numpy:
+        skip("numpy not installed.")
+    if not numexpr:
+        skip("numexpr not installed.")
+    a, b = numpy.random.randn(2, 10)
+    uf = type('uf', (Function, ),
+              {'eval' : classmethod(lambda x, y : y**2+1)})
+    func = lambdify(x, 1-uf(x), modules='numexpr')
+    assert numpy.allclose(func(a), -(a**2))
+
+    uf = implemented_function(Function('uf'), lambda x, y : 2*x*y+1)
+    func = lambdify((x, y), uf(x, y), modules='numexpr')
+    assert numpy.allclose(func(a, b), 2*a*b+1)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
@@ -393,6 +440,32 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
+
+def test_python_keywords():
+    # Test for issue 7452. The automatic dummification should ensure use of
+    # Python reserved keywords as symbol names will create valid lambda
+    # functions. This is an additional regression test.
+    python_if = symbols('if')
+    expr = python_if / 2
+    f = lambdify(python_if, expr)
+    assert f(4.0) == 2.0
+
+
+def test_lambdify_docstring():
+    func = lambdify((w, x, y, z), w + x + y + z)
+    assert func.__doc__ == (
+            "Created with lambdify. Signature:\n\n"
+            "func(w, x, y, z)\n\n"
+            "Expression:\n\n"
+            "w + x + y + z")
+    syms = symbols('a1:26')
+    func = lambdify(syms, sum(syms))
+    assert func.__doc__ == (
+            "Created with lambdify. Signature:\n\n"
+            "func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,\n"
+            "        a16, a17, a18, a19, a20, a21, a22, a23, a24, a25)\n\n"
+            "Expression:\n\n"
+            "a1 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a2 + a20 +...")
 
 
 #================== Test special printers ==========================

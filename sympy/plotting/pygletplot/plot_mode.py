@@ -5,7 +5,7 @@ from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 
 
 class PlotMode(PlotObject):
@@ -209,13 +209,7 @@ class PlotMode(PlotObject):
         class definition: Cartesian2D._register()
         """
         name = cls.__name__
-        #try:
         cls._init_mode()
-
-        #except Exception as e:
-        #    raise RuntimeError( ("Failed to initialize "
-        #                      "plot mode %s. Reason: %s")
-        #                       % (name, (str(e))) )
 
         try:
             i, d = cls.i_var_count, cls.d_var_count

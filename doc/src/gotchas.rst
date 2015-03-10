@@ -10,13 +10,13 @@ Introduction
 ============
 
 SymPy runs under the `Python Programming Language
-<http://www.python.org/>`_, so there are some things that may behave
+<https://www.python.org/>`_, so there are some things that may behave
 differently than they do in other, independent computer algebra systems
 like Maple or Mathematica.  These are some of the gotchas and pitfalls
 that you may encounter when using SymPy.  See also the `FAQ
 <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
-remainder of the SymPy Docs, and the `official Python Tutorial
-<http://docs.python.org/tutorial/>`_.
+remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.python.org/3/tutorial/>`_.
+
 
 If you are already familiar with C or Java, you might also want to look
 at this `4 minute Python tutorial
@@ -394,7 +394,7 @@ The values can be given as strings, integers, floats, or rationals.
     100.000000000000
     >>> Float('100', 5)
     100.00
-    
+
     - to have the precision match the number of digits, the null string
       can be used for the precision
 
@@ -423,7 +423,7 @@ to evaluate them to 20 digits, a difference will become apparent:
     0.25000000000000000000
     >>> r.n(20)
     0.14285278320312500000
-    
+
     It is important to realize that although a Float is being displayed in
     decimal at aritrary precision, it is actually stored in binary. Once the
     Float is created, its binary information is set at the given precision.

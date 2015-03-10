@@ -3,15 +3,31 @@ from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show
-from sympy.utilities.pytest import skip
+from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
+from sympy.core.decorators import wraps
 
 from tempfile import NamedTemporaryFile
-import warnings
 import os
+import sys
+
+
+class MockPrint(object):
+
+    def write(self, s):
+        pass
+
+def disable_print(func, *args, **kwargs):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        sys.stdout = MockPrint()
+        func(*args, **kwargs)
+        sys.stdout = sys.__stdout__
+    return wrapper
 
 unset_show()
+
 
 # XXX: We could implement this as a context manager instead
 # That would need rewriting the plot_and_save() function
@@ -69,6 +85,8 @@ def plot_and_save(name):
 
     p = plot((x**2, (x, -5, 5)), (x**3, (x, -3, 3)))
     p.save(tmp_file('%s_line_multiple_range' % name))
+
+    raises(ValueError, lambda: plot(x, y))
 
     #parametric 2d plots.
     #Single plot with default range.
@@ -222,9 +240,33 @@ def test_matplotlib():
     else:
         skip("Matplotlib not the default backend")
 
-# Tests for exceptiion handling in experimental_lambdify
+# Tests for exception handling in experimental_lambdify
 def test_experimental_lambify():
     x = Symbol('x')
-    lambdify([x], Max(x, 5))
+    f = lambdify([x], Max(x, 5))
+    # XXX should f be tested? If f(2) is attempted, an
+    # error is raised because a complex produced during wrapping of the arg
+    # is being compared with an int.
     assert Max(2, 5) == 5
-    assert Max(7, 5) == 7
+    assert Max(5, 7) == 7
+
+    x = Symbol('x-3')
+    f = lambdify([x], x + 1)
+    assert f(1) == 2
+
+@disable_print
+def test_append_issue_7140():
+    x = Symbol('x')
+    p1 = plot(x)
+    p2 = plot(x**2)
+    p3 = plot(x + 2)
+
+    # append a series
+    p2.append(p1[0])
+    assert len(p2._series) == 2
+
+    with raises(TypeError):
+        p1.append(p2)
+
+    with raises(TypeError):
+        p1.append(p2._series)

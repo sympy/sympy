@@ -1,13 +1,14 @@
 from __future__ import print_function, division
 
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
-        sample, sample_iter, random_symbols, independent, dependent)
-from sympy import sqrt, simplify
+        sample, sample_iter, random_symbols, independent, dependent,
+        sampling_density)
+from sympy import sqrt
 
 __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
-        'moment', 'cmoment']
+        'moment', 'cmoment', 'sampling_density']
 
 
 
@@ -92,7 +93,7 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> from sympy.stats import Exponential, covariance
     >>> from sympy import Symbol
 
-    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> X = Exponential('X', rate)
     >>> Y = Exponential('Y', rate)
 
@@ -125,7 +126,7 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> from sympy.stats import Exponential, correlation
     >>> from sympy import Symbol
 
-    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> X = Exponential('X', rate)
     >>> Y = Exponential('Y', rate)
 
@@ -171,7 +172,7 @@ def smoment(X, n, condition=None, **kwargs):
 
     >>> from sympy.stats import skewness, Exponential, smoment
     >>> from sympy import Symbol
-    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
     >>> smoment(Y, 4)
     9
@@ -200,7 +201,7 @@ def skewness(X, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> skewness(X)
     0
-    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
     >>> skewness(Y)
     2

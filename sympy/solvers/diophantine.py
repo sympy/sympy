@@ -1,15 +1,17 @@
 from __future__ import print_function, division
 
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
+from sympy import (Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
     isprime, nextprime, integer_nthroot)
 
-from sympy.simplify.simplify import rad_rationalize, _mexpand
-from sympy.ntheory.modular import solve_congruence
-from sympy.utilities import default_sort_key
+from sympy.core.function import _mexpand
+from sympy.simplify.simplify import rad_rationalize
+from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+from sympy.core.relational import Eq
+from sympy.solvers.solvers import check_assumptions
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
@@ -17,7 +19,7 @@ __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_so
 'diop_general_sum_of_squares', 'partition', 'sum_of_three_squares', 'sum_of_four_squares']
 
 
-def diophantine(eq, param=symbols("t", Integer=True)):
+def diophantine(eq, param=symbols("t", integer=True)):
     """
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
@@ -25,6 +27,13 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x+y = 0` and `x-y = 0` are solved independently
     and combined. Each term is solved by calling ``diop_solve()``.
+
+    Output of ``diophantine()`` is a set of tuples. Each tuple represents a
+    solution of the input equation. In a tuple, solution for each variable is
+    listed according to the alphabetic order of input variables. i.e. if we have
+    an equation with two variables `a` and `b`, first element of the tuple will
+    give the solution for `a` and the second element will give the solution for
+    `b`.
 
     Usage
     =====
@@ -56,6 +65,13 @@ def diophantine(eq, param=symbols("t", Integer=True)):
 
     diop_solve()
     """
+    if isinstance(eq, Eq):
+        eq = eq.lhs - eq.rhs
+
+    eq = Poly(eq).as_expr()
+    if not eq.is_polynomial() or eq.is_number:
+        raise TypeError("Equation input format not supported")
+
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
 
@@ -74,13 +90,10 @@ def diophantine(eq, param=symbols("t", Integer=True)):
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic",  "general_sum_of_squares"]:
+        elif eq_type in ["binary_quadratic",  "general_sum_of_squares", "univariate"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
-
-        elif eq_type == "univariable":
-            sols = solution
 
     return sols
 
@@ -97,28 +110,27 @@ def merge_solution(var, var_t, solution):
     original equation. This function converts `(t, t)` into `(t, t, n_{1})`
     where `n_{1}` is an integer parameter.
     """
-    # currently more than 3 parameters are not required.
-    n1, n2, n3 = symbols("n1, n2, n3", Integer=True)
-    params = [n1, n2, n3]
-
     l = []
-    count1 = 0
-    count2 = 0
 
-    if None not in solution:
+    if None in solution:
+        return ()
 
-        for v in var:
-            if v in var_t:
-                l.append(solution[count1])
-                count1 = count1 + 1
-            else:
-                l.append(params[count2])
-                count2 = count2 + 1
+    solution = iter(solution)
+    params = numbered_symbols("n", Integer=True, start=1)
+    for v in var:
+        if v in var_t:
+            l.append(next(solution))
+        else:
+            l.append(next(params))
+
+    for val, symb in zip(l, var):
+        if check_assumptions(val, **symb.assumptions0) is False:
+            return tuple()
 
     return tuple(l)
 
 
-def diop_solve(eq, param=symbols("t", Integer=True)):
+def diop_solve(eq, param=symbols("t", integer=True)):
     """
     Solves the diophantine equation ``eq``.
 
@@ -172,13 +184,13 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
 
-    elif eq_type == "univariable":
+    elif eq_type == "univariate":
         l = solve(eq)
         s = set([])
 
         for soln in l:
             if isinstance(soln, Integer):
-                s.add(soln)
+                s.add((soln,))
         return s
 
     elif eq_type == "general_sum_of_squares":
@@ -194,7 +206,7 @@ def classify_diop(eq):
     as a list and coefficients are returned as a dict with the key being the
     respective term and the constant term is keyed to Integer(1). Type is an
     element in the set {"linear", "binary_quadratic", "general_pythagorean",
-    "homogeneous_ternary_quadratic", "univariable", "general_sum_of_squares"}
+    "homogeneous_ternary_quadratic", "univariate", "general_sum_of_squares"}
 
     Usage
     =====
@@ -232,7 +244,7 @@ def classify_diop(eq):
             raise TypeError("Coefficients should be Integers")
 
     if len(var) == 1:
-        diop_type = "univariable"
+        diop_type = "univariate"
     elif Poly(eq).total_degree() == 1:
         diop_type = "linear"
     elif Poly(eq).total_degree() == 2 and len(var) == 2:
@@ -321,7 +333,7 @@ def classify_diop(eq):
         raise NotImplementedError("Still not implemented")
 
 
-def diop_linear(eq, param=symbols("t", Integer=True)):
+def diop_linear(eq, param=symbols("t", integer=True)):
     """
     Solves linear diophantine equations.
 
@@ -505,7 +517,7 @@ def divisible(a, b):
     return igcd(int(a), int(b)) == abs(int(b))
 
 
-def diop_quadratic(eq, param=symbols("t", Integer=True)):
+def diop_quadratic(eq, param=symbols("t", integer=True)):
     """
     Solves quadratic diophantine equations.
 
@@ -641,7 +653,7 @@ def _diop_quadratic(var, coeff, t):
                 solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
                     + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-                for z0 in xrange(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
                     if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
                         l.add((solve_x(z0), solve_y(z0)))
 
@@ -746,7 +758,7 @@ def _diop_quadratic(var, coeff, t):
 
                     done = False
 
-                    for i in xrange(k):
+                    for i in range(k):
 
                         X_1 = X*T + D*U*Y
                         Y_1 = X*U + Y*T
@@ -788,7 +800,7 @@ def is_solution_quad(var, coeff, u, v):
     return _mexpand(Subs(eq, (x, y), (u, v)).doit()) == 0
 
 
-def diop_DN(D, N, t=symbols("t", Integer=True)):
+def diop_DN(D, N, t=symbols("t", integer=True)):
     """
     Solves the equation `x^2 - Dy^2 = N`.
 
@@ -873,7 +885,7 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
             else:
                 sol = []
 
-                for y in xrange(floor(sign(N)*(N - 1)/(2*r)) + 1):
+                for y in range(floor(sign(N)*(N - 1)/(2*r)) + 1):
                     if isinstance(sqrt(D*y**2 + N), Integer):
                         sol.append((sqrt(D*y**2 + N), y))
 
@@ -1097,7 +1109,7 @@ def PQa(P_0, Q_0, D):
         Q_i = (D - P_i**2)/Q_i
 
 
-def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
+def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     """
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
@@ -1168,7 +1180,7 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
                 return [(S.Zero, S.Zero)]
 
 
-    for y in xrange(L1, L2):
+    for y in range(L1, L2):
         if isinstance(sqrt(N + D*y**2), Integer):
             x = sqrt(N + D*y**2)
             sol.append((x, y))
@@ -1491,12 +1503,12 @@ def check_param(x, y, a, t):
 
     Here ``x`` and ``y`` are functions of ``t``.
     """
-    k, m, n = symbols("k, m, n", Integer=True)
+    k, m, n = symbols("k, m, n", integer=True)
     p = Wild("p", exclude=[k])
     q = Wild("q", exclude=[k])
     ok = False
 
-    for i in xrange(a):
+    for i in range(a):
 
         z_x = _mexpand(Subs(x, t, a*k + i).doit()).match(p*k + q)
         z_y = _mexpand(Subs(y, t, a*k + i).doit()).match(p*k + q)
@@ -1545,7 +1557,7 @@ def diop_ternary_quadratic(eq):
     Usage
     =====
 
-    ``diop_ternary_quadratic(eq)``: Return a tuple containing an basic solution
+    ``diop_ternary_quadratic(eq)``: Return a tuple containing a basic solution
     to ``eq``.
 
     Details
@@ -1835,7 +1847,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
             return x_p, y_p, z_p
 
     x, y, z = v[:3]
-    r, p, q = symbols("r, p, q", Integer=True)
+    r, p, q = symbols("r, p, q", integer=True)
 
     eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
     eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
@@ -1856,7 +1868,7 @@ def diop_ternary_quadratic_normal(eq):
     `ax^2 + by^2 + cz^2 = 0`.
 
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
-    equation will be a quadratic binary or univariable equation. If solvable,
+    equation will be a quadratic binary or univariate equation. If solvable,
     returns a tuple `(x, y, z)` that satisifes the given equation. If the
     equation does not have integer solutions, `(None, None, None)` is returned.
 
@@ -2276,7 +2288,7 @@ def holzer(x_0, y_0, z_0, a, b, c):
     return x_0, y_0, z_0
 
 
-def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
+def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     """
     Solves the general pythagorean equation,
     `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
@@ -2320,7 +2332,7 @@ def _diop_general_pythagorean(var, coeff, t):
         if sign(coeff[v**2]) == -1:
             index = i
 
-    m = symbols(str(t) + "1:" + str(n), Integer=True)
+    m = symbols(str(t) + "1:" + str(n), integer=True)
     l = []
     ith = 0
 
@@ -2329,7 +2341,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
     l.append(ith - 2*m[n - 2]**2)
 
-    for i in xrange(n - 2):
+    for i in range(n - 2):
         l.append(2*m[i]*m[n-2])
 
     sol = l[:index] + [ith] + l[index:]
@@ -2408,7 +2420,7 @@ def _diop_general_sum_of_squares(var, coeff, limit=1):
         m = n // 4
         f = partition(k, m, True)
 
-        for j in xrange(limit):
+        for j in range(limit):
 
             soln = []
             try:
@@ -2486,14 +2498,14 @@ def partition(n, k=None, zeros=False):
 
         elif k > n:
             if zeros:
-                for i in xrange(1, n):
+                for i in range(1, n):
                     for t in partition(n, i):
                         yield (t,) + (0,) * (k - i)
             else:
                 yield tuple()
 
         else:
-            a = [1 for i in xrange(k)]
+            a = [1 for i in range(k)]
             a[0] = n - k + 1
 
             yield tuple(a)
@@ -2513,12 +2525,12 @@ def partition(n, k=None, zeros=False):
                 i = i + 1
 
             if zeros:
-                for m in xrange(1, k):
+                for m in range(1, k):
                     for a in partition(n, m):
                         yield tuple(a) + (0,) * (k - m)
 
     else:
-        a = [0 for i in xrange(n + 1)]
+        a = [0 for i in range(n + 1)]
         l = 1
         y = n - 1
 
@@ -2636,7 +2648,7 @@ def sum_of_three_squares(n):
     if n % 8 == 3:
         l = l if l % 2 else l - 1
 
-        for i in xrange(l, -1, -2):
+        for i in range(l, -1, -2):
             if isprime((n - i**2) // 2):
                 x = i
                 break
@@ -2649,7 +2661,7 @@ def sum_of_three_squares(n):
     else:
         l = l - 1 if l % 2 else l
 
-    for i in xrange(l, -1, -2):
+    for i in range(l, -1, -2):
         if isprime(n - i**2):
             x = i
             break
@@ -2753,7 +2765,7 @@ def power_representation(n, p, k, zeros=False):
                 yield t
 
         if zeros:
-            for i in xrange(2, k):
+            for i in range(2, k):
                 for t in pow_rep_recursive(a, i, n, [], p):
                     yield t + (0,) * (k - i)
 

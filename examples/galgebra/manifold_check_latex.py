@@ -8,6 +8,7 @@ from sympy.galgebra import oprint
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 from sympy.galgebra import Manifold
 
+
 def Test_Reciprocal_Frame():
     Print_Function()
     Format()
@@ -41,6 +42,7 @@ def Test_Reciprocal_Frame():
     print(r'%\bm{e}_{v}\cdot\bm{e}^{v} =', ev | ev_r)
     return
 
+
 def Plot_Mobius_Strip_Manifold():
     Print_Function()
     coords = symbols('x y z')
@@ -50,6 +52,7 @@ def Plot_Mobius_Strip_Manifold():
     MF = Manifold(X, mfvar, True, I=MV.I)
     MF.Plot2DSurface([0.0, 6.28, 48], [-0.3, 0.3, 12], surf=False, skip=[4, 4], tan=0.15)
     return
+
 
 def Distorted_manifold_with_scalar_function():
     Print_Function()
@@ -78,6 +81,7 @@ def Distorted_manifold_with_scalar_function():
     print('P(dP(S)) =', MF.Proj(MF.Grad(PS)))
     return
 
+
 def Simple_manifold_with_scalar_function_derivative():
     Print_Function()
     coords = (x, y, z) = symbols('x y z')
@@ -103,6 +107,7 @@ def Simple_manifold_with_scalar_function_derivative():
     dg = MF.grad*g
     print('\\eval{\\nabla g}{u=1,v=0} =', dg.subs({u: 1, v: 0}))
     return
+
 
 def Simple_manifold_with_vector_function_derivative():
     Print_Function()
@@ -134,8 +139,10 @@ def Simple_manifold_with_vector_function_derivative():
 
     return
 
+
 def dummy():
     return
+
 
 def main():
     Get_Program()
@@ -144,7 +151,7 @@ def main():
     Distorted_manifold_with_scalar_function()
     Simple_manifold_with_scalar_function_derivative()
     Simple_manifold_with_vector_function_derivative()
-    #Plot_Mobius_Strip_Manifold()
+    # Plot_Mobius_Strip_Manifold()
     xdvi()
     return
 

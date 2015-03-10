@@ -10,6 +10,7 @@ GeometryEntity
 from __future__ import print_function, division
 
 from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
@@ -18,9 +19,14 @@ from sympy.matrices import eye
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",
+    "Point3D",
     "Segment",
     "Ray",
     "Line",
+    "Line3D",
+    "Ray3D",
+    "Segment3D",
+    "Plane",
     "Triangle",
     "RegularPolygon",
     "Polygon",
@@ -39,7 +45,7 @@ class GeometryEntity(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = [Tuple(*a) if is_sequence(a) else sympify(a) for a in args]
         return Basic.__new__(cls, *args)
 
     def _sympy_(self):
@@ -159,7 +165,7 @@ class GeometryEntity(Basic):
         return self.func(*newargs)
 
     def reflect(self, line):
-        from sympy import atan, Line, Point, Dummy, oo
+        from sympy import atan, Point, Dummy, oo
 
         g = self
         l = line
@@ -258,6 +264,9 @@ class GeometryEntity(Basic):
         """
         raise NotImplementedError()
 
+    def equals(self, o):
+        return self == o
+
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
@@ -322,11 +331,15 @@ class GeometryEntity(Basic):
 
     def _eval_subs(self, old, new):
         from sympy.geometry.point import Point
+        from sympy.geometry.point3d import Point3D
         if is_sequence(old) or is_sequence(new):
-            old = Point(old)
-            new = Point(new)
-            return self._subs(old, new)
-
+            if isinstance(self, Point3D):
+                old = Point3D(old)
+                new = Point3D(new)
+            else:
+                old = Point(old)
+                new = Point(new)
+            return  self._subs(old, new)
 
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""

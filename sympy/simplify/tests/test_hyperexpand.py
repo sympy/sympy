@@ -9,11 +9,12 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
+from sympy import hyper, I, S, meijerg, Piecewise
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
-from sympy.utilities.randtest import test_numerically as tn
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.randtest import verify_numerically as tn
+from sympy.utilities.pytest import XFAIL, slow
+from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar)
@@ -188,7 +189,6 @@ def test_meijerg_formulae():
             closed_form = formula.closed_form.subs(rep)
             z = formula.z
             assert tn(g, closed_form, z)
-            #print closed_form
 
             # now test the computed matrix
             cl = (formula.C * formula.B)[0].subs(rep)
@@ -214,7 +214,7 @@ def test_plan():
         devise_plan(Hyper_Function([2], []), Hyper_Function([S("1/2")], []), z)
 
     # We cannot use pi/(10000 + n) because polys is insanely slow.
-    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
+    a1, a2, b1 = (randcplx(n) for n in range(3))
     b1 += 2*I
     h = hyper([a1, a2], [b1], z)
 
@@ -247,7 +247,7 @@ def test_plan_derivatives():
 
 
 def test_reduction_operators():
-    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
+    a1, a2, b1 = (randcplx(n) for n in range(3))
     h = hyper([a1], [b1], z)
 
     assert ReduceOrder(2, 0) is None
@@ -273,7 +273,7 @@ def test_reduction_operators():
 
 
 def test_shift_operators():
-    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
+    a1, a2, b1, b2, b3 = (randcplx(n) for n in range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, lambda: ShiftA(0))
@@ -287,7 +287,7 @@ def test_shift_operators():
 
 
 def test_ushift_operators():
-    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
+    a1, a2, b1, b2, b3 = (randcplx(n) for n in range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, lambda: UnShiftA((1,), (), 0, z))
@@ -435,9 +435,9 @@ def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
     #       hit an inexplicable test failure here, please let me know the seed.
-    a1, a2 = map(lambda n: randcplx() - 5*I - n*I, range(2))
-    b1, b2 = map(lambda n: randcplx() + 5*I + n*I, range(2))
-    b3, b4, b5, a3, a4, a5 = map(lambda n: randcplx(), range(6))
+    a1, a2 = (randcplx(n) - 5*I - n*I for n in range(2))
+    b1, b2 = (randcplx(n) + 5*I + n*I for n in range(2))
+    b3, b4, b5, a3, a4, a5 = (randcplx() for n in range(6))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert ReduceOrder.meijer_minus(3, 4) is None
@@ -471,8 +471,7 @@ def test_meijerg():
 
 def test_meijerg_shift_operators():
     # carefully set up the parameters. XXX this still fails sometimes
-    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = \
-        map(lambda n: randcplx(n), range(10))
+    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = (randcplx(n) for n in range(10))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert tn(MeijerShiftA(b1).apply(g, op),
@@ -588,7 +587,7 @@ def test_lerchphi():
 
 def test_partial_simp():
     # First test that hypergeometric function formulae work.
-    a, b, c, d, e = map(lambda _: randcplx(), range(5))
+    a, b, c, d, e = (randcplx() for _ in range(5))
     for func in [Hyper_Function([a, b, c], [d, e]),
             Hyper_Function([], [a, b, c, d, e])]:
         f = build_hypergeometric_formula(func)

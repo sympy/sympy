@@ -5,7 +5,7 @@ from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (
     random_complex_number as randcplx,
-    test_numerically as tn,
+    verify_numerically as tn,
     test_derivative_numerically as td)
 
 

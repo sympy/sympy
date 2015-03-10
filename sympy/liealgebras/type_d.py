@@ -1,6 +1,6 @@
-from sympy.core import Set, Dict, Tuple
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
+from sympy.core.compatibility import range
 
 class TypeD(Standard_Cartan):
 

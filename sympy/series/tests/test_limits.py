@@ -1,8 +1,9 @@
 from itertools import product as cartes
 
-from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-                   atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
-                   tan, cot, integrate, Sum, sign)
+from sympy import (
+    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
+    atan, gamma, Symbol, S, pi, Integral, Rational, I,
+    tan, cot, integrate, Sum, sign, Function, subfactorial)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -90,6 +91,15 @@ def test_basic4():
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo) == 0
     assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
+
+
+def test_basic5():
+    class my(Function):
+        @classmethod
+        def eval(cls, arg):
+            if arg is S.Infinity:
+                return S.NaN
+    assert limit(my(x), x, oo) == Limit(my(x), x, oo)
 
 
 def test_issue_3885():
@@ -209,10 +219,6 @@ def test_doit2():
     assert l.doit(deep=False) == l
 
 
-def test_bug693a():
-    assert sin(sin(x + 1) + 1).limit(x, 0) == sin(sin(1) + 1)
-
-
 def test_issue_3792():
     assert limit( (1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
     assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
@@ -270,7 +276,7 @@ def test_issue_5184():
     assert limit(cos(x)/x, x, oo) == 0
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
-    r = Symbol('r', real=True, bounded=True)
+    r = Symbol('r', real=True, finite=True)
     assert limit(r*sin(1/r), r, 0) == 0
 
 
@@ -334,9 +340,8 @@ def test_extended_real_line():
 
 @XFAIL
 def test_order_oo():
-    from sympy import C
-    x = Symbol('x', positive=True, bounded=True)
-    assert C.Order(x)*oo != C.Order(1, x)
+    x = Symbol('x', positive=True, finite=True)
+    assert Order(x)*oo != Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
 
@@ -421,3 +426,13 @@ def test_issue_4099():
     assert limit(-a/x, x, 0) == -oo*sign(a)
     assert limit(-a*x, x, oo) == -oo*sign(a)
     assert limit(a*x, x, oo) == oo*sign(a)
+
+
+def test_issue_4503():
+    dx = Symbol('dx')
+    assert limit((sqrt(1 + exp(x + dx)) - sqrt(1 + exp(x)))/dx, dx, 0) == \
+        exp(x)/(2*sqrt(exp(x) + 1))
+
+
+def test_issue_8730():
+    assert limit(subfactorial(x), x, oo) == oo

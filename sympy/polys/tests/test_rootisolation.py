@@ -46,7 +46,7 @@ def test_dup_refine_real_root():
     assert R.dup_refine_real_root(f, s, t, steps=1) == (QQ(1, 1), QQ(3, 2))
     assert R.dup_refine_real_root(f, s, t, steps=2) == (QQ(7, 5), QQ(3, 2))
     assert R.dup_refine_real_root(f, s, t, steps=3) == (QQ(7, 5), QQ(13, 9))
-    assert R.dup_refine_real_root(f, s, t, steps=4) == (QQ(7, 5), QQ(10, 7))
+    assert R.dup_refine_real_root(f, s, t, steps=4) == (QQ(7, 5), QQ(27, 19))
 
     s, t = QQ(-1, 1), QQ(-2, 1)
 
@@ -406,7 +406,7 @@ def test_dup_isolate_real_roots_list_QQ():
     g = x**5 - 201
 
     assert R.dup_isolate_real_roots_list([f, g]) == \
-        [((QQ(75, 26), QQ(101, 35)), {0: 1}), ((QQ(283, 98), QQ(26, 9)), {1: 1})]
+        [((QQ(75, 26), QQ(101, 35)), {0: 1}), ((QQ(309, 107), QQ(26, 9)), {1: 1})]
 
     R, x = ring("x", QQ)
 
@@ -414,7 +414,7 @@ def test_dup_isolate_real_roots_list_QQ():
     g = -QQ(1, 201)*x**5 + 1
 
     assert R.dup_isolate_real_roots_list([f, g]) == \
-        [((QQ(75, 26), QQ(101, 35)), {0: 1}), ((QQ(283, 98), QQ(26, 9)), {1: 1})]
+        [((QQ(75, 26), QQ(101, 35)), {0: 1}), ((QQ(309, 107), QQ(26, 9)), {1: 1})]
 
 
 def test_dup_count_real_roots():

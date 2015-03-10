@@ -2,7 +2,7 @@ Basic Cryptography Module
 =========================
 
 Included in this module are both block ciphers and stream ciphers.
- 
+
  * Shift cipher
  * Affine cipher
  * Bifid ciphers

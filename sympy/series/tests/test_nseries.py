@@ -273,7 +273,7 @@ def test_issue_3224():
 
 
 def test_issue_3463():
-    from sympy import summation, symbols
+    from sympy import symbols
     w, i = symbols('w,i')
     r = log(5)/log(3)
     p = w**(-1 + r)
@@ -469,7 +469,7 @@ def test_dir():
 def test_issue_3504():
     a = Symbol("a")
     e = asin(a*x)/x
-    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == \
+    assert e.series(x, 4, n=2).removeO() == \
         (x - 4)*(a/(4*sqrt(-16*a**2 + 1)) - asin(4*a)/16) + asin(4*a)/4
 
 
@@ -484,9 +484,9 @@ def test_issue_4441():
 
 
 def test_issue_4329():
-    assert tan(x).series(x, pi/2, n=3).removeO().subs(x, x - pi/2) == \
+    assert tan(x).series(x, pi/2, n=3).removeO() == \
         -pi/6 + x/3 - 1/(x - pi/2)
-    assert cot(x).series(x, pi, n=3).removeO().subs(x, x - pi) == \
+    assert cot(x).series(x, pi, n=3).removeO() == \
         -x/3 + pi/3 + 1/(x - pi)
     assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
 
@@ -503,9 +503,9 @@ def test_issue_5183():
 def test_issue_5654():
     a = Symbol('a')
     assert (1/(x**2+a**2)**2).nseries(x, x0=I*a, n=0) == \
-        -I/(4*a**3*x) - 1/(4*a**2*x**2) + O(1, x)
+        -I/(4*a**3*(-I*a + x)) - 1/(4*a**2*(-I*a + x)**2) + O(1, (x, I*a))
     assert (1/(x**2+a**2)**2).nseries(x, x0=I*a, n=1) == \
-        3/(16*a**4) - I/(4*a**3*x) - 1/(4*a**2*x**2) + O(x)
+        -I/(4*a**3*(-I*a + x)) - 1/(4*a**2*(-I*a + x)**2) + O(-I*a + x, (x, I*a))
 
 
 def test_issue_5925():

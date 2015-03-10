@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import raises
-from sympy import symbols, Function, Integer, Matrix, Abs, \
-    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false
+from sympy import (symbols, Function, Integer, Matrix, Abs,
+    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
+    Symbol, Dummy, Wild)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -88,6 +89,12 @@ def test_Matrix():
         sT(cls([[x**+1, 1], [y, x + y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
 
+def test_empty_Matrix():
+    sT(ones(0, 3), "MutableDenseMatrix(0, 3, [])")
+    sT(ones(4, 0), "MutableDenseMatrix(4, 0, [])")
+    sT(ones(0, 0), "MutableDenseMatrix([])")
+
+
 def test_Rational():
     sT(Rational(1, 3), "Rational(1, 3)")
     sT(Rational(-1, 3), "Rational(-1, 3)")
@@ -105,6 +112,41 @@ def test_Float():
 def test_Symbol():
     sT(x, "Symbol('x')")
     sT(y, "Symbol('y')")
+    sT(Symbol('x', negative=True), "Symbol('x', negative=True)")
+
+
+def test_Symbol_two_assumptions():
+    x = Symbol('x', negative=0, integer=1)
+    # order could vary
+    s1 = "Symbol('x', integer=True, negative=False)"
+    s2 = "Symbol('x', negative=False, integer=True)"
+    assert srepr(x) in (s1, s2)
+    assert eval(srepr(x), ENV) == x
+
+
+def test_Symbol_no_special_commutative_treatment():
+    sT(Symbol('x'), "Symbol('x')")
+    sT(Symbol('x', commutative=False), "Symbol('x', commutative=False)")
+    sT(Symbol('x', commutative=0), "Symbol('x', commutative=False)")
+    sT(Symbol('x', commutative=True), "Symbol('x', commutative=True)")
+    sT(Symbol('x', commutative=1), "Symbol('x', commutative=True)")
+
+
+def test_Wild():
+    sT(Wild('x', even=True), "Wild('x', even=True)")
+
+
+def test_Dummy():
+    # cannot use sT here
+    d = Dummy('d', nonzero=True)
+    assert srepr(d) == "Dummy('d', nonzero=True)"
+
+
+def test_Dummy_from_Symbol():
+    # should not get the full dictionary of assumptions
+    n = Symbol('n', integer=True)
+    d = n.as_dummy()
+    assert srepr(d) == "Dummy('n', integer=True)"
 
 
 def test_tuple():

@@ -1,17 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
-from sympy.core.compatibility import as_int, xrange
+from sympy.core import Expr, S, sympify, oo, pi, Symbol
+from sympy.core.compatibility import as_int, range
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.geometry.exceptions import GeometryError
 from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
-from sympy.solvers import solve
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_variety, has_dups
+from sympy.utilities.iterables import has_variety, has_dups, uniq
 
 from .entity import GeometryEntity
 from .point import Point
@@ -146,13 +145,12 @@ class Polygon(GeometryEntity):
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
             a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
-            # if flyback lines are desired then the following should
-            # only be done if tuple(sorted((a, b, c))) == (a, b, c)
             if b not in shared and Point.is_collinear(a, b, c):
                 nodup.pop(i + 1)
                 if a == c:
                     nodup.pop(i)
-            i += 1
+            else:
+                i += 1
 
         vertices = list(nodup)
 
@@ -171,23 +169,33 @@ class Polygon(GeometryEntity):
         # random set of segments since only those sides that are not
         # part of the convex hull can possibly intersect with other
         # sides of the polygon...but for now we use the n**2 algorithm
-        # and check if any side intersects with any preceding side
-        hit = _symbol('hit')
-        if not rv.is_convex:
+        # and check if any side intersects with any preceding side,
+        # excluding the ones it is connected to
+        try:
+            convex = rv.is_convex()
+        except ValueError:
+            convex = True
+        if not convex:
             sides = rv.sides
             for i, si in enumerate(sides):
-                pts = si.p1, si.p2
-                ai = si.arbitrary_point(hit)
-                for j in xrange(i):
+                pts = si.args
+                # exclude the sides connected to si
+                for j in range(1 if i == len(sides) - 1 else 0, i - 1):
                     sj = sides[j]
                     if sj.p1 not in pts and sj.p2 not in pts:
-                        aj = si.arbitrary_point(hit)
-                        tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
-                        if tx.is_number and 0 <= tx <= 1:
-                            ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
-                            if (tx or ty) and ty.is_number and 0 <= ty <= 1:
-                                raise GeometryError(
-                                    "Polygon has intersecting sides.")
+                        hit = si.intersection(sj)
+                        if not hit:
+                            continue
+                        hit = hit[0]
+                        # don't complain unless the intersection is definite;
+                        # if there are symbols present then the intersection
+                        # might not occur; this may not be necessary since if
+                        # the convex test passed, this will likely pass, too.
+                        # But we are about to raise an error anyway so it
+                        # won't matter too much.
+                        if all(i.is_number for i in hit.args):
+                            raise GeometryError(
+                                "Polygon has intersecting sides.")
 
         return rv
 
@@ -219,7 +227,7 @@ class Polygon(GeometryEntity):
         """
         area = 0
         args = self.args
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             x1, y1 = args[i - 1].args
             x2, y2 = args[i].args
             area += x1*y2 - x2*y1
@@ -270,7 +278,7 @@ class Polygon(GeometryEntity):
         cw = self._isright(args[-1], args[0], args[1])
 
         ret = {}
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
             if cw ^ self._isright(a, b, c):
@@ -304,7 +312,7 @@ class Polygon(GeometryEntity):
         """
         p = 0
         args = self.vertices
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             p += args[i - 1].distance(args[i])
         return simplify(p)
 
@@ -371,7 +379,7 @@ class Polygon(GeometryEntity):
         A = 1/(6*self.area)
         cx, cy = 0, 0
         args = self.args
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             x1, y1 = args[i - 1].args
             x2, y2 = args[i].args
             v = x1*y2 - x2*y1
@@ -415,7 +423,7 @@ class Polygon(GeometryEntity):
         """
         res = []
         args = self.vertices
-        for i in xrange(-len(args), 0):
+        for i in range(-len(args), 0):
             res.append(Segment(args[i], args[i + 1]))
         return res
 
@@ -450,7 +458,7 @@ class Polygon(GeometryEntity):
         # Determine orientation of points
         args = self.vertices
         cw = self._isright(args[-2], args[-1], args[0])
-        for i in xrange(1, len(args)):
+        for i in range(1, len(args)):
             if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
 
@@ -509,15 +517,16 @@ class Polygon(GeometryEntity):
             lit.append(v - p)  # the difference is simplified
             if lit[-1].free_symbols:
                 return None
-        self = Polygon(*lit)
+
+        poly = Polygon(*lit)
 
         # polygon closure is assumed in the following test but Polygon removes duplicate pts so
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
-        args = self.args
-        indices = range(-len(args), 1)
+        args = poly.args
+        indices = list(range(-len(args), 1))
 
-        if self.is_convex():
+        if poly.is_convex():
             orientation = None
             for i in indices:
                 a = args[i]
@@ -668,7 +677,7 @@ class Polygon(GeometryEntity):
             inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
-        return res
+        return list(uniq(res))
 
     def distance(self, o):
         """
@@ -908,11 +917,11 @@ class Polygon(GeometryEntity):
         oargs = o.args
         n = len(args)
         o0 = oargs[0]
-        for i0 in xrange(n):
+        for i0 in range(n):
             if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
                     return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
                     return True
         return False
 
@@ -1569,7 +1578,7 @@ class RegularPolygon(Polygon):
         v = 2*S.Pi/self._n
 
         return [Point(c.x + r*cos(k*v + rot), c.y + r*sin(k*v + rot))
-                for k in xrange(self._n)]
+                for k in range(self._n)]
 
     def __eq__(self, o):
         if not isinstance(o, Polygon):
@@ -2205,11 +2214,6 @@ class Triangle(Polygon):
         """
         s = self.sides
         return Triangle(s[0].midpoint, s[1].midpoint, s[2].midpoint)
-
-    #@property
-    #def excircles(self):
-    #    """Returns a list of the three excircles for this triangle."""
-    #    pass
 
 
 def rad(d):

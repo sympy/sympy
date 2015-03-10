@@ -6,6 +6,7 @@ from sympy import symbols, sin, cos
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 from sympy.galgebra import MV, Format
 
+
 def Maxwells_Equations_in_Geometric_Calculus():
     Print_Function()
     X = symbols('t x y z')
@@ -38,6 +39,7 @@ def Maxwells_Equations_in_Geometric_Calculus():
     (gradF.grade(3)).Fmt(3, '%\\grade{\\nabla F}_{3} = 0')
     return
 
+
 def Dirac_Equation_in_Geometric_Calculus():
     Print_Function()
     vars = symbols('t x y z')
@@ -59,6 +61,7 @@ def Dirac_Equation_in_Geometric_Calculus():
     dirac_eq.Fmt(3, r'%\text{Dirac Equation\;\;}\nabla \bm{\psi} I \sigma_{z}-e\bm{A}\bm{\psi}-m\bm{\psi}\gamma_{t} = 0')
 
     return
+
 
 def Lorentz_Tranformation_in_Geometric_Algebra():
     Print_Function()
@@ -87,8 +90,10 @@ def Lorentz_Tranformation_in_Geometric_Algebra():
     print(r"%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =", Xpp.collect(gamma))
     return
 
+
 def dummy():
     return
+
 
 def main():
     Get_Program()

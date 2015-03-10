@@ -5,13 +5,14 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial, true, false, Equivalent, Xor)
+    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
@@ -350,7 +351,7 @@ def test_FracField():
 
 
 def test_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
+    Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert str(x - x) == "0"
@@ -367,7 +368,7 @@ def test_PolyElement():
 
 
 def test_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
+    Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert str(x - x) == "0"
@@ -402,7 +403,10 @@ def test_Pow():
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
-    assert str(x**-1.0) == '1/x'
+    # not the same as x**-1
+    assert str(x**-1.0) == 'x**(-1.0)'
+    # see issue #2860
+    assert str(S(2)**-1.0) == '2**(-1.0)'
 
 
 def test_sqrt():
@@ -481,7 +485,8 @@ def test_Float():
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
-    assert str(Rel(x + y, y, "==")) == "x + y == y"
+    assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
+    assert str(Rel(x, y, "!=")) == "Ne(x, y)"
 
 
 def test_RootOf():
@@ -562,14 +567,14 @@ def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
 
 
-def test_bug2():
+def test_issue_3101():
     e = x - y
     a = str(e)
     b = str(e)
     assert a == b
 
 
-def test_bug4():
+def test_issue_3103():
     e = -2*sqrt(x) - y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]
@@ -636,19 +641,19 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: x1 > 0"
+    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
+    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a >= 0, b >= 0)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
 
 
 def test_PrettyPoly():
@@ -707,3 +712,10 @@ def test_Equivalent():
 
 def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+
+def test_Complement():
+    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+
+def test_SymmetricDifference():
+    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
+           'SymmetricDifference([2, 3], [3, 4])'

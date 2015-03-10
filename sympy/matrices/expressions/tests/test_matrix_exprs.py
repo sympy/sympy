@@ -193,5 +193,17 @@ def test_indexing():
     A[l, k]
     A[l+1, k+1]
 
+
+def test_single_indexing():
+    A = MatrixSymbol('A', 2, 3)
+    assert A[1] == A[0, 1]
+    assert A[3] == A[1, 0]
+    assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
+    raises(IndexError, lambda: A[6])
+    raises(IndexError, lambda: A[n])
+    B = MatrixSymbol('B', n, m)
+    raises(IndexError, lambda: B[1])
+
+
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]

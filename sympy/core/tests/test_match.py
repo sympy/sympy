@@ -1,6 +1,6 @@
 from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi
+    Wild, pi, meijerg
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -599,3 +599,15 @@ def test_issue_3539():
     assert (x - 2).match(a - x) is None
     assert (6/x).match(a*x) is None
     assert (6/x**2).match(a/x) == {a: 6/x}
+
+def test_gh_issue_2711():
+    x = Symbol('x')
+    f = meijerg(((), ()), ((0,), ()), x)
+    a = Wild('a')
+    b = Wild('b')
+
+    assert f.find(a) == set([(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
+                             (), meijerg(((), ()), ((S.Zero,), ()), x)])
+    assert f.find(a + b) == \
+        set([meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero])
+    assert f.find(a**2) == set([meijerg(((), ()), ((S.Zero,), ()), x), x])

@@ -12,9 +12,10 @@
 
 from __future__ import print_function, division
 
+from sympy.core.function import Function
+from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
-from sympy.functions import exp
-from sympy.core import C
+
 
 from sympy.core.compatibility import reduce
 
@@ -248,10 +249,10 @@ def get_indices(expr):
         elif expr.is_Pow or isinstance(expr, exp):
             return _get_indices_Pow(expr)
 
-        elif isinstance(expr, C.Piecewise):
+        elif isinstance(expr, Piecewise):
             # FIXME:  No support for Piecewise yet
             return set(), {}
-        elif isinstance(expr, C.Function):
+        elif isinstance(expr, Function):
             # Support ufunc like behaviour by returning indices from arguments.
             # Functions do not interpret repeated indices across argumnts
             # as summation
@@ -418,10 +419,10 @@ def get_contraction_structure(expr):
                     result[key] = d[key]
         return result
 
-    elif isinstance(expr, C.Piecewise):
+    elif isinstance(expr, Piecewise):
         # FIXME:  No support for Piecewise yet
         return {None: expr}
-    elif isinstance(expr, C.Function):
+    elif isinstance(expr, Function):
         # Collect non-trivial contraction structures in each argument
         # We do not report repeated indices in separate arguments as a
         # contraction

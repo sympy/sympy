@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core.function import Function, C
+from sympy.core.function import Function
 from sympy.core import S, Integer
 from sympy.core.mul import prod
 from sympy.utilities.iterables import (has_dups, default_sort_key)
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+from sympy.functions.elementary.complexes import Abs
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -31,8 +32,8 @@ def eval_levicivita(*args):
     from sympy import factorial
     n = len(args)
     return prod(
-        prod(args[j] - args[i] for j in xrange(i + 1, n))
-        / factorial(i) for i in xrange(n))
+        prod(args[j] - args[i] for j in range(i + 1, n))
+        / factorial(i) for i in range(n))
     # converting factorial(i) to int is slightly faster
 
 
@@ -157,7 +158,7 @@ class KroneckerDelta(Function):
         if (i > j) is True:
             return cls(j, i)
 
-        diff = C.Abs(i - j)
+        diff = Abs(i - j)
         if diff == 0:
             return S.One
         elif diff.is_number:
@@ -444,3 +445,7 @@ class KroneckerDelta(Function):
     @staticmethod
     def _latex_no_arg(printer):
         return r'\delta'
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())

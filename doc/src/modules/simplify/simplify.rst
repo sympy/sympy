@@ -13,10 +13,6 @@ collect
 
 .. autofunction:: rcollect
 
-separate
---------
-.. autofunction:: separate
-
 separatevars
 ------------
 

@@ -14,9 +14,7 @@ See:
 """
 
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
-    sin, cos, sign, Plot, lambdify, Integral, S
-
-#seterr(True)
+    sin, cos, sign, lambdify, Integral, S
 
 x = var("x", real=True)
 
@@ -127,19 +125,17 @@ def msolve(f, x):
 
 
 def main():
-    #L = l2_gram_schmidt([1, cos(x), sin(x), cos(2*x), sin(2*x)], (x, -pi, pi))
-    #L = l2_gram_schmidt([1, cos(x), sin(x)], (x, -pi, pi))
-    # the code below is equivalen to l2_gram_schmidt(), but faster:
-    L = [1/sqrt(2)]
+    L = [1]
     for i in range(1, 100):
         L.append(cos(i*x))
         L.append(sin(i*x))
+    # next 2 lines equivalent to L = l2_gram_schmidt(L, (x, -pi, pi)), but faster:
+    L[0] /= sqrt(2)
     L = [f/sqrt(pi) for f in L]
 
     f = series(L)
     print("Fourier series of the step function")
     pprint(f)
-    #Plot(f.diff(x), [x, -5, 5, 3000])
     x0 = msolve(f.diff(x), x)
 
     print("x-value of the maximum:", x0)

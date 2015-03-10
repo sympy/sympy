@@ -1,7 +1,7 @@
 Sets
 ===========
 
-.. automodule:: sympy.core.sets
+.. automodule:: sympy.sets.sets
 
 Set
 ^^^
@@ -38,6 +38,11 @@ Intersection
 ProductSet
 ^^^^^^^^^^
 .. autoclass:: ProductSet
+   :members:
+
+Complement
+^^^^^^^^^^
+.. autoclass:: Complement
    :members:
 
 Singleton Sets

@@ -29,7 +29,7 @@ for a symbolic one and then evaluate the result within SymPy.
     0.000507214304613640
 
 This method is slow.  You should use this method production only if performance
-is not an issue.  You can expect ``.subs`` to take tens of microseconds.  It
+is not an issue.  You can expect ``.subs`` to take tens of microseconds. It
 can be useful while prototyping or if you just want to see a value once.
 
 
@@ -47,7 +47,7 @@ leveraging a variety of numerical libraries.  It is used as follows:
     0.000507214304614
 
 Here lambdify makes a function that computes ``f(x) = sin(x)/x``.  By default
-lambdify relies on implementations in the ``math`` standard library.  This
+lambdify relies on implementations in the ``math`` standard library. This
 numerical evaluation takes on the order of hundreds of nanoseconds, roughly two
 orders of magnitude faster than the ``.subs`` method.  This is the speed
 difference between SymPy and raw Python.
@@ -69,21 +69,20 @@ powerful vectorized ufuncs that are backed by compiled C code.
                                -0.05440211]
 
 If you have array-based data this can confer a considerable speedup, on the
-order of 10 nano-seconds per element.  Unfortunately numpy incurs some start-up
+order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
 uFuncify
 --------
 
 While NumPy operations are very efficient for vectorized data they sometimes
-incur unnecessary costs when chained together.  Consider the following
-operation
+incur unnecessary costs when chained together. Consider the following operation
 
     >>> x = get_numpy_array(...) # doctest: +SKIP
     >>> y = sin(x) / x
 
 The operators ``sin`` and ``/`` call routines that execute tight for loops in
-``C``.  The resulting computation looks something like this
+``C``. The resulting computation looks something like this
 
 .. code:: c
 
@@ -111,9 +110,9 @@ A better solution would fuse both element-wise operations into a single for loop
     }
 
 Statically compiled projects like NumPy are unable to take advantage of such
-optimizations.  Fortunately, SymPy is able to generate efficient low-level C
-or Fortran code.  It can then depend on projects like ``Cython`` or ``f2py`` to
-compile and reconnect that code back up to Python.  Fortunately this process is
+optimizations. Fortunately, SymPy is able to generate efficient low-level C
+or Fortran code. It can then depend on projects like ``Cython`` or ``f2py`` to
+compile and reconnect that code back up to Python. Fortunately this process is
 well automated and a SymPy user wishing to make use of this code generation
 should call the ``ufuncify`` function
 
@@ -124,17 +123,17 @@ should call the ``ufuncify`` function
     >>> from sympy.utilities.autowrap import ufuncify
     >>> f = ufuncify([x], expr)
 
-This function ``f`` consumes and returns a NumPy array.  Generally ``ufuncify``
-performs at least as well as ``lambdify``.  If the expression is complicated
+This function ``f`` consumes and returns a NumPy array. Generally ``ufuncify``
+performs at least as well as ``lambdify``. If the expression is complicated
 then ``ufuncify`` often significantly outperforms the NumPy backed solution.
-Jensen has a good blogpost on this topic
-http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
+Jensen has a good `blog post <http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/>`_
+on this topic.
 
 Theano
 ------
 
 SymPy has a strong connection with
-[Theano](http://deeplearning.net/software/theano/), a mathematical array
+`Theano <http://deeplearning.net/software/theano/>`_, a mathematical array
 compiler.  SymPy expressions can be easily translated to Theano graphs and then
 compiled using the Theano compiler chain.
 

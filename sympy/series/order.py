@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
@@ -12,9 +12,9 @@ class Order(Expr):
     r""" Represents the limiting behavior of some function
 
     The order of a function characterizes the function based on the limiting
-    behavior of the function as it goes to some limit. Only taking all limit
-    points to be 0 or positive infinity is currently supported. This is
-    expressed in big O notation [1]_.
+    behavior of the function as it goes to some limit. Only taking the limit
+    point to be a number is currently supported. This is expressed in
+    big O notation [1]_.
 
     The formal definition for the order of a function `g(x)` about a point `a`
     is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any
@@ -54,7 +54,7 @@ class Order(Expr):
     Examples
     ========
 
-    >>> from sympy import O, oo
+    >>> from sympy import O, oo, cos, pi
     >>> from sympy.abc import x, y
 
     >>> O(x + x**2)
@@ -84,6 +84,10 @@ class Order(Expr):
     O(x**2)
     >>> O(x) - O(x)
     O(x)
+    >>> O(cos(x))
+    O(1)
+    >>> O(cos(x), (x, pi/2))
+    O(x - pi/2, (x, pi/2))
 
     References
     ==========
@@ -111,7 +115,8 @@ class Order(Expr):
     In the multivariate case, it is assumed the limits w.r.t. the various
     symbols commute.
 
-    If no symbols are passed then all symbols in the expression are used.
+    If no symbols are passed then all symbols in the expression are used
+    and the limit point is assumed to be zero.
 
     """
 
@@ -143,7 +148,7 @@ class Order(Expr):
                 point = [S.Zero]*len(variables)
 
         if not all(isinstance(v, Symbol) for v in variables):
-           raise TypeError('Variables are not symbols, got %s' % variables)
+            raise TypeError('Variables are not symbols, got %s' % variables)
 
         if len(list(uniq(variables))) != len(variables):
             raise ValueError('Variables are supposed to be unique symbols, got %s' % variables)
@@ -168,12 +173,33 @@ class Order(Expr):
         if expr is S.NaN:
             return S.NaN
 
-        if not all(p is S.Zero for p in point) and \
-           not all(p is S.Infinity for p in point):
-            raise NotImplementedError('Order at points other than 0 '
-                'or oo not supported, got %s as a point.' % point)
+        if any(x in p.free_symbols for x in variables for p in point):
+            raise ValueError('Got %s as a point.' % point)
 
         if variables:
+            if any(p != point[0] for p in point):
+                raise NotImplementedError
+            if point[0] is S.Infinity:
+                s = dict([(k, 1/Dummy()) for k in variables])
+                rs = dict([(1/v, 1/k) for k, v in s.items()])
+            elif point[0] is not S.Zero:
+                s = dict((k, Dummy() + point[0]) for k in variables)
+                rs = dict((v - point[0], k - point[0]) for k, v in s.items())
+            else:
+                s = ()
+                rs = ()
+
+            expr = expr.subs(s)
+
+            if expr.is_Add:
+                from sympy import expand_multinomial
+                expr = expand_multinomial(expr)
+
+            if s:
+                args = tuple([r[0] for r in rs.items()])
+            else:
+                args = tuple(variables)
+
             if len(variables) > 1:
                 # XXX: better way?  We need this expand() to
                 # workaround e.g: expr = x*(x + y).
@@ -183,24 +209,23 @@ class Order(Expr):
                 expr = expr.expand()
 
             if expr.is_Add:
-                lst = expr.extract_leading_order(variables, point)
+                lst = expr.extract_leading_order(args)
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
-                if point[0] == S.Zero:
-                    expr = expr.as_leading_term(*variables)
-                expr = expr.as_independent(*variables, as_Add=False)[1]
+                expr = expr.as_leading_term(*args)
+                expr = expr.as_independent(*args, as_Add=False)[1]
 
                 expr = expand_power_base(expr)
                 expr = expand_log(expr)
 
-                if len(variables) == 1:
+                if len(args) == 1:
                     # The definition of O(f(x)) symbol explicitly stated that
                     # the argument of f(x) is irrelevant.  That's why we can
                     # combine some power exponents (only "on top" of the
                     # expression tree for f(x)), e.g.:
                     # x**p * (-x)**q -> x**(p+q) for real p, q.
-                    x = variables[0]
+                    x = args[0]
                     margs = list(Mul.make_args(
                         expr.as_independent(x, as_Add=False)[1]))
 
@@ -222,6 +247,8 @@ class Order(Expr):
 
                     expr = Mul(*margs)
 
+            expr = expr.subs(rs)
+
         if expr is S.Zero:
             return expr
 
@@ -232,16 +259,12 @@ class Order(Expr):
             expr = S.One
 
         # create Order instance:
+        vp = dict(zip(variables, point))
         variables.sort(key=default_sort_key)
+        point = [vp[v] for v in variables]
         args = (expr,) + Tuple(*zip(variables, point))
         obj = Expr.__new__(cls, *args)
         return obj
-
-    def _hashable_content(self):
-        return self.args
-
-    def oseries(self, order):
-        return self
 
     def _eval_nseries(self, x, n, logx):
         return self
@@ -305,7 +328,7 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp, PoleError
+        from sympy import powsimp
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -346,9 +369,11 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                try:
-                    l = ratio.limit(s, point) != 0
-                except PoleError:
+                l = ratio.limit(s, point)
+                from sympy.series.limits import Limit
+                if not isinstance(l, Limit):
+                    l = l != 0
+                else:
                     l = None
                 if r is None:
                     r = l
@@ -366,24 +391,39 @@ class Order(Expr):
         return result
 
     def _eval_subs(self, old, new):
-        if old.is_Symbol and old in self.variables:
+        if old in self.variables:
+            newexpr = self.expr.subs(old, new)
             i = self.variables.index(old)
-            newexpr = self.expr._subs(old, new)
-            if isinstance(new, Symbol):
-                newvars = list(self.variables)
+            newvars = list(self.variables)
+            newpt = list(self.point)
+            if new.is_Symbol:
                 newvars[i] = new
-                newpt = self.point
             else:
-                newvars = tuple(newexpr.free_symbols) + \
-                    self.variables[:i] + self.variables[i + 1:]
-                p = new.as_numer_denom()[1].is_number*2 - 1
-                newpt = self.point[0]**p
-                if not newpt.is_real:
-                    x = Dummy('x')
-                    newpt = (x**p).limit(x, self.point[0])
-                newpt = [newpt]*len(newvars)
+                syms = new.free_symbols
+                if len(syms) == 1 or old in syms:
+                    if old in syms:
+                        var = self.variables[i]
+                    else:
+                        var = syms.pop()
+                    # First, try to substitute self.point in the "new"
+                    # expr to see if this is a fixed point.
+                    # E.g.  O(y).subs(y, sin(x))
+                    point = new.subs(var, self.point[i])
+                    if point != self.point[i]:
+                        from sympy.solvers import solve
+                        d = Dummy()
+                        res = solve(old - new.subs(var, d), d, dict=True)
+                        point = d.subs(res[0]).limit(old, self.point[i])
+                    newvars[i] = var
+                    newpt[i] = point
+                elif old not in syms:
+                    del newvars[i], newpt[i]
+                    if not syms and new == self.point[i]:
+                        newvars.extend(syms)
+                        newpt.extend([S.Zero]*len(syms))
+                else:
+                    return
             return Order(newexpr, *zip(newvars, newpt))
-        return Order(self.expr._subs(old, new), *self.args[1:])
 
     def _eval_conjugate(self):
         expr = self.expr._eval_conjugate()

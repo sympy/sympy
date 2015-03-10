@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core import Basic, Rational
+from sympy.core.compatibility import range
 from sympy.core.numbers import igcd
 from .cartan_type import CartanType
-from sympy.mpmath import fac
-from operator import itemgetter
-from itertools import groupby
+from mpmath import fac
 from sympy.matrices import Matrix, eye
 
 class WeylGroup(Basic):
@@ -387,8 +386,8 @@ class WeylGroup(Basic):
             return self.cartan_type.dynkin_diagram()
 
         if self.cartan_type.series == "B" or self.cartan_type.series ==  "C":
-            diag = "---".join("0" for i in range (1, n)) + "===0\n"
-            diag += "   ".join(str(i) for i in range (1, n+1))
+            diag = "---".join("0" for i in range(1, n)) + "===0\n"
+            diag += "   ".join(str(i) for i in range(1, n+1))
             return diag
 
         if self.cartan_type.series == "F":

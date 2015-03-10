@@ -324,4 +324,3 @@ tanh
 
 .. autoclass:: sympy.functions.elementary.hyperbolic.tanh
    :members:
-

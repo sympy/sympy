@@ -1,5 +1,5 @@
-from sympy.core import Set, Dict, Tuple
 from .cartan_type import Standard_Cartan
+from sympy.core.compatibility import range
 from sympy.matrices import eye
 
 class TypeC(Standard_Cartan):
@@ -167,6 +167,6 @@ class TypeC(Standard_Cartan):
 
     def dynkin_diagram(self):
         n = self.n
-        diag = "---".join("0" for i in range (1, n)) + "=<=0\n"
-        diag += "   ".join(str(i) for i in range (1, n+1))
+        diag = "---".join("0" for i in range(1, n)) + "=<=0\n"
+        diag += "   ".join(str(i) for i in range(1, n+1))
         return diag
