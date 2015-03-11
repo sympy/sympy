@@ -2677,18 +2677,29 @@ class MatrixBase(object):
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
-            if iszerofunc(r[pivot, i]):
-                max1, ind = 0, 0
-                for k in range(pivot, r.rows):
-                    if simplify and k > pivot:
-                        r[k, i] = simpfunc(r[k, i])
-                    if max1 < r[k, i]:
-                        max1 = r[k, i]
-                        ind = k
-                if not iszerofunc(r[ind, i]):
-                    r.row_swap(pivot, ind)
-                else:
-                    continue
+            try:
+                if iszerofunc(r[pivot, i]):
+                    max1, ind = 0, 0
+                    for k in range(pivot, r.rows):
+                        if simplify and k > pivot:
+                            r[k, i] = simpfunc(r[k, i])
+                        if max1 < abs(r[k, i]):
+                            max1 = r[k, i]
+                            ind = k
+                    if not iszerofunc(r[ind, i]):
+                        r.row_swap(pivot, ind)
+                    else:
+                        continue
+            except TypeError:
+                if iszerofunc(r[pivot, i]):
+                    for k in range(pivot, r.rows):
+                        if simplify and k > pivot:
+                            r[k, i] = simpfunc(r[k, i])
+                        if not iszerofunc(r[k, i]):
+                            r.row_swap(pivot, k)
+                            break
+                    else:
+                        continue
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
             for j in range(r.rows):
