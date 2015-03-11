@@ -326,6 +326,61 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
+    def as_solution_set(self, *args):
+        """
+        Rewrite the solution as logic and relationals from
+        solve_multivariate (NotImplemented) in form of real sets.
+
+        Assumptions
+        ===========
+        TODO - conclusion after discussion
+
+        Examples
+        ========
+
+        >>> from sympy import And, Symbol
+        >>> x = Symbol('x', real=True)
+        >>> And(x<2, x>-2).as_solution__set()
+        (-2, 2)
+
+        For multivariate logic expressions:
+
+        >>> And(x>0, y>x).as_solution_set(x, y)
+        (0, ∞) x (x, ∞)
+
+        >>> And(x>0, y>x).as_solution_set(y, x)
+        (-∞, ∞) x ((-∞, y) ∩ (0, ∞))
+
+        >>> And(x>0, y>x**2+1, z>y+x).as_solution_set(x, y, z)
+        (0, oo) x (x**2 + 1, oo) x (x + y, oo)
+
+        """
+        from sympy.sets.sets import Intersection, Interval, ProductSet
+        if len(self.free_symbols) == 1:
+            return Intersection(*[arg.as_set() for arg in self.args])
+        else:
+            result = defaultdict(lambda: Interval(S.NegativeInfinity, S.Infinity))
+            for ineq in self.args:
+                variables = ineq.free_symbols
+                u_variables = [] # contain the variables in which there is a
+                                 # univariate inequality
+                if len(variables) == 1:
+                    variable = variables.pop()
+                    u_variables.append(variable)
+                    result[variable] = Intersection(result[variable], ineq.as_set())
+                else:
+                    e = ineq.lhs - ineq.rhs
+                    index = 0
+                    for i in variables:
+                        if abs(e.coeff(i)) == 1:
+                            index = args.index(i) if args.index(i) > index else index
+                            variable = args[index]
+
+                    result[variable] = Intersection(result[variable], ineq.as_set(variable))
+
+
+            return ProductSet(*[result[arg] for arg in args])
+
     def as_set(self):
         """
         Rewrite logic operators and relationals in terms of real sets.

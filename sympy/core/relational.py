@@ -203,6 +203,44 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     __bool__ = __nonzero__
 
+    def as_set(self, gen=False):
+        """
+        Rewrites the simplified (solution) inequality in terms of real set
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Eq
+        >>> x = Symbol('x', real=True)
+        >>> (x>0).as_solution_set()
+        (0, oo)
+        >>> Eq(x, 0).as_solution_set()
+        {0}
+        >>> Ge(y, x).as_solution_set(y)
+        [x, oo)
+        >>> Lt(y, x).as_solution_set(y)
+        (-oo, x)
+        """
+        from sympy.solvers.inequalities import solve_univariate_inequality
+        syms = self.free_symbols
+
+        if len(syms) == 1:
+            sym = syms.pop()
+            return solve_univariate_inequality(self, sym, relational=False)
+        else:
+            from sympy import Interval
+            e = self.lhs - self.rhs
+            coeff_sign = e.coeff(gen)
+            e *= coeff_sign
+            is_ineq_gt = self.func(1, 0) if coeff_sign > 0 else not self.func(1, 0)
+
+            strict = not self.func(0, 0)
+
+            if is_ineq_gt:
+                return Interval(gen - e, S.Infinity, strict)
+            else:
+                return Interval(S.NegativeInfinity, gen -e, False, strict)
+
     def as_set(self):
         """
         Rewrites univariate inequality in terms of real sets
