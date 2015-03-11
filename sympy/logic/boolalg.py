@@ -343,7 +343,7 @@ class And(LatticeOp, BooleanFunction):
         >>> And(x<2, x>-2).as_solution__set()
         (-2, 2)
 
-        For multivariate logic expressions:
+        For multivariate logical expressions:
 
         >>> And(x>0, y>x).as_solution_set(x, y)
         (0, ∞) x (x, ∞)
@@ -357,7 +357,7 @@ class And(LatticeOp, BooleanFunction):
         """
         from sympy.sets.sets import Intersection, Interval, ProductSet
         if len(self.free_symbols) == 1:
-            return Intersection(*[arg.as_set() for arg in self.args])
+            return Intersection(*[arg.as_solution_set() for arg in self.args])
         else:
             result = defaultdict(lambda: Interval(S.NegativeInfinity, S.Infinity))
             for ineq in self.args:
@@ -367,7 +367,8 @@ class And(LatticeOp, BooleanFunction):
                 if len(variables) == 1:
                     variable = variables.pop()
                     u_variables.append(variable)
-                    result[variable] = Intersection(result[variable], ineq.as_set())
+                    result[variable] = Intersection(result[variable],
+                                                    ineq.as_solution_set())
                 else:
                     e = ineq.lhs - ineq.rhs
                     index = 0
@@ -376,8 +377,7 @@ class And(LatticeOp, BooleanFunction):
                             index = args.index(i) if args.index(i) > index else index
                             variable = args[index]
 
-                    result[variable] = Intersection(result[variable], ineq.as_set(variable))
-
+                    result[variable] = Intersection(result[variable], ineq.as_solution_set(variable))
 
             return ProductSet(*[result[arg] for arg in args])
 

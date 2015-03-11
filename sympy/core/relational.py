@@ -203,7 +203,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     __bool__ = __nonzero__
 
-    def as_set(self, gen=False):
+    def as_solution_set(self, gen=False):
         """
         Rewrites the simplified (solution) inequality in terms of real set
 
