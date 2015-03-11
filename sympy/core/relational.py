@@ -239,7 +239,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             if is_ineq_gt:
                 return Interval(gen - e, S.Infinity, strict)
             else:
-                return Interval(S.NegativeInfinity, gen -e, False, strict)
+                return Interval(-S.Infinity, gen -e, False, strict)
 
     def as_set(self):
         """

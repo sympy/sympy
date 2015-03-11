@@ -345,12 +345,19 @@ class And(LatticeOp, BooleanFunction):
 
         For multivariate logical expressions:
 
-        >>> And(x>0, y>x).as_solution_set(x, y)
-        (0, ∞) x (x, ∞)
+        >>> a = And(x>0, y>x)
 
-        >>> And(x>0, y>x).as_solution_set(y, x)
-        (-∞, ∞) x ((-∞, y) ∩ (0, ∞))
+        >>> a.as_solution_set(x, y)
+        (0, oo) x (x, oo)
+        >>> a.as_solution_set(y, x)
+        (-oo, oo) x ((-oo, y) ∩ (0, oo))
+        In the above example as y is passed before x, so it means
+        if required x has to be expressed in terms of y which results
+        in inappropriate result. So multivariate solvers should pass
+        args in correct order.
 
+        >>> And(x>0, z>x+y).as_solution_set(x, y, z)
+        (0, oo) × (-oo, oo) × (x + y, oo)
         >>> And(x>0, y>x**2+1, z>y+x).as_solution_set(x, y, z)
         (0, oo) x (x**2 + 1, oo) x (x + y, oo)
 
@@ -359,7 +366,7 @@ class And(LatticeOp, BooleanFunction):
         if len(self.free_symbols) == 1:
             return Intersection(*[arg.as_solution_set() for arg in self.args])
         else:
-            result = defaultdict(lambda: Interval(S.NegativeInfinity, S.Infinity))
+            result = defaultdict(lambda: Interval(-S.Infinity, S.Infinity))
             for ineq in self.args:
                 variables = ineq.free_symbols
                 u_variables = [] # contain the variables in which there is a
@@ -370,12 +377,17 @@ class And(LatticeOp, BooleanFunction):
                     result[variable] = Intersection(result[variable],
                                                     ineq.as_solution_set())
                 else:
-                    e = ineq.lhs - ineq.rhs
-                    index = 0
-                    for i in variables:
-                        if abs(e.coeff(i)) == 1:
-                            index = args.index(i) if args.index(i) > index else index
-                            variable = args[index]
+                    if ineq.lhs.is_Symbol is True and ineq.rhs.is_Symbol is False:
+                        variable = ineq.lhs
+                    elif ineq.lhs.is_Symbol is False and ineq.rhs.is_Symbol is True:
+                        variable = ineq.rhs
+                    else:
+                        e = ineq.lhs - ineq.rhs
+                        index = 0
+                        for i in variables:
+                            if abs(e.coeff(i)) == 1:
+                                index = args.index(i) if args.index(i) > index else index
+                                variable = args[index]
 
                     result[variable] = Intersection(result[variable], ineq.as_solution_set(variable))
 
