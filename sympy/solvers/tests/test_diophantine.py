@@ -118,6 +118,8 @@ def test_quadratic_non_perfect_square():
     assert check_solutions(x**2 - x*y - y**2 - 3*y)
     assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
 
+def test_issue_9106():
+    assert check_integrality(-48 - 2*x*(3*x - 1) + y*(3*y - 1))
 
 @slow
 def test_quadratic_non_perfect_slow():
@@ -579,3 +581,23 @@ def check_solutions(eq):
                 break
 
     return okay
+
+def check_integrality(eq):
+    """
+    Check that the solutions returned by diophantine() are integers.
+    This should be seldom needed except for general quadratic
+    equations which are solved with rational transformations.
+    """
+    def _check_values(x):
+        """ Check a number of values. """
+        for i in range(-4, 4):
+            if not isinstance(simplify(x.subs(t, i)), Integer):
+                return False
+        return True
+
+    for soln in diophantine(eq, param=t):
+        for x in soln:
+            if not _check_values(x):
+                return False
+
+    return True
