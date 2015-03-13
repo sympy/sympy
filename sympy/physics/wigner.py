@@ -69,13 +69,13 @@ def _calc_factlist(nn):
     return _Factlist[:int(nn) + 1]
 
 
-def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
+def wigner_3j(l_1, l_2, l_3, m_1, m_2, m_3):
     r"""
-    Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`.
+    Calculate the Wigner 3j symbol `Wigner3j(l_1,l_2,l_3,m_1,m_2,m_3)`.
 
     INPUT:
 
-    -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
+    -  ``l_1``, ``l_2``, ``l_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
 
     OUTPUT:
 
@@ -107,33 +107,33 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     The Wigner 3j symbol obeys the following symmetry rules:
 
     - invariant under any permutation of the columns (with the
-      exception of a sign change where `J:=j_1+j_2+j_3`):
+      exception of a sign change where `J:=l_1+l_2+l_3`):
 
       .. math::
 
-         Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)
-          =Wigner3j(j_3,j_1,j_2,m_3,m_1,m_2)
-          =Wigner3j(j_2,j_3,j_1,m_2,m_3,m_1)
-          =(-1)^J Wigner3j(j_3,j_2,j_1,m_3,m_2,m_1)
-          =(-1)^J Wigner3j(j_1,j_3,j_2,m_1,m_3,m_2)
-          =(-1)^J Wigner3j(j_2,j_1,j_3,m_2,m_1,m_3)
+         Wigner3j(l_1,l_2,l_3,m_1,m_2,m_3)
+          =Wigner3j(l_3,l_1,l_2,m_3,m_1,m_2)
+          =Wigner3j(l_2,l_3,l_1,m_2,m_3,m_1)
+          =(-1)^J Wigner3j(l_3,l_2,l_1,m_3,m_2,m_1)
+          =(-1)^J Wigner3j(l_1,l_3,l_2,m_1,m_3,m_2)
+          =(-1)^J Wigner3j(l_2,l_1,l_3,m_2,m_1,m_3)
 
     - invariant under space inflection, i.e.
 
       .. math::
 
-         Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)
-         =(-1)^J Wigner3j(j_1,j_2,j_3,-m_1,-m_2,-m_3)
+         Wigner3j(l_1,l_2,l_3,m_1,m_2,m_3)
+         =(-1)^J Wigner3j(l_1,l_2,l_3,-m_1,-m_2,-m_3)
 
     - symmetric with respect to the 72 additional symmetries based on
       the work by [Regge58]_
 
-    - zero for `j_1`, `j_2`, `j_3` not fulfilling triangle relation
+    - zero for `l_1`, `l_2`, `l_3` not fulfilling triangle relation
 
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
+      `l_1 \ge |m_1|`,  `l_2 \ge |m_2|`,  `l_3 \ge |m_3|`
 
     ALGORITHM:
 
@@ -155,73 +155,73 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    if int(j_1 * 2) != j_1 * 2 or int(j_2 * 2) != j_2 * 2 or \
-            int(j_3 * 2) != j_3 * 2:
+    if int(l_1 * 2) != l_1 * 2 or int(l_2 * 2) != l_2 * 2 or \
+            int(l_3 * 2) != l_3 * 2:
         raise ValueError("j values must be integer or half integer")
     if int(m_1 * 2) != m_1 * 2 or int(m_2 * 2) != m_2 * 2 or \
             int(m_3 * 2) != m_3 * 2:
         raise ValueError("m values must be integer or half integer")
     if m_1 + m_2 + m_3 != 0:
         return 0
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
+    prefid = Integer((-1) ** int(l_1 - l_2 - m_3))
     m_3 = -m_3
-    a1 = j_1 + j_2 - j_3
+    a1 = l_1 + l_2 - l_3
     if a1 < 0:
         return 0
-    a2 = j_1 - j_2 + j_3
+    a2 = l_1 - l_2 + l_3
     if a2 < 0:
         return 0
-    a3 = -j_1 + j_2 + j_3
+    a3 = -l_1 + l_2 + l_3
     if a3 < 0:
         return 0
-    if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
+    if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
         return 0
 
-    maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
-                  j_3 + abs(m_3))
+    maxfact = max(l_1 + l_2 + l_3 + 1, l_1 + abs(m_1), l_2 + abs(m_2),
+                  l_3 + abs(m_3))
     _calc_factlist(int(maxfact))
 
-    argsqrt = Integer(_Factlist[int(j_1 + j_2 - j_3)] *
-                     _Factlist[int(j_1 - j_2 + j_3)] *
-                     _Factlist[int(-j_1 + j_2 + j_3)] *
-                     _Factlist[int(j_1 - m_1)] *
-                     _Factlist[int(j_1 + m_1)] *
-                     _Factlist[int(j_2 - m_2)] *
-                     _Factlist[int(j_2 + m_2)] *
-                     _Factlist[int(j_3 - m_3)] *
-                     _Factlist[int(j_3 + m_3)]) / \
-        _Factlist[int(j_1 + j_2 + j_3 + 1)]
+    argsqrt = Integer(_Factlist[int(l_1 + l_2 - l_3)] *
+                     _Factlist[int(l_1 - l_2 + l_3)] *
+                     _Factlist[int(-l_1 + l_2 + l_3)] *
+                     _Factlist[int(l_1 - m_1)] *
+                     _Factlist[int(l_1 + m_1)] *
+                     _Factlist[int(l_2 - m_2)] *
+                     _Factlist[int(l_2 + m_2)] *
+                     _Factlist[int(l_3 - m_3)] *
+                     _Factlist[int(l_3 + m_3)]) / \
+        _Factlist[int(l_1 + l_2 + l_3 + 1)]
 
     ressqrt = sqrt(argsqrt)
     if ressqrt.is_complex:
         ressqrt = ressqrt.as_real_imag()[0]
 
-    imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
-    imax = min(j_2 + m_2, j_1 - m_1, j_1 + j_2 - j_3)
+    imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
+    imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
     sumres = 0
     for ii in range(int(imin), int(imax) + 1):
         den = _Factlist[ii] * \
-            _Factlist[int(ii + j_3 - j_1 - m_2)] * \
-            _Factlist[int(j_2 + m_2 - ii)] * \
-            _Factlist[int(j_1 - ii - m_1)] * \
-            _Factlist[int(ii + j_3 - j_2 + m_1)] * \
-            _Factlist[int(j_1 + j_2 - j_3 - ii)]
+            _Factlist[int(ii + l_3 - l_1 - m_2)] * \
+            _Factlist[int(l_2 + m_2 - ii)] * \
+            _Factlist[int(l_1 - ii - m_1)] * \
+            _Factlist[int(ii + l_3 - l_2 + m_1)] * \
+            _Factlist[int(l_1 + l_2 - l_3 - ii)]
         sumres = sumres + Integer((-1) ** ii) / den
 
     res = ressqrt * sumres * prefid
     return res
 
 
-def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
+def clebsch_gordan(l_1, l_2, l_3, m_1, m_2, m_3):
     r"""
     Calculates the Clebsch-Gordan coefficient
-    `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.
+    `\langle l_1 m_1 \; l_2 m_2 | l_3 m_3 \rangle`.
 
     The reference for this function is [Edmonds74]_.
 
     INPUT:
 
-    -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
+    -  ``l_1``, ``l_2``, ``l_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
 
     OUTPUT:
 
@@ -245,9 +245,9 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     .. math::
 
-        \langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle
-        =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1} \;
-        Wigner3j(j_1,j_2,j_3,m_1,m_2,-m_3)
+        \langle l_1 m_1 \; l_2 m_2 | l_3 m_3 \rangle
+        =(-1)^{l_1-l_2+m_3} \sqrt{2l_3+1} \;
+        Wigner3j(l_1,l_2,l_3,m_1,m_2,-m_3)
 
     See also the documentation on Wigner 3j symbols which exhibit much
     higher symmetry relations than the Clebsch-Gordan coefficient.
@@ -256,8 +256,8 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
-        wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
+    res = (-1) ** sympify(l_1 - l_2 + m_3) * sqrt(2 * l_3 + 1) * \
+        wigner_3j(l_1, l_2, l_3, m_1, m_2, -m_3)
     return res
 
 
@@ -344,8 +344,8 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
 
     .. math::
 
-       Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
-       =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)
+       Wigner6j(l_1,l_2,l_3,j_4,j_5,j_6)
+       =(-1)^{l_1+l_2+j_4+j_5} W(l_1,l_2,j_5,j_4,l_3,j_6)
 
     Please see the 6j symbol for its much richer symmetries and for
     additional properties.
@@ -390,13 +390,13 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     return res
 
 
-def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
+def wigner_6j(l_1, l_2, l_3, j_4, j_5, j_6, prec=None):
     r"""
-    Calculate the Wigner 6j symbol `Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)`.
+    Calculate the Wigner 6j symbol `Wigner6j(l_1,l_2,l_3,j_4,j_5,j_6)`.
 
     INPUT:
 
-    -  ``j_1``, ..., ``j_6`` - integer or half integer
+    -  ``l_1``, ..., ``j_6`` - integer or half integer
 
     -  ``prec`` - precision, default: ``None``. Providing a precision can
        drastically speed up the calculation.
@@ -434,8 +434,8 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
     .. math::
 
-       Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
-        =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)
+       Wigner6j(l_1,l_2,l_3,j_4,j_5,j_6)
+        =(-1)^{l_1+l_2+j_4+j_5} W(l_1,l_2,j_5,j_4,l_3,j_6)
 
     The Wigner 6j symbol obeys the following symmetry rules:
 
@@ -444,22 +444,22 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
       .. math::
 
-         Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
-          =Wigner6j(j_3,j_1,j_2,j_6,j_4,j_5)
-          =Wigner6j(j_2,j_3,j_1,j_5,j_6,j_4)
-          =Wigner6j(j_3,j_2,j_1,j_6,j_5,j_4)
-          =Wigner6j(j_1,j_3,j_2,j_4,j_6,j_5)
-          =Wigner6j(j_2,j_1,j_3,j_5,j_4,j_6)
+         Wigner6j(l_1,l_2,l_3,j_4,j_5,j_6)
+          =Wigner6j(l_3,l_1,l_2,j_6,j_4,j_5)
+          =Wigner6j(l_2,l_3,l_1,j_5,j_6,j_4)
+          =Wigner6j(l_3,l_2,l_1,j_6,j_5,j_4)
+          =Wigner6j(l_1,l_3,l_2,j_4,j_6,j_5)
+          =Wigner6j(l_2,l_1,l_3,j_5,j_4,j_6)
 
     - They are invariant under the exchange of the upper and lower
       arguments in each of any two columns, i.e.
 
       .. math::
 
-         Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
-          =Wigner6j(j_1,j_5,j_6,j_4,j_2,j_3)
-          =Wigner6j(j_4,j_2,j_6,j_1,j_5,j_3)
-          =Wigner6j(j_4,j_5,j_3,j_1,j_2,j_6)
+         Wigner6j(l_1,l_2,l_3,j_4,j_5,j_6)
+          =Wigner6j(l_1,j_5,j_6,j_4,l_2,l_3)
+          =Wigner6j(j_4,l_2,j_6,l_1,j_5,l_3)
+          =Wigner6j(j_4,j_5,l_3,l_1,l_2,j_6)
 
     - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries
       in total
@@ -479,19 +479,19 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     .. [Regge59] 'Symmetry Properties of Racah Coefficients',
       T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
     """
-    res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
-        racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
+    res = (-1) ** int(l_1 + l_2 + j_4 + j_5) * \
+        racah(l_1, l_2, j_5, j_4, l_3, j_6, prec)
     return res
 
 
-def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
+def wigner_9j(l_1, l_2, l_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     r"""
     Calculate the Wigner 9j symbol
-    `Wigner9j(j_1,j_2,j_3,j_4,j_5,j_6,j_7,j_8,j_9)`.
+    `Wigner9j(l_1,l_2,l_3,j_4,j_5,j_6,j_7,j_8,j_9)`.
 
     INPUT:
 
-    -  ``j_1``, ..., ``j_9`` - integer or half integer
+    -  ``l_1``, ..., ``j_9`` - integer or half integer
 
     -  ``prec`` - precision, default: ``None``. Providing a precision can
        drastically speed up the calculation.
@@ -529,14 +529,14 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     algebra system [Rasch03]_.
     """
     imin = 0
-    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
+    imax = min(l_1 + j_9, l_2 + j_6, j_4 + j_8)
 
     sumres = 0
     for kk in range(imin, int(imax) + 1):
         sumres = sumres + (2 * kk + 1) * \
-            racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
-            racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
-            racah(j_1, j_4, j_9, j_8, j_7, kk, prec)
+            racah(l_1, l_2, j_9, j_6, l_3, kk, prec) * \
+            racah(j_4, j_6, j_8, l_2, j_5, kk, prec) * \
+            racah(l_1, j_4, j_9, j_8, j_7, kk, prec)
     return sumres
 
 
@@ -549,11 +549,11 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     .. math::
 
-        Y(j_1,j_2,j_3,m_1,m_2,m_3)
+        Y(l_1,l_2,l_3,m_1,m_2,m_3)
         =\int Y_{l_1,m_1}(\Omega)
          Y_{l_2,m_2}(\Omega) Y_{l_3,m_3}(\Omega) d\Omega
         =\sqrt{(2l_1+1)(2l_2+1)(2l_3+1)/(4\pi)}
-         \; Y(j_1,j_2,j_3,0,0,0) \; Y(j_1,j_2,j_3,m_1,m_2,m_3)
+         \; Y(l_1,l_2,l_3,0,0,0) \; Wigner3j(l_1,l_2,l_3,m_1,m_2,m_3)
 
     INPUT:
 
@@ -594,18 +594,18 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     - invariant under any permutation of the columns
 
       .. math::
-          Y(j_1,j_2,j_3,m_1,m_2,m_3)
-          =Y(j_3,j_1,j_2,m_3,m_1,m_2)
-          =Y(j_2,j_3,j_1,m_2,m_3,m_1)
-          =Y(j_3,j_2,j_1,m_3,m_2,m_1)
-          =Y(j_1,j_3,j_2,m_1,m_3,m_2)
-          =Y(j_2,j_1,j_3,m_2,m_1,m_3)
+          Y(l_1,l_2,l_3,m_1,m_2,m_3)
+          =Y(l_3,l_1,l_2,m_3,m_1,m_2)
+          =Y(l_2,l_3,l_1,m_2,m_3,m_1)
+          =Y(l_3,l_2,l_1,m_3,m_2,m_1)
+          =Y(l_1,l_3,l_2,m_1,m_3,m_2)
+          =Y(l_2,l_1,l_3,m_2,m_1,m_3)
 
     - invariant under space inflection, i.e.
 
       .. math::
-          Y(j_1,j_2,j_3,m_1,m_2,m_3)
-          =Y(j_1,j_2,j_3,-m_1,-m_2,-m_3)
+          Y(l_1,l_2,l_3,m_1,m_2,m_3)
+          =Y(l_1,l_2,l_3,-m_1,-m_2,-m_3)
 
     - symmetric with respect to the 72 Regge symmetries as inherited
       for the `3j` symbols [Regge58]_
