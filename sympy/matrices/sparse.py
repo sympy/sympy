@@ -8,9 +8,10 @@ from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys import cancel
 from sympy.utilities.iterables import uniq
 
-from .matrices import MatrixBase, ShapeError, a2idx
+from .matrices import MatrixBase, ShapeError, a2idx, NonSquareMatrixError
 from .dense import Matrix
 import collections
 
@@ -1134,6 +1135,78 @@ class SparseMatrix(MatrixBase):
         """Return an n x n identity matrix."""
         n = as_int(n)
         return cls(n, n, dict([((i, i), S.One) for i in range(n)]))
+
+    def det_bareis(self):
+        """
+        Compute matrix determinant using a variant of Bareiss's fraction-free
+        algorithm. This variant is best suited for sparse matrices.
+        (SFF = Sparse Fraction Free Algorithm)
+        See http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
+        Maybe implement the variant "division first" (see appendix) ?
+
+        See Also
+        ========
+
+        det
+        berkowitz_det
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
+
+        M, n = self.copy().as_mutable(), self.rows
+
+        if n == 1:
+            det = M[0, 0]
+        elif n == 2:
+            det = M[0, 0]*M[1, 1] - M[0, 1]*M[1, 0]
+        elif n == 3:
+            det = (M[0, 0]*M[1, 1]*M[2, 2] + M[0, 1]*M[1, 2]*M[2, 0] + M[0, 2]*M[1, 0]*M[2, 1]) - \
+                  (M[0, 2]*M[1, 1]*M[2, 0] + M[0, 0]*M[1, 2]*M[2, 1] + M[0, 1]*M[1, 0]*M[2, 2])
+        else:
+            sign = 1  # track current sign in case of column swap
+
+            B = self.copy().as_mutable()  # data
+            h = Matrix.zeros(n, n)  # history
+
+            def P(m):  # See paper : P_m = M^(m)_(m+1, m+1) and P_(-1) = 1
+                if m == -1:
+                    return 1
+                else:
+                    return M[m, m]
+
+            for k in range(n - 1):
+                # look for a pivot in the current column
+                # and assume det == 0 if none is found
+                if M[k, k] == 0:
+                    for i in range(k + 1, n):
+                        if M[i, k]:
+                            M.row_swap(i, k)
+                            B.row_swap(i, k)
+                            h.row_swap(i, k)
+                            sign *= -1
+                            break
+                    else:
+                        return S.Zero
+
+                # proceed with SFF
+                for i in range(k + 1, n):
+                    for j in range(k + 1, n):
+                        if B[i, k] * B[k, j] != 0:
+                            B[i, j] = (P(k-1) * B[k, k] * B[i, j]) / (P(h[k, k] - 1) * P(h[i, j] - 1)) - \
+                                      (P(k-1) * B[i, k] * B[k, j]) / (P(h[i, k] - 1) * P(h[k, j] - 1))
+                            h[i, j] = k+1
+
+                        D = B[i, j] * P(k) / P(h[i, j] - 1)
+                        if D.is_Atom:
+                            M[i, j] = D
+                        else:
+                            M[i, j] = cancel(D)
+
+            det = sign*M[n - 1, n - 1]
+        return det.expand()
+
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
