@@ -131,6 +131,10 @@ def test_exp_leading_term():
     assert exp(1/x).as_leading_term(x) == exp(1/x)
     assert exp(2 + x).as_leading_term(x) == exp(2)
 
+def test_exp_taylor_term():
+    x = symbols('x')
+    assert exp(x).taylor_term(1, x) == x
+    assert exp(x).taylor_term(3, x) == x**3/6
 
 def test_log_values():
     assert log(nan) == nan
