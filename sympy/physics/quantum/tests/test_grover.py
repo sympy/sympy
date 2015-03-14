@@ -1,4 +1,5 @@
-from sympy import sqrt
+from sympy import sqrt, Matrix
+from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
@@ -39,6 +40,10 @@ def test_OracleGate():
     assert qapply(v*IntQubit(2, nbits)) == -IntQubit(2, nbits)
     assert qapply(v*IntQubit(3, nbits)) == IntQubit(3, nbits)
 
+    # Due to a bug of IntQubit, this first assertion is buggy
+    # assert represent(OracleGate(1, lambda qubits: qubits == IntQubit(0)), nqubits=1) == \
+    #     Matrix([[-1/sqrt(2), 0], [0, 1/sqrt(2)]])
+    assert represent(v, nqubits=2) == 1/2 * Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
 
 def test_WGate():
     nqubits = 2
