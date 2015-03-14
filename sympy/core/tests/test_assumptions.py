@@ -479,7 +479,7 @@ def test_composite():
     assert S(17).is_composite is False
     assert S(4).is_composite is True
     x = Dummy(integer=True, positive=True, prime=False)
-    assert x.is_composite is None # x could be 1
+    assert x.is_composite
     assert (x + 1).is_composite is None
 
 
