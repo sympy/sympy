@@ -52,7 +52,7 @@ class OrthogonalPolynomial(Function):
 
 
 class jacobi(OrthogonalPolynomial):
-    r"""
+    """
     Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
 
     jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial
@@ -162,7 +162,9 @@ class jacobi(OrthogonalPolynomial):
                 return RisingFactorial(a + 1, n) / factorial(n)
             elif x == S.Infinity:
                 if n.is_positive:
-                    # TODO: Make sure a+b+2*n \notin Z
+                    # Make sure a+b+2*n \notin Z
+                    if (a + b + 2*n) % 1 == 0:
+                        raise ValueError("Error. a + b + 2*n should not be an integer.")
                     return RisingFactorial(a + b + n + 1, n) * S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -198,7 +200,9 @@ class jacobi(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, a, b, x):
         from sympy import Sum
-        # TODO: Make sure n \in N
+        # Make sure n \in N
+        if n % 1 != 0 or n < 0:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = (RisingFactorial(-n, k) * RisingFactorial(a + b + n + 1, k) * RisingFactorial(a + k + 1, n - k) /
                 factorial(k) * ((1 - x)/2)**k)
@@ -1111,7 +1115,9 @@ class laguerre(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
-        # TODO: Should make sure n is in N_0
+        # Make sure n is in N_0
+        if n % 1 != 0 or n < 0:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
@@ -1227,7 +1233,9 @@ class assoc_laguerre(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
-        # TODO: Should make sure n is in N_0
+        # Make sure n is in N_0
+        if n % 1 != 0 or n < 0:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(
             -n, k) / (gamma(k + alpha + 1) * factorial(k)) * x**k
