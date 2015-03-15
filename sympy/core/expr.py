@@ -681,7 +681,7 @@ class Expr(Basic, EvalfMixin):
         if failing_expression:
             return diff
         return None
-        
+
     def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
