@@ -6,7 +6,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.compatibility import range
 from .zeta_functions import zeta
-from .error_functions import erf
+from .error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -448,7 +448,7 @@ class uppergamma(Function):
             if a is S.One:
                 return exp(-z)
             elif a is S.Half:
-                return sqrt(pi)*(1 - erf(sqrt(z)))  # TODO could use erfc...
+                return sqrt(pi)*erfc(sqrt(z))
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
