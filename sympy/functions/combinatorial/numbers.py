@@ -96,6 +96,9 @@ class fibonacci(Function):
 
     @classmethod
     def eval(cls, n, sym=None):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             n = int(n)
             if n < 0:
@@ -142,6 +145,9 @@ class lucas(Function):
 
     @classmethod
     def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
