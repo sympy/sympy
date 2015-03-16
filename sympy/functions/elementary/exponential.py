@@ -687,6 +687,9 @@ class log(Function):
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
 
+    def _eval_is_nonnegative(self):
+        return (self.args[0] - 1).is_nonnegative
+
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
