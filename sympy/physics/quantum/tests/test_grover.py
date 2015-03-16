@@ -43,7 +43,7 @@ def test_OracleGate():
     # Due to a bug of IntQubit, this first assertion is buggy
     # assert represent(OracleGate(1, lambda qubits: qubits == IntQubit(0)), nqubits=1) == \
     #     Matrix([[-1/sqrt(2), 0], [0, 1/sqrt(2)]])
-    assert represent(v, nqubits=2) == 1/2 * Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    assert represent(v, nqubits=2) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
 
 def test_WGate():
     nqubits = 2

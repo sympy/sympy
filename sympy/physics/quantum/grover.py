@@ -174,12 +174,11 @@ class OracleGate(Gate):
         """
         nbasis = 2**self.nqubits  # compute it only once
         matrixOracle = eye(nbasis)
-        normalizing_factor = 1/sqrt(nbasis)
         # Flip the sign given the output of the oracle function
         for i in range(nbasis):
             if self.search_function(IntQubit(i, self.nqubits)):
                 matrixOracle[i, i] = NegativeOne()
-        return normalizing_factor * matrixOracle
+        return matrixOracle
 
 
 class WGate(Gate):
