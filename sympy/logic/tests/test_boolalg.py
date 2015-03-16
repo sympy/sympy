@@ -6,7 +6,7 @@ from sympy.logic.boolalg import (
     distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
     simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table,
-    to_anf, is_anf, distribute_xor_over_and, anf_coeffs, ANF,
+    to_anf, is_anf, distribute_xor_over_and, anf_coeffs, ANFform,
     minterm, maxterm, monomial
 )
 from sympy.utilities.pytest import raises, XFAIL
@@ -749,26 +749,27 @@ def test_anf_coeffs():
     assert anf_coeffs([1, 1, 0, 1]) == [1, 0, 1, 1]
 
 
-def test_ANF():
+def test_ANFform():
     x, y = symbols('x,y')
-    assert ANF([x], [1, 1]) == True
-    assert ANF([x], [0, 0]) == False
-    expr = ANF([x], [1, 0])
-    assert isinstance(expr, Xor) and expr.args == (x, True)
-    expr = ANF([x, y], [1, 1, 1, 0])
-    assert isinstance(expr, Xor) and expr.args == (True, And(x, y))
+    assert ANFform([x], [1, 1]) == True
+    assert ANFform([x], [0, 0]) == False
+    assert ANFform([x], [1, 0]) == Xor(x, True, remove_true=False)
+    assert ANFform([x, y], [1, 1, 1, 0]) == Xor(True, And(x, y), remove_true=False)
+
 
 def test_minterm():
     x, y = symbols('x,y')
-    assert minterm(3, ['x', 'y']) == And(x, y)
+    assert minterm(3, [x, y]) == And(x, y)
     assert minterm([1, 0], [x, y]) == And(Not(y), x)
+
 
 def test_maxterm():
     x, y = symbols('x,y')
-    assert maxterm(2, ['x', 'y']) == Or(Not(x), y)
+    assert maxterm(2, [x, y]) == Or(Not(x), y)
     assert maxterm([0, 1], [x, y]) == Or(Not(y), x)
+
 
 def test_monomial():
     x, y = symbols('x,y')
     assert monomial(1, [x, y]) == y
-    assert monomial([1, 1], ['x', 'y']) == And(x, y)
+    assert monomial([1, 1], [x, y]) == And(x, y)

@@ -1807,9 +1807,9 @@ def POSform(variables, minterms, dontcares=None):
     return And(*[_convert_to_varsPOS(x, variables) for x in essential])
 
 
-def ANF(variables, truthvalues):
+def ANFform(variables, truthvalues):
     """
-    The ANF function converts the list of truth values to
+    The ANFform function converts the list of truth values to
     Algebraic Normal Form (ANF).
 
     The variables must be given as the first argument.
@@ -1827,10 +1827,11 @@ def ANF(variables, truthvalues):
 
     Examples
     ========
-    >>> from sympy.logic.boolalg import ANF
-    >>> ANF(['x'], [1, 0])
+    >>> from sympy.logic.boolalg import ANFform
+    >>> from sympy.abc import x, y
+    >>> ANFform([x], [1, 0])
     Xor(x, True)
-    >>> ANF(['x', 'y'], [0, 1, 1, 1])
+    >>> ANFform([x, y], [0, 1, 1, 1])
     Xor(x, y, And(x, y))
 
     References
@@ -1869,11 +1870,12 @@ def anf_coeffs(truthvalues):
     Examples
     ========
     >>> from sympy.logic.boolalg import anf_coeffs, monomial, Xor
+    >>> from sympy.abc import a, b, c
     >>> truthvalues = [0, 1, 1, 0, 0, 1, 0, 1]
     >>> coeffs = anf_coeffs(truthvalues)
     >>> coeffs
     [0, 1, 1, 0, 0, 0, 1, 0]
-    >>> polynomial = Xor(*[monomial(k, ['a','b','c'])
+    >>> polynomial = Xor(*[monomial(k, [a, b, c])
     ...         for k, coeff in enumerate(coeffs) if coeff==1])
     >>> polynomial
     Xor(b, c, And(a, b))
@@ -1918,7 +1920,7 @@ def minterm(k, variables):
     >>> from sympy.abc import x, y, z
     >>> minterm([1, 0, 1], [x, y, z])
     And(Not(y), x, z)
-    >>> minterm(6, ['x', 'y', 'z'])
+    >>> minterm(6, [x, y, z])
     And(Not(z), x, y)
 
     """
@@ -1949,7 +1951,7 @@ def maxterm(k, variables):
     >>> from sympy.abc import x, y, z
     >>> maxterm([1, 0, 1], [x, y, z])
     Or(Not(x), Not(z), y)
-    >>> maxterm(6, ['x', 'y', 'z'])
+    >>> maxterm(6, [x, y, z])
     Or(Not(x), Not(y), z)
 
     """
@@ -1979,7 +1981,7 @@ def monomial(k, variables):
     >>> from sympy.abc import x, y, z
     >>> monomial([1, 0, 1], [x, y, z])
     And(x, z)
-    >>> monomial(6, ['x', 'y', 'z'])
+    >>> monomial(6, [x, y, z])
     And(x, y)
 
     """
