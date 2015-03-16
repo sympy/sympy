@@ -439,10 +439,18 @@ class Or(LatticeOp, BooleanFunction):
                                       " expressions")
 
     def to_anf(self, deep=True):
-        a = self.args[0]
-        b = self.args[1:]
-        b = Or(*b)
-        return Xor._to_anf(a, b, And(a, b), deep=deep)
+        n_args = len(self.args)
+        a = self.args[:int(n_args/2)]
+        b = self.args[int(n_args/2):]
+        if len(a) == 1:
+            a = a[0]
+        else:
+            a = to_anf(Or(*a), deep=deep)
+        if len(b) == 1:
+            b = b[0]
+        else:
+            b = to_anf(Or(*b), deep=deep)
+        return Xor._to_anf(a, b, distribute_xor_over_and(And(a, b)), deep=deep)
 
 
 class Not(BooleanFunction):

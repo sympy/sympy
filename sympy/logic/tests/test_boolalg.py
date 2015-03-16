@@ -361,6 +361,7 @@ def test_distribute():
     assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
     assert distribute_xor_over_and(And(A, Xor(B, C))) == Xor(And(A, B), And(A, C))
 
+
 def test_to_nnf():
     assert to_nnf(true) is true
     assert to_nnf(false) is false
