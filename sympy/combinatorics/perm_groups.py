@@ -1963,8 +1963,8 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S3 = SymmetricGroup(3)
-        >>> S3.conjugacy_class(Permutation(1, 2, 3))
-        [Permutation(1, 2, 3), Permutation(1, 3, 2)]
+        >>> S3.conjugacy_class(Permutation(0, 1, 2))
+        set([Permutation(0, 1, 2), Permutation(0, 2, 1)])
 
         Notes
         =====
