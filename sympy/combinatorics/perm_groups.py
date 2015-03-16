@@ -1936,6 +1936,94 @@ class PermutationGroup(Basic):
             self._union_find_rep(i, parents)
         return parents
 
+    def conjugacy_class(self, x):
+        r"""Return the conjugacy class of an element in the group.
+
+        The conjugacy class of an element ``g`` in a group ``G`` is the set of
+        elements ``x`` in ``G`` that are conjugate with ``g``, i.e. for which 
+
+            ``g = xax^{-1}``
+
+        for some ``a`` in ``G``.
+
+        Note that conjugacy is an equivalence relation, and therefore that
+        conjugacy classes are partitions of ``G``. For a list of all the
+        conjugacy classes of the group, use the conjugacy_classes() method.
+
+        In a permutation group, each conjugacy class corresponds to a particular
+        `cycle structure': for example, in ``S_3``, the conjugacy classes are:
+
+            * the identity class, ``{()}``
+            * all transpositions, ``{(1 2), (1 3), (2 3)}``
+            * all 3-cycles, ``{(1 2 3), (1 3 2)}``
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S3 = SymmetricGroup(3)
+        >>> S3.conjugacy_class(Permutation(1, 2, 3))
+        [Permutation(1, 2, 3), Permutation(1, 3, 2)]
+
+        Notes
+        =====
+        
+        This procedure computes the conjugacy class directly by finding the
+        orbit of the element under conjugation in G. This algorithm is only
+        feasible for permutation groups of relatively small order, but is like
+        the orbit() function itself in that respect.
+        """
+        # Ref: "Computing the conjugacy classes of finite groups"; Butler, G.
+        # Groups '93 Galway/St Andrews; edited by Campbell, C. M.
+        new_class = set([x])
+        last_iteration = new_class
+
+        while len(last_iteration) > 0:
+            this_iteration = set()
+
+            for y in last_iteration:
+                for s in self.generators:
+                    conjugated = s * y * (~s) 
+                    if conjugated not in new_class:
+                        this_iteration.add(conjugated)
+
+            new_class.update(last_iteration)
+            last_iteration = this_iteration
+
+        return new_class
+
+
+    def conjugacy_classes(self):
+        r"""Return the conjugacy classes of the group.
+
+        As described in the documentation for the .conjugacy_class() function,
+        conjugacy is an equivalence relation on a group G which partitions the
+        set of elements. This method returns a list of all these conjugacy
+        classes of G.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import SymmetricGroup
+        >>> SymmetricGroup(3).conjugacy_classes()
+        [set([Permutation(2)]),
+         set([Permutation(0, 1, 2), Permutation(0, 2, 1)]),
+         set([Permutation(1, 2), Permutation(2)(0, 1), Permutation(0, 2)])]
+
+        """
+        identity = _af_new(list(range(self.degree)))
+        known_elements = set([identity])
+        classes = [known_elements.copy()]
+
+        for x in self.generate():
+            if x not in known_elements:
+                new_class = self.conjugacy_class(x)
+                classes.append(new_class)
+                known_elements.update(new_class)
+
+        return classes
+
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
 
