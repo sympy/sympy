@@ -705,4 +705,3 @@ def test_conjugacy_classes():
 
     assert len(expected) == len(computed)
     assert all(e in computed for e in expected)
-

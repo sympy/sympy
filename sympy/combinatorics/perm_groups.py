@@ -1940,7 +1940,7 @@ class PermutationGroup(Basic):
         r"""Return the conjugacy class of an element in the group.
 
         The conjugacy class of an element ``g`` in a group ``G`` is the set of
-        elements ``x`` in ``G`` that are conjugate with ``g``, i.e. for which 
+        elements ``x`` in ``G`` that are conjugate with ``g``, i.e. for which
 
             ``g = xax^{-1}``
 
@@ -1968,7 +1968,7 @@ class PermutationGroup(Basic):
 
         Notes
         =====
-        
+
         This procedure computes the conjugacy class directly by finding the
         orbit of the element under conjugation in G. This algorithm is only
         feasible for permutation groups of relatively small order, but is like
@@ -1984,7 +1984,7 @@ class PermutationGroup(Basic):
 
             for y in last_iteration:
                 for s in self.generators:
-                    conjugated = s * y * (~s) 
+                    conjugated = s * y * (~s)
                     if conjugated not in new_class:
                         this_iteration.add(conjugated)
 
