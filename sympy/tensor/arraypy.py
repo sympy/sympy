@@ -284,6 +284,28 @@ class Arraypy(Basic):
             index = self.next_index(index)
 
         return res
+    
+    def __mul__(self, other):
+        """
+        Overloads *.
+        n-dimensional arrays can be multiplyed on atom types (int, float, Symbol)
+        
+        Examples
+        ========
+        
+        """
+        # forming list of tuples for Arraypy constructor of type
+        # a = Arraypy( [(a, b), (c, d), ... , (y, z)] )
+        arg = [(self.start_index[i], self.end_index[i])
+               for i in range(self._rank)]
+        res = Arraypy(arg)  
+        
+        idx = self.start_index
+        for i in range(len(self)):
+            res[idx] = self[idx] * other
+            idx = self.next_index(idx)
+            
+        return res    
 
     def __eq__(self, other):
         """
@@ -927,63 +949,6 @@ class Tensor(Arraypy):
             return False
 
         return True
-
-    def __mul__(self, other):
-        """
-        Overloads operator "*". Returns tensor product.
-        Rank of resulted tensor is a summary rank of two tensors.
-
-        Examples
-        ========
-
-        from sympy.tensor.arraypy import Arraypy, Tensor
-        >>> a = Tensor( Arraypy ('1..2', 'X'), 1)
-        >>> b = Tensor( Arraypy ('1..2', 'Y'), -1)
-        >>> c = a * b
-        >>> print c
-        X[1]*Y[1] X[1]*Y[2]
-        X[2]*Y[1] X[2]*Y[2]
-
-        >>> c.start_index
-        (1, 1)
-        >>> c.end_index
-        (2, 2)
-        >>> c.rank
-        2
-        >>> c.ind_char
-        (1, -1)
-        """
-        if not isinstance(other, Tensor):
-            raise TypeError('Second operand must be Tensor')
-
-        # forming list of tuples for Arraypy constructor of type a = Arraypy(
-        # [(a, b), (c, d), ... , (y, z)] )
-        arg = [(self.start_index[i], self.end_index[i])
-               for i in range(self._rank)]
-        arg = arg + [(other.start_index[i], other.end_index[i])
-                     for i in range(other._rank)]
-
-        # index charater of resulted tensor will be a concatination of two
-        # index characters
-        res = Tensor(Arraypy(arg), self.ind_char + other.ind_char)
-
-        # start indexes of: current tensor and other tensor
-        cur_idx = self.start_index
-        other_idx = other.start_index
-
-        # loop over current tensor
-        for i in range(self.__len__()):
-
-            # loop over other tensor
-            for j in range(len(other)):
-                res[cur_idx +
-                    other_idx] = self.__getitem__(cur_idx) * other[other_idx]
-                # other tensor next index
-                other_idx = other.next_index(other_idx)
-            # current tensor next index
-            cur_idx = self.next_index(cur_idx)
-
-        return res
 
     def __copy__(self):
         """

@@ -113,6 +113,88 @@ def asymmetric(in_arr):
 
     return res_arr
 
+def tensorProduct(first_tensor, second_tensor):
+    """
+    Returns tensor product.
+    Rank of resulted tensor is a summary rank of two tensors.
+
+    Examples
+    ========
+
+    from sympy.tensor.arraypy import Arraypy, Tensor
+    >>> a = Tensor( Arraypy ('1..2', 'X'), 1)
+    >>> b = Tensor( Arraypy ('1..2', 'Y'), -1)
+    >>> c = a * b
+    >>> print c
+    X[1]*Y[1] X[1]*Y[2]
+    X[2]*Y[1] X[2]*Y[2]
+
+    >>> c.start_index
+    (1, 1)
+    >>> c.end_index
+    (2, 2)
+    >>> c.rank
+    2
+    >>> c.ind_char
+    (1, -1)
+    """
+    
+    if not isinstance(first_tensor, Tensor):
+        raise TypeError('first attribute must be Tensor')
+    if not isinstance(second_tensor, Tensor):
+        raise TypeError('second attribute must be Tensor')    
+    
+    # forming list of tuples for Arraypy constructor of type a = Arraypy(
+    # [(a, b), (c, d), ... , (y, z)] )
+    arg = [(first_tensor.start_index[i], first_tensor.end_index[i])
+           for i in range(first_tensor._rank)]
+    arg = arg + [(second_tensor.start_index[i], second_tensor.end_index[i])
+                 for i in range(second_tensor._rank)]
+
+    # index charater of resulted tensor will be a concatination of two
+    # index characters
+    res = Tensor(Arraypy(arg), first_tensor.ind_char + second_tensor.ind_char)
+
+    # start indexes of: current tensor and second_tensor tensor
+    cur_idx = first_tensor.start_index
+    second_tensor_idx = second_tensor.start_index
+
+    # loop over current tensor
+    for i in range(len(first_tensor)):
+
+        # loop over second_tensor tensor
+        for j in range(len(second_tensor)):
+            res[cur_idx +
+                second_tensor_idx] = first_tensor[cur_idx] * second_tensor[second_tensor_idx]
+            # second_tensor tensor next index
+            second_tensor_idx = second_tensor.next_index(second_tensor_idx)
+        # current tensor next index
+        cur_idx = first_tensor.next_index(cur_idx)
+
+    return res    
+    
+
+def wedge(first_tensor, second_tensor):
+    """
+    Finds outer product (wedge) of two tensor arguments.
+    The algoritm is too find the asymmetric form of tensor product of
+    two arguments. The resulted array is multiplied on coefficient which is
+    coeff = factorial(p+s)/factorial(p)*factorial(s)
+    
+    Examples
+    ========
+    
+    """
+    if not isinstance(first_tensor, Tensor):
+        raise TypeError('Input must be of Tensor type')
+    if not isinstance(second_tensor, Tensor):
+            raise TypeError('Input must be of Tensor type')    
+    
+    p = len(first_tensor)
+    s = len(second_tensor)
+    
+    coeff = factorial(p+s)/factorial(p)*factorial(s)
+    return coeff*asymmetric(tensorProduct(first_tensor, second_tensor))
 
 def perm_parity(lst):
     '''\
