@@ -517,3 +517,69 @@ class dirichlet_eta(Function):
 
     def _eval_rewrite_as_zeta(self, s):
         return (1 - 2**(1 - s)) * zeta(s)
+
+
+class stieltjes(Function):
+    """
+    Represents Stieltjes constants, :math: `\gamma_{k}` that occur in Laurent
+    Series expansion of the Riemann zeta function.
+
+    Examples
+    ========
+
+    >>> from sympy import stieltjes
+    >>> from sympy.abc import n
+
+    >>> stieltjes(n)
+    stieltjes(n)
+
+    The zero'th constant is the Euler-Mascheroni constant
+
+    >>> from sympy import stieltjes
+
+    >>> stieltjes(0)
+    EulerGamma
+    >>> stieltjes(0, 1)
+    EulerGamma
+
+    For generalized stieltjes constants
+
+    >>> from sympy import stieltjes
+    >>> from sympy.abc import n, m
+
+    >>> stieltjes(n, m)
+    stieltjes(n, m)
+
+    Constants are only defined for integers >= 0
+
+    >>> from sympy import stieltjes
+
+    >>> stieltjes(-1)
+    zoo
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Stieltjes_constants
+    """
+
+    @classmethod
+    def eval(cls, n, a=None):
+        n = sympify(n)
+
+        if a != None:
+            a = sympify(a)
+            if a is S.NaN:
+                return S.NaN
+            if a.is_Integer and a.is_nonpositive:
+                return S.ComplexInfinity
+
+        if n.is_Number:
+            if n is S.NaN:
+                return S.NaN
+            elif n < 0:
+                return S.ComplexInfinity
+            elif not n.is_Integer:
+                return S.ComplexInfinity
+            elif n == 0 and a in [None, 1]:
+                return S.EulerGamma
