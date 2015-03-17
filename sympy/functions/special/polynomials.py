@@ -1115,7 +1115,7 @@ class laguerre(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
-        # Make sure n is in N_0
+        # Make sure n \in N_0
         if not n.is_integer or n.is_negative:
             raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
@@ -1233,7 +1233,7 @@ class assoc_laguerre(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
-        # Make sure n is in N_0
+        # Make sure n \in N_0
         if not n.is_integer or n.is_negative:
             raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
