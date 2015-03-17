@@ -52,7 +52,7 @@ class OrthogonalPolynomial(Function):
 
 
 class jacobi(OrthogonalPolynomial):
-    """
+    r"""
     Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
 
     jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial
@@ -163,7 +163,7 @@ class jacobi(OrthogonalPolynomial):
             elif x == S.Infinity:
                 if n.is_positive:
                     # Make sure a+b+2*n \notin Z
-                    if (a + b + 2*n) % 1 == 0:
+                    if (a + b + 2*n).is_integer:
                         raise ValueError("Error. a + b + 2*n should not be an integer.")
                     return RisingFactorial(a + b + n + 1, n) * S.Infinity
         else:
@@ -201,7 +201,7 @@ class jacobi(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, a, b, x):
         from sympy import Sum
         # Make sure n \in N
-        if n % 1 != 0 or n < 0:
+        if not n.is_integer or n.is_negative:
             raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = (RisingFactorial(-n, k) * RisingFactorial(a + b + n + 1, k) * RisingFactorial(a + k + 1, n - k) /
@@ -1116,7 +1116,7 @@ class laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
         # Make sure n is in N_0
-        if n % 1 != 0 or n < 0:
+        if not n.is_integer or n.is_negative:
             raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
@@ -1234,7 +1234,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
         # Make sure n is in N_0
-        if n % 1 != 0 or n < 0:
+        if not n.is_integer or n.is_negative:
             raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(
