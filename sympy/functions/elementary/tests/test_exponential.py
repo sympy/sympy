@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
+    symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
 
@@ -444,6 +444,7 @@ def test_log_product():
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
 
+
 def test_issue_8866():
     x = Symbol('x')
     assert simplify(log(x, 10, evaluate=False)) == simplify(log(x, 10))
@@ -456,3 +457,10 @@ def test_issue_8866():
     b2 = log(exp(y), exp(5), evaluate=False)
     assert simplify(log(l1, b1)) == simplify(log(l2, b2))
     assert expand_log(log(l1, b1)) == expand_log(log(l2, b2))
+
+
+def test_issue_9116():
+    n = Symbol('n', positive=True, integer=True)
+
+    assert ln(n).is_nonnegative is True
+    assert log(n).is_nonnegative is True
