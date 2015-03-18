@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
-from sympy.core.compatibility import xrange
+from sympy import Expr, Add, Mul, Pow, sympify, Matrix, Tuple
+from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 
 
@@ -46,7 +46,7 @@ def _cycle_permute(l):
     # in each of the sublist is item just before the next occurence of
     # minitem in the cycle formed.
     sublist = [[le[indices[i]:indices[i + 1]]] for i in
-               xrange(len(indices) - 1)]
+               range(len(indices) - 1)]
 
     # we do comparison of strings by comparing elements
     # in each sublist
@@ -173,8 +173,7 @@ class Tr(Expr):
 
     @property
     def is_number(self):
-        #TODO : This function to be reviewed
-        # and implementation improved.
+        # TODO : improve this implementation
         return True
 
     #TODO: Review if the permute method is needed

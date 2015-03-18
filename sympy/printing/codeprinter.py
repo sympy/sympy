@@ -1,11 +1,15 @@
 from __future__ import print_function, division
 
-from sympy.core import C, Add, Mul, Pow, S
+from sympy.core import Add, Mul, Pow, S
+from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key, string_types
+from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
+from sympy.core.relational import Relational
+from sympy.core.symbol import Symbol
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 
 
 class AssignmentError(Exception):
@@ -15,7 +19,7 @@ class AssignmentError(Exception):
     pass
 
 
-class Assignment(C.Relational):
+class Assignment(Relational):
     """
     Represents variable assignment for code generation.
 
@@ -55,17 +59,20 @@ class Assignment(C.Relational):
     __slots__ = []
 
     def __new__(cls, lhs, rhs=0, **assumptions):
+        from sympy.matrices.expressions.matexpr import (
+            MatrixElement, MatrixSymbol)
+        from sympy.tensor.indexed import Indexed
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (C.Symbol, C.MatrixSymbol, C.MatrixElement, C.Indexed)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
         # Indexed types implement shape, but don't define it until later. This
         # causes issues in assignment validation. For now, matrices are defined
         # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, C.Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, C.Indexed)
+        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
+        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
         # If lhs and rhs have same structure, then this assignment is ok
         if lhs_is_mat:
             if not rhs_is_mat:
@@ -74,7 +81,7 @@ class Assignment(C.Relational):
                 raise ValueError("Dimensions of lhs and rhs don't align.")
         elif rhs_is_mat and not lhs_is_mat:
             raise ValueError("Cannot assign a matrix to a scalar.")
-        return C.Relational.__new__(cls, lhs, rhs, **assumptions)
+        return Relational.__new__(cls, lhs, rhs, **assumptions)
 
 
 class CodePrinter(StrPrinter):
@@ -87,6 +94,17 @@ class CodePrinter(StrPrinter):
         'or': '||',
         'not': '!',
     }
+
+    _default_settings = {'order': None,
+                         'full_prec': 'auto',
+                         'error_on_reserved': False,
+                         'reserved_word_suffix': '_'}
+
+    def __init__(self, settings=None):
+
+        super(CodePrinter, self).__init__(settings=settings)
+
+        self.reserved_words = set()
 
     def doprint(self, expr, assign_to=None):
         """
@@ -101,15 +119,22 @@ class CodePrinter(StrPrinter):
             If provided, the printed code will set the expression to a
             variable with name ``assign_to``.
         """
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
 
         if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
+            if expr.is_Matrix:
+                assign_to = MatrixSymbol(assign_to, *expr.shape)
+            else:
+                assign_to = Symbol(assign_to)
+        elif not isinstance(assign_to, (Basic, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))
 
         if assign_to:
             expr = Assignment(assign_to, expr)
+        else:
+            # _sympify is not enough b/c it errors on iterables
+            expr = sympify(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
@@ -234,6 +259,8 @@ class CodePrinter(StrPrinter):
 
     def _sort_optimized(self, indices, expr):
 
+        from sympy.tensor.indexed import Indexed
+
         if not indices:
             return []
 
@@ -243,7 +270,7 @@ class CodePrinter(StrPrinter):
         for i in indices:
             score_table[i] = 0
 
-        arrays = expr.atoms(C.Indexed)
+        arrays = expr.atoms(Indexed)
         for arr in arrays:
             for p, ind in enumerate(arr.indices):
                 try:
@@ -291,10 +318,13 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
     def _print_Assignment(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
-        if isinstance(expr.rhs, C.Piecewise):
+        if isinstance(expr.rhs, Piecewise):
             # Here we modify Piecewise so each expression is now
             # an Assignment, and then continue on the print.
             expressions = []
@@ -302,9 +332,9 @@ class CodePrinter(StrPrinter):
             for (e, c) in rhs.args:
                 expressions.append(Assignment(lhs, e))
                 conditions.append(c)
-            temp = C.Piecewise(*zip(expressions, conditions))
+            temp = Piecewise(*zip(expressions, conditions))
             return self._print(temp)
-        elif isinstance(lhs, C.MatrixSymbol):
+        elif isinstance(lhs, MatrixSymbol):
             # Here we form an Assignment for each element in the array,
             # printing each one.
             lines = []
@@ -313,8 +343,8 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif self._settings["contract"] and (lhs.has(C.IndexedBase) or
-                rhs.has(C.IndexedBase)):
+        elif self._settings["contract"] and (lhs.has(IndexedBase) or
+                rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
             return self._doprint_loops(rhs, lhs)
@@ -322,6 +352,19 @@ class CodePrinter(StrPrinter):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+    def _print_Symbol(self, expr):
+
+        name = super(CodePrinter, self)._print_Symbol(expr)
+
+        if name in self.reserved_words:
+            if self._settings['error_on_reserved']:
+                msg = ('This expression includes the symbol "{}" which is a '
+                       'reserved keyword in this language.')
+                raise ValueError(msg.format(name))
+            return name + self._settings['reserved_word_suffix']
+        else:
+            return name
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -335,7 +378,7 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 return "%s(%s)" % (func, self.stringify(expr.args, ", "))
-        elif hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
+        elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         else:
@@ -352,11 +395,16 @@ class CodePrinter(StrPrinter):
         # dummies must be printed as unique symbols
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
-    _print_Catalan = _print_NumberSymbol
-    _print_EulerGamma = _print_NumberSymbol
-    _print_GoldenRatio = _print_NumberSymbol
-    _print_Exp1 = _print_NumberSymbol
-    _print_Pi = _print_NumberSymbol
+    def _print_Catalan(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_EulerGamma(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_GoldenRatio(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_Exp1(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_Pi(self, expr):
+        return self._print_NumberSymbol(expr)
 
     def _print_And(self, expr):
         PREC = precedence(expr)
@@ -424,10 +472,7 @@ class CodePrinter(StrPrinter):
         if len(b) == 0:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
-            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/" % a_str[0] + '*'.join(b_str)
-            else:
-                return sign + '*'.join(a_str) + "/%s" % b_str[0]
+            return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 

@@ -33,7 +33,7 @@ def mplot3d(f, var1, var2, show=True):
     fig = p.figure()
     ax = p3.Axes3D(fig)
 
-    # ax.plot_surface(x,y,z) #seems to be a bug in matplotlib
+    # ax.plot_surface(x, y, z, rstride=2, cstride=2)
     ax.plot_wireframe(x, y, z)
 
     ax.set_xlabel('X')

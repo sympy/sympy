@@ -8,32 +8,29 @@ Contains
 
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, pi, Dummy
+from sympy.core import S, sympify, pi
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo, zoo, Rational
+from sympy.core.numbers import oo, Rational
+from sympy.core.compatibility import range
+from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
-from sympy.polys import Poly, PolynomialError
+from sympy.polys import Poly, PolynomialError, DomainError
+from sympy.polys.polyutils import _nsort, _not_a_coeff
 from sympy.solvers import solve
-from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
-from sympy.mpmath import findroot as nroot
 
 
 import random
 
 from sympy.utilities.decorator import doctest_depends_on
-
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
 
 
 class Ellipse(GeometryEntity):
@@ -260,10 +257,16 @@ class Ellipse(GeometryEntity):
         m
 
         """
-        rv = Min(*self.args[1:3])
-        if rv.func is Min:
-            return self.vradius
-        return rv
+        ab = self.args[1:3]
+        if len(ab) == 1:
+            return ab[0]
+        a, b = ab
+        o = a - b < 0
+        if o == True:
+            return a
+        elif o == False:
+            return b
+        return self.vradius
 
     @property
     def major(self):
@@ -301,10 +304,16 @@ class Ellipse(GeometryEntity):
         m + 1
 
         """
-        rv = Max(*self.args[1:3])
-        if rv.func is Max:
-            return self.hradius
-        return rv
+        ab = self.args[1:3]
+        if len(ab) == 1:
+            return ab[0]
+        a, b = ab
+        o = b - a < 0
+        if o == True:
+            return a
+        elif o == False:
+            return b
+        return self.hradius
 
     @property
     def area(self):
@@ -341,11 +350,12 @@ class Ellipse(GeometryEntity):
         12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
 
         """
+        from sympy import Integral
         if self.eccentricity == 1:
             return 2*pi*self.hradius
         else:
-            x = C.Dummy('x', real=True)
-            return 4*self.major*C.Integral(
+            x = Dummy('x', real=True)
+            return 4*self.major*Integral(
                 sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
 
     @property
@@ -770,8 +780,8 @@ class Ellipse(GeometryEntity):
             inter = self.intersection(o)
             if isinstance(inter, Ellipse):
                 return False
-            return (inter is not None and isinstance(inter[0], Point)
-                    and len(inter) == 1)
+            return (inter is not None and len(inter) == 1
+                    and isinstance(inter[0], Point))
         elif isinstance(o, LinearEntity):
             inter = self._do_line_intersection(o)
             if inter is not None and len(inter) == 1:
@@ -847,29 +857,22 @@ class Ellipse(GeometryEntity):
         norm = -1/dydx
         slope = Line(p, (x, y)).slope
         seq = slope - norm
-        points = []
-        if prec is not None:
-            yis = solve(seq, y)[0]
-            xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+        yis = solve(seq, y)[0]
+        xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+        if len(xeq.free_symbols) == 1:
             try:
-                iv = list(zip(*Poly(xeq).intervals()))[0]
-                # bisection is safest here since other methods may miss root
-                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson"))
-                    for i in iv]
-                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec)
-                    for i in xsol]
-            except PolynomialError:
-                pass
-        if not points:
-            points = solve((seq, eq), (x, y))
-            # complicated expressions may not be decidably real so evaluate to
-            # check whether they are real or not
-            points = [Point(i).n(prec) if prec is not None else Point(i)
-                      for i in points if all(j.n(2).is_real for j in i)]
+                # this is so much faster, it's worth a try
+                xsol = Poly(xeq, x).real_roots()
+            except (DomainError, PolynomialError, NotImplementedError):
+                xsol = _nsort(solve(xeq, x), separated=True)[0]
+            points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
+        else:
+            raise NotImplementedError(
+                'intersections for the general ellipse are not supported')
         slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
         if prec is not None:
-            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i
-                for i in slopes]
+            points = [pt.n(prec) for pt in points]
+            slopes = [i if _not_a_coeff(i) else i.n(prec) for i in slopes]
         return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
 
 
@@ -911,8 +914,8 @@ class Ellipse(GeometryEntity):
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError(filldedent('Symbol %s already appears in object '
                 'and cannot be used as a parameter.' % t.name))
-        return Point(self.center.x + self.hradius*C.cos(t),
-                     self.center.y + self.vradius*C.sin(t))
+        return Point(self.center.x + self.hradius*cos(t),
+                     self.center.y + self.vradius*sin(t))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
@@ -1226,8 +1229,8 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = C.Dummy('x', real=True)
-            y = C.Dummy('y', real=True)
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero

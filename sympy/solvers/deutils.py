@@ -10,8 +10,8 @@ _desolve
 """
 from __future__ import print_function, division
 
-from sympy.core.function import Function, Derivative, AppliedUndef
-from sympy.core.relational import Equality, Eq
+from sympy.core.function import Derivative, AppliedUndef
+from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
 def _preprocess(expr, func=None, hint='_Integral'):
@@ -71,7 +71,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
 
     derivs = expr.atoms(Derivative)
     if not func:
-        funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+        funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError('The function cannot be '
                 'automatically detected for %s.' % expr)

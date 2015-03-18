@@ -10,11 +10,13 @@ Segment
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
-from sympy.core.logic import fuzzy_and
+from sympy.core import S, sympify, Dummy
 from sympy.core.exprtools import factor_terms
+from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import (acos,
+     _pi_coeff as pi_coeff, sqrt, tan)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -337,7 +339,7 @@ class LinearEntity(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
@@ -372,6 +374,7 @@ class LinearEntity(GeometryEntity):
 
         """
         d = self.p1 - self.p2
+        p = Point(p)
         return Line(p, p + d)
 
     def perpendicular_line(self, p):
@@ -406,6 +409,7 @@ class LinearEntity(GeometryEntity):
         True
 
         """
+        p = Point(p)
         d1, d2 = (self.p1 - self.p2).args
         if d2 == 0:  # If a horizontal line
             if p.y == self.p1.y:  # if p is on this linear entity
@@ -459,6 +463,7 @@ class LinearEntity(GeometryEntity):
         Segment(Point(2, 2), Point(4, 0))
 
         """
+        p = Point(p)
         if p in self:
             return p
         a, b, c = self.coefficients
@@ -772,22 +777,23 @@ class LinearEntity(GeometryEntity):
                     return True
 
             prec = (Line, Ray, Segment)
-            if prec.index(self.func) > prec.index(o.func):
-                self, o = o, self
+            expr = self
+            if prec.index(expr.func) > prec.index(o.func):
+                expr, o = o, expr
             rv = [inter]
-            if isinstance(self, Line):
+            if isinstance(expr, Line):
                 if isinstance(o, Line):
                     return rv
                 elif isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Ray) and inray(self):
+            elif isinstance(expr, Ray) and inray(expr):
                 if isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Segment) and inseg(self):
+            elif isinstance(expr, Segment) and inseg(expr):
                 if isinstance(o, Segment) and inseg(o):
                     return rv
             return []
@@ -1007,8 +1013,8 @@ class Line(LinearEntity):
                 'If it was a slope, enter it with keyword "slope".')
         elif slope is not None and pt is None:
             slope = sympify(slope)
-            if slope.is_bounded is False:
-                # when unbounded slope, don't change x
+            if slope.is_finite is False:
+                # when infinite slope, don't change x
                 dx = 0
                 dy = 1
             else:
@@ -1257,9 +1263,13 @@ class Ray(LinearEntity):
                 if p2 is None:
                     c *= S.Pi
             else:
-                c = angle
+                c = angle % (2*S.Pi)
             if not p2:
-                p2 = p1 + Point(1, C.tan(c))
+                m = 2*c/S.Pi
+                left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
+                x = Piecewise((-1, left), (Piecewise((0, Eq(m % 1, 0)), (1, True)), True))
+                y = Piecewise((-tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (tan(c), True)), True))
+                p2 = p1 + Point(x, y)
         else:
             raise ValueError('A 2nd point or keyword "angle" must be used.')
 
@@ -1611,7 +1621,7 @@ class Segment(LinearEntity):
 
         """
         l = LinearEntity.perpendicular_line(self, self.midpoint)
-        if p is None or p not in l:
+        if p is None or Point(p) not in l:
             return l
         else:
             return Segment(self.midpoint, p)

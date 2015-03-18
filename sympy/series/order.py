@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
@@ -328,7 +328,7 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp, PoleError
+        from sympy import powsimp
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -369,9 +369,11 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                try:
-                    l = ratio.limit(s, point) != 0
-                except PoleError:
+                l = ratio.limit(s, point)
+                from sympy.series.limits import Limit
+                if not isinstance(l, Limit):
+                    l = l != 0
+                else:
                     l = None
                 if r is None:
                     r = l

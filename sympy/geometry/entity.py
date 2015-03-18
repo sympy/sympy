@@ -10,6 +10,7 @@ GeometryEntity
 from __future__ import print_function, division
 
 from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
@@ -44,7 +45,7 @@ class GeometryEntity(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = [Tuple(*a) if is_sequence(a) else sympify(a) for a in args]
         return Basic.__new__(cls, *args)
 
     def _sympy_(self):
@@ -164,7 +165,7 @@ class GeometryEntity(Basic):
         return self.func(*newargs)
 
     def reflect(self, line):
-        from sympy import atan, Line, Point, Dummy, oo
+        from sympy import atan, Point, Dummy, oo
 
         g = self
         l = line

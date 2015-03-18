@@ -285,7 +285,7 @@ How to create a new function with one variable::
                 if not isinstance(coeff, Basic.One):
                     return cls(coeff) * cls(Basic.Mul(*terms))
 
-        is_bounded = True
+        is_finite = True
 
         def _eval_conjugate(self):
             return self

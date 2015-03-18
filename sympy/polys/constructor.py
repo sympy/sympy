@@ -6,9 +6,8 @@ from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.assumptions import ask, Q
 from sympy.utilities import public
-from sympy.core import sympify, Symbol
+from sympy.core import sympify
 
 
 def _construct_simple(coeffs, opt):
@@ -16,7 +15,7 @@ def _construct_simple(coeffs, opt):
     result, rationals, reals, algebraics = {}, False, False, False
 
     if opt.extension is True:
-        is_algebraic = lambda coeff: ask(Q.algebraic(coeff))
+        is_algebraic = lambda coeff: coeff.is_number and coeff.is_algebraic
     else:
         is_algebraic = lambda coeff: False
 

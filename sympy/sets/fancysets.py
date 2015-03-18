@@ -1,12 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass
-from sympy.sets.sets import Set, Interval, Intersection, \
-    FiniteSet, Union, Complement, EmptySet
+from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.sets.sets import Set, Interval, Intersection, EmptySet
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import symbols
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
 
@@ -50,10 +48,10 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.positive(other)) and ask(Q.integer(other)):
-            return True
-        return False
+        if other.is_positive and other.is_integer:
+            return S.true
+        elif other.is_integer is False or other.is_positive is False:
+            return S.false
 
     def __iter__(self):
         i = self._inf
@@ -78,10 +76,10 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.negative(other)) == False and ask(Q.integer(other)):
-            return True
-        return False
+        if other.is_integer and other.is_nonnegative:
+            return S.true
+        elif other.is_integer is False or other.is_nonnegative is False:
+            return S.false
 
 
 class Integers(with_metaclass(Singleton, Set)):
@@ -126,10 +124,10 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.integer(other)):
-            return True
-        return False
+        if other.is_integer:
+            return S.true
+        elif other.is_integer is False:
+            return S.false
 
     def __iter__(self):
         yield S.Zero
@@ -237,11 +235,11 @@ class ImageSet(Set):
         for soln in solns:
             try:
                 if soln in self.base_set:
-                    return True
+                    return S.true
             except TypeError:
                 if soln.evalf() in self.base_set:
-                    return True
-        return False
+                    return S.true
+        return S.false
 
     @property
     def is_iterable(self):
@@ -273,6 +271,25 @@ class ImageSet(Set):
 
                 # since 'a' < 'b'
                 return imageset(Lambda(t, f.subs(a, solns[0][0])), S.Integers)
+
+        if other == S.Reals:
+            from sympy.solvers.solveset import solveset_real
+            from sympy.core.function import expand_complex
+            if len(self.lamda.variables) > 1:
+                return None
+
+            f = self.lamda.expr
+            n = self.lamda.variables[0]
+
+            n_ = Dummy(n.name, real=True)
+            f_ = f.subs(n, n_)
+
+            re, im = f_.as_real_imag()
+            im = expand_complex(im)
+
+            return imageset(Lambda(n_, re),
+                            self.base_set.intersect(
+                                solveset_real(im, n_)))
 
 
 @deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
@@ -314,7 +331,7 @@ class Range(Set):
             raise ValueError("Inputs to Range must be Integer Valued\n" +
                     "Use ImageSets of Ranges for other cases")
 
-        if not step.is_bounded:
+        if not step.is_finite:
             raise ValueError("Infinite step is not allowed")
         if start == stop:
             return S.EmptySet
@@ -325,7 +342,7 @@ class Range(Set):
 
         # normalize args: regardless of how they are entered they will show
         # canonically as Range(inf, sup, step) with step > 0
-        if n.is_bounded:
+        if n.is_finite:
             start, stop = sorted((start, start + (n - 1)*step))
         else:
             start, stop = sorted((start, stop - step))
@@ -358,7 +375,7 @@ class Range(Set):
             inf = ceiling(Max(self.inf, oinf))
             sup = floor(Min(self.sup, osup))
             # if we are off the sequence, get back on
-            if inf.is_bounded and self.inf.is_bounded:
+            if inf.is_finite and self.inf.is_finite:
                 off = (inf - self.inf) % self.step
             else:
                 off = S.Zero
@@ -376,10 +393,12 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        return (other >= self.inf and other <= self.sup and
-                (ask(Q.integer((self.start - other)/self.step)) or
-                 ask(Q.integer((self.stop - other)/self.step))))
+        if (((self.start - other)/self.step).is_integer or
+            ((self.stop - other)/self.step).is_integer):
+            return _sympify(other >= self.inf and other <= self.sup)
+        elif (((self.start - other)/self.step).is_integer is False and
+            ((self.stop - other)/self.step).is_integer is False):
+            return S.false
 
     def __iter__(self):
         if self.start is S.NegativeInfinity:

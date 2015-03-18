@@ -7,8 +7,10 @@
 import os
 import re
 import warnings
+import io
 
 from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -34,7 +36,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), "r") as f:
+            with io.open(os.path.join(root, file), "r", encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
@@ -504,6 +506,12 @@ def test_sympy__sets__sets__Complement():
     assert _test_args(Complement(Interval(0, 2), Interval(0, 1)))
 
 
+def test_sympy__sets__sets__SymmetricDifference():
+    from sympy.sets.sets import FiniteSet, SymmetricDifference
+    assert _test_args(SymmetricDifference(FiniteSet(1, 2, 3), \
+           FiniteSet(2, 3, 4)))
+
+
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
@@ -538,6 +546,13 @@ def test_sympy__sets__fancysets__ImageSet():
 def test_sympy__sets__fancysets__Range():
     from sympy.sets.fancysets import Range
     assert _test_args(Range(1, 5, 1))
+
+
+def test_sympy__sets__contains__Contains():
+    from sympy.sets.fancysets import Range
+    from sympy.sets.contains import Contains
+    assert _test_args(Contains(x, Range(0, 10, 2)))
+
 
 # STATS
 
@@ -627,7 +642,7 @@ def test_sympy__stats__rv__ConditionalDomain():
 
 def test_sympy__stats__rv__PSpace():
     from sympy.stats.rv import PSpace, RandomDomain
-    from sympy import Dict, FiniteSet
+    from sympy import FiniteSet
     D = RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3, 4, 5, 6))
     assert _test_args(PSpace(D, die))
 
@@ -685,6 +700,11 @@ def test_sympy__stats__frv_types__HypergeometricDistribution():
     assert _test_args(HypergeometricDistribution(10, 5, 3))
 
 
+def test_sympy__stats__frv_types__RademacherDistribution():
+    from sympy.stats.frv_types import RademacherDistribution
+    assert _test_args(RademacherDistribution())
+
+
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
     assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
@@ -717,15 +737,14 @@ def test_sympy__stats__frv__FinitePSpace():
 
 
 def test_sympy__stats__frv__SingleFinitePSpace():
-    from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDomain
+    from sympy.stats.frv import SingleFinitePSpace
     from sympy import Symbol
 
     assert _test_args(SingleFinitePSpace(Symbol('x'), die))
 
 
 def test_sympy__stats__frv__ProductFinitePSpace():
-    from sympy.stats.frv import (SingleFiniteDomain, SingleFinitePSpace,
-        ProductFinitePSpace)
+    from sympy.stats.frv import SingleFinitePSpace, ProductFinitePSpace
     from sympy import Symbol
     xp = SingleFinitePSpace(Symbol('x'), die)
     yp = SingleFinitePSpace(Symbol('y'), die)
@@ -996,6 +1015,11 @@ def test_sympy__functions__combinatorial__numbers__catalan():
     assert _test_args(catalan(x))
 
 
+def test_sympy__functions__combinatorial__numbers__genocchi():
+    from sympy.functions.combinatorial.numbers import genocchi
+    assert _test_args(genocchi(x))
+
+
 def test_sympy__functions__combinatorial__numbers__euler():
     from sympy.functions.combinatorial.numbers import euler
     assert _test_args(euler(x))
@@ -1101,6 +1125,11 @@ def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__hyperbolic__ReciprocalHyperbolicFunction():
+    pass
+
+
 def test_sympy__functions__elementary__hyperbolic__acosh():
     from sympy.functions.elementary.hyperbolic import acosh
     assert _test_args(acosh(2))
@@ -1129,6 +1158,16 @@ def test_sympy__functions__elementary__hyperbolic__cosh():
 def test_sympy__functions__elementary__hyperbolic__coth():
     from sympy.functions.elementary.hyperbolic import coth
     assert _test_args(coth(2))
+
+
+def test_sympy__functions__elementary__hyperbolic__csch():
+    from sympy.functions.elementary.hyperbolic import csch
+    assert _test_args(csch(2))
+
+
+def test_sympy__functions__elementary__hyperbolic__sech():
+    from sympy.functions.elementary.hyperbolic import sech
+    assert _test_args(sech(2))
 
 
 def test_sympy__functions__elementary__hyperbolic__sinh():
@@ -1778,7 +1817,7 @@ def test_sympy__liealgebras__weyl_group__WeylGroup():
 
 @XFAIL
 def test_sympy__liealgebras__root_system__RootSystem():
-    from sympy.liealgebras.root_system import RootSyStem
+    from sympy.liealgebras.root_system import RootSystem
     assert _test_args(RootSystem("A2"))
 
 @XFAIL
@@ -1895,12 +1934,37 @@ def test_sympy__matrices__expressions__matexpr__MatrixBase():
 
 def test_sympy__matrices__immutable__ImmutableMatrix():
     from sympy.matrices.immutable import ImmutableMatrix
-    assert _test_args(ImmutableMatrix([[1, 2], [3, 4]]))
+    m = ImmutableMatrix([[1, 2], [3, 4]])
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
+    m = ImmutableMatrix(1, 1, [1])
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
+    m = ImmutableMatrix(2, 2, lambda i, j: 1)
+    assert m[0, 0] is S.One
+    m = ImmutableMatrix(2, 2, lambda i, j: 1/(1 + i) + 1/(1 + j))
+    assert m[1, 1] is S.One  # true div. will give 1.0 if i,j not sympified
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
 
 
 def test_sympy__matrices__immutable__ImmutableSparseMatrix():
     from sympy.matrices.immutable import ImmutableSparseMatrix
-    assert _test_args(ImmutableSparseMatrix([[1, 2], [3, 4]]))
+    m = ImmutableSparseMatrix([[1, 2], [3, 4]])
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
+    m = ImmutableSparseMatrix(1, 1, {(0, 0): 1})
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
+    m = ImmutableSparseMatrix(1, 1, [1])
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
+    m = ImmutableSparseMatrix(2, 2, lambda i, j: 1)
+    assert m[0, 0] is S.One
+    m = ImmutableSparseMatrix(2, 2, lambda i, j: 1/(1 + i) + 1/(1 + j))
+    assert m[1, 1] is S.One  # true div. will give 1.0 if i,j not sympified
+    assert _test_args(m)
+    assert _test_args(Basic(*list(m)))
 
 
 def test_sympy__matrices__expressions__slice__MatrixSlice():
@@ -2426,6 +2490,46 @@ def test_sympy__physics__quantum__fermion__FermionFockBra():
     assert _test_args(FermionFockBra(1))
 
 
+def test_sympy__physics__quantum__pauli__SigmaOpBase():
+    from sympy.physics.quantum.pauli import SigmaOpBase
+    assert _test_args(SigmaOpBase())
+
+
+def test_sympy__physics__quantum__pauli__SigmaX():
+    from sympy.physics.quantum.pauli import SigmaX
+    assert _test_args(SigmaX())
+
+
+def test_sympy__physics__quantum__pauli__SigmaY():
+    from sympy.physics.quantum.pauli import SigmaY
+    assert _test_args(SigmaY())
+
+
+def test_sympy__physics__quantum__pauli__SigmaZ():
+    from sympy.physics.quantum.pauli import SigmaZ
+    assert _test_args(SigmaZ())
+
+
+def test_sympy__physics__quantum__pauli__SigmaMinus():
+    from sympy.physics.quantum.pauli import SigmaMinus
+    assert _test_args(SigmaMinus())
+
+
+def test_sympy__physics__quantum__pauli__SigmaPlus():
+    from sympy.physics.quantum.pauli import SigmaPlus
+    assert _test_args(SigmaPlus())
+
+
+def test_sympy__physics__quantum__pauli__SigmaZKet():
+    from sympy.physics.quantum.pauli import SigmaZKet
+    assert _test_args(SigmaZKet(0))
+
+
+def test_sympy__physics__quantum__pauli__SigmaZBra():
+    from sympy.physics.quantum.pauli import SigmaZBra
+    assert _test_args(SigmaZBra(0))
+
+
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
     from sympy.physics.quantum.piab import PIABHamiltonian
     assert _test_args(PIABHamiltonian('P'))
@@ -2887,8 +2991,8 @@ def test_sympy__physics__unitsystems__units__Unit():
     assert _test_args(Unit(length, abbrev="u", factor=10))
 
 
-def test_sympy__polys__numberfields__AlgebraicNumber():
-    from sympy.polys.numberfields import AlgebraicNumber
+def test_sympy__core__numbers__AlgebraicNumber():
+    from sympy.core.numbers import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
 
 
@@ -2966,12 +3070,11 @@ def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
 
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
-    from sympy import Symbol
     assert _test_args(TensorIndexType('Lorentz', metric=False))
 
 
 def test_sympy__tensor__tensor__TensorSymmetry():
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
     assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
 
 
@@ -2991,7 +3094,7 @@ def test_sympy__tensor__tensor__TensorHead():
 
 
 def test_sympy__tensor__tensor__TensorIndex():
-    from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    from sympy.tensor.tensor import TensorIndexType, TensorIndex
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     assert _test_args(TensorIndex('i', Lorentz))
 
@@ -3011,6 +3114,17 @@ def test_sympy__tensor__tensor__TensAdd():
     assert _test_args(TensAdd(t1, t2))
 
 
+def test_sympy__tensor__tensor__Tensor():
+    from sympy.core import S
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p = S1('p')
+    assert _test_args(p(a))
+
+
 def test_sympy__tensor__tensor__TensMul():
     from sympy.core import S
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
@@ -3019,8 +3133,8 @@ def test_sympy__tensor__tensor__TensMul():
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     S1 = TensorType([Lorentz], sym)
     p = S1('p')
-    free, dum = TIDS.free_dum_from_indices(a)
-    assert _test_args(TensMul.from_data(S.One, [p], free, dum))
+    q = S1('q')
+    assert _test_args(3*p(a)*q(b))
 
 
 def test_as_coeff_add():
@@ -3115,22 +3229,19 @@ def test_sympy__geometry__polygon__Triangle():
 def test_sympy__geometry__entity__GeometryEntity():
     from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point
-    assert _test_args(GeometryEntity(Point(1, 0), 1))
+    assert _test_args(GeometryEntity(Point(1, 0), 1, [1, 2]))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__Manifold():
     from sympy.diffgeom import Manifold
     assert _test_args(Manifold('name', 3))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__Patch():
     from sympy.diffgeom import Manifold, Patch
     assert _test_args(Patch('name', Manifold('name', 3)))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__CoordSystem():
     from sympy.diffgeom import Manifold, Patch, CoordSystem
     assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
@@ -3143,14 +3254,12 @@ def test_sympy__diffgeom__diffgeom__Point():
         CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__BaseScalarField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     assert _test_args(BaseScalarField(cs, 0))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__BaseVectorField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
@@ -3164,7 +3273,7 @@ def test_sympy__diffgeom__diffgeom__Differential():
 
 
 def test_sympy__diffgeom__diffgeom__Commutator():
-    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, BaseVectorField, Commutator
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, Commutator
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)))
     v = BaseVectorField(cs, 0)
@@ -3246,7 +3355,7 @@ def test_sympy__categories__baseclasses__CompositeMorphism():
 
 
 def test_sympy__categories__baseclasses__Diagram():
-    from sympy.categories import Object, NamedMorphism, Diagram, Category
+    from sympy.categories import Object, NamedMorphism, Diagram
     A = Object("A")
     B = Object("B")
     C = Object("C")
@@ -3272,6 +3381,14 @@ def test_sympy__ntheory__factor___totient():
     from sympy.ntheory.factor_ import totient
     k = symbols('k', integer=True)
     t = totient(k)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___divisor_sigma():
+    from sympy.ntheory.factor_ import divisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = divisor_sigma(n, k)
     assert _test_args(t)
 
 

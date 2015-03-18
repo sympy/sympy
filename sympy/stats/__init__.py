@@ -49,6 +49,7 @@ __all__.extend(rv_interface.__all__)
 from . import frv_types
 from .frv_types import (
     Bernoulli, Binomial, Coin, Die, DiscreteUniform, FiniteRV, Hypergeometric,
+    Rademacher,
 )
 __all__.extend(frv_types.__all__)
 

@@ -9,6 +9,11 @@ sympify
 ^^^^^^^
 .. autofunction:: sympify
 
+assumptions
+-----------
+
+.. automodule:: sympy.core.assumptions
+
 cache
 -------
 .. module:: sympy.core.cache
@@ -30,6 +35,10 @@ Atom
 ^^^^
 .. autoclass:: Atom
    :members:
+
+core
+----
+.. module:: sympy.core.core
 
 C
 ^

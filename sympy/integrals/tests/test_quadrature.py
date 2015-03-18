@@ -361,10 +361,10 @@ def test_jacobi():
     assert [str(r) for r in w] == ['3.1415926535897932']
 
     x, w = gauss_jacobi(2, -S.Half, S.Half, 17)
-    assert [str(r) for r in x] == ['0.80901699437494742',
-                                   '-0.30901699437494742']
-    assert [str(r) for r in w] == ['2.2732777998989693',
-                                   '0.86831485369082398']
+    assert [str(r) for r in x] == ['-0.30901699437494742',
+                                   '0.80901699437494742']
+    assert [str(r) for r in w] == ['0.86831485369082398',
+                                   '2.2732777998989693']
 
     x, w = gauss_jacobi(3, -S.Half, S.Half, 17)
     assert [str(r) for r in x] == ['-0.62348980185873353',
@@ -401,10 +401,10 @@ def test_jacobi():
     assert [str(r) for r in w] == ['1.0666666666666667']
 
     x, w = gauss_jacobi(2, 2, 3, 17)
-    assert [str(r) for r in x] == ['0.46247529557426437',
-                                   '-0.24025307335204215']
-    assert [str(r) for r in w] == ['0.58152042148828007',
-                                   '0.48514624517838660']
+    assert [str(r) for r in x] == ['-0.24025307335204215',
+                                   '0.46247529557426437']
+    assert [str(r) for r in w] == ['0.48514624517838660',
+                                   '0.58152042148828007']
 
     x, w = gauss_jacobi(3, 2, 3, 17)
     assert [str(r) for r in x] == ['-0.46115870378089762',

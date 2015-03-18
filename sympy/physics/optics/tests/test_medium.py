@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import symbols, Symbol, sqrt, simplify
+from sympy import sqrt, simplify
 from sympy.physics.optics import Medium
 from sympy.abc import epsilon, mu
 from sympy.physics.units import c, u0, e0, m, kg, s, A

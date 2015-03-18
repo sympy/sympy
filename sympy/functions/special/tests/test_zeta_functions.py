@@ -2,8 +2,7 @@ from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
                    exp_polar, polar_lift, O)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
-                      random_complex_number as randcplx, test_numerically as tn)
-from sympy.utilities.pytest import XFAIL
+                      random_complex_number as randcplx, verify_numerically as tn)
 
 x = Symbol('x')
 a = Symbol('a')
@@ -122,7 +121,7 @@ def myexpand(func, target):
 
 
 def test_polylog_expansion():
-    from sympy import factor, log
+    from sympy import log
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == dirichlet_eta(s)

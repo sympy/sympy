@@ -9,12 +9,6 @@ if not pyglet_gl or not pyglet_window:
     disabled = True
 
 
-def setup_module(module):
-    """py.test support"""
-    if module.disabled:
-        import pytest
-        pytest.skip("Pyglet and/or OpenGL are unavailable.")
-
 from sympy import symbols, sin, cos
 x, y, z = symbols('x, y, z')
 

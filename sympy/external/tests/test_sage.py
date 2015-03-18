@@ -30,45 +30,49 @@ if sys.version_info[0] == 3:
     # Sage does not support Python 3 currently
     disabled = True
 
-
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("Sage isn't available.")
-
 import sympy
 
 from sympy.utilities.pytest import XFAIL
 
 
-def check_expression(expr, var_symbols):
-    """Does eval(expr) both in Sage and SymPy and does other checks."""
+def check_expression(expr, var_symbols, only_from_sympy=False):
+    """
+    Does eval(expr) both in Sage and SymPy and does other checks.
+    """
 
     # evaluate the expression in the context of Sage:
     if var_symbols:
         sage.var(var_symbols)
     a = globals().copy()
     # safety checks...
-    assert not "sin" in a
     a.update(sage.__dict__)
     assert "sin" in a
-    e_sage = eval(expr, a)
-    assert not isinstance(e_sage, sympy.Basic)
+    is_different = False
+    try:
+        e_sage = eval(expr, a)
+        assert not isinstance(e_sage, sympy.Basic)
+    except (NameError, TypeError):
+        is_different = True
+        pass
 
     # evaluate the expression in the context of SymPy:
     if var_symbols:
-        sympy.var(var_symbols)
+        sympy_vars = sympy.var(var_symbols)
     b = globals().copy()
-    assert not "sin" in b
     b.update(sympy.__dict__)
     assert "sin" in b
     b.update(sympy.__dict__)
     e_sympy = eval(expr, b)
     assert isinstance(e_sympy, sympy.Basic)
 
+    # Sympy func may have specific _sage_ method
+    if is_different:
+        _sage_method = getattr(e_sympy.func, "_sage_")
+        e_sage = _sage_method(sympy.S(e_sympy))
+
     # Do the actual checks:
-    assert sympy.S(e_sage) == e_sympy
+    if not only_from_sympy:
+        assert sympy.S(e_sage) == e_sympy
     assert e_sage == sage.SR(e_sympy)
 
 
@@ -121,7 +125,8 @@ def test_oo():
     assert sage.oo == sage.SR(sympy.oo)
     assert sympy.sympify(-sage.oo) == -sympy.oo
     assert -sage.oo == sage.SR(-sympy.oo)
-
+    #assert sympy.sympify(sage.UnsignedInfinityRing.gen()) == sympy.zoo
+    #assert sage.UnsignedInfinityRing.gen() == sage.SR(sympy.zoo)
 
 def test_NaN():
     assert sympy.sympify(sage.NaN) == sympy.nan
@@ -139,6 +144,9 @@ def test_GoldenRation():
 
 
 def test_functions():
+    # Test at least one Function without own _sage_ method
+    assert not "_sage_" in sympy.factorial.__dict__
+    check_expression("factorial(x)", "x")
     check_expression("sin(x)", "x")
     check_expression("cos(x)", "x")
     check_expression("tan(x)", "x")
@@ -158,7 +166,28 @@ def test_functions():
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
     check_expression("log(x)", "x")
+    check_expression("re(x)", "x")
+    check_expression("im(x)", "x")
+    check_expression("sign(x)", "x")
+    check_expression("abs(x)", "x")
+    check_expression("arg(x)", "x")
+    check_expression("conjugate(x)", "x")
 
+    # The following tests differently named functions
+    check_expression("besselj(y, x)", "x, y")
+    check_expression("bessely(y, x)", "x, y")
+    check_expression("besseli(y, x)", "x, y")
+    check_expression("besselk(y, x)", "x, y")
+    check_expression("DiracDelta(x)", "x")
+    check_expression("KroneckerDelta(x, y)", "x, y")
+    check_expression("expint(y, x)", "x, y")
+    check_expression("Si(x)", "x")
+    check_expression("Ci(x)", "x")
+    check_expression("Shi(x)", "x")
+    check_expression("Chi(x)", "x")
+    check_expression("loggamma(x)", "x")
+    check_expression("Ynm(n,m,x,y)", "n, m, x, y")
+    check_expression("hyper((n,m),(m,n),x)", "n, m, x")
 
 def test_issue_4023():
     sage.var("a x")
@@ -167,6 +196,30 @@ def test_issue_4023():
     i2 = sympy.simplify(i)
     s = sage.SR(i2)
     assert s == (a*log(1 + a) - a*log(a) + log(1 + a) - 1)/a
+
+def test_integral():
+    #test Sympy-->Sage
+    check_expression("Integral(x, (x,))", "x", only_from_sympy=True)
+    check_expression("Integral(x, (x, 0, 1))", "x", only_from_sympy=True)
+    check_expression("Integral(x*y, (x,), (y, ))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x,), (y, 0, 1))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x, 0, 1), (y,))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x, 0, 1), (y, 0, 1))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y*z, (x, 0, 1), (y, 0, 1), (z, 0, 1))", "x,y,z", only_from_sympy=True)
+
+@XFAIL
+def test_integral_failing():
+    check_expression("Integral(x, (x, 0))", "x", only_from_sympy=True)
+    check_expression("Integral(x*y, (x,), (y, 0))", "x,y", only_from_sympy=True)
+    check_expression("Integral(x*y, (x, 0, 1), (y, 0))", "x,y", only_from_sympy=True)
+
+def test_undefined_function():
+    f = sympy.Function('f')
+    sf = sage.function('f')
+    x = sympy.symbols('x')
+    sx = sage.var('x')
+    assert bool(sf(sx) == f(x)._sage_())
+    #assert bool(f == sympy.sympify(sf))
 
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
@@ -188,5 +241,14 @@ TESTS::
     sage: test_GoldenRation()
     sage: test_functions()
     sage: test_issue_4023()
+    sage: test_integral()
+    sage: test_undefined_function()
+
+Sage has no symbolic Lucas function at the moment::
+
+    sage: check_expression("lucas(x)", "x")
+    Traceback (most recent call last):
+    ...
+    AttributeError: 'module' object has no attribute 'lucas'
 
 """

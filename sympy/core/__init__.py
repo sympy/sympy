@@ -3,12 +3,14 @@
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
-from .basic import Basic, Atom, C, preorder_traversal
+from .core import C
+from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var
 from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
-    RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo
+    RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
+    AlgebraicNumber, comp
 from .power import Pow, integer_nthroot
 from .mul import Mul, prod
 from .add import Add

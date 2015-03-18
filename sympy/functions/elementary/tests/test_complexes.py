@@ -1,11 +1,10 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
+    Interval, comp
 )
-from sympy.utilities.pytest import XFAIL
-
-from sympy.utilities.randtest import comp
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -70,6 +69,16 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
+    assert re(x).rewrite(im) == x - im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    x = Symbol('x')
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -129,6 +138,16 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
+    assert im(x).rewrite(re) == x - re(x)
+    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    x = Symbol('x')
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
+
 
 def test_sign():
     assert sign(1.2) == 1
@@ -140,9 +159,11 @@ def test_sign():
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
+    assert sign(im(sqrt(1 - sqrt(3)))) == 1
+    assert sign(sqrt(1 - sqrt(3))) == I
 
     x = Symbol('x')
-    assert sign(x).is_bounded is True
+    assert sign(x).is_finite is True
     assert sign(x).is_complex is True
     assert sign(x).is_imaginary is None
     assert sign(x).is_integer is None
@@ -215,10 +236,20 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    assert sign(Symbol('x', nonnegative=True)).is_nonnegative
+    assert sign(Symbol('x', nonnegative=True)).is_nonpositive is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonnegative is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonpositive
+    assert sign(Symbol('x', real=True)).is_nonnegative is None
+    assert sign(Symbol('x', real=True)).is_nonpositive is None
+    assert sign(Symbol('x', real=True, zero=False)).is_nonpositive is None
+
     x, y = Symbol('x', real=True), Symbol('y')
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
@@ -261,6 +292,7 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+
 @XFAIL
 def test_sign_issue_3068():
     n = pi**1000
@@ -275,6 +307,8 @@ def test_sign_issue_3068():
 
 
 def test_Abs():
+    raises(TypeError, lambda: Abs(Interval(2, 3)))  # issue 8717
+
     x, y = symbols('x,y')
     assert sign(sign(x)) == sign(x)
     assert sign(x*y).func is sign
@@ -310,6 +344,8 @@ def test_Abs():
         Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
+    assert Abs(x)**-3 == Abs(x)/(x**4)
+    assert Abs(x**3) == x**2*Abs(x)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -325,6 +361,23 @@ def test_Abs():
     d = p - q
     assert abs(d).func is Abs or abs(d) == 0
 
+    assert Abs(4*exp(pi*I/4)) == 4
+    assert Abs(3**(2 + I)) == 9
+    assert Abs((-3)**(1 - I)) == 3*exp(pi)
+
+    assert Abs(oo) is oo
+    assert Abs(-oo) is oo
+    assert Abs(oo + I) is oo
+    assert Abs(oo + I*oo) is oo
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    x = Symbol('x')
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
+
+
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
     a = Abs(x).rewrite(Heaviside).expand()
@@ -337,6 +390,7 @@ def test_Abs_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
     assert Abs(y).rewrite(Piecewise) == Abs(y)
+    assert Abs(y).rewrite(sign) == y/sign(y)
 
 
 def test_Abs_real():
@@ -360,18 +414,44 @@ def test_Abs_real():
 def test_Abs_properties():
     x = Symbol('x')
     assert Abs(x).is_real is True
+    assert Abs(x).is_rational is None
     assert Abs(x).is_positive is None
     assert Abs(x).is_nonnegative is True
 
-    w = Symbol('w', complex=True, zero=False)
-    assert Abs(w).is_real is True
-    assert Abs(w).is_positive is True
-    assert Abs(w).is_zero is False
+    z = Symbol('z', complex=True, zero=False)
+    assert Abs(z).is_real is True
+    assert Abs(z).is_rational is None
+    assert Abs(z).is_positive is True
+    assert Abs(z).is_zero is False
 
-    q = Symbol('q', positive=True)
-    assert Abs(q).is_real is True
-    assert Abs(q).is_positive is True
-    assert Abs(q).is_zero is False
+    p = Symbol('p', positive=True)
+    assert Abs(p).is_real is True
+    assert Abs(p).is_rational is None
+    assert Abs(p).is_positive is True
+    assert Abs(p).is_zero is False
+
+    q = Symbol('q', rational=True)
+    assert Abs(q).is_rational is True
+    assert Abs(q).is_integer is None
+    assert Abs(q).is_positive is None
+    assert Abs(q).is_nonnegative is True
+
+    i = Symbol('i', integer=True)
+    assert Abs(i).is_integer is True
+    assert Abs(i).is_positive is None
+    assert Abs(i).is_nonnegative is True
+
+    e = Symbol('n', even=True)
+    ne = Symbol('ne', real=True, even=False)
+    assert Abs(e).is_even
+    assert Abs(ne).is_even is False
+    assert Abs(i).is_even is None
+
+    o = Symbol('n', odd=True)
+    no = Symbol('no', real=True, odd=False)
+    assert Abs(o).is_odd
+    assert Abs(no).is_odd is False
+    assert Abs(i).is_odd is None
 
 
 def test_abs():
@@ -426,6 +506,7 @@ def test_arg_rewrite():
     y = Symbol('y', real=True)
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
 
+
 def test_adjoint():
     a = Symbol('a', antihermitian=True)
     b = Symbol('b', hermitian=True)
@@ -470,6 +551,12 @@ def test_conjugate():
     assert conjugate(x * y) == conjugate(x) * conjugate(y)
     assert conjugate(x / y) == conjugate(x) / conjugate(y)
     assert conjugate(-x) == -conjugate(x)
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
 
 
 def test_conjugate_transpose():

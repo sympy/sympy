@@ -17,7 +17,12 @@ def __sympy_debug():
     # We don't just import SYMPY_DEBUG from that file because we don't want to
     # import all of sympy just to use this module.
     import os
-    return eval(os.getenv('SYMPY_DEBUG', 'False'))
+    debug_str = os.getenv('SYMPY_DEBUG', 'False')
+    if debug_str in ('True', 'False'):
+        return eval(debug_str)
+    else:
+        raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
+                           debug_str)
 
 if __sympy_debug():
     WARN_OLD_VERSION = True

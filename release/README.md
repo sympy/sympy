@@ -17,7 +17,7 @@ First, make sure that you have done the following things
 - Create a release branch. Usually this branch is the same name as the release
   (e.g., "0.7.3"), although no naming convention is enforced on it.
 
-- Change the version in the release branch in sympy/__init__.py.  If you want
+- Change the version in the release branch in sympy/release.py.  If you want
   to do a release candidate, change it to something like 0.7.3.rc1.
 
 - Change the version in master.  This way, any additional changes made in

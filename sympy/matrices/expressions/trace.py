@@ -36,7 +36,7 @@ class Trace(Expr):
         return self.args[0]
 
     def doit(self, **kwargs):
-        if kwargs.get('deep', False):
+        if kwargs.get('deep', True):
             arg = self.arg.doit()
         else:
             arg = self.arg

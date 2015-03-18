@@ -25,11 +25,11 @@ from sympy.polys.polytools import (
     nth_power_roots_poly,
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
-    _torational_factor_list)
+    _torational_factor_list,
+    to_rational_coeffs)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
-    OperationNotSupported,
     ExactQuotientFailed,
     PolificationFailed,
     ComputationFailed,
@@ -39,7 +39,6 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
     PolynomialError,
     CoercionFailed,
-    NotAlgebraic,
     DomainError,
     OptionError,
     FlagError)
@@ -51,7 +50,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.basic import _aresame
@@ -59,7 +58,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.abc import a, b, c, d, e, p, q, r, s, t, u, v, w, x, y, z
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
 
 def _epsilon_eq(a, b):
@@ -1282,6 +1281,8 @@ def test_Poly_nth():
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
+    raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
+
 
 def test_Poly_LM():
     assert Poly(0, x).LM() == (0,)
@@ -1463,8 +1464,8 @@ def test_Poly_eval():
     assert Poly(x*y + y, x, y).eval((6, 7)) == 49
     assert Poly(x*y + y, x, y).eval([6, 7]) == 49
 
-    Poly(x + 1, domain='ZZ').eval(S(1)/2) == S(3)/2
-    Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
+    assert Poly(x + 1, domain='ZZ').eval(S(1)/2) == S(3)/2
+    assert Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
     raises(ValueError, lambda: Poly(x*y + y, x, y).eval((6, 7, 8)))
     raises(DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
@@ -1832,6 +1833,8 @@ def test_gcd_list():
     assert gcd_list([1, 2]) == 1
     assert gcd_list([4, 6, 8]) == 2
 
+    assert gcd_list([x*(y + 42) - x*y - x*42]) == 0
+
     gcd = gcd_list([], x)
     assert gcd.is_Number and gcd is S.Zero
 
@@ -1850,6 +1853,8 @@ def test_lcm_list():
     assert lcm_list([]) == 1
     assert lcm_list([1, 2]) == 2
     assert lcm_list([4, 6, 8]) == 24
+
+    assert lcm_list([x*(y + 42) - x*y - x*42]) == 0
 
     lcm = lcm_list([], x)
     assert lcm.is_Number and lcm is S.One
@@ -2716,6 +2721,10 @@ def test_nroots():
 
     raises(PolynomialError, lambda: nroots(0))
 
+    # issue 8296
+    f = Poly(x**4 - 1)
+    assert f.nroots(2) == [w.n(2) for w in f.all_roots()]
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2
@@ -3129,3 +3138,8 @@ def test_noncommutative():
     assert cancel(foo(e)) == foo(c)
     assert cancel(e + foo(e)) == c + foo(c)
     assert cancel(e*foo(c)) == c*foo(c)
+
+
+def test_to_rational_coeffs():
+    assert to_rational_coeffs(
+        Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None

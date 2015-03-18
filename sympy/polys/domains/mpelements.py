@@ -4,11 +4,11 @@ from __future__ import print_function, division
 
 from sympy.polys.domains.domainelement import DomainElement
 
-from sympy.mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
-from sympy.mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
+from mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
+from mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
     round_nearest, mpf_mul, mpf_abs, mpf_lt, mpc_abs, repr_dps, int_types,
     from_int, from_float, from_str, to_rational)
-from sympy.mpmath.rational import mpq
+from mpmath.rational import mpq
 
 from sympy.utilities import public
 

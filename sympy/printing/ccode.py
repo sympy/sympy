@@ -13,8 +13,8 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
-from sympy.core.compatibility import string_types
+from sympy.core import S
+from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
@@ -43,6 +43,43 @@ known_functions = {
     "ceiling": "ceil",
 }
 
+# These are the core reserved words in the C language. Taken from:
+# http://crasseux.com/books/ctutorial/Reserved-words-in-C.html
+
+reserved_words = ['auto',
+                  'if',
+                  'break',
+                  'int',
+                  'case',
+                  'long',
+                  'char',
+                  'register',
+                  'continue',
+                  'return',
+                  'default',
+                  'short',
+                  'do',
+                  'sizeof',
+                  'double',
+                  'static',
+                  'else',
+                  'struct',
+                  'entry',
+                  'switch',
+                  'extern',
+                  'typedef',
+                  'float',
+                  'union',
+                  'for',
+                  'unsigned',
+                  'goto',
+                  'while',
+                  'enum',
+                  'void',
+                  'const',
+                  'signed',
+                  'volatile']
+
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -56,7 +93,9 @@ class CCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': True,
-        'dereference': set()
+        'dereference': set(),
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
     }
 
     def __init__(self, settings={}):
@@ -65,6 +104,7 @@ class CCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
+        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
         return p*5
@@ -176,10 +216,16 @@ class CCodePrinter(CodePrinter):
                 expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
+
+        name = super(CCodePrinter, self)._print_Symbol(expr)
+
         if expr in self._dereference:
-            return '(*{0})'.format(expr.name)
+            return '(*{0})'.format(name)
         else:
-            return expr.name
+            return name
+
+    def _print_sign(self, func):
+        return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -226,10 +272,11 @@ def ccode(expr, assign_to=None, **settings):
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
+        A dictionary where the keys are string representations of either
+        ``FunctionClass`` or ``UndefinedFunction`` instances and the values
+        are their desired C string representations. Alternatively, the
+        dictionary value can be a list of tuples i.e. [(argument_test,
+        cfunction_string)].  See below for examples.
     dereference : iterable, optional
         An iterable of symbols that should be dereferenced in the printed code
         expression. These would be values passed by address to the function.
@@ -250,25 +297,27 @@ def ccode(expr, assign_to=None, **settings):
     Examples
     ========
 
-    >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
+    >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs, Function
     >>> x, tau = symbols("x, tau")
     >>> ccode((2*tau)**Rational(7, 2))
     '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
     >>> ccode(sin(x), assign_to="s")
     's = sin(x);'
 
-    Custom printing can be defined for certain types by passing a dictionary of
-    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
-    dictionary value can be a list of tuples i.e. [(argument_test,
-    cfunction_string)].
+    Simple custom printing can be defined for certain types by passing a
+    dictionary of {"type" : "function"} to the ``user_functions`` kwarg.
+    Alternatively, the dictionary value can be a list of tuples i.e.
+    [(argument_test, cfunction_string)].
 
     >>> custom_functions = {
     ...   "ceiling": "CEIL",
     ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
-    ...           (lambda x: x.is_integer, "ABS")]
+    ...           (lambda x: x.is_integer, "ABS")],
+    ...   "func": "f"
     ... }
-    >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
-    'fabs(x) + CEIL(x)'
+    >>> func = Function('func')
+    >>> ccode(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
+    'f(fabs(x) + CEIL(x))'
 
     ``Piecewise`` expressions are converted into conditionals. If an
     ``assign_to`` variable is provided an if statement is created, otherwise

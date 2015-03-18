@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, expand
+from sympy.core import S, sympify
+from sympy.core.compatibility import range
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.sets.sets import Interval
 
 
@@ -73,7 +73,7 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> d = 3
         >>> knots = range(10)
         >>> b0 = bspline_basis(d, knots, 0, x)
-        >>> f = lambdify(x, b0, default_array=True)
+        >>> f = lambdify(x, b0)
         >>> y = f(0.5)
 
     See Also
