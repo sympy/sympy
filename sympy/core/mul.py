@@ -1182,6 +1182,17 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
+    def _eval_is_prime(self):
+        """
+        If product is a positive integer, multiplication
+        will never result in a prime number.
+        """
+        r=self.simplify()
+        if r.is_integer and r.is_positive:
+            if r.is_number:
+                return r.is_prime
+            return False
+
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity
