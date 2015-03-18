@@ -397,6 +397,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Param Singh: added missing units from mks system
 #. Philippe Bouafia: Fixed a typo.
 #. Lucas Jones: Add a test in integrals
+#. Peter Schmidt: Removed duplicate tests
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
