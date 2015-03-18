@@ -52,6 +52,8 @@ def test_jacobi():
            (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
                                     /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
 
+    raises(ValueError, lambda: jacobi(-2.1, a, b, x))
+
 
 def test_gegenbauer():
     n = Symbol("n")
@@ -248,6 +250,8 @@ def test_laguerre():
 
     assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
 
+    raises(ValueError, lambda: laguerre(-2.1, x))
+
 
 def test_assoc_laguerre():
     n = Symbol("n")
@@ -278,6 +282,8 @@ def test_assoc_laguerre():
 
     assert conjugate(assoc_laguerre(n, alpha, x)) == \
         assoc_laguerre(n, conjugate(alpha), conjugate(x))
+
+    raises(ValueError, lambda: assoc_laguerre(-2.1, alpha, x))
 
 
 @XFAIL
