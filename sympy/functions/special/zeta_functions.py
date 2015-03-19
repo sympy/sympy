@@ -520,22 +520,18 @@ class dirichlet_eta(Function):
 
 
 class stieltjes(Function):
-    """
-    Represents Stieltjes constants, :math: `\gamma_{k}` that occur in Laurent
-    Series expansion of the Riemann zeta function.
+    r"""Represents Stieltjes constants, :math:`\gamma_{k}` that occur in
+    Laurent Series expansion of the Riemann zeta function.
 
     Examples
     ========
 
     >>> from sympy import stieltjes
-    >>> from sympy.abc import n
-
+    >>> from sympy.abc import n, m
     >>> stieltjes(n)
     stieltjes(n)
 
-    The zero'th constant is the Euler-Mascheroni constant
-
-    >>> from sympy import stieltjes
+    zero'th stieltjes constant
 
     >>> stieltjes(0)
     EulerGamma
@@ -544,15 +540,10 @@ class stieltjes(Function):
 
     For generalized stieltjes constants
 
-    >>> from sympy import stieltjes
-    >>> from sympy.abc import n, m
-
     >>> stieltjes(n, m)
     stieltjes(n, m)
 
     Constants are only defined for integers >= 0
-
-    >>> from sympy import stieltjes
 
     >>> stieltjes(-1)
     zoo
