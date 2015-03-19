@@ -53,7 +53,7 @@ def test_jacobi():
                                     /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
 
     raises(ValueError, lambda: jacobi(-2.1, a, b, x))
-    raises(ValueError, lambda: jacobi(Dummy(positive=True), 1, 2, oo))
+    raises(ValueError, lambda: jacobi(Dummy(positive=True, integer=True), 1, 2, oo))
 
 
 def test_gegenbauer():
