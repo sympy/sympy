@@ -1,5 +1,5 @@
 from sympy import (
-    Symbol, diff, Derivative, Rational, roots, S, sqrt, hyper,
+    Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
     cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
     laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
