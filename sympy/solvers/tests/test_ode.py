@@ -2552,3 +2552,11 @@ def test_issue_7093():
     sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
     eq = Derivative(f(x), x)**2 - x**3
     assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)
+
+
+def test_dsolve_linsystem_symbol():
+    eps = Symbol('epsilon', positive=True)
+    eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
+    sol1 = [Eq(f(x), -eps*(C1*sin(eps*x) + C2*cos(eps*x))),
+            Eq(g(x), C1*eps*cos(eps*x) - C2*eps*sin(eps*x))]
+    assert dsolve(eq1) == sol1
