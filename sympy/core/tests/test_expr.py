@@ -293,6 +293,12 @@ def test_as_leading_term4():
     assert r.as_leading_term(x).cancel() == n/2
 
 
+def test_as_leading_term5():
+    # see issue 9075
+    assert (6**(n+1)).as_leading_term(n) == 6
+    assert (6**(n+x)).as_leading_term(n) == 6**x
+
+
 def test_as_leading_term_stub():
     class foo(Function):
         pass

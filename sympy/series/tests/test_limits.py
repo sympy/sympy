@@ -7,7 +7,7 @@ from sympy import (
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.abc import x, y, z
+from sympy.abc import x, y, z, n
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -187,6 +187,11 @@ def test_issue_3871():
     f = -1/z*exp(-z*x)
     assert limit(f, x, oo) == 0
     assert f.limit(x, oo) == 0
+
+
+def test_issue_9075():
+    assert ((6**(n+1)+n+1)/(6**n+1)).limit(n, oo) == 6
+    assert ((6**(n+x)+n+1)/(6**n+1)).limit(n, oo) == 6**x
 
 
 def test_exponential():

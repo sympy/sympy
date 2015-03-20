@@ -1302,7 +1302,14 @@ class Pow(Expr):
         from sympy import exp, log
         if not self.exp.has(x):
             return self.func(self.base.as_leading_term(x), self.exp)
-        return exp(self.exp * log(self.base)).as_leading_term(x)
+        sep, e = 1, self.exp
+        # separate out the independent terms
+        if self.exp.is_Add:
+            for t in self.exp.args:
+                if not t.has(x):
+                    sep *= self.base**t
+                    e -= t
+        return sep * exp(e * log(self.base)).as_leading_term(x)
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
