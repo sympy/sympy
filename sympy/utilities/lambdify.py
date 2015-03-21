@@ -300,9 +300,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     from sympy.utilities.iterables import flatten
     # If the user hasn't specified any modules, use what is available.
     if not sympify(expr) == expr:
-	raise TypeError("expr must be a valid sympy expression")
-    if not ((isinstance(args, list)) or (isinstance(args, Symbol)) or (isinstance(args, tuple))):
-	raise TypeError("args must be a symbol or a tuple of symbols")
+        raise TypeError("expr must be a valid sympy expression")
+    if not isinstance(args, (Symbol, list, tuple)):
+        raise TypeError("args must be a symbol or a tuple of symbols")
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
     if modules is None:
