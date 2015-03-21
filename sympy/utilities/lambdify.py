@@ -296,6 +296,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     in other namespaces, unless the ``use_imps`` input parameter is False.
     """
     from sympy.core.symbol import Symbol
+    from sympy.core import sympify
     from sympy.utilities.iterables import flatten
     # If the user hasn't specified any modules, use what is available.
     if not sympify(expr) == expr:
