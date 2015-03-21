@@ -546,11 +546,11 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
-    >>> reduce_inequalities(S(0) <= x + 3, [])
+    >>> reduce_inequalities(0 <= x + 3, [])
     And(-3 <= x, x < oo)
 
-    >>> reduce_inequalities(S(0) <= x + y*2 - 1, [x])
-    -2*y + 1 <= x
+    >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
+    x >= -2*y + 1
     """
     if not iterable(inequalities):
         inequalities = [inequalities]
