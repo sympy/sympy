@@ -727,6 +727,22 @@ def test_Mul_is_prime():
     assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
     assert Mul(5, S.Half, evaluate=False).is_prime is False
 
+def test_Pow_is_prime():
+    from sympy import Pow
+    x = Symbol('x', positive=True, integer=True)
+    y = Symbol('y', positive=True, integer=True)
+    assert (x**y).is_prime is False
+
+    x = Symbol('x', positive=True)
+    assert (x**y).is_prime is None
+
+    x = Symbol('x', prime=True)
+    assert (x**1).is_prime is True
+
+    assert Pow(6, S.One, evaluate=False).is_prime is False
+    assert Pow(9, S.Half, evaluate=False).is_prime is True
+    assert Pow(5, S.One, evaluate=False).is_prime is True
+
 
 def test_Mul_is_infinite():
     x = Symbol('x')
