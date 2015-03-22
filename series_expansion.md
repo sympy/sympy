@@ -20,7 +20,7 @@ In [89]: t1 = clock()
 Out:[89]: 0.5608868598937988
 ```
 Now, 0.56s might not seem much, but when used in an algorithm that needs repeated calls for series expansion,
-for example PyDy, the total time taken is exorbitant.
+for example PyDy, the total time taken is exorbitant.   
 3. Series expansions are stored as sum of core objects
 ```
 In [48]: from sympy.polys.ring_series import rs_exp, rs_mul
@@ -40,7 +40,7 @@ In [57]: t1 = clock()
 Out[53]: 0.0587308406829834    
 ```
 Manipulation over core objects is slow by a factor of 50. This, of course is a slightly sparse series, 
-however sparse multiplication will still be faster with dense series.
+however sparse multiplication will still be faster with dense series.    
 4. Core has to deal with order
 
 I propose the following solutions to these issues:
