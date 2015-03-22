@@ -1671,6 +1671,11 @@ def test_sympy__functions__special__zeta_functions__polylog():
     assert _test_args(polylog(x, y))
 
 
+def test_sympy__functions__special__zeta_functions__stieltjes():
+    from sympy.functions.special.zeta_functions import stieltjes
+    assert _test_args(stieltjes(x, y))
+
+
 def test_sympy__integrals__integrals__Integral():
     from sympy.integrals.integrals import Integral
     assert _test_args(Integral(2, (x, 0, 1)))
