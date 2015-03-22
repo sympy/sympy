@@ -714,6 +714,19 @@ def test_Pow_is_algebraic():
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
 
+def test_Mul_is_prime():
+    from sympy import Mul
+    x = Symbol('x', positive=True, integer=True)
+    y = Symbol('y', positive=True, integer=True)
+    assert (x*y).is_prime is False
+
+    x = Symbol('x', positive=True)
+    assert (x*y).is_prime is None
+
+    assert Mul(6, S.Half, evaluate=False).is_prime is True
+    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
+    assert Mul(5, S.Half, evaluate=False).is_prime is False
+
 
 def test_Mul_is_infinite():
     x = Symbol('x')

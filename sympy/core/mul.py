@@ -1187,10 +1187,17 @@ class Mul(Expr, AssocOp):
         If product is a positive integer, multiplication
         will never result in a prime number.
         """
-        r=self.simplify()
-        if r.is_integer and r.is_positive:
-            if r.is_number:
-                return r.is_prime
+        if self.is_number:
+            """
+            If input is a number that is not completely simplified.
+            e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
+            """
+            r=S.One
+            for arg in self.args:
+                r*=arg
+            return r.is_prime
+
+        if self.is_integer and self.is_positive:
             return False
 
     def _eval_subs(self, old, new):
