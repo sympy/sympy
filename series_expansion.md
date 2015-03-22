@@ -2,21 +2,23 @@
 
 Implement multivariate Series class in Sympy.
 
-Series expansion in Sympy suffers from the following issues:
-1. All types of series are grouped under the same name
-2. Series expansion is slow.
-
+Series expansion in Sympy suffers from the following issues:   
+1. All types of series are grouped under the same name  
+2. Series expansion is slow.  
+```
 %time s = (1/cos(x/log(x))).series(x, 0, 10)
 CPU times: user 2.75 s, sys: 50.4 ms, total: 2.8 s
 Wall time: 4.1 s
+```
 It takes 4 seconds!
-
+```
 In [89]: t1 = clock()
     ...: h = exp(x).series(x, 0, 10)
     ...: t2 =clock()
     ...: t2-t1
     ...: 
-Out[89]: 0.5608868598937988
+Out:[89]: 0.5608868598937988
+```
 Now, 0.56s might not seem much, but when used in an algorithm that needs repeated calls for series expansion,
 for example PyDy, the total time taken is exorbitant.
 3. Series expansions are stored as sum of core objects
@@ -48,7 +50,7 @@ I propose the following solutions to these issues:
      FormalPowerSeries
      FormalLaurentSeries
      FormalPuiseuxSeries
-A semi-working example involving univariate series on QQ:
+A semi-working example involving univariate series on QQ:  
 Note: This example covers only the univariate case. However, the final
     implementation will support multivariate series as well.
 ```
