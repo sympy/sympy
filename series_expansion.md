@@ -44,12 +44,12 @@ however sparse multiplication will still be faster with dense series.
 I propose the following solutions to these issues:
 
 1. Implement a class based representation:
-* FormalSeries
-* FormalPowerSeries
-* FormalLaurentSeries
-* FormalPuiseuxSeries
+     FormalSeries
+     FormalPowerSeries
+     FormalLaurentSeries
+     FormalPuiseuxSeries
 A semi-working example involving univariate series on QQ:
-* Note: This example covers only the univariate case. However, the final
+Note: This example covers only the univariate case. However, the final
     implementation will support multivariate series as well.
 ```
     class FormalSeries(object):
