@@ -158,3 +158,14 @@ increasing 'n' till you get the desired order.  Start with 'n' terms in the
 innermost part and output whatever ordered expansion you get. This method would
 be much faster than the 1st one but there is no guarantee you'd get the
 requested order.
+
+####References
+1. http://www.cs.berkeley.edu/~fateman/papers/polysbyGMP.pdf
+2. https://groups.google.com/forum/#!searchin/sympy/series/sympy/hiRuIHa8ImA/JLOBsMr9yUcJ  
+3. http://link.springer.com/chapter/10.1007%2F978-3-319-02297-0_8#page-1: Contains definitions and algorithm for multiplication of DMP (Distributed Multivariate Polynomials)
+4. http://www.cybertester.com/data/gruntz.pdf
+5. https://mattpap.github.io/masters-thesis/html/src/conclusions.html#polynomial-arithmetics
+6. https://groups.google.com/forum/#!topic/sympy/TVEp72mZ3Uo
+7. https://mattpap.github.io/masters-thesis/html/src/internals.html
+8. https://groups.google.com/forum/#!topic/sage-gsoc/WbmAJAaGlhs
+9. http://arxiv.org/pdf/0712.4046.pdf?origin=publication_detail
