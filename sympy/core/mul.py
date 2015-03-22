@@ -1192,10 +1192,7 @@ class Mul(Expr, AssocOp):
             If input is a number that is not completely simplified.
             e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
             """
-            r=S.One
-            for arg in self.args:
-                r*=arg
-            return r.is_prime
+            return self.doit().is_prime
 
         if self.is_integer and self.is_positive:
             return False
