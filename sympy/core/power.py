@@ -492,14 +492,14 @@ class Pow(Expr):
             return self.base.is_prime
         if self.is_number:
             return self.doit().is_prime
-        
+
         if self.is_integer and self.is_positive:
             """
             a Power will be non-prime only if both base and exponent
             are greater than 1
             """
             try:
-                if self.base > 1 or self.exp >1:
+                if self.base > 1 or self.exp > 1:
                     return False
             except TypeError:
                 pass
