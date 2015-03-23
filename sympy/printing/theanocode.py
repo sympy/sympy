@@ -225,5 +225,9 @@ def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
                    broadcastables=broadcastables)
     tinputs  = list(map(code, inputs))
     toutputs = list(map(code, outputs))
+
+    #fix constant expressions as variables
+    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
+
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
     return theano.function(tinputs, toutputs, **theano_kwargs)
