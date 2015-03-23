@@ -51,7 +51,9 @@ if theano:
             sympy.GreaterThan: tt.ge,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
-
+            sympy.conjugate: tt.conj,
+            sympy.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
+            
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
