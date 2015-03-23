@@ -1191,11 +1191,33 @@ class Mul(Expr, AssocOp):
             """
             If input is a number that is not completely simplified.
             e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
+            So we manually evaluate it and return whether that is prime or not.
             """
-            return self.doit().is_prime
+            # Note: `doit()` was not used due to test failing (Infinite Recursion)
+            r=S.One
+            for arg in self.args:
+                r *= arg
+            return r.is_prime
 
         if self.is_integer and self.is_positive:
-            return False
+            """
+            Here we count the number of arguments that have a minimum value 
+            greater than two. 
+            If there are more than one of such a symbol then the result is not prime.
+            Else, the result cannot be determined.
+            """
+            from sympy.functions.elementary.miscellaneous import Min
+            number_of_args=0 # count of symbols with minimum value greater than one
+            for arg in self.args:
+                try:
+                    if arg > 1:
+                        number_of_args +=1
+                except TypeError: # If it cannot be determined.
+                    pass
+
+            if number_of_args >1:
+                return False
+
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
