@@ -718,7 +718,8 @@ def test_Mul_is_prime():
     from sympy import Mul
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
-    assert (x*y).is_prime is False
+    assert (x*y).is_prime is None
+    assert ( (x+1)*(y+1) ).is_prime is False
 
     x = Symbol('x', positive=True)
     assert (x*y).is_prime is None
@@ -731,7 +732,7 @@ def test_Pow_is_prime():
     from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
-    assert (x**y).is_prime is False
+    assert (x**y).is_prime is None
 
     x = Symbol('x', positive=True)
     assert (x**y).is_prime is None
