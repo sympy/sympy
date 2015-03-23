@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr
+from sympy import Basic, Expr, sympify
 from .matexpr import ShapeError
 
 
@@ -20,6 +20,8 @@ class Trace(Expr):
     is_Trace = True
 
     def __new__(cls, mat):
+        mat = sympify(mat)
+
         if not mat.is_Matrix:
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 

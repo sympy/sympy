@@ -301,7 +301,7 @@ class exp(ExpBase):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        return x**n/factorial()(n)
+        return x**n/factorial(n)
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -686,6 +686,9 @@ class log(Function):
 
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
+
+    def _eval_is_nonnegative(self):
+        return (self.args[0] - 1).is_nonnegative
 
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled

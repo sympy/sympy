@@ -40,7 +40,7 @@ def comb_w_rep(n, k):
 
 
 def vandermonde(order, dim=1, syms='a b c d'):
-    """Comptutes a Vandermonde matrix of given order and dimension.
+    """Computes a Vandermonde matrix of given order and dimension.
 
     Define syms to give beginning strings for temporary variables.
 
@@ -118,7 +118,7 @@ def main():
     pprint(V)
 
     print('-'*79)
-    print("Computing the determinate and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
+    print("Computing the determinant and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
 
     det_sum = 1
     for j in range(order + 1):
