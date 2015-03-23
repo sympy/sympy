@@ -181,17 +181,17 @@ def _old_assump_replacer(obj):
     ret = None
 
     if obj.func == Q.positive:
-        ret = fuzzy_and([e.is_bounded, e.is_positive])
+        ret = fuzzy_and([e.is_finite, e.is_positive])
     if obj.func == Q.zero:
         ret = e.is_zero
     if obj.func == Q.negative:
-        ret = fuzzy_and([e.is_bounded, e.is_negative])
+        ret = fuzzy_and([e.is_finite, e.is_negative])
     if obj.func == Q.nonpositive:
-        ret = fuzzy_and([e.is_bounded, e.is_nonpositive])
+        ret = fuzzy_and([e.is_finite, e.is_nonpositive])
     if obj.func == Q.nonzero:
-        ret = fuzzy_and([e.is_real, e.is_bounded, e.is_nonzero])
+        ret = fuzzy_and([e.is_real, e.is_finite, e.is_nonzero])
     if obj.func == Q.nonnegative:
-        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_bounded]),
+        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]),
         e.is_nonnegative])
 
     if obj.func == Q.rational:
