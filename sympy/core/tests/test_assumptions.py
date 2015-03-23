@@ -737,9 +737,6 @@ def test_Pow_is_prime():
     x = Symbol('x', positive=True)
     assert (x**y).is_prime is None
 
-    x = Symbol('x', prime=True)
-    assert (x**1).is_prime is True
-
     assert Pow(6, S.One, evaluate=False).is_prime is False
     assert Pow(9, S.Half, evaluate=False).is_prime is True
     assert Pow(5, S.One, evaluate=False).is_prime is True
