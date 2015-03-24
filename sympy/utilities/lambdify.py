@@ -307,9 +307,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         if not tuple(args.replace(',','')) == tuple(args.split(',')):
             invalid_str_args = 1
     # If the user hasn't specified any modules, use what is available.
-    if (not sympify(expr) == expr) and (not isinstance(expr, (tuple,list))) and (invalid_str_expr == 1 ):
+    if  invalid_str_expr == 1 :
         raise TypeError("expr must be a valid sympy expression or a tuple/list/string of comma separated variables/symbols")
-    if (not isinstance(args, (Symbol, list, tuple))) and (invalid_str_args == 1):
+    if invalid_str_args == 1:
         raise TypeError("args must be a symbol or a tuple of symbols or a string of comma separated variables")
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
