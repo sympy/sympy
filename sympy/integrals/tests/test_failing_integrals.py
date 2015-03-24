@@ -145,13 +145,11 @@ def test_issue_4950():
 
 
 @XFAIL
-@slow
 def test_issue_4968():
     assert not integrate(sin(log(x**2))).has(Integral)
 
 
 @XFAIL
-@slow
 def test_issue_4992():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)
