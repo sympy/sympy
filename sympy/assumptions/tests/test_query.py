@@ -17,7 +17,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
-from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf, Not
+from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
 
@@ -1911,6 +1911,9 @@ def test_algebraic():
     assert ask(Q.algebraic(sqrt(y + I*sqrt(7)))) is None
 
     assert ask(Q.algebraic(2.47)) is True
+
+    assert ask(Q.algebraic(x), Q.transcendental(x)) is False
+    assert ask(Q.transcendental(x), Q.algebraic(x)) is False
 
 
 def test_global():

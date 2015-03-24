@@ -1,9 +1,11 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi)
-from sympy.mpmath import mpi
+    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
+    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference)
+from mpmath import mpi
 
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -15,8 +17,11 @@ def test_interval_arguments():
     assert Interval(0, oo).right_open is true
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
     assert Interval(-oo, 0).left_open is true
+    assert Interval(oo, -oo) == S.EmptySet
 
     assert isinstance(Interval(1, 1), FiniteSet)
+    e = Sum(x, (x, 1, 3))
+    assert isinstance(Interval(e, e), FiniteSet)
 
     assert Interval(1, 0) == S.EmptySet
     assert Interval(1, 1).measure == 0
@@ -25,13 +30,16 @@ def test_interval_arguments():
     assert Interval(1, 1, True, False) == S.EmptySet
     assert Interval(1, 1, True, True) == S.EmptySet
 
+
+    assert isinstance(Interval(0, Symbol('a')), Interval)
+    assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
-    raises(ValueError, lambda: Interval(0, Symbol('z')))
+    raises(ValueError, lambda: Interval(0, Symbol('z', real=False)))
+
     raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, z, And(x, y)))
 
-    assert isinstance(Interval(1, Symbol('a', real=True)), Interval)
 
 
 def test_interval_symbolic_end_points():
@@ -166,6 +174,8 @@ def test_complement():
     assert S.UniversalSet.complement(S.Reals) == S.EmptySet
     assert S.UniversalSet.complement(S.UniversalSet) == S.EmptySet
 
+    assert S.EmptySet.complement(S.Reals) == S.Reals
+
     assert Union(Interval(0, 1), Interval(2, 3)).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
               Interval(3, oo, True, True))
@@ -250,6 +260,7 @@ def test_intersection():
 
     # Singleton special cases
     assert Intersection(Interval(0, 1), S.EmptySet) == S.EmptySet
+    assert Intersection(Interval(-oo, oo), Interval(-oo, x)) == Interval(-oo, x)
 
     # Products
     line = Interval(0, 5)
@@ -395,6 +406,20 @@ def test_contains():
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
+    # issue 8197
+    from sympy.abc import a, b
+    assert isinstance(FiniteSet(b).contains(-a), Contains)
+    assert isinstance(FiniteSet(b).contains(a), Contains)
+    assert isinstance(FiniteSet(a).contains(1), Contains)
+    raises(TypeError, lambda: 1 in FiniteSet(a))
+
+    # issue 8209
+    rad1 = Pow(Pow(2, S(1)/3) - 1, S(1)/3)
+    rad2 = Pow(S(1)/9, S(1)/3) - Pow(S(2)/9, S(1)/3) + Pow(S(4)/9, S(1)/3)
+    s1 = FiniteSet(rad1)
+    s2 = FiniteSet(rad2)
+    assert s1 - s2 == S.EmptySet
+
     items = [1, 2, S.Infinity, S('ham'), -1.1]
     fset = FiniteSet(*items)
     assert all(item in fset for item in items)
@@ -405,6 +430,10 @@ def test_contains():
     assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
     assert S.EmptySet.contains(1) is S.false
+    assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
+
+    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
+    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
 
 
 def test_interval_symbolic():
@@ -464,13 +493,17 @@ def test_Interval_as_relational():
     assert Interval(-1, 2, True, True).as_relational(x) == \
         And(Lt(-1, x), Lt(x, 2))
 
-    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Le(x, 2), Lt(-oo, x))
-    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(x, 2), Lt(-oo, x))
+    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Lt(-oo, x), Le(x, 2))
+    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(-oo, x), Lt(x, 2))
 
     assert Interval(-2, oo, left_open=False).as_relational(x) == And(Le(-2, x), Lt(x, oo))
     assert Interval(-2, oo, left_open=True).as_relational(x) == And(Lt(-2, x), Lt(x, oo))
 
     assert Interval(-oo, oo).as_relational(x) == And(Lt(-oo, x), Lt(x, oo))
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert Interval(x, y).as_relational(x) == (x <= y)
+    assert Interval(y, x).as_relational(x) == (y <= x)
 
 
 def test_Finite_as_relational():
@@ -592,21 +625,21 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True)
+    x = Symbol('x', real=True, finite=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
-    A = FiniteSet(1, 2, 30, x, S.Pi, S.Infinity)
+    A = FiniteSet(1, 2, 30, x, S.Pi)
     B = FiniteSet(-4, 0)
-    C = FiniteSet(100, S.NegativeInfinity)
+    C = FiniteSet(100)
     D = FiniteSet('Ham', 'Eggs')
 
-    assert all(s.is_real for s in [I, J, A, B, C])
-    assert not D.is_real
-    assert all((a + b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
-    assert not any((a + D).is_real for a in [I, J, A, B, C, D])
+    assert all(s.is_subset(S.Reals) for s in [I, J, A, B, C])
+    assert not D.is_subset(S.Reals)
+    assert all((a + b).is_subset(S.Reals) for a in [I, J, A, B, C] for b in [I, J, A, B, C])
+    assert not any((a + D).is_subset(S.Reals) for a in [I, J, A, B, C, D])
 
-    assert not (I + A + D).is_real
+    assert not (I + A + D).is_subset(S.Reals)
 
 
 def test_supinf():
@@ -785,3 +818,30 @@ def test_interior():
 
 def test_issue_7841():
     raises(TypeError, lambda: x in S.Reals)
+
+
+def test_Eq():
+    assert Eq(Interval(0, 1), Interval(0, 1))
+    assert Eq(Interval(0, 1), Interval(0, 2)) == False
+
+    s1 = FiniteSet(0, 1)
+    s2 = FiniteSet(1, 2)
+
+    assert Eq(s1, s1)
+    assert Eq(s1, s2) == False
+
+    assert Eq(s1*s2, s1*s2)
+    assert Eq(s1*s2, s2*s1) == False
+
+
+def test_SymmetricDifference():
+   assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
+          FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
+   assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 ,4 ,5 )) \
+          == FiniteSet(5)
+   assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
+          FiniteSet(3, 4, 6)
+   assert Set(1, 2 ,3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
+          Set(2, 3, 4) - Set(1, 2, 3))
+   assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
+          Interval(2, 5), Interval(2, 5) - Interval(0, 4))

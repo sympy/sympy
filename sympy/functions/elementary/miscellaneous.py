@@ -1,18 +1,22 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify
+from sympy.core import S, sympify
 from sympy.core.add import Add
-from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.power import Pow
+from sympy.core.relational import Equality
 from sympy.core.singleton import Singleton
+from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass, xrange
+from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and
-
+from sympy.functions.elementary.integers import floor
+from sympy.logic.boolalg import And
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
@@ -30,7 +34,7 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
 
     def __new__(cls):
         from sympy.sets.sets import FiniteSet
-        x = C.Dummy('x')
+        x = Dummy('x')
         #construct "by hand" to avoid infinite loop
         obj = Expr.__new__(cls, Tuple(x), x)
         obj.nargs = FiniteSet(1)
@@ -109,7 +113,7 @@ def sqrt(arg):
 
     """
     # arg = sympify(arg) is handled by Pow
-    return C.Pow(arg, S.Half)
+    return Pow(arg, S.Half)
 
 
 
@@ -160,13 +164,12 @@ def cbrt(arg):
     * http://en.wikipedia.org/wiki/Principal_value
 
     """
-    return C.Pow(arg, C.Rational(1, 3))
+    return Pow(arg, Rational(1, 3))
 
 
-def root(arg, n):
-    """The n-th root function (a shortcut for ``arg**(1/n)``)
-
-    root(x, n) -> Returns the principal n-th root of x.
+def root(arg, n, k=0):
+    """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
+    principle root (k=0).
 
 
     Examples
@@ -187,6 +190,10 @@ def root(arg, n):
     >>> root(x, -Rational(2, 3))
     x**(-3/2)
 
+    To get the k-th n-th root, specify k:
+
+    >>> root(-2, 3, 2)
+    -(-1)**(2/3)*2**(1/3)
 
     To get all n n-th roots you can use the RootOf function.
     The following examples show the roots of unity for n
@@ -194,13 +201,13 @@ def root(arg, n):
 
     >>> from sympy import RootOf, I
 
-    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    >>> [ RootOf(x**2 - 1, i) for i in range(2) ]
     [-1, 1]
 
-    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    >>> [ RootOf(x**3 - 1,i) for i in range(3) ]
     [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
 
-    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    >>> [ RootOf(x**4 - 1,i) for i in range(4) ]
     [-1, 1, -I, I]
 
     SymPy, like other symbolic algebra systems, returns the
@@ -212,13 +219,19 @@ def root(arg, n):
     >>> root(-8, 3)
     2*(-1)**(1/3)
 
-    The real_root function can be used to either make such a result
-    real or simply return the real root in the first place:
+    The real_root function can be used to either make the principle
+    result real (or simply to return the real root directly):
 
     >>> from sympy import real_root
     >>> real_root(_)
     -2
     >>> real_root(-32, 5)
+    -2
+
+    Alternatively, the n//2-th n-th root of a negative number can be
+    computed with root:
+
+    >>> root(-32, 5, 5//2)
     -2
 
     See Also
@@ -239,12 +252,16 @@ def root(arg, n):
 
     """
     n = sympify(n)
-    return C.Pow(arg, 1/n)
+    if k:
+        return Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
+    return Pow(arg, 1/n)
 
 
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
-    all instances of -1**(1/odd) will be changed to -1.
+    all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
+    will only create a real root of a principle root -- the presence of
+    other factors may cause the result to not be real.
 
     Examples
     ========
@@ -259,6 +276,15 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
+    If one creates a non-principle root and applies real_root, the
+    result will not be real (so use with caution):
+
+    >>> root(-8, 3, 2)
+    -2*(-1)**(2/3)
+    >>> real_root(_)
+    -2*(-1)**(2/3)
+
+
     See Also
     ========
 
@@ -266,17 +292,28 @@ def real_root(arg, n=None):
     sympy.core.power.integer_nthroot
     root, sqrt
     """
+    from sympy import im, Piecewise
     if n is not None:
-        n = as_int(n)
-        rv = C.Pow(arg, Rational(1, n))
-        if n % 2 == 0:
-            return rv
+        try:
+            n = as_int(n)
+            arg = sympify(arg)
+            if arg.is_positive or arg.is_negative:
+                rv = root(arg, n)
+            else:
+                raise ValueError
+        except ValueError:
+            return root(arg, n)*Piecewise(
+                (S.One, ~Equality(im(arg), 0)),
+                (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
+                    Equality(n % 2, 1),
+                    arg < 0)),
+                (S.One, True))
     else:
         rv = sympify(arg)
-    n1pow = Transform(lambda x: S.NegativeOne,
+    n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and
-                      x.base is S.NegativeOne and
+                      x.base.is_negative and
                       x.exp.is_Rational and
                       x.exp.p == 1 and x.exp.q % 2)
     return rv.xreplace(n1pow)
@@ -331,7 +368,7 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if (arg.is_real is False) or (arg is S.ComplexInfinity):
+            if (not isinstance(arg, Expr)) or (arg.is_real is False) or (arg is S.ComplexInfinity):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:
@@ -360,11 +397,13 @@ class MinMaxBase(Expr, LatticeOp):
             for z in localzeros_:
                 if id(v) == id(z):
                     is_newzero = False
-                elif cls._is_connected(v, z):
-                    is_newzero = False
-                    if cls._is_asneeded(v, z):
-                        localzeros.remove(z)
-                        localzeros.update([v])
+                else:
+                    con = cls._is_connected(v, z)
+                    if con:
+                        is_newzero = False
+                        if con is True or con == cls:
+                            localzeros.remove(z)
+                            localzeros.update([v])
             if is_newzero:
                 localzeros.update([v])
         return localzeros
@@ -374,34 +413,23 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        xy = x > y
-        yx = x < y
-        if (x == y) or xy == True or xy == False or yx == True or yx == False:
+        def hit(v, t, f):
+            if not v.is_Relational:
+                return t if v else f
+        if x == y:
             return True
-        if x.is_Number and y.is_Number:
-            return True
-        return False
-
-    @classmethod
-    def _is_asneeded(cls, x, y):
-        """
-        Check if x and y satisfy relation condition.
-
-        The relation condition for Max function is x > y,
-        for Min function is x < y. They are defined in children Max and Min
-        classes through the method _rel(cls, x, y)
-        """
-        if (x == y):
-            return False
-        if x.is_Number and y.is_Number:
-            if cls._rel(x, y):
-                return True
-        xy = cls._rel(x, y)
-        if xy == True or xy == False:
-            return bool(xy)
-        yx = cls._rel_inversed(x, y)
-        if yx == True or yx == False:
-            return not bool(yx)
+        r = hit(x >= y, Max, Min)
+        if r is not None:
+            return r
+        r = hit(y <= x, Max, Min)
+        if r is not None:
+            return r
+        r = hit(x <= y, Min, Max)
+        if r is not None:
+            return r
+        r = hit(y >= x, Min, Max)
+        if r is not None:
+            return r
         return False
 
     def _eval_derivative(self, s):
@@ -503,7 +531,7 @@ class Max(MinMaxBase, Application):
 
     Assumption:
        - if A > B > C then A > C
-       - if A==B then B can be removed
+       - if A == B then B can be removed
 
     References
     ==========
@@ -519,31 +547,22 @@ class Max(MinMaxBase, Application):
     zero = S.Infinity
     identity = S.NegativeInfinity
 
-    @classmethod
-    def _rel(cls, x, y):
-        """
-        Check if x > y.
-        """
-        return (x > y)
-
-    @classmethod
-    def _rel_inversed(cls, x, y):
-        """
-        Check if x < y.
-        """
-        return (x < y)
-
     def fdiff( self, argindex ):
-        from sympy.functions.special.delta_functions import Heaviside
+        from sympy import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[argindex] - self.args[1-argindex] )
-            newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
-            return Heaviside( self.args[argindex] - Max(*newargs) )
+                return Heaviside(self.args[argindex] - self.args[1 - argindex])
+            newargs = tuple([self.args[i] for i in range(n) if i != argindex])
+            return Heaviside(self.args[argindex] - Max(*newargs))
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        from sympy import Heaviside
+        return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
+                for j in args])
 
 
 class Min(MinMaxBase, Application):
@@ -581,28 +600,19 @@ class Min(MinMaxBase, Application):
     zero = S.NegativeInfinity
     identity = S.Infinity
 
-    @classmethod
-    def _rel(cls, x, y):
-        """
-        Check if x < y.
-        """
-        return (x < y)
-
-    @classmethod
-    def _rel_inversed(cls, x, y):
-        """
-        Check if x > y.
-        """
-        return (x > y)
-
     def fdiff( self, argindex ):
-        from sympy.functions.special.delta_functions import Heaviside
+        from sympy import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
                 return Heaviside( self.args[1-argindex] - self.args[argindex] )
-            newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
+            newargs = tuple([ self.args[i] for i in range(n) if i != argindex])
             return Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        from sympy import Heaviside
+        return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
+                for j in args])

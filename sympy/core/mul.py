@@ -4,12 +4,12 @@ from collections import defaultdict
 import operator
 
 from .sympify import sympify
-from .basic import Basic, C
+from .basic import Basic
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group, _fuzzy_group_inverse
-from .compatibility import cmp_to_key, reduce, xrange
+from .logic import fuzzy_not, _fuzzy_group
+from .compatibility import cmp_to_key, reduce, range
 from .expr import Expr
 
 # internal marker to indicate:
@@ -91,9 +91,6 @@ class Mul(Expr, AssocOp):
     __slots__ = []
 
     is_Mul = True
-
-    #identity = S.One
-    # cyclic import, so defined in numbers.py
 
     @classmethod
     def flatten(cls, seq):
@@ -541,9 +538,9 @@ class Mul(Expr, AssocOp):
         # zoo
         if coeff is S.ComplexInfinity:
             # zoo might be
-            #   unbounded_real + bounded_im
-            #   bounded_real + unbounded_im
-            #   unbounded_real + unbounded_im
+            #   infinite_real + bounded_im
+            #   bounded_real + infinite_im
+            #   infinite_real + infinite_im
             # and non-zero real or imaginary will not change that status.
             c_part = [c for c in c_part if not (c.is_nonzero and
                                                 c.is_real is not None)]
@@ -645,7 +642,8 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps):
+    def as_coeff_mul(self, *deps, **kwargs):
+        rational = kwargs.pop('rational', True)
         if deps:
             l1 = []
             l2 = []
@@ -656,26 +654,29 @@ class Mul(Expr, AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         args = self.args
-        if args[0].is_Rational:
-            return args[0], args[1:]
-        elif args[0] is S.NegativeInfinity:
-            return S.NegativeOne, (-args[0],) + args[1:]
+        if args[0].is_Number:
+            if not rational or args[0].is_Rational:
+                return args[0], args[1:]
+            elif args[0].is_negative:
+                return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number and not (rational and not coeff.is_Rational):
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        else:
-            return S.One, self
+        if coeff.is_Number:
+            if not rational or coeff.is_Rational:
+                if len(args) == 1:
+                    return coeff, args[0]
+                else:
+                    return coeff, self._new_rawargs(*args)
+            elif coeff.is_negative:
+                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
+        return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import expand_mul
+        from sympy import Abs, expand_mul, im, re
         other = []
         coeffr = []
         coeffi = []
@@ -689,7 +690,7 @@ class Mul(Expr, AssocOp):
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
                     if x == a.conjugate():
-                        coeffr.append(C.Abs(x)**2)
+                        coeffr.append(Abs(x)**2)
                         del other[i]
                         break
                 else:
@@ -703,13 +704,13 @@ class Mul(Expr, AssocOp):
         if hints.get('ignore') == m:
             return
         if len(coeffi) % 2:
-            imco = C.im(coeffi.pop(0))
+            imco = im(coeffi.pop(0))
             # all other pairs make a real factor; they will be
             # put into reco below
         else:
             imco = S.Zero
         reco = self.func(*(coeffr + coeffi))
-        r, i = (reco*C.re(m), reco*C.im(m))
+        r, i = (reco*re(m), reco*im(m))
         if addterms == 1:
             if m == 1:
                 if imco is S.Zero:
@@ -786,15 +787,15 @@ class Mul(Expr, AssocOp):
             else:
                 return plain
 
+    @cacheit
     def _eval_derivative(self, s):
-        terms = list(self.args)
-        factors = []
-        for i in xrange(len(terms)):
-            t = terms[i].diff(s)
-            if t is S.Zero:
-                continue
-            factors.append(self.func(*(terms[:i] + [t] + terms[i + 1:])))
-        return Add(*factors)
+        args = list(self.args)
+        terms = []
+        for i in range(len(args)):
+            d = args[i].diff(s)
+            if d:
+                terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
+        return Add(*terms)
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
@@ -831,7 +832,8 @@ class Mul(Expr, AssocOp):
         return repl_dict or None
 
     def _matches(self, expr, repl_dict={}):
-        # weed out negative one prefixes
+        # weed out negative one prefixes#
+        from sympy import Wild
         sign = 1
         a, b = self.as_two_terms()
         if a is S.NegativeOne:
@@ -870,7 +872,7 @@ class Mul(Expr, AssocOp):
                 pp.remove(p)
 
         # only one symbol left in pattern -> match the remaining expression
-        if len(pp) == 1 and isinstance(pp[0], C.Wild):
+        if len(pp) == 1 and isinstance(pp[0], Wild):
             if len(ee) == 1:
                 d[pp[0]] = sign * ee[0]
             else:
@@ -956,33 +958,48 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_bounded = lambda self: _fuzzy_group(
-        a.is_bounded for a in self.args)
+    _eval_is_finite = lambda self: _fuzzy_group(
+        a.is_finite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
+
+    def _eval_is_infinite(self):
+        if any(a.is_infinite for a in self.args):
+            if any(a.is_zero for a in self.args):
+                return S.NaN.is_infinite
+            if any(a.is_zero is None for a in self.args):
+                return None
+            return True
 
     def _eval_is_rational(self):
         r = _fuzzy_group((a.is_rational for a in self.args), quick_exit=True)
         if r:
             return r
         elif r is False:
-            return self._eval_is_zero()
+            return self.is_zero
+
+    def _eval_is_algebraic(self):
+        r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
+        if r:
+            return r
+        elif r is False:
+            return self.is_zero
 
     def _eval_is_zero(self):
-        zero = unbound = False
+        zero = infinite = False
         for a in self.args:
             z = a.is_zero
             if z:
-                if unbound:
+                if infinite:
                     return  # 0*oo is nan and nan.is_zero is None
                 zero = True
             else:
-                if not a.is_bounded:
+                if not a.is_finite:
                     if zero:
                         return  # 0*oo is nan and nan.is_zero is None
-                    unbound = True
+                    infinite = True
                 if zero is False and z is None:  # trap None
                     zero = None
         return zero
@@ -1019,7 +1036,7 @@ class Mul(Expr, AssocOp):
                     if not z and zero is False:
                         zero = z
                     elif z:
-                        if all(a.is_bounded for a in self.args):
+                        if all(a.is_finite for a in self.args):
                             return True
                         return
             elif t.is_real is False:
@@ -1038,7 +1055,10 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
+        z = self.is_zero
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
@@ -1072,7 +1092,10 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        if self.is_nonzero:
+        z = self.is_zero
+        if z:
+            return False
+        elif z is False:
             return (S.ImaginaryUnit*self).is_hermitian
 
     def _eval_is_irrational(self):
@@ -1081,9 +1104,9 @@ class Mul(Expr, AssocOp):
             if a:
                 others = list(self.args)
                 others.remove(t)
-                if all(x.is_rational is True for x in others):
+                if all((x.is_rational and x.is_nonzero) is True for x in others):
                     return True
-                return None
+                return
             if a is None:
                 return
         return False
@@ -1186,7 +1209,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            return fuzzy_not(self._eval_is_odd())
+            return fuzzy_not(self.is_odd)
 
         elif is_integer is False:
             return False
@@ -1210,7 +1233,8 @@ class Mul(Expr, AssocOp):
             # if I and -1 are in a Mul, they get both end up with
             # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
-            if a.is_Pow or a.func is C.exp:
+            from sympy import exp
+            if a.is_Pow or a.func is exp:
                 return a.as_base_exp()
             return a, S.One
 
@@ -1258,12 +1282,13 @@ class Mul(Expr, AssocOp):
         # rv will be the default return value
         rv = None
         n, d = fraction(self)
+        self2 = self
         if d is not S.One:
             self2 = n._subs(old, new)/d._subs(old, new)
             if not self2.is_Mul:
                 return self2._subs(old, new)
             if self2 != self:
-                self = rv = self2
+                rv = self2
 
         # Now continue with regular substitution.
 
@@ -1271,7 +1296,7 @@ class Mul(Expr, AssocOp):
         # should even be started; we always know where to find the Rational
         # so it's a quick test
 
-        co_self = self.args[0]
+        co_self = self2.args[0]
         co_old = old.args[0]
         co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
@@ -1284,7 +1309,7 @@ class Mul(Expr, AssocOp):
 
         # break self and old into factors
 
-        (c, nc) = breakup(self)
+        (c, nc) = breakup(self2)
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
@@ -1450,14 +1475,14 @@ class Mul(Expr, AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return co_residual*self.func(*margs)*self.func(*nc)
+        return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import powsimp
+        from sympy import Order, powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(C.Order):
-            res += C.Order(x**n, x)
+        if res.has(Order):
+            res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):

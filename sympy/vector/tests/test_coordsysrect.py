@@ -1,20 +1,19 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
-from sympy import Symbol, sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, sqrt, zeros
+from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
+     symbols, simplify, zeros
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 
-
-A = CoordSysCartesian('A')
 a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
 def test_coordsyscartesian_equivalence():
+    A = CoordSysCartesian('A')
     A1 = CoordSysCartesian('A')
     assert A1 == A
     B = CoordSysCartesian('B')
@@ -25,6 +24,7 @@ def test_coordsyscartesian_equivalence():
 
 
 def test_orienters():
+    A = CoordSysCartesian('A')
     axis_orienter = AxisOrienter(a, A.k)
     body_orienter = BodyOrienter(a, b, c, '123')
     space_orienter = SpaceOrienter(a, b, c, '123')
@@ -60,6 +60,7 @@ def test_coordinate_vars():
     Tests the coordinate variables functionality with respect to
     reorientation of coordinate systems.
     """
+    A = CoordSysCartesian('A')
     assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
     assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
     assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
@@ -249,6 +250,7 @@ def test_locatenew_point():
     """
     Tests Point class, and locate_new method in CoordSysCartesian.
     """
+    A = CoordSysCartesian('A')
     assert isinstance(A.origin, Point)
     v = a*A.i + b*A.j + c*A.k
     C = A.locate_new('C', v)
@@ -272,6 +274,7 @@ def test_locatenew_point():
 
 
 def test_evalf():
+    A = CoordSysCartesian('A')
     v = 3*A.i + 4*A.j + a*A.k
     assert v.n() == v.evalf()
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()

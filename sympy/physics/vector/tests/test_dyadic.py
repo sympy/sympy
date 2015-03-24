@@ -1,6 +1,5 @@
 from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
-from sympy.physics.vector import (ReferenceFrame, Vector, Dyadic, \
-     dynamicsymbols)
+from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
 
 
 Vector.simp = True

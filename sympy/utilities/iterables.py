@@ -6,12 +6,12 @@ import random
 from operator import gt
 
 from sympy.core.decorators import deprecated
-from sympy.core import Basic, C
+from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
     as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered, xrange
+    iterable, ordered, range
 )
 
 from sympy.utilities.enumerative import (
@@ -87,7 +87,7 @@ def unflatten(iter, n=2):
     """
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
-    return list(zip(*(iter[i::n] for i in xrange(n))))
+    return list(zip(*(iter[i::n] for i in range(n))))
 
 
 def reshape(seq, how):
@@ -577,9 +577,10 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
     """
     exclude = set(exclude or [])
     if cls is None:
-        # We can't just make the default cls=C.Symbol because it isn't
+        # We can't just make the default cls=Symbol because it isn't
         # imported yet.
-        cls = C.Symbol
+        from sympy import Symbol
+        cls = Symbol
 
     while True:
         name = '%s%s' % (prefix, start)
@@ -666,7 +667,7 @@ def sift(seq, keyfunc):
 
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
-    return [ value for _, value in zip(xrange(n), iter) ]
+    return [ value for _, value in zip(range(n), iter) ]
 
 
 def dict_merge(*dicts):
@@ -698,7 +699,7 @@ def common_prefix(*seqs):
         return seqs[0]
     i = 0
     for i in range(min(len(s) for s in seqs)):
-        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
             break
     else:
         i += 1
@@ -725,7 +726,7 @@ def common_suffix(*seqs):
         return seqs[0]
     i = 0
     for i in range(-1, -min(len(s) for s in seqs) - 1, -1):
-        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
             break
     else:
         i -= 1
@@ -750,7 +751,7 @@ def prefixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[:i + 1]
 
 
@@ -769,7 +770,7 @@ def postfixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[n - i - 1:]
 
 
@@ -1332,7 +1333,7 @@ def partitions(n, m=None, k=None, size=False):
     The numbers appearing in the partition (the key of the returned dict)
     are limited with k:
 
-    >>> for p in partitions(6, k=2):
+    >>> for p in partitions(6, k=2):  # doctest: +SKIP
     ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
@@ -1342,7 +1343,7 @@ def partitions(n, m=None, k=None, size=False):
     The maximum number of parts in the partion (the sum of the values in
     the returned dict) are limited with m:
 
-    >>> for p in partitions(6, m=2):
+    >>> for p in partitions(6, m=2):  # doctest: +SKIP
     ...     print(p)
     ...
     {6: 1}
@@ -1360,9 +1361,9 @@ def partitions(n, m=None, k=None, size=False):
     If you want to build a list of the returned dictionaries then
     make a copy of them:
 
-    >>> [p.copy() for p in partitions(6, k=2)]
+    >>> [p.copy() for p in partitions(6, k=2)]  # doctest: +SKIP
     [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
-    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]
+    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
     [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
     Reference:
@@ -1513,7 +1514,9 @@ def has_dups(seq):
     >>> all(has_dups(c) is False for c in (set(), Set(), dict(), Dict()))
     True
     """
-    if isinstance(seq, (dict, set, C.Dict, C.Set)):
+    from sympy.core.containers import Dict
+    from sympy.sets.sets import Set
+    if isinstance(seq, (dict, set, Dict, Set)):
         return False
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
@@ -1835,14 +1838,14 @@ def generate_oriented_forest(n):
         if P[n] > 0:
             P[n] = P[P[n]]
         else:
-            for p in xrange(n - 1, 0, -1):
+            for p in range(n - 1, 0, -1):
                 if P[p] != 0:
                     target = P[p] - 1
-                    for q in xrange(p - 1, 0, -1):
+                    for q in range(p - 1, 0, -1):
                         if P[q] == target:
                             break
                     offset = p - q
-                    for i in xrange(p, n + 1):
+                    for i in range(p, n + 1):
                         P[i] = P[i - offset]
                     break
             else:

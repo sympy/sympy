@@ -8,13 +8,23 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import range
 
 
 def _fuzzy_group(args, quick_exit=False):
-    """Return True if all args are True, None if any is None, otherwise False.
-    This default behavior is modified by setting `quick_exit` to True which
-    will cause None to be returned if a 2nd False is seen.
+    """Return True if all args are True, None if there is any None else False
+    unless ``quick_exit`` is True (then return None as soon as a second False
+    is seen.
+
+     ``_fuzzy_group`` is like ``fuzzy_and`` except that it is more
+    conservative in returning a False, waiting to make sure that all
+    arguments are True or False and returning None if any arguments are
+    None. It also has the capability of permiting only a single False and
+    returning None if more than one is seen. For example, the presence of a
+    single transcendental amongst rationals would indicate that the group is
+    no longer rational; but a second transcendental in the group would make the
+    determination impossible.
+
 
     Examples
     ========
@@ -48,43 +58,6 @@ def _fuzzy_group(args, quick_exit=False):
             return
         saw_other = True
     return not saw_other
-
-
-def _fuzzy_group_inverse(args, quick_exit=False):
-    """Return True if all args are True, False if any is False, otherwise None.
-    This default behavior is modified by setting `quick_exit` to True which
-    will cause False to be returned if a second None is seen.
-
-    Examples
-    ========
-
-    >>> from sympy.core.logic import _fuzzy_group_inverse
-
-    By default, multiple None mean the group status is unknown:
-
-    >>> _fuzzy_group_inverse([None, None, True])
-
-    If multiple None mean the group is broken then set
-    `quick_exit` to True so False can be returned when the 2nd None is seen:
-
-    >>> _fuzzy_group_inverse([None, None, True], quick_exit=True)
-    False
-
-    But if only a single None is seen then the group status is unknown:
-
-    >>> _fuzzy_group_inverse([None, True, True], quick_exit=True)
-
-    """
-    saw_other = False
-    for a in args:
-        if a is True:
-            continue
-        if a is False:
-            return False
-        if quick_exit and saw_other:
-            return False
-        saw_other = True
-    return None if saw_other else True
 
 
 def fuzzy_bool(x):
@@ -206,18 +179,18 @@ class Logic(object):
         else:
             return a.args != b.args
 
-    def __lt__(cls, other):
-        if cls.__cmp__(other) == -1:
+    def __lt__(self, other):
+        if self.__cmp__(other) == -1:
             return True
         return False
 
-    def __cmp__(a, b):
-        if type(a) is not type(b):
-            a = str(type(a))
-            b = str(type(b))
+    def __cmp__(self, other):
+        if type(self) is not type(other):
+            a = str(type(self))
+            b = str(type(other))
         else:
-            a = a.args
-            b = b.args
+            a = self.args
+            b = other.args
         return (a > b) - (a < b)
 
     def __str__(self):
@@ -227,11 +200,11 @@ class Logic(object):
 
     @staticmethod
     def fromstring(text):
-        """Logic from string
+        """Logic from string with space around & and | but none after !.
 
            e.g.
 
-           !a & !b | c
+           !a & b | c
         """
         lexpr = None  # current logical expression
         schedop = None  # scheduled operation
@@ -246,7 +219,11 @@ class Logic(object):
                         '%s cannot be in the beginning of expression' % term)
                 schedop = term
                 continue
+            if '&' in term or '|' in term:
+                raise ValueError('& and | must have space around them')
             if term[0] == '!':
+                if len(term) == 1:
+                    raise ValueError('do not include space after "!"')
                 term = Not(term[1:])
 
             # already scheduled operation, e.g. '&'
@@ -283,8 +260,7 @@ class AndOr_Base(Logic):
                 continue    # skip this argument
             bargs.append(a)
 
-        args = cls.flatten(bargs)
-        args = set(args)
+        args = sorted(set(cls.flatten(bargs)), key=hash)
 
         for a in args:
             if Not(a) in args:
@@ -295,7 +271,7 @@ class AndOr_Base(Logic):
         elif len(args) == 0:
             return not cls.op_x_notx
 
-        return Logic.__new__(cls, *sorted(args, key=hash))
+        return Logic.__new__(cls, *args)
 
     @classmethod
     def flatten(cls, args):
@@ -376,6 +352,7 @@ class Not(Logic):
     @property
     def arg(self):
         return self.args[0]
+
 
 Logic.op_2class['&'] = And
 Logic.op_2class['|'] = Or

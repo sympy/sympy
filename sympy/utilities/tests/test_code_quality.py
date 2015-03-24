@@ -3,6 +3,7 @@ from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
+import ast
 
 from sympy.core.compatibility import PY3
 
@@ -33,6 +34,7 @@ message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
+message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -44,6 +46,7 @@ test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_ok_def_re = re.compile(r'^def\s+test_.*:$')
 test_file_re = re.compile(r'.*test_.*\.py$')
 
+
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
     including the whitespace of docstring code samples."""
@@ -54,6 +57,42 @@ def tab_in_leading(s):
         smore = s[n + 3:]
         check = s[:n] + smore[:len(smore) - len(smore.lstrip())]
     return not (check.expandtabs() == check)
+
+
+def find_self_assignments(s):
+    """Returns a list of "bad" assignments: if there are instances
+    of assigning to the first argument of the class method (except
+    for staticmethod's).
+    """
+    t = [n for n in ast.parse(s).body if isinstance(n, ast.ClassDef)]
+
+    bad = []
+    for c in t:
+        for n in c.body:
+            if not isinstance(n, ast.FunctionDef):
+                continue
+            if any(d.id == 'staticmethod'
+                   for d in n.decorator_list if isinstance(d, ast.Name)):
+                continue
+            if n.name == '__new__':
+                continue
+            if not n.args.args:
+                continue
+            if PY3:
+                first_arg = n.args.args[0].arg
+            else:
+                first_arg = n.args.args[0].id
+            for m in ast.walk(n):
+                if isinstance(m, ast.Assign):
+                    for a in m.targets:
+                        if isinstance(a, ast.Name) and a.id == first_arg:
+                            bad.append(m)
+                        elif (isinstance(a, ast.Tuple) and
+                              any(q.id == first_arg for q in a.elts
+                                  if isinstance(q, ast.Name))):
+                            bad.append(m)
+
+    return bad
 
 
 def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
@@ -95,6 +134,7 @@ def test_files():
       o there are no old style raise statements
       o name of arg-less test suite functions start with _ or test_
       o no duplicate function names that start with test_
+      o no assignments to self variable in class methods
     """
 
     def test(fname):
@@ -104,6 +144,13 @@ def test_files():
         else:
             with open(fname, "rt") as test_file:
                 test_this_file(fname, test_file)
+
+            with open(fname, "rt") as test_file:
+                source = test_file.read()
+            result = find_self_assignments(source)
+            if result:
+                assert False, message_self_assignments % (fname,
+                                                          result[0].lineno)
 
     def test_this_file(fname, test_file):
         line = None  # to flag the case where there were no lines in file
@@ -152,9 +199,7 @@ def test_files():
         "setupegg.py",
     ]]
     # Files to exclude from all tests
-    exclude = set([
-        "%(sep)smpmath%(sep)s" % sepd,
-    ])
+    exclude = set()
     # Files to exclude from the implicit import test
     import_exclude = set([
         # glob imports are allowed in top-level __init__.py:
@@ -331,3 +376,25 @@ def test_test_duplicate_defs():
         assert check(c) == ok
     for c in candidates_fail:
         assert check(c) != ok
+
+
+def test_find_self_assignments():
+    candidates_ok = [
+        "class A(object):\n    def foo(self, arg): arg = self\n",
+        "class A(object):\n    def foo(self, arg): self.prop = arg\n",
+        "class A(object):\n    def foo(self, arg): obj, obj2 = arg, self\n",
+        "class A(object):\n    @classmethod\n    def bar(cls, arg): arg = cls\n",
+        "class A(object):\n    def foo(var, arg): arg = var\n",
+    ]
+    candidates_fail = [
+        "class A(object):\n    def foo(self, arg): self = arg\n",
+        "class A(object):\n    def foo(self, arg): obj, self = arg, arg\n",
+        "class A(object):\n    def foo(self, arg):\n        if arg: self = arg",
+        "class A(object):\n    @classmethod\n    def foo(cls, arg): cls = arg\n",
+        "class A(object):\n    def foo(var, arg): var = arg\n",
+    ]
+
+    for c in candidates_ok:
+        assert find_self_assignments(c) == []
+    for c in candidates_fail:
+        assert find_self_assignments(c) != []

@@ -33,8 +33,7 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, get_function_code,
-                                      string_types, xrange)
+from sympy.core.compatibility import exec_, PY3, string_types, range
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -204,7 +203,10 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
                      repr(function_kwargs)))
 
     try:
-        return subprocess.call([command, "-R", "-c", commandstring])
+        p = subprocess.Popen([command, "-R", "-c", commandstring])
+        p.communicate()
+    except KeyboardInterrupt:
+        p.wait()
     finally:
         # Put the environment variable back, so that it reads correctly for
         # the current Python process.
@@ -212,6 +214,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
             del os.environ["PYTHONHASHSEED"]
         else:
             os.environ["PYTHONHASHSEED"] = hash_seed
+        return p.returncode
 
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
@@ -415,10 +418,14 @@ def test(*paths, **kwargs):
     """
     subprocess = kwargs.pop("subprocess", True)
     rerun = kwargs.pop("rerun", 0)
+    # count up from 0, do not print 0
+    print_counter = lambda i : (print("rerun %d" % (rerun-i))
+                                if rerun-i else None)
 
     if subprocess:
         # loop backwards so last i is 0
-        for i in xrange(rerun, -1, -1):
+        for i in range(rerun, -1, -1):
+            print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_test",
                         function_args=paths, function_kwargs=kwargs)
             if ret is False:
@@ -429,7 +436,8 @@ def test(*paths, **kwargs):
                 return val
 
     # rerun even if hash randomization is not supported
-    for i in xrange(rerun, -1, -1):
+    for i in range(rerun, -1, -1):
+        print_counter(i)
         val = not bool(_test(*paths, **kwargs))
         if not val or i == 0:
             return val
@@ -447,7 +455,10 @@ def _test(*paths, **kwargs):
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
-    kw = kwargs.get("kw", "")
+    kw = kwargs.get("kw", None) or ()
+    # ensure that kw is a tuple
+    if isinstance(kw, str):
+        kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     force_colors = kwargs.get("force_colors", False)
@@ -460,9 +471,6 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     blacklist = kwargs.get('blacklist', [])
-    blacklist.extend([
-        "sympy/mpmath", # needs to be fixed upstream
-    ])
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
@@ -553,12 +561,30 @@ def doctest(*paths, **kwargs):
 
     """
     subprocess = kwargs.pop("subprocess", True)
+    rerun = kwargs.pop("rerun", 0)
+    # count up from 0, do not print 0
+    print_counter = lambda i : (print("rerun %d" % (rerun-i))
+                                if rerun-i else None)
+
     if subprocess:
-        ret = run_in_subprocess_with_hash_randomization("_doctest",
-            function_args=paths, function_kwargs=kwargs)
-        if ret is not False:
-            return not bool(ret)
-    return not bool(_doctest(*paths, **kwargs))
+        # loop backwards so last i is 0
+        for i in range(rerun, -1, -1):
+            print_counter(i)
+            ret = run_in_subprocess_with_hash_randomization("_doctest",
+                        function_args=paths, function_kwargs=kwargs)
+            if ret is False:
+                break
+            val = not bool(ret)
+            # exit on the first failure or if done
+            if not val or i == 0:
+                return val
+
+    # rerun even if hash randomization is not supported
+    for i in range(rerun, -1, -1):
+        print_counter(i)
+        val = not bool(_doctest(*paths, **kwargs))
+        if not val or i == 0:
+            return val
 
 
 def _doctest(*paths, **kwargs):
@@ -576,8 +602,6 @@ def _doctest(*paths, **kwargs):
     blacklist = kwargs.get("blacklist", [])
     split  = kwargs.get('split', None)
     blacklist.extend([
-        "doc/src/modules/mpmath",  # needs to be fixed upstream
-        "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
@@ -617,14 +641,6 @@ def _doctest(*paths, **kwargs):
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
         ])
-
-    # pytest = import_module('pytest')
-    # py = import_module('py')
-    # if py is None or pytest is None:
-    #     blacklist.extend([
-    #         "sympy/conftest.py",
-    #         "sympy/utilities/benchmarking.py"
-    #     ])
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
@@ -715,9 +731,6 @@ def _doctest(*paths, **kwargs):
             continue
         old_displayhook = sys.displayhook
         try:
-            # out = pdoctest.testfile(
-            #    rst_file, module_relative=False, encoding='utf-8',
-            #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -989,10 +1002,7 @@ class SymPyTests(object):
     def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
         funcs = []
         try:
-            clear_cache()
-            self._count += 1
             gl = {'__file__': filename}
-            random.seed(self._seed)
             try:
                 if PY3:
                     open_file = lambda: open(filename, encoding="utf8")
@@ -1001,6 +1011,13 @@ class SymPyTests(object):
 
                 with open_file() as f:
                     source = f.read()
+                    if self._kw:
+                        for l in source.splitlines():
+                            if l.lstrip().startswith('def '):
+                                if any(l.find(k) != -1 for k in self._kw):
+                                    break
+                        else:
+                            return
 
                 if enhance_asserts:
                     try:
@@ -1015,6 +1032,9 @@ class SymPyTests(object):
             except ImportError:
                 self._reporter.import_error(filename, sys.exc_info())
                 return
+            clear_cache()
+            self._count += 1
+            random.seed(self._seed)
             pytestfile = ""
             if "XFAIL" in gl:
                 pytestfile = inspect.getsourcefile(gl["XFAIL"])
@@ -1113,9 +1133,12 @@ class SymPyTests(object):
 
         Always returns True if self._kw is "".
         """
-        if self._kw == "":
+        if not self._kw:
             return True
-        return x.__name__.find(self._kw) != -1
+        for kw in self._kw:
+            if x.__name__.find(kw) != -1:
+                return True
+        return False
 
     def get_test_files(self, dir, pat='test_*.py'):
         """
@@ -1283,7 +1306,6 @@ class SymPyDocTests(object):
         if executables is not None:
             for ex in executables:
                 found = find_executable(ex)
-                # print "EXE %s found %s" %(ex, found)
                 if found is None:
                     return False
         if moduledeps is not None:
@@ -1296,10 +1318,7 @@ class SymPyDocTests(object):
                         min_module_version='1.0.0', catch=(RuntimeError,))
                     if matplotlib is not None:
                         pass
-                        # print "EXTMODULE matplotlib version %s found" % \
-                        #     matplotlib.__version__
                     else:
-                        # print "EXTMODULE matplotlib > 1.0.0 not found"
                         return False
                 else:
                     # TODO min version support
@@ -1308,9 +1327,7 @@ class SymPyDocTests(object):
                         version = "unknown"
                         if hasattr(mod, '__version__'):
                             version = mod.__version__
-                        # print "EXTMODULE %s version %s found" %(extmod, version)
                     else:
-                        # print "EXTMODULE %s not found" %(extmod)
                         return False
         if viewers is not None:
             import tempfile
@@ -1817,9 +1834,11 @@ class PyTestReporter(Reporter):
                         columns = match.group('columns')
 
                         try:
-                            return int(columns)
+                            width = int(columns)
                         except ValueError:
                             pass
+                        if width != 0:
+                            return width
 
             return self._default_width
 
@@ -2009,7 +2028,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
-            #self.write_center("These tests raised an exception", "_")
             for e in self._exceptions:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
@@ -2022,7 +2040,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._failed) > 0:
-            #self.write_center("Failed", "_")
             for e in self._failed:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
@@ -2031,7 +2048,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._failed_doctest) > 0:
-            #self.write_center("Failed", "_")
             for e in self._failed_doctest:
                 filename, msg = e
                 self.write_center("", "_")

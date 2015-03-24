@@ -6,6 +6,7 @@ from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         random_symbols, sample)
 from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import range
 
 
 def test_where():
@@ -160,7 +161,7 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x, z = symbols('x, z', real=True, bounded=True)
+    x, z = symbols('x, z', real=True, finite=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1

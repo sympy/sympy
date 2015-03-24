@@ -54,7 +54,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', integer=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', integer=True, finite=True, cls=Dummy)
         left_bound = self.set.inf
 
         # CDF is integral of PDF from left bound to z
@@ -70,7 +70,6 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
         if evaluate:
             return summation(expr * self.pdf(var),

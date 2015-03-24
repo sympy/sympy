@@ -1,5 +1,5 @@
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
-    fuzzy_or, _fuzzy_group, _fuzzy_group_inverse)
+    fuzzy_or, _fuzzy_group)
 from sympy.utilities.pytest import raises
 
 T = True
@@ -13,14 +13,9 @@ def test_fuzzy_group():
     for i in cartes(*[v]*3):
         assert _fuzzy_group(i) is (
             None if None in i else (True if all(j for j in i) else False))
-        assert _fuzzy_group_inverse(i) is (
-            False if False in i else (True if all(j for j in i) else None))
         assert _fuzzy_group(i, quick_exit=True) is (
             None if (i.count(False) > 1) else (None if None in i else (
             True if all(j for j in i) else False)))
-        assert _fuzzy_group_inverse(i, quick_exit=True) is (
-            False if (i.count(None) > 1) else (False if False in i else (
-            True if all(j for j in i) else None)))
 
 
 def test_fuzzy_not():
@@ -144,6 +139,9 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a | & b'))
     raises(ValueError, lambda: S('a & & b'))
     raises(ValueError, lambda: S('a |'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('!'))
+    raises(ValueError, lambda: S('! a'))
 
 
 def test_logic_not():
@@ -154,3 +152,10 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+
+def test_formatting():
+    S = Logic.fromstring
+    raises(ValueError, lambda: S('a&b'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('! a'))

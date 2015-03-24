@@ -15,14 +15,9 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        sympify, Equality, solve, Lambda, DiracDelta)
-from sympy.core.compatibility import reduce
+        Equality, solve, Lambda, DiracDelta)
 from sympy.sets.sets import FiniteSet, ProductSet
 from sympy.abc import x
-
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
 
 
 class RandomDomain(Basic):
@@ -232,7 +227,7 @@ class RandomSymbol(Expr):
             raise TypeError("pspace variable should be of type PSpace")
         return Basic.__new__(cls, pspace, symbol)
 
-    is_bounded = True
+    is_finite = True
     is_Symbol = True
     is_Atom = True
 
@@ -389,7 +384,7 @@ class ProductDomain(RandomDomain):
         for domain in self.domains:
             # Collect the parts of this event which associate to this domain
             elem = frozenset([item for item in other
-                if item[0] in domain.symbols])
+                              if domain.symbols.contains(item[0]) == S.true])
             # Test this sub-event
             if elem not in domain:
                 return False
@@ -440,7 +435,7 @@ def sumsets(sets):
     """
     Union of sets
     """
-    return reduce(frozenset.union, sets, frozenset())
+    return frozenset().union(*sets)
 
 
 def rs_swap(a, b):
@@ -762,8 +757,7 @@ def where(condition, given_condition=None, **kwargs):
     (-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
-    """
+    Domain: Or(And(Eq(a, 1), Eq(b, 1)), And(Eq(a, 1), Eq(b, 2)), And(Eq(a, 2), Eq(b, 2)))    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)

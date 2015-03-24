@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 import random
 
@@ -184,7 +184,7 @@ class GrayCode(Basic):
             'not be greater than %i' % (len(graycode_bin), bits))
         self._current = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
-        for i in xrange(graycode_int, 1 << bits):
+        for i in range(graycode_int, 1 << bits):
             if self._skip:
                 self._skip = False
             else:
@@ -318,7 +318,7 @@ def random_bitstring(n):
     >>> random_bitstring(3) # doctest: +SKIP
     100
     """
-    return ''.join([random.choice('01') for i in xrange(n)])
+    return ''.join([random.choice('01') for i in range(n)])
 
 
 def gray_to_bin(bin_list):
@@ -339,7 +339,7 @@ def gray_to_bin(bin_list):
     bin_to_gray
     """
     b = [bin_list[0]]
-    for i in xrange(1, len(bin_list)):
+    for i in range(1, len(bin_list)):
         b += str(int(b[i - 1] != bin_list[i]))
     return ''.join(b)
 
@@ -362,7 +362,7 @@ def bin_to_gray(bin_list):
     gray_to_bin
     """
     b = [bin_list[0]]
-    for i in xrange(0, len(bin_list) - 1):
+    for i in range(0, len(bin_list) - 1):
         b += str(int(bin_list[i]) ^ int(b[i - 1]))
     return ''.join(b)
 

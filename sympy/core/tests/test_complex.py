@@ -1,7 +1,6 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
         expand_complex)
-from sympy.utilities.pytest import XFAIL
 
 
 def test_complex():

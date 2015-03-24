@@ -1,6 +1,7 @@
 """Tests for sho1d.py"""
 
 from sympy import Integer, Symbol, sqrt, I, S
+from sympy.core.compatibility import range
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum import Commutator

@@ -5,9 +5,10 @@ import os
 import tempfile
 import shutil
 
-from sympy.utilities.autowrap import autowrap, binary_function, CythonCodeWrapper, \
-    ufuncify, UfuncifyCodeWrapper, CodeWrapper
-from sympy.utilities.codegen import Routine, CCodeGen, CodeGenArgumentListError
+from sympy.utilities.autowrap import (autowrap, binary_function,
+            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+from sympy.utilities.codegen import (CCodeGen, CodeGenArgumentListError,
+                                     make_routine)
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
@@ -31,7 +32,7 @@ def get_string(dump_fn, routines, prefix="file"):
 def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = CythonCodeWrapper(CCodeGen())
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
@@ -49,7 +50,7 @@ def test_cython_wrapper_outarg():
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(CCodeGen())
 
-    routine = Routine("test", Equality(z, x + y))
+    routine = make_routine("test", Equality(z, x + y))
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
         "cdef extern from 'file.h':\n"
@@ -67,7 +68,7 @@ def test_cython_wrapper_inoutarg():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(CCodeGen())
-    routine = Routine("test", Equality(z, x + y + z))
+    routine = make_routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
         "cdef extern from 'file.h':\n"
@@ -135,11 +136,10 @@ def test_binary_function():
 
 
 def test_ufuncify_source():
-    from sympy import Equality
     x, y, z = symbols('x,y,z')
     code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
     CodeWrapper._module_counter = 0
-    routine = Routine("test", x + y + z)
+    routine = make_routine("test", x + y + z)
     source = get_string(code_wrapper.dump_c, [routine])
     expected = """\
 #include "Python.h"

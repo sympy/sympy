@@ -1,10 +1,12 @@
-from sympy.core.add import Add
 from sympy.core.function import Function
-from sympy.core.numbers import Float, I, oo, pi, Rational
+from sympy.core.numbers import I, oo, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.miscellaneous import sqrt, cbrt, root, Min, Max, real_root
+from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root,
+    Min, Max, real_root)
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.pytest import raises
 
@@ -95,10 +97,9 @@ def test_Min():
     raises(ValueError, lambda: Min(I, x))
     raises(ValueError, lambda: Min(S.ComplexInfinity, x))
 
-    from sympy.functions.special.delta_functions import Heaviside
-    assert Min(1,x).diff(x) == Heaviside(1-x)
-    assert Min(x,1).diff(x) == Heaviside(1-x)
-    assert Min(0,-x,1-2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
+    assert Min(1, x).diff(x) == Heaviside(1 - x)
+    assert Min(x, 1).diff(x) == Heaviside(1 - x)
+    assert Min(0, -x, 1 - 2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
         - 2*Heaviside(2*x + Min(0, -x) - 1)
 
     a, b = Symbol('a', real=True), Symbol('b', real=True)
@@ -125,6 +126,7 @@ def test_Max():
     p_ = Symbol('p_', positive=True)
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
+    r = Symbol('r', real=True)
 
     assert Max(5, 4) == 5
 
@@ -139,7 +141,7 @@ def test_Max():
     assert Max(n, -oo, n_, p) == p
     assert Max(2, x, p, n, -oo, S.NegativeInfinity, n_, p, 2) == Max(2, x, p)
     assert Max(0, x, 1, y) == Max(1, x, y)
-    assert Max(x, x + 1, x - 1) == 1 + x
+    assert Max(r, r + 1, r - 1) == 1 + r
     assert Max(1000, 100, -100, x, p, n) == Max(p, x, 1000)
     assert Max(cos(x), sin(x)) == Max(sin(x), cos(x))
     assert Max(cos(x), sin(x)).subs(x, 1) == sin(1)
@@ -154,11 +156,11 @@ def test_Max():
     # Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
     # False
 
-    from sympy.functions.special.delta_functions import Heaviside
-    assert Max(1,x).diff(x) == Heaviside(x-1)
-    assert Max(x,1).diff(x) == Heaviside(x-1)
-    assert Max(x**2, 1+x, 1).diff(x) == 2*x*Heaviside(x**2 - Max(1,x+1)) \
-        + Heaviside(x - Max(1,x**2) + 1)
+    assert Max(1, x).diff(x) == Heaviside(x - 1)
+    assert Max(x, 1).diff(x) == Heaviside(x - 1)
+    assert Max(x**2, 1 + x, 1).diff(x) == \
+        2*x*Heaviside(x**2 - Max(1, x + 1)) \
+        + Heaviside(x - Max(1, x**2) + 1)
 
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Max(a, b) should be real
@@ -170,9 +172,20 @@ def test_Max():
     assert e.n().args == (0, x)
 
 
+def test_issue_8413():
+    x = Symbol('x', real=True)
+    # we can't evaluate in general because non-reals are not
+    # comparable: Min(floor(3.2 + I), 3.2 + I) -> ValueError
+    assert Min(floor(x), x) == floor(x)
+    assert Min(ceiling(x), x) == x
+    assert Max(floor(x), x) == x
+    assert Max(ceiling(x), x) == ceiling(x)
+
+
 def test_root():
-    from sympy.abc import x, y, z
+    from sympy.abc import x
     n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True)
 
     assert root(2, 2) == sqrt(2)
     assert root(2, 1) == 2
@@ -194,8 +207,10 @@ def test_root():
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
 
+    assert root(x, n, k) == x**(1/n)*(-1)**(2*k/n)
 
-def test_nthroot():
+
+def test_real_root():
     assert real_root(-8, 3) == -2
     assert real_root(-16, 4) == root(-16, 4)
     r = root(-7, 4)
@@ -204,3 +219,34 @@ def test_nthroot():
     r2 = r1**2
     r3 = root(-1, 4)
     assert real_root(r1 + r2 + r3) == -1 + r2 + r3
+    assert real_root(root(-2, 3)) == -root(2, 3)
+    assert real_root(-8., 3) == -2
+    x = Symbol('x')
+    n = Symbol('n')
+    g = real_root(x, n)
+    assert g.subs(dict(x=-8, n=3)) == -2
+    assert g.subs(dict(x=8, n=3)) == 2
+    # give principle root if there is no real root -- if this is not desired
+    # then maybe a Root class is needed to raise an error instead
+    assert g.subs(dict(x=I, n=3)) == cbrt(I)
+    assert g.subs(dict(x=-8, n=2)) == sqrt(-8)
+    assert g.subs(dict(x=I, n=2)) == sqrt(I)
+
+
+def test_rewrite_MaxMin_as_Heaviside():
+    from sympy.abc import x
+    assert Max(0, x).rewrite(Heaviside) == x*Heaviside(x)
+    assert Max(3, x).rewrite(Heaviside) == x*Heaviside(x - 3) + \
+        3*Heaviside(-x + 3)
+    assert Max(0, x+2, 2*x).rewrite(Heaviside) == \
+        2*x*Heaviside(2*x)*Heaviside(x - 2) + \
+        (x + 2)*Heaviside(-x + 2)*Heaviside(x + 2)
+
+
+    assert Min(0, x).rewrite(Heaviside) == x*Heaviside(-x)
+    assert Min(3, x).rewrite(Heaviside) == x*Heaviside(-x + 3) + \
+        3*Heaviside(x - 3)
+    assert Min(x, -x, -2).rewrite(Heaviside) == \
+        x*Heaviside(-2*x)*Heaviside(-x - 2) - \
+        x*Heaviside(2*x)*Heaviside(x - 2) \
+        - 2*Heaviside(-x + 2)*Heaviside(x + 2)

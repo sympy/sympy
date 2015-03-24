@@ -1,17 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core.containers import Tuple
-from sympy.core.core import C
-from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class Product(ExprWithIntLimits):
@@ -89,7 +84,7 @@ class Product(ExprWithIntLimits):
     Direct computation currently fails:
 
     >>> W.doit()
-    nan
+    Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, oo))
 
     But we can approach the infinite product by a limit of finite products:
 
@@ -219,7 +214,7 @@ class Product(ExprWithIntLimits):
                 f = 1 / f
 
             g = self._eval_product(f, (i, a, b))
-            if g is None:
+            if g in (None, S.NaN):
                 return self.func(powsimp(f), *self.limits[index:])
             else:
                 f = g
@@ -240,11 +235,13 @@ class Product(ExprWithIntLimits):
     def _eval_product(self, term, limits):
         from sympy.concrete.delta import deltaproduct, _has_simple_delta
         from sympy.concrete.summations import summation
-        from sympy.functions import KroneckerDelta
+        from sympy.functions import KroneckerDelta, RisingFactorial
 
         (k, a, n) = limits
 
         if k not in term.free_symbols:
+            if (term - 1).is_zero:
+                return S.One
             return term**(n - a + 1)
 
         if a == n:
@@ -255,20 +252,22 @@ class Product(ExprWithIntLimits):
 
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
+            return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
 
             A = B = Q = S.One
 
-            all_roots = roots(poly, multiple=True)
+            all_roots = roots(poly)
 
-            for r in all_roots:
-                A *= C.RisingFactorial(a - r, n - a + 1)
-                Q *= n - r
+            M = 0
+            for r, m in all_roots.items():
+                M += m
+                A *= RisingFactorial(a - r, n - a + 1)**m
+                Q *= (n - r)**m
 
-            if len(all_roots) < poly.degree():
+            if M < poly.degree():
                 arg = quo(poly, Q.as_poly(k))
                 B = self.func(arg, (k, a, n)).doit()
 

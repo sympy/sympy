@@ -5,7 +5,7 @@ from __future__ import print_function, division
 import sys
 import os
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name
+from sympy.core.compatibility import get_function_name, range
 
 # if you use
 # filldedent('''

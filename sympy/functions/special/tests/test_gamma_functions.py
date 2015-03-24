@@ -5,7 +5,7 @@ from sympy import (
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
-                                      test_numerically as tn)
+                                      verify_numerically as tn)
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -55,7 +55,6 @@ def test_gamma():
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
 
     assert conjugate(gamma(x)) == gamma(conjugate(x))
-    assert gamma(w).is_real is True
 
     assert expand_func(gamma(x + Rational(3, 2))) == \
         (x + Rational(1, 2))*gamma(x + Rational(1, 2))
@@ -68,6 +67,15 @@ def test_gamma():
 
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
     assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
+
+    # Issue 8526
+    k = Symbol('k', integer=True, nonnegative=True)
+    assert isinstance(gamma(k), gamma)
+    assert gamma(-k) == zoo
+
+
+def test_gamma_rewrite():
+    assert gamma(n).rewrite(factorial) == factorial(n - 1)
 
 
 def test_gamma_series():
@@ -385,3 +393,33 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+
+
+def test_issue_8657():
+    n = Symbol('n', negative=True, integer=True)
+    m = Symbol('m', integer=True)
+    o = Symbol('o', positive=True)
+    p = Symbol('p', negative=True, integer=False)
+    assert gamma(n).is_real is None
+    assert gamma(m).is_real is None
+    assert gamma(o).is_real is True
+    assert gamma(p).is_real is True
+    assert gamma(w).is_real is None
+
+
+def test_issue_8524():
+    x = Symbol('x', positive=True)
+    y = Symbol('y', negative=True)
+    z = Symbol('z', positive=False)
+    p = Symbol('p', negative=False)
+    q = Symbol('q', integer=True)
+    r = Symbol('r', integer=False)
+    e = Symbol('e', even=True, negative=True)
+    assert gamma(x).is_positive is True
+    assert gamma(y).is_positive is None
+    assert gamma(z).is_positive is None
+    assert gamma(p).is_positive is None
+    assert gamma(q).is_positive is None
+    assert gamma(r).is_positive is None
+    assert gamma(e + S.Half).is_positive is True
+    assert gamma(e - S.Half).is_positive is False

@@ -25,12 +25,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 from __future__ import print_function, division
 
 from inspect import getargspec
-from itertools import chain
 from collections import Callable
 import warnings
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
+from sympy.core.compatibility import range
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -922,13 +922,13 @@ class MatplotlibBackend(BaseBackend):
                 if len(points) == 2:
                     #interval math plotting
                     x, y = _matplotlib_list(points[0])
-                    self.ax.fill(x, y, facecolor='b', edgecolor='None' )
+                    self.ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
                 else:
                     # use contourf or contour depending on whether it is
                     # an inequality or equality.
                     #XXX: ``contour`` plots multiple lines. Should be fixed.
                     ListedColormap = self.matplotlib.colors.ListedColormap
-                    colormap = ListedColormap(["white", "blue"])
+                    colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
                         self.ax.contour(xarray, yarray, zarray,
@@ -1745,7 +1745,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set.union(*[e.free_symbols for e in exprs]))
+        free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -1776,7 +1776,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         exprs = args[:i]
         assert all(isinstance(e, Expr) for expr in exprs for e in expr)
-        free_symbols = list(set.union(*[e.free_symbols for expr in exprs
+        free_symbols = list(set().union(*[e.free_symbols for expr in exprs
                                         for e in expr]))
 
         if len(free_symbols) > nb_of_free_symbols:

@@ -77,15 +77,14 @@ from subprocess import STDOUT, CalledProcessError
 from string import Template
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import check_output
+from sympy.core.compatibility import check_output, range
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
-from sympy.utilities.codegen import (
-    get_code_generator, Routine, OutputArgument, InOutArgument, InputArgument,
-    CodeGenArgumentListError, Result, ResultBase, CCodeGen
-)
+from sympy.utilities.codegen import (make_routine, get_code_generator,
+            OutputArgument, InOutArgument, InputArgument,
+            CodeGenArgumentListError, Result, ResultBase, CCodeGen)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -94,7 +93,7 @@ class CodeWrapError(Exception):
     pass
 
 
-class CodeWrapper:
+class CodeWrapper(object):
     """Base Class for code wrappers"""
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
@@ -212,30 +211,35 @@ class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
     setup_template = (
-            "from distutils.core import setup\n"
-            "from distutils.extension import Extension\n"
-            "from Cython.Distutils import build_ext\n"
-            "\n"
-            "setup(\n"
-            "    cmdclass = {{'build_ext': build_ext}},\n"
-            "    ext_modules = [Extension({ext_args}, extra_compile_args=['-std=c99'])]\n"
-            "        )")
+        "from distutils.core import setup\n"
+        "from distutils.extension import Extension\n"
+        "from Cython.Distutils import build_ext\n"
+        "{np_import}"
+        "\n"
+        "setup(\n"
+        "    cmdclass = {{'build_ext': build_ext}},\n"
+        "    ext_modules = [Extension({ext_args},\n"
+        "                             extra_compile_args=['-std=c99'])],\n"
+        "{np_includes}"
+        "        )")
 
     pyx_imports = (
-            "import numpy as np\n"
-            "cimport numpy as np\n\n")
+        "import numpy as np\n"
+        "cimport numpy as np\n\n")
 
     pyx_header = (
-            "cdef extern from '{header_file}.h':\n"
-            "    {prototype}\n\n")
+        "cdef extern from '{header_file}.h':\n"
+        "    {prototype}\n\n")
 
     pyx_func = (
-            "def {name}_c({arg_string}):\n"
-            "\n"
-            "{declarations}"
-            "{body}")
+        "def {name}_c({arg_string}):\n"
+        "\n"
+        "{declarations}"
+        "{body}")
 
-    _need_numpy = False
+    def __init__(self, *args, **kwargs):
+        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        self._need_numpy = False
 
     @property
     def command(self):
@@ -252,8 +256,16 @@ class CythonCodeWrapper(CodeWrapper):
 
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
+        if self._need_numpy:
+            np_import = 'import numpy as np\n'
+            np_includes = '    include_dirs = [np.get_include()],\n'
+        else:
+            np_import = ''
+            np_includes = ''
         with open('setup.py', 'w') as f:
-            f.write(self.setup_template.format(ext_args=", ".join(ext_args)))
+            f.write(self.setup_template.format(ext_args=", ".join(ext_args),
+                                               np_import=np_import,
+                                               np_includes=np_includes))
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
@@ -490,7 +502,7 @@ def autowrap(
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
-        routine = Routine('autofunc', expr, args)
+        routine = make_routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
@@ -500,11 +512,11 @@ def autowrap(
             if not isinstance(missing, OutputArgument):
                 raise
             new_args.append(missing.name)
-        routine = Routine('autofunc', expr, args + new_args)
+        routine = make_routine('autofunc', expr, args + new_args)
 
     helps = []
     for name, expr, args in helpers:
-        helps.append(Routine(name, expr, args))
+        helps.append(make_routine(name, expr, args))
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 
@@ -856,10 +868,10 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     flags = flags if flags else ()
 
     if backend.upper() == 'NUMPY':
-        routine = Routine('autofunc', expr, args)
+        routine = make_routine('autofunc', expr, args)
         helps = []
         for name, expr, args in helpers:
-            helps.append(Routine(name, expr, args))
+            helps.append(make_routine(name, expr, args))
         code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
                                            flags, verbose)
         return code_wrapper.wrap_code(routine, helpers=helps)

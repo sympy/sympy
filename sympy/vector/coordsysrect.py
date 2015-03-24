@@ -1,9 +1,7 @@
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy import (sin, cos, eye, sympify, trigsimp,
-                   ImmutableMatrix as Matrix, S, Symbol, rot_axis1,
-                   rot_axis2, rot_axis3)
-from sympy.core.compatibility import string_types
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
+from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)

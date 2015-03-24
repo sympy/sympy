@@ -11,11 +11,10 @@ import timeit
 
 from inspect import getsource
 
-from sympy.core.compatibility import exec_
+from sympy.core.compatibility import exec_, range
 
 
 # from IPython.Magic.magic_timeit
-#units = ["s", "ms", "\xc2\xb5s", "ns"]
 units = ["s", "ms", "us", "ns"]
 scaling = [1, 1e3, 1e6, 1e9]
 
@@ -112,12 +111,10 @@ class Function(py.__.test.item.Function):
 class BenchSession(TerminalSession):
 
     def header(self, colitems):
-        #self.out.sep("-", "benchmarking starts")
         super(BenchSession, self).header(colitems)
 
     def footer(self, colitems):
         super(BenchSession, self).footer(colitems)
-        #self.out.sep("-", "benchmarking ends")
 
         self.out.write('\n')
         self.print_bench_results()

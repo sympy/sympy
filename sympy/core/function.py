@@ -36,23 +36,24 @@ from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
-from .core import BasicMeta, C
+from .core import BasicMeta
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
+from .operations import LatticeOp
 from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, xrange
+from sympy.core.compatibility import string_types, with_metaclass, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
-from sympy import mpmath
-import sympy.mpmath.libmp as mlib
+import mpmath
+import mpmath.libmp as mlib
 
 import inspect
 
@@ -244,7 +245,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
             if arg is S.Zero: return S.Zero
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, C.Mul):
+            if isinstance(arg, Mul):
                 coeff, terms = arg.as_coeff_Mul(rational=True)
                 if coeff is not S.One:
                     return cls(coeff) * cls(terms)
@@ -448,7 +449,7 @@ class Function(Application, Expr):
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
             try:
-                return C.Float(self._imp_(*self.args), prec)
+                return Float(self._imp_(*self.args), prec)
             except (AttributeError, TypeError):
                 return
 
@@ -460,7 +461,7 @@ class Function(Application, Expr):
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
             def bad(m):
-                from sympy.mpmath import mpf, mpc
+                from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
                 # if that is 1 (and m[1] is not 1 which would indicate a
                 # power of 2), then the eval failed; so check that none of
@@ -482,14 +483,8 @@ class Function(Application, Expr):
         except ValueError:
             return
 
-        # Set mpmath precision and apply. Make sure precision is restored
-        # afterwards
-        orig = mpmath.mp.prec
-        try:
-            mpmath.mp.prec = prec
+        with mpmath.workprec(prec):
             v = func(*args)
-        finally:
-            mpmath.mp.prec = orig
 
         return Expr._from_mpmath(v, prec)
 
@@ -555,10 +550,11 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
+        from sympy import Order
         from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
-        if any(t.is_bounded is False for t in args0):
+        if any(t.is_finite is False for t in args0):
             from sympy import oo, zoo, nan
             # XXX could use t.as_leading_term(x) here but it's a little
             # slower
@@ -591,7 +587,7 @@ class Function(Application, Expr):
             s = e1._eval_nseries(v, n, logx)
             o = s.getO()
             s = s.removeO()
-            s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
+            s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
             return s
         if (self.func.nargs is S.Naturals0
                 or (self.func.nargs == FiniteSet(1) and args0[0])
@@ -602,7 +598,7 @@ class Function(Application, Expr):
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
-                if term.is_bounded is False or term is S.NaN:
+                if term.is_finite is False or term is S.NaN:
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
@@ -616,26 +612,26 @@ class Function(Application, Expr):
                     if subs is S.NaN:
                         # try to evaluate a limit if we have to
                         subs = e.limit(_x, S.Zero)
-                    if subs.is_bounded is False:
+                    if subs.is_finite is False:
                         raise PoleError("Cannot expand %s around 0" % (self))
                     term = subs*(x**i)/fact
                     term = term.expand()
                     series += term
-                return series + C.Order(x**n, x)
+                return series + Order(x**n, x)
             return e1.nseries(x, n=n, logx=logx)
         arg = self.args[0]
         l = []
         g = None
         # try to predict a number of terms needed
         nterms = n + 2
-        cf = C.Order(arg.as_leading_term(x), x).getn()
+        cf = Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
             nterms = int(nterms / cf)
-        for i in xrange(nterms):
+        for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
-        return Add(*l) + C.Order(x**n, x)
+        return Add(*l) + Order(x**n, x)
 
     def fdiff(self, argindex=1):
         """
@@ -645,7 +641,7 @@ class Function(Application, Expr):
             raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
             # See issue 4624 and issue 4719 and issue 5600
-            arg_dummy = C.Dummy('xi_%i' % argindex)
+            arg_dummy = Dummy('xi_%i' % argindex)
             arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
                 self.subs(self.args[argindex - 1], arg_dummy),
@@ -658,8 +654,9 @@ class Function(Application, Expr):
         argument whose leading term vanishes as x -> 0 might be encountered.
         See, for example, cos._eval_as_leading_term.
         """
+        from sympy import Order
         args = [a.as_leading_term(x) for a in self.args]
-        o = C.Order(1, x)
+        o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
             # Whereas x and any finite number are contained in O(1, x),
             # expressions like 1/x are not. If any arg simplified to a
@@ -679,6 +676,13 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
+    def _sage_(self):
+        import sage.all as sage
+        fname = self.func.__name__
+        func = getattr(sage, fname)
+        args = [arg._sage_() for arg in self.args]
+        return func(*args)
+
 
 class AppliedUndef(Function):
     """
@@ -694,6 +698,12 @@ class AppliedUndef(Function):
     def _eval_as_leading_term(self, x):
         return self
 
+    def _sage_(self):
+        import sage.all as sage
+        fname = str(self.func)
+        args = [arg._sage_() for arg in self.args]
+        func = sage.function(fname, *args)
+        return func
 
 class UndefinedFunction(FunctionClass):
     """
@@ -876,11 +886,11 @@ class Derivative(Expr):
     expr.subs(Function, Symbol) is well-defined:  just structurally replace the
     function everywhere it appears in the expression.
 
-    This is actually the same notational convenience used in the Euler-Lagrange
-    method when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant
-    is that the expression in question is represented by some F(t, u, v) at
-    u = f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means
-    F(t, u, v).diff(u) at u = f(t).
+    This is the same notational convenience used in the Euler-Lagrange method
+    when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant is
+    that the expression in question is represented by some F(t, u, v) at u =
+    f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means F(t, u,
+    v).diff(u) at u = f(t).
 
     We do not allow derivatives to be taken with respect to expressions where this
     is not so well defined.  For example, we do not allow expr.diff(x*y)
@@ -916,7 +926,7 @@ class Derivative(Expr):
         >>> diff(f(x), x).diff(f(x))
         0
 
-    The same is actually true for derivatives of different orders::
+    The same is true for derivatives of different orders::
 
         >>> diff(f(x), x, 2).diff(diff(f(x), x, 1))
         0
@@ -953,6 +963,7 @@ class Derivative(Expr):
         >>> Derivative(f(g(x)), x, evaluate=True)
         Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
                                             (_xi_1,), (g(x),))
+
     """
 
     is_Derivative = True
@@ -1020,8 +1031,10 @@ class Derivative(Expr):
 
             if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
+                last_digit = int(str(count)[-1])
+                ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
                 raise ValueError(filldedent('''
-                Can\'t calculate %s-th derivative wrt %s.''' % (count, v)))
+                Can\'t calculate %s%s derivative wrt %s.''' % (count, ordinal, v)))
 
             if all_zero and not count == 0:
                 all_zero = False
@@ -1050,7 +1063,7 @@ class Derivative(Expr):
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
         # after a few differentiations, then we won't need the other variables.
-        variablegen = (v for v, count in variable_count for i in xrange(count))
+        variablegen = (v for v, count in variable_count for i in range(count))
 
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
@@ -1089,7 +1102,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if not is_symbol:
-                    new_v = C.Dummy('xi_%i' % i)
+                    new_v = Dummy('xi_%i' % i)
                     new_v.dummy_index = hash(v)
                     expr = expr.subs(v, new_v)
                     old_v = v
@@ -1229,7 +1242,7 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
-        from sympy import mpmath
+        import mpmath
         from sympy.core.expr import Expr
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
@@ -1288,7 +1301,7 @@ class Derivative(Expr):
                 if match:
                     variables = self_vars_front + self_vars
                     return Derivative(new, *variables)
-        return Derivative(*map(lambda x: x._subs(old, new), self.args))
+        return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
         dx = self.args[1:]
@@ -1306,6 +1319,11 @@ class Derivative(Expr):
 
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
+
+    def _sage_(self):
+        import sage.all as sage
+        args = [arg._sage_() for arg in self.args]
+        return sage.derivative(*args)
 
 
 class Lambda(Expr):
@@ -1373,7 +1391,6 @@ class Lambda(Expr):
         return self.expr.free_symbols - set(self.variables)
 
     def __call__(self, *args):
-        from sympy.sets.sets import FiniteSet
         n = len(args)
         if n not in self.nargs:  # Lambda only ever has 1 value in nargs
             # XXX: exception message must be in exactly this format to
@@ -1562,9 +1579,7 @@ class Subs(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables:
-            pts = list(self.point.args)
-            pts[self.variables.index(old)] = new
-            return self.func(self.expr, self.variables, pts)
+            return self
 
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
@@ -1973,6 +1988,22 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     hints['basic'] = basic
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
+# This is a special application of two hints
+
+def _mexpand(expr, recursive=False):
+    # expand multinomials and then expand products; this may not always
+    # be sufficient to give a fully expanded expression (see
+    # test_issue_8247_8354 in test_arit)
+    if expr is None:
+        return
+    was = None
+    while was != expr:
+        was, expr = expr, expand_mul(expand_multinomial(expr))
+        if not recursive:
+            break
+    return expr
+
+
 # These are simple wrappers around single hints.
 
 
@@ -2241,6 +2272,7 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
+    from sympy import Integral, Symbol
     from sympy.simplify.simplify import fraction
     from sympy.logic.boolalg import BooleanFunction
 
@@ -2249,10 +2281,10 @@ def count_ops(expr, visual=False):
 
         ops = []
         args = [expr]
-        NEG = C.Symbol('NEG')
-        DIV = C.Symbol('DIV')
-        SUB = C.Symbol('SUB')
-        ADD = C.Symbol('ADD')
+        NEG = Symbol('NEG')
+        DIV = Symbol('DIV')
+        SUB = Symbol('SUB')
+        ADD = Symbol('ADD')
         while args:
             a = args.pop()
             if a.is_Rational:
@@ -2309,11 +2341,11 @@ def count_ops(expr, visual=False):
                 a.is_Pow or
                 a.is_Function or
                 isinstance(a, Derivative) or
-                    isinstance(a, C.Integral)):
+                    isinstance(a, Integral)):
 
-                o = C.Symbol(a.func.__name__.upper())
+                o = Symbol(a.func.__name__.upper())
                 # count the args
-                if (a.is_Mul or isinstance(a, C.LatticeOp)):
+                if (a.is_Mul or isinstance(a, LatticeOp)):
                     ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
@@ -2329,7 +2361,7 @@ def count_ops(expr, visual=False):
         ops = []
         for arg in expr.args:
             ops.append(count_ops(arg, visual=True))
-        o = C.Symbol(expr.func.__name__.upper())
+        o = Symbol(expr.func.__name__.upper())
         ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []
@@ -2342,7 +2374,7 @@ def count_ops(expr, visual=False):
             while args:
                 a = args.pop()
                 if a.args:
-                    o = C.Symbol(a.func.__name__.upper())
+                    o = Symbol(a.func.__name__.upper())
                     if a.is_Boolean:
                         ops.append(o*(len(a.args)-1))
                     else:

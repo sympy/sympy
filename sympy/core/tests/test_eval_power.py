@@ -1,5 +1,6 @@
-from sympy.core import (Rational, Symbol, S, Float, Integer, Number, Pow,
-Basic, I, nan, pi, symbols)
+from sympy.core import (
+    Rational, Symbol, S, Float, Integer, Number, Pow,
+    Basic, I, nan, pi, symbols, oo, zoo)
 from sympy.core.tests.test_evalf import NS
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
@@ -225,6 +226,8 @@ def test_pow_as_base_exp():
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
+    # issue 8344:
+    assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
 def test_issue_6100():
@@ -332,3 +335,19 @@ def test_issue_7638():
     assert sqrt(e**5) == e**(5*S.Half)
     assert sqrt(e**6) == e**3
     assert sqrt((1 + I*r)**6) != (1 + I*r)**3
+
+
+def test_issue_8582():
+    assert 1**oo is nan
+    assert 1**(-oo) is nan
+    assert 1**zoo is nan
+    assert 1**(oo + I) is nan
+    assert 1**(1 + I*oo) is nan
+    assert 1**(oo + I*oo) is nan
+
+
+def test_issue_8650():
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert (n**n).is_positive is True
+    x = 5*n+5
+    assert (x**(5*(n+1))).is_positive is True

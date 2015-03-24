@@ -14,7 +14,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
         NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
+from sympy import (Interval, symbols, sympify, Dummy, Mul,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
         Basic)
 from sympy.solvers.inequalities import reduce_rational_inequalities
@@ -195,7 +195,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', real=True, finite=True, cls=Dummy)
         left_bound = self.set.start
 
         # CDF is integral of PDF from left bound to z
@@ -270,7 +270,7 @@ class ContinuousPSpace(PSpace):
             pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
-        z = Dummy('z', real=True, bounded=True)
+        z = Dummy('z', real=True, finite=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
 
     @cacheit
@@ -280,7 +280,7 @@ class ContinuousPSpace(PSpace):
                 "CDF not well defined on multivariate expressions")
 
         d = self.compute_density(expr, **kwargs)
-        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', real=True, finite=True, cls=Dummy)
         left_bound = self.domain.set.start
 
         # CDF is integral of PDF from left bound to z
@@ -290,7 +290,7 @@ class ContinuousPSpace(PSpace):
         return Lambda(z, cdf)
 
     def probability(self, condition, **kwargs):
-        z = Dummy('z', real=True, bounded=True)
+        z = Dummy('z', real=True, finite=True)
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)

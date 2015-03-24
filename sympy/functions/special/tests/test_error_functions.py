@@ -1,10 +1,10 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, Abs, O, factorial, exp_polar, polar_lift, gruntz, limit,
+    re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
     Symbol, I, integrate, S,
     sqrt, sin, cos, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma, loggamma,
+    gamma, uppergamma,
     Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
     fresnels, fresnelc,
     hyper, meijerg)
@@ -225,7 +225,7 @@ def test_erf2():
     assert erf2(I, 0).is_real is False
     assert erf2(0, 0).is_real is True
 
-    #assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
+    assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
 
     assert erf2(x, y).rewrite('erf')  == erf(y) - erf(x)
     assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
@@ -277,12 +277,12 @@ def test_erf2inv():
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
-    from sympy.utilities.randtest import test_numerically, random_complex_number
+    from sympy.utilities.randtest import verify_numerically, random_complex_number
     subs = {}
     for a in expr1.free_symbols:
         if a != x:
             subs[a] = random_complex_number()
-    return expr2 == expr3 and test_numerically(expr1.subs(subs),
+    return expr2 == expr3 and verify_numerically(expr1.subs(subs),
                                                expr2.subs(subs), x, d=d)
 
 
@@ -661,14 +661,14 @@ def test_fresnel():
         meijerg(((), (1,)), ((S(1)/4,),
         (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
 
-    from sympy.utilities.randtest import test_numerically
+    from sympy.utilities.randtest import verify_numerically
 
-    test_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
-    test_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
-    test_numerically(fresnels(z), fresnels(z).rewrite(hyper), z)
-    test_numerically(fresnels(z), fresnels(z).rewrite(meijerg), z)
+    verify_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
+    verify_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
+    verify_numerically(fresnels(z), fresnels(z).rewrite(hyper), z)
+    verify_numerically(fresnels(z), fresnels(z).rewrite(meijerg), z)
 
-    test_numerically(re(fresnelc(z)), fresnelc(z).as_real_imag()[0], z)
-    test_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
-    test_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
-    test_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)
+    verify_numerically(re(fresnelc(z)), fresnelc(z).as_real_imag()[0], z)
+    verify_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
+    verify_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
+    verify_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)

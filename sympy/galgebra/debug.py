@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-from itertools import chain, islice
+from itertools import islice
 
 
 def ostr(obj, dict_mode=False):

@@ -26,7 +26,12 @@ del sys
 def __sympy_debug():
     # helper function so we don't import os globally
     import os
-    return eval(os.getenv('SYMPY_DEBUG', 'False'))
+    debug_str = os.getenv('SYMPY_DEBUG', 'False')
+    if debug_str in ('True', 'False'):
+        return eval(debug_str)
+    else:
+        raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
+                           debug_str)
 SYMPY_DEBUG = __sympy_debug()
 
 from .core import *
@@ -54,7 +59,8 @@ from .calculus import *
 from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, mathematica_code, latex, preview
+from .printing import ccode, fcode, jscode, mathematica_code, octave_code, \
+    latex, preview
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 
