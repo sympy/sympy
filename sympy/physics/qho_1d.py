@@ -79,5 +79,5 @@ def coherent_state(n,alpha):
         the eigen value of annihilation operator
     """
 
-    return exp(-Abs(alpha)**2/2)*(alpha**n)/sqrt(factorial(n))
+    return exp(- Abs(alpha) ** 2 / 2) * (alpha ** n) / sqrt(factorial(n))
 
