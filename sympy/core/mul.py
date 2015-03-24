@@ -1124,7 +1124,39 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_negative(self):
-        return (-self).is_positive
+        """Return True if self is negative, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonnegative. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> False is returned
+            pos * neg * nonnegative -> neg or zero -> None is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
+                return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            else:
+                return
+        if sign == -1 and saw_NON is False:
+            return True
+        if sign > 0:
+            return False
 
     def _eval_is_odd(self):
         is_integer = self.is_integer
