@@ -4248,34 +4248,40 @@ def _update_args(args, key, value):
 
 
 @public
-def degree(f, *gens, **args):
-    """
-    Return the degree of ``f`` in the given variable.
+def degree(f, gen=0):
+        """
+        Returns degree of ``f`` in ``x_j``.
 
-    The degree of 0 is negative infinity.
+        The degree of 0 is negative infinity.
 
-    Examples
-    ========
+        Examples
+        ========
 
-    >>> from sympy import degree
-    >>> from sympy.abc import x, y
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
 
-    >>> degree(x**2 + y*x + 1, gen=x)
-    2
-    >>> degree(x**2 + y*x + 1, gen=y)
-    1
-    >>> degree(0, x)
-    -oo
+        >>> Poly(x**2 + y*x + 1, x, y).degree()
+        2
+        >>> Poly(x**2 + y*x + y, x, y).degree(y)
+        1
+        >>> Poly(0, x).degree()
+        -oo
 
-    """
-    options.allowed_flags(args, ['gen', 'polys'])
+        """
 
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed as exc:
-        raise ComputationFailed('degree', 1, exc)
+	fstr=str(f)
+	h=fstr.split(‘**’)
+	if len(h)==2:
+		if isinstance(eval(h[1]),int):
+			return degree(eval(h[0]))*eval(h[1])
+	else:	
+        	j = f._gen_to_level(gen)
 
-    return sympify(F.degree(opt.gen))
+        	if hasattr(f.rep, 'degree'):
+          		return f.rep.degree(j)
+       		else:  # pragma: no cover
+            	raise OperationNotSupported(f, 'degree')
+
 
 
 @public
