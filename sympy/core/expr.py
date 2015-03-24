@@ -682,10 +682,6 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_composite(self):
-        if self.is_integer and self.is_positive and self.is_prime is False:
-            return True
-
     def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic

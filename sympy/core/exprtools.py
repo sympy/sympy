@@ -72,7 +72,7 @@ def _monotonic_sign(self):
         rv = _monotonic_sign(-self)
         return rv if rv is None else -rv
 
-    if self.is_Symbol:
+    if not self.is_Add and self.as_numer_denom()[1].is_number:
         s = self
         if s.is_prime:
             if s.is_odd:

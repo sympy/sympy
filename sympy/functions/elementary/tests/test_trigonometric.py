@@ -1390,3 +1390,8 @@ def test_issue_8653():
     assert sin(n).is_irrational is None
     assert cos(n).is_irrational is None
     assert tan(n).is_irrational is None
+
+
+def test_issue_9157():
+    n = Symbol('n', integer=True, positive=True)
+    atan(n - 1).is_nonnegative is True

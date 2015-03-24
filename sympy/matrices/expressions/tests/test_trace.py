@@ -53,6 +53,12 @@ def test_Trace_doit():
     assert Trace(q).doit(deep=False).arg == q
 
 
+def test_Trace_MutableMatrix_plus():
+    # See issue #9043
+    X = Matrix([[1, 2], [3, 4]])
+    assert Trace(X) + Trace(X) == 2*Trace(X)
+
+
 @XFAIL
 def test_Trace_MatAdd_doit():
     # FIXME: Issue #9028.
