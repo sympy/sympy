@@ -11,7 +11,6 @@ from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
 
-
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
 def _addsort(args):
@@ -493,8 +492,20 @@ class Add(Expr, AssocOp):
         return False
 
     def _eval_is_positive(self):
+        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super(Add, self)._eval_is_positive()
+        c, a = self.as_coeff_Add()
+        if not c.is_zero:
+            v = _monotonic_sign(a)
+            if v is not None:
+                s = v + c
+                if s.is_positive and a.is_nonnegative:
+                    return True
+                if len(self.free_symbols) == 1:
+                    v = _monotonic_sign(self)
+                    if v is not None and v.is_positive:
+                        return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
@@ -534,9 +545,51 @@ class Add(Expr, AssocOp):
         elif not pos and not nonneg:
             return False
 
+    def _eval_is_nonnegative(self):
+        from sympy.core.exprtools import _monotonic_sign
+        if not self.is_number:
+            c, a = self.as_coeff_Add()
+            if not c.is_zero and a.is_nonnegative:
+                v = _monotonic_sign(a)
+                if v is not None:
+                    s = v + c
+                    if s.is_nonnegative:
+                        return True
+                    if len(self.free_symbols) == 1:
+                        v = _monotonic_sign(self)
+                        if v is not None and v.is_nonnegative:
+                            return True
+
+    def _eval_is_nonpositive(self):
+        from sympy.core.exprtools import _monotonic_sign
+        if not self.is_number:
+            c, a = self.as_coeff_Add()
+            if not c.is_zero and a.is_nonpositive:
+                v = _monotonic_sign(a)
+                if v is not None:
+                    s = v + c
+                    if s.is_nonpositive:
+                        return True
+                    if len(self.free_symbols) == 1:
+                        v = _monotonic_sign(self)
+                        if v is not None and v.is_nonpositive:
+                            return True
+
     def _eval_is_negative(self):
+        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super(Add, self)._eval_is_negative()
+        c, a = self.as_coeff_Add()
+        if not c.is_zero:
+            v = _monotonic_sign(a)
+            if v is not None:
+                s = v + c
+                if s.is_negative and a.is_nonpositive:
+                    return True
+                if len(self.free_symbols) == 1:
+                    v = _monotonic_sign(self)
+                    if v is not None and v.is_negative:
+                        return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
