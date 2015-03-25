@@ -1208,11 +1208,8 @@ class Mul(Expr, AssocOp):
             """
             number_of_args = 0 # count of symbols with minimum value greater than one
             for arg in self.args:
-                try:
-                    if arg > 1:
-                        number_of_args += 1
-                except TypeError: # If it cannot be determined.
-                    pass
+                if (arg-1).is_positive:
+                    number_of_args += 1
 
             if number_of_args > 1:
                 return False

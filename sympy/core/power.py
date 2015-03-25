@@ -498,11 +498,8 @@ class Pow(Expr):
             a Power will be non-prime only if both base and exponent
             are greater than 1
             """
-            try:
-                if self.base > 1 or self.exp > 1:
-                    return False
-            except TypeError:
-                pass
+            if (self.base-1).is_positive or (self.exp-1).is_positive:
+                return False
 
     def _eval_is_polar(self):
         return self.base.is_polar
