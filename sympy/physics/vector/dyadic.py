@@ -1,5 +1,5 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, unicode
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
 
@@ -196,30 +196,39 @@ class Dyadic(object):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
-                mpp = VectorPrettyPrinter()
+                ar = e.args  # just to shorten things
+                settings = printer._settings if printer else {}
+                if printer:
+                    use_unicode = printer._use_unicode
+                else:
+                    from sympy.printing.pretty.pretty_symbology import (
+                        pretty_use_unicode)
+                    use_unicode = pretty_use_unicode()
+                mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
+                bar = u("\N{CIRCLED TIMES}") if use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.append(u(" + ") +
-                                  mpp.doprint(ar[i][1]) +
-                                  u("\u2297") +
-                                  mpp.doprint(ar[i][2]))
+                        ol.extend([u(" + "),
+                                  mpp.doprint(ar[i][1]),
+                                  bar,
+                                  mpp.doprint(ar[i][2])])
+
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.append(u(" - ") +
-                                  mpp.doprint(ar[i][1]) +
-                                  u("\u2297") +
-                                  mpp.doprint(ar[i][2]))
+                        ol.extend([u(" - "),
+                                  mpp.doprint(ar[i][1]),
+                                  bar,
+                                  mpp.doprint(ar[i][2])])
+
                     # If the coefficient of the dyadic is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
                     elif ar[i][0] != 0:
                         if isinstance(ar[i][0], Add):
-                            arg_str = VectorPrettyPrinter()._print(
+                            arg_str = mpp._print(
                                 ar[i][0]).parens()[0]
                         else:
                             arg_str = mpp.doprint(ar[i][0])
@@ -228,10 +237,11 @@ class Dyadic(object):
                             str_start = u(" - ")
                         else:
                             str_start = u(" + ")
-                        ol.append(str_start + arg_str + u(" ") +
-                                  mpp.doprint(ar[i][1]) +
-                                  u("\u2297") +
-                                  mpp.doprint(ar[i][2]))
+                        ol.extend([str_start, arg_str, u(" "),
+                                  mpp.doprint(ar[i][1]),
+                                  bar,
+                                  mpp.doprint(ar[i][2])])
+
                 outstr = u("").join(ol)
                 if outstr.startswith(u(" + ")):
                     outstr = outstr[3:]

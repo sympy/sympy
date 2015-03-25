@@ -1,4 +1,5 @@
 from sympy.core import symbols
+from sympy.core.compatibility import range
 from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
       encipher_vigenere, decipher_vigenere,
@@ -156,6 +157,7 @@ def test_rsa_private_key():
     assert rsa_private_key(2, 2, 1) == (4, 1)
     assert rsa_private_key(2, 3, 1) == (6, 1)
     assert rsa_private_key(5, 3, 3) == (15, 3)
+    assert rsa_private_key(23,29,5) == (667,493)
     assert rsa_private_key(8, 8, 8) is False
 
 

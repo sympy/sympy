@@ -1,12 +1,8 @@
 from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
-from sympy.mpmath import mnorm, mpf
+from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
-
-# TODO: This should be removed for the release of 0.7.7, see issue #7853
-from functools import partial
-lambdify = partial(lambdify, default_array=True)
 
 
 def test_nsolve():

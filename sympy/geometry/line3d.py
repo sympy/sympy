@@ -10,18 +10,15 @@ Segment3D
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
-from sympy.core.logic import fuzzy_and
-from sympy.core.exprtools import factor_terms
+from sympy.core import S, Dummy, nan
+from sympy.functions.elementary.trigonometric import acos
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .util import _symbol
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 
 class LinearEntity3D(GeometryEntity):
     """An base class for all linear entities (line, ray and segment)
@@ -280,15 +277,20 @@ class LinearEntity3D(GeometryEntity):
 
         """
         if l1 == l2:
-            ValueError('Enter two distinct lines')
+            return True
         a = l1.direction_cosine
         b = l2.direction_cosine
-        a = [abs(i) for i in a]
-        b = [abs(i) for i in b]
-        if a == b:
-            return True
-        else:
-            return False
+        # lines are parallel if the direction_cosines are the same or
+        # differ by a constant
+        rat = set()
+        for i, j in zip(a, b):
+            if i and j:
+                rat.add(i/j)
+                if len(rat) > 1:
+                    return False
+            elif i or j:
+                return False
+        return True
 
     def is_perpendicular(l1, l2):
         """Are two linear entities perpendicular?
@@ -373,7 +375,7 @@ class LinearEntity3D(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
@@ -442,10 +444,10 @@ class LinearEntity3D(GeometryEntity):
         True
 
         """
-        from sympy.core import Symbol
-        t = Symbol('t')
+        p = Point3D(p)
         if p in self:
             raise NotImplementedError("Given point should not be on the line")
+        t = Dummy()
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -495,10 +497,10 @@ class LinearEntity3D(GeometryEntity):
         Segment3D(Point3D(4/3, 4/3, 4/3), Point3D(4, 0, 0))
 
         """
-        from sympy.core import Symbol
-        t = Symbol('t')
+        p = Point3D(p)
         if p in self:
             raise NotImplementedError("Given point should not be on the line")
+        t = Dummy()
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -624,9 +626,6 @@ class LinearEntity3D(GeometryEntity):
         []
 
         """
-        from sympy.core import Symbol
-        t1 = Symbol('t1')
-        t2 = Symbol('t2')
         if isinstance(o, Point3D):
             if o in self:
                 return [o]
@@ -634,18 +633,12 @@ class LinearEntity3D(GeometryEntity):
                 return []
 
         elif isinstance(o, LinearEntity3D):
-            a = self.direction_cosine
-            b = o.direction_cosine
-            a = [abs(i) for i in a]
-            b = [abs(i) for i in b]
-            if a == b:  # assume they are parallel
+            if self == o:
+                return [self]
+            elif self.is_parallel(o):
                 if isinstance(self, Line3D):
                     if o.p1 in self:
                         return [o]
-                    return []
-                elif isinstance(o, Line3D):
-                    if self.p1 in o:
-                        return [self]
                     return []
                 elif isinstance(self, Ray3D):
                     if isinstance(o, Ray3D):
@@ -670,9 +663,7 @@ class LinearEntity3D(GeometryEntity):
                             return [Segment3D(o.p2, self.source)]
                         return []
                 elif isinstance(self, Segment3D):
-                    if isinstance(o, Ray3D):
-                        return o.intersection(self)
-                    elif isinstance(o, Segment3D):
+                    if isinstance(o, Segment3D):
                         # A reminder that the points of Segments are ordered
                         # in such a way that the following works. See
                         # Segment3D.__new__ for details on the ordering.
@@ -681,7 +672,7 @@ class LinearEntity3D(GeometryEntity):
                                 # Neither of the endpoints are in o so either
                                 # o is contained in this segment or it isn't
                                 if o in self:
-                                    return [self]
+                                    return [o]
                                 return []
                             else:
                                 # p1 not in o but p2 is. Either there is a
@@ -702,24 +693,25 @@ class LinearEntity3D(GeometryEntity):
                         # is in o
                         return [self]
 
-                # Unknown linear entity
-                return []
-            # If the lines are not parallel the solve their arbitrary points
-            # to obtain the point of intersection
-            a = self.arbitrary_point(t1)
-            b = o.arbitrary_point(t2)
-            c = solve([a.x - b.x, a.y - b.y], [t1, t2])
-            d = solve([a.x - b.x, a.z - b.z], [t1, t2])
-            if len(c) == 1 and len(d) == 1:
-                return []
-            if c is {}:
-                e = a.subs(t1, d[t1])
+                else:  # unrecognized LinearEntity
+                    raise NotImplementedError
+
             else:
+                # If the lines are not parallel then solve their arbitrary points
+                # to obtain the point of intersection
+                t = t1, t2 = Dummy(), Dummy()
+                a = self.arbitrary_point(t1)
+                b = o.arbitrary_point(t2)
+                dx = a.x - b.x
+                c = solve([dx, a.y - b.y], t)
+                d = solve([dx, a.z - b.z], t)
+                if len(c) == 1 and len(d) == 1:
+                    return []
                 e = a.subs(t1, c[t1])
-            if  e in self and e in o:
-                return [e]
-            else:
-                return []
+                if  e in self and e in o:
+                    return [e]
+                else:
+                    return []
 
         return o.intersection(self)
 
@@ -948,7 +940,7 @@ class Line3D(LinearEntity3D):
         if isinstance(o, Point3D):
             sym = list(map(Dummy, 'xyz'))
             eq = self.equation(*sym)
-            a = [eq[0].subs(sym[0], o.args[0]), eq[1].subs(sym[1], o.args[1]), eq[2].subs(sym[2], o.args[2])]
+            a = [eq[i].subs(sym[i], o.args[i]) for i in range(3)]
             a = [i for i in a if i != nan]
             if len(a) == 1:
                 return True

@@ -71,7 +71,7 @@ def test_CheckOldAssump():
             return False
 
     class Test2(Expr):
-        def _eval_is_bounded(self):
+        def _eval_is_finite(self):
             return True
         def _eval_is_positive(self):
             return True

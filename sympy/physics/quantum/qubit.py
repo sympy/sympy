@@ -12,7 +12,7 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
-from sympy.core.compatibility import string_types, xrange
+from sympy.core.compatibility import string_types, range
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -24,7 +24,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
-from sympy.mpmath.libmp.libintmath import bitcount
+from mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -220,7 +220,7 @@ class Qubit(QubitState, Ket):
 
         #trace out for each of index
         new_mat = self*bra
-        for i in xrange(len(sorted_idx) - 1, -1, -1):
+        for i in range(len(sorted_idx) - 1, -1, -1):
             # start from tracing out from leftmost qubit
             new_mat = self._reduced_density(new_mat, int(sorted_idx[i]))
 
@@ -245,8 +245,8 @@ class Qubit(QubitState, Ket):
         new_size = old_size//2
         new_matrix = Matrix().zeros(new_size)
 
-        for i in xrange(new_size):
-            for j in xrange(new_size):
+        for i in range(new_size):
+            for j in range(new_size):
                 for k in range(2):
                     col = find_index_that_is_projected(j, k, qubit)
                     row = find_index_that_is_projected(i, k, qubit)
@@ -481,7 +481,7 @@ def matrix_to_density(mat):
 
 
 def qubit_to_matrix(qubit, format='sympy'):
-    """Coverts an Add/Mul of Qubit objects into it's matrix representation
+    """Converts an Add/Mul of Qubit objects into it's matrix representation
 
     This function is the inverse of ``matrix_to_qubit`` and is a shorthand
     for ``represent(qubit)``.

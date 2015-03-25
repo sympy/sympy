@@ -11,7 +11,7 @@ from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, range
 from sympy import sqrt, pi, oo
 
 def test_PolyRing___init__():
@@ -1037,8 +1037,8 @@ def test_PolyElement___call__():
     R, x = ring("x", ZZ)
     f = 3*x + 1
 
-    f(0) == 1
-    f(1) == 4
+    assert f(0) == 1
+    assert f(1) == 4
 
     raises(ValueError, lambda: f())
     raises(ValueError, lambda: f(0, 1))
@@ -1048,13 +1048,13 @@ def test_PolyElement___call__():
     R, x,y = ring("x,y", ZZ)
     f = 3*x + y**2 + 1
 
-    f(0, 0) == 1
-    f(1, 7) == 53
+    assert f(0, 0) == 1
+    assert f(1, 7) == 53
 
     Ry = R.drop(x)
 
-    f(0) == Ry.y**2 + 1
-    f(1) == Ry.y**2 + 4
+    assert f(0) == Ry.y**2 + 1
+    assert f(1) == Ry.y**2 + 4
 
     raises(ValueError, lambda: f())
     raises(ValueError, lambda: f(0, 1, 2))

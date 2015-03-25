@@ -10,8 +10,8 @@ are_similar
 """
 from __future__ import print_function, division
 
-from sympy import Dummy, S, Symbol, Function, solve
-from sympy.core.compatibility import string_types, is_sequence
+from sympy import Symbol, Function, solve
+from sympy.core.compatibility import string_types, is_sequence, range
 
 
 def idiff(eq, y, x, n=1):
@@ -124,7 +124,7 @@ def _uniquely_named_symbol(xname, *exprs):
     """
     prefix = '%s'
     x = prefix % xname
-    syms = set.union(*[e.free_symbols for e in exprs])
+    syms = set().union(*[e.free_symbols for e in exprs])
     while any(x == str(s) for s in syms):
         prefix = '_' + prefix
         x = prefix % xname

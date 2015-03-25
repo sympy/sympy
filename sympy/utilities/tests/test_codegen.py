@@ -1,13 +1,14 @@
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
 from sympy import erf, Integral
-from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
-    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
-    InOutArgument)
+from sympy import Equality
+from sympy.matrices import Matrix, MatrixSymbol
+from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
+            InputArgument, CodeGenError, FCodeGen, CodeGenArgumentListError,
+            OutputArgument, InOutArgument)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
-# import test:
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
 
@@ -30,15 +31,15 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
 def test_Routine_argument_order():
     a, x, y, z = symbols('a x y z')
     expr = (x + y)*z
-    raises(CodeGenArgumentListError, lambda: Routine("test", expr,
+    raises(CodeGenArgumentListError, lambda: make_routine("test", expr,
            argument_sequence=[z, x]))
-    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a,
+    raises(CodeGenArgumentListError, lambda: make_routine("test", Eq(a,
            expr), argument_sequence=[z, x, y]))
-    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    r = make_routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
     assert [ type(arg) for arg in r.arguments ] == [
         InputArgument, InputArgument, OutputArgument, InputArgument  ]
-    r = Routine('test', Eq(z, expr), argument_sequence=[z, x, y])
+    r = make_routine('test', Eq(z, expr), argument_sequence=[z, x, y])
     assert [ type(arg) for arg in r.arguments ] == [
         InOutArgument, InputArgument, InputArgument ]
 
@@ -46,11 +47,11 @@ def test_Routine_argument_order():
     A, B = map(IndexedBase, ['A', 'B'])
     m = symbols('m', integer=True)
     i = Idx('i', m)
-    r = Routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
+    r = make_routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
     assert [ arg.name for arg in r.arguments ] == [B.label, A.label, m]
 
     expr = Integral(x*y*z, (x, 1, 2), (y, 1, 3))
-    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    r = make_routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
 
 
@@ -87,7 +88,7 @@ def test_empty_c_header():
 def test_simple_c_code():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -102,8 +103,26 @@ def test_simple_c_code():
     assert source == expected
 
 
+def test_c_code_reserved_words():
+    x, y, z = symbols('if, typedef, while')
+    expr = (x + y) * z
+    routine = make_routine("test", expr)
+    code_gen = CCodeGen()
+    source = get_string(code_gen.dump_c, [routine])
+    expected = (
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double if_, double typedef_, double while_) {\n"
+        "   double test_result;\n"
+        "   test_result = while_*(if_ + typedef_);\n"
+        "   return test_result;\n"
+        "}\n"
+    )
+    assert source == expected
+
+
 def test_numbersymbol_c_code():
-    routine = Routine("test", pi**Catalan)
+    routine = make_routine("test", pi**Catalan)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -122,7 +141,7 @@ def test_numbersymbol_c_code():
 def test_c_code_argument_order():
     x, y, z = symbols('x,y,z')
     expr = x + y
-    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    routine = make_routine("test", expr, argument_sequence=[z, x, y])
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
@@ -140,7 +159,7 @@ def test_c_code_argument_order():
 def test_simple_c_header():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
@@ -178,7 +197,7 @@ def test_multiple_results_c():
     x, y, z = symbols('x,y,z')
     expr1 = (x + y)*z
     expr2 = (x - y)*z
-    routine = Routine(
+    routine = make_routine(
         "test",
         [expr1, expr2]
     )
@@ -187,7 +206,7 @@ def test_multiple_results_c():
 
 
 def test_no_results_c():
-    raises(ValueError, lambda: Routine("test", []))
+    raises(ValueError, lambda: make_routine("test", []))
 
 
 def test_ansi_math1_codegen():
@@ -382,9 +401,6 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -398,7 +414,7 @@ def test_dummy_loops_c():
         '   }\n'
         '}\n'
     ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
-    r = Routine('test_dummies', Eq(y[i], x[i]))
+    r = make_routine('test_dummies', Eq(y[i], x[i]))
     c = CCodeGen()
     code = get_string(c.dump_c, [r])
     assert code == expected
@@ -451,7 +467,7 @@ def test_partial_loops_c():
 def test_output_arg_c():
     from sympy import sin, cos, Equality
     x, y, z = symbols("x,y,z")
-    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = CCodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.c"
@@ -466,6 +482,81 @@ def test_output_arg_c():
         '}\n'
     )
     assert result[0][1] == expected
+
+
+def test_output_arg_c_reserved_words():
+    from sympy import sin, cos, Equality
+    x, y, z = symbols("if, while, z")
+    r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
+    c = CCodeGen()
+    result = c.write([r], "test", header=False, empty=False)
+    assert result[0][0] == "test.c"
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'double foo(double if_, double *while_) {\n'
+        '   (*while_) = sin(if_);\n'
+        '   double foo_result;\n'
+        '   foo_result = cos(if_);\n'
+        '   return foo_result;\n'
+        '}\n'
+    )
+    assert result[0][1] == expected
+
+
+def test_ccode_results_named_ordered():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(C, (x + y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
+        '   (*C) = z*(x + y);\n'
+        '   A[0] = 1;\n'
+        '   A[1] = 2;\n'
+        '   A[2] = x;\n'
+        '   (*B) = 2*x;\n'
+        '}\n'
+    )
+    assert source == expected
+
+
+def test_ccode_matrixsymbol_slice():
+    A = MatrixSymbol('A', 5, 3)
+    B = MatrixSymbol('B', 1, 3)
+    C = MatrixSymbol('C', 1, 3)
+    D = MatrixSymbol('D', 5, 1)
+    name_expr = ("test", [Equality(B, A[0, :]),
+                          Equality(C, A[1, :]),
+                          Equality(D, A[:, 2])])
+    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *A, double *B, double *C, double *D) {\n'
+        '   B[0] = A[0];\n'
+        '   B[1] = A[1];\n'
+        '   B[2] = A[2];\n'
+        '   C[0] = A[3];\n'
+        '   C[1] = A[4];\n'
+        '   C[2] = A[5];\n'
+        '   D[0] = A[2];\n'
+        '   D[1] = A[5];\n'
+        '   D[2] = A[8];\n'
+        '   D[3] = A[11];\n'
+        '   D[4] = A[14];\n'
+        '}\n'
+    )
+    assert source == expected
 
 
 def test_empty_f_code():
@@ -499,7 +590,7 @@ def test_empty_f_header():
 def test_simple_f_code():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -515,7 +606,7 @@ def test_simple_f_code():
 
 
 def test_numbersymbol_f_code():
-    routine = Routine("test", pi**Catalan)
+    routine = make_routine("test", pi**Catalan)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -530,7 +621,7 @@ def test_numbersymbol_f_code():
 
 def test_erf_f_code():
     x = symbols('x')
-    routine = Routine("test", erf(x) - erf(-2 * x))
+    routine = make_routine("test", erf(x) - erf(-2 * x))
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -545,7 +636,7 @@ def test_erf_f_code():
 def test_f_code_argument_order():
     x, y, z = symbols('x,y,z')
     expr = x + y
-    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    routine = make_routine("test", expr, argument_sequence=[z, x, y])
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
@@ -563,7 +654,7 @@ def test_f_code_argument_order():
 def test_simple_f_header():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    routine = Routine("test", expr)
+    routine = make_routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
@@ -610,7 +701,7 @@ def test_multiple_results_f():
     x, y, z = symbols('x,y,z')
     expr1 = (x + y)*z
     expr2 = (x - y)*z
-    routine = Routine(
+    routine = make_routine(
         "test",
         [expr1, expr2]
     )
@@ -619,7 +710,7 @@ def test_multiple_results_f():
 
 
 def test_no_results_f():
-    raises(ValueError, lambda: Routine("test", []))
+    raises(ValueError, lambda: make_routine("test", []))
 
 
 def test_intrinsic_math_codegen():
@@ -632,10 +723,8 @@ def test_intrinsic_math_codegen():
         ("test_acos", acos(x)),
         ("test_asin", asin(x)),
         ("test_atan", atan(x)),
-        # ("test_ceil", ceiling(x)),
         ("test_cos", cos(x)),
         ("test_cosh", cosh(x)),
-        # ("test_floor", floor(x)),
         ("test_log", log(x)),
         ("test_ln", ln(x)),
         ("test_sin", sin(x)),
@@ -960,9 +1049,6 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -979,7 +1065,7 @@ def test_dummy_loops_f95():
         'end do\n'
         'end subroutine\n'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
-    r = Routine('test_dummies', Eq(y[i], x[i]))
+    r = make_routine('test_dummies', Eq(y[i], x[i]))
     c = FCodeGen()
     code = get_string(c.dump_f95, [r])
     assert code == expected
@@ -1084,7 +1170,7 @@ def test_partial_loops_f():
 def test_output_arg_f():
     from sympy import sin, cos, Equality
     x, y, z = symbols("x,y,z")
-    r = Routine("foo", [Equality(y, sin(x)), cos(x)])
+    r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = FCodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.f90"
@@ -1107,7 +1193,7 @@ def test_inline_function():
     i = Idx('i', m)
     p = FCodeGen()
     func = implemented_function('func', Lambda(n, n*(n + 1)))
-    routine = Routine('test_inline', Eq(y[i], func(x[i])))
+    routine = make_routine('test_inline', Eq(y[i], func(x[i])))
     code = get_string(p.dump_f95, [routine])
     expected = (
         'subroutine test_inline(m, x, y)\n'
@@ -1124,6 +1210,46 @@ def test_inline_function():
     args = ('x(i)', '(x(i) + 1)')
     assert code == expected % args or\
         code == expected % args[::-1]
+
+
+def test_f_code_call_signature_wrap():
+    # Issue #7934
+    x = symbols('x:20')
+    expr = 0
+    for sym in x:
+        expr += sym
+    routine = make_routine("test", expr)
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [routine])
+    expected = """\
+REAL*8 function test(x0, x1, x10, x11, x12, x13, x14, x15, x16, x17, x18, &
+      x19, x2, x3, x4, x5, x6, x7, x8, x9)
+implicit none
+REAL*8, intent(in) :: x0
+REAL*8, intent(in) :: x1
+REAL*8, intent(in) :: x10
+REAL*8, intent(in) :: x11
+REAL*8, intent(in) :: x12
+REAL*8, intent(in) :: x13
+REAL*8, intent(in) :: x14
+REAL*8, intent(in) :: x15
+REAL*8, intent(in) :: x16
+REAL*8, intent(in) :: x17
+REAL*8, intent(in) :: x18
+REAL*8, intent(in) :: x19
+REAL*8, intent(in) :: x2
+REAL*8, intent(in) :: x3
+REAL*8, intent(in) :: x4
+REAL*8, intent(in) :: x5
+REAL*8, intent(in) :: x6
+REAL*8, intent(in) :: x7
+REAL*8, intent(in) :: x8
+REAL*8, intent(in) :: x9
+test = x0 + x1 + x10 + x11 + x12 + x13 + x14 + x15 + x16 + x17 + x18 + &
+      x19 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9
+end function
+"""
+    assert source == expected
 
 
 def test_check_case():
@@ -1143,3 +1269,133 @@ def test_check_case_false_positive():
     except CodeGenError as e:
         if e.args[0].startswith("Fortran ignores case."):
             raise AssertionError("This exception should not be raised!")
+
+
+def test_c_fortran_omit_routine_name():
+    x, y = symbols("x,y")
+    name_expr = [("foo", 2*x)]
+    result = codegen(name_expr, "F95", header=False, empty=False)
+    expresult = codegen(name_expr, "F95", "foo", header=False, empty=False)
+    assert result[0][1] == expresult[0][1]
+
+    name_expr = ("foo", x*y)
+    result = codegen(name_expr, "F95", header=False, empty=False)
+    expresult = codegen(name_expr, "F95", "foo", header=False, empty=False)
+    assert result[0][1] == expresult[0][1]
+
+    name_expr = ("foo", Matrix([[x, y], [x+y, x-y]]))
+    result = codegen(name_expr, "C", header=False, empty=False)
+    expresult = codegen(name_expr, "C", "foo", header=False, empty=False)
+    assert result[0][1] == expresult[0][1]
+
+
+def test_fcode_matrix_output():
+    x, y, z = symbols('x,y,z')
+    e1 = x + y
+    e2 = Matrix([[x, y], [z, 16]])
+    name_expr = ("test", (e1, e2))
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        "REAL*8 function test(x, y, z, out_%(hash)s)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "REAL*8, intent(in) :: z\n"
+        "REAL*8, intent(out), dimension(1:2, 1:2) :: out_%(hash)s\n"
+        "out_%(hash)s(1, 1) = x\n"
+        "out_%(hash)s(2, 1) = z\n"
+        "out_%(hash)s(1, 2) = y\n"
+        "out_%(hash)s(2, 2) = 16\n"
+        "test = x + y\n"
+        "end function\n"
+    )
+    # look for the magic number
+    a = source.splitlines()[5]
+    b = a.split('_')
+    out = b[1]
+    expected = expected % {'hash': out}
+    assert source == expected
+
+
+def test_fcode_results_named_ordered():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(C, (x + y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result = codegen(name_expr, "f95", "test", header=False, empty=False,
+                     argument_sequence=(x, z, y, C, A, B))
+    source = result[0][1]
+    expected = (
+        "subroutine test(x, z, y, C, A, B)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: z\n"
+        "REAL*8, intent(in) :: y\n"
+        "REAL*8, intent(out) :: C\n"
+        "REAL*8, intent(out) :: B\n"
+        "REAL*8, intent(out), dimension(1:1, 1:3) :: A\n"
+        "C = z*(x + y)\n"
+        "A(1, 1) = 1\n"
+        "A(1, 2) = 2\n"
+        "A(1, 3) = x\n"
+        "B = 2*x\n"
+        "end subroutine\n"
+    )
+    assert source == expected
+
+
+def test_fcode_matrixsymbol_slice():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 1, 3)
+    C = MatrixSymbol('C', 1, 3)
+    D = MatrixSymbol('D', 2, 1)
+    name_expr = ("test", [Equality(B, A[0, :]),
+                          Equality(C, A[1, :]),
+                          Equality(D, A[:, 2])])
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        "subroutine test(A, B, C, D)\n"
+        "implicit none\n"
+        "REAL*8, intent(in), dimension(1:2, 1:3) :: A\n"
+        "REAL*8, intent(out), dimension(1:1, 1:3) :: B\n"
+        "REAL*8, intent(out), dimension(1:1, 1:3) :: C\n"
+        "REAL*8, intent(out), dimension(1:2, 1:1) :: D\n"
+        "B(1, 1) = A(1, 1)\n"
+        "B(1, 2) = A(1, 2)\n"
+        "B(1, 3) = A(1, 3)\n"
+        "C(1, 1) = A(2, 1)\n"
+        "C(1, 2) = A(2, 2)\n"
+        "C(1, 3) = A(2, 3)\n"
+        "D(1, 1) = A(1, 3)\n"
+        "D(2, 1) = A(2, 3)\n"
+        "end subroutine\n"
+    )
+    assert source == expected
+
+
+def test_fcode_matrixsymbol_slice_autoname():
+    # see issue #8093
+    A = MatrixSymbol('A', 2, 3)
+    name_expr = ("test", A[:, 1])
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        "subroutine test(A, out_%(hash)s)\n"
+        "implicit none\n"
+        "REAL*8, intent(in), dimension(1:2, 1:3) :: A\n"
+        "REAL*8, intent(out), dimension(1:2, 1:1) :: out_%(hash)s\n"
+        "out_%(hash)s(1, 1) = A(1, 2)\n"
+        "out_%(hash)s(2, 1) = A(2, 2)\n"
+        "end subroutine\n"
+    )
+    # look for the magic number
+    a = source.splitlines()[3]
+    b = a.split('_')
+    out = b[1]
+    expected = expected % {'hash': out}
+    assert source == expected

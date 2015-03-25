@@ -1,19 +1,20 @@
 from sympy import (
     Abs, acos, Add, atan, Basic, besselsimp, binomial, collect,
-    collect_const, combsimp, cos, cosh, cot, coth, count_ops, denom,
+    collect_const, combsimp, cos, cosh, cot, coth, count_ops,
     Derivative, diff, Dummy, E, Eq, erf, exp, exp_polar, expand,
     expand_multinomial, exptrigsimp, factor, factorial, FallingFactorial,
-    Float, fraction, Function, gamma, GoldenRatio, hyper, hyper,
-    hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
-    Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
+    Float, fraction, Function, gamma, GoldenRatio, hyper,
+    hypersimp, I, Integral, integrate, log, logcombine, Matrix,
+    Mul, nsimplify, O, oo, pi, Piecewise,
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
-    sympify, tan, tanh, trigsimp, Wild, zoo, Sum)
+    sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
 from sympy.utilities.pytest import XFAIL, slow
+from sympy.core.compatibility import range
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -495,7 +496,7 @@ def test_simplify_other():
     assert simplify(gamma(x + 1)/gamma(x)) == x
     assert simplify(sin(x)**2 + cos(x)**2 + factorial(x)/gamma(x)) == 1 + x
     assert simplify(
-        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
+        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(x, 1)
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
     # issue 6123
@@ -539,6 +540,10 @@ def test_simplify_measure():
     expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
     assert measure1(simplify(expr, measure=measure1)) <= measure1(expr)
     assert measure2(simplify(expr, measure=measure2)) <= measure2(expr)
+
+    expr2 = Eq(sin(x)**2 + cos(x)**2, 1)
+    assert measure1(simplify(expr2, measure=measure1)) <= measure1(expr2)
+    assert measure2(simplify(expr2, measure=measure2)) <= measure2(expr2)
 
 
 def test_simplify_issue_1308():
@@ -678,6 +683,8 @@ def test_powsimp():
 
     assert all(powsimp(e) == e for e in (sqrt(x**a), sqrt(x**2)))
 
+    # issue 8836
+    assert str( powsimp(exp(I*pi/3)*root(-1,3)) ) == '(-1)**(2/3)'
 
 def test_issue_6367():
     z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
@@ -756,6 +763,7 @@ def test_powsimp_nc():
     assert powsimp(B**x*A**x*C**x, combine='base') == (B*A*C)**x
     assert powsimp(B**x*A**x*C**x, combine='exp') == B**x*A**x*C**x
 
+
 def test_nthroot():
     assert nthroot(90 + 34*sqrt(7), 3) == sqrt(7) + 3
     q = 1 + sqrt(2) - 2*sqrt(3) + sqrt(6) + sqrt(7)
@@ -772,6 +780,7 @@ def test_nthroot():
     assert nthroot(expand_multinomial(q**3), 3) == q
     assert nthroot(expand_multinomial(q**6), 6) == q
 
+
 @slow
 def test_nthroot1():
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**20
@@ -779,7 +788,8 @@ def test_nthroot1():
     assert nthroot(p, 5) == q
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**30
     p = expand_multinomial(q**5)
-    assert nthroot(p, 5) == p**Rational(1, 5)
+    assert nthroot(p, 5) == q
+
 
 def test_collect_1():
     """Collect with respect to a Symbol"""
@@ -1093,6 +1103,8 @@ def test_nsimplify():
     assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
     # issue 7211, PR 4112
     assert nsimplify(S(2e-8)) == S(1)/50000000
+    # issue 7322 direct test
+    assert nsimplify(1e-42, rational=True) != 0
 
 
 def test_extract_minus_sign():
@@ -1682,7 +1694,7 @@ def test_polarify():
 
 
 def test_unpolarify():
-    from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
+    from sympy import (exp_polar, polar_lift, exp, unpolarify,
                        principal_branch)
     from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
     from sympy.abc import x
@@ -1738,7 +1750,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
+    from sympy import besselj, besseli, exp_polar, cosh, cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -1827,7 +1839,7 @@ def test_issue_7001():
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.utilities.randtest import test_numerically as tn
+        from sympy.utilities.randtest import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True
@@ -1892,3 +1904,12 @@ def test_issue_2827_trigsimp_methods():
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+
+
+def test_inequality_no_auto_simplify():
+    # no simplify on creation but can be simplified
+    lhs = cos(x)**2 + sin(x)**2
+    rhs = 2;
+    e = Lt(lhs, rhs)
+    assert e == Lt(lhs, rhs, evaluate=False)
+    assert simplify(e)

@@ -78,6 +78,15 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Atiyah69] M.F. Atiyah, I.G. MacDonald, Introduction to Commutative Algebra,
     Addison-Wesley, 1969
 
+.. [Collins67] G.E. Collins, Subresultants and Reduced Polynomial 
+   Remainder Sequences. J. ACM 14 (1967) 128-142
+
+.. [BrownTraub71] W.S. Brown, J.F. Traub, On Euclid's Algorithm and
+   the Theory of Subresultants. J. ACM 18 (1971) 505-514
+
+.. [Brown78] W.S. Brown, The Subresultant PRS Algorithm.
+   ACM Transaction of Mathematical Software 4 (1978) 237-249
+
 .. [Monagan00] M. Monagan and A. Wittkopf, On the Design and Implementation
     of Brown’s Algorithm over the Integers and Number Fields, Proceedings of
     ISSAC 2000, pp. 225-233, ACM, 2000.

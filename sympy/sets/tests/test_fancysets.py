@@ -1,7 +1,8 @@
+from sympy.core.compatibility import range
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt, Eq, tan)
+        Rational, sqrt, tan, log, Abs)
 from sympy.utilities.pytest import XFAIL, raises
 import itertools
 
@@ -65,8 +66,9 @@ def test_ImageSet():
 
     harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
-    assert .25 in harmonics
-    assert .3 not in harmonics
+    assert Rational(.25) in harmonics
+    assert 0.25 not in harmonics
+    assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
 
@@ -224,6 +226,16 @@ def test_infinitely_indexed_set_2():
     assert imageset(Lambda(n, 2*n + pi), S.Integers) == ImageSet(Lambda(n, 2*n + pi), S.Integers)
     assert imageset(Lambda(n, pi*n + pi), S.Integers) == ImageSet(Lambda(n, pi*n + pi), S.Integers)
     assert imageset(Lambda(n, exp(n)), S.Integers) != imageset(Lambda(n, n), S.Integers)
+
+
+def test_imageset_intersect_real():
+    from sympy import I
+    from sympy.abc import n
+    assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == \
+            FiniteSet(-1, 1)
+
+    s = ImageSet(Lambda(n, -I*(I*(2*pi*n - pi/4) + log(Abs(sqrt(-I))))), S.Integers)
+    assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
 
 
 @XFAIL

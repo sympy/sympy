@@ -2,7 +2,7 @@ from sympy import symbols, Eq
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
 Cython = import_module('Cython', min_module_version='0.15.1')
@@ -90,14 +90,14 @@ def runtest_autowrap_matrix_matrix(language, backend):
 def runtest_ufuncify(language, backend):
     has_module('numpy')
     a, b, c = symbols('a b c')
-    fabc = ufuncify([a, b, c], a*b + c, language=language, backend=backend)
-    facb = ufuncify([a, c, b], a*b + c, language=language, backend=backend)
+    fabc = ufuncify([a, b, c], a*b + c, backend=backend)
+    facb = ufuncify([a, c, b], a*b + c, backend=backend)
     grid = numpy.linspace(-2, 2, 50)
-    for b in numpy.linspace(-5, 4, 3):
-        for c in numpy.linspace(-1, 1, 3):
-            expected = grid*b + c
-            assert numpy.sum(numpy.abs(expected - fabc(grid, b, c))) < 1e-13
-            assert numpy.sum(numpy.abs(expected - facb(grid, c, b))) < 1e-13
+    b = numpy.linspace(-5, 4, 50)
+    c = numpy.linspace(-1, 1, 50)
+    expected = grid*b + c
+    numpy.testing.assert_allclose(fabc(grid, b, c), expected)
+    numpy.testing.assert_allclose(facb(grid, c, b), expected)
 
 #
 # tests of language-backend combinations
@@ -156,3 +156,12 @@ def test_autowrap_matrix_matrix_C_cython():
 def test_ufuncify_C_Cython():
     has_module('Cython')
     runtest_ufuncify('C', 'cython')
+
+
+# Numpy
+
+def test_ufuncify_numpy():
+    # This test doesn't use Cython, but if Cython works, then there is a valid
+    # C compiler, which is needed.
+    has_module('Cython')
+    runtest_ufuncify('C', 'numpy')

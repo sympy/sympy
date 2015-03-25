@@ -1,6 +1,5 @@
-from sympy import Symbol, sqrt, pi, sin, cos, cot, exp, I, S, diff, conjugate
+from sympy import Symbol, sqrt, pi, sin, cos, cot, exp, I, diff, conjugate
 from sympy.functions.special.spherical_harmonics import Ynm, Znm, Ynm_c
-from sympy.utilities.pytest import XFAIL
 
 
 def test_Ynm():
@@ -42,7 +41,6 @@ def test_Ynm_c():
 def test_Znm():
     # http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
-    from sympy.abc import n,m
 
     assert Znm(0, 0, th, ph) == Ynm(0, 0, th, ph)
     assert Znm(1, -1, th, ph) == (-sqrt(2)*I*(Ynm(1, 1, th, ph)

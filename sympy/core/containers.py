@@ -9,7 +9,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, range
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
@@ -252,4 +252,4 @@ class Dict(Basic):
     @property
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
-        return sorted(self.args, key=default_sort_key)
+        return tuple(sorted(self.args, key=default_sort_key))

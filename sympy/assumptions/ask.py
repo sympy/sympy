@@ -2,7 +2,8 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
-from sympy.logic.boolalg import (to_cnf, And, Or, Not, Implies, Equivalent,
+
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
@@ -24,6 +25,8 @@ class Q:
     integer = Predicate('integer')
     irrational = Predicate('irrational')
     rational = Predicate('rational')
+    algebraic = Predicate('algebraic')
+    transcendental = Predicate('transcendental')
     negative = Predicate('negative')
     nonzero = Predicate('nonzero')
     positive = Predicate('positive')
@@ -342,6 +345,7 @@ known_facts = And(
     Implies(Q.integer, Q.rational),
     Implies(Q.rational, Q.algebraic),
     Implies(Q.algebraic, Q.complex),
+    Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
     Implies(Q.imaginary, Q.complex & ~Q.real),
     Implies(Q.imaginary, Q.antihermitian),
     Implies(Q.antihermitian, ~Q.hermitian),

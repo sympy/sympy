@@ -1,20 +1,16 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi, Eq, Integral
+from sympy import S, Integer, sin, cos, sqrt, symbols, pi, Eq, Integral, exp
 from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
+    _nsort,
     _sort_gens,
     _unify_gens,
     _analyze_gens,
     _sort_factors,
-    _parallel_dict_from_expr_if_gens,
-    _parallel_dict_from_expr_no_gens,
-    _dict_from_expr_if_gens,
-    _dict_from_expr_no_gens,
     parallel_dict_from_expr,
     dict_from_expr,
-    expr_from_dict,
 )
 
 from sympy.polys.polyerrors import (
@@ -22,10 +18,35 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
-from sympy.polys.domains import ZZ, QQ, EX
+from sympy.polys.domains import ZZ
 
 x, y, z, p, q, r, s, t, u, v, w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 A, B = symbols('A,B', commutative=False)
+
+
+def test__nsort():
+    # issue 6137
+    r = S('''[3/2 + sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) - 4/sqrt(-7/3 +
+    61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3)) -
+    61/(18*(-415/216 + 13*I/12)**(1/3)))/2 - sqrt(-7/3 + 61/(18*(-415/216
+    + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3))/2, 3/2 - sqrt(-7/3
+    + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3))/2 - sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) -
+    4/sqrt(-7/3 + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3)) - 61/(18*(-415/216 + 13*I/12)**(1/3)))/2, 3/2 +
+    sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) + 4/sqrt(-7/3 +
+    61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3)) -
+    61/(18*(-415/216 + 13*I/12)**(1/3)))/2 + sqrt(-7/3 + 61/(18*(-415/216
+    + 13*I/12)**(1/3)) + 2*(-415/216 + 13*I/12)**(1/3))/2, 3/2 + sqrt(-7/3
+    + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3))/2 - sqrt(-14/3 - 2*(-415/216 + 13*I/12)**(1/3) +
+    4/sqrt(-7/3 + 61/(18*(-415/216 + 13*I/12)**(1/3)) + 2*(-415/216 +
+    13*I/12)**(1/3)) - 61/(18*(-415/216 + 13*I/12)**(1/3)))/2]''')
+    ans = [r[1], r[0], r[-1], r[-2]]
+    assert _nsort(r) == ans
+    assert len(_nsort(r, separated=True)[0]) == 0
+    b, c, a = exp(-1000), exp(-999), exp(-1001)
+    assert _nsort((b, c, a)) == [a, b, c]
 
 
 def test__sort_gens():
@@ -251,11 +272,13 @@ def test__parallel_dict_from_expr_no_gens():
 
 
 def test_parallel_dict_from_expr():
-    parallel_dict_from_expr([Eq(x, 1), Eq(
-        x**2, 2)]) == ([{(1,): Integer(1)}, {(2,): Integer(2)}], (x,))
+    assert parallel_dict_from_expr([Eq(x, 1), Eq(
+        x**2, 2)]) == ([{(0,): -Integer(1), (1,): Integer(1)},
+                        {(0,): -Integer(2), (2,): Integer(1)}], (x,))
     raises(PolynomialError, lambda: parallel_dict_from_expr([A*B - B*A]))
 
 
 def test_dict_from_expr():
-    dict_from_expr(Eq(x, 1)) == ({(1,): Integer(1)}, (x,))
+    assert dict_from_expr(Eq(x, 1)) == \
+        ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))

@@ -21,8 +21,9 @@ from __future__ import print_function, division
 
 import string
 
-from sympy.core import S, C, Add, N
-from sympy.core.compatibility import string_types
+from sympy.core import S, Add, N
+from sympy.core.compatibility import string_types, range
+from sympy.core.function import Function
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
@@ -214,7 +215,7 @@ class FCodePrinter(CodePrinter):
         prec =  self._settings['precision']
         args = [N(a, prec) for a in expr.args]
         eval_expr = expr.func(*args)
-        if not isinstance(eval_expr, C.Function):
+        if not isinstance(eval_expr, Function):
             return self._print(eval_expr)
         else:
             return CodePrinter._print_Function(self, expr.func(*args))

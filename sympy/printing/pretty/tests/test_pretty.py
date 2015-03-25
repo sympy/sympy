@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 
 from sympy import (
-    Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral, KroneckerDelta,
+    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
-    Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2, binomial,
-    catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
-    factorial2, floor, gamma, groebner, hyper, log, lowergamma, meijerg,
-    oo, pi, sin, sqrt, subfactorial, symbols, tan, uppergamma, lex, ilex,
-    grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, Range, Complement)
+    Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
+    Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
+    groebner, oo, pi, symbols, ilex, grlex, Range, Contains)
+from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
+    Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
+    euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
+    lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.trace import Tr
 
 from sympy.core.compatibility import u_decode as u
+from sympy.core.compatibility import range
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -255,7 +258,7 @@ def test_upretty_sub_super():
     assert upretty( Symbol("F^1^2^3^4") ) == u('F¹ ² ³ ⁴')
 
 
-def test_upretty_subs_missingin_24():
+def test_upretty_subs_missing_in_24():
     assert upretty( Symbol('F_beta') ) == u('Fᵦ')
     assert upretty( Symbol('F_gamma') ) == u('Fᵧ')
     assert upretty( Symbol('F_rho') ) == u('Fᵨ')
@@ -270,6 +273,22 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_r') ) == u('Fᵣ')
     assert upretty( Symbol('F_v') ) == u('Fᵥ')
     assert upretty( Symbol('F_x') ) == u('Fₓ')
+
+
+@XFAIL
+def test_missing_in_2X_issue_9047():
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        assert upretty( Symbol('F_h') ) == u('Fₕ')
+        assert upretty( Symbol('F_k') ) == u('Fₖ')
+        assert upretty( Symbol('F_l') ) == u('Fₗ')
+        assert upretty( Symbol('F_m') ) == u('Fₘ')
+        assert upretty( Symbol('F_n') ) == u('Fₙ')
+        assert upretty( Symbol('F_p') ) == u('Fₚ')
+        assert upretty( Symbol('F_s') ) == u('Fₛ')
+        assert upretty( Symbol('F_t') ) == u('Fₜ')
+
 
 def test_upretty_modifiers():
     # Accents
@@ -355,6 +374,36 @@ u("""\
 1\n\
 ─\n\
 x\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    # not the same as 1/x
+    expr = x**-1.0
+    ascii_str = \
+"""\
+ -1.0\n\
+x    \
+"""
+    ucode_str = \
+("""\
+ -1.0\n\
+x    \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    # see issue #2860
+    expr = S(2)**-1.0
+    ascii_str = \
+"""\
+ -1.0\n\
+2    \
+"""
+    ucode_str = \
+("""\
+ -1.0\n\
+2    \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -997,6 +1046,37 @@ y + 1     \
 """)
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
+
+
+def test_issue_7117():
+    # See also issue #5031 (hence the evaluate=False in these).
+    e = Eq(x + 1, x/2)
+    q = Mul(2, e, evaluate=False)
+    assert upretty(q) == u("""\
+  ⎛        x⎞\n\
+2⋅⎜x + 1 = ─⎟\n\
+  ⎝        2⎠\
+""")
+    q = Add(e, 6, evaluate=False)
+    assert upretty(q) == u("""\
+    ⎛        x⎞\n\
+6 + ⎜x + 1 = ─⎟\n\
+    ⎝        2⎠\
+""")
+    q = Pow(e, 2, evaluate=False)
+    assert upretty(q) == u("""\
+           2\n\
+⎛        x⎞ \n\
+⎜x + 1 = ─⎟ \n\
+⎝        2⎠ \
+""")
+    e2 = Eq(x, 2)
+    q = Mul(e, e2, evaluate=False)
+    assert upretty(q) == u("""\
+⎛        x⎞        \n\
+⎜x + 1 = ─⎟⋅(x = 2)\n\
+⎝        2⎠        \
+""")
 
 
 def test_pretty_rational():
@@ -2983,7 +3063,7 @@ x->oo \
     ucode_str = \
 u("""\
 lim x\n\
-x->∞ \
+x─→∞ \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2991,15 +3071,15 @@ x->∞ \
     expr = Limit(x**2, x, 0)
     ascii_str = \
 """\
-     2\n\
-lim x \n\
-x->0  \
+      2\n\
+ lim x \n\
+x->0+  \
 """
     ucode_str = \
 u("""\
-     2\n\
-lim x \n\
-x->0  \
+      2\n\
+ lim x \n\
+x─→0⁺  \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3007,15 +3087,15 @@ x->0  \
     expr = Limit(1/x, x, 0)
     ascii_str = \
 """\
-    1\n\
-lim -\n\
-x->0x\
+     1\n\
+ lim -\n\
+x->0+x\
 """
     ucode_str = \
 u("""\
-    1\n\
-lim ─\n\
-x->0x\
+     1\n\
+ lim ─\n\
+x─→0⁺x\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3023,15 +3103,31 @@ x->0x\
     expr = Limit(sin(x)/x, x, 0)
     ascii_str = \
 """\
-    sin(x)\n\
-lim ------\n\
-x->0  x   \
+     sin(x)\n\
+ lim ------\n\
+x->0+  x   \
 """
     ucode_str = \
 u("""\
-    sin(x)\n\
-lim ──────\n\
-x->0  x   \
+     sin(x)\n\
+ lim ──────\n\
+x─→0⁺  x   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Limit(sin(x)/x, x, 0, "-")
+    ascii_str = \
+"""\
+     sin(x)\n\
+ lim ------\n\
+x->0-  x   \
+"""
+    ucode_str = \
+u("""\
+     sin(x)\n\
+ lim ──────\n\
+x─→0⁻  x   \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3252,18 +3348,18 @@ def test_pretty_Domain():
 
 
 def test_pretty_prec():
-    assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
-    assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"
-    assert xpretty(S("0.3"), full_prec=False) == "0.3"
-    assert xpretty(S("0.3")*x, full_prec=True, use_unicode=False) in [
+    assert xpretty(S("0.3"), full_prec=True, wrap_line=False) == "0.300000000000000"
+    assert xpretty(S("0.3"), full_prec="auto", wrap_line=False) == "0.300000000000000"
+    assert xpretty(S("0.3"), full_prec=False, wrap_line=False) == "0.3"
+    assert xpretty(S("0.3")*x, full_prec=True, use_unicode=False, wrap_line=False) in [
         "0.300000000000000*x",
         "x*0.300000000000000"
     ]
-    assert xpretty(S("0.3")*x, full_prec="auto", use_unicode=False) in [
+    assert xpretty(S("0.3")*x, full_prec="auto", use_unicode=False, wrap_line=False) in [
         "0.3*x",
         "x*0.3"
     ]
-    assert xpretty(S("0.3")*x, full_prec=False, use_unicode=False) in [
+    assert xpretty(S("0.3")*x, full_prec=False, use_unicode=False, wrap_line=False) in [
         "0.3*x",
         "x*0.3"
     ]
@@ -3276,7 +3372,7 @@ def test_pprint():
     sso = sys.stdout
     sys.stdout = fd
     try:
-        pprint(pi, use_unicode=False)
+        pprint(pi, use_unicode=False, wrap_line=False)
     finally:
         sys.stdout = sso
     assert fd.getvalue() == 'pi\n'
@@ -4218,8 +4314,8 @@ atan2⎜───────, ╲╱ x ⎟\n\
 def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
-    e = Ray((1, 1), angle=4.05*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/20) + 1))'
+    e = Ray((1, 1), angle=4.02*pi)
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/50) + 1))'
 
 
 def test_expint():
@@ -4345,14 +4441,15 @@ u("""\
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert upretty(where(X > 0)) == u("Domain: x₁ > 0")
+    assert upretty(where(X > 0)) == u("Domain: 0 < x₁ ∧ x₁ < ∞")
 
     D = Die('d1', 6)
     assert upretty(where(D > 4)) == u('Domain: d₁ = 5 ∨ d₁ = 6')
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A, B)).domain) == u('Domain: a ≥ 0 ∧ b ≥ 0')
+    assert upretty(pspace(Tuple(A, B)).domain) == \
+        u('Domain: 0 ≤ a ∧ 0 ≤ b ∧ a < ∞ ∧ b < ∞')
 
 
 def test_PrettyPoly():
@@ -4748,3 +4845,102 @@ def test_issue_7180():
 def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
+
+
+def test_pretty_SymmetricDifference():
+    from sympy import SymmetricDifference, Interval
+    from sympy.utilities.pytest import raises
+    assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
+           evaluate = False)) == u('[2, 3] ∆ [3, 5]')
+    with raises(NotImplementedError):
+        pretty(SymmetricDifference(Interval(2,3), Interval(3,5), evaluate = False))
+
+
+def test_pretty_Contains():
+    assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
+    assert upretty(Contains(x, S.Integers)) == u('x ∈ ℤ')
+
+
+def test_issue_8292():
+    from sympy.core import sympify
+    e = sympify('((x+x**4)/(x-1))-(2*(x-1)**4/(x-1)**4)', evaluate=False)
+    ucode_str = \
+u("""\
+           4    4    \n\
+  2⋅(x - 1)    x  + x\n\
+- ────────── + ──────\n\
+          4    x - 1 \n\
+   (x - 1)           \
+""")
+    ascii_str = \
+"""\
+           4    4    \n\
+  2*(x - 1)    x  + x\n\
+- ---------- + ------\n\
+          4    x - 1 \n\
+   (x - 1)           \
+"""
+    assert pretty(e) == ascii_str
+    assert upretty(e) == ucode_str
+
+
+def test_issue_4335():
+    expr = -y(x).diff(x)
+    ucode_str = \
+u("""\
+ d       \n\
+-──(y(x))\n\
+ dx      \
+""")
+    ascii_str = \
+"""\
+  d       \n\
+- --(y(x))\n\
+  dx      \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_issue_8344():
+    from sympy.core import sympify
+    e = sympify('2*x*y**2/1**2 + 1', evaluate=False)
+    ucode_str = \
+u("""\
+     2    \n\
+2⋅x⋅y     \n\
+────── + 1\n\
+   2      \n\
+  1       \
+""")
+    assert upretty(e) == ucode_str
+
+
+def test_issue_6324():
+    x = Pow(2, 3, evaluate=False)
+    y = Pow(10, -2, evaluate=False)
+    e = Mul(x, y, evaluate=False)
+    ucode_str = \
+u("""\
+  3\n\
+ 2 \n\
+───\n\
+  2\n\
+10 \
+""")
+    assert upretty(e) == ucode_str
+
+
+def test_issue_6134():
+    from sympy.abc import lamda, phi, t
+
+    e = lamda*x*Integral(phi(t)*pi*sin(pi*t), (t, 0, 1)) + lamda*x**2*Integral(phi(t)*2*pi*sin(2*pi*t), (t, 0, 1))
+    ucode_str = \
+u("""\
+     1                              1                   \n\
+   2 ⌠                              ⌠                   \n\
+λ⋅x ⋅⎮ 2⋅π⋅φ(t)⋅sin(2⋅π⋅t) dt + λ⋅x⋅⎮ π⋅φ(t)⋅sin(π⋅t) dt\n\
+     ⌡                              ⌡                   \n\
+     0                              0                   \
+""")
+    assert upretty(e) == ucode_str
