@@ -68,7 +68,7 @@ def E_n(n, omega):
     return hbar * omega*(n + Rational(1, 2))
 
 
-def coherent_state(n,alpha):
+def coherent_state(n, alpha):
     """
     Returns <n|alpha> for the coherent states of 1D harmonic oscillator.
     See http://en.wikipedia.org/wiki/Coherent_states
@@ -79,5 +79,5 @@ def coherent_state(n,alpha):
         the eigen value of annihilation operator
     """
 
-    return exp(- Abs(alpha) ** 2 / 2) * (alpha ** n) / sqrt(factorial(n))
+    return exp(- Abs(alpha)**2/2)*(alpha**n)/sqrt(factorial(n))
 
