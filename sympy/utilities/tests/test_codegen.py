@@ -1,6 +1,6 @@
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
-from sympy import erf, Integral
+from sympy import erf, Integral, Symbol
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
@@ -1399,3 +1399,30 @@ def test_fcode_matrixsymbol_slice_autoname():
     out = b[1]
     expected = expected % {'hash': out}
     assert source == expected
+    
+def test_fcode_complex():
+    x = Symbol('x', real=True)
+    y = Symbol('y',real=True)
+    result = codegen(('test',x+y), 'f95', 'test', header=False, empty=False)
+    source = (result[0][1])
+    expected = (
+        "REAL*8 function test(x, y)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "test = x + y\n"
+        "end function\n")
+    assert source == expected
+    x = Symbol('x')
+    y = Symbol('y',real=True)
+    result = codegen(('test',x+y), 'f95', 'test', header=False, empty=False)
+    source = (result[0][1])
+    expected = (
+        "COMPLEX*16 function test(x, y)\n"
+        "implicit none\n"
+        "COMPLEX*16, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "test = x + y\n"
+        "end function\n"
+        )
+    assert source==expected
