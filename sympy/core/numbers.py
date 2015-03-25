@@ -2496,7 +2496,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonpositive:
                 return S.false
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.true
         return Expr.__le__(self, other)
 
@@ -2510,7 +2510,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonpositive:
                 return S.true
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.false
         return Expr.__gt__(self, other)
 
@@ -2698,7 +2698,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonnegative:
                 return S.true
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.false
         return Expr.__lt__(self, other)
 
@@ -2730,7 +2730,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonnegative:
                 return S.false
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.true
         return Expr.__ge__(self, other)
 
