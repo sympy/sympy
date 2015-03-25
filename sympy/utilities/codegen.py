@@ -90,7 +90,7 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.printing.octave import octave_code, OctaveCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
-                            MatrixExpr, MatrixSlice)
+                            MatrixExpr, MatrixSlice, MutableMatrix)
 
 
 __all__ = [
@@ -219,21 +219,32 @@ class DataType(object):
 
 default_datatypes = {
     "int": DataType("int", "INTEGER*4", "int", ""),
-    "float": DataType("double", "REAL*8", "float", "")
+    "float": DataType("double", "REAL*8", "float", ""),
+    "complex": DataType("double", "COMPLEX*16", "complex", "") #FIXME:
+       # complex is only 
+       # supported in fortran and python. So to not break c-code generation, we 
+       # stick with double (but actually should raise an exeption for explicitly
+       # complex variables (x.is_complex==True)) 
 }
 
 
-def get_default_datatype(expr):
+def get_default_datatype(expr, complex_allowed=False):
     """Derives an appropriate datatype based on the expression."""
     if expr.is_integer:
         return default_datatypes["int"]
-    elif isinstance(expr, MatrixBase):
-        for element in expr:
-            if not element.is_integer:
-                return default_datatypes["float"]
-        return default_datatypes["int"]
-    else:
+    elif expr.is_real:
         return default_datatypes["float"]
+    elif isinstance(expr, MatrixBase):
+        #check all entries
+        dt = "int"
+        for element in expr:
+            if dt is "int" and not element.is_integer:
+                dt = "float"
+            if dt is "float" and not element.is_real:
+                return default_datatypes["complex"]
+        return default_datatypes[dt]
+    else:
+        return default_datatypes["complex"]
 
 
 class Variable(object):
@@ -418,7 +429,7 @@ class Result(Variable, ResultBase):
 
         datatype : optional
             When not given, the data type will be guessed based on the
-            assumptions on the symbol argument.
+            assumptions on the expr argument.
 
         dimension : sequence containing tupes, optional
             If present, this variable is interpreted as an array,
@@ -434,6 +445,10 @@ class Result(Variable, ResultBase):
 
         if name is None:
             name = 'result_%d' % abs(hash(expr))
+            
+        if datatype is None:
+            #try to infer data type from the expression
+            datatype = get_default_datatype(expr)
 
         if isinstance(name, string_types):
             if isinstance(expr, (MatrixBase, MatrixExpr)):
