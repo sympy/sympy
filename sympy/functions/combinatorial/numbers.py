@@ -9,7 +9,7 @@ the separate 'factorials' module.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, Rational, Integer, C, Add, Dummy
+from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, expand_mul
@@ -96,6 +96,9 @@ class fibonacci(Function):
 
     @classmethod
     def eval(cls, n, sym=None):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             n = int(n)
             if n < 0:
@@ -142,6 +145,9 @@ class lucas(Function):
 
     @classmethod
     def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
@@ -428,6 +434,7 @@ class bell(Function):
                 return r
 
     def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
+        from sympy import Sum
         if (k_sym is not None) or (symbols is not None):
             return self
 
@@ -435,7 +442,7 @@ class bell(Function):
         if not n.is_nonnegative:
             return self
         k = Dummy('k', integer=True, nonnegative=True)
-        return 1 / E * C.Sum(k**n / factorial(k), (k, 0, S.Infinity))
+        return 1 / E * Sum(k**n / factorial(k), (k, 0, S.Infinity))
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -576,6 +583,7 @@ class harmonic(Function):
 
     @classmethod
     def eval(cls, n, m=None):
+        from sympy import zeta
         if m is S.One:
             return cls(n)
         if m is None:
@@ -591,7 +599,7 @@ class harmonic(Function):
             elif LessThan(m, S.One):
                 return S.Infinity
             elif StrictGreaterThan(m, S.One):
-                return C.zeta(m)
+                return zeta(m)
             else:
                 return cls
 
@@ -618,12 +626,14 @@ class harmonic(Function):
         return self.rewrite(polygamma)
 
     def _eval_rewrite_as_Sum(self, n, m=None):
+        from sympy import Sum
         k = Dummy("k", integer=True)
         if m is None:
             m = S.One
-        return C.Sum(k**(-m), (k, 1, n))
+        return Sum(k**(-m), (k, 1, n))
 
     def _eval_expand_func(self, **hints):
+        from sympy import Sum
         n = self.args[0]
         m = self.args[1] if len(self.args) == 2 else 1
 
@@ -646,8 +656,8 @@ class harmonic(Function):
                 p = p - u * q
                 if u.is_nonnegative and p.is_positive and q.is_positive and p < q:
                     k = Dummy("k")
-                    t1 = q * C.Sum(1 / (q * k + p), (k, 0, u))
-                    t2 = 2 * C.Sum(cos((2 * pi * p * k) / S(q)) *
+                    t1 = q * Sum(1 / (q * k + p), (k, 0, u))
+                    t2 = 2 * Sum(cos((2 * pi * p * k) / S(q)) *
                                    log(sin((pi * k) / S(q))),
                                    (k, 1, floor((q - 1) / S(2))))
                     t3 = (pi / 2) * cot((pi * p) / q) + log(2 * q)
@@ -656,11 +666,13 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1):
-        return self.rewrite(C.polygamma).rewrite("tractable", deep=True)
+        from sympy import polygamma
+        return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
+        from sympy import polygamma
         if all(i.is_number for i in self.args):
-            return self.rewrite(C.polygamma)._eval_evalf(prec)
+            return self.rewrite(polygamma)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#
@@ -724,11 +736,12 @@ class euler(Function):
             return Integer(res)
 
     def _eval_rewrite_as_Sum(self, arg):
+        from sympy import Sum
         if arg.is_even:
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
             n = self.args[0] / 2
-            Em = (S.ImaginaryUnit * C.Sum(C.Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
+            Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
 
             return Em
@@ -834,9 +847,10 @@ class catalan(Function):
 
     @classmethod
     def eval(cls, n):
+        from sympy import gamma
         if (n.is_Integer and n.is_nonnegative) or \
            (n.is_noninteger and n.is_negative):
-            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
+            return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
 
         if (n.is_integer and n.is_negative):
             if (n + 1).is_negative:
@@ -845,8 +859,9 @@ class catalan(Function):
                 return -S.Half
 
     def fdiff(self, argindex=1):
+        from sympy import polygamma, log
         n = self.args[0]
-        return catalan(n)*(C.polygamma(0, n + Rational(1, 2)) - C.polygamma(0, n + 2) + C.log(4))
+        return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
 
     def _eval_rewrite_as_binomial(self, n):
         return binomial(2*n, n)/(n + 1)
@@ -855,21 +870,25 @@ class catalan(Function):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
     def _eval_rewrite_as_gamma(self, n):
+        from sympy import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
-        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
+        return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
 
     def _eval_rewrite_as_hyper(self, n):
-        return C.hyper([1 - n, -n], [2], 1)
+        from sympy import hyper
+        return hyper([1 - n, -n], [2], 1)
 
     def _eval_rewrite_as_Product(self, n):
+        from sympy import Product
         if not (n.is_integer and n.is_nonnegative):
             return self
         k = Dummy('k', integer=True, positive=True)
-        return C.Product((n + k) / k, (k, 2, n))
+        return Product((n + k) / k, (k, 2, n))
 
     def _eval_evalf(self, prec):
+        from sympy import gamma
         if self.args[0].is_number:
-            return self.rewrite(C.gamma)._eval_evalf(prec)
+            return self.rewrite(gamma)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#
@@ -935,7 +954,7 @@ class genocchi(Function):
 
     def _eval_rewrite_as_bernoulli(self, n):
         if n.is_integer and n.is_nonnegative:
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+            return (1 - S(2) ** n) * bernoulli(n) * 2
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_positive:
@@ -971,8 +990,9 @@ class genocchi(Function):
 
     def _eval_is_prime(self):
         n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
+        # only G_6 = -3 and G_8 = 17 are prime,
+        # but SymPy does not consider negatives as prime
+        # so only n=8 is tested
         return (n - 8).is_zero
 
 

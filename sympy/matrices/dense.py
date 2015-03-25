@@ -503,9 +503,9 @@ class DenseMatrix(MatrixBase):
         """Returns an Immutable version of this Matrix
         """
         from .immutable import ImmutableMatrix as cls
-        if self.rows:
+        if self.rows and self.cols:
             return cls._new(self.tolist())
-        return cls._new(0, self.cols, [])
+        return cls._new(self.rows, self.cols, [])
 
     @classmethod
     def zeros(cls, r, c=None):
@@ -804,8 +804,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col
         row_op
         """
-        self._mat[j::self.cols] = list(map(lambda t: f(*t),
-            list(zip(self._mat[j::self.cols], list(range(self.rows))))))
+        self._mat[j::self.cols] = [f(*t) for t in list(zip(self._mat[j::self.cols], list(range(self.rows))))]
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.

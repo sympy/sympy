@@ -13,7 +13,7 @@ from sympy.solvers import solve
 from sympy.core.compatibility import range
 
 
-class Sum(AddWithLimits,ExprWithIntLimits):
+class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
 
     ``Sum`` represents a finite or infinite series, with the first argument
@@ -166,6 +166,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
             f = self.function.doit(**hints)
         else:
             f = self.function
+
+        if self.function.is_Matrix:
+            return self.expand().doit()
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit

@@ -392,7 +392,15 @@ want to be mentioned here, so see our repository history for a full list).
 #. Lokesh Sharma: reorder setup.py file imports to correct NameError
 #. Sartaj Singh: use \left \| instead of \lvert for latex Abs
 #. Chris Swierczewski: RootOf.evalf watches for root on interval boundary
+#. Sumith: implemented columnspace of a matrix
 #. Konstantin Togoi: added truth_table and binary digit utilities to boolalg
+#. Param Singh: added missing units from mks system
+#. Philippe Bouafia: Fixed a typo.
+#. Lucas Jones: Add a test in integrals
+#. Peter Schmidt: Removed duplicate tests
+#. Jiaxing Liang: Fix infinite recursion issue in test_f
+#. Juha Remes: Fixed a typo in qubit_to_matrix documentation
+#. Gregory Ashton: Fix dsolve to allow symbols in systems of equations
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

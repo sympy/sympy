@@ -6,7 +6,6 @@ import math
 import re as regex
 from collections import defaultdict
 
-from .core import C
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
@@ -337,8 +336,9 @@ class Number(AtomicExpr):
         return self
 
     def _eval_order(self, *symbols):
+        from sympy import Order
         # Order(5, x, y) -> Order(1,x,y)
-        return C.Order(S.One, *symbols)
+        return Order(S.One, *symbols)
 
     def _eval_subs(self, old, new):
         if old == -self:
@@ -1967,7 +1967,7 @@ class AlgebraicNumber(Expr):
 
     def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
         """Construct a new algebraic number. """
-
+        from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.core.symbol import Symbol
@@ -1978,7 +1978,7 @@ class AlgebraicNumber(Expr):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
-                minpoly = C.Poly(minpoly)
+                minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
             minpoly, root = expr.minpoly, expr.root
         else:
@@ -2035,13 +2035,14 @@ class AlgebraicNumber(Expr):
 
     def as_poly(self, x=None):
         """Create a Poly instance from ``self``. """
+        from sympy import Dummy, Poly, PurePoly
         if x is not None:
-            return C.Poly.new(self.rep, x)
+            return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
-                return C.Poly.new(self.rep, self.alias)
+                return Poly.new(self.rep, self.alias)
             else:
-                return C.PurePoly.new(self.rep, C.Dummy('x'))
+                return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
         """Create a Basic expression from ``self``. """
@@ -2057,13 +2058,14 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert ``self`` to an algebraic integer. """
+        from sympy import Poly
         f = self.minpoly
 
         if f.LC() == 1:
             return self
 
         coeff = f.LC()**(f.degree() - 1)
-        poly = f.compose(C.Poly(f.gen/f.LC()))
+        poly = f.compose(Poly(f.gen/f.LC()))
 
         minpoly = poly*coeff
         root = f.LC()*self.root
@@ -3083,15 +3085,18 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
             pass
 
     def _eval_power(self, expt):
-        return C.exp(expt)
+        from sympy import exp
+        return exp(expt)
 
     def _eval_rewrite_as_sin(self):
+        from sympy import sin
         I = S.ImaginaryUnit
-        return C.sin(I + S.Pi/2) - I*C.sin(I)
+        return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self):
+        from sympy import cos
         I = S.ImaginaryUnit
-        return C.cos(I) + I*C.cos(I + S.Pi/2)
+        return cos(I) + I*cos(I + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage

@@ -11,7 +11,7 @@ complete source code files.
 """
 
 from __future__ import print_function, division
-from sympy.core import C, Mul, Pow, S, Rational
+from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
@@ -149,8 +149,8 @@ class OctaveCodePrinter(CodePrinter):
 
         a = a or [S.One]
 
-        a_str = list(map(lambda x: self.parenthesize(x, prec), a))
-        b_str = list(map(lambda x: self.parenthesize(x, prec), b))
+        a_str = [self.parenthesize(x, prec) for x in a]
+        b_str = [self.parenthesize(x, prec) for x in b]
 
         # from here it differs from str.py to deal with "*" and ".*"
         def multjoin(a, a_str):
@@ -225,11 +225,13 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Assignment(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
-        if not self._settings["inline"] and isinstance(expr.rhs, C.Piecewise):
+        if not self._settings["inline"] and isinstance(expr.rhs, Piecewise):
             # Here we modify Piecewise so each expression is now
             # an Assignment, and then continue on the print.
             expressions = []
@@ -237,10 +239,10 @@ class OctaveCodePrinter(CodePrinter):
             for (e, c) in rhs.args:
                 expressions.append(Assignment(lhs, e))
                 conditions.append(c)
-            temp = C.Piecewise(*zip(expressions, conditions))
+            temp = Piecewise(*zip(expressions, conditions))
             return self._print(temp)
-        if self._settings["contract"] and (lhs.has(C.IndexedBase) or
-                rhs.has(C.IndexedBase)):
+        if self._settings["contract"] and (lhs.has(IndexedBase) or
+                rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
             return self._doprint_loops(rhs, lhs)

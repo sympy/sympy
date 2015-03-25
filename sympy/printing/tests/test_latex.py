@@ -1171,14 +1171,14 @@ def test_modifiers():
     assert latex(symbols("xDdDot")) == r"\dddot{x}"
     assert latex(symbols("xDDot")) == r"\ddot{x}"
     assert latex(symbols("xBold")) == r"\boldsymbol{x}"
-    assert latex(symbols("xnOrM")) == r"\left\lVert{x}\right\rVert"
+    assert latex(symbols("xnOrM")) == r"\left\|{x}\right\|"
     assert latex(symbols("xAVG")) == r"\left\langle{x}\right\rangle"
     assert latex(symbols("xHat")) == r"\hat{x}"
     assert latex(symbols("xDot")) == r"\dot{x}"
     assert latex(symbols("xBar")) == r"\bar{x}"
     assert latex(symbols("xVec")) == r"\vec{x}"
     assert latex(symbols("xAbs")) == r"\left|{x}\right|"
-    assert latex(symbols("xMag")) == r"\left\lvert{x}\right\rvert"
+    assert latex(symbols("xMag")) == r"\left|{x}\right|"
     assert latex(symbols("xPrM")) == r"{x}'"
     assert latex(symbols("xBM")) == r"\boldsymbol{x}"
     # Test strings that are *only* the names of modifiers
@@ -1205,7 +1205,7 @@ def test_modifiers():
     # Check a few combinations
     assert latex(symbols("xvecdot")) == r"\dot{\vec{x}}"
     assert latex(symbols("xDotVec")) == r"\vec{\dot{x}}"
-    assert latex(symbols("xHATNorm")) == r"\left\lVert{\hat{x}}\right\rVert"
+    assert latex(symbols("xHATNorm")) == r"\left\|{\hat{x}}\right\|"
     # Check a couple big, ugly combinations
     assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left|{\breve{z}}\right|}_{{\check{y}}'}"
     assert latex(symbols('alphadothat_nVECDOT__tTildePrime')) == r"\hat{\dot{\alpha}}^{{\tilde{t}}'}_{\dot{\vec{n}}}"
@@ -1335,3 +1335,7 @@ def test_issue_7117():
     assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
     q = Pow(e, 2, evaluate=False)
     assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
+
+
+def test_issue_2934():
+    assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'

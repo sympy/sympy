@@ -8,7 +8,6 @@ from itertools import combinations, product
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.core import C
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
@@ -469,23 +468,26 @@ class Not(BooleanFunction):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import (
+            Equality, GreaterThan, LessThan,
+            StrictGreaterThan, StrictLessThan, Unequality)
         if isinstance(arg, Number) or arg in (True, False):
             return false if arg else true
         if arg.is_Not:
             return arg.args[0]
         # Simplify Relational objects.
-        if isinstance(arg, C.Equality):
-            return C.Unequality(*arg.args)
-        if isinstance(arg, C.Unequality):
-            return C.Equality(*arg.args)
-        if isinstance(arg, C.StrictLessThan):
-            return C.GreaterThan(*arg.args)
-        if isinstance(arg, C.StrictGreaterThan):
-            return C.LessThan(*arg.args)
-        if isinstance(arg, C.LessThan):
-            return C.StrictGreaterThan(*arg.args)
-        if isinstance(arg, C.GreaterThan):
-            return C.StrictLessThan(*arg.args)
+        if isinstance(arg, Equality):
+            return Unequality(*arg.args)
+        if isinstance(arg, Unequality):
+            return Equality(*arg.args)
+        if isinstance(arg, StrictLessThan):
+            return GreaterThan(*arg.args)
+        if isinstance(arg, StrictGreaterThan):
+            return LessThan(*arg.args)
+        if isinstance(arg, LessThan):
+            return StrictGreaterThan(*arg.args)
+        if isinstance(arg, GreaterThan):
+            return StrictLessThan(*arg.args)
 
     def as_set(self):
         """

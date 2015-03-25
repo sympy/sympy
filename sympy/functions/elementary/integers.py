@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core.function import Function
 from sympy.core import Add
@@ -20,10 +19,11 @@ class RoundFunction(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import im
         if arg.is_integer:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
-            i = C.im(arg)
+            i = im(arg)
             if not i.has(S.ImaginaryUnit):
                 return cls(i)*S.ImaginaryUnit
             return cls(arg, evaluate=False)
@@ -39,7 +39,7 @@ class RoundFunction(Function):
         terms = Add.make_args(arg)
 
         for t in terms:
-            if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
+            if t.is_integer or (t.is_imaginary and im(t).is_integer):
                 ipart += t
             elif t.has(Symbol):
                 spart += t
@@ -66,7 +66,7 @@ class RoundFunction(Function):
         if not spart:
             return ipart
         elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:
-            return ipart + cls(C.im(spart), evaluate=False)*S.ImaginaryUnit
+            return ipart + cls(im(spart), evaluate=False)*S.ImaginaryUnit
         else:
             return ipart + cls(spart, evaluate=False)
 
