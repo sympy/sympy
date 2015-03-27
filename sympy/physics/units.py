@@ -220,6 +220,7 @@ ps = picosecond = picoseconds = pico*s
 minute = minutes = 60*s
 h = hour = hours = 60*minute
 day = days = 24*hour
+week = weeks = 7*day
 
 sidereal_year = sidereal_years = Rational('31558149.540')*s
 tropical_year = tropical_years = Rational('365.24219')*day
