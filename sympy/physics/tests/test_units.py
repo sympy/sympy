@@ -21,7 +21,7 @@ def test_units():
     assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
     
-    abs((year / week).evalf() - 52) < 0.2
+    assert float( (year / week).evalf(15) ) == 52.17745571428571
 
 def test_issue_quart():
     assert 4*quart/inch**3 == 231
