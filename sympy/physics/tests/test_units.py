@@ -1,4 +1,4 @@
-from sympy import integrate, Rational, sqrt, Symbol
+from sympy import integrate, Rational, Float, sqrt, Symbol
 from sympy.physics.units import (au, amu, charge, day, find_unit,
                                  foot, km, m, meter, minute, s,
                                  speed_of_light, grams, quart, inch)
@@ -21,7 +21,7 @@ def test_units():
     assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
     
-    assert float( (year / week).evalf(15) ) == 52.17745571428571
+    assert (year / week).evalf(15) == Float(52.17745571428571)
 
 def test_issue_quart():
     assert 4*quart/inch**3 == 231
