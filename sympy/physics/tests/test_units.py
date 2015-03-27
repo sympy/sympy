@@ -20,6 +20,8 @@ def test_units():
     t = Symbol('t')
     assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
+    
+    assert str((year/week).n(2)) == '52.'
 
 def test_issue_quart():
     assert 4*quart/inch**3 == 231
