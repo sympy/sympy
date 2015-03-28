@@ -438,7 +438,7 @@ class Domain(object):
 
     def pow(self, a, b):
         """Raise ``a`` to power ``b``, implies ``__pow__``.  """
-        return a ** b
+        return a**b
 
     def exquo(self, a, b):
         """Exact quotient of ``a`` and ``b``, implies something. """

@@ -146,8 +146,8 @@ def test_C12():
 
 
 def test_C13():
-    test = R(10, 7) * (1 + R(29, 1000)) ** R(1, 3)
-    good = 3 ** R(1, 3)
+    test = R(10, 7) * (1 + R(29, 1000))**R(1, 3)
+    good = 3**R(1, 3)
     assert test == good
 
 
@@ -179,7 +179,7 @@ def test_C18():
 
 @XFAIL
 def test_C19():
-    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 35*sqrt(7))**R(1, 3))) == 3 + sqrt(7)
 
 
 def test_C20():
@@ -189,7 +189,7 @@ def test_C20():
 
 
 def test_C21():
-    assert simplify(AlgebraicNumber((41 + 29*sqrt(2)) ** R(1, 5))) == \
+    assert simplify(AlgebraicNumber((41 + 29*sqrt(2))**R(1, 5))) == \
         AlgebraicNumber(1 + sqrt(2))
 
 
@@ -270,7 +270,7 @@ def test_D11():
 
 @XFAIL
 def test_D12():
-    assert (mpi(-4, 2) * x + mpi(1, 3)) ** 2 == mpi(-8, 16)*x**2 + mpi(-24, 12)*x + mpi(1, 9)
+    assert (mpi(-4, 2) * x + mpi(1, 3))**2 == mpi(-8, 16)*x**2 + mpi(-24, 12)*x + mpi(1, 9)
 
 
 @XFAIL
@@ -455,7 +455,7 @@ def test_H13():
 
 
 def test_H14():
-    p = (x + 1) ** 20
+    p = (x + 1)**20
     ep = expand(p)
     assert ep == (1 + 20*x + 190*x**2 + 1140*x**3 + 4845*x**4 + 15504*x**5
         + 38760*x**6 + 77520*x**7 + 125970*x**8 + 167960*x**9 + 184756*x**10
@@ -530,7 +530,7 @@ def test_H24():
 
 @slow
 def test_H25():
-    e = (x - 2*y**2 + 3*z**3) ** 20
+    e = (x - 2*y**2 + 3*z**3)**20
     assert factor(expand(e)) == e
 
 

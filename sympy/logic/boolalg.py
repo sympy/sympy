@@ -1697,7 +1697,7 @@ def simplify_logic(expr, form=None, deep=True):
             from sympy.simplify.simplify import simplify
             variables = [simplify(v) for v in variables]
         if form == 'dnf' or \
-           (form is None and len(truthtable) >= (2 ** (len(variables) - 1))):
+           (form is None and len(truthtable) >= (2**(len(variables) - 1))):
             return SOPform(variables, truthtable)
         elif form == 'cnf' or form is None:
             return POSform(variables, truthtable)

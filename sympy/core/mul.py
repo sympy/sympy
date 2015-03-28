@@ -341,7 +341,7 @@ class Mul(Expr, AssocOp):
                     # if a.is_commutative == False, but prohibits
                     # a**x*a**y and x**a*x**b from combining (x,y commute).
                     if b1 == b2 and (not new_exp.is_Add):
-                        o12 = b1 ** new_exp
+                        o12 = b1**new_exp
 
                         # now o12 could be a commutative object
                         if o12.is_commutative:

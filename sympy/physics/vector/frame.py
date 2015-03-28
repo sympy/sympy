@@ -528,11 +528,11 @@ class ReferenceFrame(object):
             if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 4)):
                 raise TypeError('Amounts are a list or tuple of length 4')
             q0, q1, q2, q3 = amounts
-            parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
+            parent_orient = (Matrix([[q0**2 + q1**2 - q2**2 - q3 **
                 2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
-                [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 ** 2 - q3 ** 2,
+                [2 * (q1 * q2 + q0 * q3), q0**2 - q1**2 + q2**2 - q3**2,
                 2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), 2 * (q0 *
-                q1 + q2 * q3), q0 ** 2 - q1 ** 2 - q2 ** 2 + q3 ** 2]]))
+                q1 + q2 * q3), q0**2 - q1**2 - q2**2 + q3**2]]))
         elif rot_type == 'BODY':
             if not (len(amounts) == 3 & len(rot_order) == 3):
                 raise TypeError('Body orientation takes 3 values & 3 orders')

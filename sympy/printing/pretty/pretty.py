@@ -1047,7 +1047,7 @@ class PrettyPrinter(Printer):
         # TODO should exp_polar be printed differently?
         #      what about exp_polar(0), exp_polar(1)?
         base = prettyForm(pretty_atom('Exp1', 'e'))
-        return base ** self._print(e.args[0])
+        return base**self._print(e.args[0])
 
     def _print_Function(self, e, sort=False):
         # XXX works only for applied functions

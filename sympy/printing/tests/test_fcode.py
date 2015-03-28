@@ -62,7 +62,7 @@ def test_fcode_Float():
 
 def test_fcode_functions():
     x, y = symbols('x,y')
-    assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+    assert fcode(sin(x)**cos(y)) == "      sin(x)**cos(y)"
 
 
 #issue 6814

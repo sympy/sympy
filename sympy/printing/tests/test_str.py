@@ -457,7 +457,7 @@ def test_Rational():
     assert str(sqrt(Rational(1, 4))) == "1/2"
     assert str(sqrt(Rational(1, 36))) == "1/6"
 
-    assert str((123**25) ** Rational(1, 25)) == "123"
+    assert str((123**25)**Rational(1, 25)) == "123"
     assert str((123**25 + 1)**Rational(1, 25)) != "123"
     assert str((123**25 - 1)**Rational(1, 25)) != "123"
     assert str((123**25 - 1)**Rational(1, 25)) != "122"

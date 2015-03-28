@@ -409,7 +409,7 @@ class Product(ExprWithIntLimits):
                 l = (limit[0], limit[2] + 1 , limit[1] - 1)
             limits.append(l)
 
-        return Product(expr.function ** e, *limits)
+        return Product(expr.function**e, *limits)
 
 
 def product(*args, **kwargs):

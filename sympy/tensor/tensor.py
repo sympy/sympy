@@ -2389,7 +2389,7 @@ class TensorHead(Basic):
         for metric in metrics:
             marray = numpy.tensordot(marray, numpy.tensordot(metric, marray, (1, 0)), (0, 0))
         pow2 = marray[()]
-        return pow2 ** (Rational(1, 2) * other)
+        return pow2**(Rational(1, 2) * other)
 
     @property
     def data(self):
@@ -2499,7 +2499,7 @@ class TensExpr(Basic):
                 (0, 0)
             )
         pow2 = marray[()]
-        return pow2 ** (Rational(1, 2) * other)
+        return pow2**(Rational(1, 2) * other)
 
     def __rpow__(self, other):
         raise NotImplementedError

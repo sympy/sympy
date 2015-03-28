@@ -944,7 +944,7 @@ class genocchi(Function):
             if (not n.is_Integer) or n.is_nonpositive:
                 raise ValueError("Genocchi numbers are defined only for " +
                                  "positive integers")
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+            return 2 * (1 - S(2)**n) * bernoulli(n)
 
         if n.is_odd and (n - 1).is_positive:
             return S.Zero
@@ -954,7 +954,7 @@ class genocchi(Function):
 
     def _eval_rewrite_as_bernoulli(self, n):
         if n.is_integer and n.is_nonnegative:
-            return (1 - S(2) ** n) * bernoulli(n) * 2
+            return (1 - S(2)**n) * bernoulli(n) * 2
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_positive:

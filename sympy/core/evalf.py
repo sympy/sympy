@@ -680,21 +680,21 @@ def evalf_pow(v, prec, options):
     if not (xre or xim):
         return None, None, None, None
 
-    # (real ** complex) or (complex ** complex)
+    # (real**complex) or (complex**complex)
     if yim:
         re, im = libmp.mpc_pow(
             (xre or fzero, xim or fzero), (yre or fzero, yim),
             target_prec)
         return finalize_complex(re, im, target_prec)
-    # complex ** real
+    # complex**real
     if xim:
         re, im = libmp.mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
         return finalize_complex(re, im, target_prec)
-    # negative ** real
+    # negative**real
     elif mpf_lt(xre, fzero):
         re, im = libmp.mpc_pow_mpf((xre, fzero), yre, target_prec)
         return finalize_complex(re, im, target_prec)
-    # positive ** real
+    # positive**real
     else:
         return mpf_pow(xre, yre, target_prec), None, target_prec, None
 

@@ -69,10 +69,10 @@ def test_requires_partial():
     # again, invalid
     assert requires_partial(Derivative(f, n)) is False
 
-    f = x ** n
+    f = x**n
     assert requires_partial(Derivative(f, x)) is False
 
-    assert requires_partial(Derivative(Integral((x*y) ** n * exp(-x * y), (x, 0, oo)), y, evaluate=False)) is False
+    assert requires_partial(Derivative(Integral((x*y)**n * exp(-x * y), (x, 0, oo)), y, evaluate=False)) is False
 
     # parametric equation
     f = (exp(t), cos(t))

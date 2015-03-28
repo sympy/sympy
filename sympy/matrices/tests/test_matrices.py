@@ -166,7 +166,7 @@ def test_power():
     assert (A**3)[:] == [290, 262, 251, 448, 440, 368, 702, 954, 433]
     assert A**0 == eye(3)
     assert A**1 == A
-    assert (Matrix([[2]]) ** 100)[0, 0] == 2**100
+    assert (Matrix([[2]])**100)[0, 0] == 2**100
     assert eye(2)**10000000 == eye(2)
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 

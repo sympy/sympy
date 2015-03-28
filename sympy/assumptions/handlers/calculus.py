@@ -240,10 +240,10 @@ class AskBoundedHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Unbounded ** NonZero -> Unbounded
-        Bounded ** Bounded -> Bounded
-        Abs()<=1 ** Positive -> Bounded
-        Abs()>=1 ** Negative -> Bounded
+        Unbounded**NonZero -> Unbounded
+        Bounded**Bounded -> Bounded
+        Abs()<=1**Positive -> Bounded
+        Abs()>=1**Negative -> Bounded
         Otherwise unknown
         """
         base_bounded = ask(Q.bounded(expr.base), assumptions)

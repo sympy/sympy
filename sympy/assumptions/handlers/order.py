@@ -92,9 +92,9 @@ class AskNegativeHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Real ** Even -> NonNegative
-        Real ** Odd  -> same_as_base
-        NonNegative ** Positive -> NonNegative
+        Real**Even -> NonNegative
+        Real**Odd  -> same_as_base
+        NonNegative**Positive -> NonNegative
         """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
