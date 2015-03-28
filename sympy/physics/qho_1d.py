@@ -80,4 +80,3 @@ def coherent_state(n, alpha):
     """
 
     return exp(- Abs(alpha)**2/2)*(alpha**n)/sqrt(factorial(n))
-
