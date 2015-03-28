@@ -10,9 +10,6 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 import math
 import sympy
-import unittest
-#import mymod
-
 
 MutableDenseMatrix = Matrix
 
@@ -47,15 +44,17 @@ def test_str_args():
     # make sure correct number of args required
     raises(TypeError, lambda: f(0))
 
-def test_incorrect_arg_args():
-    def test_err(self):
-        self.assertRaises(TypeError, "args must be a symbol or a tuple of symbols or a string of comma separated variables", lambdify, "numpy",x)
-
 def test_incorrect_arg_expr():
-    def test_err(self):
-        self.assertRaises(TypeError, "expr must be a valid sympy expression or a tuple/list/string of comma separated variables/symbols" , lambdify, x, "numpy")
+    try:
+        f = lambdify( x,"numpy")
+    except TypeError as e:
+        assert str(e) == "expr must be a valid sympy expression or a tuple/list/string of comma separated variables/symbols"
 
-
+def test_incorrect_arg_args():
+    try:
+        f = lambdify("numpy", x)
+    except TypeError as e:
+        assert str(e) == "args must be a symbol or a tuple of symbols or a string of comma separated variables"
 
 def test_own_namespace():
     myfunc = lambda x: 1
