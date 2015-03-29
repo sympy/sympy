@@ -11,11 +11,11 @@ class TypeD(Standard_Cartan):
 
 
     def dimension(self):
-        """
-        Return the dimension of the vector space
-        V underlying the Lie algebra
+        """Dmension of the vector space V underlying the Lie algebra
+
         Example
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("D4")
         >>> c.dimension()

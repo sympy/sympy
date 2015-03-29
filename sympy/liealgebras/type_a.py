@@ -19,11 +19,11 @@ class TypeA(Standard_Cartan):
 
 
     def dimension(self):
-        """
-        Return the dimension of the vector space
-        V underlying the Lie algebra
+        """Dimension of the vector space V underlying the Lie algebra
+
         Example
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A4")
         >>> c.dimension()
@@ -83,7 +83,7 @@ class TypeA(Standard_Cartan):
         get the negative roots.
 
         Example
-        ======
+        =======
 
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")

@@ -12,11 +12,11 @@ class TypeE(Standard_Cartan):
         return Standard_Cartan.__new__(cls, "E", n)
 
     def dimension(self):
-        """
-        Returns the dimension of the vector space
-        V underlying the Lie algebra
+        """Dimension of the vector space V underlying the Lie algebra
+
         Example
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.dimension()
