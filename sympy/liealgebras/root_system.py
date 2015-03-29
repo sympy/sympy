@@ -56,6 +56,7 @@ class RootSystem(Basic):
 
         Example
         ====
+
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> roots = c.simple_roots()
@@ -100,6 +101,7 @@ class RootSystem(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> c.root_space()
@@ -119,6 +121,7 @@ class RootSystem(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> newroot = c.add_simple_roots(1, 2)
@@ -148,6 +151,7 @@ class RootSystem(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> c.add_as_roots([1, 0, -1, 0], [0, 0, 1, -1])
@@ -172,6 +176,7 @@ class RootSystem(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> c.cartan_matrix()
@@ -189,6 +194,7 @@ class RootSystem(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> print(c.dynkin_diagram())

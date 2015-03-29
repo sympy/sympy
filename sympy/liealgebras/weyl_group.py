@@ -32,6 +32,7 @@ class WeylGroup(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("F4")
         >>> c.generators()
@@ -53,6 +54,7 @@ class WeylGroup(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("D4")
         >>> c.group_order()
@@ -125,6 +127,7 @@ class WeylGroup(Basic):
 
         Example
         ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> b = WeylGroup("B4")
         >>> b.element_order('r1*r4*r2')
@@ -225,6 +228,7 @@ class WeylGroup(Basic):
 
         Example
         =======
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> f = WeylGroup("F4")
         >>> f.matrix_form('r2*r3')
@@ -375,6 +379,7 @@ class WeylGroup(Basic):
 
         Example
         ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("B3")
         >>> print(c.coxeter_diagram())

@@ -825,6 +825,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
 
     Examples
     --------
+
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y
     >>> import numpy as np

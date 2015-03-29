@@ -15,6 +15,7 @@ class TypeC(Standard_Cartan):
 
         Example
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("C3")
         >>> c.dimension()
@@ -52,6 +53,7 @@ class TypeC(Standard_Cartan):
 
         Example
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("C3")
         >>> c.simple_root(2)
@@ -76,6 +78,7 @@ class TypeC(Standard_Cartan):
 
         Example
         ======
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -122,6 +125,7 @@ class TypeC(Standard_Cartan):
 
         Example
         =======
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('C4')
         >>> c.cartan_matrix()

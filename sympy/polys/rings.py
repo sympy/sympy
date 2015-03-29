@@ -38,6 +38,7 @@ def ring(symbols, domain, order=lex):
 
     Examples
     --------
+
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.orderings import lex
@@ -66,6 +67,7 @@ def xring(symbols, domain, order=lex):
 
     Examples
     --------
+
     >>> from sympy.polys.rings import xring
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.orderings import lex
@@ -94,6 +96,7 @@ def vring(symbols, domain, order=lex):
 
     Examples
     --------
+
     >>> from sympy.polys.rings import vring
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.orderings import lex
@@ -122,6 +125,7 @@ def sring(exprs, *symbols, **options):
 
     Examples
     --------
+
     >>> from sympy.core import symbols
     >>> from sympy.polys.rings import sring
     >>> from sympy.polys.domains import ZZ
@@ -442,6 +446,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
         Example
         -------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -468,6 +473,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
         Example
         -------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -537,6 +543,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -604,6 +611,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -859,6 +867,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -932,6 +941,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -985,6 +995,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -1011,6 +1022,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.rings import ring
 
@@ -1060,6 +1072,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -1088,6 +1101,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
 
@@ -1173,6 +1187,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1330,6 +1345,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1460,6 +1476,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1503,6 +1520,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1588,6 +1606,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1615,6 +1634,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1662,6 +1682,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1689,6 +1710,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -1723,6 +1745,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.orderings import lex, grlex
@@ -1747,6 +1770,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.orderings import lex, grlex
@@ -1771,6 +1795,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.orderings import lex, grlex
@@ -1817,6 +1842,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 
@@ -2113,6 +2139,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys import ring, ZZ
         >>> R, x,y = ring("x,y", ZZ)
 
@@ -2168,6 +2195,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         Examples
         --------
+
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
 

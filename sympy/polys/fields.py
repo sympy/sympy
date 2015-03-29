@@ -502,6 +502,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         Examples
         --------
+
         >>> from sympy.polys.fields import field
         >>> from sympy.polys.domains import ZZ
 

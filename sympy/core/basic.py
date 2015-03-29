@@ -1812,6 +1812,7 @@ class preorder_traversal(Iterator):
 
         Examples
         --------
+
         >>> from sympy.core import symbols
         >>> from sympy.core.basic import preorder_traversal
         >>> x, y, z = symbols('x y z')

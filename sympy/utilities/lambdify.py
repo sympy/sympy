@@ -554,6 +554,7 @@ def _imp_namespace(expr, namespace=None):
 
     Examples
     --------
+
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
@@ -623,6 +624,7 @@ def implemented_function(symfunc, implementation):
 
     Examples
     --------
+
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function

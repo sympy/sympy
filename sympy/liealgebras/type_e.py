@@ -87,6 +87,7 @@ class TypeE(Standard_Cartan):
 
         Example
         ======
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -237,6 +238,7 @@ class TypeE(Standard_Cartan):
 
         Example
         =======
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')
         >>> c.cartan_matrix()

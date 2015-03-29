@@ -155,6 +155,7 @@ def opt_cse(exprs, order='canonical'):
 
     Examples
     --------
+
     >>> from sympy.simplify.cse_main import opt_cse
     >>> from sympy.abc import x
     >>> opt_subs = opt_cse([x**-2])

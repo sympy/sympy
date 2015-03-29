@@ -58,6 +58,7 @@ class TypeB(Standard_Cartan):
 
         Example
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("B3")
         >>> c.simple_root(2)
@@ -81,6 +82,7 @@ class TypeB(Standard_Cartan):
 
         Example
         ======
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -126,6 +128,7 @@ class TypeB(Standard_Cartan):
 
         Example
         =======
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('B4')
         >>> c.cartan_matrix()
