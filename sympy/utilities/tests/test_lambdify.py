@@ -11,6 +11,7 @@ from sympy.external import import_module
 import math
 import sympy
 
+
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
@@ -45,16 +46,10 @@ def test_str_args():
     raises(TypeError, lambda: f(0))
 
 def test_incorrect_arg_expr():
-    try:
-        f = lambdify( x,"numpy")
-    except TypeError as e:
-        assert str(e) == "expr must be a valid sympy expression or a tuple/list/string of comma separated variables/symbols"
+    raises(TypeError, lambda: lambdify(x, "numpy"))
 
 def test_incorrect_arg_args():
-    try:
-        f = lambdify("numpy", x)
-    except TypeError as e:
-        assert str(e) == "args must be a symbol or a tuple of symbols or a string of comma separated variables"
+    raises(TypeError, lambda: lambdify("numpy", x))
 
 def test_own_namespace():
     myfunc = lambda x: 1

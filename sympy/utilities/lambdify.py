@@ -296,7 +296,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     in other namespaces, unless the ``use_imps`` input parameter is False.
     """
     from sympy.core.symbol import Symbol
-    from sympy.core import sympify
     from sympy.utilities.iterables import flatten
     invalid_str_expr = 0
     invalid_str_args = 0
@@ -306,7 +305,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if isinstance(args, str):
         if not tuple(args.replace(',','')) == tuple(args.split(',')):
             invalid_str_args = 1
-    # If the user hasn't specified any modules, use what is available.
     if  invalid_str_expr == 1 :
         raise TypeError("expr must be a valid sympy expression or a tuple/list/string of comma separated variables/symbols")
     if invalid_str_args == 1:
