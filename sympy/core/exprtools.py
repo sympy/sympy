@@ -1300,7 +1300,7 @@ def factor_nc(expr):
     expressions.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.core.exprtools import factor_nc
     >>> from sympy import Symbol
