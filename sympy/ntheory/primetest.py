@@ -77,8 +77,6 @@ def mr(n, bases):
     http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
-    ========
-
     >>> from sympy.ntheory.primetest import mr
     >>> mr(1373651, [2, 3])
     False

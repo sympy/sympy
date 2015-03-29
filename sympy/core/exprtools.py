@@ -1299,7 +1299,9 @@ def factor_nc(expr):
     """Return the factored form of ``expr`` while handling non-commutative
     expressions.
 
-    **examples**
+    Examples
+    --------
+
     >>> from sympy.core.exprtools import factor_nc
     >>> from sympy import Symbol
     >>> from sympy.abc import x
