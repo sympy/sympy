@@ -1401,6 +1401,8 @@ def test_fcode_matrixsymbol_slice_autoname():
     assert source == expected
     
 def test_fcode_complex():
+    import sympy.utilities.codegen
+    sympy.utilities.codegen.COMPLEX_ALLOWED = True
     x = Symbol('x', real=True)
     y = Symbol('y',real=True)
     result = codegen(('test',x+y), 'f95', 'test', header=False, empty=False)
@@ -1426,3 +1428,4 @@ def test_fcode_complex():
         "end function\n"
         )
     assert source==expected
+    sympy.utilities.codegen.COMPLEX_ALLOWED = False
