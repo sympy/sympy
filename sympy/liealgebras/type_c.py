@@ -70,7 +70,7 @@ class TypeC(Standard_Cartan):
 
     def positive_roots(self):
         """Generates all the positive roots of A_n
-        
+
         This is half of all of the roots of C_n; by multiplying all the
         positive roots by -1 we get the negative roots.
 
