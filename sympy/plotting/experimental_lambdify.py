@@ -488,6 +488,7 @@ class Lambdifier(object):
         Expressions that do not contain functions are directly returned.
 
         Examples:
+
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
@@ -529,6 +530,7 @@ class Lambdifier(object):
         """Converts a tree to string without translations.
 
         Examples:
+
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier

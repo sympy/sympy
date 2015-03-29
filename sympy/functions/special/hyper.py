@@ -30,6 +30,7 @@ def _prep_tuple(v):
     hypergeometric and meijer g-functions are unbranched in their parameters.
 
     Examples:
+
     >>> from sympy.functions.special.hyper import _prep_tuple
     >>> _prep_tuple([1, 2, 3])
     (1, 2, 3)

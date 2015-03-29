@@ -67,6 +67,7 @@ def _peeloff_pi(arg):
     The multiple of pi returned in the second position is always a Rational.
 
     Examples:
+
     >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
     >>> from sympy import pi
     >>> from sympy.abc import x, y

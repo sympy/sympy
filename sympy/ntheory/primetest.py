@@ -77,6 +77,7 @@ def mr(n, bases):
     http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
+
     >>> from sympy.ntheory.primetest import mr
     >>> mr(1373651, [2, 3])
     False
@@ -236,6 +237,7 @@ def _mr_safe_helper(_s):
     by a previous test.
 
     e.g.
+
     >>> from sympy.ntheory.primetest import _mr_safe_helper
     >>> print(_mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])"))
      # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
