@@ -78,9 +78,3 @@ Cartan Matrix
 Dynkin Diagram
 =============
 .. autofunction:: sympy.liealgebras.dynkin_diagram.DynkinDiagram
-   
-   
-   
-
-
-
