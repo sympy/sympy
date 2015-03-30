@@ -1692,7 +1692,6 @@ def test_issue_2941():
     _check()
 
 
-@slow
 def test_symbolic_intersect():
     # Issue 7814.
     circle = Circle(Point(x, 0), y)

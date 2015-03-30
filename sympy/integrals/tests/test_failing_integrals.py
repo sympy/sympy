@@ -139,7 +139,6 @@ def test_issue_4941():
 
 
 @XFAIL
-@slow
 def test_issue_4950():
     # Problem is with exception
     assert not integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x).has(Integral)
