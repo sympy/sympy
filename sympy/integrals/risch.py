@@ -1528,8 +1528,8 @@ class NonElementaryIntegral(Integral):
     part, so that the result of integrate will be the sum of an elementary
     expression and a NonElementaryIntegral.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import integrate, exp, log, Integral
     >>> from sympy.abc import x

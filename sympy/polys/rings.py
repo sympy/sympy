@@ -37,7 +37,7 @@ def ring(symbols, domain, order=lex):
     order : :class:`Order` or coercible, optional, defaults to ``lex``
 
     Examples
-    --------
+    ========
 
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.domains import ZZ
@@ -66,7 +66,7 @@ def xring(symbols, domain, order=lex):
     order : :class:`Order` or coercible, optional, defaults to ``lex``
 
     Examples
-    --------
+    ========
 
     >>> from sympy.polys.rings import xring
     >>> from sympy.polys.domains import ZZ
@@ -95,7 +95,7 @@ def vring(symbols, domain, order=lex):
     order : :class:`Order` or coercible, optional, defaults to ``lex``
 
     Examples
-    --------
+    ========
 
     >>> from sympy.polys.rings import vring
     >>> from sympy.polys.domains import ZZ
@@ -124,7 +124,7 @@ def sring(exprs, *symbols, **options):
     options : keyword arguments understood by :class:`Options`
 
     Examples
-    --------
+    ========
 
     >>> from sympy.core import symbols
     >>> from sympy.polys.rings import sring
@@ -444,8 +444,8 @@ class PolyRing(DefaultPrinting, IPolys):
         """
         Add a sequence of polynomials or containers of polynomials.
 
-        Example
-        -------
+        Examples
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -471,8 +471,8 @@ class PolyRing(DefaultPrinting, IPolys):
         """
         Multiply a sequence of polynomials or containers of polynomials.
 
-        Example
-        -------
+        Examples
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -542,7 +542,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         can copy the polynomial. This method makes a shallow copy.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -610,7 +610,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Equality test for polynomials.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -866,7 +866,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Add two polynomials.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -940,7 +940,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Subtract polynomial p2 from p1.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -994,7 +994,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """n - p1 with n convertible to the coefficient domain.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -1021,7 +1021,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Multiply two polynomials.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import QQ
         >>> from sympy.polys.rings import ring
@@ -1071,7 +1071,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """p2 * p1 with p2 in the coefficient domain of p1.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -1100,7 +1100,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """raise polynomial to power `n`
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
@@ -1186,7 +1186,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """square of a polynomial
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1344,7 +1344,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         All polynomials are required not to be Laurent polynomials.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1475,7 +1475,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1519,7 +1519,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1605,7 +1605,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Leading monomial tuple according to the monomial ordering.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1633,7 +1633,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         element : PolyElement (with ``is_monomial = True``) or 1
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1681,7 +1681,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Leading monomial as a polynomial element.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1709,7 +1709,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Leading term as a polynomial element.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1744,7 +1744,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         order : :class:`Order` or coercible, optional
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1769,7 +1769,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         order : :class:`Order` or coercible, optional
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1794,7 +1794,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         order : :class:`Order` or coercible, optional
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -1841,7 +1841,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else multiply not inplace
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ
@@ -2138,7 +2138,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Cancel common factors in a rational function ``f/g``.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys import ring, ZZ
         >>> R, x,y = ring("x,y", ZZ)
@@ -2194,7 +2194,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Computes partial derivative in ``x``.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.rings import ring
         >>> from sympy.polys.domains import ZZ

@@ -1,7 +1,7 @@
 """Integration functions that integrates a sympy expression.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import integrate, sin
     >>> from sympy.abc import x

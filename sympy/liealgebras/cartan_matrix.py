@@ -3,8 +3,8 @@ from .cartan_type import CartanType
 def CartanMatrix(ct):
     """Access the Cartan matrix of a specific Lie algebra
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.liealgebras.cartan_matrix import CartanMatrix
     >>> CartanMatrix("A2")

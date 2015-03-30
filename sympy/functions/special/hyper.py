@@ -29,7 +29,8 @@ def _prep_tuple(v):
     Turn an iterable argument V into a Tuple and unpolarify, since both
     hypergeometric and meijer g-functions are unbranched in their parameters.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.functions.special.hyper import _prep_tuple
     >>> _prep_tuple([1, 2, 3])

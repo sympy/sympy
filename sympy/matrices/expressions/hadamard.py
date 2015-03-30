@@ -10,7 +10,7 @@ def hadamard_product(*matrices):
     Return the elementwise (aka Hadamard) product of matrices.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.matrices import hadamard_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 3)

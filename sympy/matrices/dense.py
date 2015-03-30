@@ -991,7 +991,7 @@ def symarray(prefix, shape):  # pragma: no cover
       more than one dimension the shape must be a tuple.
 
     Examples
-    --------
+    ========
     These doctests require numpy.
 
     >>> from sympy import symarray

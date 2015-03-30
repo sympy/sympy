@@ -487,7 +487,8 @@ class Lambdifier(object):
         Other expressions are (head_string, mid_tree, tail_str).
         Expressions that do not contain functions are directly returned.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
@@ -529,7 +530,8 @@ class Lambdifier(object):
     def tree2str(cls, tree):
         """Converts a tree to string without translations.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin

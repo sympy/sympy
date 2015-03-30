@@ -501,7 +501,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Computes partial derivative in ``x``.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.polys.fields import field
         >>> from sympy.polys.domains import ZZ

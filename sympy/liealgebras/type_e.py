@@ -14,7 +14,7 @@ class TypeE(Standard_Cartan):
     def dimension(self):
         """Dimension of the vector space V underlying the Lie algebra
 
-        Example
+        Examples
         ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
@@ -85,8 +85,8 @@ class TypeE(Standard_Cartan):
         by multiplying all the positive roots by -1 we
         get the negative roots.
 
-        Example
-        ======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
@@ -236,8 +236,8 @@ class TypeE(Standard_Cartan):
         roots, (alpha[1], ...., alpha[l]).  Then the ijth
         entry of the Cartan matrix is (<alpha[i],alpha[j]>).
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')

@@ -55,8 +55,8 @@ class RootSystem(Basic):
         the simple_root method from the Lie algebra classes to generate all the
         simple roots.
 
-        Example
-        ====
+        Examples
+        ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
@@ -101,8 +101,8 @@ class RootSystem(Basic):
         method returns a string that represents the root space as the span of
         the simple roots, alpha[1],...., alpha[n].
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
@@ -121,8 +121,8 @@ class RootSystem(Basic):
         uses these integers as keys in the dictionary of simple roots, and gets
         the corresponding simple roots, and then adds them together.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
@@ -151,8 +151,8 @@ class RootSystem(Basic):
         is, it returns the sum.  Otherwise it returns a string saying that the
         sum is not a root.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
@@ -175,8 +175,8 @@ class RootSystem(Basic):
     def cartan_matrix(self):
         """Cartan matrix of Lie algebra associated with this root system
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
@@ -191,8 +191,8 @@ class RootSystem(Basic):
     def dynkin_diagram(self):
         """Dynkin diagram of the Lie algebra associated with this root system
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")

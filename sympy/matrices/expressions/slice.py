@@ -33,6 +33,7 @@ class MatrixSlice(MatrixExpr):
     """ A MatrixSlice of a Matrix Expression
 
     Examples
+    ========
 
     >>> from sympy import MatrixSlice, ImmutableMatrix
     >>> M = ImmutableMatrix(4, 4, range(16))

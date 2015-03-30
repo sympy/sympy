@@ -539,7 +539,8 @@ class Subset(Basic):
         """Return indices of subset in superset in a list; the list is empty
         if all elements of subset are not in superset.
 
-        Examples::
+        Examples
+        ========
 
             >>> from sympy.combinatorics import Subset
             >>> superset = [1, 3, 2, 5, 4]

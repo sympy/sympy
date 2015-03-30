@@ -1,7 +1,7 @@
 """A module for solving all kinds of equations.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.solvers import solve
     >>> from sympy.abc import x

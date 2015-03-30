@@ -570,7 +570,7 @@ class Vector(object):
             The matrix that gives the 1D vector.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame

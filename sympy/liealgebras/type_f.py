@@ -14,7 +14,7 @@ class TypeF(Standard_Cartan):
     def dimension(self):
         """Dimension of the vector space V underlying the Lie algebra
 
-        Example
+        Examples
         ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
@@ -49,8 +49,8 @@ class TypeF(Standard_Cartan):
         element of Q can be written as a linear combination
         of elements of D with all coefficients non-negative.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("F4")
@@ -75,8 +75,8 @@ class TypeF(Standard_Cartan):
         This is half of all of the roots of F_4; by multiplying all the
         positive roots by -1 we get the negative roots.
 
-        Example
-        ======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
@@ -135,8 +135,8 @@ class TypeF(Standard_Cartan):
         roots, (alpha[1], ...., alpha[l]).  Then the ijth
         entry of the Cartan matrix is (<alpha[i],alpha[j]>).
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')

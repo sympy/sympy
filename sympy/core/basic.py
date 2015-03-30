@@ -1811,7 +1811,7 @@ class preorder_traversal(Iterator):
         Skip yielding current node's (last yielded node's) subtrees.
 
         Examples
-        --------
+        ========
 
         >>> from sympy.core import symbols
         >>> from sympy.core.basic import preorder_traversal
