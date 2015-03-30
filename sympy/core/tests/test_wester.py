@@ -959,7 +959,6 @@ def test_M21():
     assert solve(x + sqrt(x) - 2) == [1]
 
 
-@slow
 def test_M22():
     assert solve(2*sqrt(x) + 3*x**R(1, 4) - 2) == [R(1, 16)]
 
