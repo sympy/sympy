@@ -822,7 +822,6 @@ def test_prudnikov_8():
                         assert can_do([a, b], [c, d])
 
 
-@slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
     for i in range(9):
@@ -856,7 +855,6 @@ def test_prudnikov_10():
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
 
 
-@slow
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
