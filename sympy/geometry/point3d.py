@@ -255,9 +255,7 @@ class Point3D(GeometryEntity):
         if len(points) == 3:
             a = (points[0].direction_cosine(points[1]))
             b = (points[0].direction_cosine(points[2]))
-            a = [abs(i) for i in a]
-            b = [abs(i) for i in b]
-            if a == b:
+            if a == b or a == [-x for x in b]:
                 return True
             else:
                 return False
