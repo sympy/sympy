@@ -22,6 +22,7 @@ import traceback
 import pdb
 import re
 import linecache
+import time
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
@@ -1081,7 +1082,13 @@ class SymPyTests(object):
         self._reporter.entering_filename(filename, len(funcs))
         if not sort:
             random.shuffle(funcs)
+
+        # Seconds, from human / UX design limits
+        # http://www.nngroup.com/articles/response-times-3-important-limits/
+        slow_threshold = 10.0
+
         for f in funcs:
+            start = time.time()
             self._reporter.entering_test(f)
             try:
                 if getattr(f, '_slow', False) and not slow:
@@ -1116,6 +1123,9 @@ class SymPyTests(object):
                         pdb.post_mortem(tr)
             else:
                 self._reporter.test_pass()
+            taken = time.time() - start
+            if taken > slow_threshold:
+                self._reporter.slow_test_functions.append((f.__name__, taken))
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
@@ -1770,6 +1780,9 @@ class PyTestReporter(Reporter):
         self._default_width = 80
         self._split = split
 
+        # TODO: Should this be protected?
+        self.slow_test_functions = []
+
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
         self._write_pos = 0
@@ -2020,6 +2033,12 @@ class PyTestReporter(Reporter):
         if len(self._exceptions) > 0:
             add_text("%d exceptions, " % len(self._exceptions))
         add_text("in %.2f seconds" % (self._t_end - self._t_start))
+
+        if self.slow_test_functions:
+            self.write_center('slowest tests', '_')
+            sorted_slow = sorted(self.slow_test_functions, key=lambda r: r[1])
+            for slow_func_name, taken in sorted_slow[-3:]:
+                print('{} - Took {:.3f} seconds'.format(slow_func_name, taken))
 
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
