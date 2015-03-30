@@ -1,3 +1,31 @@
+"""
+This module exports all latin and greek letters as Symbols, so you can
+conveniently do
+
+    >>> from sympy.abc import x, y
+
+instead of the slightly more clunky-looking
+
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
+
+Caveats
+=======
+
+1. It's all too easy to accidentally type ``from sympy.abc import *``, so if
+you write ``I`` you won't get the imaginary unit but just a symbol without any
+special meaning that just happens to be named ``I``.
+
+2. You cannot define multi-letter symbols, i.e. ```from sympy.abc import foo```
+will be reported as an error.
+This is not a problem in itself, it just means that SymPy code will have both a
+``sympy.abc`` import and a ``symbols`` call, which may confuse readers.
+
+3. Using ``from sympy.abc import x, y`` will confuse static analysis tools
+because they won't find the definition of ``x`` or ``y`` in the source of
+``sympy/abc.py``.
+"""
+
 from __future__ import print_function, division
 
 import string
