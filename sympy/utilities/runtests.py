@@ -1086,6 +1086,7 @@ class SymPyTests(object):
         # Seconds, from human / UX design limits
         # http://www.nngroup.com/articles/response-times-3-important-limits/
         slow_threshold = 10.0
+        fast_threshold = 0.1
 
         for f in funcs:
             start = time.time()
@@ -1126,6 +1127,8 @@ class SymPyTests(object):
             taken = time.time() - start
             if taken > slow_threshold:
                 self._reporter.slow_test_functions.append((f.__name__, taken))
+            if taken < fast_threshold:
+                self._reporter.fast_test_functions.append((f.__name__, taken))
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
@@ -1780,8 +1783,9 @@ class PyTestReporter(Reporter):
         self._default_width = 80
         self._split = split
 
-        # TODO: Should this be protected?
+        # TODO: Should these be protected?
         self.slow_test_functions = []
+        self.fast_test_functions = []
 
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
@@ -2039,6 +2043,13 @@ class PyTestReporter(Reporter):
             sorted_slow = sorted(self.slow_test_functions, key=lambda r: r[1])
             for slow_func_name, taken in sorted_slow[-3:]:
                 print('{} - Took {:.3f} seconds'.format(slow_func_name, taken))
+
+        if self.fast_test_functions:
+            self.write_center('unexpectedly fast tests', '_')
+            sorted_fast = sorted(self.fast_test_functions,
+                                 key=lambda r: r[1])
+            for fast_func_name, taken in sorted_fast:
+                print('{} - Took {:.3f} seconds'.format(fast_func_name, taken))
 
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
