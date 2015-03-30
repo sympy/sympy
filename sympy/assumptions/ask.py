@@ -100,8 +100,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Examples
     ========
 
-    >>> from sympy import ask, Q, pi
-    >>> from sympy.abc import x, y
+    >>> from sympy import ask, Q, pi, symbols
+    >>> x, y = symbols('x y')
     >>> ask(Q.rational(pi))
     False
     >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))

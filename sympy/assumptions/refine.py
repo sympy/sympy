@@ -16,8 +16,8 @@ def refine(expr, assumptions=True):
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
+        >>> from sympy import refine, sqrt, Q, Symbol
+        >>> x = Symbol('x')
         >>> refine(sqrt(x**2), Q.real(x))
         Abs(x)
         >>> refine(sqrt(x**2), Q.positive(x))
@@ -51,7 +51,7 @@ def refine_abs(expr, assumptions):
 
     >>> from sympy import Symbol, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs
-    >>> from sympy.abc import x
+    >>> x = Symbol('x')
     >>> refine_abs(Abs(x), Q.real(x))
     >>> refine_abs(Abs(x), Q.positive(x))
     x
@@ -72,9 +72,9 @@ def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Q
+    >>> from sympy import Q, Symbol, symbols
     >>> from sympy.assumptions.refine import refine_Pow
-    >>> from sympy.abc import x,y,z
+    >>> x, y, z = symbols('x y z')
     >>> refine_Pow((-1)**x, Q.real(x))
     >>> refine_Pow((-1)**x, Q.even(x))
     1
@@ -172,7 +172,7 @@ def refine_exp(expr, assumptions):
 
     >>> from sympy import Symbol, Q, exp, I, pi
     >>> from sympy.assumptions.refine import refine_exp
-    >>> from sympy.abc import x
+    >>> x = Symbol('x')
     >>> refine_exp(exp(pi*I*2*x), Q.real(x))
     >>> refine_exp(exp(pi*I*2*x), Q.integer(x))
     1
@@ -200,9 +200,9 @@ def refine_atan2(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy import Q, Symbol, symbols, refine, atan2
     >>> from sympy.assumptions.refine import refine_atan2
-    >>> from sympy.abc import x, y
+    >>> x, y = symbols('x y')
     >>> refine_atan2(atan2(y,x), Q.real(y) & Q.positive(x))
     atan(y/x)
     >>> refine_atan2(atan2(y,x), Q.negative(y) & Q.negative(x))
@@ -229,7 +229,8 @@ def refine_Relational(expr, assumptions):
 
     >>> from sympy.assumptions.refine import refine_Relational
     >>> from sympy.assumptions.ask import Q
-    >>> from sympy.abc import x
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
     >>> refine_Relational(x<0, ~Q.is_true(x<0))
     False
     """

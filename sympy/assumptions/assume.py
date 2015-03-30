@@ -19,11 +19,11 @@ class AssumptionsContext(set):
     Examples
     ========
 
-    >>> from sympy import AppliedPredicate, Q
+    >>> from sympy import AppliedPredicate, Q, Symbol
     >>> from sympy.assumptions.assume import global_assumptions
     >>> global_assumptions
     AssumptionsContext()
-    >>> from sympy.abc import x
+    >>> x = Symbol('x')
     >>> global_assumptions.add(Q.real(x))
     >>> global_assumptions
     AssumptionsContext([Q.real(x)])
@@ -195,7 +195,8 @@ def assuming(*assumptions):
     ========
 
     >>> from sympy.assumptions import assuming, Q, ask
-    >>> from sympy.abc import x, y
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
 
     >>> print(ask(Q.integer(x + y)))
     None
