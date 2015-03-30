@@ -184,6 +184,10 @@ class exp_polar(ExpBase):
             return self, S(1)
         return ExpBase.as_base_exp(self)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.exp(self.args[0]._sage_())
+
 
 class exp(ExpBase):
     """
