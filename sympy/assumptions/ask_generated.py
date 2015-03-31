@@ -81,7 +81,7 @@ known_facts_cnf = And(
 known_facts_dict = {
     Q.algebraic: set([Q.algebraic, Q.complex]),
     Q.antihermitian: set([Q.antihermitian]),
-    Q.bounded: set([Q.bounded]),
+    Q.finite: set([Q.finite]),
     Q.commutative: set([Q.commutative]),
     Q.complex: set([Q.complex]),
     Q.complex_elements: set([Q.complex_elements]),

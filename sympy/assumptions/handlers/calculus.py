@@ -37,7 +37,7 @@ class AskInfinitesimalHandler(CommonHandler):
         for arg in expr.args:
             if ask(Q.infinitesimal(arg), assumptions):
                 result = True
-            elif ask(Q.bounded(arg), assumptions):
+            elif ask(Q.finite(arg), assumptions):
                 continue
             else:
                 break
@@ -69,7 +69,7 @@ class AskBoundedHandler(CommonHandler):
     >>> a = AskBoundedHandler()
     >>> a.Symbol(x, Q.positive(x)) == None
     True
-    >>> a.Symbol(x, Q.bounded(x))
+    >>> a.Symbol(x, Q.finite(x))
     True
 
     """
@@ -88,11 +88,11 @@ class AskBoundedHandler(CommonHandler):
         >>> a = AskBoundedHandler()
         >>> a.Symbol(x, Q.positive(x)) == None
         True
-        >>> a.Symbol(x, Q.bounded(x))
+        >>> a.Symbol(x, Q.finite(x))
         True
 
         """
-        if Q.bounded(expr) in conjuncts(assumptions):
+        if Q.finite(expr) in conjuncts(assumptions):
             return True
         return None
 
@@ -165,7 +165,7 @@ class AskBoundedHandler(CommonHandler):
         sign = -1  # sign of unknown or infinite
         result = True
         for arg in expr.args:
-            _bounded = ask(Q.bounded(arg), assumptions)
+            _bounded = ask(Q.finite(arg), assumptions)
             if _bounded:
                 continue
             s = ask(Q.positive(arg), assumptions)
@@ -224,7 +224,7 @@ class AskBoundedHandler(CommonHandler):
         """
         result = True
         for arg in expr.args:
-            _bounded = ask(Q.bounded(arg), assumptions)
+            _bounded = ask(Q.finite(arg), assumptions)
             if _bounded:
                 continue
             elif _bounded is None:
@@ -247,8 +247,8 @@ class AskBoundedHandler(CommonHandler):
         Abs()>=1 ** Negative -> Bounded
         Otherwise unknown
         """
-        base_bounded = ask(Q.bounded(expr.base), assumptions)
-        exp_bounded = ask(Q.bounded(expr.exp), assumptions)
+        base_bounded = ask(Q.finite(expr.base), assumptions)
+        exp_bounded = ask(Q.finite(expr.exp), assumptions)
         if base_bounded is None and exp_bounded is None:  # Common Case
             return None
         if base_bounded is False and ask(Q.nonzero(expr.exp), assumptions):
@@ -265,7 +265,7 @@ class AskBoundedHandler(CommonHandler):
 
     @staticmethod
     def log(expr, assumptions):
-        return ask(Q.bounded(expr.args[0]), assumptions)
+        return ask(Q.finite(expr.args[0]), assumptions)
 
     exp = log
 
