@@ -473,10 +473,13 @@ def _test(*paths, **kwargs):
     split = kwargs.get('split', None)
     blacklist = kwargs.get('blacklist', [])
     blacklist = convert_to_native_paths(blacklist)
+    fast_threshold = kwargs.get('fast_threshold', None)
+    slow_threshold = kwargs.get('slow_threshold', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
-    t = SymPyTests(r, kw, post_mortem, seed)
-
+    t = SymPyTests(r, kw, post_mortem, seed,
+                   fast_threshold=fast_threshold,
+                   slow_threshold=slow_threshold)
 
     # Disable warnings for external modules
     import sympy.external
@@ -937,7 +940,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 class SymPyTests(object):
 
     def __init__(self, reporter, kw="", post_mortem=False,
-                 seed=None):
+                 seed=None, fast_threshold=None, slow_threshold=None):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -946,6 +949,20 @@ class SymPyTests(object):
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
         self._seed = seed if seed is not None else random.random()
+
+        # Defaults in seconds, from human / UX design limits
+        # http://www.nngroup.com/articles/response-times-3-important-limits/
+        #
+        # These defaults are *NOT* set in stone as we are measuring different
+        # things, so others feel free to come up with a better yardstick :)
+        if fast_threshold:
+            self._fast_threshold = float(fast_threshold)
+        else:
+            self._fast_threshold = 0.1
+        if slow_threshold:
+            self._slow_threshold = float(slow_threshold)
+        else:
+            self._slow_threshold = 10
 
     def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
@@ -1083,11 +1100,6 @@ class SymPyTests(object):
         if not sort:
             random.shuffle(funcs)
 
-        # Seconds, from human / UX design limits
-        # http://www.nngroup.com/articles/response-times-3-important-limits/
-        slow_threshold = 10.0
-        fast_threshold = 0.1
-
         for f in funcs:
             start = time.time()
             self._reporter.entering_test(f)
@@ -1125,9 +1137,9 @@ class SymPyTests(object):
             else:
                 self._reporter.test_pass()
             taken = time.time() - start
-            if taken > slow_threshold:
+            if taken > self._slow_threshold:
                 self._reporter.slow_test_functions.append((f.__name__, taken))
-            if taken < fast_threshold:
+            if taken < self._fast_threshold:
                 self._reporter.fast_test_functions.append((f.__name__, taken))
         self._reporter.leaving_filename()
 
