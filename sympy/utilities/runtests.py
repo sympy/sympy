@@ -1139,8 +1139,9 @@ class SymPyTests(object):
             taken = time.time() - start
             if taken > self._slow_threshold:
                 self._reporter.slow_test_functions.append((f.__name__, taken))
-            if taken < self._fast_threshold:
-                self._reporter.fast_test_functions.append((f.__name__, taken))
+            if getattr(f, '_slow', False):
+                if taken < self._fast_threshold:
+                    self._reporter.fast_test_functions.append((f.__name__, taken))
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
