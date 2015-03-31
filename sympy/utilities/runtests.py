@@ -2042,14 +2042,14 @@ class PyTestReporter(Reporter):
             self.write_center('slowest tests', '_')
             sorted_slow = sorted(self.slow_test_functions, key=lambda r: r[1])
             for slow_func_name, taken in sorted_slow[-3:]:
-                print('{} - Took {:.3f} seconds'.format(slow_func_name, taken))
+                print('%s - Took %.3f seconds' % (slow_func_name, taken))
 
         if self.fast_test_functions:
             self.write_center('unexpectedly fast tests', '_')
             sorted_fast = sorted(self.fast_test_functions,
                                  key=lambda r: r[1])
             for fast_func_name, taken in sorted_fast:
-                print('{} - Took {:.3f} seconds'.format(fast_func_name, taken))
+                print('%s - Took %.3f seconds' % (fast_func_name, taken))
 
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
