@@ -330,7 +330,7 @@ known_facts = And(
     Implies(Q.real, Q.complex),
     Implies(Q.real, Q.hermitian),
     Equivalent(Q.even, Q.integer & ~Q.odd),
-    Equivalent(Q.extended_real, Q.real | Q.infinity),
+    Equivalent(Q.extended_real, Q.real | Q.infinite),
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
     Implies(Q.integer, Q.rational),
