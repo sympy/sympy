@@ -2055,7 +2055,7 @@ class PyTestReporter(Reporter):
         if self.slow_test_functions:
             self.write_center('slowest tests', '_')
             sorted_slow = sorted(self.slow_test_functions, key=lambda r: r[1])
-            for slow_func_name, taken in sorted_slow[-3:]:
+            for slow_func_name, taken in sorted_slow:
                 print('%s - Took %.3f seconds' % (slow_func_name, taken))
 
         if self.fast_test_functions:
