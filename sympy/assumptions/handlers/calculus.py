@@ -1,6 +1,6 @@
 """
 This module contains query handlers responsible for calculus queries:
-infinitesimal, bounded, etc.
+infinitesimal, finite, etc.
 """
 from __future__ import print_function, division
 
@@ -57,7 +57,7 @@ class AskInfinitesimalHandler(CommonHandler):
 
 class AskFiniteHandler(CommonHandler):
     """
-    Handler for key 'bounded'.
+    Handler for key 'finite'.
 
     Test that an expression is bounded respect to all its variables.
 
