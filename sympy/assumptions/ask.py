@@ -327,6 +327,7 @@ for name, value in _handlers:
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
                     if not attr.startswith('__')]
 known_facts = And(
+    Implies(Q.infinite, ~Q.finite),
     Implies(Q.real, Q.complex),
     Implies(Q.real, Q.hermitian),
     Equivalent(Q.even, Q.integer & ~Q.odd),
