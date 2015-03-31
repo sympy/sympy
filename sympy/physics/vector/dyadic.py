@@ -525,8 +525,8 @@ class Dyadic(object):
             raise TypeError("`f` must be callable.")
 
         out = Dyadic(0)
-        a, b, c = zip(*self.args)
-        out.args = list(zip(list(map(f, a)), b, c))
+        for a, b, c in self.args:
+            out += f(a) * (b|c)
         return out
 
     dot = __and__
