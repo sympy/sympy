@@ -6355,7 +6355,6 @@ def sysode_linear_2eq_order1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
-    l = Symbol('l')
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
