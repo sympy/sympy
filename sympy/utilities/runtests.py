@@ -1018,6 +1018,7 @@ class SymPyTests(object):
         return fix_missing_locations(new_tree)
 
     def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
+        reporter = self._reporter
         funcs = []
         try:
             gl = {'__file__': filename}
@@ -1048,7 +1049,7 @@ class SymPyTests(object):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except ImportError:
-                self._reporter.import_error(filename, sys.exc_info())
+                reporter.import_error(filename, sys.exc_info())
                 return
             clear_cache()
             self._count += 1
@@ -1093,16 +1094,16 @@ class SymPyTests(object):
             if not funcs:
                 return
         except Exception:
-            self._reporter.entering_filename(filename, len(funcs))
+            reporter.entering_filename(filename, len(funcs))
             raise
 
-        self._reporter.entering_filename(filename, len(funcs))
+        reporter.entering_filename(filename, len(funcs))
         if not sort:
             random.shuffle(funcs)
 
         for f in funcs:
             start = time.time()
-            self._reporter.entering_test(f)
+            reporter.entering_test(f)
             try:
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
@@ -1113,7 +1114,7 @@ class SymPyTests(object):
                     f()
             except KeyboardInterrupt:
                 if getattr(f, '_slow', False):
-                    self._reporter.test_skip("KeyboardInterrupt")
+                    reporter.test_skip("KeyboardInterrupt")
                 else:
                     raise
             except Exception:
@@ -1121,28 +1122,28 @@ class SymPyTests(object):
                     signal.alarm(0)  # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
-                    self._reporter.test_fail((t, v, tr))
+                    reporter.test_fail((t, v, tr))
                     if self._post_mortem:
                         pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
-                    self._reporter.test_skip(v)
+                    reporter.test_skip(v)
                 elif t.__name__ == "XFail":
-                    self._reporter.test_xfail()
+                    reporter.test_xfail()
                 elif t.__name__ == "XPass":
-                    self._reporter.test_xpass(v)
+                    reporter.test_xpass(v)
                 else:
-                    self._reporter.test_exception((t, v, tr))
+                    reporter.test_exception((t, v, tr))
                     if self._post_mortem:
                         pdb.post_mortem(tr)
             else:
-                self._reporter.test_pass()
+                reporter.test_pass()
             taken = time.time() - start
             if taken > self._slow_threshold:
-                self._reporter.slow_test_functions.append((f.__name__, taken))
+                reporter.slow_test_functions.append((f.__name__, taken))
             if getattr(f, '_slow', False) and slow:
                 if taken < self._fast_threshold:
-                    self._reporter.fast_test_functions.append((f.__name__, taken))
-        self._reporter.leaving_filename()
+                    reporter.fast_test_functions.append((f.__name__, taken))
+        reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
         def callback(x, y):
