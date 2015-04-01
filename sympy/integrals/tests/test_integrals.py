@@ -138,7 +138,6 @@ def test_integration():
     assert integrate(cos(x), x) == sin(x)
     assert integrate(tan(x), x) == -log(sin(x)**2 - 1) / 2
     assert integrate(exp(x), x) == exp(x)
-    
 
     b = Symbol("b")
     c = Symbol("c")
