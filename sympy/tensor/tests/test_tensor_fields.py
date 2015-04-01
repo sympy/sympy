@@ -1,5 +1,7 @@
-from sympy.tensor import *
-from sympy import sin, symbols, cos, Matrix
+from sympy.matrices import Matrix
+from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, list2tensor
+from sympy.tensor.tensor_fields import df, grad, curl, div, lie_xy, dw, lie_w
+from sympy import symbols, cos, sin
 
 
 def test_df_varlist():

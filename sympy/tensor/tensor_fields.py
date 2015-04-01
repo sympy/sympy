@@ -3,9 +3,9 @@
 from sympy.matrices import Matrix, eye
 from sympy.core import diff, Add, Symbol
 from sympy.simplify import simplify
-from sympy import sqrt
 from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
     matrix2tensor, list2arraypy, list2tensor
+from sympy import sqrt
 
 """Module tensor_fields contains functions for working with the tensor fields:
 -the calculation of the differential and the gradient of the function;
@@ -548,8 +548,6 @@ def lie_xy(X, Y, args, output_type=None):
     return Lie
 
 
-# ---------------- NotNeedElement --------------------------------
-
 def NotNeedElement(_list, index):
     """The function returns a tuple containing the remainder of the input list
     after you remove the element at the specified index."""
@@ -559,8 +557,6 @@ def NotNeedElement(_list, index):
             res.append((_list[i]))
     return (tuple(res))
 
-
-# ---------------- dw --------------------------------
 
 def dw(omega, args):
     """Return a skew-symmetric tensor of type (0,p+1).
@@ -654,8 +650,6 @@ def dw(omega, args):
 
 # Output
     return d_omega
-
-# ---------------- NeedElementK --------------------------------
 
 
 def NeedElementK(_list, index, k):
