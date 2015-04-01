@@ -134,6 +134,11 @@ def test_integration():
     assert integrate(t**2 + 5*t - 8, (t, 0, x)) == x**3/3 + 5*x**2/2 - 8*x
     assert integrate(x**2, x) == x**3/3
     assert integrate((3*t*x)**5, x) == (3*t)**5 * x**6 / 6
+    assert integrate(sin(x), x) == -cos(x)
+    assert integrate(cos(x), x) == sin(x)
+    assert integrate(tan(x), x) == -log(sin(x)**2 - 1) / 2
+    assert integrate(exp(x), x) == exp(x)
+    
 
     b = Symbol("b")
     c = Symbol("c")
