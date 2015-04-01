@@ -446,6 +446,10 @@ def test_acosh():
     # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcCosh/03/01/
     # at specific points
+    x = Symbol('x')
+
+    assert acosh(-x) == acosh(-x)
+
     assert acosh(1) == 0
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
