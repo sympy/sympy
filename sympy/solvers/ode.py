@@ -1495,13 +1495,18 @@ def check_linear_2eq_order1(eq, func, func_coef):
     r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
     r['b1'] = -fc[0,x(t),0]/fc[0,x(t),1] ; r['b2'] = -fc[1,x(t),0]/fc[1,y(t),1]
     r['c1'] = -fc[0,y(t),0]/fc[0,x(t),1] ; r['c2'] = -fc[1,y(t),0]/fc[1,y(t),1]
-    const = [S(0),S(0)]
+    forcing = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
-            if not j.has(t):
-                const[i] += j
-    r['d1'] = const[0]
-    r['d2'] = const[1]
+            if not j.has(x(t), y(t)):
+                forcing[i] += j
+    if not (forcing[0].has(t) or forcing[1].has(t)):
+        # We can handle homogeneous case and simple constant forcings
+        r['d1'] = forcing[0]
+        r['d2'] = forcing[1]
+    else:
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        return None
 
     # Conditions to check for type 6 whose equations are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and
     # Eq(diff(y(t),t), a*[f(t) + a*h(t)]x(t) + a*[g(t) - h(t)]*y(t))
@@ -6370,13 +6375,18 @@ def sysode_linear_2eq_order1(match_):
     r['c'] = -fc[1,x(t),0]/fc[1,y(t),1]
     r['b'] = -fc[0,y(t),0]/fc[0,x(t),1]
     r['d'] = -fc[1,y(t),0]/fc[1,y(t),1]
-    const = [S(0),S(0)]
+    forcing = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
-            if not j.has(t):
-                const[i] += j
-    r['k1'] = const[0]
-    r['k2'] = const[1]
+            if not j.has(x(t), y(t)):
+                forcing[i] += j
+    if not (forcing[0].has(t) or forcing[1].has(t)):
+        r['k1'] = forcing[0]
+        r['k2'] = forcing[1]
+    else:
+        raise NotImplementedError("Only homogeneous problems are supported" +
+                                  " (and constant inhomogeneity)")
+
     if match_['type_of_equation'] == 'type1':
         sol = _linear_2eq_order1_type1(x, y, t, r)
     if match_['type_of_equation'] == 'type2':
