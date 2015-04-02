@@ -81,6 +81,17 @@ def test_linear_2eq_order1():
     assert dsolve(eq10) == sol10
 
 
+def test_linear_2eq_order1_type2_degen():
+    e = [Eq(diff(f(x), x), f(x) + 5),
+         Eq(diff(g(x), x), f(x) + 7)]
+    s1 = [Eq(f(x), C2*exp(x) - 5), Eq(g(x), C2*exp(x) - C1 + 2*x - 5)]
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+
 def test_dsolve_linear_2eq_order1_diag_triangular():
     e = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x))]

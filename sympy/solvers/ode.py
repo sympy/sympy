@@ -6553,13 +6553,14 @@ def _linear_2eq_order1_type2(x, y, t, r):
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
-    elif (r['a']*a[d] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
+    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
         k = r['c']/r['a']
         sigma = r['a'] + r['b']*k
         if sigma != 0:
             sol1 = r['b']*sigma**-1*(r['k1']*k-r['k2'])*t - sigma**-2*(r['a']*r['k1']+r['b']*r['k2'])
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         else:
+            # FIXME: a previous typo fix shows this is not covered by tests
             sol1 = r['b']*(r['k2']-r['k1']*k)*t**2 + r['k1']*t
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         psol = [sol1, sol2]
