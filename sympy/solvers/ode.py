@@ -6363,7 +6363,7 @@ def sysode_linear_2eq_order1(match_):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
 
-    # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
+    # for equations Eq(a1*diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
     r['a'] = -fc[0,x(t),0]/fc[0,x(t),1]
     r['c'] = -fc[1,x(t),0]/fc[1,y(t),1]
