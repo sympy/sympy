@@ -1703,7 +1703,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     f = Wild('f')
     g = Wild('g')
-    u, v = symbols('u, v')
+    u, v = symbols('u, v', cls=Dummy)
     def check_type(x, y):
         r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
         r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
@@ -1778,7 +1778,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
     z = func[2].func
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    u, v, w = symbols('u, v, w')
+    u, v, w = symbols('u, v, w', cls=Dummy)
     a = Wild('a', exclude=[x(t), y(t), z(t), t])
     b = Wild('b', exclude=[x(t), y(t), z(t), t])
     c = Wild('c', exclude=[x(t), y(t), z(t), t])
@@ -6535,8 +6535,8 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
     """
     r['k1'] = -r['k1']; r['k2'] = -r['k2']
-    x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
+        x0, y0 = symbols('x0, y0', cls=Dummy)
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
     elif (r['a']*a[d] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
