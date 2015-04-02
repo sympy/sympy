@@ -81,6 +81,27 @@ def test_linear_2eq_order1():
     assert dsolve(eq10) == sol10
 
 
+def test_dsolve_linear_2eq_order1_diag_triangular():
+    e = [Eq(diff(f(x), x), f(x)),
+         Eq(diff(g(x), x), g(x))]
+    s1 = [Eq(f(x), C2*exp(x)), Eq(g(x), C1*exp(x))]
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+    e = [Eq(diff(f(x), x), 2*f(x)),
+         Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
+    s1 = [Eq(f(x), -5*C1*exp(2*x)),
+          Eq(g(x), 3*C1*exp(2*x) + 8*C2*exp(7*x))];
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)

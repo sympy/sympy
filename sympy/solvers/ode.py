@@ -6474,8 +6474,13 @@ def _linear_2eq_order1_type1(x, y, t, r):
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D > 0:
-            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
-            gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
+            if r['b'].is_zero:
+                # tempting to use this in all cases, but does not guarantee linearly independent eigenvectors
+                gsol1 = C1*(l1 - r['d'] + r['b'])*exp(l1*t) + C2*(l2 - r['d'] + r['b'])*exp(l2*t)
+                gsol2 = C1*(l1 - r['a'] + r['c'])*exp(l1*t) + C2*(l2 - r['a'] + r['c'])*exp(l2*t)
+            else:
+                gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
+                gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
         if D < 0:
             sigma = re(l1)
             if im(l1).is_positive:
