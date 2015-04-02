@@ -7071,6 +7071,8 @@ def _linear_2eq_order2_type4(x, y, t, r):
     peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
     peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
     peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
+    # FIXME: solve for what in what?  Ra, Rb, etc I guess
+    # but then psol not used for anything?
     psol = solve([peq1, peq2, peq3, peq4])
 
     chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)
