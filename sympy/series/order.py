@@ -304,7 +304,7 @@ class Order(Expr):
                not all(p == self.point[0] for p in self.point):
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
-            if order_symbols[0][1] != self.point[0]:
+            if order_symbols and order_symbols[0][1] != self.point[0]:
                 raise NotImplementedError(
                         "Multiplying Order at different points is not supported.")
             order_symbols = dict(order_symbols)
