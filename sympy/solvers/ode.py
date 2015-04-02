@@ -6467,6 +6467,12 @@ def _linear_2eq_order1_type1(x, y, t, r):
     .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
+    # FIXME: at least some of these can fail to give two linearly
+    # independent solutions e.g., because they make assumptions about
+    # zero/nonzero of certain coefficients.  I've "fixed" one and
+    # raised NotImplementedError in another.  I think this should probably
+    # just be re-written in terms of eigenvectors...
+
     l = Dummy('l')
     C1, C2, C3, C4 = symbols('C1:5')
     l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
@@ -6487,6 +6493,8 @@ def _linear_2eq_order1_type1(x, y, t, r):
                 beta = im(l1)
             else:
                 beta = im(l2)
+            if r['b'].is_zero:
+                raise NotImplementedError('b == 0 case not implemented')
             gsol1 = r['b']*exp(sigma*t)*(C1*sin(beta*t)+C2*cos(beta*t))
             gsol2 = exp(sigma*t)*(((C1*(sigma-r['a'])-C2*beta)*sin(beta*t)+(C1*beta+(sigma-r['a'])*C2)*cos(beta*t)))
         if D == 0:
