@@ -6424,7 +6424,7 @@ def _linear_2eq_order1_type1(x, y, t, r):
 
     .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t}
 
-    .. math:: y = c_1 (\lambda_1 - a) e^{\lambda_1 t} + c_2 (\lambda_2 - a) e^{\lambda_2 t}
+    .. math:: y = C_1 (\lambda_1 - a) e^{\lambda_1 t} + C_2 (\lambda_2 - a) e^{\lambda_2 t}
 
     where `C_1` and `C_2` being arbitary constants
 
