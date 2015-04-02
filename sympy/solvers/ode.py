@@ -1286,8 +1286,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     whether given equation is linear or Non-linear based on the coefficients
     of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc
     which itself is a parameter named 'func_coeff'.
-    If the coefficient is constant, then the equation is said to be linear and 'is_linear'
-    returns True otherwise 'is_linear' returns False.
+    Note that "linear" here refers to the operator: terms such as x*diff(x,t) are
+    non-linear, whereas terms like sin(t)*diff(x,t) are still linear operators.
     Second parameter is order of equation, it provides information about order
     of differential equations provided. The third parameters is the number of equation
     in the system.
