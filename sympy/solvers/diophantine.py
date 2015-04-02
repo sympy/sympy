@@ -715,6 +715,11 @@ def _diop_quadratic(var, coeff, t):
             # In this case equation can be transformed into a Pell equation
             #n = symbols("n", integer=True)
 
+            fund_solns = solns_pell
+            solns_pell = set(fund_solns)
+            for X, Y in fund_solns:
+                solns_pell.add((-X, -Y))
+
             a = diop_DN(D, 1)
             T = a[0][0]
             U = a[0][1]
@@ -736,50 +741,33 @@ def _diop_quadratic(var, coeff, t):
                     l.add((x_n, y_n))
 
             else:
-                L = ilcm(S(P[0]).q, ilcm(S(P[1]).q, ilcm(S(P[2]).q, ilcm(S(P[3]).q, ilcm(S(Q[0]).q, S(Q[1]).q)))))
+                L = ilcm(S(P[0]).q, ilcm(S(P[1]).q, ilcm(S(P[2]).q,
+                         ilcm(S(P[3]).q, ilcm(S(Q[0]).q, S(Q[1]).q)))))
 
-                k = 0
-                done = False
+                k = 1
 
                 T_k = T
                 U_k = U
 
-                while not done:
-                    k = k + 1
-
-                    if (T_k - 1) % L == 0 and U_k % L == 0:
-                        done = True
+                while (T_k - 1) % L != 0 or U_k % L != 0:
                     T_k, U_k = T_k*T + D*U_k*U, T_k*U + U_k*T
+                    k += 1
 
-                for soln in solns_pell:
-
-                    X = soln[0]
-                    Y = soln[1]
-
-                    done = False
+                for X, Y in solns_pell:
 
                     for i in range(k):
+                        Z = P*Matrix([X, Y]) + Q
+                        x, y = Z[0], Z[1]
 
-                        X_1 = X*T + D*U*Y
-                        Y_1 = X*U + Y*T
+                        if isinstance(x, Integer) and isinstance(y, Integer):
+                            Xt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t +
+                                  (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ 2
+                            Yt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t -
+                                  (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ (2*sqrt(D))
+                            Zt = P*Matrix([Xt, Yt]) + Q
+                            l.add((Zt[0], Zt[1]))
 
-                        x = (P*Matrix([X_1, Y_1]) + Q)[0]
-                        y = (P*Matrix([X_1, Y_1]) + Q)[1]
-
-                        if is_solution_quad(var, coeff, x, y):
-                            done = True
-
-
-                            x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ 2
-                            y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ (2*sqrt(D))
-
-                            x_n = _mexpand(x_n)
-                            y_n = _mexpand(y_n)
-                            x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
-                            l.add((x_n, y_n))
-
-                        if done:
-                            break
+                        X, Y = X*T + D*U*Y, X*U + Y*T
 
 
     return l
