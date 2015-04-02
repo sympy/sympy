@@ -1328,6 +1328,12 @@ class PrettyPrinter(Printer):
     def _print_nth_root(self, base, expt):
         bpretty = self._print(base)
 
+        # In very simple cases, use a single-char root sign
+        if (self._use_unicode and expt is S.Half
+            and bpretty.height() == 1 and (bpretty.width() == 1
+            or (base.is_Integer and base.is_nonnegative))):
+            return prettyForm(*bpretty.left(u('\N{SQUARE ROOT}')))
+
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
         rootsign = xobj('\\', 1) + _zZ
