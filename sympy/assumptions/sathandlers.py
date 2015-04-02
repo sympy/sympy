@@ -29,7 +29,7 @@ class UnevaluatedOnFree(BooleanFunction):
     A free predicate is a predicate that is not applied, or a combination
     thereof. For example, Q.zero or Or(Q.positive, Q.negative).
 
-    A singly applied predicate is a free predicated applied everywhere to a
+    A singly applied predicate is a free predicate applied everywhere to a
     single expression. For instance, Q.zero(x) and Or(Q.positive(x*y),
     Q.negative(x*y)) are singly applied, but Or(Q.positive(x), Q.negative(y))
     and Or(Q.positive, Q.negative(y)) are not.
@@ -44,7 +44,7 @@ class UnevaluatedOnFree(BooleanFunction):
     predicate, the method apply() is called and returned, or the original
     expression returned if apply() returns None. When apply() is called,
     self.expr is set to the unique expression that the predicates are applied
-    at.  self.pred is set to the free form of the predicate.
+    at. self.pred is set to the free form of the predicate.
 
     The typical usage is to create this class with free predicates and
     evaluate it using .rcall().
@@ -76,6 +76,7 @@ class UnevaluatedOnFree(BooleanFunction):
 
     def apply(self):
         return
+
 
 class AllArgs(UnevaluatedOnFree):
     """
@@ -130,6 +131,7 @@ class AnyArgs(UnevaluatedOnFree):
     def apply(self):
         return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
 
+
 class ExactlyOneArg(UnevaluatedOnFree):
     """
     Class representing a predicate holding on exactly one of the .args of an
@@ -168,6 +170,7 @@ class ExactlyOneArg(UnevaluatedOnFree):
         # to distribute the q across it to get to cnf.
 
         # return And(*[Or(*map(Not, c)) for c in combinations(pred_args, 2)]) & Or(*pred_args)
+
 
 def _old_assump_replacer(obj):
     # Things to be careful of:
@@ -214,6 +217,7 @@ def _old_assump_replacer(obj):
         return obj
     return ret
 
+
 def evaluate_old_assump(pred):
     """
     Replace assumptions of expressions replaced with their values in the old
@@ -224,14 +228,17 @@ def evaluate_old_assump(pred):
     """
     return pred.xreplace(Transform(_old_assump_replacer))
 
+
 class CheckOldAssump(UnevaluatedOnFree):
     def apply(self):
         return Equivalent(self.args[0], evaluate_old_assump(self.args[0]))
+
 
 class CheckIsPrime(UnevaluatedOnFree):
     def apply(self):
         from sympy import isprime
         return Equivalent(self.args[0], isprime(self.expr))
+
 
 class CustomLambda(object):
     """
@@ -241,8 +248,10 @@ class CustomLambda(object):
     """
     def __init__(self, lamda):
         self.lamda = lamda
+
     def rcall(self, *args):
         return self.lamda(*args)
+
 
 class ClassFactRegistry(MutableMapping):
     """
@@ -279,10 +288,13 @@ class ClassFactRegistry(MutableMapping):
     def __repr__(self):
         return repr(self.d)
 
+
 fact_registry = ClassFactRegistry()
+
 
 def register_fact(klass, fact, registry=fact_registry):
     registry[klass] |= set([fact])
+
 
 for klass, fact in [
     (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),

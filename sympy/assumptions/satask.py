@@ -8,6 +8,7 @@ from sympy.logic.boolalg import And
 from sympy.assumptions.ask_generated import known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
 
+
 def satask(proposition, assumptions=True, context=global_assumptions,
     use_known_facts=True, iterations=oo):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
@@ -32,6 +33,7 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         # assumptions, global_assumptions, and relevant_facts are
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
+
 
 def get_relevant_facts(proposition, assumptions=(True,),
     context=global_assumptions, use_known_facts=True, exprs=None, relevant_facts=None):
@@ -62,11 +64,12 @@ def get_relevant_facts(proposition, assumptions=(True,),
 
     return relevant_facts, newexprs - exprs
 
+
 def get_all_relevant_facts(proposition, assumptions=True,
     context=global_assumptions, use_known_facts=True, iterations=oo):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
-    # we stop getting new things.  Hopefully this strategy won't lead to an
+    # we stop getting new things. Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
     relevant_facts = set()
