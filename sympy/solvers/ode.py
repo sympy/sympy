@@ -6509,7 +6509,7 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
     .. math:: x' = ax + by + k1 , y' = cx + dy + k2
 
-    The general solution og this system is given by sum of its particular solution and the
+    The general solution of this system is given by sum of its particular solution and the
     general solution of the corresponding homogeneous system is obtained from type1.
 
     1. When `ad - bc \neq 0`. The particular solution will be
