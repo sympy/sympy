@@ -519,6 +519,16 @@ class Dyadic(object):
         return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
                     for v in self.args], Dyadic(0))
 
+    def applyfunc(self, f):
+        """Apply a function to each component of a Dyadic."""
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        out = Dyadic(0)
+        for a, b, c in self.args:
+            out += f(a) * (b|c)
+        return out
+
     dot = __and__
     cross = __xor__
 
