@@ -375,9 +375,9 @@ def get_subset_from_bitstring(super_set, bitstring):
     ========
 
     >>> from sympy.combinatorics.graycode import get_subset_from_bitstring
-    >>> get_subset_from_bitstring(['a','b','c','d'], '0011')
+    >>> get_subset_from_bitstring(['a', 'b', 'c', 'd'], '0011')
     ['c', 'd']
-    >>> get_subset_from_bitstring(['c','a','c','c'], '1100')
+    >>> get_subset_from_bitstring(['c', 'a', 'c', 'c'], '1100')
     ['c', 'a']
 
     See Also
