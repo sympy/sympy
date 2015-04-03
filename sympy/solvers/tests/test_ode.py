@@ -113,6 +113,29 @@ def test_dsolve_linear_2eq_order1_diag_triangular():
     assert e[1].subs(s).doit()
 
 
+@XFAIL
+def test_sysode_linear_2eq_order1_type1_D_lt_0():
+    e = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*I*g(x))]
+    s = dsolve(e)
+    s = [(l.lhs, l.rhs) for l in s]
+    # bit of a hassle to get these to clean up
+    assert (e[0].lhs - e[0].rhs).subs(s).doit().simplify().doit() == 0
+    assert (e[1].lhs - e[1].rhs).subs(s).doit().simplify().doit() == 0
+
+
+@XFAIL
+def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
+    e = [Eq(diff(f(x), x), -9*I*f(x)),
+         Eq(diff(g(x), x), -4*I*g(x))]
+    s1 = [Eq(f(x), C1*exp(-9*I*x)), Eq(g(x), C2*exp(-4*I*x))]
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
