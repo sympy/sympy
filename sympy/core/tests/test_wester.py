@@ -2093,9 +2093,7 @@ def test_T9():
     assert limit(hyper((1, k), (1,), z/k), k, oo) == exp(z)
 
 
-@XFAIL
 def test_T10():
-    # raises PoleError should return euler-mascheroni constant
     limit(zeta(x) - 1/(x - 1), x, 1)
 
 
@@ -2341,11 +2339,8 @@ def test_V11():
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**Rational(1, 3)))
 
 
-@XFAIL
 def test_V12():
     r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
-    # Correct result in python2.7.4 wrong result in python3.3.1
-    # https://github.com/sympy/sympy/issues/7157
     assert r1 == -1/(tan(x/2) + 2)
 
 
