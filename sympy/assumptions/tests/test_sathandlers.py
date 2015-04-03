@@ -5,7 +5,9 @@ from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,
 
 from sympy.utilities.pytest import raises
 
+
 x, y, z = symbols('x y z')
+
 
 def test_class_handler_registry():
     my_handler_registry = ClassFactRegistry()
@@ -20,6 +22,7 @@ def test_class_handler_registry():
     assert my_handler_registry[Basic] == set()
     assert my_handler_registry[Expr] == set([fact2])
     assert my_handler_registry[Mul] == set([fact1, fact2])
+
 
 def test_UnevaluatedOnFree():
     a = UnevaluatedOnFree(Q.positive)
@@ -49,17 +52,20 @@ def test_UnevaluatedOnFree():
 
     raises(ValueError, lambda: MyUnevaluatedOnFree(Q.positive(x) | Q.negative(y)))
 
+
 def test_AllArgs():
     a = AllArgs(Q.zero)
     b = AllArgs(Q.positive | Q.negative)
     assert a.rcall(x*y) == And(Q.zero(x), Q.zero(y))
     assert b.rcall(x*y) == And(Q.positive(x) | Q.negative(x), Q.positive(y) | Q.negative(y))
 
+
 def test_AnyArgs():
     a = AnyArgs(Q.zero)
     b = AnyArgs(Q.positive & Q.negative)
     assert a.rcall(x*y) == Or(Q.zero(x), Q.zero(y))
     assert b.rcall(x*y) == Or(Q.positive(x) & Q.negative(x), Q.positive(y) & Q.negative(y))
+
 
 def test_CheckOldAssump():
     # TODO: Make these tests more complete
@@ -89,6 +95,7 @@ def test_CheckOldAssump():
 
     assert CheckOldAssump(Q.positive(t2)) == Q.positive(t2)
     assert CheckOldAssump(Q.negative(t2)) == ~Q.negative(t2)
+
 
 def test_ExactlyOneArg():
     a = ExactlyOneArg(Q.zero)
