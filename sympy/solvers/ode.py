@@ -1665,6 +1665,16 @@ def check_linear_3eq_order1(eq, func, func_coef):
     r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
     r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
     r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
+    forcing = [S(0), S(0), S(0)]
+    for i in range(3):
+        for j in Add.make_args(eq[i]):
+            if not j.has(x(t), y(t), z(t)):
+                forcing[i] += j
+    if forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t):
+        # We can handle homogeneous case and simple constant forcings.
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        return None
+
     if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
         if r['c1']==r['d1']==r['d2']==0:
             return 'type1'
@@ -7428,14 +7438,21 @@ def sysode_linear_3eq_order1(match_):
     r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
     r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
     r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    const = [S(0), S(0), S(0)]
-    for i in range(2):
+    forcing = [S(0), S(0), S(0)]
+    for i in range(3):
         for j in Add.make_args(eq[i]):
-            if not (j.has(x(t)) or j.has(y(t))):
-                const[i] += j
-    r['d1'] = -const[0]
-    r['d2'] = -const[1]
-    r['d3'] = -const[2]
+            if not j.has(x(t), y(t), z(t)):
+                forcing[i] += j
+    if not (forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t)):
+        # We can handle homogeneous case and simple constant forcings
+        r['d1'] = -forcing[0]
+        r['d2'] = -forcing[1]
+        r['d3'] = -forcing[2]
+    else:
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        raise NotImplementedError("Only homogeneous problems are supported" +
+                                  " (and constant inhomogeneity)")
+
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r)
     if match_['type_of_equation'] == 'type2':

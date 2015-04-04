@@ -282,6 +282,13 @@ def test_linear_3eq_order1():
     assert dsolve(eq6) == sol6
 
 
+def test_linear_3eq_order1_nonhomog():
+    e = [Eq(diff(f(x), x), -9*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*g(x)),
+         Eq(diff(h(x), x), h(x) + exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
 def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
