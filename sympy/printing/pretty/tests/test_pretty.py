@@ -1709,6 +1709,22 @@ u("√2")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+
+def test_pretty_sqrt_symbol_knob():
+    expr = sqrt(2)
+    ucode_str1 = \
+u"""\
+  ___\n\
+╲╱ 2 \
+"""
+    ucode_str2 = \
+u("√2")
+    assert xpretty(expr, use_unicode=True,
+                   unicode_square_roots=False) == ucode_str1
+    assert xpretty(expr, use_unicode=True,
+                   unicode_square_roots=True) == ucode_str2
+
+
     expr = 2**Rational(1, 3)
     ascii_str = \
 """\
