@@ -51,6 +51,7 @@ def test_Trace_A_plus_B():
 
 
 def test_Trace_MatAdd_doit():
+    # See issue #9028
     X = ImmutableMatrix([[1, 2, 3]]*3)
     Y = MatrixSymbol('Y', 3, 3)
     q = MatAdd(X, 2*X, Y, -3*Y)
@@ -89,15 +90,6 @@ def test_trace_constant_factor():
     assert trace(2*A) == 2*Trace(A)
     X = ImmutableMatrix([[1, 2], [3, 4]])
     assert trace(MatMul(2, X)) == 10
-
-
-@XFAIL
-def test_Trace_MutableMatrix_plus():
-    # Issue #9043, Trace(X) plus anything raises type error
-    X = Matrix([[1, 2], [3, 4]])
-    Y = MatrixSymbol('Y', 2, 2)
-    q = Trace(X) + Trace(Y)
-    assert Trace(X) + Trace(X) == 2*Trace(X)
 
 
 @XFAIL
