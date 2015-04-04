@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify
+from sympy.core import S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -292,6 +292,7 @@ def real_root(arg, n=None):
     sympy.core.power.integer_nthroot
     root, sqrt
     """
+    from sympy import im, Piecewise
     if n is not None:
         try:
             n = as_int(n)
@@ -301,8 +302,8 @@ def real_root(arg, n=None):
             else:
                 raise ValueError
         except ValueError:
-            return root(arg, n)*C.Piecewise(
-                (S.One, ~Equality(C.im(arg), 0)),
+            return root(arg, n)*Piecewise(
+                (S.One, ~Equality(im(arg), 0)),
                 (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
                     Equality(n % 2, 1),
                     arg < 0)),
@@ -547,18 +548,20 @@ class Max(MinMaxBase, Application):
     identity = S.NegativeInfinity
 
     def fdiff( self, argindex ):
+        from sympy import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return C.Heaviside(self.args[argindex] - self.args[1 - argindex])
+                return Heaviside(self.args[argindex] - self.args[1 - argindex])
             newargs = tuple([self.args[i] for i in range(n) if i != argindex])
-            return C.Heaviside(self.args[argindex] - Max(*newargs))
+            return Heaviside(self.args[argindex] - Max(*newargs))
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return Add(*[j*Mul(*[C.Heaviside(j - i) for i in args if i!=j]) \
+        from sympy import Heaviside
+        return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
 
@@ -598,16 +601,18 @@ class Min(MinMaxBase, Application):
     identity = S.Infinity
 
     def fdiff( self, argindex ):
+        from sympy import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return C.Heaviside( self.args[1-argindex] - self.args[argindex] )
+                return Heaviside( self.args[1-argindex] - self.args[argindex] )
             newargs = tuple([ self.args[i] for i in range(n) if i != argindex])
-            return C.Heaviside( Min(*newargs) - self.args[argindex] )
+            return Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return Add(*[j*Mul(*[C.Heaviside(i-j) for i in args if i!=j]) \
+        from sympy import Heaviside
+        return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])

@@ -396,7 +396,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     contained. It then goes through each of the classes/functions to get
     the docstring and doctest coverage of the module. """
 
-    # Import the package and find membmers
+    # Import the package and find members
     m = None
     try:
         __import__(module_path)

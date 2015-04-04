@@ -181,8 +181,7 @@ def test_factorial2():
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
     assert factorial2(tpe - 3).is_integer
-    # This should work, but it doesn't due to ...
-    # assert factorial2(tto - 4).is_integer
+    assert factorial2(tto - 4).is_integer
     assert factorial2(tto - 2).is_integer
     assert factorial2(tf).is_integer is None
     assert factorial2(tfe).is_integer is None
@@ -197,11 +196,9 @@ def test_factorial2():
     assert factorial2(n).is_positive is None
     assert factorial2(tt - 1).is_positive is True
     assert factorial2(tte - 1).is_positive is True
-    # This should work, but it doesn't due to ...
-    # assert factorial2(tpe - 3).is_positive is True
+    assert factorial2(tpe - 3).is_positive is True
     assert factorial2(tpe - 1).is_positive is True
-    # This should work, but it doesn't due to ...
-    # assert factorial2(tto - 2).is_positive is True
+    assert factorial2(tto - 2).is_positive is True
     assert factorial2(tto - 1).is_positive is True
     assert factorial2(tf).is_positive is None
     assert factorial2(tfe).is_positive is None

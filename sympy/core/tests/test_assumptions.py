@@ -1,4 +1,4 @@
-from sympy import I, sqrt, log, exp, sin, asin
+from sympy import I, sqrt, log, exp, sin, asin, factorial
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
@@ -479,7 +479,7 @@ def test_composite():
     assert S(17).is_composite is False
     assert S(4).is_composite is True
     x = Dummy(integer=True, positive=True, prime=False)
-    assert x.is_composite
+    assert x.is_composite is None # x could be 1
     assert (x + 1).is_composite is None
 
 
@@ -879,3 +879,29 @@ def test_issue_8075():
 def test_issue_8642():
     x = Symbol('x', real=True, integer=False)
     assert (x*2).is_integer is None
+
+
+def test_issues_8632_8633_8638_8675_8992():
+    p = Dummy(integer=True, positive=True)
+    nn = Dummy(integer=True, nonnegative=True)
+    assert (p - S.Half).is_positive
+    assert (p - 1).is_nonnegative
+    assert (nn + 1).is_positive
+    assert (-p + 1).is_nonpositive
+    assert (-nn - 1).is_negative
+    prime = Dummy(prime=True)
+    assert (prime - 2).is_nonnegative
+    assert (prime - 3).is_nonnegative is None
+    even = Dummy(positive=True, even=True)
+    assert (even - 2).is_nonnegative
+
+    p = Dummy(positive=True)
+    assert (p/(p + 1) - 1).is_negative
+    assert ((p + 2)**3 - S.Half).is_positive
+    n = Dummy(negative=True)
+    assert (n - 3).is_nonpositive
+
+def test_issue_9115():
+    n = Dummy('n', integer=True, nonnegative=True)
+    assert (factorial(n) >= 1) == True
+    assert (factorial(n) < 1) == False

@@ -66,6 +66,12 @@ def test_Trace_MatPow_doit():
     assert Trace(q).doit() == 29
 
 
+def test_Trace_MutableMatrix_plus():
+    # See issue #9043
+    X = Matrix([[1, 2], [3, 4]])
+    assert Trace(X) + Trace(X) == 2*Trace(X)
+
+
 @XFAIL
 def test_Trace_doit_deep_False():
     X = Matrix([[1, 2], [3, 4]])

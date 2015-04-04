@@ -96,6 +96,9 @@ class fibonacci(Function):
 
     @classmethod
     def eval(cls, n, sym=None):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             n = int(n)
             if n < 0:
@@ -142,6 +145,9 @@ class lucas(Function):
 
     @classmethod
     def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
@@ -948,7 +954,7 @@ class genocchi(Function):
 
     def _eval_rewrite_as_bernoulli(self, n):
         if n.is_integer and n.is_nonnegative:
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+            return (1 - S(2) ** n) * bernoulli(n) * 2
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_positive:
@@ -984,8 +990,9 @@ class genocchi(Function):
 
     def _eval_is_prime(self):
         n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
+        # only G_6 = -3 and G_8 = 17 are prime,
+        # but SymPy does not consider negatives as prime
+        # so only n=8 is tested
         return (n - 8).is_zero
 
 

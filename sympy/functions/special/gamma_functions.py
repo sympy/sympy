@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, C, sympify, oo, pi, Dummy
+from sympy.core import Add, S, sympify, oo, pi, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -591,6 +591,7 @@ class polygamma(Function):
         return self.args[0].is_real
 
     def _eval_aseries(self, n, args0, x, logx):
+        from sympy import Order
         if args0[1] != oo or not \
                 (self.args[0].is_Integer and self.args[0].is_nonnegative):
             return super(polygamma, self)._eval_aseries(n, args0, x, logx)
@@ -603,12 +604,12 @@ class polygamma(Function):
             r = log(z) - 1/(2*z)
             o = None
             if n < 2:
-                o = C.Order(1/z, x)
+                o = Order(1/z, x)
             else:
                 m = ceiling((n + 1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
-                o = C.Order(1/z**(2*m), x)
+                o = Order(1/z**(2*m), x)
             return r._eval_nseries(x, n, logx) + o
         else:
             # proper polygamma function
@@ -622,11 +623,11 @@ class polygamma(Function):
             for k in range(1, m):
                 fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
                 e0 += bernoulli(2*k)*fac/z**(2*k)
-            o = C.Order(1/z**(2*m), x)
+            o = Order(1/z**(2*m), x)
             if n == 0:
-                o = C.Order(1/z, x)
+                o = Order(1/z, x)
             elif n == 1:
-                o = C.Order(1/z**2, x)
+                o = Order(1/z**2, x)
             r = e0._eval_nseries(z, n, logx) + o
             return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
 
@@ -734,8 +735,9 @@ class polygamma(Function):
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
     def _eval_as_leading_term(self, x):
+        from sympy import Order
         n, z = [a.as_leading_term(x) for a in self.args]
-        o = C.Order(z, x)
+        o = Order(z, x)
         if n == 0 and o.contains(1/x):
             return o.getn() * log(x)
         else:
@@ -874,6 +876,7 @@ class loggamma(Function):
             return S.NaN
 
     def _eval_expand_func(self, **hints):
+        from sympy import Sum
         z = self.args[0]
 
         if z.is_Rational:
@@ -885,9 +888,9 @@ class loggamma(Function):
             if p.is_positive and q.is_positive and p < q:
                 k = Dummy("k")
                 if n.is_positive:
-                    return loggamma(p / q) - n*log(q) + C.Sum(log((k - 1)*q + p), (k, 1, n))
+                    return loggamma(p / q) - n*log(q) + Sum(log((k - 1)*q + p), (k, 1, n))
                 elif n.is_negative:
-                    return loggamma(p / q) - n*log(q) + S.Pi*S.ImaginaryUnit*n - C.Sum(log(k*q - p), (k, 1, -n))
+                    return loggamma(p / q) - n*log(q) + S.Pi*S.ImaginaryUnit*n - Sum(log(k*q - p), (k, 1, -n))
                 elif n.is_zero:
                     return loggamma(p / q)
 
@@ -901,6 +904,7 @@ class loggamma(Function):
         return super(loggamma, self)._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
+        from sympy import Order
         if args0[0] != oo:
             return super(loggamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[0]
@@ -909,9 +913,9 @@ class loggamma(Function):
         l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, m)]
         o = None
         if m == 0:
-            o = C.Order(1, x)
+            o = Order(1, x)
         else:
-            o = C.Order(1/z**(2*m - 1), x)
+            o = Order(1/z**(2*m - 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
