@@ -7413,14 +7413,15 @@ def sysode_linear_3eq_order1(match_):
     eq = match_['eq']
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    for i in range(2):
+    for i in range(3):
         eqs = 0
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
-    # for equations Eq(diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
-    # Eq(diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2) and
-    # Eq(a2*diff(y(t),t,t), a3x(t)+b3*y(t)+c3*z(t)+d3)
+    # for equations:
+    #   Eq(g1*diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
+    #   Eq(g2*diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2), and
+    #   Eq(g3*diff(z(t),t), a3*x(t)+b3*y(t)+c3*z(t)+d3)
     r['a1'] = fc[0,x(t),0]/fc[0,x(t),1]; r['a2'] = fc[1,x(t),0]/fc[1,y(t),1];
     r['a3'] = fc[2,x(t),0]/fc[2,z(t),1]
     r['b1'] = fc[0,y(t),0]/fc[0,x(t),1]; r['b2'] = fc[1,y(t),0]/fc[1,y(t),1];
