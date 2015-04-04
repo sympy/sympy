@@ -919,15 +919,8 @@ class acosh(Function):
                     return cst_table[arg]*S.ImaginaryUnit
                 return cst_table[arg]
 
-        if arg is S.ComplexInfinity:
+        if arg.is_infinite:
             return S.Infinity
-
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-            if i_coeff is not None:
-                if _coeff_isneg(i_coeff):
-                    return S.ImaginaryUnit * acos(i_coeff)
-                return S.ImaginaryUnit * acos(-i_coeff)
 
     @staticmethod
     @cacheit
