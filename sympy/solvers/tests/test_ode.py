@@ -324,6 +324,17 @@ def test_linear_3eq_order1():
     assert dsolve(eq6) == sol6
 
 
+@XFAIL
+def test_linear_3eq_order1_diagonal():
+    # code makes assumptions about coefficients being nonzero, breaks when assumptions are not true
+    e = [Eq(diff(f(x), x), f(x)),
+         Eq(diff(g(x), x), g(x)),
+         Eq(diff(h(x), x), h(x))]
+    s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x)), Eq(h(x), C3*exp(x))]
+    s = dsolve(e)
+    assert s == s1
+
+
 def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
