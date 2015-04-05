@@ -78,7 +78,6 @@ def rs_trunc(p1, x, prec):
         p[exp1] = p1[exp1]
     return p
 
-
 def rs_mul(p1, p2, x, prec):
     """
     product of series modulo ``O(x**prec)``
@@ -489,6 +488,109 @@ def rs_exp(p, x, prec):
 
     r = rs_series_from_list(p, c, x, prec)
     return r
+
+def _atan_series(p, iv, prec):
+    ring = p.ring
+    mo = ring(-1)
+    c = [-mo]
+    p2 = p.rs_square(iv, prec)
+    for k in range(1, prec):
+        c.append(mo**k/(2*k + 1))
+    s = p2.rs_series_from_list(c, iv, prec)
+    s = s.rs_mul(p, iv, prec)
+    return s
+
+def rs_atan(p, x, prec):
+    """arctangent of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.atan(x, 8)
+    -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x
+    """
+    if _has_constant_term(p, x):
+        raise NotImplementedError('polynomial must not have constant term in the series variables')
+    ring = p.ring
+    if x in ring.gens:
+        dp = p.diff(x)
+        p1 = rs_square(p, x, prec) + ring(1)
+        p1 = rs_series_inversion(p1, x, prec - 1)
+        p1 = rs_mul(dp, p1, x, prec - 1)
+        return rs_integrate(p1, x)
+    else:
+        return _atan_series(p, x, prec)
+
+def _tan1(p, x, prec):
+    ring = p.ring
+    p1 = zero(0)
+    for precx in giant_steps(prec):
+        tmp = p - p1.atan(x, precx)
+        tmp = tmp.rs_mul(1 + p1.rs_square(), x, precx)
+        p1 += tmp
+    return p1
+
+def tan(p, x, prec):
+    """tangent of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.tan(x, 8)
+    17/315*x**7 + 2/15*x**5 + 1/3*x**3 + x
+    """
+    ring = p.ring
+    if p.has_constant_term(x):
+        raise NotImplementedError('p must not have constant part in series variables')
+    if lp.commuting and lp.ngens == 1:
+        return p._tan1(iv, prec)
+    return p.fun('tan', iv, prec)
+
+def sin(p, x, prec):
+    """
+    sine of a series
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> lp, x = lgens('x', QQ)
+    >>> x.sin(x, 6)
+    1/120*x**5 - 1/6*x**3 + x
+    """
+    ring = x.ring
+    #if not p:
+    #    return lp(0)
+    if _.has_constant_term(p, x):
+        raise NotImplementedError
+       # if not lp.SR:
+       #     raise TaylorEvalError
+       # zm = lp.zero_mon
+       # c = p[zm]
+        #if c.is_number and not c.is_real:
+        #    raise TaylorEvalError
+        #p1 = p - c
+        #return sympy.functions.cos(c)*p1.sin(iv, prec) + sympy.functions.sin(c)*p1.cos(iv, prec)
+    # get a good value
+    if len(p) > 20 and p.ngens == 1:
+        t = (p/2).tan(iv, prec)
+        t2 = t.square_trunc(iv, prec)
+        p1 = (1 + t2).series_inversion(iv, prec)
+        return p1.mul_trunc(2*t, iv, prec)
+    one = lp.ring(1)
+    n = 1
+    c = [0]
+    for k in range(2, prec + 2, 2):
+        c.append(one/n)
+        c.append(0)
+        n *= -k*(k + 1)
+    return p.series_from_list(c, iv, prec)
 
 def rs_newton(p, x, prec):
     """
