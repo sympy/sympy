@@ -38,7 +38,7 @@ class PrettyPrinter(Printer):
         "use_unicode": None,
         "wrap_line": True,
         "num_columns": None,
-        "unicode_square_roots": True,
+        "use_unicode_sqrt_char": True,
     }
 
     def __init__(self, settings=None):
@@ -1330,7 +1330,7 @@ class PrettyPrinter(Printer):
         bpretty = self._print(base)
 
         # In very simple cases, use a single-char root sign
-        if (self._settings['unicode_square_roots'] and self._use_unicode
+        if (self._settings['use_unicode_sqrt_char'] and self._use_unicode
             and expt is S.Half and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
@@ -1962,7 +1962,7 @@ def pretty_print(expr, **settings):
         use full precision. Default to "auto"
     order : bool or string, optional
         set to 'none' for long expressions if slow; default is None
-    unicode_square_roots : bool, optional
+    use_unicode_sqrt_char : bool, optional
         use compact single-character square root symbol (when unambiguous);
         default is True.
 

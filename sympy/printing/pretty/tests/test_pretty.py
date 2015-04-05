@@ -1709,22 +1709,6 @@ u("√2")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-
-def test_pretty_sqrt_symbol_knob():
-    expr = sqrt(2)
-    ucode_str1 = \
-u"""\
-  ___\n\
-╲╱ 2 \
-"""
-    ucode_str2 = \
-u("√2")
-    assert xpretty(expr, use_unicode=True,
-                   unicode_square_roots=False) == ucode_str1
-    assert xpretty(expr, use_unicode=True,
-                   unicode_square_roots=True) == ucode_str2
-
-
     expr = 2**Rational(1, 3)
     ascii_str = \
 """\
@@ -1837,18 +1821,31 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+
+def test_pretty_sqrt_char_knob():
+    # See PR #9234.
+    expr = sqrt(2)
+    ucode_str1 = \
+u("""\
+  ___\n\
+╲╱ 2 \
+""")
+    ucode_str2 = \
+u("√2")
+    assert xpretty(expr, use_unicode=True,
+                   use_unicode_sqrt_char=False) == ucode_str1
+    assert xpretty(expr, use_unicode=True,
+                   use_unicode_sqrt_char=True) == ucode_str2
+
+
+def test_pretty_sqrt_longsymbol_no_sqrt_char():
+    # Do not use unicode sqrt char for long symbols (see PR #9234).
     expr = sqrt(Symbol('C1'))
-    ascii_str = \
-"""\
-  ____\n\
-\/ C1 \
-"""
     ucode_str = \
 u("""\
   ____\n\
 ╲╱ C₁ \
 """)
-    assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
 
