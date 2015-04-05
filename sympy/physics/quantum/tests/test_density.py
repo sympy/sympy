@@ -1,7 +1,7 @@
 from sympy import symbols, S, log
 from sympy.core.trace import Tr
 from sympy.external import import_module
-from sympy.physics.quantum.density import Density, entropy, fidelity
+from sympy.physics.quantum.density import Density, entropy, fidelity, bures_angle, bures_metric
 from sympy.physics.quantum.state import Ket, TimeDepKet
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.represent import represent
@@ -284,3 +284,158 @@ def test_fidelity():
     # unsupported data-type
     x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))
+
+def test_bures_metric():
+    #test with kets
+    up = JzKet(S(1)/2, S(1)/2)
+    down = JzKet(S(1)/2, -S(1)/2)
+    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
+
+    #check with matrices
+    up_dm = represent(up * Dagger(up))
+    down_dm = represent(down * Dagger(down))
+    updown_dm = represent(updown * Dagger(updown))
+
+    assert abs(bures_metric(up_dm, up_dm)) < 1e-3
+    assert abs(bures_metric(up_dm, updown_dm)) < 1/2e-3
+    assert abs(bures_metric(updown_dm, down_dm)) < 1/2e-3
+
+    #check with density
+    up_dm = Density([up, 1.0])
+    down_dm = Density([down, 1.0])
+    updown_dm = Density([updown, 1.0])
+
+    assert abs(bures_metric(up_dm, up_dm)) < 1e-3
+    assert abs(bures_metric(up_dm, updown_dm)) < 1/2e-3
+    assert abs(bures_metric(updown_dm, down_dm)) < 1/2e-3
+
+    #check mixed states with density
+    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
+    d1 = Density([updown, 0.25], [updown2, 0.75])
+    d2 = Density([updown, 0.75], [updown2, 0.25])
+
+    assert abs(bures_metric(d1, d2) - 1) < 1
+    assert abs(bures_metric(d2, d1) - bures_metric(d1, d2)) < 1e-3
+
+    #using qubits/density(pure states)
+    state1 = Qubit('0')
+    state2 = Qubit('1')
+    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
+    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
+
+    state1_dm = Density([state1, 1])
+    state2_dm = Density([state2, 1])
+    state3_dm = Density([state3, 1])
+
+    assert bures_metric(state1_dm, state1_dm) == 0
+    assert bures_metric(state1_dm, state2_dm) == 1
+    assert abs(bures_metric(state1_dm, state3_dm) - 1/sqrt(2)) < 1
+    assert abs(bures_metric(state3_dm, state2_dm) - 1/sqrt(2)) < 1
+
+    #using qubits/density(mixed states)
+    d1 = Density([state3, 0.70], [state4, 0.30])
+    d2 = Density([state3, 0.20], [state4, 0.80])
+    assert abs(bures_metric(d1, d1) - 1)  < 1
+    assert abs(bures_metric(d1, d2) - 0.996) < 1
+    assert abs(bures_metric(d1, d2) - bures_metric(d2, d1)) < 1e-10
+
+    #TODO: test for invalid arguments
+    # non-square matrix
+    mat1 = [[0, 0],
+            [0, 0],
+            [0, 0]]
+
+    mat2 = [[0, 0],
+            [0, 0]]
+
+    raises(ValueError, lambda: bures_metric(mat1, mat2))
+
+    # unequal dimensions
+    mat1 = [[0, 0],
+            [0, 0]]
+    mat2 = [[0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]]
+    raises(ValueError, lambda: bures_metric(mat1, mat2))
+
+    # unsupported data-type
+    x, y = 1, 2  # random values that is not a matrix
+    raises(ValueError, lambda: bures_metric(x, y))
+
+
+def test_bures_angle():
+    #test with kets
+    up = JzKet(S(1)/2, S(1)/2)
+    down = JzKet(S(1)/2, -S(1)/2)
+    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
+
+    #check with matrices
+    up_dm = represent(up * Dagger(up))
+    down_dm = represent(down * Dagger(down))
+    updown_dm = represent(updown * Dagger(updown))
+
+    assert abs(bures_angle(up_dm, up_dm)) < 1e-3
+    assert abs(bures_angle(up_dm, updown_dm)) < 1/2e-3
+    assert abs(bures_angle(updown_dm, down_dm)) < 1/2e-3
+
+    #check with density
+    up_dm = Density([up, 1.0])
+    down_dm = Density([down, 1.0])
+    updown_dm = Density([updown, 1.0])
+
+    assert abs(bures_angle(up_dm, up_dm)) < 1e-3
+    assert abs(bures_angle(up_dm, updown_dm)) < 1/2e-3
+    assert abs(bures_angle(updown_dm, down_dm)) < 1/2e-3
+
+    #check mixed states with density
+    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
+    d1 = Density([updown, 0.25], [updown2, 0.75])
+    d2 = Density([updown, 0.75], [updown2, 0.25])
+
+    assert abs(bures_angle(d1, d2) - 1) < 1
+    assert abs(bures_angle(d2, d1) - bures_angle(d1, d2)) < 1e-3
+
+    #using qubits/density(pure states)
+    state1 = Qubit('0')
+    state2 = Qubit('1')
+    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
+    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
+
+    state1_dm = Density([state1, 1])
+    state2_dm = Density([state2, 1])
+    state3_dm = Density([state3, 1])
+
+    assert bures_angle(state1_dm, state1_dm) == 0
+    assert bures_angle(state1_dm, state2_dm) == 1
+    assert abs(bures_angle(state1_dm, state3_dm) - 1/sqrt(2)) < 1
+    assert abs(bures_angle(state3_dm, state2_dm) - 1/sqrt(2)) < 1
+
+    #using qubits/density(mixed states)
+    d1 = Density([state3, 0.70], [state4, 0.30])
+    d2 = Density([state3, 0.20], [state4, 0.80])
+    assert abs(bures_angle(d1, d1) - 1)  < 1
+    assert abs(bures_angle(d1, d2) - 0.996) < 1
+    assert abs(bures_angle(d1, d2) - bures_angle(d2, d1)) < 1e-10
+
+    #TODO: test for invalid arguments
+    # non-square matrix
+    mat1 = [[0, 0],
+            [0, 0],
+            [0, 0]]
+
+    mat2 = [[0, 0],
+            [0, 0]]
+
+    raises(ValueError, lambda: bures_angle(mat1, mat2))
+
+    # unequal dimensions
+    mat1 = [[0, 0],
+            [0, 0]]
+    mat2 = [[0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]]
+    raises(ValueError, lambda: bures_angle(mat1, mat2))
+
+    # unsupported data-type
+    x, y = 1, 2  # random values that is not a matrix
+    raises(ValueError, lambda: bures_angle(x, y))
