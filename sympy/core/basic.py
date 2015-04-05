@@ -1552,23 +1552,24 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Examples
         ========
+	>>> from sympy.abc import x
+	
+	Unspecified pattern:
 
-        >>> from sympy import sin, exp
-        >>> from sympy.abc import x
+	>>> sin(x).rewrite(exp)
+	-I*(exp(I*x) - exp(-I*x))/2
+	
+	Pattern as a single function:
 
-        Unspecified pattern:
-        >>> sin(x).rewrite(exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+	>>> sin(x).rewrite(sin, exp)
+	-I*(exp(I*x) - exp(-I*x))/2
+	
+	Pattern as a list of functions:
 
-        Pattern as a single function:
-        >>> sin(x).rewrite(sin, exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+	>>> sin(x).rewrite([sin, ], exp)
+	-I*(exp(I*x) - exp(-I*x))/2
 
-        Pattern as a list of functions:
-        >>> sin(x).rewrite([sin, ], exp)
-        -I*(exp(I*x) - exp(-I*x))/2
-
-        """
+                """
         if not args:
             return self
         else:
