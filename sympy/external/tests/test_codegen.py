@@ -178,7 +178,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     elif language == "C":
         f_name = "main.c"
     else:
-        raise NotImplemented(
+        raise NotImplementedError(
             "FIXME: filename extension unknown for language: %s" % language)
 
     with open(f_name, "w") as f:
