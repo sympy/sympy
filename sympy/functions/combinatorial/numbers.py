@@ -424,6 +424,8 @@ class bell(Function):
 
     @classmethod
     def eval(cls, n, k_sym=None, symbols=None):
+        if n is S.Infinity:
+            return S.Infinity
         if n.is_Integer and n.is_nonnegative:
             if k_sym is None:
                 return Integer(cls._bell(int(n)))

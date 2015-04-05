@@ -68,6 +68,7 @@ def test_fibonacci():
 
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
+    assert bell(oo) == S.Infinity
 
     assert bell(0, x) == 1
     assert bell(1, x) == x
