@@ -1557,14 +1557,17 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x
 
         Unspecified pattern:
+        
         >>> sin(x).rewrite(exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
         Pattern as a single function:
+        
         >>> sin(x).rewrite(sin, exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
         Pattern as a list of functions:
+        
         >>> sin(x).rewrite([sin, ], exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
