@@ -373,7 +373,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 
     if isinstance(eq, Expr):
         eq = [eq]
-    elif not is_iterable(eq):
+    elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
     atom_set = set().union(*[i.free_symbols for i in eq])
@@ -1893,7 +1893,7 @@ def checksysodesol(eqs, sols, func=None):
 
     >>> from sympy import Eq, diff, symbols, sin, cos, exp, sqrt, S
     >>> from sympy.solvers.ode import checksysodesol
-    >>> C1, C2 = symbols('C1:3')
+    >>> C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(diff(x(t),t), x(t) + y(t) + 17), Eq(diff(y(t),t), -2*x(t) + y(t) + 12))
@@ -6349,7 +6349,7 @@ def lie_heuristic_linear(match, comp=False):
 
 
 def sysode_linear_2eq_order1(match_):
-    C1, C2, C3, C4 = symbols('C1:5')
+    
     x = match_['func'][0].func
     y = match_['func'][1].func
     func = match_['func']
@@ -6363,6 +6363,7 @@ def sysode_linear_2eq_order1(match_):
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
 
     # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
@@ -6569,7 +6570,7 @@ def _linear_2eq_order1_type3(x, y, t, r):
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     F = Integral(r['a'], t)
     G = Integral(r['b'], t)
     sol1 = exp(F)*(C1*exp(G) + C2*exp(-G))
@@ -6593,7 +6594,7 @@ def _linear_2eq_order1_type4(x, y, t, r):
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     if r['b'] == -r['c']:
         F = exp(Integral(r['a'], t))
         G = Integral(r['b'], t)
@@ -6623,7 +6624,7 @@ def _linear_2eq_order1_type5(x, y, t, r):
     .. math:: u'(T) = v , v'(T) = au + bv
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     u, v = symbols('u, v', function=True)
     T = Symbol('T')
     if not cancel(r['c']/r['b']).has(t):
@@ -6662,7 +6663,7 @@ def _linear_2eq_order1_type6(x, y, t, r):
     `x`, we can obtain `y` by substituting the value of `x` in second equation.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     p = 0
     q = 0
     p1 = cancel(r['c']/cancel(r['c']/r['d']).as_numer_denom()[0])
@@ -6728,7 +6729,7 @@ def _linear_2eq_order1_type7(x, y, t, r):
     .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     e1 = r['a']*r['b']*r['c'] - r['b']**2*r['c'] + r['a']*diff(r['b'],t) - diff(r['a'],t)*r['b']
     e2 = r['a']*r['c']*r['d'] - r['b']*r['c']**2 + diff(r['c'],t)*r['d'] - r['c']*diff(r['d'],t)
     m1 = r['a']*r['b'] + r['b']*r['d'] + diff(r['b'],t)
@@ -6755,7 +6756,6 @@ def _linear_2eq_order1_type7(x, y, t, r):
 
 
 def sysode_linear_2eq_order2(match_):
-    C1, C2, C3, C4 = symbols('C1:5')
     x = match_['func'][0].func
     y = match_['func'][1].func
     func = match_['func']
@@ -6768,6 +6768,7 @@ def sysode_linear_2eq_order2(match_):
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],2]
         eq[i] = eqs
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     # for equations Eq(diff(x(t),t,t), a1*diff(x(t),t)+b1*diff(y(t),t)+c1*x(t)+d1*y(t)+e1)
     # and Eq(a2*diff(y(t),t,t), a2*diff(x(t),t)+b2*diff(y(t),t)+c2*x(t)+d2*y(t)+e2)
     r['a1'] = -fc[0,x(t),1]/fc[0,x(t),2] ; r['a2'] = -fc[1,x(t),1]/fc[1,y(t),2]
@@ -6983,7 +6984,7 @@ def _linear_2eq_order2_type3(x, y, t, r):
     .. math:: \alpha = \frac{1}{2} a + \frac{1}{2} \sqrt{a^2 + 4b}, \beta = \frac{1}{2} a - \frac{1}{2} \sqrt{a^2 + 4b}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     if r['b1']**2 - 4*r['c1'] > 0:
         r['a'] = r['b1'] ; r['b'] = -r['c1']
         alpha = r['a']/2 + sqrt(r['a']**2 + 4*r['b'])/2
@@ -7038,7 +7039,7 @@ def _linear_2eq_order2_type4(x, y, t, r):
     .. math:: y = C_1 (\lambda_1^{2} + a_1 \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + a_1 \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + a_1 \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + a_1 \lambda_4 + c_1) e^{\lambda_4 t}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     Ra, Ca, Rb, Cb = symbols('Ra, Ca, Rb, Cb')
     a1 = r['a1'] ; a2 = r['a2']
@@ -7107,7 +7108,7 @@ def _linear_2eq_order2_type5(x, y, t, r):
     where `C_3` and `C_4` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     r['a'] = -r['d1'] ; r['b'] = -r['c2']
     mul = sqrt(abs(r['a']*r['b']))
     if r['a']*r['b'] > 0:
@@ -7143,7 +7144,7 @@ def _linear_2eq_order2_type6(x, y, t, r):
     of `z_1` and `z_2` by solving the differential equation and substuting the result.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     k = Symbol('k')
     z = Function('z')
     num, denum = cancel((r['c1']*x(t) + r['d1']*y(t))/(r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
@@ -7189,7 +7190,7 @@ def _linear_2eq_order2_type7(x, y, t, r):
     where `C_1,...,C_4` are arbitrary constants and `F(t) = \int f(t) \,dt`
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     k = Symbol('k')
     num, denum = cancel((r['a1']*x(t) + r['b1']*y(t))/(r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
     f = r['a1']/num.coeff(x(t))
@@ -7244,7 +7245,7 @@ def _linear_2eq_order2_type8(x, y, t, r):
     where `C_3` and `C_4` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     num, denum = cancel(r['d1']/r['c2']).as_numer_denom()
     f = -r['d1']/num
     a = num
@@ -7302,7 +7303,7 @@ def _linear_2eq_order2_type9(x, y, t, r):
     .. math:: y = C_1 (\lambda_1^{2} + (a_1 - 1) \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + (a_1 - 1) \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + (a_1 - 1) \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + (a_1 - 1) \lambda_4 + c_1) e^{\lambda_4 t}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     k = Symbol('k')
     a1 = -r['a1']*t; a2 = -r['a2']*t
     b1 = -r['b1']*t; b2 = -r['b2']*t
@@ -7341,7 +7342,7 @@ def _linear_2eq_order2_type10(x, y, t, r):
     constant-coefficient second-order linear homogeneous differential equations.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     u, v = symbols('u, v', function=True)
     T = Symbol('T')
     p = Wild('p', exclude=[t, t**2])
@@ -7384,7 +7385,7 @@ def _linear_2eq_order2_type11(x, y, t, r):
     where `C_3` and `C_4` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(Eq(x(t)), num=4)
     u, v = symbols('u, v', function=True)
     f = -r['c1'] ; g = -r['d1']
     h = -r['c2'] ; p = -r['d2']
@@ -7394,7 +7395,7 @@ def _linear_2eq_order2_type11(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def sysode_linear_3eq_order1(match_):
-    C1, C2, C3, C4 = symbols('C1:5')
+    
     x = match_['func'][0].func
     y = match_['func'][1].func
     z = match_['func'][2].func
@@ -7408,6 +7409,7 @@ def sysode_linear_3eq_order1(match_):
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     # for equations Eq(diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
     # Eq(diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2) and
     # Eq(a2*diff(y(t),t,t), a3x(t)+b3*y(t)+c3*z(t)+d3)
@@ -7501,7 +7503,7 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
     .. math:: a C_1 + b C_2 + c C_3 = 0
 
     """
-    C0, C1, C2, C3 = symbols('C0:4')
+    C0, C1, C2, C3 = get_numbered_constants(Eq(x(t)), num=4, start=0)
     a = -r['c2']; b = -r['a3']; c = -r['b1']
     k = sqrt(a**2 + b**2 + c**2)
     C3 = (-a*C1 - b*C2)/c
@@ -7540,7 +7542,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     .. math:: a^2 C_1 + b^2 C_2 + c^2 C_3 = 0
 
     """
-    C0, C1, C2, C3 = symbols('C0:4')
+    C0, C1, C2, C3 = get_numbered_constants(Eq(x(t)), num=4, start=0)
     c = sqrt(r['b1']*r['c2'])
     b = sqrt(r['b1']*r['a3'])
     a = sqrt(r['c2']*r['a3'])
@@ -7763,7 +7765,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     where `C_1` and `C_2` are arbitrary constants.
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
     u, v, phi = symbols('u, v, phi', function=True)
@@ -7808,7 +7810,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     where `C_1` and `C_2` are arbitrary constants.
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
     u, v, phi = symbols('u, v, phi', function=True)
@@ -7846,7 +7848,8 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     .. math:: \int \frac{1}{F(x,y(x,C_1))} \,dx = t + C_1
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
+    #C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', function=True)
     f = Wild('f')
     g = Wild('g')
@@ -7854,6 +7857,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     r2 = eq[1].match(diff(y(t),t) - g)
     F = r1[f].subs(x(t),u).subs(y(t),v)
     G = r2[g].subs(x(t),u).subs(y(t),v)
+  #  C1, C2, C3, C4 = get_numbered_constants
     sol2r = dsolve(Eq(diff(v(u),u), G.subs(v,v(u))/F.subs(v,v(u))))
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v, sol2s.rhs), u).doit() - t - C2, u)
@@ -7882,7 +7886,7 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     arrives at a firs-order equation for determining `y` (resp., `x` ).
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v')
     f = Wild('f')
     g = Wild('g')
@@ -7929,7 +7933,7 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
     `(i)` and `(ii)`.
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     f = Wild('f')
     g = Wild('g')
     def check_type(x, y):
@@ -7998,7 +8002,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8060,7 +8064,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
