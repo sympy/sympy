@@ -403,7 +403,7 @@ def matrix_to_qubit(matrix):
         sympy matrices, numpy matrices and scipy.sparse sparse matrices.
 
     Examples
-    --------
+    ========
 
     Represent a state and then go back to its qubit form:
 

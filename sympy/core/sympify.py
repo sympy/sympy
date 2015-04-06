@@ -28,8 +28,8 @@ class CantSympify(object):
     """
     Mix in this trait to a class to disallow sympification of its instances.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.core.sympify import sympify, CantSympify
 

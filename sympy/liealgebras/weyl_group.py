@@ -30,8 +30,9 @@ class WeylGroup(Basic):
         different generating reflections.  This function returns them as
         a list.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("F4")
         >>> c.generators()
@@ -51,8 +52,9 @@ class WeylGroup(Basic):
         the rank of the Lie algebra.  For types F and G,
         the order is fixed.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("D4")
         >>> c.group_order()
@@ -123,8 +125,9 @@ class WeylGroup(Basic):
         the specified element, and then finding what power of the matrix is the
         identity.  It then returns this power.
 
-        Example
+        Examples
         ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> b = WeylGroup("B4")
         >>> b.element_order('r1*r4*r2')
@@ -223,8 +226,9 @@ class WeylGroup(Basic):
         This method uses the standard representation for all the generating
         reflections.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> f = WeylGroup("F4")
         >>> f.matrix_form('r2*r3')
@@ -373,8 +377,9 @@ class WeylGroup(Basic):
         m(i, j) is 3.  If there are two edges, the order m(i, j) is 4, and if there
         are three edges, the order m(i, j) is 6.
 
-        Example
+        Examples
         ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("B3")
         >>> print(c.coxeter_diagram())

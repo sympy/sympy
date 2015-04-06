@@ -2125,6 +2125,7 @@ class TensorHead(Basic):
     Let's define `F`, an antisymmetric tensor, we have to assign an
     antisymmetric matrix to it, because `[[2]]` stands for the Young tableau
     representation of an antisymmetric set of two elements:
+
     >>> F = tensorhead('A', [Lorentz, Lorentz], [[2]])
     >>> F(-i0, -i1).data = [
     ... [0, Ex/c, Ey/c, Ez/c],

@@ -238,6 +238,7 @@ def _mr_safe_helper(_s):
     by a previous test.
 
     e.g.
+
     >>> from sympy.ntheory.primetest import _mr_safe_helper
     >>> print(_mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])"))
      # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]

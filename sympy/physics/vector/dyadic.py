@@ -432,7 +432,7 @@ class Dyadic(object):
             The matrix that gives the 2D tensor form.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame, Vector
