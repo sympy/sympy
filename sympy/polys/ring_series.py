@@ -581,13 +581,13 @@ def rs_atan(p, x, prec):
 def _tan1(p, x, prec):
     ring = p.ring
     p1 = ring(0)
-    for precx in giant_steps(prec):
-        tmp = p - p1.rs_atan(x, precx)
-        tmp = tmp.rs_mul(1 + p1.rs_square(), x, precx)
+    for precx in _giant_steps(prec):
+        tmp = p - rs_atan(p1, x, precx)
+        tmp = rs_mul(tmp, 1 + p1.square(), x, precx)
         p1 += tmp
     return p1
 
-def tan(p, x, prec):
+def rs_tan(p, x, prec):
     """tangent of a series
 
     Examples
@@ -606,7 +606,7 @@ def tan(p, x, prec):
         return _tan1(p, x, prec)
     return fun(p, 'tan', x, prec)
 
-def sin(p, x, prec):
+def rs_sin(p, x, prec):
     """
     sine of a series
     Examples
@@ -619,32 +619,24 @@ def sin(p, x, prec):
     1/120*x**5 - 1/6*x**3 + x
     """
     ring = x.ring
-    #if not p:
-    #    return lp(0)
-    if _.has_constant_term(p, x):
+    if not p:
+        return ring(0)
+    if _has_constant_term(p, x):
         raise NotImplementedError
-       # if not lp.SR:
-       #     raise TaylorEvalError
-       # zm = lp.zero_mon
-       # c = p[zm]
-        #if c.is_number and not c.is_real:
-        #    raise TaylorEvalError
-        #p1 = p - c
-        #return sympy.functions.cos(c)*p1.sin(iv, prec) + sympy.functions.sin(c)*p1.cos(iv, prec)
     # get a good value
     if len(p) > 20 and p.ngens == 1:
-        t = (p/2).tan(iv, prec)
-        t2 = t.square_trunc(iv, prec)
-        p1 = (1 + t2).series_inversion(iv, prec)
-        return p1.mul_trunc(2*t, iv, prec)
-    one = lp.ring(1)
+        t = rs_tan(p/2, x, prec)
+        t2 = rs_square(t, x, prec)
+        p1 = rs_series_inversion(1 + t2, x, prec)
+        return rs_mul(p1, 2*t, x, prec)
+    one = ring(1)
     n = 1
     c = [0]
     for k in range(2, prec + 2, 2):
         c.append(one/n)
         c.append(0)
         n *= -k*(k + 1)
-    return p.series_from_list(c, iv, prec)
+    return rs_series_from_list(p, c, x, prec)
 
 def rs_newton(p, x, prec):
     """
