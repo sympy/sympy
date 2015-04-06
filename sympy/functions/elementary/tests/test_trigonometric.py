@@ -1376,7 +1376,6 @@ def test_acsc():
 
 
 @XFAIL
-@slow
 def test_csc_rewrite_failing():
     # Move these 2 tests to test_csc() once bugs fixed
     # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth

@@ -481,7 +481,6 @@ def test_H16():
         + x**5 + 1)*(x**40 - x**30 + x**20 - x**10 + 1))
 
 
-@slow
 def test_H17():
     assert simplify(factor(expand(p1 * p2)) - p1*p2) == 0
 
@@ -528,7 +527,6 @@ def test_H24():
         (x - phi)*(x + 1 - phi)*(x - 1 + phi)*(x + phi)
 
 
-@slow
 def test_H25():
     e = (x - 2*y**2 + 3*z**3) ** 20
     assert factor(expand(e)) == e
@@ -959,7 +957,6 @@ def test_M21():
     assert solve(x + sqrt(x) - 2) == [1]
 
 
-@slow
 def test_M22():
     assert solve(2*sqrt(x) + 3*x**R(1, 4) - 2) == [R(1, 16)]
 
@@ -1046,7 +1043,6 @@ def test_M37():
     assert solve([x + y + z - 6, 2*x + y + 2*z - 10, x + 3*y + z - 10 ]) == {x: -z + 4, y: 2}
 
 
-@slow
 def test_M38():
     variabes = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
     system = [
@@ -1895,7 +1891,6 @@ def test_R14():
     assert T.simplify() == sin(n*x)**2/sin(x)
 
 
-@slow
 @XFAIL
 def test_R15():
     n, k = symbols('n k', integer=True, positive=True)

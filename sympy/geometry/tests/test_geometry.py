@@ -743,6 +743,7 @@ def test_line3d():
     assert Line3D((0, 0, 0), (x, y, z)).contains((2*x, 2*y, 2*z))
 
 
+@slow
 def test_plane():
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
@@ -909,6 +910,7 @@ def test_plane():
            '[Point3D(4.0, -0.89, 2.3)]'
 
 
+@slow
 def test_ellipse_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
@@ -1697,7 +1699,6 @@ def test_issue_2941():
     _check()
 
 
-@slow
 def test_symbolic_intersect():
     # Issue 7814.
     circle = Circle(Point(x, 0), y)
