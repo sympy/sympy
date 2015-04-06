@@ -418,6 +418,60 @@ def rs_integrate(self, x):
         p1[e] = self[expv]/(expv[n] + 1)
     return p1
 
+def fun(p, f, *args):
+        """Function of a multivariate series computed by substitution
+
+          p: multivariate series
+          f: method name or function
+          args[:-2]: arguments of f, apart from the first one
+          args[-2] = iv: names of the series variables
+          args[-1] = prec: list of the precisions of the series variables
+
+        The case with f method name is used to compute tan and nth_root
+        of a multivariate series:
+
+          fun(p, 'tan', iv, prec)
+          compute tan(_x, iv, prec), then substitute _x with p
+
+          fun(p, 'nth_root', n, iv, prec)
+          compute (_x + p[0]).nth_root(n, '_x', prec)), then substitute _x
+          with p - p[0]
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.lpoly import lgens
+        >>> lp, x, y = lgens('x, y', QQ)
+        >>> p = x + x*y + x**2*y + x**3*y**2
+        >>> p.fun('_tan1', 'x', 4)
+        1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
+        """
+        ring = p.ring
+        ring1, _x = ring([_x], ring.ring, ring.order)
+        h = int(args[-1])
+        args1 = args[:-2] + ('_x', h)
+        zm = ring1(0)
+        # separate the constant term of the series
+        # compute the univariate series f(_x, .., 'x', sum(nv))
+        # or _x.f(..., 'x', sum(nv)
+        if zm in p:
+            x1 = _x + p[zm]
+            p1 = p - p[zm]
+        else:
+            x1 = _x
+            p1 = p
+        if isinstance(f, str):
+            q = getattr(x1, f)(*args1)
+        else:
+            q = f(x1, *args1)
+        a = sorted(q.iteritems())
+        c = [0]*h
+        for x in a:
+            c[x[0][0]] = x[1]
+        p1 = _series_from_list(p, c, args[-2], args[-1])
+        return p1
+
 def rs_log(p, x, prec):
     """
     logarithm of ``p`` modulo ``O(x**prec)``
@@ -493,11 +547,11 @@ def _atan_series(p, iv, prec):
     ring = p.ring
     mo = ring(-1)
     c = [-mo]
-    p2 = p.rs_square(iv, prec)
+    p2 = rs_square(p, iv, prec)
     for k in range(1, prec):
         c.append(mo**k/(2*k + 1))
-    s = p2.rs_series_from_list(c, iv, prec)
-    s = s.rs_mul(p, iv, prec)
+    s = rs_series_from_list(p2, c, iv, prec)
+    s = rs_mul(s, p, iv, prec)
     return s
 
 def rs_atan(p, x, prec):
@@ -526,9 +580,9 @@ def rs_atan(p, x, prec):
 
 def _tan1(p, x, prec):
     ring = p.ring
-    p1 = zero(0)
+    p1 = ring(0)
     for precx in giant_steps(prec):
-        tmp = p - p1.atan(x, precx)
+        tmp = p - p1.rs_atan(x, precx)
         tmp = tmp.rs_mul(1 + p1.rs_square(), x, precx)
         p1 += tmp
     return p1
@@ -546,11 +600,11 @@ def tan(p, x, prec):
     17/315*x**7 + 2/15*x**5 + 1/3*x**3 + x
     """
     ring = p.ring
-    if p.has_constant_term(x):
+    if _has_constant_term(p, x):
         raise NotImplementedError('p must not have constant part in series variables')
-    if lp.commuting and lp.ngens == 1:
-        return p._tan1(iv, prec)
-    return p.fun('tan', iv, prec)
+    if ring.ngens == 1:
+        return _tan1(p, x, prec)
+    return fun(p, 'tan', x, prec)
 
 def sin(p, x, prec):
     """
