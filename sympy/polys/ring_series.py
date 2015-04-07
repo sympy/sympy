@@ -431,21 +431,19 @@ def fun(p, f, *args):
     The case with f method name is used to compute tan and nth_root
     of a multivariate series:
 
-      fun(p, tan, iv, prec)
-      compute _x.tan(iv, prec), then substitute _x with p
-
-      fun(p, nth_root, n, iv, prec)
-      compute (_x + p[0]).nth_root(n, '_x', prec)), then substitute _x
-      with p - p[0]
+      fun(p, tan, iv, prec):
+      tan series is first computed for a dummy variable _x, ie, tan(_x, iv, prec)
+      Then we substitute _x with p to get the desired series
 
     Examples
     ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import fun, _tan1
     >>> R, x, y = ring('x, y', QQ)
     >>> p = x + x*y + x**2*y + x**3*y**2
-    >>> fun(p, _tan1, 'x', 4)
+    >>> fun(p, _tan1, x, 4)
     1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
     """
     _ring = p.ring
@@ -466,7 +464,7 @@ def fun(p, f, *args):
         q = getattr(x1, f)(*args1)
     else:
         q = f(x1, *args1)
-    a = sorted(q.iteritems())
+    a = sorted(q.items())
     c = [0]*h
     for x in a:
         c[x[0][0]] = x[1]
