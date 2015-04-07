@@ -1,7 +1,7 @@
 """Power series manipulating functions acting on polys.ring.PolyElement()"""
 
 from sympy.polys.domains import QQ
-from sympy.polys.rings import PolyElement
+from sympy.polys.rings import PolyElement, ring
 from sympy.polys.monomials import monomial_min, monomial_mul
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
@@ -419,22 +419,21 @@ def rs_integrate(self, x):
     return p1
 
 def fun(p, f, *args):
-    """
-    Function of a multivariate series computed by substitution
+    """function of a multivariate series computed by substitution
 
-      p: multivariate series
-      f: method name or function
-      args[:-2]: arguments of f, apart from the first one
-      args[-2] = iv: names of the series variables
-      args[-1] = prec: list of the precisions of the series variables
+      p multivariate series
+      f method name or function
+      args[:-2] arguments of f, apart from the first one
+      args[-2] = iv names of the series variables
+      args[-1] = prec list of the precisions of the series variables
 
     The case with f method name is used to compute tan and nth_root
     of a multivariate series:
 
-      fun(p, 'tan', iv, prec)
-      compute tan(_x, iv, prec), then substitute _x with p
+      p.fun('tan', iv, prec)
+      compute _x.tan(iv, prec), then substitute _x with p
 
-      fun(p, 'nth_root', n, iv, prec)
+      p.fun('nth_root', n, iv, prec)
       compute (_x + p[0]).nth_root(n, '_x', prec)), then substitute _x
       with p - p[0]
 
@@ -442,18 +441,17 @@ def fun(p, f, *args):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import fun
-    >>> R, x, y = ring('x, y', QQ)
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x, y = lgens('x, y', QQ)
     >>> p = x + x*y + x**2*y + x**3*y**2
-    >>> fun(p, '_tan1', 'x', 4)
+    >>> p.fun('_tan1', 'x', 4)
     1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
     """
-    ring = p.ring
-    ring1, _x = ring([_x], ring.ring, ring.order)
+    _ring = p.ring
+    ring1, _x = ring('_x', _ring)
     h = int(args[-1])
-    args1 = args[:-2] + ('_x', h)
-    zm = ring1(0)
+    args1 = args[:-2] + (_x, h)
+    zm = _ring.zero_monom
     # separate the constant term of the series
     # compute the univariate series f(_x, .., 'x', sum(nv))
     # or _x.f(..., 'x', sum(nv)
@@ -471,7 +469,7 @@ def fun(p, f, *args):
     c = [0]*h
     for x in a:
         c[x[0][0]] = x[1]
-    p1 = _series_from_list(p, c, args[-2], args[-1])
+    p1 = rs_series_from_list(p1, c, args[-2], args[-1])
     return p1
 
 def rs_log(p, x, prec):
@@ -614,7 +612,7 @@ def rs_tan(p, x, prec):
         raise NotImplementedError('p must not have constant part in series variables')
     if ring.ngens == 1:
         return _tan1(p, x, prec)
-    return fun(p, 'tan', x, prec)
+    return fun(p, rs_tan, x, prec)
 
 def rs_sin(p, x, prec):
     """
