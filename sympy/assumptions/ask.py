@@ -131,9 +131,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     else:
         key, expr = Q.is_true, sympify(proposition)
 
-    if isinstance(proposition, (bool, BooleanAtom)):
-        return sympify(proposition)
-
     assumptions = And(assumptions, And(*context))
     assumptions = to_cnf(assumptions)
 
