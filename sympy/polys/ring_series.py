@@ -419,21 +419,22 @@ def rs_integrate(self, x):
     return p1
 
 def fun(p, f, *args):
-    """function of a multivariate series computed by substitution
+    """
+    Function of a multivariate series computed by substitution
 
-      p multivariate series
-      f method name or function
+      p: multivariate series
+      f: method name or function
       args[:-2] arguments of f, apart from the first one
-      args[-2] = iv names of the series variables
-      args[-1] = prec list of the precisions of the series variables
+      args[-2] = iv: names of the series variables
+      args[-1] = prec: list of the precisions of the series variables
 
     The case with f method name is used to compute tan and nth_root
     of a multivariate series:
 
-      p.fun('tan', iv, prec)
+      fun(p, tan, iv, prec)
       compute _x.tan(iv, prec), then substitute _x with p
 
-      p.fun('nth_root', n, iv, prec)
+      fun(p, nth_root, n, iv, prec)
       compute (_x + p[0]).nth_root(n, '_x', prec)), then substitute _x
       with p - p[0]
 
@@ -441,10 +442,10 @@ def fun(p, f, *args):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x, y = lgens('x, y', QQ)
+    >>> from sympy.polys.rings import ring
+    >>> R, x, y = ring('x, y', QQ)
     >>> p = x + x*y + x**2*y + x**3*y**2
-    >>> p.fun('_tan1', 'x', 4)
+    >>> fun(p, _tan1, 'x', 4)
     1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
     """
     _ring = p.ring
