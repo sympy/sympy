@@ -6370,6 +6370,42 @@ def lie_heuristic_linear(match, comp=False):
             return [{xi: xival, eta: etaval}]
 
 
+def sysode_linear_order1_jordan(match_):
+    # FIXME: support M in higher-up code
+    # M x' = L x  +  f
+    # x' = inv(M) L x  +  f
+    from sympy import BlockDiagMatrix, DiagonalMatrix, ones
+    from sympy import pprint
+    func = match_['func']
+    fc = match_['func_coeff']
+    eq = match_['eq']
+    n = len(eq)
+
+    t = func[0].args[0]
+    # FIXME: check all same: add test, or maybe this is dealt with higher up?
+    if not all([f.args[0] == t for f in func]):
+        raise ValueError("The ODEs must all be in the same variables")
+
+    M = Matrix(n, n, lambda i,j: -fc[i, func[j], 1])
+    L = Matrix(n, n, lambda i,j: -fc[i, func[j], 0])
+    A = M.inv() * L
+    pprint(A)
+
+    T, JJ = A.jordan_cells()
+    # FIXME: need special treatment for complex_conj pairs
+    expm = Matrix(BlockDiagMatrix(*[(J*t).exp() for J in JJ]))
+    q = T*expm*T.inv()
+    Cvec = Matrix(get_numbered_constants(eq, num=n))
+    q = q*Cvec
+
+    # fixme: can simplify to cosh/sinh sometimes, or let user do this?
+    out = []
+    for i in range(0, n):
+        out.append(Eq(func[i], q[i]))
+    pprint(out)
+    return out
+
+
 def sysode_linear_2eq_order1(match_):
     C1, C2, C3, C4 = symbols('C1:5')
     x = match_['func'][0].func
