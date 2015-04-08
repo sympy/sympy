@@ -1338,6 +1338,8 @@ def test_csc():
 
 
 def test_asec():
+    z = Symbol('z', zero=True)
+    assert asec(z) == nan
     assert asec(nan) == nan
     assert asec(1) == 0
     assert asec(-1) == pi
@@ -1354,6 +1356,16 @@ def test_asec():
     assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
     assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
+
+
+def test_asec_is_real():
+    assert asec(S(1)/2).is_real is False
+    n = Symbol('n', positive=True, integer=True)
+    assert asec(n).is_real is True
+    assert asec(x).is_real is None
+    assert asec(r).is_real is None
+    t = Symbol('t', real=False)
+    assert asec(t).is_real is False
 
 
 def test_acsc():
