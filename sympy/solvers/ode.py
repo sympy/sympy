@@ -373,7 +373,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 
     if isinstance(eq, Expr):
         eq = [eq]
-    elif not is_iterable(eq):
+    elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
     atom_set = set().union(*[i.free_symbols for i in eq])
