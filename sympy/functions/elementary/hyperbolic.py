@@ -922,15 +922,12 @@ class acosh(Function):
         if arg is S.ComplexInfinity:
             return S.Infinity
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-        if i_coeff is not None:
-            if _coeff_isneg(i_coeff):
-                return S.ImaginaryUnit * acos(i_coeff)
-            return S.ImaginaryUnit * acos(-i_coeff)
         else:
-            if _coeff_isneg(arg):
-                return -cls(-arg)
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            if i_coeff is not None:
+                if _coeff_isneg(i_coeff):
+                    return S.ImaginaryUnit * acos(i_coeff)
+                return S.ImaginaryUnit * acos(-i_coeff)
 
     @staticmethod
     @cacheit

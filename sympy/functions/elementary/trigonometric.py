@@ -66,7 +66,9 @@ def _peeloff_pi(arg):
     This assumes ARG to be an Add.
     The multiple of pi returned in the second position is always a Rational.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
     >>> from sympy import pi
     >>> from sympy.abc import x, y
@@ -2221,6 +2223,8 @@ class asec(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
+        if arg.is_zero:
+            return S.NaN
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2250,6 +2254,12 @@ class asec(InverseTrigonometricFunction):
             return log(arg)
         else:
             return self.func(arg)
+
+    def _eval_is_real(self):
+        x = self.args[0]
+        if x.is_real is False:
+            return False
+        return (x - 1).is_nonnegative or (-x - 1).is_nonnegative
 
     def _eval_rewrite_as_log(self, arg):
         return S.Pi/2 + S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))

@@ -125,6 +125,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
 
     **Tips**
         - You can declare the derivative of an unknown function this way:
+
             >>> from sympy import Function, Derivative
             >>> from sympy.abc import x, y # x and y are the independent variables
             >>> f = Function("f")(x, y) # f is a function of x and y

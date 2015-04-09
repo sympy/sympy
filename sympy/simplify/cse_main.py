@@ -154,7 +154,8 @@ def opt_cse(exprs, order='canonical'):
         The expression substitutions which can be useful to optimize CSE.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.simplify.cse_main import opt_cse
     >>> from sympy.abc import x
     >>> opt_subs = opt_cse([x**-2])

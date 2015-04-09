@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
-from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols
+from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
+                                  Point, dynamicsymbols)
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
@@ -462,7 +463,7 @@ def msubs(expr, *sub_dicts, **kwargs):
         func = _smart_subs
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
-    if isinstance(expr, Matrix):
+    if isinstance(expr, (Matrix, Vector, Dyadic)):
         return expr.applyfunc(lambda x: func(x, sub_dict))
     else:
         return func(expr, sub_dict)

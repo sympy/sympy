@@ -56,7 +56,7 @@ class Boolean(Basic):
 
     def equals(self, other):
         """
-        Returns if the given formulas have the same truth table.
+        Returns True if the given formulas have the same truth table.
         For two formulas to be equal they must have the same literals.
 
         Examples

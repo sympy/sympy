@@ -531,6 +531,7 @@ class Hyper_Function(Expr):
                     n1 = 1, n2 = 1,   n2 = 2
              r = 1, t1 = 0
                     m1 = 2:
+
         >>> Hyper_Function(ap, bq).build_invariants()
         (1, ((0, 1), (1/3, 1), (1/2, 2)), ((0, 2),))
         """

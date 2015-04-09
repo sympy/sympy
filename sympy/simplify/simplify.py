@@ -2512,12 +2512,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     >>> x, y = symbols('x y')
 
     Two radicals are automatically joined through Mul:
+
     >>> a=sqrt(x*sqrt(y))
     >>> a*a**3 == a**4
     True
 
     But if an integer power of that radical has been
     autoexpanded then Mul does not join the resulting factors:
+
     >>> a**4 # auto expands to a Mul, no longer a Pow
     x**2*y
     >>> _*a # so Mul doesn't combine them
