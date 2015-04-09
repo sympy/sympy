@@ -606,10 +606,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                if match['no_of_equation'] > 3:
-                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
-                else:
-                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+                solvefunc = globals()['sysode_linear_order%(order)s_jordan' % match]
+                #if match['no_of_equation'] > 3:
+                #    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                #else:
+                #    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
