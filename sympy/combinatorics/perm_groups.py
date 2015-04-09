@@ -2055,11 +2055,11 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,2,0,4,5,6,3])
+        >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
         set([0, 1, 2])
-        >>> G.orbit([0,4], 'union')
+        >>> G.orbit([0, 4], 'union')
         set([0, 1, 2, 3, 4, 5, 6])
 
         See Also
@@ -2153,8 +2153,8 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation(1,5)(2,3)(4,0,6)
-        >>> b = Permutation(1,5)(3,4)(2,6,0)
+        >>> a = Permutation(1, 5)(2, 3)(4, 0, 6)
+        >>> b = Permutation(1, 5)(3, 4)(2, 6, 0)
         >>> G = PermutationGroup([a, b])
         >>> G.orbits()
         [set([0, 2, 3, 4, 6]), set([1, 5])]
@@ -2725,9 +2725,9 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> a = Permutation([2,4,6,3,1,5,0])
-        >>> b = Permutation([0,1,3,5,4,6,2])
-        >>> G = PermutationGroup([a,b])
+        >>> a = Permutation([2, 4, 6, 3, 1, 5, 0])
+        >>> b = Permutation([0, 1, 3, 5, 4, 6, 2])
+        >>> G = PermutationGroup([a, b])
         >>> G.schreier_vector(0)
         [-1, None, 0, 1, None, 1, 0]
 
@@ -3085,7 +3085,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([1, 2, 0])
         >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a,b])
+        >>> G = PermutationGroup([a, b])
         >>> G.transitivity_degree
         3
 
@@ -3223,7 +3223,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
 
     'union' - computes the union of the orbits of the points in the list
     'tuples' - computes the orbit of the list interpreted as an ordered
-    tuple under the group action ( i.e., g((1,2,3)) = (g(1), g(2), g(3)) )
+    tuple under the group action ( i.e., g((1, 2, 3)) = (g(1), g(2), g(3)) )
     'sets' - computes the orbit of the list interpreted as a sets
 
     Examples
