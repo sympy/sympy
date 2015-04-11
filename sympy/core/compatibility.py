@@ -172,14 +172,14 @@ def with_metaclass(meta, *bases):
     <class 'Meta'>
 
     """
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+    # Code copied from the 'six' library.
     class metaclass(meta):
-        __call__ = type.__call__
-        __init__ = type.__init__
         def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
-    return metaclass("NewBase", None, {})
+    return type.__new__(metaclass, "NewBase", (), {})
 
 
 # These are in here because telling if something is an iterable just by calling
