@@ -12,18 +12,29 @@ instead of the slightly more clunky-looking
 Caveats
 =======
 
-1. It's all too easy to accidentally type ``from sympy.abc import *``, so if
-you write ``I`` you won't get the imaginary unit but just a symbol without any
-special meaning that just happens to be named ``I``.
+1. As of the time of writing this, the names ``C``, ``O``, ``S``, ``I``, ``N``,
+``E``, and ``Q`` are colliding with names defined in SymPy. If you import them
+both from ``sympy.abc`` and ``sympy``, the second import will "win".
+I.e. you can do ``from sympy.abc import *; from sympy import *`` to get all
+``sympy.abc`` symbols and still have ``C`` with the usual definition from SymPy.
+However, this approach is recommended only for interactive sessions and
+short-lived code, because future versions of ``from sympy import *`` may import
+more single-letter names than today.
 
-2. You cannot define multi-letter symbols, i.e. ```from sympy.abc import foo```
-will be reported as an error.
-This is not a problem in itself, it just means that SymPy code will have both a
-``sympy.abc`` import and a ``symbols`` call, which may confuse readers.
+2. This module does not define symbol names on demand, i.e.
+```from sympy.abc import foo``` will be reported as an error because
+``sympy.abc`` does not generate the name ``foo``. To get a symbol named `'foo'`,
+you still need to use ``Symbol('foo')`` or ``symbols('foo')``.
+You can freely mix usage of ``sympy.abc`` and ``Symbol``/``symbols``, though if
+the code is supposed to live longer than the current session, it's usually
+easier on human readers to stick with one and only one way to get the required
+symbols.
 
 3. Using ``from sympy.abc import x, y`` will confuse static analysis tools
 because they won't find the definition of ``x`` or ``y`` in the source of
 ``sympy/abc.py``.
+This is more of a problem for larger amounts of ``abc``-using code, such as
+SymPy itself.
 """
 
 from __future__ import print_function, division
