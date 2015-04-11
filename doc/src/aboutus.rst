@@ -402,6 +402,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Juha Remes: Fixed a typo in qubit_to_matrix documentation
 #. Gregory Ashton: Fix dsolve to allow symbols in systems of equations
 #. Renato Orsino: Add `applyfunc` to Dyadic and Vector
+#. Jennifer White: Added checks into polynomials.py
+#. Juha Remes: Fixed several typos.
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
