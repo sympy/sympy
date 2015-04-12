@@ -336,7 +336,7 @@ class cosh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self.args[0].is_real or self.args[0].is_imaginary
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -672,9 +672,6 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     def _eval_is_real(self):
         return self._reciprocal_of(self.args[0]).is_real
 
-    def _eval_is_finite(self):
-        return (1/self._reciprocal_of(self.args[0])).is_finite
-
 
 class csch(ReciprocalHyperbolicFunction):
     r"""
@@ -722,6 +719,9 @@ class csch(ReciprocalHyperbolicFunction):
     def _eval_rewrite_as_cosh(self, arg):
         return S.ImaginaryUnit / cosh(arg + S.ImaginaryUnit * S.Pi / 2)
 
+    def _eval_is_finite(self):
+        return None
+
     def _sage_(self):
         import sage.all as sage
         return sage.csch(self.args[0]._sage_())
@@ -760,6 +760,9 @@ class sech(ReciprocalHyperbolicFunction):
 
     def _eval_rewrite_as_sinh(self, arg):
         return S.ImaginaryUnit / sinh(arg + S.ImaginaryUnit * S.Pi /2)
+
+    def _eval_is_finite(self):
+        return self.args[0].is_real
 
     def _sage_(self):
         import sage.all as sage

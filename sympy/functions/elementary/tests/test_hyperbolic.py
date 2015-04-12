@@ -67,6 +67,14 @@ def test_sinh():
 
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
 
+    assert sinh(x).is_real is None
+    assert sinh(k).is_real is True
+
+    i = Symbol('i', imaginary=True)
+
+    assert sinh(i).is_finite is True
+    assert sinh(x).is_finite is None
+
 
 def test_sinh_series():
     x = Symbol('x')
@@ -134,6 +142,14 @@ def test_cosh():
 
     assert cosh(k*pi) == cosh(k*pi)
 
+    i = Symbol('i', imaginary=True)
+
+    assert cosh(i).is_real is True
+    assert cosh(k).is_real is True
+    assert cosh(x).is_real is None
+
+    assert cosh(x).is_finite is None
+    assert cosh(i).is_finite is True
 
 def test_cosh_series():
     x = Symbol('x')
@@ -202,6 +218,14 @@ def test_tanh():
     assert tanh(17*k*pi*I) == 0
 
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
+
+    assert tanh(x).is_real is None
+    assert tanh(k).is_real is True
+
+    i = Symbol('i', imaginary=True)
+
+    assert tanh(x).is_finite is None
+    assert tanh(k).is_finite is True
 
 
 def test_tanh_series():
@@ -337,6 +361,12 @@ def test_csch():
 
     assert csch(n).is_real is True
 
+    i = Symbol('i', imaginary=True)
+
+    assert csch(i).is_finite is None
+    assert csch(x).is_finite is None
+    assert csch(k).is_finite is None
+
 
 def test_csch_series():
     x = Symbol('x')
@@ -398,8 +428,13 @@ def test_sech():
     assert sech(k*pi*I) == 1/cos(k*pi)
     assert sech(17*k*pi*I) == 1/cos(17*k*pi)
 
-    assert sech(n).is_real is True
+    i = Symbol('i', imaginary=True)
 
+    assert sech(n).is_real is True
+    assert sech(i).is_real is True
+
+    assert sech(x).is_finite is None
+    assert sech(k).is_finite is True
 
 def test_sech_series():
     x = Symbol('x')
