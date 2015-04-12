@@ -6,16 +6,17 @@ from .core import Symbol, symbols
 from .core.alphabets import greeks
 from .core.compatibility import exec_
 
-a, b, c, d, e = symbols('a, b, c, d, e')
-f, g, h, i, j = symbols('f, g, h, i, j')
-k, l, m, n, o = symbols('k, l, m, n, o')
-p, q, r, s, t = symbols('p, q, r, s, t')
+##### Symbol definitions #####
+
+# Implementation note: The easiest way to avoid typos in the symbols()
+# parameter is to copy it from the left-hand side of the assignment.
+
+a, b, c, d, e, f, g, h, i, j = symbols('a, b, c, d, e, f, g, h, i, j')
+k, l, m, n, o, p, q, r, s, t = symbols('k, l, m, n, o, p, q, r, s, t')
 u, v, w, x, y, z = symbols('u, v, w, x, y, z')
 
-A, B, C, D, E = symbols('A, B, C, D, E')
-F, G, H, I, J = symbols('F, G, H, I, J')
-K, L, M, N, O = symbols('K, L, M, N, O')
-P, Q, R, S, T = symbols('P, Q, R, S, T')
+A, B, C, D, E, F, G, H, I, J = symbols('A, B, C, D, E, F, G, H, I, J')
+K, L, M, N, O, P, Q, R, S, T = symbols('K, L, M, N, O, P, Q, R, S, T')
 U, V, W, X, Y, Z = symbols('U, V, W, X, Y, Z')
 
 alpha, beta, gamma, delta = symbols('alpha, beta, gamma, delta')
@@ -24,6 +25,12 @@ iota, kappa, lamda, mu = symbols('iota, kappa, lamda, mu')
 nu, xi, omicron, pi = symbols('nu, xi, omicron, pi')
 rho, sigma, tau, upsilon = symbols('rho, sigma, tau, upsilon')
 phi, chi, psi, omega = symbols('phi, chi, psi, omega')
+
+
+##### Clashing-symbols diagnostics #####
+
+# We want to know which names in SymPy collide with those in here.
+# This is mostly for diagnosing SymPy's namespace during SymPy development.
 
 _latin = list(string.ascii_letters)
 # COSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
