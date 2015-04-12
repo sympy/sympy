@@ -1,6 +1,10 @@
 from sympy.assumptions import ask, Q
 from sympy.assumptions.assume import assuming, global_assumptions
-from sympy.abc import x, y
+from sympy.core.symbol import symbols
+
+
+x, y = symbols('x y')
+
 
 def test_assuming():
     with assuming(Q.integer(x)):

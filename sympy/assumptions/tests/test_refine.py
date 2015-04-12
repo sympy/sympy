@@ -1,8 +1,11 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
                    atan, atan2)
-from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
+from sympy.core.symbol import symbols
 from sympy.functions.elementary.piecewise import Piecewise
+
+
+x, y, z = symbols('x y z')
 
 
 def test_Abs():

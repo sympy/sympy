@@ -1,4 +1,3 @@
-from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
 from sympy.assumptions.assume import global_assumptions
@@ -20,6 +19,9 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
+
+
+t, w, x, y, z, n, k, m, p, i = symbols('t w x y z n k m p i')
 
 
 def test_int_1():

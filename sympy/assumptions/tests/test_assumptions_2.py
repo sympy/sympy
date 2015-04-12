@@ -1,12 +1,14 @@
 """
 rename this to test_assumptions.py when the old assumptions system is deleted
 """
-from sympy.abc import x, y
 from sympy.assumptions.assume import global_assumptions, Predicate
 from sympy.assumptions.ask import _extract_facts, Q
-from sympy.core import symbols
+from sympy.core.symbol import symbols
 from sympy.logic.boolalg import Or
 from sympy.printing import pretty
+
+
+x, y = symbols('x y')
 
 
 def test_equal():
