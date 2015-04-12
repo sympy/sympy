@@ -1729,8 +1729,8 @@ class PermutationGroup(Basic):
         >>> G2 = PermutationGroup([a, c])
         >>> G2.is_transitive()
         True
-        >>> d = Permutation([1,0,2,3])
-        >>> e = Permutation([0,1,3,2])
+        >>> d = Permutation([1, 0, 2, 3])
+        >>> e = Permutation([0, 1, 3, 2])
         >>> G3 = PermutationGroup([d, e])
         >>> G3.is_transitive() or G3.is_transitive(strict=False)
         False
@@ -1831,7 +1831,7 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> G = PermutationGroup([Permutation([0,2,1,3])])
+        >>> G = PermutationGroup([Permutation([0, 2, 1, 3])])
         >>> G.max_div
         2
 
@@ -1887,9 +1887,9 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
-        >>> D.minimal_block([0,5])
+        >>> D.minimal_block([0, 5])
         [0, 6, 2, 8, 4, 0, 6, 2, 8, 4]
-        >>> D.minimal_block([0,1])
+        >>> D.minimal_block([0, 1])
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         See Also
@@ -3231,7 +3231,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
 
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.perm_groups import PermutationGroup, _orbit
-    >>> a = Permutation([1,2,0,4,5,6,3])
+    >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
     >>> G = PermutationGroup([a])
     >>> _orbit(G.degree, G.generators, 0)
     set([0, 1, 2])
