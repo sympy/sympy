@@ -1,10 +1,10 @@
 from sympy.core import Lambda, S, symbols
 from sympy.concrete import Sum
 from sympy.functions import adjoint, conjugate, transpose
-from sympy.matrices import eye, Matrix, ShapeError
+from sympy.matrices import eye, Matrix, ShapeError, ImmutableMatrix
 from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
-    ZeroMatrix, trace, MatPow, MatAdd
+    ZeroMatrix, trace, MatPow, MatAdd, MatMul
 )
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -30,7 +30,7 @@ def test_Trace():
     # Some easy simplifications
     assert trace(Identity(5)) == 5
     assert trace(ZeroMatrix(5, 5)) == 0
-    assert trace(2*A*B) == 2 * trace(A*B)
+    assert trace(2*A*B) == 2*Trace(A*B)
     assert trace(A.T) == trace(A)
 
     i, j = symbols('i j')
@@ -44,13 +44,27 @@ def test_Trace():
     assert str(trace(A)) == str(Trace(A).doit())
 
 
-def test_Trace_doit():
+def test_Trace_A_plus_B():
+    assert trace(A + B) == Trace(A) + Trace(B)
+    assert Trace(A + B).arg == MatAdd(A, B)
+    assert Trace(A + B).doit() == Trace(A) + Trace(B)
+
+
+def test_Trace_MatAdd_doit():
+    # See issue #9028
+    X = ImmutableMatrix([[1, 2, 3]]*3)
+    Y = MatrixSymbol('Y', 3, 3)
+    q = MatAdd(X, 2*X, Y, -3*Y)
+    assert Trace(q).arg == q
+    assert Trace(q).doit() == 18 - 2*Trace(Y)
+
+
+def test_Trace_MatPow_doit():
     X = Matrix([[1, 2], [3, 4]])
     assert Trace(X).doit() == 5
     q = MatPow(X, 2)
     assert Trace(q).arg == q
     assert Trace(q).doit() == 29
-    assert Trace(q).doit(deep=False).arg == q
 
 
 def test_Trace_MutableMatrix_plus():
@@ -60,11 +74,22 @@ def test_Trace_MutableMatrix_plus():
 
 
 @XFAIL
-def test_Trace_MatAdd_doit():
-    # FIXME: Issue #9028.
+def test_Trace_doit_deep_False():
     X = Matrix([[1, 2], [3, 4]])
+    q = MatPow(X, 2)
+    assert Trace(q).doit(deep=False).arg == q
     q = MatAdd(X, 2*X)
     assert Trace(q).doit(deep=False).arg == q
+    q = MatMul(X, 2*X)
+    assert Trace(q).doit(deep=False).arg == q
+
+
+@XFAIL
+def test_trace_constant_factor():
+    # Issue 9052: LHS gives Trace(MatMul(A))
+    assert trace(2*A) == 2*Trace(A)
+    X = ImmutableMatrix([[1, 2], [3, 4]])
+    assert trace(MatMul(2, X)) == 10
 
 
 @XFAIL
