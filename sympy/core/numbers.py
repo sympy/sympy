@@ -1576,65 +1576,6 @@ class Rational(Number):
         return S.One, self
 
 
-# int -> Integer
-_intcache = {}
-
-
-# TODO move this tracing facility to sympy/core/trace.py  ?
-def _intcache_printinfo():
-    ints = sorted(_intcache.keys())
-    nhit = _intcache_hits
-    nmiss = _intcache_misses
-
-    if nhit == 0 and nmiss == 0:
-        print()
-        print('Integer cache statistic was not collected')
-        return
-
-    miss_ratio = float(nmiss) / (nhit + nmiss)
-
-    print()
-    print('Integer cache statistic')
-    print('-----------------------')
-    print()
-    print('#items: %i' % len(ints))
-    print()
-    print(' #hit   #miss               #total')
-    print()
-    print('%5i   %5i (%7.5f %%)   %5i' % (
-        nhit, nmiss, miss_ratio*100, nhit + nmiss)
-    )
-    print()
-    print(ints)
-
-_intcache_hits = 0
-_intcache_misses = 0
-
-
-def int_trace(f):
-    import os
-    if os.getenv('SYMPY_TRACE_INT', 'no').lower() != 'yes':
-        return f
-
-    def Integer_tracer(cls, i):
-        global _intcache_hits, _intcache_misses
-
-        try:
-            _intcache_hits += 1
-            return _intcache[i]
-        except KeyError:
-            _intcache_hits -= 1
-            _intcache_misses += 1
-
-            return f(cls, i)
-
-    # also we want to hook our _intcache_printinfo into sys.atexit
-    import atexit
-    atexit.register(_intcache_printinfo)
-
-    return Integer_tracer
-
-
 class Integer(Rational):
 
     q = 1
@@ -1651,8 +1592,6 @@ class Integer(Rational):
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
 
-    # TODO caching with decorator, but not to degrade performance
-    @int_trace
     def __new__(cls, i):
         if isinstance(i, string_types):
             i = i.replace(' ', '')
@@ -3462,10 +3401,6 @@ def sympify_complex(a):
     return real + S.ImaginaryUnit*imag
 
 converter[complex] = sympify_complex
-
-_intcache[0] = S.Zero
-_intcache[1] = S.One
-_intcache[-1] = S.NegativeOne
 
 from .power import Pow, integer_nthroot
 from .mul import Mul
