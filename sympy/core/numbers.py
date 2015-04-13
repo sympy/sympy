@@ -1667,16 +1667,14 @@ class Integer(Rational):
         except TypeError:
             raise TypeError(
                 'Integer can only work with integer expressions.')
-        try:
-            return _intcache[ival]
-        except KeyError:
-            # We only work with well-behaved integer types. This converts, for
-            # example, numpy.int32 instances.
-            obj = Expr.__new__(cls)
-            obj.p = ival
+        return Integer.__cached__(cls, ival)
 
-            _intcache[ival] = obj
-            return obj
+    def __int_cache_func__(cls, ival):
+        obj = Expr.__new__(cls)
+        obj.p = ival
+        return obj
+
+    __cached__ = staticmethod(cacheit(__int_cache_func__))
 
     def __getnewargs__(self):
         return (self.p,)
