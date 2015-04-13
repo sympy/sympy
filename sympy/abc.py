@@ -7,7 +7,7 @@ from .core.alphabets import greeks
 from .core.compatibility import exec_
 
 _latin = list(string.ascii_letters)
-# COSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
+# OSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
 _greek = list(greeks) # make a copy, so we can mutate it
 # Note: We import lamda since lambda is a reserved keyword in Python
 _greek.remove("lambda")

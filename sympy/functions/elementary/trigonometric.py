@@ -717,6 +717,7 @@ class cos(TrigonometricFunction):
             # if n can be factored in terms of Fermat primes with
             # multiplicity of each being 1, return those primes, else
             # False
+            from sympy import chebyshevt
             primes = []
             for p_i in cst_table_some:
                 n, r = divmod(n, p_i)
