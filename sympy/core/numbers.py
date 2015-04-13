@@ -1592,6 +1592,7 @@ class Integer(Rational):
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
 
+    @cacheit
     def __new__(cls, i):
         if isinstance(i, string_types):
             i = i.replace(' ', '')
@@ -1606,14 +1607,11 @@ class Integer(Rational):
         except TypeError:
             raise TypeError(
                 'Integer can only work with integer expressions.')
-        return Integer.__cached__(cls, ival)
-
-    def __int_cache_func__(cls, ival):
+        # We only work with well-behaved integer types. This converts, for
+        # example, numpy.int32 instances.
         obj = Expr.__new__(cls)
         obj.p = ival
         return obj
-
-    __cached__ = staticmethod(cacheit(__int_cache_func__))
 
     def __getnewargs__(self):
         return (self.p,)
