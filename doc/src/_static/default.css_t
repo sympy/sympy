@@ -13,6 +13,23 @@
 
 /* -- page layout ----------------------------------------------------------- */
 
+{%  set theme_collapsiblesidebar = True %}
+{%  set theme_relbarbgcolor = '#2f441e'  %}
+{%  set theme_sidebarbgcolor = '#3b5526'  %}
+{%  set theme_sidebarbtncolor = '#4F663C'  %}
+{%  set theme_sidebarlinkcolor = '#81B953'  %}
+{%  set theme_linkcolor = '#29A329'  %}
+{%  set theme_visitedlinkcolor = '#307748'  %}
+{%  set theme_headtextcolor = '#2f441e'  %}
+{%  set theme_footerbgcolor = '#293b1b'  %}
+{%  set theme_headlinkcolor = '#AAAAAA'  %}
+{%  set theme_sidebartextcolor = '#DDDDDD'  %}
+{%  set theme_footertextcolor = '#DDDDDD'  %}
+{%  set theme_relbartextcolor = '#DDDDDD'  %}
+{%  set theme_relbarlinkcolor = '#81B953'  %}
+{%  set theme_bgcolor = '#FFFFFF'  %}
+
+
 body {
     font-family: {{ theme_bodyfont }};
     font-size: 100%;
