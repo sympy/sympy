@@ -10,6 +10,7 @@
  */
 
 @import url("basic.css");
+@import url(http://fonts.googleapis.com/css?family=Open+Sans);
 
 /* -- page layout ----------------------------------------------------------- */
 
@@ -31,7 +32,7 @@
 
 
 body {
-    font-family: {{ theme_bodyfont }};
+    font-family: Open Sans, sans-serif;
     font-size: 100%;
     background-color: {{ theme_footerbgcolor }};
     color: #000;

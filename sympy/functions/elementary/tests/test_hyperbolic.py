@@ -283,6 +283,7 @@ def test_csch():
     x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
+    n = Symbol('n', positive=True)
 
     assert csch(nan) == nan
     assert csch(zoo) == nan
@@ -334,6 +335,8 @@ def test_csch():
 
     assert csch(k*pi*I/2) == -1/sin(k*pi/2)*I
 
+    assert csch(n).is_real is True
+
 
 def test_csch_series():
     x = Symbol('x')
@@ -346,6 +349,7 @@ def test_sech():
     x, y = symbols('x, y')
 
     k = Symbol('k', integer=True)
+    n = Symbol('n', positive=True)
 
     assert sech(nan) == nan
     assert sech(zoo) == nan
@@ -393,6 +397,8 @@ def test_sech():
 
     assert sech(k*pi*I) == 1/cos(k*pi)
     assert sech(17*k*pi*I) == 1/cos(17*k*pi)
+
+    assert sech(n).is_real is True
 
 
 def test_sech_series():
@@ -474,6 +480,9 @@ def test_acosh():
     assert acosh(-(1 + sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
     assert acosh((sqrt(5) + 1)/4) == I*pi/5
     assert acosh(-(sqrt(5) + 1)/4) == 4*I*pi/5
+
+    assert str(acosh(5*I).n(6)) == '2.31244 + 1.5708*I'
+    assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
 
 
 def test_acosh_infinities():

@@ -670,10 +670,10 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_real(self):
-        return self._reciprocal_of(args[0]).is_real
+        return self._reciprocal_of(self.args[0]).is_real
 
     def _eval_is_finite(self):
-        return (1/self._reciprocal_of(args[0])).is_finite
+        return (1/self._reciprocal_of(self.args[0])).is_finite
 
 
 class csch(ReciprocalHyperbolicFunction):
@@ -919,15 +919,8 @@ class acosh(Function):
                     return cst_table[arg]*S.ImaginaryUnit
                 return cst_table[arg]
 
-        if arg is S.ComplexInfinity:
+        if arg.is_infinite:
             return S.Infinity
-
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-            if i_coeff is not None:
-                if _coeff_isneg(i_coeff):
-                    return S.ImaginaryUnit * acos(i_coeff)
-                return S.ImaginaryUnit * acos(-i_coeff)
 
     @staticmethod
     @cacheit

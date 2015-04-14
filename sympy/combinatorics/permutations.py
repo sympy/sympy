@@ -31,7 +31,8 @@ def _af_rmul(a, b):
 
     This handles the operands in reverse order compared to the ``*`` operator:
 
-    >>> a = Permutation(a); b = Permutation(b)
+    >>> a = Permutation(a)
+    >>> b = Permutation(b)
     >>> list(a*b)
     [2, 0, 1]
     >>> [b(a(i)) for i in range(3)]
