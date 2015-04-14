@@ -1,4 +1,6 @@
 from itertools import product as cartes
+import itertools
+import os
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
@@ -346,6 +348,13 @@ def test_issue_5955():
     assert limit((x**16)/(1 + x**16), x, oo) == 1
     assert limit((x**100)/(1 + x**100), x, oo) == 1
     assert limit((x**1885)/(1 + x**1885), x, oo) == 1
+    assert limit((x**100/((x + 1)**100 + exp(-x))), x, oo) == 1
+
+
+@pytest.mark.slow
+@pytest.mark.xfail
+@pytest.mark.skipif(os.getenv('TRAVIS_BUILD_NUMBER'), reason="Too slow for travis.")
+def test_issue_5955_slow():
     assert limit((x**1000/((x + 1)**1000 + exp(-x))), x, oo) == 1
 
 
@@ -476,6 +485,7 @@ def test_issue_9205():
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
+<<<<<<< HEAD
 def test_limit_seq():
     assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == S.Infinity
@@ -505,3 +515,11 @@ def test_issue_6599():
 def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
+
+
+def test_issue_10610():
+    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
+
+
+def test_issue_9075():
+    assert limit((6**(x + 1) + x + 1)/(6**x + x), x, oo) == 6

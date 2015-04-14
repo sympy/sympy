@@ -152,26 +152,6 @@ class Limit(Expr):
         if z0.is_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
-        if e.is_Mul:
-            if abs(z0) is S.Infinity:
-                e = factor_terms(e)
-                e = e.rewrite(fibonacci, GoldenRatio)
-                ok = lambda w: (z in w.free_symbols and
-                                any(a.is_polynomial(z) or
-                                    any(z in m.free_symbols and m.is_polynomial(z)
-                                        for m in Mul.make_args(a))
-                                    for a in Add.make_args(w)))
-                if all(ok(w) for w in e.as_numer_denom()):
-                    u = Dummy(positive=True)
-                    if z0 is S.NegativeInfinity:
-                        inve = e.subs(z, -1/u)
-                    else:
-                        inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
