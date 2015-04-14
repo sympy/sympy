@@ -229,12 +229,11 @@ Lastly, it is recommended that you not use :obj:`I`, :obj:`E`, :obj:`S`,
 are used for the imaginary unit (:math:`i`), the base of the natural
 logarithm (:math:`e`), the :func:`sympify` function (see :ref:`Symbolic
 Expressions<symbolic-expressions>` below), numeric evaluation (:func:`N`
-is equivalent to :ref:`evalf()<evalf-label>` ), the class registry (for
-things like :func:`C.cos`, to prevent cyclic imports in some code),
+is equivalent to :ref:`evalf()<evalf-label>` ),
 the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol
 (as in :math:`O(n\log{n})`), and the assumptions object that holds a list of
 supported ask keys (such as :obj:`Q.real`), respectively.  You can use the
-mnemonic ``QCOSINE`` to remember what Symbols are defined by default in SymPy.
+mnemonic ``OSINEQ`` to remember what Symbols are defined by default in SymPy.
 Or better yet, always use lowercase letters for Symbol names.  Python will
 not prevent you from overriding default SymPy names or functions, so be
 careful.
