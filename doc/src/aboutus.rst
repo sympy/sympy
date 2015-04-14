@@ -235,7 +235,6 @@ want to be mentioned here, so see our repository history for a full list).
 #. Huijun Mai: Chinese translation of the tutorial
 #. Marek Šuppa: Improvements to symbols, tests
 #. Prasoon Shukla: Bug fixes
-#. Sergey B Kirpichev: Bug fixes
 #. Stefen Yin: Fixes to the mechanics module
 #. Thomas Hisch: Improvements to the printing module
 #. Matthew Hoff: Addition to quantum module
