@@ -422,6 +422,7 @@ Financial and Infrastructure Support
   * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
   * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
+  * in 2014 for 10 students (`GSoC 2014 <https://github.com/sympy/sympy/wiki/Gsoc-2014-report>`_)
 
 * `Python Software Foundation (PSF) <https://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:
