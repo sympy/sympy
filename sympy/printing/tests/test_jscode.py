@@ -58,7 +58,7 @@ def test_jscode_Integer():
 
 
 def test_jscode_functions():
-    assert jscode(sin(x) ** cos(x)) == "Math.pow(Math.sin(x), Math.cos(x))"
+    assert jscode(sin(x)**cos(x)) == "Math.pow(Math.sin(x), Math.cos(x))"
 
 
 def test_jscode_inline_function():

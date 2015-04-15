@@ -329,7 +329,7 @@ def test_genocchi():
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
     assert genocchi(m) == genocchi(m)
-    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
+    assert genocchi(n).rewrite(bernoulli) == (1 - 2**n) * bernoulli(n) * 2
     assert genocchi(2 * n).is_odd
     assert genocchi(4 * n).is_positive
     # these are the only 2 prime Genocchi numbers

@@ -117,9 +117,9 @@ class AskRationalHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Rational ** Integer      -> Rational
-        Irrational ** Rational   -> Irrational
-        Rational ** Irrational   -> ?
+        Rational**Integer      -> Rational
+        Irrational**Rational   -> Irrational
+        Rational**Irrational   -> ?
         """
         if ask(Q.integer(expr.exp), assumptions):
             return ask(Q.rational(expr.base), assumptions)

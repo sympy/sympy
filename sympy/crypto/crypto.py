@@ -1587,5 +1587,5 @@ def decipher_elgamal(ct, prk):
     100
 
     """
-    u = igcdex(ct[0] ** prk[2], prk[0])[0]
+    u = igcdex(ct[0]**prk[2], prk[0])[0]
     return u * ct[1] % prk[0]

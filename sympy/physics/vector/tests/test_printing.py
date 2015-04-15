@@ -14,10 +14,10 @@ alpha, omega, beta = dynamicsymbols('alpha, omega, beta')
 A = ReferenceFrame('A')
 N = ReferenceFrame('N')
 
-v = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
+v = a**2 * N.x + b * N.y + c * sin(alpha) * N.z
 w = alpha * N.x + sin(omega) * N.y + alpha * beta * N.z
 
-y = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
+y = a**2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
 x = alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) + alpha * beta * (N.z | N.x)
 
 def ascii_vpretty(expr):
@@ -28,7 +28,7 @@ def unicode_vpretty(expr):
 
 def test_latex_printer():
     r = Function('r')('t')
-    assert VectorLatexPrinter().doprint(r ** 2) == "r^{2}"
+    assert VectorLatexPrinter().doprint(r**2) == "r^{2}"
 
 def test_vector_pretty_print():
 
@@ -61,7 +61,7 @@ def test_vector_latex():
 
     a, b, c, d, omega = symbols('a, b, c, d, omega')
 
-    v = (a ** 2 + b / c) * A.x + sqrt(d) * A.y + cos(omega) * A.z
+    v = (a**2 + b / c) * A.x + sqrt(d) * A.y + cos(omega) * A.z
 
     assert v._latex() == (r'(a^{2} + \frac{b}{c})\mathbf{\hat{a}_x} + '
                           r'\sqrt{d}\mathbf{\hat{a}_y} + '
@@ -94,7 +94,7 @@ def test_vector_latex():
 
     a, b, c, d, omega = symbols('a, b, c, d, omega')
 
-    v = (a ** 2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
+    v = (a**2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
 
     expected = (r'(a^{2} + \frac{b}{c})\mathbf{\hat{n}_x} + '
                 r'\sqrt{d}\mathbf{\hat{n}_y} + '
@@ -109,7 +109,7 @@ def test_vector_latex():
 
     N = ReferenceFrame('N', latexs=(r'\hat{i}', r'\hat{j}', r'\hat{k}'))
 
-    v = (a ** 2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
+    v = (a**2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
 
     expected = (r'(a^{2} + \frac{b}{c})\hat{i} + '
                 r'\sqrt{d}\hat{j} + '
@@ -127,7 +127,7 @@ def test_vector_latex_with_functions():
 
     assert v._latex() == r'\dot{\omega}\mathbf{\hat{n}_x}'
 
-    v = omega.diff() ** alpha * N.x
+    v = omega.diff()**alpha * N.x
 
     assert v._latex() == (r'\left(\dot{\omega}\right)^{\alpha}'
                           r'\mathbf{\hat{n}_x}')

@@ -163,7 +163,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         raise ValueError("m values must be integer or half integer")
     if m_1 + m_2 + m_3 != 0:
         return 0
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
+    prefid = Integer((-1)**int(j_1 - j_2 - m_3))
     m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
@@ -206,7 +206,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             _Factlist[int(j_1 - ii - m_1)] * \
             _Factlist[int(ii + j_3 - j_2 + m_1)] * \
             _Factlist[int(j_1 + j_2 - j_3 - ii)]
-        sumres = sumres + Integer((-1) ** ii) / den
+        sumres = sumres + Integer((-1)**ii) / den
 
     res = ressqrt * sumres * prefid
     return res
@@ -256,7 +256,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
+    res = (-1)**sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
         wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
     return res
 
@@ -384,9 +384,9 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
             _Factlist[int(aa + bb + cc + dd - kk)] * \
             _Factlist[int(aa + dd + ee + ff - kk)] * \
             _Factlist[int(bb + cc + ee + ff - kk)]
-        sumres = sumres + Integer((-1) ** kk * _Factlist[kk + 1]) / den
+        sumres = sumres + Integer((-1)**kk * _Factlist[kk + 1]) / den
 
-    res = prefac * sumres * (-1) ** int(aa + bb + cc + dd)
+    res = prefac * sumres * (-1)**int(aa + bb + cc + dd)
     return res
 
 
@@ -479,7 +479,7 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     .. [Regge59] 'Symmetry Properties of Racah Coefficients',
       T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
     """
-    res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
+    res = (-1)**int(j_1 + j_2 + j_4 + j_5) * \
         racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
     return res
 
@@ -681,9 +681,9 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
         den = _Factlist[ii] * _Factlist[ii + l_3 - l_1 - m_2] * \
             _Factlist[l_2 + m_2 - ii] * _Factlist[l_1 - ii - m_1] * \
             _Factlist[ii + l_3 - l_2 + m_1] * _Factlist[l_1 + l_2 - l_3 - ii]
-        sumres = sumres + Integer((-1) ** ii) / den
+        sumres = sumres + Integer((-1)**ii) / den
 
-    res = ressqrt * prefac * sumres * (-1) ** (bigL + l_3 + m_1 - m_2)
+    res = ressqrt * prefac * sumres * (-1)**(bigL + l_3 + m_1 - m_2)
     if prec is not None:
         res = res.n(prec)
     return res

@@ -276,19 +276,19 @@ def inverse_trig_rule(integral):
         if a != 1:
             constant = a**base_exp
             current_base = sign_a + sign_b * (b/a) * current_symbol**2
-            factored = current_base ** base_exp
+            factored = current_base**base_exp
         if (b/a) != 1:
             u_func = sympy.sqrt(b/a) * symbol
             u_constant = sympy.sqrt(a/b)
             current_symbol = u_var
             current_base = sign_a + sign_b * current_symbol**2
 
-        substep = RuleClass(current_base ** base_exp, current_symbol)
+        substep = RuleClass(current_base**base_exp, current_symbol)
         if u_func is not None:
             if u_constant != 1:
                 substep = ConstantTimesRule(
-                    u_constant, current_base ** base_exp, substep,
-                    u_constant * current_base ** base_exp, symbol)
+                    u_constant, current_base**base_exp, substep,
+                    u_constant * current_base**base_exp, symbol)
             substep = URule(u_var, u_func, u_constant, substep, factored, symbol)
         if constant is not None:
             substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
@@ -412,7 +412,7 @@ def parts_rule(integral):
                 rule = CyclicPartsRule(
                     [PartsRule(u, dv, v_step, None, None, None)
                      for (u, dv, v, du, v_step) in steps],
-                    (-1) ** len(steps) * coefficient,
+                    (-1)**len(steps) * coefficient,
                     integrand, symbol
                 )
                 if constant != 1:
@@ -573,34 +573,34 @@ sincos_botheven_condition = uncurry(
     m.is_nonnegative and n.is_nonnegative)
 
 sincos_botheven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (((1 - sympy.cos(2*a*symbol)) / 2) ** (m / 2)) *
-                                    (((1 + sympy.cos(2*b*symbol)) / 2) ** (n / 2)) ))
+    lambda a, b, m, n, i, symbol: ( (((1 - sympy.cos(2*a*symbol)) / 2)**(m / 2)) *
+                                    (((1 + sympy.cos(2*b*symbol)) / 2)**(n / 2)) ))
 
 sincos_sinodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd and m >= 3)
 
 sincos_sinodd = trig_rewriter(
     lambda a, b, m, n, i, symbol: ( (1 - sympy.cos(a*symbol)**2)**((m - 1) / 2) *
                                     sympy.sin(a*symbol) *
-                                    sympy.cos(b*symbol) ** n))
+                                    sympy.cos(b*symbol)**n))
 
 sincos_cosodd_condition = uncurry(lambda a, b, m, n, i, s: n.is_odd and n >= 3)
 
 sincos_cosodd = trig_rewriter(
     lambda a, b, m, n, i, symbol: ( (1 - sympy.sin(b*symbol)**2)**((n - 1) / 2) *
                                     sympy.cos(b*symbol) *
-                                    sympy.sin(a*symbol) ** m))
+                                    sympy.sin(a*symbol)**m))
 
 tansec_seceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 tansec_seceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + sympy.tan(b*symbol)**2) ** (n/2 - 1) *
+    lambda a, b, m, n, i, symbol: ( (1 + sympy.tan(b*symbol)**2)**(n/2 - 1) *
                                     sympy.sec(b*symbol)**2 *
-                                    sympy.tan(a*symbol) ** m ))
+                                    sympy.tan(a*symbol)**m ))
 
 tansec_tanodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 tansec_tanodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (sympy.sec(a*symbol)**2 - 1) ** ((m - 1) / 2) *
+    lambda a, b, m, n, i, symbol: ( (sympy.sec(a*symbol)**2 - 1)**((m - 1) / 2) *
                                      sympy.tan(a*symbol) *
-                                     sympy.sec(b*symbol) ** n ))
+                                     sympy.sec(b*symbol)**n ))
 
 tan_tansquared_condition = uncurry(lambda a, b, m, n, i, s: m == 2 and n == 0)
 tan_tansquared = trig_rewriter(
@@ -608,15 +608,15 @@ tan_tansquared = trig_rewriter(
 
 cotcsc_csceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 cotcsc_csceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + sympy.cot(b*symbol)**2) ** (n/2 - 1) *
+    lambda a, b, m, n, i, symbol: ( (1 + sympy.cot(b*symbol)**2)**(n/2 - 1) *
                                     sympy.csc(b*symbol)**2 *
-                                    sympy.cot(a*symbol) ** m ))
+                                    sympy.cot(a*symbol)**m ))
 
 cotcsc_cotodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 cotcsc_cotodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (sympy.csc(a*symbol)**2 - 1) ** ((m - 1) / 2) *
+    lambda a, b, m, n, i, symbol: ( (sympy.csc(a*symbol)**2 - 1)**((m - 1) / 2) *
                                     sympy.cot(a*symbol) *
-                                    sympy.csc(b*symbol) ** n ))
+                                    sympy.csc(b*symbol)**n ))
 
 def trig_sincos_rule(integral):
     integrand, symbol = integral
@@ -956,7 +956,7 @@ def eval_constanttimes(constant, other, substep, integrand, symbol):
 
 @evaluates(PowerRule)
 def eval_power(base, exp, integrand, symbol):
-    return (base ** (exp + 1)) / (exp + 1)
+    return (base**(exp + 1)) / (exp + 1)
 
 @evaluates(ExpRule)
 def eval_exp(base, exp, integrand, symbol):

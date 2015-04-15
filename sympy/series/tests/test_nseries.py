@@ -82,7 +82,7 @@ def test_log_singular1():
 
 
 def test_log_power1():
-    e = 1 / (1/x + x ** (log(3)/log(2)))
+    e = 1 / (1/x + x**(log(3)/log(2)))
     assert e.nseries(x, n=5) == x - x**(2 + log(3)/log(2)) + O(x**5)
 
 

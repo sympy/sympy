@@ -349,10 +349,10 @@ def test_Float():
         t = Float("1.0E-15")
         return (-t < a - b < t)
 
-    a = Float(2) ** Float(3)
+    a = Float(2)**Float(3)
     assert eq(a.evalf(), Float(8))
-    assert eq((pi ** -1).evalf(), Float("0.31830988618379067"))
-    a = Float(2) ** Float(4)
+    assert eq((pi**-1).evalf(), Float("0.31830988618379067"))
+    a = Float(2)**Float(4)
     assert eq(a.evalf(), Float(16))
     assert (S(.3) == S(.5)) is False
     x_str = Float((0, '13333333333333', -52, 53))
@@ -844,41 +844,41 @@ def test_integer_nthroot_overflow():
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
-    assert S(1) ** S.Infinity == S.NaN
+    assert S(1)**S.Infinity == S.NaN
     assert S(-1)** S.Infinity == S.NaN
-    assert S(2) ** S.Infinity == S.Infinity
+    assert S(2)**S.Infinity == S.Infinity
     assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
-    assert S(0) ** S.Infinity == 0
+    assert S(0)**S.Infinity == 0
 
     # check Nan
-    assert S(1) ** S.NaN == S.NaN
-    assert S(-1) ** S.NaN == S.NaN
+    assert S(1)**S.NaN == S.NaN
+    assert S(-1)**S.NaN == S.NaN
 
     # check for exact roots
-    assert S(-1) ** Rational(6, 5) == - (-1)**(S(1)/5)
+    assert S(-1)**Rational(6, 5) == - (-1)**(S(1)/5)
     assert sqrt(S(4)) == 2
     assert sqrt(S(-4)) == I * 2
-    assert S(16) ** Rational(1, 4) == 2
-    assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1, 4)
-    assert S(9) ** Rational(3, 2) == 27
-    assert S(-9) ** Rational(3, 2) == -27*I
-    assert S(27) ** Rational(2, 3) == 9
-    assert S(-27) ** Rational(2, 3) == 9 * (S(-1) ** Rational(2, 3))
-    assert (-2) ** Rational(-2, 1) == Rational(1, 4)
+    assert S(16)**Rational(1, 4) == 2
+    assert S(-16)**Rational(1, 4) == 2 * (-1)**Rational(1, 4)
+    assert S(9)**Rational(3, 2) == 27
+    assert S(-9)**Rational(3, 2) == -27*I
+    assert S(27)**Rational(2, 3) == 9
+    assert S(-27)**Rational(2, 3) == 9 * (S(-1)**Rational(2, 3))
+    assert (-2)**Rational(-2, 1) == Rational(1, 4)
 
     # not exact roots
     assert sqrt(-3) == I*sqrt(3)
-    assert (3) ** (S(3)/2) == 3 * sqrt(3)
-    assert (-3) ** (S(3)/2) == - 3 * sqrt(-3)
-    assert (-3) ** (S(5)/2) == 9 * I * sqrt(3)
-    assert (-3) ** (S(7)/2) == - I * 27 * sqrt(3)
-    assert (2) ** (S(3)/2) == 2 * sqrt(2)
-    assert (2) ** (S(-3)/2) == sqrt(2) / 4
-    assert (81) ** (S(2)/3) == 9 * (S(3) ** (S(2)/3))
-    assert (-81) ** (S(2)/3) == 9 * (S(-3) ** (S(2)/3))
-    assert (-3) ** Rational(-7, 3) == \
+    assert (3)**(S(3)/2) == 3 * sqrt(3)
+    assert (-3)**(S(3)/2) == - 3 * sqrt(-3)
+    assert (-3)**(S(5)/2) == 9 * I * sqrt(3)
+    assert (-3)**(S(7)/2) == - I * 27 * sqrt(3)
+    assert (2)**(S(3)/2) == 2 * sqrt(2)
+    assert (2)**(S(-3)/2) == sqrt(2) / 4
+    assert (81)**(S(2)/3) == 9 * (S(3)**(S(2)/3))
+    assert (-81)**(S(2)/3) == 9 * (S(-3)**(S(2)/3))
+    assert (-3)**Rational(-7, 3) == \
         -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
-    assert (-3) ** Rational(-2, 3) == \
+    assert (-3)**Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     # join roots
@@ -888,16 +888,16 @@ def test_powers_Integer():
     # separate symbols & constansts
     x = Symbol("x")
     assert sqrt(49 * x) == 7 * sqrt(x)
-    assert sqrt((3 - sqrt(pi)) ** 2) == 3 - sqrt(pi)
+    assert sqrt((3 - sqrt(pi))**2) == 3 - sqrt(pi)
 
     # check that it is fast for big numbers
-    assert (2**64 + 1) ** Rational(4, 3)
-    assert (2**64 + 1) ** Rational(17, 25)
+    assert (2**64 + 1)**Rational(4, 3)
+    assert (2**64 + 1)**Rational(17, 25)
 
     # negative rational power and negative base
-    assert (-3) ** Rational(-7, 3) == \
+    assert (-3)**Rational(-7, 3) == \
         -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
-    assert (-3) ** Rational(-2, 3) == \
+    assert (-3)**Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     assert S(1234).factors() == {617: 1, 2: 1}
@@ -941,30 +941,30 @@ def test_powers_Integer():
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
-    assert Rational(1, 2) ** S.Infinity == 0
-    assert Rational(3, 2) ** S.Infinity == S.Infinity
-    assert Rational(-1, 2) ** S.Infinity == 0
-    assert Rational(-3, 2) ** S.Infinity == \
+    assert Rational(1, 2)**S.Infinity == 0
+    assert Rational(3, 2)**S.Infinity == S.Infinity
+    assert Rational(-1, 2)**S.Infinity == 0
+    assert Rational(-3, 2)**S.Infinity == \
         S.Infinity + S.Infinity * S.ImaginaryUnit
 
     # check Nan
-    assert Rational(3, 4) ** S.NaN == S.NaN
-    assert Rational(-2, 3) ** S.NaN == S.NaN
+    assert Rational(3, 4)**S.NaN == S.NaN
+    assert Rational(-2, 3)**S.NaN == S.NaN
 
     # exact roots on numerator
     assert sqrt(Rational(4, 3)) == 2 * sqrt(3) / 3
-    assert Rational(4, 3) ** Rational(3, 2) == 8 * sqrt(3) / 9
+    assert Rational(4, 3)**Rational(3, 2) == 8 * sqrt(3) / 9
     assert sqrt(Rational(-4, 3)) == I * 2 * sqrt(3) / 3
-    assert Rational(-4, 3) ** Rational(3, 2) == - I * 8 * sqrt(3) / 9
-    assert Rational(27, 2) ** Rational(1, 3) == 3 * (2 ** Rational(2, 3)) / 2
-    assert Rational(5**3, 8**3) ** Rational(4, 3) == Rational(5**4, 8**4)
+    assert Rational(-4, 3)**Rational(3, 2) == - I * 8 * sqrt(3) / 9
+    assert Rational(27, 2)**Rational(1, 3) == 3 * (2**Rational(2, 3)) / 2
+    assert Rational(5**3, 8**3)**Rational(4, 3) == Rational(5**4, 8**4)
 
     # exact root on denominator
     assert sqrt(Rational(1, 4)) == Rational(1, 2)
     assert sqrt(Rational(1, -4)) == I * Rational(1, 2)
     assert sqrt(Rational(3, 4)) == sqrt(3) / 2
     assert sqrt(Rational(3, -4)) == I * sqrt(3) / 2
-    assert Rational(5, 27) ** Rational(1, 3) == (5 ** Rational(1, 3)) / 3
+    assert Rational(5, 27)**Rational(1, 3) == (5**Rational(1, 3)) / 3
 
     # not exact roots
     assert sqrt(Rational(1, 2)) == sqrt(2) / 2
@@ -975,7 +975,7 @@ def test_powers_Rational():
         -(-1)**Rational(1, 3)*2**Rational(2, 3)*3**Rational(1, 3)/3
 
     # negative integer power and negative rational base
-    assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
+    assert Rational(-2, 3)**Rational(-2, 1) == Rational(9, 4)
 
     a = Rational(1, 10)
     assert a**Float(a, 2) == Float(a, 2)**Float(a, 2)

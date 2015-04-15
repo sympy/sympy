@@ -47,7 +47,7 @@ def n_order(a, n):
         exponent = group_order
         for f in range(e + 1):
             if pow(a, exponent, n) != 1:
-                order *= p ** (e - f + 1)
+                order *= p**(e - f + 1)
                 break
             exponent = exponent // p
     return order

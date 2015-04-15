@@ -212,14 +212,14 @@ def test_solve_polynomial():
     assert solveset_real(3*x - 2, x) == FiniteSet(Rational(2, 3))
 
     assert solveset_real(x**2 - 1, x) == FiniteSet(-S(1), S(1))
-    assert solveset_real(x - y**3, x) == FiniteSet(y ** 3)
+    assert solveset_real(x - y**3, x) == FiniteSet(y**3)
 
     a11, a12, a21, a22, b1, b2 = symbols('a11, a12, a21, a22, b1, b2')
 
     assert solveset_real(x**3 - 15*x - 4, x) == FiniteSet(
-        -2 + 3 ** Rational(1, 2),
+        -2 + 3**Rational(1, 2),
         S(4),
-        -2 - 3 ** Rational(1, 2))
+        -2 - 3**Rational(1, 2))
 
     assert solveset_real(sqrt(x) - 1, x) == FiniteSet(1)
     assert solveset_real(sqrt(x) - 2, x) == FiniteSet(4)
@@ -636,7 +636,7 @@ def test_solve_complex_sqrt():
     assert solveset_complex(sqrt(5*x + 6) - (2 + 2*I) - x, x) == \
         FiniteSet(-S(2), 3 - 4*I)
     assert solveset_complex(4*x*(1 - a * sqrt(x)), x) == \
-        FiniteSet(S(0), 1 / a ** 2)
+        FiniteSet(S(0), 1 / a**2)
 
 
 def test_solveset_complex_tan():

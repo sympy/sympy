@@ -26,7 +26,7 @@ def test_Rational():
 
 def test_Function():
     assert mcode(f(x, y, z)) == "f[x, y, z]"
-    assert mcode(sin(x) ** cos(x)) == "Sin[x]^Cos[x]"
+    assert mcode(sin(x)**cos(x)) == "Sin[x]^Cos[x]"
 
 
 def test_Pow():

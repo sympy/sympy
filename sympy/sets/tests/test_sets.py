@@ -598,7 +598,7 @@ def test_product_basic():
 
     assert (0, 0) in square
     assert 0 not in square
-    assert (H, T) in coin ** 2
+    assert (H, T) in coin**2
     assert (.5, .5, .5) in square * unit_line
     assert (H, 3, 3) in coin * d6* d6
     HH, TT = sympify(H), sympify(T)
@@ -778,7 +778,7 @@ def test_union_boundary_of_joining_sets():
 
 
 def test_boundary_ProductSet():
-    open_square = Interval(0, 1, True, True) ** 2
+    open_square = Interval(0, 1, True, True)**2
     assert open_square.boundary == (FiniteSet(0, 1) * Interval(0, 1)
                                   + Interval(0, 1) * FiniteSet(0, 1))
 

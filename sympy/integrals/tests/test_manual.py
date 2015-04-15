@@ -31,7 +31,7 @@ def test_manualintegrate_polynomials():
 
 def test_manualintegrate_exponentials():
     assert manualintegrate(exp(2*x), x) == exp(2*x) / 2
-    assert manualintegrate(2**x, x) == (2 ** x) / log(2)
+    assert manualintegrate(2**x, x) == (2**x) / log(2)
 
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
@@ -64,7 +64,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sec(x), x) == log(sec(x) + tan(x))
     assert manualintegrate(csc(x), x) == -log(csc(x) + cot(x))
 
-    assert manualintegrate(sin(x) * cos(x), x) in [sin(x) ** 2 / 2, -cos(x)**2 / 2]
+    assert manualintegrate(sin(x) * cos(x), x) in [sin(x)**2 / 2, -cos(x)**2 / 2]
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
     assert manualintegrate(csc(x) * cot(x), x) == -csc(x)
     assert manualintegrate(sec(x)**2, x) == tan(x)
@@ -217,7 +217,7 @@ def test_manual_true():
     assert integrate(exp(x) * sin(x), x, manual=True) == \
         (exp(x) * sin(x)) / 2 - (exp(x) * cos(x)) / 2
     assert integrate(sin(x) * cos(x), x, manual=True) in \
-        [sin(x) ** 2 / 2, -cos(x)**2 / 2]
+        [sin(x)**2 / 2, -cos(x)**2 / 2]
 
 
 def test_issue_6746():

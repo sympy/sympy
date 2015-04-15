@@ -40,6 +40,6 @@ def test_boson_states():
     assert (BosonCoherentBra(alpha1) * BosonCoherentKet(alpha1)).doit() == 1
     assert (BosonCoherentBra(alpha2) * BosonCoherentKet(alpha2)).doit() == 1
     assert abs((BosonCoherentBra(alpha1) * BosonCoherentKet(alpha2)).doit() -
-               exp(-S(1) / 2 * (alpha1 - alpha2) ** 2)) < 1e-12
+               exp(-S(1) / 2 * (alpha1 - alpha2)**2)) < 1e-12
     assert qapply(a * BosonCoherentKet(alpha1)) == \
         alpha1 * BosonCoherentKet(alpha1)

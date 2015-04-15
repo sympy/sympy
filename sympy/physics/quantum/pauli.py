@@ -193,7 +193,7 @@ class SigmaZ(SigmaOpBase):
     >>> from sympy.physics.quantum import represent
     >>> from sympy.physics.quantum.pauli import SigmaZ
     >>> sz = SigmaZ()
-    >>> sz ** 3
+    >>> sz**3
     SigmaZ()
     >>> represent(sz)
     Matrix([

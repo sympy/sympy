@@ -90,7 +90,7 @@ def test_tensorproduct():
     ket3 = TensorProduct(BosonFockKet(0), BosonFockKet(2))
     bra1 = TensorProduct(BosonFockBra(0), BosonFockBra(0))
     bra2 = TensorProduct(BosonFockBra(1), BosonFockBra(2))
-    assert qapply(TensorProduct(a, b ** 2) * ket1) == sqrt(2) * ket2
+    assert qapply(TensorProduct(a, b**2) * ket1) == sqrt(2) * ket2
     assert qapply(TensorProduct(a, Dagger(b) * b) * ket1) == 2 * ket3
     assert qapply(bra1 * TensorProduct(a, b * b),
                   dagger=True) == sqrt(2) * bra2

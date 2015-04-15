@@ -40,8 +40,8 @@ def test_systematic_basic():
         x = numpy_array * sympy_object
         x = sympy_object / numpy_array
         x = numpy_array / sympy_object
-        x = sympy_object ** numpy_array
-        x = numpy_array ** sympy_object
+        x = sympy_object**numpy_array
+        x = numpy_array**sympy_object
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [

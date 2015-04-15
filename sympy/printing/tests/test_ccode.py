@@ -69,7 +69,7 @@ def test_ccode_Integer():
 
 
 def test_ccode_functions():
-    assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+    assert ccode(sin(x)**cos(x)) == "pow(sin(x), cos(x))"
 
 
 def test_ccode_inline_function():

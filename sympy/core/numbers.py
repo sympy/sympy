@@ -2440,8 +2440,8 @@ class Infinity(with_metaclass(Singleton, Number)):
         ================ ======= ==============================
         Expression       Result  Notes
         ================ ======= ==============================
-        ``oo ** nan``    ``nan``
-        ``oo ** -p``     ``0``   ``p`` is number, ``oo``
+        ``oo**nan``    ``nan``
+        ``oo**-p``     ``0``   ``p`` is number, ``oo``
         ================ ======= ==============================
 
         See Also
@@ -2643,11 +2643,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         ================ ======= ==============================
         Expression       Result  Notes
         ================ ======= ==============================
-        ``(-oo) ** nan`` ``nan``
-        ``(-oo) ** oo``  ``nan``
-        ``(-oo) ** -oo`` ``nan``
-        ``(-oo) ** e``   ``oo``  ``e`` is positive even integer
-        ``(-oo) ** o``   ``-oo`` ``o`` is positive odd integer
+        ``(-oo)**nan`` ``nan``
+        ``(-oo)**oo``  ``nan``
+        ``(-oo)**-oo`` ``nan``
+        ``(-oo)**e``   ``oo``  ``e`` is positive even integer
+        ``(-oo)**o``   ``-oo`` ``o`` is positive odd integer
         ================ ======= ==============================
 
         See Also

@@ -565,7 +565,7 @@ class cos(TrigonometricFunction):
 
         if arg.func is asin:
             x = arg.args[0]
-            return sqrt(1 - x ** 2)
+            return sqrt(1 - x**2)
 
         if arg.func is acot:
             x = arg.args[0]

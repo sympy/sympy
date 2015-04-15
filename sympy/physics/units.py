@@ -258,7 +258,7 @@ atmosphere = atmospheres = atm = 101325 * pascal
 kPa = kilo*Pa
 bar = bars = 100*kPa
 pound = pounds = 0.45359237 * kg * gee  # exact
-psi = pound / inch ** 2
+psi = pound / inch**2
 dHg0 = 13.5951  # approx value at 0 C
 mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol

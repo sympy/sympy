@@ -99,16 +99,16 @@ def refine_Pow(expr, assumptions):
     if isinstance(expr.base, Abs):
         if ask(Q.real(expr.base.args[0]), assumptions) and \
                 ask(Q.even(expr.exp), assumptions):
-            return expr.base.args[0] ** expr.exp
+            return expr.base.args[0]**expr.exp
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
             if ask(Q.even(expr.exp), assumptions):
-                return abs(expr.base) ** expr.exp
+                return abs(expr.base)**expr.exp
             if ask(Q.odd(expr.exp), assumptions):
-                return sign(expr.base) * abs(expr.base) ** expr.exp
+                return sign(expr.base) * abs(expr.base)**expr.exp
         if isinstance(expr.exp, Rational):
             if type(expr.base) is Pow:
-                return abs(expr.base.base) ** (expr.base.exp * expr.exp)
+                return abs(expr.base.base)**(expr.base.exp * expr.exp)
 
         if expr.base is S.NegativeOne:
             if expr.exp.is_Add:

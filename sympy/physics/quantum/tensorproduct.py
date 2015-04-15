@@ -382,7 +382,7 @@ def tensor_product_simp(e, **hints):
     if isinstance(e, Add):
         return Add(*[tensor_product_simp(arg) for arg in e.args])
     elif isinstance(e, Pow):
-        return tensor_product_simp(e.base) ** e.exp
+        return tensor_product_simp(e.base)**e.exp
     elif isinstance(e, Mul):
         return tensor_product_simp_Mul(e)
     elif isinstance(e, Commutator):

@@ -244,7 +244,7 @@ closed-form expressions, and support arbitrary-precision evaluation:
     1.2912859970626635404072825905956005414986193682745
     >>> Integral(x**(-x), (x, 0, 1)).evalf(50)
     1.2912859970626635404072825905956005414986193682745
-    >>> (Integral(exp(-x**2), (x, -oo, oo)) ** 2).evalf(30)
+    >>> (Integral(exp(-x**2), (x, -oo, oo))**2).evalf(30)
     3.14159265358979323846264338328
 
 

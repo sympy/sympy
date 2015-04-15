@@ -370,7 +370,7 @@ def test_pi():
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
-    z = S.Pi ** 2
+    z = S.Pi**2
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
@@ -390,7 +390,7 @@ def test_pi():
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
-    z = (1 + S.Pi) ** 2
+    z = (1 + S.Pi)**2
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
@@ -1025,10 +1025,10 @@ def test_bounded():
     assert ask(Q.bounded(2**x)) is None
     assert ask(Q.bounded(2**x), Q.bounded(x)) is True
     assert ask(Q.bounded(x**x)) is None
-    assert ask(Q.bounded(Rational(1, 2) ** x)) is None
-    assert ask(Q.bounded(Rational(1, 2) ** x), Q.positive(x)) is True
-    assert ask(Q.bounded(Rational(1, 2) ** x), Q.negative(x)) is None
-    assert ask(Q.bounded(S(2) ** x), Q.negative(x)) is True
+    assert ask(Q.bounded(Rational(1, 2)**x)) is None
+    assert ask(Q.bounded(Rational(1, 2)**x), Q.positive(x)) is True
+    assert ask(Q.bounded(Rational(1, 2)**x), Q.negative(x)) is None
+    assert ask(Q.bounded(S(2)**x), Q.negative(x)) is True
     assert ask(Q.bounded(sqrt(x))) is None
     assert ask(Q.bounded(2**x), ~Q.bounded(x)) is False
     assert ask(Q.bounded(x**2), ~Q.bounded(x)) is False

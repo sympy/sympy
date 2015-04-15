@@ -704,8 +704,8 @@ class Ellipse(GeometryEntity):
 
         if p in self:
             delta = self.center - p
-            rise = (self.vradius ** 2)*delta.x
-            run = -(self.hradius ** 2)*delta.y
+            rise = (self.vradius**2)*delta.x
+            run = -(self.hradius**2)*delta.y
             p2 = Point(simplify(p.x + run),
                        simplify(p.y + rise))
             return [Line(p, p2)]
@@ -1069,8 +1069,8 @@ class Ellipse(GeometryEntity):
 
         """
 
-        hr_sq = self.hradius ** 2
-        vr_sq = self.vradius ** 2
+        hr_sq = self.hradius**2
+        vr_sq = self.vradius**2
         lp = o.points
 
         ldir = lp[1] - lp[0]

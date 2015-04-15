@@ -336,7 +336,7 @@ def factoring_visitor(state, primes):
         factor = 1
         for ps in pstack[f[i]: f[i + 1]]:
             if ps.v > 0:
-                factor *= primes[ps.c] ** ps.v
+                factor *= primes[ps.c]**ps.v
         factoring.append(factor)
     return factoring
 

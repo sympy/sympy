@@ -325,14 +325,14 @@ class factorial2(CombinatorialFunction):
             if arg.is_nonnegative:
                 if arg.is_even:
                     k = arg / 2
-                    return 2 ** k * factorial(k)
+                    return 2**k * factorial(k)
 
                 return factorial(arg) / factorial2(arg - 1)
 
             if arg.is_even:
                 raise ValueError("argument must be nonnegative or odd")
 
-            return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+            return arg * (S.NegativeOne)**((1 - arg) / 2) / factorial2(-arg)
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input

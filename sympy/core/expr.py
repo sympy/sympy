@@ -1685,7 +1685,7 @@ class Expr(Basic, EvalfMixin):
         return d
 
     def as_base_exp(self):
-        # a -> b ** e
+        # a -> b**e
         return self, S.One
 
     def as_coeff_mul(self, *deps, **kwargs):
@@ -1955,11 +1955,11 @@ class Expr(Basic, EvalfMixin):
             if c.is_Pow and c.base == self.base:
                 new_exp = self.exp.extract_additively(c.exp)
                 if new_exp is not None:
-                    return self.base ** (new_exp)
+                    return self.base**(new_exp)
             elif c == self.base:
                 new_exp = self.exp.extract_additively(1)
                 if new_exp is not None:
-                    return self.base ** (new_exp)
+                    return self.base**(new_exp)
 
     def extract_additively(self, c):
         """Return self - c if it's possible to subtract c from self and

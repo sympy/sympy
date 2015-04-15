@@ -29,7 +29,7 @@ def test_Rational():
 
 
 def test_Function():
-    assert mcode(sin(x) ** cos(x)) == "sin(x).^cos(x)"
+    assert mcode(sin(x)**cos(x)) == "sin(x).^cos(x)"
     assert mcode(abs(x)) == "abs(x)"
     assert mcode(ceiling(x)) == "ceil(x)"
 

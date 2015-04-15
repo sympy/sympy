@@ -78,12 +78,12 @@ class DummyNumber(object):
 
     def __rpow__(self, a):
         if isinstance(a, (int, float)):
-            return a ** self.number
+            return a**self.number
         return NotImplemented
 
     def __pow__(self, a):
         if isinstance(a, (int, float, DummyNumber)):
-            return self.number ** a
+            return self.number**a
         return NotImplemented
 
     def __pos__(self):
@@ -229,7 +229,7 @@ def test_basic_nostr():
         else:
             raises(TypeError, lambda: obj * '1')
         raises(TypeError, lambda: obj / '1')
-        raises(TypeError, lambda: obj ** '1')
+        raises(TypeError, lambda: obj**'1')
 
 
 def test_series_expansion_for_uniform_order():
