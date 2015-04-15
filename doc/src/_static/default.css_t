@@ -326,3 +326,12 @@ div.viewcode-block:target {
     border-top: 1px solid #ac9;
     border-bottom: 1px solid #ac9;
 }
+
+/*
+To highlight inline code blocks
+*/
+code{
+    background-color: #ECF0F3;
+    border-radius: 3px;
+    padding: 2px;
+}
