@@ -39,7 +39,7 @@ class Trace(Expr):
 
     def doit(self, **kwargs):
         if kwargs.get('deep', True):
-            arg = self.arg.doit()
+            arg = self.arg.doit(**kwargs)
         else:
             arg = self.arg
         try:
