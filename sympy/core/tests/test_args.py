@@ -1252,6 +1252,11 @@ def test_sympy__functions__elementary__trigonometric__sin():
     assert _test_args(sin(2))
 
 
+def test_sympy__functions__elementary__trigonometric__sinc():
+    from sympy.functions.elementary.trigonometric import sinc
+    assert _test_args(sinc(2))
+
+
 def test_sympy__functions__elementary__trigonometric__sec():
     from sympy.functions.elementary.trigonometric import sec
     assert _test_args(sec(2))

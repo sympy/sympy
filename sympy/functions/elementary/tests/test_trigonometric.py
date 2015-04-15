@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc, Mul)
+        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
 
@@ -625,6 +625,34 @@ def test_cot_expansion():
     assert 0 == cot(2*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 3))])*3 + 4
     assert 0 == cot(3*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 5))])*55 - 37
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
+
+
+def test_sinc():
+    assert isinstance(sinc(x), sinc)
+
+    s = Symbol('s', zero=True)
+    assert sinc(s) == S.One
+    assert sinc(S.Infinity) == S.Zero
+    assert sinc(-S.Infinity) == S.Zero
+    assert sinc(S.NaN) == S.NaN
+    assert sinc(S.ComplexInfinity) == S.NaN
+
+    n = Symbol('n', integer=True, nonzero=True)
+    assert sinc(n*pi) == S.Zero
+    assert sinc(-n*pi) == S.Zero
+    assert sinc(pi/2) == 2 / pi
+    assert sinc(-pi/2) == 2 / pi
+    assert sinc(5*pi/2) == 2 / (5*pi)
+    assert sinc(7*pi/2) == -2 / (7*pi)
+
+    assert sinc(-x) == sinc(x)
+
+    assert sinc(x).diff() == (x*cos(x) - sin(x)) / x**2
+
+    assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+
+    assert sinc(x).rewrite(jn) == jn(0, x)
+    assert sinc(x).rewrite(sin) == sin(x) / x
 
 
 def test_asin():
