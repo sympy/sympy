@@ -39,7 +39,7 @@ class ModuleHomomorphism(object):
     - domain - the domain module
     - codomain - the codomain module
     - _ker - cached kernel
-    - _img - cachd image
+    - _img - cached image
 
     Non-implemented methods:
 
