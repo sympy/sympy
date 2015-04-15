@@ -294,6 +294,8 @@ class Order(Expr):
     def _eval_power(b, e):
         if e.is_Number and e.is_nonnegative:
             return b.func(b.expr ** e, *b.args[1:])
+        if e == O(1):
+            return b
         return
 
     def as_expr_variables(self, order_symbols):
