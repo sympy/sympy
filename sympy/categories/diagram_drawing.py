@@ -1450,7 +1450,7 @@ class ArrowStringDescription(object):
     References
     ==========
 
-    [Xypic] http://www.tug.org/applications/Xy-pic/
+    [Xypic] http://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
