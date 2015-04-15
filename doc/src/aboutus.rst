@@ -404,6 +404,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Renato Orsino: Add `applyfunc` to Dyadic and Vector
 #. Jennifer White: Added checks into polynomials.py
 #. Alistair Lynn: Removed duplicate classifiers list in setup.py
+#. Govind Sahai: Fixed some typos
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
