@@ -267,7 +267,7 @@ def test_point3D():
     assert p.transform(identity) == p
     trans = Matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]])
     assert p.transform(trans) == Point3D(2, 2, 2)
-
+    
     # Test Equals
     assert p.equals(x1) == False
 
