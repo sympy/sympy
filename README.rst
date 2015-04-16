@@ -20,6 +20,13 @@ https://groups.google.com/forum/?fromgroups#!forum/sympy.
 We have community chat at `Gitter <https://gitter.im/sympy/sympy>`_. Feel free
 to ask us anything there. We have a very welcoming and helpful community.
 
+|Gitter Badge|
+
+.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/sympy/sympy
+   :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+
 Download
 --------
 
