@@ -14,7 +14,7 @@ from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.geometry.util import idiff, are_coplanar
 from sympy.integrals.integrals import Integral
-from sympy.matrices import *
+from sympy.matrices import Identity, Matrix
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import verify_numerically
@@ -267,7 +267,7 @@ def test_point3D():
     assert p.transform(identity) == p
     trans = Matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]])
     assert p.transform(trans) == Point3D(2, 2, 2)
-    
+
     # Test Equals
     assert p.equals(x1) == False
 
