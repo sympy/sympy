@@ -14,7 +14,7 @@ from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.geometry.util import idiff, are_coplanar
 from sympy.integrals.integrals import Integral
-from sympy.matrices import Identity, Matrix
+from sympy.matrices import Matrix
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import verify_numerically
