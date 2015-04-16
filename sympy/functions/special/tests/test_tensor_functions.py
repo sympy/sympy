@@ -34,6 +34,7 @@ def test_kronecker_delta():
     k = Symbol('k', nonzero=True)
     assert KroneckerDelta(1, 1) == 1
     assert KroneckerDelta(1, 2) == 0
+    assert KroneckerDelta(k, 0) == 0
     assert KroneckerDelta(x, x) == 1
     assert KroneckerDelta(x**2 - y**2, x**2 - y**2) == 1
     assert KroneckerDelta(i, i) == 1
