@@ -151,20 +151,21 @@ class EinsteinSum(Function):
             import numpy as np
         except ImportError as e:
             msg = ("NumPy is required for EinsteinSum.numpify but it couldn't "
-                   "be imported: {!s}".format(e))
+                   "be imported: {0!s}".format(e))
             raise ImportError(msg)
 
         self._check_numpify_args(args, outer_indices)
 
         # Produce a string component that we will pass to numpy.einsum below.
         # This component specifies the indices of the resultant tensor.
-        outer_string = '->{}'.format(
+        outer_string = '->{0}'.format(
             ''.join([str(index) for index in outer_indices]))
 
         # Make a map from argument (IndexedBase instance) to argument's
         # position in args. E.g. if args = [a, b, c], would be
         # {a: 0, b: 1, c: 2}.
-        base_to_arg_position = {arg: i for i, arg in enumerate(args)}
+        base_to_arg_position = dict([(arg, arg_id)
+                                     for arg_id, arg in enumerate(args)])
 
         def arrange_args(args, order):
             """Permute args according to order."""
@@ -247,8 +248,8 @@ class EinsteinSum(Function):
         index_structure = self.index_structure
         actual_outer_indices = set(index_structure['outer'])
         if set(outer_indices) != actual_outer_indices:
-            msg = ("Supplied outer_indices = {} should be a permutation of "
-                   "true outer indices = {} but isn't")
+            msg = ("Supplied outer_indices = {0} should be a permutation of "
+                   "true outer indices = {1} but isn't")
             raise IndexConformanceException(msg.format(outer_indices,
                                                        actual_outer_indices))
 
@@ -265,8 +266,8 @@ class EinsteinSum(Function):
         # Check that all IndexedBase objects appearing in the EinsteinSum have
         # been mentioned in args.
         if not set(args) == indexed_base_objects:
-            msg = ("Supplied args list, {}, should list all IndexedBase "
-                   "objects appearing in EinsteinSum, {}, but it doesn't")
+            msg = ("Supplied args list, {0}, should list all IndexedBase "
+                   "objects appearing in EinsteinSum, {1}, but it doesn't")
             raise ValueError(msg.format(args, indexed_base_objects))
 
         # Ensure there are no free symbols that aren't indices.
@@ -274,13 +275,13 @@ class EinsteinSum(Function):
                             [S.One for _ in range(len(indexed_objects))])
         if not isinstance(expr.subs(substitutions), Number):
             msg = ("Only numbers and Indexed objects are allowed when calling "
-                   "EinsteinSum.numpify(): {}")
+                   "EinsteinSum.numpify(): {0}")
             raise ValueError(msg.format(expr))
 
         # Ensure all indices are symbolic (not e.g. numbers).
         for index in all_indices:
             if not (isinstance(index, Symbol) or isinstance(index, Idx)):
-                msg = "Index is neither a Symbol nor an Idx: {}"
+                msg = "Index is neither a Symbol nor an Idx: {0}"
                 raise TypeError(msg.format(srepr(index)))
 
     @property
@@ -395,7 +396,7 @@ class EinsteinSum(Function):
             base, power = monomial.args
             base_prefactor, base_decomp = cls._decompose_monomial(base)
             if base_decomp and not isinstance(power, Integer):
-                msg = "Only integral powers are allowed, not: {!s}"
+                msg = "Only integral powers are allowed, not: {0!s}"
                 raise ValueError(msg.format(power))
             prefactor *= base_prefactor ** power
             monomial_decomp = base_decomp * power
@@ -403,11 +404,11 @@ class EinsteinSum(Function):
             monomial_decomp.append(monomial)
         elif isinstance(monomial, Add):
             if monomial.has(Indexed):
-                raise ValueError("Not a monomial: {!s}".format(monomial))
+                raise ValueError("Not a monomial: {0!s}".format(monomial))
             prefactor *= monomial
         elif isinstance(monomial, IndexedBase):
                 msg = ("No IndexedBase objects should be present w/o indices: "
-                       "{!s}")
+                       "{0!s}")
                 raise IndexException(msg.format(monomial))
         else:
             # Assume everything else has no Indexed objects.
@@ -503,9 +504,8 @@ class EinsteinSum(Function):
                     continue
                 elif len(tensor_ids) > 2:
                     # Inconsistent with Einstein convention.
-                    raise IndexConformanceException(
-                        "Index {!s} repeated > 2 times in {!s}".format(index,
-                                                                       expr))
+                    msg = "Index {0!s} repeated > 2 times in {1!s}"
+                    raise IndexConformanceException(msg.format(index, expr))
 
                 # Handling a dummy index. See if either tensor possessing the
                 # dummy index is a Kronecker delta; if so, perform contraction
@@ -523,8 +523,8 @@ class EinsteinSum(Function):
         elif (isinstance(expr, Pow) and isinstance(expr.args[0], Indexed)
               and isinstance(expr.args[0].base, DeltaIndexedBase)):
             delta_base = expr.args[0].base
-            wild1 = Wild('wild1')
-            wild2 = Wild('wild2')
+            wild1 = Wild("wild1")
+            wild2 = Wild("wild2")
             return expr.replace(delta_base[wild1, wild2] ** 2,
                                 delta_base[wild1, wild1])
         else:
@@ -546,7 +546,7 @@ def _get_monomial_indices(monomial):
         base, power = monomial.args
         indices_list = _get_monomial_indices(base)
         if indices_list and not isinstance(power, Integer):
-            msg = "Only integral powers are allowed, not: {!s}"
+            msg = "Only integral powers are allowed, not: {0!s}"
             raise ValueError(msg.format(power))
         if indices_list:
             indices_list *= power
@@ -554,7 +554,7 @@ def _get_monomial_indices(monomial):
         indices_list = list(monomial.indices)
     elif isinstance(monomial, Add):
         if monomial.has(Indexed):
-            raise ValueError("Not a monomial: {!s}".format(monomial))
+            raise ValueError("Not a monomial: {0!s}".format(monomial))
         indices_list = []
     else:
         # Assume everything else has no indices.
@@ -583,14 +583,20 @@ def _classify_indices(index_list):
     """
     outer = set()
     inner = set()
-    index_counts = collections.Counter(index_list)
+    index_counts = {}
+    for index in index_list:
+        if index in index_counts:
+            index_counts[index] += 1
+        else:
+            index_counts[index] = 1
+
     for index in index_counts:
         if index_counts[index] == 1:
             outer.add(index)
         elif index_counts[index] == 2:
             inner.add(index)
         else:
-            msg = "> 2 occurrences of index {!s}: {!s}"
+            msg = "> 2 occurrences of index {0!s}: {1!s}"
             raise IndexConformanceException(msg.format(index, index_list))
     return outer, inner
 
@@ -607,7 +613,7 @@ def _get_index_structure(expr, einstein_notation):
         prev_outer = None
         for _, outer, inner in index_structure:
             if prev_outer is not None and outer != prev_outer:
-                msg = "Inconsistent index structure across sum: {!s}"
+                msg = "Inconsistent index structure across sum: {0!s}"
                 raise IndexConformanceException(msg.format(expr))
             prev_outer = outer
 

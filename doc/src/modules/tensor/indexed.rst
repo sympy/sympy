@@ -53,8 +53,8 @@ EinsteinSum(2*x[i])
 
 They can also be converted into Python functions accepting NumPy arrays:
 
->>> func = EinsteinSum(M[i, j] * x[j]).numpify([M, x], [i])
->>> func([[1, -1], [0, 1]], [1, 2])
+>>> func = EinsteinSum(M[i, j] * x[j]).numpify([M, x], [i])  # doctest: +SKIP
+>>> func([[1, -1], [0, 1]], [1, 2])  # doctest: +SKIP
 [-1. 2.]
 
 Reference
@@ -77,7 +77,7 @@ Indexed Objects
 .. autoclass:: DeltaIndexedBase
    :members:
 
-.. module:: sympy.tensor.sums
+.. module:: sympy.tensor.indexed_sums
 
 .. autofunction:: get_indices
 
