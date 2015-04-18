@@ -6,7 +6,7 @@ from sympy import Function, Rational, Integer, Lambda
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
-from sympy.tensor import IndexedBase, Idx
+from sympy.tensor import IndexedBase, Idx, EinsteinSum
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -528,7 +528,8 @@ def test_loops():
         'end do'
     )
 
-    code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
+    ein_sum = EinsteinSum(A[i, j]*x[j])
+    code = fcode(ein_sum, assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
             code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'} or
             code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'} or

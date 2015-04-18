@@ -451,7 +451,7 @@ def test_m_loops():
     # more dimensions.  Also, size(A) would be used rather than passing in m
     # and n.  Perhaps users would expect us to vectorize automatically here?
     # Or is it possible to represent such things using IndexedBase?
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
@@ -459,7 +459,8 @@ def test_m_loops():
     y = IndexedBase('y')
     i = Idx('i', m)
     j = Idx('j', n)
-    result, = codegen(('mat_vec_mult', Eq(y[i], A[i, j]*x[j])), "Octave",
+    expr = EinsteinSum(A[i, j]*x[j])
+    result, = codegen(('mat_vec_mult', Eq(y[i], expr)), "Octave",
                       header=False, empty=False)
     source = result[1]
     expected = (
@@ -480,7 +481,7 @@ def test_m_loops():
 
 def test_m_tensor_loops_multiple_contractions():
     # see comments in previous test about vectorizing
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A')
@@ -490,7 +491,8 @@ def test_m_tensor_loops_multiple_contractions():
     j = Idx('j', n)
     k = Idx('k', o)
     l = Idx('l', p)
-    result, = codegen(('tensorthing', Eq(y[i], B[j, k, l]*A[i, j, k, l])),
+    expr = EinsteinSum(B[j, k, l]*A[i, j, k, l])
+    result, = codegen(('tensorthing', Eq(y[i], expr)),
                       "Octave", header=False, empty=False)
     source = result[1]
     expected = (

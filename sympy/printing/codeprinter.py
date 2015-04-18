@@ -166,16 +166,17 @@ class CodePrinter(StrPrinter):
 
     def _doprint_loops(self, expr, assign_to=None):
         # Here we print an expression that contains Indexed objects, they
-        # correspond to arrays in the generated code.  The low-level implementation
-        # involves looping over array elements and possibly storing results in temporary
-        # variables or accumulate it in the assign_to object.
+        # correspond to arrays in the generated code.  The low-level
+        # implementation involves looping over array elements and possibly
+        # storing results in temporary variables or accumulate it in the
+        # assign_to object.
 
         if self._settings.get('contract', True):
-            from sympy.tensor import get_contraction_structure
-            # Setup loops over non-dummy indices  --  all terms need these
+            # Setup loops over non-dummy indices -- all terms need these
             indices = self._get_expression_indices(expr, assign_to)
-            # Setup loops over dummy indices  --  each term needs separate treatment
-            dummies = get_contraction_structure(expr)
+            # Setup loops over dummy indices -- each term needs separate
+            # treatment
+            dummies = self._get_contraction_structure(expr)
         else:
             indices = []
             dummies = {None: (expr,)}
@@ -245,20 +246,35 @@ class CodePrinter(StrPrinter):
 
     def _get_expression_indices(self, expr, assign_to):
         from sympy.tensor import get_indices
-        rinds, junk = get_indices(expr)
-        linds, junk = get_indices(assign_to)
+        rinds = get_indices(expr)
+        linds = get_indices(assign_to)
 
         # support broadcast of scalar
         if linds and not rinds:
             rinds = linds
         if rinds != linds:
-            raise ValueError("lhs indices must match non-dummy"
-                    " rhs indices in %s" % expr)
+            raise ValueError("lhs indices must match non-dummy rhs indices "
+                             "in %s" % expr)
 
         return self._sort_optimized(rinds, assign_to)
 
-    def _sort_optimized(self, indices, expr):
+    def _get_contraction_structure(self, expr):
+        from sympy.tensor import EinsteinSum
+        from collections import defaultdict
 
+        if isinstance(expr, EinsteinSum):
+            structure = expr.index_structure
+            dummies = defaultdict(list)
+
+            for monomial, inner in zip(structure['monomial_list'],
+                                       structure['inner_list']):
+                key = tuple(inner) if inner else None
+                dummies[key].append(monomial)
+            return dummies
+        else:
+            return {None: (expr,)}
+
+    def _sort_optimized(self, indices, expr):
         from sympy.tensor.indexed import Indexed
 
         if not indices:

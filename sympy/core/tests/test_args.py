@@ -3024,6 +3024,20 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A')[0, 1])
 
 
+def test_sympy__tensor__indexed__DeltaIndexedBase():
+    from sympy.tensor.indexed import DeltaIndexedBase
+    assert _test_args(DeltaIndexedBase('A', shape=(x, y)))
+    assert _test_args(DeltaIndexedBase('A'))
+    assert _test_args(DeltaIndexedBase('A')[0, 1])
+
+
+def test_sympy__tensor__indexed_sums__EinsteinSum():
+    from sympy.tensor.indexed import IndexedBase
+    from sympy.tensor.indexed_sums import EinsteinSum
+    A = IndexedBase('A')
+    assert _test_args(EinsteinSum(2*A[x, y]))
+
+
 @XFAIL
 def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
     # This test fails, this class can be reconstructed from the *args

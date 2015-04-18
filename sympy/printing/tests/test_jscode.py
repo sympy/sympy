@@ -1,9 +1,10 @@
-from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
+from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
+                        EulerGamma, Catalan, Lambda, Dummy)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function
-from sympy.tensor import IndexedBase, Idx
+from sympy.tensor import IndexedBase, Idx, EinsteinSum
 from sympy.matrices import Matrix, MatrixSymbol
 
 from sympy import jscode
@@ -136,8 +137,6 @@ def test_jscode_settings():
 
 
 def test_jscode_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = JavascriptCodePrinter()
@@ -171,7 +170,7 @@ def test_jscode_loops_matrix_vector():
         '   }\n'
         '}'
     )
-    c = jscode(A[i, j]*x[j], assign_to=y[i])
+    c = jscode(EinsteinSum(A[i, j]*x[j]), assign_to=y[i])
     assert c == s
 
 
@@ -191,8 +190,6 @@ def test_dummy_loops():
 
 
 def test_jscode_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -211,13 +208,11 @@ def test_jscode_loops_add():
         '   }\n'
         '}'
     )
-    c = jscode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
+    c = jscode(EinsteinSum(A[i, j]*x[j] + x[i] + z[i]), assign_to=y[i])
     assert c == s
 
 
 def test_jscode_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -241,13 +236,11 @@ def test_jscode_loops_multiple_contractions():
         '   }\n'
         '}'
     )
-    c = jscode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
+    c = jscode(EinsteinSum(b[j, k, l]*a[i, j, k, l]), assign_to=y[i])
     assert c == s
 
 
 def test_jscode_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -266,13 +259,23 @@ def test_jscode_loops_addfactor():
         '   for (var j=0; j<n; j++){\n'
         '      for (var k=0; k<o; k++){\n'
         '         for (var l=0; l<p; l++){\n'
-        '            y[i] = (a[%s] + b[%s])*c[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
+        '            y[i] = y[i] + c[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
+        '         }\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      for (var k=0; k<o; k++){\n'
+        '         for (var l=0; l<p; l++){\n'
+        '            y[i] = y[i] + c[%s]*b[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
         '}'
     )
-    c = jscode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
+    ein_sum = EinsteinSum((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l])
+    c = jscode(ein_sum, assign_to=y[i])
     assert c == s
 
 
@@ -316,8 +319,8 @@ def test_jscode_loops_multiple_terms():
         '   }\n'
         '}\n'
     )
-    c = jscode(
-        b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
+    ein_sum = EinsteinSum(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k])
+    c = jscode(ein_sum, assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
             c == s0 + s2 + s1 + s3[:-1] or

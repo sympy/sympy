@@ -1052,12 +1052,20 @@ class Derivative(Expr):
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
-        # expression at all. Note, this cannnot check non-symbols like
+        # expression at all. Note, this cannot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate:
-            symbol_set = set(sc[0] for sc in variable_count if sc[0].is_Symbol)
-            if symbol_set.difference(expr.free_symbols):
+            # Handle Indexed objects: we don't want to assume e.g.
+            # d(h[i])/d(h[j]) = 0 (should be a Kronecker delta instead), but do
+            # want e.g. d(h[i])/d(k[j]) = 0.
+            def get_base_symbol(symbol):
+                if hasattr(symbol, '_base_Symbol'):
+                    return symbol._base_Symbol
+                return symbol
+            symbol_set = set(get_base_symbol(sc[0])
+                             for sc in variable_count if sc[0].is_Symbol)
+            if symbol_set and not symbol_set.intersection(expr.free_symbols):
                 return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.

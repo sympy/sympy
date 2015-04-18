@@ -144,8 +144,8 @@ the kwarg ``standard=95``:
     >>> print(fcode(Piecewise((x,x<1),(x**2,True)), standard=95))
           merge(x, x**2, x < 1)
 
-Loops are generated if there are Indexed objects in the expression. This
-also requires use of the assign_to option.
+Loops are generated if there are ``Indexed`` objects in the expression. This
+also requires use of the ``assign_to`` option.
 
     >>> A, B = map(IndexedBase, ['A', 'B'])
     >>> m = Symbol('m', integer=True)
@@ -155,11 +155,11 @@ also requires use of the assign_to option.
             A(i) = 2*B(i)
         end do
 
-Repeated indices in an expression with Indexed objects are interpreted as
-summation. For instance, code for the trace of a matrix can be generated
-with
+Repeated indices in an expression with ``Indexed`` objects are interpreted as
+summation when enclosed by the ``EinsteinSum`` function. For instance, code
+for the trace of a matrix can be generated with
 
-    >>> print(fcode(A[i, i], assign_to=x))
+    >>> print(fcode(EinsteinSum(A[i, i]), assign_to=x))
           x = 0
           do i = 1, m
               x = x + A(i, i)

@@ -1,6 +1,6 @@
 from sympy import symbols, Eq
 from sympy.external import import_module
-from sympy.tensor import IndexedBase, Idx
+from sympy.tensor import IndexedBase, Idx, EinsteinSum
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
 from sympy.utilities.pytest import skip
 
@@ -58,14 +58,14 @@ def runtest_autowrap_twice(language, backend):
 
 def runtest_autowrap_trace(language, backend):
     has_module('numpy')
-    trace = autowrap(A[i, i], language, backend)
+    trace = autowrap(EinsteinSum(A[i, i]), language, backend)
     assert trace(numpy.eye(100)) == 100
 
 
 def runtest_autowrap_matrix_vector(language, backend):
     has_module('numpy')
     x, y = symbols('x y', cls=IndexedBase)
-    expr = Eq(y[i], A[i, j]*x[j])
+    expr = Eq(y[i], EinsteinSum(A[i, j]*x[j]))
     mv = autowrap(expr, language, backend)
 
     # compare with numpy's dot product
@@ -77,7 +77,7 @@ def runtest_autowrap_matrix_vector(language, backend):
 
 def runtest_autowrap_matrix_matrix(language, backend):
     has_module('numpy')
-    expr = Eq(C[i, j], A[i, k]*B[k, j])
+    expr = Eq(C[i, j], EinsteinSum(A[i, k]*B[k, j]))
     matmat = autowrap(expr, language, backend)
 
     # compare with numpy's dot product

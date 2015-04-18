@@ -358,7 +358,7 @@ def test_complicated_codegen():
 
 
 def test_loops_c():
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
@@ -367,8 +367,9 @@ def test_loops_c():
     i = Idx('i', m)
     j = Idx('j', n)
 
+    expr = EinsteinSum(A[i, j]*x[j])
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], expr)), "C", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
@@ -423,7 +424,7 @@ def test_dummy_loops_c():
 def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
@@ -432,8 +433,9 @@ def test_partial_loops_c():
     i = Idx('i', (o, m - 5))  # Note: bounds are inclusive
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
+    expr = EinsteinSum(A[i, j]*x[j])
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], expr)), "C", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
@@ -997,7 +999,7 @@ def test_complicated_codegen_f95():
 
 
 def test_loops():
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
 
     n, m = symbols('n,m', integer=True)
@@ -1005,8 +1007,9 @@ def test_loops():
     i = Idx('i', m)
     j = Idx('j', n)
 
+    expr = EinsteinSum(A[i, j]*x[j])
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], expr)), "F95", "file", header=False, empty=False)
 
     assert f1 == 'file.f90'
     expected = (
@@ -1072,7 +1075,7 @@ def test_dummy_loops_f95():
 
 
 def test_loops_InOut():
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
 
     i, j, n, m = symbols('i,j,n,m', integer=True)
@@ -1081,8 +1084,9 @@ def test_loops_InOut():
     x = IndexedBase(x)[Idx(j, n)]
     y = IndexedBase(y)[Idx(i, m)]
 
+    expr = EinsteinSum(y + A*x)
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y, y + A*x)), "F95", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y, expr)), "F95", "file", header=False, empty=False)
 
     assert f1 == 'file.f90'
     expected = (
@@ -1123,7 +1127,7 @@ def test_loops_InOut():
 def test_partial_loops_f():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
-    from sympy.tensor import IndexedBase, Idx
+    from sympy.tensor import IndexedBase, Idx, EinsteinSum
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
@@ -1132,8 +1136,9 @@ def test_partial_loops_f():
     i = Idx('i', (o, m - 5))  # Note: bounds are inclusive
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
+    expr = EinsteinSum(A[i, j]*x[j])
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], expr)), "F95", "file", header=False, empty=False)
 
     expected = (
         'subroutine matrix_vector(A, m, n, o, p, x, y)\n'
