@@ -98,6 +98,25 @@ def test_simplify_contractions():
     run_test(expr1, expr2)
 
 
+def test_canonicalize_inner():
+    i, j, k, l, m, n = symbols('i j k l m n')
+    h, s, L, Q, phi = symbols('h s L Q phi', cls=IndexedBase)
+
+    expr = EinsteinSum(s[i] + L[i, j] * h[j] + L[i, k] * h[k])
+    expected_result = EinsteinSum(s[i] + 2 * L[i, j] * h[j])
+    assert_equal(expr.canonicalize_inner(), expected_result)
+
+    expr = EinsteinSum(L[i, j] * h[i] * h[j] + L[j, i] * h[i] * h[j])
+    expected_result = EinsteinSum(2 * L[i, j] * h[i] * h[j])
+    assert_equal(expr.canonicalize_inner(), expected_result)
+
+    expr = EinsteinSum(s[i] + L[i, j] * h[j] + Q[i, l, m] * h[l] * h[m]
+                       + Q[i, m, n] * h[m] * h[n])
+    expected_result = EinsteinSum(s[i] + L[i, j] * h[j] +
+                                  2 * Q[i, j, l] * h[j] * h[l])
+    assert_equal(expr.canonicalize_inner(), expected_result)
+
+
 def test_simplify():
     i, j = symbols('i j', cls=Idx)
     a = symbols('a')

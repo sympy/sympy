@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import collections
+import itertools
 
 from .indexed import (IndexedBase, Indexed, Idx, IndexException,
                       DeltaIndexedBase)
@@ -17,6 +18,10 @@ from sympy.utilities.decorator import doctest_depends_on
 
 # TODO: Implement IndexedSum, allowing explicit specification of indices that
 # should/shouldn't be summed?
+
+
+_NUM_SIMPLIFY_ITERATIONS = 3
+_MAX_INDEX_COUNT_TO_PERMUTE = 5
 
 
 class IndexConformanceException(Exception):
@@ -45,11 +50,21 @@ class EinsteinSum(Function):
     Examples
     ========
 
+    Create an ``EinsteinSum`` that effects matrix multiplication:
+
     >>> from sympy import symbols, IndexedBase, EinsteinSum
     >>> A, x = symbols('A x', cls=IndexedBase)
     >>> i, j = symbols('i j')
     >>> ein_sum = EinsteinSum(A[i, j] * x[j]); ein_sum
     EinsteinSum(x[j]*A[i, j])
+
+    ``EinsteinSum`` objects can be simplified:
+
+    >>> from sympy import simplify
+    >>> k = symbols('k')
+    >>> ein_sum = EinsteinSum(A[i, j] * x[i] * x[j] + A[j, k] * x[k] * x[j])
+    >>> simplify(ein_sum)
+    EinsteinSum(2*x[i]*x[j]*A[i, j])
 
     """
     def __new__(cls, arg):
@@ -264,8 +279,8 @@ class EinsteinSum(Function):
                 all_indices |= set(arg.indices)
 
         # Check that all IndexedBase objects appearing in the EinsteinSum have
-        # been mentioned in args.
-        if not set(args) == indexed_base_objects:
+        # been mentioned in args. (Extras in args are okay though.)
+        if not set(args) >= indexed_base_objects:
             msg = ("Supplied args list, {0}, should list all IndexedBase "
                    "objects appearing in EinsteinSum, {1}, but it doesn't")
             raise ValueError(msg.format(args, indexed_base_objects))
@@ -420,9 +435,67 @@ class EinsteinSum(Function):
         return type(self)(self.expr.diff(wrt)).simplify_deltas()
 
     def _eval_simplify(self, **kwargs):
-        ein_sum = self.simplify_deltas()
-        expr = simplify(ein_sum.expr, **kwargs)
-        return type(self)(expr)
+        old = self
+        for iteration in range(_NUM_SIMPLIFY_ITERATIONS):
+            new = old.simplify_deltas()
+            new = new.canonicalize_inner()
+            new = type(self)(simplify(new.expr, **kwargs))
+            if new == old:
+                break
+            old = new
+        return new
+
+    def canonicalize_inner(self):
+        """Rename and reorder inner indices into a canonical form.
+
+        Since inner indices are "dummies", this only cosmetically changes the
+        expression. Renaming only uses existing inner indices -- no new indices
+        are created.
+
+        Examples
+        ========
+
+        >>> from sympy import EinsteinSum, IndexedBase, symbols
+        >>> i, j, l, m = symbols('i j l m')
+        >>> L, h, Q = symbols('L h Q', cls=IndexedBase)
+        >>> expr = EinsteinSum(L[i, j] * h[i] * h[j] + L[j, i] * h[i] * h[j])
+        >>> expr.canonicalize_inner()
+        EinsteinSum(2*h[i]*h[j]*L[i, j])
+        >>> expr = EinsteinSum(L[i, j] * h[j] + Q[i, l, m] * h[l] * h[m])
+        >>> expr.canonicalize_inner()
+        EinsteinSum(h[j]*h[l]*Q[i, j, l] + h[j]*L[i, j])
+
+        """
+        structure = self.index_structure
+        inner_list = structure["inner_list"]
+        monomial_list = structure["monomial_list"]
+        new_monomial_list = monomial_list[:]
+
+        # Construct a canonical list of inner indices.
+        canonical_inner = set().union(*inner_list)
+        canonical_inner = sorted(list(canonical_inner), key=default_sort_key)
+
+        # Construct a list of monomials using a minimal set of inner indices.
+        for pos in range(len(inner_list)):
+            inner = sorted(list(inner_list[pos]), key=default_sort_key)
+            sub = zip(inner, canonical_inner[:len(inner)])
+            new_monomial_list[pos] = monomial_list[pos].subs(sub,
+                                                             simultaneous=True)
+
+        # Iteratively reorder each monomial's inner indices to minimize hash.
+        for pos, monomial in enumerate(new_monomial_list):
+            num_inner = len(inner_list[pos])
+            if num_inner > _MAX_INDEX_COUNT_TO_PERMUTE:
+                continue
+            inner = canonical_inner[:num_inner]
+
+            monomial_permutations = [
+                monomial.subs(zip(inner, new_inner), simultaneous=True)
+                for new_inner in itertools.permutations(inner)]
+            new_monomial_list[pos] = min(monomial_permutations,
+                                         key=default_sort_key)
+
+        return type(self)(sum(new_monomial_list))
 
     def simplify_deltas(self):
         """Simplify trivial contractions involving Kronecker deltas.
