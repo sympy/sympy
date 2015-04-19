@@ -8,14 +8,6 @@ This module implements elementary functions, as well as functions like ``Abs``,
 Abs
 ---
 
-Returns the absolute value of the argument.
-
-Examples::
-
-    >>> from sympy.functions import Abs
-    >>> Abs(-1)
-    1
-
 .. autoclass:: sympy.functions.elementary.complexes.Abs
    :members:
 
@@ -46,20 +38,6 @@ acoth
 arg
 ---
 
-Returns the argument (in radians) of a complex number. For a real
-number, the argument is always 0.
-
-Examples::
-
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
-    >>> arg(2.0)
-    0
-    >>> arg(I)
-    pi/2
-    >>> arg(sqrt(2) + I*sqrt(2))
-    pi/4
-
 .. autoclass:: sympy.functions.elementary.complexes.arg
    :members:
 
@@ -84,9 +62,6 @@ atan
 atan2
 -----
 
-This function is like `\operatorname{atan}`, but considers the sign of both
-arguments in order to correctly determine the quadrant of its result.
-
 .. autoclass:: sympy.functions.elementary.trigonometric.atan2
    :members:
 
@@ -104,25 +79,6 @@ ceiling
 
 conjugate
 ---------
-
-Returns the `complex conjugate <http://en.wikipedia.org/wiki/Complex_conjugation>`_
-of an argument. In mathematics, the complex conjugate of a complex number is given
-by changing the sign of the imaginary part. Thus, the conjugate of the complex number
-
-    :math:`a + ib`
-
-(where a and b are real numbers) is
-
-    :math:`a - ib`
-
-Examples::
-
-    >>> from sympy.functions import conjugate
-    >>> from sympy import I
-    >>> conjugate(2)
-    2
-    >>> conjugate(I)
-    -I
 
 .. autoclass:: sympy.functions.elementary.complexes.conjugate
    :members:
@@ -156,8 +112,6 @@ exp
 .. autoclass:: sympy.functions.elementary.exponential.exp
    :members:
 
-.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.log`
-
 ExprCondPair
 ------------
 
@@ -185,21 +139,8 @@ IdentityFunction
 im
 --
 
-Returns the imaginary part of an expression.
-
-Examples::
-
-
-    >>> from sympy.functions import im
-    >>> from sympy import I
-    >>> im(2+3*I)
-    3
-
-.. autoclass: sympy.functions.elementary.im
+.. autoclass:: sympy.functions.elementary.im
    :members:
-
-.. seealso::
-   :py:class:`sympy.functions.elementary.complexes.re`
 
 LambertW
 --------
@@ -213,34 +154,14 @@ log
 .. autoclass:: sympy.functions.elementary.exponential.log
    :members:
 
-.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.exp`
-
 Min
 ---
-
-Returns the minimum of two (comparable) expressions.
-
-Examples::
-
-    >>> from sympy.functions import Min
-    >>> Min(1,2)
-    1
-    >>> from sympy.abc import x
-    >>> Min(1, x)
-    Min(1, x)
-
-It is named ``Min`` and not ``min`` to avoid conflicts with the built-in function ``min``.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Min
    :members:
 
-
 Max
 ---
-
-Returns the maximum of two (comparable) expressions
-
-It is named ``Max`` and not ``max`` to avoid conflicts with the built-in function ``max``.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Max
    :members:
@@ -256,20 +177,8 @@ Piecewise
 re
 --
 
-Return the real part of an expression.
-
-Examples::
-
-    >>> from sympy.functions import re
-    >>> from sympy import I
-    >>> re(2+3*I)
-    2
-
 .. autoclass:: sympy.functions.elementary.complexes.re
    :members:
-
-.. seealso::
-   :py:class:`sympy.functions.elementary.complexes.im`
 
 root
 ----
@@ -295,13 +204,6 @@ sinh
 
 sqrt
 ----
-
-Returns the square root of an expression. It is equivalent to raise to ``Rational(1,2)``.
-
-    >>> from sympy.functions import sqrt
-    >>> from sympy import Rational
-    >>> sqrt(2) == 2**Rational(1,2)
-    True
 
 .. autofunction:: sympy.functions.elementary.miscellaneous.sqrt
 

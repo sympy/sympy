@@ -19,31 +19,30 @@ from sympy.functions.elementary.trigonometric import atan2
 
 
 class re(Function):
-    """Returns real part of expression. This function performs only
-       elementary analysis and so it will fail to decompose properly
-       more complicated expressions. If completely simplified result
-       is needed then use Basic.as_real_imag() or perform complex
-       expansion on instance of this function.
+    """
+    Returns real part of expression. This function performs only
+    elementary analysis and so it will fail to decompose properly
+    more complicated expressions. If completely simplified result
+    is needed then use Basic.as_real_imag() or perform complex
+    expansion on instance of this function.
 
-       >>> from sympy import re, im, I, E
-       >>> from sympy.abc import x, y
+    Examples
+    ========
 
-       >>> re(2*E)
-       2*E
+    >>> from sympy import re, im, I, E
+    >>> from sympy.abc import x, y
+    >>> re(2*E)
+    2*E
+    >>> re(2*I + 17)
+    17
+    >>> re(2*I)
+    0
+    >>> re(im(x) + x*I + 2)
+    2
 
-       >>> re(2*I + 17)
-       17
-
-       >>> re(2*I)
-       0
-
-       >>> re(im(x) + x*I + 2)
-       2
-
-       See Also
-       ========
-
-       im
+    See Also
+    ========
+    im
     """
 
     is_real = True
@@ -123,16 +122,12 @@ class im(Function):
 
     >>> from sympy import re, im, E, I
     >>> from sympy.abc import x, y
-
     >>> im(2*E)
     0
-
     >>> re(2*I + 17)
     17
-
     >>> im(x*I)
     re(x)
-
     >>> im(re(x) + y)
     im(y)
 
@@ -566,7 +561,23 @@ class Abs(Function):
 
 
 class arg(Function):
-    """Returns the argument (in radians) of a complex number"""
+    """
+    Returns the argument (in radians) of a complex number. For a real
+    number, the argument is always 0.
+
+    Examples
+    ========
+
+    >>> from sympy.functions import arg
+    >>> from sympy import I, sqrt
+    >>> arg(2.0)
+    0
+    >>> arg(I)
+    pi/2
+    >>> arg(sqrt(2) + I*sqrt(2))
+    pi/4
+
+    """
 
     is_real = True
     is_finite = True
@@ -597,22 +608,34 @@ class arg(Function):
         x, y = re(self.args[0]), im(self.args[0])
         return atan2(y, x)
 
+
 class conjugate(Function):
     """
-    Changes the sign of the imaginary part of a complex number.
+    Returns the `complex conjugate` Ref[1] of an argument.
+    In mathematics, the complex conjugate of a complex number
+    is givenby changing the sign of the imaginary part.
+
+    Thus, the conjugate of the complex number
+    :math:`a + ib` (where a and b are real numbers) is :math:`a - ib`
 
     Examples
     ========
 
     >>> from sympy import conjugate, I
-
-    >>> conjugate(1 + I)
-    1 - I
+    >>> conjugate(2)
+    2
+    >>> conjugate(I)
+    -I
 
     See Also
     ========
 
     sign, Abs
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Complex_conjugation
     """
 
     @classmethod
