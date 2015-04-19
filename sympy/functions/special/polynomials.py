@@ -145,9 +145,7 @@ class jacobi(OrthogonalPolynomial):
         elif b == -a:
             # P^{a, -a}_n(x)
             return gamma(n + a + 1) / gamma(n + 1) * (1 + x)**(a/2) / (1 - x)**(a/2) * assoc_legendre(n, -a, x)
-        elif a == -b:
-            # P^{-b, b}_n(x)
-            return gamma(n - b + 1) / gamma(n + 1) * (1 - x)**(b/2) / (1 + x)**(b/2) * assoc_legendre(n, b, x)
+
 
         if not n.is_Number:
             # Symbolic result P^{a,b}_n(x)
