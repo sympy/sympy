@@ -227,6 +227,7 @@ def test_factorial2():
 
 
 def test_binomial():
+    x = Symbol('x')
     n = Symbol('n', integer=True)
     nz = Symbol('nz', integer=True, nonzero=True)
     k = Symbol('k', integer=True)
@@ -234,6 +235,7 @@ def test_binomial():
     u = Symbol('u', negative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
+    nt = Symbol('nt', integer=False)
 
     assert binomial(0, 0) == 1
     assert binomial(1, 1) == 1
@@ -269,6 +271,8 @@ def test_binomial():
     assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
     assert binomial(n, k).is_integer
+    assert binomial(nt, k).is_integer is None
+    assert binomial(x, nt).is_integer is False
 
 
 def test_binomial_diff():
