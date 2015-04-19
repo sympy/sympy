@@ -1110,6 +1110,11 @@ def test_sympy__functions__elementary__hyperbolic__atanh():
     assert _test_args(atanh(2))
 
 
+def test_sympy__functions__elementary__hyperbolic__asech():
+    from sympy.functions.elementary.hyperbolic import asech
+    assert _test_args(asech(2))
+
+
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh
     assert _test_args(cosh(2))
