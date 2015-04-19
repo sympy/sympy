@@ -613,7 +613,7 @@ class conjugate(Function):
     """
     Returns the `complex conjugate` Ref[1] of an argument.
     In mathematics, the complex conjugate of a complex number
-    is givenby changing the sign of the imaginary part.
+    is given by changing the sign of the imaginary part.
 
     Thus, the conjugate of the complex number
     :math:`a + ib` (where a and b are real numbers) is :math:`a - ib`
