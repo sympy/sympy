@@ -197,7 +197,7 @@ class MultiFactorial(CombinatorialFunction):
 
 
 class subfactorial(CombinatorialFunction):
-    """The subfactorial counts the derangements of n items and is
+    r"""The subfactorial counts the derangements of n items and is
     defined for non-negative integers as::
 
               ,
@@ -209,9 +209,14 @@ class subfactorial(CombinatorialFunction):
     It can also be written as int(round(n!/exp(1))) but the recursive
     definition with caching is implemented for this function.
 
-    This function is generalized to noninteger arguments [2]_ as
+    An interesting analytic expression is the following [2]_
 
     .. math:: !x = \Gamma(x + 1, -1)/e
+
+    which is valid for non-negative integers x. The above formula
+    is not very useful incase of non-integers. :math:`\Gamma(x + 1, -1)` is
+    single-valued only for integral arguments x, elsewhere on the positive real
+    axis it has an infinite number of branches none of which are real.
 
     References
     ==========
@@ -251,8 +256,10 @@ class subfactorial(CombinatorialFunction):
         if arg.is_Number:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
+            elif arg is S.NaN:
+                return S.NaN
             elif arg is S.Infinity:
-                return arg
+                return S.Infinity
 
     def _eval_is_even(self):
         if self.args[0].is_odd and self.args[0].is_nonnegative:

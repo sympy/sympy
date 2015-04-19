@@ -309,6 +309,7 @@ def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) == oo
+    assert subfactorial(nan) == nan
 
     x = Symbol('x')
     assert subfactorial(x).rewrite(uppergamma) == uppergamma(x + 1, -1)/S.Exp1
