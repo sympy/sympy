@@ -176,7 +176,7 @@ class Polyhedron(Basic):
         ---------------------------
 
         It is not necessary to enter any permutations, nor is necessary to
-        enter a complete set of transforations. In fact, for a polyhedron,
+        enter a complete set of transformations. In fact, for a polyhedron,
         all configurations can be constructed from just two permutations.
         For example, the orientations of a tetrahedron can be generated from
         an axis passing through a vertex and face and another axis passing
