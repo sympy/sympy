@@ -234,15 +234,17 @@ class Polyhedron(Basic):
 
         To rotate the square with a single permutation we can do:
 
-        >>> square.rotate(square.pgroup[0]); square.corners
+        >>> square.rotate(square.pgroup[0])
+        >>> square.corners
         (1, 3, 2, 4)
 
         To use more than one permutation (or to use one permutation more
         than once) it is more convenient to use the make_perm method:
 
-        >>> p011 = square.pgroup.make_perm([0,1,1]) # diag flip + 2 rotations
+        >>> p011 = square.pgroup.make_perm([0, 1, 1]) # diag flip + 2 rotations
         >>> square.reset() # return to initial orientation
-        >>> square.rotate(p011); square.corners
+        >>> square.rotate(p011)
+        >>> square.corners
         (4, 2, 3, 1)
 
         Thinking outside the box
@@ -353,11 +355,13 @@ class Polyhedron(Basic):
 
             20 faces:
 
-            (0,1,2) (0,2,3) (0,3,4) (0,4,5) (0,1,5)
-            (1,2,6) (2,3,7) (3,4,8) (4,5,9) (1,5,10)
-            (2,6,7) (3,7,8) (4,8,9) (5,9,10) (1,6,10)
-            (6,7,11,) (7,8,11) (8,9,11) (9,10,11)
-            (6,10,11)
+            (0, 1, 2) (0, 2, 3) (0, 3, 4)
+            (0, 4, 5) (0, 1, 5) (1, 2, 6)
+            (2, 3, 7) (3, 4, 8) (4, 5, 9)
+            (1, 5, 10) (2, 6, 7) (3, 7, 8)
+            (4, 8, 9) (5, 9, 10) (1, 6, 10)
+            (6, 7, 11) (7, 8, 11) (8, 9, 11)
+            (9, 10, 11) (6, 10, 11)
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> cube.edges
@@ -538,7 +542,7 @@ class Polyhedron(Basic):
         A non-physical "rotation" that is not prohibited by this method:
 
         >>> cube.reset()
-        >>> cube.rotate(Permutation([[1,2]], size=8))
+        >>> cube.rotate(Permutation([[1, 2]], size=8))
         >>> cube.corners
         (0, 2, 1, 3, 4, 5, 6, 7)
 
@@ -801,8 +805,8 @@ def _pgroup_calcs():
 
     icosahedron_faces = [
         [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
-        [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9 ],
-        [3, 4, 9], [4, 9, 10 ], [4, 5, 10], [5, 6, 10], [1, 5, 6 ],
+        [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9],
+        [3, 4, 9], [4, 9, 10 ], [4, 5, 10], [5, 6, 10], [1, 5, 6],
         [6, 7, 11], [7, 8, 11], [8, 9, 11], [9, 10, 11], [6, 10, 11]]
 
     icosahedron = Polyhedron(
