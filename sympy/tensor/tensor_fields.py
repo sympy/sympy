@@ -59,7 +59,7 @@ def df(f, args, output_type='l'):
     Differentials:
 
     >>> d = df(f, args_t, 't')
-    >>> d
+    >>> print(d)
     2*x1*x2 x1**2 + (x3 - 1)*cos(x2*x3 - x2) x2*cos(x2*x3 - x2)
 
     The valence of the returned tensor:
@@ -117,6 +117,7 @@ def grad(f, args, g=None, output_type=None):
     >>> from sympy import symbols, sin
     >>> from sympy.tensor.arraypy import Arraypy
     >>> x1, x2, x3 = symbols('x1 x2 x3')
+
     f it’s a function the differential of that is calculated:
 
     >>> f=x1**2*x2 + sin(x2*x3 - x2)
@@ -149,7 +150,7 @@ def grad(f, args, g=None, output_type=None):
 
     Gradient:
     >>> gr=grad(f,args,g_t,'a')
-    >>> gr
+    >>> print(gr)
     -x1**2/5 + 6*x1*x2/5 - (x3 - 1)*cos(x2*x3 - x2)/5 2*x1**2/5 - 2*x1*x2/5 + \
     2*(x3 - 1)*cos(x2*x3 - x2)/5 x2*cos(x2*x3 - x2)
 
@@ -252,7 +253,7 @@ def curl(X, args, output_type=None):
     >>> X_t[2]=x3**3-x1
     >>> arg=[x1,x2,x3]
     >>> r=curl(X_t,arg,'t')
-    >>> r
+    >>> print(r)
     -sin(x3) 1 -3*x1*x2**2
     >>> r.type_pq
     (1, 0)
@@ -358,6 +359,7 @@ def div(X, args, g=None):
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
 
     >>> dv = div(X,arg,g)
+    >>> print(dv)
     x2**3 + 3*x3**2 + 1
 
     """
@@ -432,7 +434,7 @@ def lie_xy(X, Y, args, output_type=None):
     The Lie brackets of two vector fields:
 
     >>> lie = lie_xy(X, Y, arg,'a')
-    >>> lie
+    >>> print(lie)
     2*x1**3*x2**6 + 3*x1**3*x2**2*(x2 - cos(x3)) - 3*x1*x2**2*(x2*x3 - \
     sin(x1*x3))
     -x1*x2**3*x3*cos(x1*x3) - x2*x3 + x3*(x2 - cos(x3)) + \
@@ -589,7 +591,7 @@ def dw(omega, args):
     External differential of a differential forms:
 
     >>> domega=dw(omega, [x1,x2,x3])
-    >>> domega
+    >>> print(domega)
     0 0 0
     0 0 3
     0 -3 0
@@ -707,7 +709,7 @@ def lie_w(omega, X, args):
     Lie derivative of a differential form:
 
     >>> li = lie_w(omega,X,arg)
-    >>> li
+    >>> print(li)
     0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
     -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1
     x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - \

@@ -153,7 +153,7 @@ def christoffel_1(g, var, type_output='t'):
     -sin(x2)*cos(x2)  0
     -sin(x2)*cos(x2)  0
     0  0
-    >>> christoffel1.type_pq
+    >>> ch_1.type_pq
     (0, 3)
 
     """
@@ -508,7 +508,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     =========
 
     >>> from sympy.tensor.riemannian_geometry import covar_der_XY
-    >>> from sympy.tensot.arraypy import Arraypy, Tensor
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -665,7 +665,7 @@ def riemann(g, var, type_output='t'):
     =========
 
     >>> from sympy.tensor.riemannian_geometry import riemann
-    >>> from sympy.tensot.arraypy import Arraypy, Tensor
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')
 
@@ -797,7 +797,7 @@ def ricci(riemann, var, type_output='t'):
     Examples:
     =========
 
-    >>> from sympy.tensor.riemannian_geometry import ricci
+    >>> from sympy.tensor.riemannian_geometry import ricci, riemann
     >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos   
     >>> x1, x2 = symbols('x1, x2')
@@ -908,7 +908,7 @@ def scal_curv(g, ricci, var):
     Examples:
     =========
 
-    >>> from sympy.tensor.riemannian_geometry import scal_curv
+    >>> from sympy.tensor.riemannian_geometry import scal_curv, ricci
     >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos  
     >>> x1, x2 = symbols('x1, x2')
@@ -1013,7 +1013,7 @@ def k_sigma(X, Y, R, g, var):
     Examples:
     =========
 
-    >>> from sympy.tensor.riemannian_geometry import k_sigma
+    >>> from sympy.tensor.riemannian_geometry import k_sigma, riemann
     >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> from sympy import symbols, cos
     >>> x1, x2 = symbols('x1, x2')

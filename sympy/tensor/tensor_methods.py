@@ -14,6 +14,7 @@ def symmetric(in_arr):
     Examples
     ========
     
+    >>> from sympy.tensor.arraypy import list2arraypy, symmetric
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = symmetric(a)
     >>> print (b)
@@ -64,6 +65,7 @@ def asymmetric(in_arr):
     Examples
     ========
     
+    >>> from sympy.tensor.arraypy import list2arraypy, asymmetric
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = asymmetric(a)
     >>> print (b)
@@ -121,11 +123,11 @@ def tensorProduct(first_tensor, second_tensor):
     Examples
     ========
 
-    from sympy.tensor.arraypy import Arraypy, Tensor
+    >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> a = Tensor( Arraypy ('1..2', 'X'), 1)
     >>> b = Tensor( Arraypy ('1..2', 'Y'), -1)
     >>> c = a * b
-    >>> print c
+    >>> print (c)
     X[1]*Y[1] X[1]*Y[2]
     X[2]*Y[1] X[2]*Y[2]
 
@@ -205,6 +207,9 @@ def perm_parity(lst):
     Examples
     ========
     
+    >>> from sympy.matrices import zeros
+    >>> from itertools import permutations
+    >>> from sympy.tensor.tensor_methods import perm_parity
     >>> signs=zeros(6)
     >>> temp_i=0
     >>> for p in permutations(range(3)):
