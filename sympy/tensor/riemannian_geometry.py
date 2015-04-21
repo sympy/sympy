@@ -407,7 +407,7 @@ def covar_der(X, g, var, type_output='t'):
     >>> print(c_v)
     x2**3 - (x1 - cos(x2))*sin(x2)/cos(x2)  x1*x2**3*sin(x2)*cos(x2) + 1  
     -x1*x2**3*sin(x2)/cos(x2) + 3*x1*x2**2  sin(x2) 
-    >>>c_v.type_pq
+    >>> c_v.type_pq
     (1, 1)
 
     """
@@ -901,8 +901,6 @@ def ricci(riemann, var, type_output='t'):
     return ricci
 
 
-# ---------------- scal_curv --------------------------------
-
 def scal_curv(g, ricci, var):
     """The scalar curvature (or the Ricci scalar)
     is the simplest curvature invariant of a Riemannian manifold.
@@ -1006,8 +1004,6 @@ def scal_curv(g, ricci, var):
     # Output
     return scal_curv
 
-
-# ----------------- k_sigma ----------------------------
 
 def k_sigma(X, Y, R, g, var):
     """Return Sectional curvature of thу Riemannian space

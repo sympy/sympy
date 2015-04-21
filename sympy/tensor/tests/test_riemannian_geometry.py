@@ -1,5 +1,7 @@
-from sympy.tensor import *
 from sympy.matrices import Matrix
+from sympy.tensor.arraypy import Arraypy, Tensor
+from sympy.tensor.riemannian_geometry import scal_prod, christoffel_1,\
+    christoffel_2, covar_der, covar_der_XY, riemann, ricci, scal_curv, k_sigma
 from sympy import symbols, cos, sin
 
 
@@ -464,3 +466,4 @@ def test_k_sigma():
     assert k_sigma(X, Y, riemann_ten, g, var_list) == 1
     assert k_sigma(X, Y, riemann_ten, g_ten, var_list) == 1
     assert k_sigma(X, Y, riemann_ten, g_ten0, var_list) == 1
+    
