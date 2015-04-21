@@ -417,6 +417,11 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x) is True
     assert (sin(y)/x).is_rational_function(x, y) is False
 
+    assert (S.NaN).is_rational_function() is False
+    assert (S.Infinity).is_rational_function() is False
+    assert (-S.Infinity).is_rational_function() is False
+    assert (S.ComplexInfinity).is_rational_function() is False
+
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True

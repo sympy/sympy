@@ -34,13 +34,14 @@ def test_kronecker_delta():
     k = Symbol('k', nonzero=True)
     assert KroneckerDelta(1, 1) == 1
     assert KroneckerDelta(1, 2) == 0
+    assert KroneckerDelta(k, 0) == 0
     assert KroneckerDelta(x, x) == 1
     assert KroneckerDelta(x**2 - y**2, x**2 - y**2) == 1
     assert KroneckerDelta(i, i) == 1
     assert KroneckerDelta(i, i + 1) == 0
     assert KroneckerDelta(0, 0) == 1
     assert KroneckerDelta(0, 1) == 0
-    assert KroneckerDelta(i + k, i) == KroneckerDelta(0, k)
+    assert KroneckerDelta(i + k, i) == 0
     assert KroneckerDelta(i + k, i + k) == 1
     assert KroneckerDelta(i + k, i + 1 + k) == 0
     assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0

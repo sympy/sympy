@@ -387,7 +387,7 @@ class GeometricRay(Matrix):
     matrix : a 2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
-    =======
+    ========
 
     >>> from sympy.physics.optics import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix

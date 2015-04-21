@@ -400,8 +400,7 @@ rational numbers, and identity 2 holds, it will be applied automatically
      2  2
     t ⋅z
    >>> sqrt(x*y)
-      ___   ___
-    ╲╱ x ⋅╲╱ y
+    √x⋅√y
 
 This means that it will be impossible to undo this identity with
 ``powsimp()``, because even if ``powsimp()`` were to put the bases together,
@@ -411,8 +410,7 @@ they would be automatically split apart again.
      2  2
     t ⋅z
    >>> powsimp(sqrt(x)*sqrt(y))
-      ___   ___
-    ╲╱ x ⋅╲╱ y
+    √x⋅√y
 
 expand_power_exp / expand_power_base
 ------------------------------------

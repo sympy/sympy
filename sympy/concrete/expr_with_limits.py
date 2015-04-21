@@ -13,6 +13,7 @@ from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
+from sympy.matrices import Matrix
 
 
 
@@ -412,6 +413,9 @@ class AddWithLimits(ExprWithLimits):
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
             return Add(*[ self.func(i, *self.limits) for i in summand.args ])
+        elif summand.is_Matrix:
+            return Matrix._new(summand.rows, summand.cols,
+                [self.func(i, *self.limits) for i in summand._mat])
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

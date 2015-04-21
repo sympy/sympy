@@ -1087,3 +1087,9 @@ def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
+
+
+def test_issue_7130():
+    i, L, a, b = symbols('i L a b')
+    integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
+    assert x not in integrate(integrand, (x, 0, L)).free_symbols

@@ -4145,6 +4145,8 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
+    from sympy.functions.elementary.piecewise import Piecewise
+
     if len(exprs) == 2:
         f, g = exprs
 
@@ -6256,6 +6258,7 @@ def cancel(f, *gens, **args):
     sqrt(6)/2
     """
     from sympy.core.exprtools import factor_terms
+    from sympy.functions.elementary.piecewise import Piecewise
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -6799,5 +6802,3 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
-
-from sympy.functions import Piecewise

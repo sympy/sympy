@@ -1032,6 +1032,7 @@ class FermionState(FockState):
         FockStateFermionKet((a,))
 
         A creator acting on vacuum below fermi vanishes
+
         >>> FKet([]).up(i)
         0
 
@@ -1074,10 +1075,12 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         An annihilator acting on vacuum above fermi vanishes
+
         >>> FKet([]).down(a)
         0
 
         Also below fermi, it vanishes, unless we specify a fermi level > 0
+
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)

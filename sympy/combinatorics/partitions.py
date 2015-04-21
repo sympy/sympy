@@ -58,7 +58,7 @@ class Partition(FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = FiniteSet.__new__(cls, *list(map(lambda x: FiniteSet(*x), args)))
+        obj = FiniteSet.__new__(cls, *[FiniteSet(*x) for x in args])
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -320,6 +320,7 @@ class IntegerPartition(Basic):
 
         If the value that the partion should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
+
         >>> IntegerPartition(10, [5, 4, 3, 1])
         Traceback (most recent call last):
         ...

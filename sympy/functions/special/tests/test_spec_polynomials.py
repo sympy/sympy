@@ -1,5 +1,5 @@
 from sympy import (
-    Symbol, diff, Derivative, Rational, roots, S, sqrt, hyper,
+    Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
     cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
     laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
@@ -51,6 +51,9 @@ def test_jacobi():
     assert jacobi_normalized(n, a, b, x) == \
            (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
                                     /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
+
+    raises(ValueError, lambda: jacobi(-2.1, a, b, x))
+    raises(ValueError, lambda: jacobi(Dummy(positive=True, integer=True), 1, 2, oo))
 
 
 def test_gegenbauer():
@@ -248,6 +251,8 @@ def test_laguerre():
 
     assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
 
+    raises(ValueError, lambda: laguerre(-2.1, x))
+
 
 def test_assoc_laguerre():
     n = Symbol("n")
@@ -278,6 +283,8 @@ def test_assoc_laguerre():
 
     assert conjugate(assoc_laguerre(n, alpha, x)) == \
         assoc_laguerre(n, conjugate(alpha), conjugate(x))
+
+    raises(ValueError, lambda: assoc_laguerre(-2.1, alpha, x))
 
 
 @XFAIL

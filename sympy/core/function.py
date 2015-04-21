@@ -36,7 +36,7 @@ from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
-from .core import BasicMeta, C
+from .core import BasicMeta
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -245,7 +245,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
             if arg is S.Zero: return S.Zero
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, C.Mul):
+            if isinstance(arg, Mul):
                 coeff, terms = arg.as_coeff_Mul(rational=True)
                 if coeff is not S.One:
                     return cls(coeff) * cls(terms)
@@ -550,6 +550,7 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
+        from sympy import Order
         from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
@@ -586,7 +587,7 @@ class Function(Application, Expr):
             s = e1._eval_nseries(v, n, logx)
             o = s.getO()
             s = s.removeO()
-            s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
+            s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
             return s
         if (self.func.nargs is S.Naturals0
                 or (self.func.nargs == FiniteSet(1) and args0[0])
@@ -616,21 +617,21 @@ class Function(Application, Expr):
                     term = subs*(x**i)/fact
                     term = term.expand()
                     series += term
-                return series + C.Order(x**n, x)
+                return series + Order(x**n, x)
             return e1.nseries(x, n=n, logx=logx)
         arg = self.args[0]
         l = []
         g = None
         # try to predict a number of terms needed
         nterms = n + 2
-        cf = C.Order(arg.as_leading_term(x), x).getn()
+        cf = Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
             nterms = int(nterms / cf)
         for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
-        return Add(*l) + C.Order(x**n, x)
+        return Add(*l) + Order(x**n, x)
 
     def fdiff(self, argindex=1):
         """
@@ -653,8 +654,9 @@ class Function(Application, Expr):
         argument whose leading term vanishes as x -> 0 might be encountered.
         See, for example, cos._eval_as_leading_term.
         """
+        from sympy import Order
         args = [a.as_leading_term(x) for a in self.args]
-        o = C.Order(1, x)
+        o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
             # Whereas x and any finite number are contained in O(1, x),
             # expressions like 1/x are not. If any arg simplified to a
@@ -1149,7 +1151,7 @@ class Derivative(Expr):
         * Derivatives wrt symbols and non-symbols don't commute.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import Derivative, Function, symbols
         >>> vsort = Derivative._sort_variables
@@ -1299,7 +1301,7 @@ class Derivative(Expr):
                 if match:
                     variables = self_vars_front + self_vars
                     return Derivative(new, *variables)
-        return Derivative(*map(lambda x: x._subs(old, new), self.args))
+        return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
         dx = self.args[1:]
@@ -1935,8 +1937,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     kind of 'expansion'.  For hints that simply rewrite an expression, use the
     .rewrite() API.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Expr, sympify
     >>> class MyClass(Expr):
@@ -2270,6 +2272,7 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
+    from sympy import Integral, Symbol
     from sympy.simplify.simplify import fraction
     from sympy.logic.boolalg import BooleanFunction
 
@@ -2278,10 +2281,10 @@ def count_ops(expr, visual=False):
 
         ops = []
         args = [expr]
-        NEG = C.Symbol('NEG')
-        DIV = C.Symbol('DIV')
-        SUB = C.Symbol('SUB')
-        ADD = C.Symbol('ADD')
+        NEG = Symbol('NEG')
+        DIV = Symbol('DIV')
+        SUB = Symbol('SUB')
+        ADD = Symbol('ADD')
         while args:
             a = args.pop()
             if a.is_Rational:
@@ -2338,9 +2341,9 @@ def count_ops(expr, visual=False):
                 a.is_Pow or
                 a.is_Function or
                 isinstance(a, Derivative) or
-                    isinstance(a, C.Integral)):
+                    isinstance(a, Integral)):
 
-                o = C.Symbol(a.func.__name__.upper())
+                o = Symbol(a.func.__name__.upper())
                 # count the args
                 if (a.is_Mul or isinstance(a, LatticeOp)):
                     ops.append(o*(len(a.args) - 1))
@@ -2358,7 +2361,7 @@ def count_ops(expr, visual=False):
         ops = []
         for arg in expr.args:
             ops.append(count_ops(arg, visual=True))
-        o = C.Symbol(expr.func.__name__.upper())
+        o = Symbol(expr.func.__name__.upper())
         ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []
@@ -2371,7 +2374,7 @@ def count_ops(expr, visual=False):
             while args:
                 a = args.pop()
                 if a.args:
-                    o = C.Symbol(a.func.__name__.upper())
+                    o = Symbol(a.func.__name__.upper())
                     if a.is_Boolean:
                         ops.append(o*(len(a.args)-1))
                     else:

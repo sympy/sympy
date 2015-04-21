@@ -231,6 +231,15 @@ def test_point3D():
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
+
+def test_issue_9214():
+    p1 = Point3D(4, -2, 6)
+    p2 = Point3D(1, 2, 3)
+    p3 = Point3D(7, 2, 3)
+
+    assert Point3D.are_collinear(p1, p2, p3) is False
+
+
 def test_line_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
@@ -741,8 +750,6 @@ def test_plane():
     p4 = Point3D(x, x, x)
     p5 = Point3D(y, y, y)
 
-    raises(NotImplementedError, lambda: Plane(p1, p2, p4))
-    raises(NotImplementedError, lambda: Plane(p1, p2, p5))
     raises(ValueError, lambda: Plane(p1, p2))
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))

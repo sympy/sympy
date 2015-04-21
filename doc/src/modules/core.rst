@@ -36,10 +36,9 @@ Atom
 .. autoclass:: Atom
    :members:
 
-C
-^
-.. autoclass:: C
-   :members:
+core
+----
+.. module:: sympy.core.core
 
 singleton
 ---------

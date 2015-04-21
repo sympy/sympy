@@ -90,8 +90,8 @@ def int_to_Integer(s):
     http://docs.python.org/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
-    Example
-    =======
+    Examples
+    ========
 
     >>> from __future__ import division
     >>> from sympy.interactive.session import int_to_Integer

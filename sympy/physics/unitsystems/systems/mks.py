@@ -61,6 +61,11 @@ c = Constant(velocity, factor=299792458, abbrev="c")
 
 units = [m, g, s, J, N, W, Pa, Hz]
 all_units = []
+
+# Prefixes of units like g, J, N etc get added using `prefix_unit`
+# in the for loop, but the actual units have to be added manually.
+all_units.extend([g, J, N, W, Pa, Hz])
+
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 all_units.extend([v, a, p, G, c])

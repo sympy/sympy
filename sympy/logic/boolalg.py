@@ -8,12 +8,11 @@ from itertools import combinations, product
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.core import C
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application
-from sympy.core.compatibility import ordered, range, with_metaclass
+from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 
@@ -57,7 +56,7 @@ class Boolean(Basic):
 
     def equals(self, other):
         """
-        Returns if the given formulas have the same truth table.
+        Returns True if the given formulas have the same truth table.
         For two formulas to be equal they must have the same literals.
 
         Examples
@@ -469,23 +468,26 @@ class Not(BooleanFunction):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import (
+            Equality, GreaterThan, LessThan,
+            StrictGreaterThan, StrictLessThan, Unequality)
         if isinstance(arg, Number) or arg in (True, False):
             return false if arg else true
         if arg.is_Not:
             return arg.args[0]
         # Simplify Relational objects.
-        if isinstance(arg, C.Equality):
-            return C.Unequality(*arg.args)
-        if isinstance(arg, C.Unequality):
-            return C.Equality(*arg.args)
-        if isinstance(arg, C.StrictLessThan):
-            return C.GreaterThan(*arg.args)
-        if isinstance(arg, C.StrictGreaterThan):
-            return C.LessThan(*arg.args)
-        if isinstance(arg, C.LessThan):
-            return C.StrictGreaterThan(*arg.args)
-        if isinstance(arg, C.GreaterThan):
-            return C.StrictLessThan(*arg.args)
+        if isinstance(arg, Equality):
+            return Unequality(*arg.args)
+        if isinstance(arg, Unequality):
+            return Equality(*arg.args)
+        if isinstance(arg, StrictLessThan):
+            return GreaterThan(*arg.args)
+        if isinstance(arg, StrictGreaterThan):
+            return LessThan(*arg.args)
+        if isinstance(arg, LessThan):
+            return StrictGreaterThan(*arg.args)
+        if isinstance(arg, GreaterThan):
+            return StrictLessThan(*arg.args)
 
     def as_set(self):
         """
@@ -1303,6 +1305,123 @@ def to_int_repr(clauses, symbols):
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
             for c in clauses]
+
+
+def term_to_integer(term):
+    """
+    Return an integer corresponding to the base-2 digits given by ``term``.
+
+    Parameters
+    ==========
+
+    term : a string or list of ones and zeros
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import term_to_integer
+    >>> term_to_integer([1, 0, 0])
+    4
+    >>> term_to_integer('100')
+    4
+
+    """
+
+    return int(''.join(list(map(str, list(term)))), 2)
+
+
+def integer_to_term(k, n_bits=None):
+    """
+    Return a list of the base-2 digits in the integer, ``k``.
+
+    Parameters
+    ==========
+
+    k : int
+    n_bits : int
+        If ``n_bits`` is given and the number of digits in the binary
+        representation of ``k`` is smaller than ``n_bits`` then left-pad the
+        list with 0s.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import integer_to_term
+    >>> integer_to_term(4)
+    [1, 0, 0]
+    >>> integer_to_term(4, 6)
+    [0, 0, 0, 1, 0, 0]
+    """
+
+    s = '{0:0{1}b}'.format(abs(as_int(k)), as_int(abs(n_bits or 0)))
+    return list(map(int, s))
+
+
+def truth_table(expr, variables, input=True):
+    """
+    Return a generator of all possible configurations of the input variables,
+    and the result of the boolean expression for those values.
+
+    Parameters
+    ==========
+
+    expr : string or boolean expression
+    variables : list of variables
+    input : boolean (default True)
+        indicates whether to return the input combinations.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import truth_table
+    >>> from sympy.abc import x,y
+    >>> table = truth_table(x >> y, [x, y])
+    >>> for t in table:
+    ...     print('{0} -> {1}'.format(*t))
+    [0, 0] -> True
+    [0, 1] -> True
+    [1, 0] -> False
+    [1, 1] -> True
+
+    >>> table = truth_table('x | y', ['x', 'y'])
+    >>> list(table)
+    [([0, 0], False), ([0, 1], True), ([1, 0], True), ([1, 1], True)]
+
+    If input is false, truth_table returns only a list of truth values.
+    In this case, the corresponding input values of variables can be
+    deduced from the index of a given output.
+
+    >>> from sympy.logic.boolalg import integer_to_term
+    >>> vars = [y, x]
+    >>> values = truth_table(x >> y, vars, input=False)
+    >>> values = list(values)
+    >>> values
+    [True, False, True, True]
+
+    >>> for i, value in enumerate(values):
+    ...     print('{0} -> {1}'.format(list(zip(
+    ...     vars, integer_to_term(i, len(vars)))), value))
+    [(y, 0), (x, 0)] -> True
+    [(y, 0), (x, 1)] -> False
+    [(y, 1), (x, 0)] -> True
+    [(y, 1), (x, 1)] -> True
+
+    """
+    variables = [sympify(v) for v in variables]
+
+    expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction) and not is_literal(expr):
+        return
+
+    table = product([0, 1], repeat=len(variables))
+    for term in table:
+        term = list(term)
+        value = expr.xreplace(dict(zip(variables, term)))
+
+        if input:
+            yield term, value
+        else:
+            yield value
 
 
 def _check_pair(minterm1, minterm2):
