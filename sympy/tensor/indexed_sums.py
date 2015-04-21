@@ -20,7 +20,7 @@ from sympy.utilities.decorator import doctest_depends_on
 # should/shouldn't be summed?
 
 
-_NUM_SIMPLIFY_ITERATIONS = 3
+_MAX_NUM_SIMPLIFY_ITERATIONS = 3
 _MAX_INDEX_COUNT_TO_PERMUTE = 5
 
 
@@ -85,8 +85,9 @@ class EinsteinSum(Function):
         """Make a function accepting NumPy arrays out of an ``EinsteinSum``.
 
         The constructed function is then simply a wrapper for ``numpy.einsum``.
-        Any shape information in the component ``Indexed`` objects is ignored
-        by this method.
+        Using ``Idx`` instances with numerical upper bounds as outer indices is
+        required if any ``DeltaIndexedBase`` instances are present (so that
+        corresponding identity matrices can be constructed automatically).
 
         Note that there can be no non-numerical elements of ``EinsteinSum``
         objects that call ``numpify`` other than ``Indexed`` objects -- making
@@ -99,8 +100,11 @@ class EinsteinSum(Function):
         args : ``list`` (or iterable)
             List of all constituent ``IndexedBase`` instances specifying the
             argument NumPy arrays the constructed function will take, in order.
+            This does not include ``DeltaIndexedBase`` instances, which are
+            handled automatically.
         outer_indices : ``list`` (or iterable)
-            Index order of output of constructed function.
+            List of outer (i.e. non-summation) indices present, which specifies
+            the index order of the output of the constructed function.
         dtype : a number type (either ``float`` or ``complex``)
             Number type constructed function should use for computation.
 
@@ -122,38 +126,33 @@ class EinsteinSum(Function):
         >>> np.allclose(func(A_array, B_array), A_array.dot(B_array))
         True
 
-        Competitive speedwise with default matrix multiply:
+        Competitive speedwise with default matrix multiply for large arrays:
 
         >>> from timeit import timeit
-        >>> m, n = 300, 400
+        >>> m, n = 3, 4
         >>> A_array = np.random.rand(m*n).reshape(m, n)
         >>> B_array = np.random.rand(n*m).reshape(n, m)
-        >>> timeit(func(A_array, B_array), number=10)  # doctest: +SKIP
+        >>> timeit(lambda: func(A_array, B_array), number=10)  # doctest: +SKIP
         0.21692680500564165
-        >>> timeit(A_array.dot(B_array), number=10)  # doctest: +SKIP
+        >>> timeit(lambda: A_array.dot(B_array), number=10)  # doctest: +SKIP
         0.3139198549906723
 
         Kronecker deltas
         ----------------
 
-        Currently if the ``EinsteinSum`` involves a Kronecker delta ``Indexed``
-        object (made via ``DeltaIndexedBase()``), then it must be referenced
-        in ``args``, and an appropriately shaped NumPy identity matrix must be
-        supplied explicitly as an argument to the constructed function. If
-        multiple different Kronecker deltas are required, they should be given
-        different explicit labels, otherwise they will be determined to be the
-        same. In the future this should be fixed so that identity matrices are
-        supplied automatically.
+        If the ``EinsteinSum`` involves one or more Kronecker delta ``Indexed``
+        object (made via ``DeltaIndexedBase()``), they should *not* be included
+        in ``args``. Instead, they should have ``Idx`` instances as indices,
+        each possessing numerical shape information. This is how ``numpify``
+        knows how to construct corresponding identity matrices.
 
-        >>> from sympy import DeltaIndexedBase
-        >>> v = symbols('v', cls=IndexedBase)
+        >>> from sympy import Idx, DeltaIndexedBase
+        >>> N = 3
+        >>> i, j, k, l = symbols('i j k l', cls=Idx, range=N)
         >>> delta = DeltaIndexedBase()
-        >>> m = 3
-        >>> v_array = np.random.rand(m)
-        >>> delta_array = np.eye(m)
-        >>> expr = EinsteinSum(delta[i, j]*v[j])
-        >>> func = expr.numpify([delta, v], [i])
-        >>> np.allclose(func(delta_array, v_array), v_array)
+        >>> expr = EinsteinSum(delta[i, j] * delta[k, l])
+        >>> func = expr.numpify([], [i, j, k, l])
+        >>> np.allclose(func(), np.einsum('kl,ij->ijkl', np.eye(N), np.eye(N)))
         True
 
         See Also
@@ -169,6 +168,7 @@ class EinsteinSum(Function):
                    "be imported: {0!s}".format(e))
             raise ImportError(msg)
 
+        self = self._eval_simplify()
         self._check_numpify_args(args, outer_indices)
 
         # Produce a string component that we will pass to numpy.einsum below.
@@ -176,63 +176,80 @@ class EinsteinSum(Function):
         outer_string = '->{0}'.format(
             ''.join([str(index) for index in outer_indices]))
 
-        # Make a map from argument (IndexedBase instance) to argument's
-        # position in args. E.g. if args = [a, b, c], would be
-        # {a: 0, b: 1, c: 2}.
-        base_to_arg_position = dict([(arg, arg_id)
-                                     for arg_id, arg in enumerate(args)])
+        # Arrays args will be organized below as [arrays from args, identity
+        # matrices]. array_pos corresponds to an array's position in this list.
+        # E.g. if args = [a, b, c] and there is one Kronecker delta tensor, then
+        # the array_pos of b is 1, the delta tensor's array pos is 3, etc.
 
-        def arrange_args(args, order):
-            """Permute args according to order."""
-            return [args[index] for index in order]
+        # Make a map from each argument (IndexedBase instance) to its
+        # corresponding array_pos. E.g. if args = [a, b, c], this would be
+        # {a: 0, b: 1, c: 2}.
+        arg_to_array_pos = dict([(arg, pos) for pos, arg in enumerate(args)])
+
+        # Find and organize (by dimension) all DeltaIndexedBase instances.
+        delta_dims = set()
+        for arg in preorder_traversal(self):
+            if (
+                isinstance(arg, Indexed)
+                and isinstance(arg.base, DeltaIndexedBase)
+            ):
+                delta_dims.add(arg.shape[0])
+        delta_dims = sorted(list(delta_dims))
+        delta_arrays = [np.eye(dim) for dim in delta_dims]
+        num_args = len(args)
+        # Make a map from each delta tensor's dimension to its corresponding
+        # array_pos. E.g. if args = [a, b, c] and there is just one delta tensor
+        # with shape = (2, 2), this would be {2: 3}.
+        delta_dim_to_array_pos = dict([
+            (dim, num_args + pos) for pos, dim in enumerate(delta_dims)])
 
         prefactors, decomp = self._decompose(self.expr)
         prefactors = [dtype(prefactor) for prefactor in prefactors]
 
         # Loop through EinsteinSum's monomial terms. For each, produce 1) an
-        # ordering of arguments to later pass to np.einsum (e.g. [1, 1, 0]
-        # meaning pass arg 1, then arg 1 again, then arg 0), and 2) a
+        # ordering of arrays to later pass to np.einsum (e.g. [1, 1, 0]
+        # meaning pass array 1, then array 1 again, then array 0), and 2) a
         # contraction specification string for np.einsum (e.g. "i,k,ij->jk").
         einsum_term_strings = []
-        term_arg_orders = []
+        term_array_orders = []
         for term_decomp in decomp:
             # Loop through multiplicative factors in each monomial.
-            term_arg_orders.append([base_to_arg_position[factor.base]
-                                    for factor in term_decomp])
             einsum_factor_strings = []
+            term_array_order = []
             for factor in term_decomp:
                 assert isinstance(factor, Indexed)
                 einsum_factor_strings.append(
                     "".join([str(index) for index in factor.indices]))
+                if isinstance(factor.base, DeltaIndexedBase):
+                    term_array_order.append(
+                        delta_dim_to_array_pos[factor.shape[0]])
+                else:
+                    term_array_order.append(arg_to_array_pos[factor.base])
             einsum_term_strings.append(
                 ",".join(einsum_factor_strings) + outer_string)
+            term_array_orders.append(term_array_order)
 
-        # Create functions to evaluate each monomial. Need to have this factory
-        # function to avoid using loop variable in closure (classic Python
-        # mistake).
-        def make_term_func(einsum_string):
-            def term_func(*args):
-                return np.einsum(einsum_string, *args, dtype=dtype)
-            term_func.einsum_string = einsum_string
-            return term_func
-        term_funcs = []
-        for einsum_string in einsum_term_strings:
-            term_funcs.append(make_term_func(einsum_string))
+        # Function to evaluate each monomial.
+        def term_func(prefactor, arrays, order, einsum_string):
+            return prefactor * np.einsum(einsum_string,
+                                         *[arrays[pos] for pos in order])
 
         # Create function that evaluates entire EinsteinSum = sum of monomials.
-        def func(*args):
+        def func(*arrays):
+            # Append identity matrices to array arguments.
+            arrays = list(arrays) + delta_arrays
             result = 0.
-            iterable = zip(term_funcs, term_arg_orders, prefactors)
-            for term_func, arg_order, prefactor in iterable:
-                arranged_args = arrange_args(args, arg_order)
-                result += prefactor * term_func(*arranged_args)
+            iterable = zip(prefactors, term_array_orders, einsum_term_strings)
+            for prefactor, array_order, einsum_string in iterable:
+                result += term_func(
+                    prefactor, arrays, array_order, einsum_string)
             return result
         func.__doc__ = """Tensor function created with EinsteinSum.numpify.
 
         Parameters
         ==========
 
-        {args} : each a ``numpy.ndarray`` or object that can be converted into
+        {arrays} : each a ``numpy.ndarray`` or object that can be converted into
             one via ``numpy.array``.
 
         Returns
@@ -245,19 +262,24 @@ class EinsteinSum(Function):
                 {outer!s}
 
         """.format(
-            expr=self.expr, args=", ".join([str(arg) for arg in args]),
+            expr=self.expr, arrays=", ".join([str(arg) for arg in args]),
             outer=outer_indices)
-        func.term_funcs = term_funcs
         return func
 
     def _check_numpify_args(self, args, outer_indices):
         """Various checks to ensure arguments to numpify are valid."""
         expr = self.expr
 
-        # Check that args are all IndexedBase objects.
+        # Check that args are all IndexedBase objects. Ensure none are
+        # DeltaIndexedBase objects.
         for arg in args:
             if not isinstance(arg, IndexedBase):
                 raise TypeError("args should only have IndexedBase objects")
+            if isinstance(arg, DeltaIndexedBase):
+                raise TypeError(
+                    "No need to specify Kronecker deltas as arguments; just "
+                    "ensure relevant indices are instances of Idx and have the "
+                    "right numerical upper bounds")
 
         # Check supplied outer indices.
         index_structure = self.index_structure
@@ -274,9 +296,17 @@ class EinsteinSum(Function):
         indexed_objects = set()
         for arg in preorder_traversal(expr):
             if isinstance(arg, Indexed):
-                indexed_objects.add(arg)
-                indexed_base_objects.add(arg.base)
-                all_indices |= set(arg.indices)
+                if not isinstance(arg.base, DeltaIndexedBase):
+                    indexed_objects.add(arg)
+                    indexed_base_objects.add(arg.base)
+                    all_indices |= set(arg.indices)
+                elif not all(
+                    [_index_has_shape(index) for index in arg.indices]
+                ):
+                    msg = ("Kronecker delta tensors specified via "
+                           "DeltaIndexedBase should have Idx indices with "
+                           "numerical ranges: {0}")
+                    raise TypeError(msg.format(arg))
 
         # Check that all IndexedBase objects appearing in the EinsteinSum have
         # been mentioned in args. (Extras in args are okay though.)
@@ -286,9 +316,8 @@ class EinsteinSum(Function):
             raise ValueError(msg.format(args, indexed_base_objects))
 
         # Ensure there are no free symbols that aren't indices.
-        substitutions = zip(indexed_objects,
-                            [S.One for _ in range(len(indexed_objects))])
-        if not isinstance(expr.subs(substitutions), Number):
+        replaced_expr = expr.replace(Indexed, lambda *_: S.One)
+        if not isinstance(replaced_expr, Number):
             msg = ("Only numbers and Indexed objects are allowed when calling "
                    "EinsteinSum.numpify(): {0}")
             raise ValueError(msg.format(expr))
@@ -436,7 +465,7 @@ class EinsteinSum(Function):
 
     def _eval_simplify(self, **kwargs):
         old = self
-        for iteration in range(_NUM_SIMPLIFY_ITERATIONS):
+        for iteration in range(_MAX_NUM_SIMPLIFY_ITERATIONS):
             new = old.simplify_deltas()
             new = new.canonicalize_inner()
             new = type(self)(simplify(new.expr, **kwargs))
@@ -446,11 +475,13 @@ class EinsteinSum(Function):
         return new
 
     def canonicalize_inner(self):
-        """Rename and reorder inner indices into a canonical form.
+        """Rename and reorder inner (summation) indices into a canonical form.
 
         Since inner indices are "dummies", this only cosmetically changes the
         expression. Renaming only uses existing inner indices -- no new indices
-        are created.
+        are created. Note that all inner indices must be interchangeable in
+        order to be rearranged: they must all be of the same type and must all
+        have the same range information if of type ``Idx``.
 
         Examples
         ========
@@ -474,6 +505,20 @@ class EinsteinSum(Function):
         # Construct a canonical list of inner indices.
         canonical_inner = set().union(*inner_list)
         canonical_inner = sorted(list(canonical_inner), key=default_sort_key)
+        if not canonical_inner:
+            return type(self)(self.expr)
+
+        # Ensure all inner indices are interchangeable. Otherwise don't attempt
+        # to simplify.
+        inner_type = type(canonical_inner[0])
+        for inner in canonical_inner:
+            if not isinstance(inner, inner_type):
+                return type(self)(self.expr)
+            if inner_type == Idx and not (
+                inner.lower == canonical_inner[0].lower and
+                inner.upper == canonical_inner[0].upper
+            ):
+                return type(self)(self.expr)
 
         # Construct a list of monomials using a minimal set of inner indices.
         for pos in range(len(inner_list)):
@@ -732,3 +777,7 @@ def get_indices(expr):
         return set(expr.indices)
     else:
         return set().union(*[get_indices(arg) for arg in expr.args])
+
+
+def _index_has_shape(index):
+    return isinstance(index, Idx) and isinstance(index.upper, Number)

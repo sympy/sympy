@@ -116,6 +116,19 @@ def test_canonicalize_inner():
                                   2 * Q[i, j, l] * h[j] * h[l])
     assert_equal(expr.canonicalize_inner(), expected_result)
 
+    expr = EinsteinSum(L[i, j] * h[i] * h[j] + Q[k, l] * phi[k] * phi[l])
+    expected_result = EinsteinSum(L[i, j] * h[i] * h[j]
+                                  + Q[i, j] * phi[i] * phi[j])
+    assert_equal(expr.canonicalize_inner(), expected_result)
+
+    # Index reordering/renaming shouldn't happen with heterogeneous inner
+    # indices.
+    i = Idx('i', range=7)
+    expr = EinsteinSum(L[i, j] * h[i] * h[j] + Q[k, l] * phi[k] * phi[l])
+    expected_result = EinsteinSum(L[i, j] * h[i] * h[j]
+                                  + Q[i, j] * phi[i] * phi[j])
+    assert_not_equal(expr.canonicalize_inner(), expected_result)
+
 
 def test_simplify():
     i, j = symbols('i j', cls=Idx)
@@ -218,193 +231,232 @@ def test_numpify_norm():
     """Ensure numpification can compute vector norms."""
     try:
         import numpy as np
-
-        i = symbols('i', cls=Idx)
-        h = symbols('h', cls=IndexedBase)
-
-        m = 3
-        h_arr = np.random.rand(m)
-
-        expr = EinsteinSum(S(-3) * h[i] * h[i])
-        func = expr.numpify([h], [])
-        val = func(h_arr)
-
-        expected_val = 0.
-        for ii in range(m):
-            expected_val += -3. * h_arr[ii] * h_arr[ii]
-        assert np.allclose(val, expected_val)
     except ImportError:
-        pass
+        return
+
+    i = symbols('i', cls=Idx)
+    h = symbols('h', cls=IndexedBase)
+
+    m = 3
+    h_arr = np.random.rand(m)
+
+    expr = EinsteinSum(S(-3) * h[i] * h[i])
+    func = expr.numpify([h], [])
+    val = func(h_arr)
+
+    expected_val = 0.
+    for ii in range(m):
+        expected_val += -3. * h_arr[ii] * h_arr[ii]
+    assert np.allclose(val, expected_val)
 
 
 def test_numpify_matrix_mult():
     """Ensure numpification can compute matrix multiplication."""
     try:
         import numpy as np
-
-        i, j, k = symbols('i j k', cls=Idx)
-        A, B = symbols('A, B', cls=IndexedBase)
-
-        m = 7
-        A_arr = np.random.rand(m, m)
-        B_arr = np.random.rand(m, m)
-
-        expr = EinsteinSum(A[i, j] * B[j, k])
-        func = expr.numpify([A, B], [i, k])
-        mult = func(A_arr, B_arr)
-
-        expected_mult = A_arr.dot(B_arr)
-        assert np.allclose(mult, expected_mult)
     except ImportError:
-        pass
+        return
+
+    i, j, k = symbols('i j k', cls=Idx)
+    A, B = symbols('A, B', cls=IndexedBase)
+
+    m = 7
+    A_arr = np.random.rand(m, m)
+    B_arr = np.random.rand(m, m)
+
+    expr = EinsteinSum(A[i, j] * B[j, k])
+    func = expr.numpify([A, B], [i, k])
+    mult = func(A_arr, B_arr)
+
+    expected_mult = A_arr.dot(B_arr)
+    assert np.allclose(mult, expected_mult)
 
 
 def test_numpify_vec_1():
     try:
         import numpy as np
-
-        i, j, k = symbols('i j k', cls=Idx)
-        s, h, L, Q = symbols('s, h, L, Q', cls=IndexedBase)
-
-        m, n = 3, 4
-        arr_func = np.random.rand
-        s_arr = arr_func(m)
-        h_arr = arr_func(n)
-        L_arr = arr_func(m * n).reshape(m, n)
-
-        expr = EinsteinSum(2 * s[i] - 0.5 * L[i, j] * h[j])
-        func = expr.numpify([L, h, s], [i])
-        vec = func(L_arr, h_arr, s_arr)
-
-        expected_vec = np.zeros(m)
-        for ii in range(m):
-            for jj in range(n):
-                expected_vec[ii] += -0.5 * L_arr[ii, jj] * h_arr[jj]
-            expected_vec[ii] += 2 * s_arr[ii]
-        assert np.allclose(vec, expected_vec)
     except ImportError:
-        pass
+        return
+
+    i, j, k = symbols('i j k', cls=Idx)
+    s, h, L, Q = symbols('s, h, L, Q', cls=IndexedBase)
+
+    m, n = 3, 4
+    arr_func = np.random.rand
+    s_arr = arr_func(m)
+    h_arr = arr_func(n)
+    L_arr = arr_func(m * n).reshape(m, n)
+
+    expr = EinsteinSum(2 * s[i] - 0.5 * L[i, j] * h[j])
+    func = expr.numpify([L, h, s], [i])
+    vec = func(L_arr, h_arr, s_arr)
+
+    expected_vec = np.zeros(m)
+    for ii in range(m):
+        for jj in range(n):
+            expected_vec[ii] += -0.5 * L_arr[ii, jj] * h_arr[jj]
+        expected_vec[ii] += 2 * s_arr[ii]
+    assert np.allclose(vec, expected_vec)
 
 
 def test_numpify_vec_2():
     try:
         import numpy as np
-
-        i, j, k = symbols('i j k', cls=Idx)
-        s, h, L, Q = symbols('s, h, L, Q', cls=IndexedBase)
-
-        m, n = 3, 4
-        arr_func = np.random.rand
-        s_arr = arr_func(m)
-        h_arr = arr_func(n)
-        L_arr = arr_func(m * n).reshape(m, n)
-        Q_arr = arr_func(m * n * n).reshape(m, n, n)
-
-        expr = EinsteinSum(S(-3) * s[i] + S(7) * L[i, j] * h[j]
-                           + Q[i, j, k] * h[j] * h[k])
-        func = expr.numpify([s, L, h, Q], [i])
-        raises(IndexConformanceException,
-               lambda: expr.numpify([s, L, h, Q], [i, j]))
-        vec = func(s_arr, L_arr, h_arr, Q_arr)
-
-        expected_vec = np.zeros(m)
-        for ii in range(m):
-            for jj in range(n):
-                for kk in range(n):
-                    expected_vec[ii] += (Q_arr[ii, jj, kk] * h_arr[jj]
-                                         * h_arr[kk])
-                expected_vec[ii] += 7. * L_arr[ii, jj] * h_arr[jj]
-            expected_vec[ii] += -3. * s_arr[ii]
-        assert np.allclose(vec, expected_vec)
     except ImportError:
-        pass
+        return
+
+    i, j, k = symbols('i j k', cls=Idx)
+    s, h, L, Q = symbols('s, h, L, Q', cls=IndexedBase)
+
+    m, n = 3, 4
+    arr_func = np.random.rand
+    s_arr = arr_func(m)
+    h_arr = arr_func(n)
+    L_arr = arr_func(m * n).reshape(m, n)
+    Q_arr = arr_func(m * n * n).reshape(m, n, n)
+
+    expr = EinsteinSum(S(-3) * s[i] + S(7) * L[i, j] * h[j]
+                       + Q[i, j, k] * h[j] * h[k])
+    func = expr.numpify([s, L, h, Q], [i])
+    raises(IndexConformanceException,
+           lambda: expr.numpify([s, L, h, Q], [i, j]))
+    vec = func(s_arr, L_arr, h_arr, Q_arr)
+
+    expected_vec = np.zeros(m)
+    for ii in range(m):
+        for jj in range(n):
+            for kk in range(n):
+                expected_vec[ii] += (Q_arr[ii, jj, kk] * h_arr[jj]
+                                     * h_arr[kk])
+            expected_vec[ii] += 7. * L_arr[ii, jj] * h_arr[jj]
+        expected_vec[ii] += -3. * s_arr[ii]
+    assert np.allclose(vec, expected_vec)
 
 
 def test_numpify_internal_contraction():
     try:
         import numpy as np
-
-        i, j, k = symbols('i j k')
-        A = symbols('A', cls=IndexedBase)
-        delta = DeltaIndexedBase()
-
-        A_array = np.array([[[1, 2], [-1, 7]], [[-3, 2], [-1, 2]]])
-        delta_array = np.eye(2)
-        expected_result = np.array([8., -1.])
-
-        expr = EinsteinSum(A[i, j, j])
-        func = expr.numpify([A], [i])
-        assert np.allclose(func(A_array), expected_result)
-
-        expr = EinsteinSum(A[i, j, k] * delta[j, k])
-        func = expr.numpify([A, delta], [i])
-        assert np.allclose(func(A_array, delta_array), expected_result)
     except ImportError:
-        pass
+        return
+
+    i, j, k = symbols('i j k')
+    A = symbols('A', cls=IndexedBase)
+    delta = DeltaIndexedBase()
+
+    A_array = np.array([[[1, 2], [-1, 7]], [[-3, 2], [-1, 2]]])
+    expected_result = np.array([8., -1.])
+
+    expr = EinsteinSum(A[i, j, j])
+    func = expr.numpify([A], [i])
+    assert np.allclose(func(A_array), expected_result)
+
+    expr = EinsteinSum(A[i, j, k] * delta[j, k])
+    func = expr.numpify([A], [i])
+    assert np.allclose(func(A_array), expected_result)
 
 
-def test_numpify_delta():
+def test_numpify_deltas():
     try:
         import numpy as np
-
-        i, j, k, l = symbols('i j k l', cls=Idx)
-        A = symbols('A', cls=IndexedBase)
-        delta1, delta2 = symbols('delta1 delta87', cls=DeltaIndexedBase)
-
-        m, n = 4, 3
-        A_array = np.random.rand(m, n)
-        delta1_array = np.eye(m)
-        delta2_array = np.eye(n)
-
-        expr = EinsteinSum(delta1[i, j] * A[j, k] * delta2[k, l])
-        func = expr.numpify([delta2, A, delta1], [i, l])
-        assert np.allclose(func(delta2_array, A_array, delta1_array), A_array)
     except ImportError:
-        pass
+        return
+
+    M, N = 4, 3
+    i, j, m, n = symbols('i j m n', cls=Idx, range=M)
+    k, l = symbols('k l', cls=Idx, range=N)
+
+    A = symbols('A', cls=IndexedBase)
+    delta1, delta2 = symbols('delta1 delta87', cls=DeltaIndexedBase)
+
+    A_array = np.random.rand(N, N)
+
+    expr = EinsteinSum(delta1[i, j] * A[k, l])
+    func = expr.numpify([A], [k, i, l, j])
+    assert np.allclose(func(A_array),
+                       np.einsum('kl,ij->kilj', A_array, np.eye(M)))
+
+    expr = EinsteinSum(delta1[i, j] * delta1[m, n])
+    func = expr.numpify([], [i, j, n, m])
+    assert np.allclose(func(),
+                       np.einsum('ij,mn->ijnm', np.eye(M), np.eye(M)))
+
+    expr = EinsteinSum(delta1[i, j] * delta2[m, n])
+    func = expr.numpify([], [i, n, j, m])
+    assert np.allclose(func(),
+                       np.einsum('ij,mn->injm', np.eye(M), np.eye(M)))
+
+    expr = EinsteinSum(delta1[i, j] * A[k, l]
+                       - 73 * delta2[i, j] * delta1[k, l])
+    func = expr.numpify([A], [l, k, i, j])
+    expected_result = np.einsum('kl,ij->lkij', A_array, np.eye(M))
+    expected_result -= 73 * np.einsum('kl,ij->lkij', np.eye(N), np.eye(M))
+    assert np.allclose(func(A_array), expected_result)
+
+    expr = EinsteinSum(delta1[i, j] * delta1[m, n])
+    func = expr.numpify([], [i, j, m, n])
+    assert np.allclose(func(), np.einsum('ij,mn->ijmn', np.eye(M), np.eye(M)))
+
+
+def test_numpify_symmetrize():
+    try:
+        import numpy as np
+    except ImportError:
+        return
+
+    M = 4
+    i, j = symbols('i j', cls=Idx, range=M)
+
+    A = symbols('A', cls=IndexedBase)
+
+    A_array = np.random.rand(M, M)
+
+    expr = EinsteinSum(A[i, j] + A[j, i])
+    func = expr.numpify([A], [i, j])
+    assert np.allclose(func(A_array), A_array + A_array.T)
 
 
 def test_numpify_complex_trace():
     try:
         import numpy as np
-
-        i = symbols('i', cls=Idx)
-        A = symbols('A', cls=IndexedBase)
-
-        m = 4
-        A_array = np.random.rand(m, m) + np.random.rand(m, m) * 1j
-
-        expr = EinsteinSum(A[i, i])
-        func = expr.numpify([A], [], dtype=complex)
-        assert np.allclose(func(A_array), A_array.trace())
     except ImportError:
-        pass
+        return
+
+    i = symbols('i', cls=Idx)
+    A = symbols('A', cls=IndexedBase)
+
+    m = 4
+    A_array = np.random.rand(m, m) + np.random.rand(m, m) * 1j
+
+    expr = EinsteinSum(A[i, i])
+    func = expr.numpify([A], [], dtype=complex)
+    assert np.allclose(func(A_array), A_array.trace())
 
 
 def test_numpify_exceptions():
     try:
         import numpy as np
-
-        i, j, z = symbols('i j z', cls=Idx)
-        s = symbols('s', cls=IndexedBase)
-
-        # No exception.
-        expr = EinsteinSum(S(-7.8) * s[i, j, j])
-        func = expr.numpify([s], [i])
-        func(np.random.rand(2, 3, 3))
-
-        # Exceptions:
-        expr = EinsteinSum(S(-7.8) * s[i, j, j])
-        raises(IndexConformanceException, lambda: expr.numpify([s], [i, z]))
-        raises(TypeError, lambda: expr.numpify([z], [i]))
-        raises(ValueError, lambda: expr.numpify([], [i]))
-
-        expr = EinsteinSum(z * s[i, j, j])
-        raises(ValueError, lambda: expr.numpify([s], [i]))
-
-        expr = EinsteinSum(s[1])
-        raises(TypeError, lambda: expr.numpify([s], [1]))
     except ImportError:
-        pass
+        return
+
+    i, j, z = symbols('i j z', cls=Idx)
+    s = symbols('s', cls=IndexedBase)
+
+    # No exception.
+    expr = EinsteinSum(S(-7.8) * s[i, j, j])
+    func = expr.numpify([s], [i])
+    func(np.random.rand(2, 3, 3))
+
+    # Exceptions:
+    expr = EinsteinSum(S(-7.8) * s[i, j, j])
+    raises(IndexConformanceException, lambda: expr.numpify([s], [i, z]))
+    raises(TypeError, lambda: expr.numpify([z], [i]))
+    raises(ValueError, lambda: expr.numpify([], [i]))
+
+    expr = EinsteinSum(z * s[i, j, j])
+    raises(ValueError, lambda: expr.numpify([s], [i]))
+
+    expr = EinsteinSum(s[1])
+    raises(TypeError, lambda: expr.numpify([s], [1]))
 
 
 def test_get_indices_trivial():
