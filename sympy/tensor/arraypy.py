@@ -747,6 +747,7 @@ class Arraypy(Basic):
         # creating matrix of needed shape: self._dims[0] on self._dims[1]
         x = MatrixSymbol(0, self._dims[0], self._dims[1])
         res_matrix = Matrix(x)
+        # res_matrix = Matrix(self.shape[0], self.shape[1], [0 for i in range self.shape[0]*self.shape[1]])
 
         # filling matrix with Arraypy elements
         idx = self._start_index

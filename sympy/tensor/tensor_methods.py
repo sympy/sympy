@@ -115,7 +115,7 @@ def asymmetric(in_arr):
 
     return res_arr
 
-def tensorProduct(first_tensor, second_tensor):
+def tensor_product(first_tensor, second_tensor):
     """
     Returns tensor product.
     Rank of resulted tensor is a summary rank of two tensors.
@@ -196,7 +196,42 @@ def wedge(first_tensor, second_tensor):
     s = len(second_tensor)
     
     coeff = factorial(p+s)/factorial(p)*factorial(s)
-    return coeff*asymmetric(tensorProduct(first_tensor, second_tensor))
+    return coeff*asymmetric(tensor_product(first_tensor, second_tensor))
+
+def change_basis(tensor, transformation_matrix, old_to_new = True):
+    if not isinstance(tensor, Tensor):
+            raise TypeError('First argiment must be of Tensor type')
+    if not isinstance(transformation_matrix, Arraypy):
+        transformation_matrix = transormation_matrix.to_matrix()
+    elif not isinstance(transformation_matrix, Matrix):
+        raise TypeError('Transformation_matrix must be of Matrix type or Arraypy with rank == 2')
+    inverse_transformation_matrix = transformation_matrix.inv()
+    
+    # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
+    # b), (c, d), ... , (y, z)] )
+    arg = [(in_arr.start_index[i], in_arr.end_index[i])
+               for i in range(in_arr.rank)]    
+    result_tensor = Tensor(Arraypy(arg), tensor.ind_char)
+    """
+    idx = result_tensor.start_index
+    for i in range(len(result_tensor)):
+        result_tensor[idx] = 
+    """
+    # loop over index characters of tensor
+    for i in tensor.ind_char:
+        if old_to_new:
+            if i == 1:
+                
+                pass
+                
+            elif i == -1:
+                pass
+        else:
+            if i == 1:
+                pass
+            
+            elif i == -1:
+                pass
 
 def perm_parity(lst):
     '''\
@@ -232,3 +267,15 @@ def perm_parity(lst):
             lst[i], lst[mn] = lst[mn], lst[i]
     return parity
 #====================================================
+
+def is_symmetric(array):
+    """
+    Check if array or tensor is already symmetric
+    """
+    return array == symmetric(array)
+
+def is_asymmetric(array):
+    """
+    Check if array or tensor is already asymmetric
+    """
+    return array == asymmetric(array)
