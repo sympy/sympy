@@ -168,8 +168,8 @@ class EinsteinSum(Function):
                    "be imported: {0!s}".format(e))
             raise ImportError(msg)
 
-        self = self._eval_simplify()
-        self._check_numpify_args(args, outer_indices)
+        ein_sum = self._eval_simplify()
+        ein_sum._check_numpify_args(args, outer_indices)
 
         # Produce a string component that we will pass to numpy.einsum below.
         # This component specifies the indices of the resultant tensor.
@@ -188,7 +188,7 @@ class EinsteinSum(Function):
 
         # Find and organize (by dimension) all DeltaIndexedBase instances.
         delta_dims = set()
-        for arg in preorder_traversal(self):
+        for arg in preorder_traversal(ein_sum):
             if (
                 isinstance(arg, Indexed)
                 and isinstance(arg.base, DeltaIndexedBase)
@@ -203,7 +203,7 @@ class EinsteinSum(Function):
         delta_dim_to_array_pos = dict([
             (dim, num_args + pos) for pos, dim in enumerate(delta_dims)])
 
-        prefactors, decomp = self._decompose(self.expr)
+        prefactors, decomp = ein_sum._decompose(ein_sum.expr)
         prefactors = [dtype(prefactor) for prefactor in prefactors]
 
         # Loop through EinsteinSum's monomial terms. For each, produce 1) an
