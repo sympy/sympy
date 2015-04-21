@@ -335,14 +335,14 @@ def curl(X, args, output_type=None):
     return rotor
 
 
-def div(X, args, g=None):
+def diverg(X, args, g=None):
     """Return the divergence of a vector field X. Compute divergence of vector
     field consisting of N elements.
 
     Examples:
     =========
 
-    >>> from sympy.tensor.tensor_fields import div
+    >>> from sympy.tensor.tensor_fields import diverg
     >>> from sympy import symbols, cos
     >>> from sympy.matrices import Matrix
     >>> x1, x2, x3 = symbols('x1 x2 x3')
@@ -358,7 +358,7 @@ def div(X, args, g=None):
 
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
 
-    >>> dv = div(X,arg,g)
+    >>> dv = diverg(X,arg,g)
     >>> print(dv)
     x2**3 + 3*x3**2 + 1
 
