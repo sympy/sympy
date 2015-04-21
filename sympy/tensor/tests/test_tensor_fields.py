@@ -1,6 +1,6 @@
 from sympy.matrices import Matrix
 from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, list2tensor
-from sympy.tensor.tensor_fields import df, grad, curl, div, lie_xy, dw, lie_w
+from sympy.tensor.tensor_fields import df, grad, curl, diverg, lie_xy, dw, lie_w
 from sympy import symbols, cos, sin
 
 
@@ -105,7 +105,7 @@ def test_df_var_tnsr1():
     assert df(f, var_tnsr1, 't').type_pq == (0, 1)
 
 
-def test_div_var_x_list():
+def test_diverg_var_x_list():
     x1, x2, x3 = symbols('x1 x2 x3')
 
     X = [x1 * x2**3, x2 - cos(x3), x3**3 - x1]
@@ -134,10 +134,10 @@ def test_div_var_x_list():
     ten1[3, 2] = 0
     ten1[3, 3] = 1
 
-    assert div(X, var) == x2**3 + 3 * x3**2 + 1
-    assert div(X, var, g) == x2**3 + 3 * x3**2 + 1
-    assert div(X, var, ten) == x2**3 + 3 * x3**2 + 1
-    assert div(X, var, ten1) == x2**3 + 3 * x3**2 + 1
+    assert diverg(X, var) == x2**3 + 3 * x3**2 + 1
+    assert diverg(X, var, g) == x2**3 + 3 * x3**2 + 1
+    assert diverg(X, var, ten) == x2**3 + 3 * x3**2 + 1
+    assert diverg(X, var, ten1) == x2**3 + 3 * x3**2 + 1
 
 
 def test_grad_varlist():
