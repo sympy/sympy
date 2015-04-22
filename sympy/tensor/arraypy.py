@@ -708,6 +708,18 @@ class Arraypy(Basic):
         """
         res = tuple([self._end_index[i] - 1 for i in range(self._rank)])
         return res
+    
+    @property
+    def iter_index(self):
+        """
+        Return current index in iteration process.
+        
+        Use it only in loops over Arraypy/Tensor
+        
+        Examples
+        ========
+        """
+        return self._current_index
 
     @property
     def rank(self):

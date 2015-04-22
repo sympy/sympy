@@ -198,6 +198,143 @@ def wedge(first_tensor, second_tensor):
     coeff = factorial(p+s)/factorial(p)*factorial(s)
     return coeff*asymmetric(tensor_product(first_tensor, second_tensor))
 
+def lower_index(tensor, metric_tensor, index_number_to_low):
+    """
+    Lowering one upper index of the tensor
+    
+    Examples
+    ========
+    >>> x, y, z, w, r, phi = symbols('x y z w r phi')
+    >>> A = list2tensor([1, 0, 0, 0, r**2, 0, 0, 0, (r**2)*sin(phi)], (3, 3) ,(-1, -1))
+    print(A)
+    1  0  0  
+    0  r**2  0  
+    0  0  r**2*sin(phi)
+
+    >>> T = list2tensor([w, x, 0, y, z, 0, 0, y**2, x*y*w], (3, 3) ,(1, -1))
+    >>> print(A)
+    w  x  0  
+    y  z  0  
+    0  y**2  w*x*y 
+
+    >>> S1 = lower_index(T, A, 1)
+    print(S1)    
+    w  x  0  
+    r**2*y  r**2*z  0  
+    0  r**2*y**2*sin(phi)  r**2*w*x*y*sin(phi)   
+    
+    >>> print(S1.ind_char)
+    (-1, -1)
+    """
+    index_number_to_low -= 1
+    
+    if not isinstance(tensor, Tensor):
+        raise TypeError('Input tensor must be of Tensor type') 
+    
+    if not isinstance(metric_tensor, Tensor):
+        raise TypeError('Metric tensor must be of Tensor type') 
+        
+    if not metric_tensor.rank == 2:
+        raise ValueError('Metric tensor rank must be equal to 2')
+    
+    if not metric_tensor.ind_char == (-1, -1):
+        raise ValueError('Metric tensor must be covariant')
+    
+    if tensor.ind_char[index_number_to_low] == -1:
+        raise ValueError('Index number should point on upper index')
+    
+    # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
+    # b), (c, d), ... , (y, z)] )
+    arg = [(tensor.start_index[i], tensor.end_index[i])
+                   for i in range(tensor.rank)]
+    new_ind_char = [i for i in tensor.ind_char]
+    new_ind_char[index_number_to_low] = -1
+    result_tensor = Tensor(Arraypy(arg), new_ind_char)   
+    
+    cur_index = tensor.start_index
+    # loop over all tensor elements
+    for i in range (len(tensor)):
+        # loop over dimension pointed in index_number_to_low
+        for j in range(tensor.start_index[index_number_to_low], tensor.end_index[index_number_to_low]+1):
+            # forming indexes
+            metric_tensor_index = (j, cur_index[index_number_to_low])
+            temp_index = [i for i in cur_index]
+            temp_index[index_number_to_low] = j
+            result_tensor[cur_index] += tensor[tuple(temp_index)]*metric_tensor[metric_tensor_index]
+        cur_index = tensor.next_index(cur_index)
+    
+    return result_tensor
+
+def raise_index(tensor, metric_tensor, index_number_to_low):
+    """
+    Raising one lower index of the tensor
+    
+    Examples
+    ========
+    >>> x, y, z, w, r, phi = symbols('x y z w r phi')
+    >>> A = list2tensor([1, 0, 0, 0, r**2, 0, 0, 0, (r**2)*sin(phi)], (3, 3) ,(-1, -1))
+    print(A)
+    1  0  0  
+    0  r**2  0  
+    0  0  r**2*sin(phi)
+
+    >>> T = list2tensor([w, x, 0, y, z, 0, 0, y**2, x*y*w], (3, 3) ,(1, -1))
+    >>> print(A)
+    w  x  0  
+    y  z  0  
+    0  y**2  w*x*y 
+
+    >>> S = raise_index(T, A, 2)
+    print(S)    
+    w  x/r**2  0  
+    y  z/r**2  0  
+    0  y**2/r**2  w*x*y/(r**2*sin(phi))  
+    
+    >>> print(S.ind_char)
+    (1, 1)
+    """
+    index_number_to_low -= 1
+    
+    if not isinstance(tensor, Tensor):
+        raise TypeError('Input tensor must be of Tensor type') 
+    
+    if not isinstance(metric_tensor, Tensor):
+        raise TypeError('Metric tensor must be of Tensor type') 
+        
+    if not metric_tensor.rank == 2:
+        raise ValueError('Metric tensor rank must be equal to 2')
+    
+    if not metric_tensor.ind_char == (-1, -1):
+        raise ValueError('Metric tensor must be covariant')
+    
+    if tensor.ind_char[index_number_to_low] == 1:
+        raise ValueError('Index number should point on lower index')
+    
+    # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
+    # b), (c, d), ... , (y, z)] )
+    arg = [(tensor.start_index[i], tensor.end_index[i])
+                   for i in range(tensor.rank)]
+    new_ind_char = [i for i in tensor.ind_char]
+    new_ind_char[index_number_to_low] = 1
+    result_tensor = Tensor(Arraypy(arg), new_ind_char)
+    
+    # finding contravariant reversed matrix
+    metric_tensor = metric_tensor.to_matrix().inv()
+    
+    cur_index = tensor.start_index
+    # loop over all tensor elements
+    for i in range (len(tensor)):
+        # loop over dimension pointed in index_number_to_low
+        for j in range(tensor.start_index[index_number_to_low], tensor.end_index[index_number_to_low]+1):
+            # forming indexes
+            metric_tensor_index = (j, cur_index[index_number_to_low])
+            temp_index = [i for i in cur_index]
+            temp_index[index_number_to_low] = j
+            result_tensor[cur_index] += tensor[tuple(temp_index)]*metric_tensor[metric_tensor_index]
+        cur_index = tensor.next_index(cur_index)
+    
+    return result_tensor
+
 def change_basis(tensor, transformation_matrix, old_to_new = True):
     if not isinstance(tensor, Tensor):
             raise TypeError('First argiment must be of Tensor type')
@@ -266,7 +403,6 @@ def perm_parity(lst):
             mn = min(range(i, len(lst)), key=lst.__getitem__)
             lst[i], lst[mn] = lst[mn], lst[i]
     return parity
-#====================================================
 
 def is_symmetric(array):
     """
@@ -279,3 +415,5 @@ def is_asymmetric(array):
     Check if array or tensor is already asymmetric
     """
     return array == asymmetric(array)
+
+#====================================================
