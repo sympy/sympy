@@ -542,7 +542,7 @@ def covar_der_XY(X, Y, g, var, type_output='t'):
     The covariant derivative along another vector field:
     >>> c_v_XY = covar_der_XY(X, Y, g, var, 't')
     >>> print(c_v_XY)
-    -2*x1*x2**3*sin(x2)/cos(x2) + 6*x1*x2**2 + x2**3 - (x1 - cos(x2)) \
+    -2*x1*x2**3*sin(x2)/cos(x2) + 6*x1*x2**2 + x2**3 - (x1 - cos(x2))\
     *sin(x2)/cos(x2)  x1*x2**3*sin(x2)*cos(x2) + 2*sin(x2) + 1 
 
     """
@@ -928,10 +928,15 @@ def scal_curv(g, ricci, var):
     >>> g[1,0] = 0
     >>> g[1,1] = 1
 
+    riemann is a Riemann curvature tensor must be symmetric matrix, 
+    arraypy or tensor with valences indices (-1, -1, -1, 1):
+
+    >>> cur = riemann(g, var, 't')
+
     ricci is Ricci tensor must be a matrix, arraypy or valences with 
     tensor indices (-1, -1):
 
-    >>> r = ricci(g, var, 't')
+    >>> r = ricci(cur, var, 't')
 
     The Ricci tensor for the Riemann curvature tensor:
     >>> sc_c = scal_curv(g, r, var)
