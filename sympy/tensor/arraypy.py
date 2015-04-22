@@ -509,6 +509,7 @@ class Arraypy(Basic):
 
     def __iter__(self):
         """Arraypy iterator"""
+        self._next_iter_index = self._start_index
         self._current_index = self._start_index
         self._iterator_index_number = 0
 
@@ -521,29 +522,28 @@ class Arraypy(Basic):
 
         Examples
         ========
-
+        
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
         >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
         >>> for i in a:
-        ...     print (i)
+        ...     print(str(i) + ' ' + str(a.iter_index))
         ... 
-        1
-        2
-        3
-        4
-        5
-        6
-        7
-        8
-
+        1 (0, 0, 0)
+        2 (0, 0, 1)
+        3 (0, 1, 0)
+        4 (0, 1, 1)
+        5 (1, 0, 0)
+        6 (1, 0, 1)
+        7 (1, 1, 0)
+        8 (1, 1, 1)
         """
         if (self._iterator_index_number == self._loop_size):
             raise StopIteration
         else:
             self._iterator_index_number += 1
-            temp_index = self._current_index
-            self._current_index = self.next_index(self._current_index)
-            return self[temp_index]
+            self._current_index = self._next_iter_index
+            self._next_iter_index = self.next_index(self._current_index)
+            return self[self._current_index]
 
     def next_index(self, index):
         """
@@ -718,6 +718,19 @@ class Arraypy(Basic):
         
         Examples
         ========
+        >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
+        >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
+        >>> for i in a:
+        ...     print(str(i) + ' ' + str(a.iter_index))
+        ... 
+        1 (0, 0, 0)
+        2 (0, 0, 1)
+        3 (0, 1, 0)
+        4 (0, 1, 1)
+        5 (1, 0, 0)
+        6 (1, 0, 1)
+        7 (1, 1, 0)
+        8 (1, 1, 1)
         """
         return self._current_index
 
@@ -1430,3 +1443,4 @@ def list2tensor(list_arr, shape=0, ind_char=0):
         result[idx] = list_arr[i]
         idx = result.next_index(idx)
     return result
+    
