@@ -86,25 +86,32 @@ class floor(RoundFunction):
     value not greater than its argument. However this implementation
     generalizes floor to complex numbers.
 
-    More information can be found in "Concrete mathematics" by Graham,
-    pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
+    Examples
+    ========
 
-        >>> from sympy import floor, E, I, Float, Rational
-        >>> floor(17)
-        17
-        >>> floor(Rational(23, 10))
-        2
-        >>> floor(2*E)
-        5
-        >>> floor(-Float(0.567))
-        -1
-        >>> floor(-I/2)
-        -I
+    >>> from sympy import floor, E, I, Float, Rational
+    >>> floor(17)
+    17
+    >>> floor(Rational(23, 10))
+    2
+    >>> floor(2*E)
+    5
+    >>> floor(-Float(0.567))
+    -1
+    >>> floor(-I/2)
+    -I
 
     See Also
     ========
 
-    ceiling
+    sympy.functions.elementary.integers.ceiling
+
+    References
+    ==========
+
+    .. [1] "Concrete mathematics" by Graham, pp. 87
+    .. [2] http://mathworld.wolfram.com/FloorFunction.html
+
     """
     _dir = -1
 
@@ -150,25 +157,32 @@ class ceiling(RoundFunction):
     value not less than its argument. Ceiling function is generalized
     in this implementation to complex numbers.
 
-    More information can be found in "Concrete mathematics" by Graham,
-    pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
+    Examples
+    ========
 
-        >>> from sympy import ceiling, E, I, Float, Rational
-        >>> ceiling(17)
-        17
-        >>> ceiling(Rational(23, 10))
-        3
-        >>> ceiling(2*E)
-        6
-        >>> ceiling(-Float(0.567))
-        0
-        >>> ceiling(I/2)
-        I
+    >>> from sympy import ceiling, E, I, Float, Rational
+    >>> ceiling(17)
+    17
+    >>> ceiling(Rational(23, 10))
+    3
+    >>> ceiling(2*E)
+    6
+    >>> ceiling(-Float(0.567))
+    0
+    >>> ceiling(I/2)
+    I
 
     See Also
     ========
 
-    floor
+    sympy.functions.elementary.integers.floor
+
+    References
+    ==========
+
+    .. [1] "Concrete mathematics" by Graham, pp. 87
+    .. [2] http://mathworld.wolfram.com/CeilingFunction.html
+
     """
     _dir = 1
 
