@@ -377,7 +377,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True):
     """Simplifies the given expression.
 
     Simplification is not a well defined term and the exact strategies
@@ -509,6 +509,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     For example, ``asin(sin(x))`` will yield ``x`` without checking whether
     x belongs to the set where this relation is true. The default is
     False.
+
+    Note that ``simplify()`` automatically calls ``doit()`` on the final
+    expression. You can avoid this behavior by passing ``doit=False`` as
+    an argument.
     """
 
     expr = sympify(expr)
@@ -521,7 +525,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
     if _eval_simplify is not None:
-        return _eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+        return _eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse, doit=doit)
 
     original_expr = expr = signsimp(expr)
 
@@ -645,7 +649,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
 
-    return expr
+    return expr if not doit else expr.doit()
 
 
 def sum_simplify(s, **kwargs):
