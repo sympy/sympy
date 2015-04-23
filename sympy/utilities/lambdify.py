@@ -9,7 +9,8 @@ import inspect
 import textwrap
 
 from sympy.external import import_module
-from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range
+from sympy.core.compatibility import (exec_, is_sequence, iterable,
+                                      string_types, range)
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -91,9 +92,12 @@ NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
-    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
-    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS,
+             ("from math import *",)),
+    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS,
+               ("from mpmath import *",)),
+    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS,
+              ("import_module('numpy')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -320,6 +324,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # First find any function implementations
     if use_imps:
         namespaces.append(_imp_namespace(expr))
+
     # Check for dict before iterating
     if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
@@ -415,10 +420,16 @@ def _get_namespace(m):
         return MODULES[m][0]
     elif isinstance(m, dict):
         return m
-    elif hasattr(m, "__dict__"):
-        return m.__dict__
+    elif hasattr(m, "__dict__"):  # is a module, __dict__ maps str to funcs
+        # fixes issue 9334
+        if m.__name__ == 'numexpr':
+            _import(m.__name__)
+            return MODULES[m.__name__][0]
+        else:
+            return m.__dict__
     else:
-        raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
+        msg = "Argument must be either a string, dict or module but it is: {}"
+        raise TypeError(msg.format(m))
 
 
 def lambdastr(args, expr, printer=None, dummify=False):
