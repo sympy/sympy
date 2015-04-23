@@ -1785,7 +1785,7 @@ def test_Piecewise():
 def test_polymorphism():
     class A(Basic):
         def _eval_simplify(x, **kwargs):
-            return 1
+            return S.One
 
     a = A(5, 2)
     assert simplify(a) == 1

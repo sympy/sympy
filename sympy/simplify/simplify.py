@@ -3539,7 +3539,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, fu=False, doit=True):
     """
     Simplifies the given expression.
 
@@ -3661,10 +3661,16 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    Note that ``simplify()`` automatically calls ``doit()`` on the final
+    expression. You can avoid this behavior by passing ``doit=False`` as
+    an argument.
     """
     expr = sympify(expr)
 
     try:
+        if doit:
+            return expr._eval_simplify(ratio=ratio, measure=measure).doit()
         return expr._eval_simplify(ratio=ratio, measure=measure)
     except AttributeError:
         pass
@@ -3762,6 +3768,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 
+    if doit:
+        return expr.doit()
     return expr
 
 
