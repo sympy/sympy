@@ -746,10 +746,10 @@ Modular GCD
 
 .. currentmodule:: sympy.polys.modulargcd
 
-.. autoclass:: modgcd_univariate
-.. autoclass:: modgcd_bivariate
-.. autoclass:: modgcd_multivariate
-.. autoclass:: func_field_modgcd
+.. autofunction:: modgcd_univariate
+.. autofunction:: modgcd_bivariate
+.. autofunction:: modgcd_multivariate
+.. autofunction:: func_field_modgcd
 
 Manipulation of power series
 ****************************************************************************
