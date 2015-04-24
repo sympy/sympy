@@ -148,6 +148,7 @@ latex_elements = {
 \usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
+\usepackage[english]{babel}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
