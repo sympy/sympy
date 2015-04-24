@@ -719,7 +719,17 @@ class Float(Number):
         elif isinstance(num, str):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
-            _mpf_ = mlib.from_str(str(num), prec, rnd)
+            if num.is_finite():
+                _mpf_ = mlib.from_str(str(num), prec, rnd)
+            elif num.is_nan():
+                _mpf_ = _mpf_nan
+            elif num.is_infinite():
+                if num > 0:
+                    _mpf_ = _mpf_inf
+                else:
+                    _mpf_ = _mpf_ninf
+            else:
+                raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
