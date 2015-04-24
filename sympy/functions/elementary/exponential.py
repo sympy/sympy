@@ -676,13 +676,7 @@ class log(Function):
         return arg.is_finite
 
     def _eval_is_positive(self):
-        arg = self.args[0]
-        if arg.is_positive:
-            if arg.is_infinite:
-                return True
-            if arg.is_zero:
-                return False
-            return (arg - 1).is_positive
+        return (self.args[0] - 1).is_positive
 
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
