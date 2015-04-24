@@ -456,6 +456,55 @@ class MinMaxBase(Expr, LatticeOp):
     def is_real(self):
         return fuzzy_and(arg.is_real for arg in self.args)
 
+    def _eval_is_algebraic(self):
+        if all(arg.is_algebraic for arg in self.args):
+            return True
+        if all(arg.is_algebraic is False for arg in self.args):
+            return False
+
+    def _eval_is_even(self):
+        if all(arg.is_even for arg in self.args):
+            return True
+        if all(arg.is_even is False for arg in self.args):
+            return False
+
+    def _eval_is_integer(self):
+        if all(arg.is_integer for arg in self.args):
+            return True
+        if all(arg.is_integer is False for arg in self.args):
+            return False
+
+    def _eval_is_irrational(self):
+        if all(arg.is_irrational for arg in self.args):
+            return True
+        if all(arg.is_irrational is False for arg in self.args):
+            return False
+
+    def _eval_is_noninteger(self):
+        if all(arg.is_noninteger for arg in self.args):
+            return True
+        if all(arg.is_noninteger is False for arg in self.args):
+            return False
+
+    def _eval_is_odd(self):
+        if all(arg.is_odd for arg in self.args):
+            return True
+        if all(arg.is_odd is False for arg in self.args):
+            return False
+
+    def _eval_is_prime(self):
+        if all(arg.is_prime for arg in self.args):
+            return True
+        if all(arg.is_prime is False for arg in self.args):
+            return False
+
+    def _eval_is_rational(self):
+        if all(arg.is_rational for arg in self.args):
+            return True
+        if all(arg.is_rational is False for arg in self.args):
+            return False
+
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
