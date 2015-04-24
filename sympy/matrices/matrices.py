@@ -3643,9 +3643,6 @@ class MatrixBase(object):
                     # it can harm only in terms of efficiency.
                     # So to be sure I left it there for the moment.
 
-                    # A more elegant alternative approach might be to drop condition (**) altogether
-                    # because it is added implicitly by excluding the chainvectors but the original author
-                    # of this code was not sure if this is correct in all cases.
                     l = len(chain_vectors)
                     if l > 0:
                         for k in range(0, l):
