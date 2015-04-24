@@ -7,26 +7,28 @@ import math
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.compatibility import ordered
-from sympy.core.mul import expand_2arg
+from sympy.core.mul import expand_2arg, Mul
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, igcd
+from sympy.core.numbers import Rational, igcd, comp
+from sympy.core.exprtools import factor_terms
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im, Abs, cos, acos, sin, Piecewise
+from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
-from sympy.functions.elementary.complexes import sign
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
+from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
+    DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
-from sympy.utilities import default_sort_key, public
+from sympy.utilities import public
 
-from sympy.core.compatibility import reduce, xrange
+from sympy.core.compatibility import reduce, range
 
 
 def roots_linear(f):
@@ -54,6 +56,23 @@ def roots_quadratic(f):
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
 
+    def _sqrt(d):
+        # remove squares from square root since both will be represented
+        # in the results; a similar thing is happening in roots() but
+        # must be duplicated here because not all quadratics are binomials
+        co = []
+        other = []
+        for di in Mul.make_args(d):
+            if di.is_Pow and di.exp.is_Integer and di.exp % 2 == 0:
+                co.append(Pow(di.base, di.exp//2))
+            else:
+                other.append(di)
+        if co:
+            d = Mul(*other)
+            co = Mul(*co)
+            return co*sqrt(d)
+        return sqrt(d)
+
     def _simplify(expr):
         if dom.is_Composite:
             return factor(expr)
@@ -72,7 +91,7 @@ def roots_quadratic(f):
         if not dom.is_Numerical:
             r = _simplify(r)
 
-        R = sqrt(r)
+        R = _sqrt(r)
         r0 = -R
         r1 = R
     else:
@@ -84,7 +103,7 @@ def roots_quadratic(f):
             d = _simplify(d)
             B = _simplify(B)
 
-        D = sqrt(d)/A
+        D = factor_terms(_sqrt(d)/A)
         r0 = B - D
         r1 = B + D
         if a.is_negative:
@@ -206,7 +225,6 @@ def _roots_quartic_euler(p, q, r, a):
     >>> _roots_quartic_euler(p, q, r, S(0))[0]
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
-    from sympy.solvers import solve
     # solve the resolvent equation
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
@@ -452,7 +470,7 @@ def roots_cyclotomic(f, factor=False):
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
-    for n in xrange(L, U + 1):
+    for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
         if f == g:
@@ -466,7 +484,7 @@ def roots_cyclotomic(f, factor=False):
         # get the indices in the right order so the computed
         # roots will be sorted
         h = n//2
-        ks = [i for i in xrange(1, n + 1) if igcd(i, n) == 1]
+        ks = [i for i in range(1, n + 1) if igcd(i, n) == 1]
         ks.sort(key=lambda x: (x, -1) if x <= h else (abs(x - n), 1))
         d = 2*I*pi/n
         for k in reversed(ks):
@@ -537,8 +555,6 @@ def roots_quintic(f):
     order = quintic.order(theta, d)
     test = (order*delta.n()) - ( (l1.n() - l4.n())*(l2.n() - l3.n()) )
     # Comparing floats
-    # Problems importing on top
-    from sympy.utilities.randtest import comp
     if not comp(test, 0, tol):
         l2, l3 = l3, l2
 
@@ -859,6 +875,27 @@ def roots(f, *gens, **flags):
     else:
         try:
             f = Poly(f, *gens, **flags)
+            if f.length == 2 and f.degree() != 1:
+                # check for foo**n factors in the constant
+                n = f.degree()
+                npow_bases = []
+                expr = f.as_expr()
+                con = expr.as_independent(*gens)[0]
+                for p in Mul.make_args(con):
+                    if p.is_Pow and not p.exp % n:
+                        npow_bases.append(p.base**(p.exp/n))
+                    else:
+                        other.append(p)
+                    if npow_bases:
+                        b = Mul(*npow_bases)
+                        B = Dummy()
+                        d = roots(Poly(expr - con + B**n*Mul(*others), *gens,
+                            **flags), *gens, **flags)
+                        rv = {}
+                        for k, v in d.items():
+                            rv[k.subs(B, b)] = v
+                        return rv
+
         except GeneratorsNeeded:
             if multiple:
                 return []

@@ -30,7 +30,6 @@ from sympy.polys.polytools import (
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
-    OperationNotSupported,
     ExactQuotientFailed,
     PolificationFailed,
     ComputationFailed,
@@ -40,7 +39,6 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
     PolynomialError,
     CoercionFailed,
-    NotAlgebraic,
     DomainError,
     OptionError,
     FlagError)
@@ -52,7 +50,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.basic import _aresame
@@ -60,7 +58,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.abc import a, b, c, d, e, p, q, r, s, t, u, v, w, x, y, z
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
 
 def _epsilon_eq(a, b):
@@ -1282,6 +1280,8 @@ def test_Poly_nth():
 
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
+
+    raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
 
 
 def test_Poly_LM():

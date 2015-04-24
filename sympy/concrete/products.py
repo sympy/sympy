@@ -1,17 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core.containers import Tuple
-from sympy.core.core import C
-from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class Product(ExprWithIntLimits):
@@ -240,7 +235,7 @@ class Product(ExprWithIntLimits):
     def _eval_product(self, term, limits):
         from sympy.concrete.delta import deltaproduct, _has_simple_delta
         from sympy.concrete.summations import summation
-        from sympy.functions import KroneckerDelta
+        from sympy.functions import KroneckerDelta, RisingFactorial
 
         (k, a, n) = limits
 
@@ -257,7 +252,7 @@ class Product(ExprWithIntLimits):
 
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
+            return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
@@ -269,7 +264,7 @@ class Product(ExprWithIntLimits):
             M = 0
             for r, m in all_roots.items():
                 M += m
-                A *= C.RisingFactorial(a - r, n - a + 1)**m
+                A *= RisingFactorial(a - r, n - a + 1)**m
                 Q *= (n - r)**m
 
             if M < poly.degree():

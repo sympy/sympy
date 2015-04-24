@@ -9,7 +9,7 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix, MatrixSymbol
 
 
@@ -343,8 +343,8 @@ def test_fcode_Xlogical():
 
 def test_fcode_Relational():
     x, y = symbols("x y")
-    assert fcode(Relational(x, y, "=="), source_format="free") == "x == y"
-    assert fcode(Relational(x, y, "!="), source_format="free") == "x /= y"
+    assert fcode(Relational(x, y, "=="), source_format="free") == "Eq(x, y)"
+    assert fcode(Relational(x, y, "!="), source_format="free") == "Ne(x, y)"
     assert fcode(Relational(x, y, ">="), source_format="free") == "x >= y"
     assert fcode(Relational(x, y, "<="), source_format="free") == "x <= y"
     assert fcode(Relational(x, y, ">"), source_format="free") == "x > y"
@@ -368,7 +368,7 @@ def test_fcode_Piecewise():
     )
     a = cos(x)/x
     b = sin(x)/x
-    for i in xrange(10):
+    for i in range(10):
         a = diff(a, x)
         b = diff(b, x)
     expected = (
@@ -536,9 +536,6 @@ def test_loops():
 
 
 def test_dummy_loops():
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')

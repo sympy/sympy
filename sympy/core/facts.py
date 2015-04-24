@@ -52,7 +52,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from .logic import Logic, And, Or, Not
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 
 
 def _base_fact(atom):
@@ -186,7 +186,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     ximpls.add(bimpl)
 
                     # we introduced new implication - now we have to restore
-                    # completness of the whole set.
+                    # completeness of the whole set.
                     bimpl_impl = x_impl.get(bimpl)
                     if bimpl_impl is not None:
                         ximpls |= bimpl_impl[0]

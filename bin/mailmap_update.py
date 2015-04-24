@@ -52,7 +52,7 @@ firstauthor = "Ondřej Čertík"
 authors = AUTHORS[AUTHORS.find(firstauthor):].strip().split('\n')
 
 # People who don't want to be listed in AUTHORS
-authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>"]
+authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>", "Sergey B Kirpichev <skirpichev@gmail.com>"]
 
 predate_git = 0
 

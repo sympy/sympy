@@ -9,13 +9,11 @@ Point3D
 from __future__ import print_function, division
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, range
 from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
-from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.point import Point
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
@@ -257,9 +255,10 @@ class Point3D(GeometryEntity):
         if len(points) == 3:
             a = (points[0].direction_cosine(points[1]))
             b = (points[0].direction_cosine(points[2]))
-            a = [abs(i) for i in a]
-            b = [abs(i) for i in b]
-            if a == b:
+            c = [(-1)*i for i in b]  # opposite of b
+
+            # a and b are either equal or opposite
+            if a == b or a == c:
                 return True
             else:
                 return False

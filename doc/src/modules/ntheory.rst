@@ -65,6 +65,10 @@ Ntheory Functions Reference
 
 .. autofunction:: udivisor_sigma
 
+.. autofunction:: core
+
+.. autofunction:: digits
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue

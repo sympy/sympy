@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 
-from functools import reduce
+from sympy.core.compatibility import reduce
 from operator import add
 
 from sympy.core import Add, Basic, sympify
 from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
-from sympy.strategies import (rm_id, unpack, flatten, sort, condition, debug,
+from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
         exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy.utilities import default_sort_key, sift
@@ -50,11 +50,16 @@ class MatAdd(MatrixExpr):
         return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
     def _eval_trace(self):
-        from trace import Trace
-        return MatAdd(*[Trace(arg) for arg in self.args]).doit()
+        from .trace import trace
+        return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **ignored):
-        return canonicalize(self)
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return canonicalize(MatAdd(*args))
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -68,7 +73,6 @@ def validate(*args):
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
 def combine(cnt, mat):
-    from .matmul import MatMul
     if cnt == 1:
         return mat
     else:

@@ -1,16 +1,17 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core import S
 from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
-from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.expr import Expr
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -81,8 +82,7 @@ class re(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
 
@@ -177,8 +177,7 @@ class im(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
 
@@ -366,8 +365,9 @@ class sign(Function):
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, arg):
+        from sympy import Heaviside
         if arg.is_real:
-            return C.Heaviside(arg)*2-1
+            return Heaviside(arg)*2-1
 
     def _eval_simplify(self, ratio, measure):
         return self.func(self.args[0].factor())
@@ -439,7 +439,7 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
-        if not isinstance(arg, C.Expr):
+        if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
@@ -470,9 +470,9 @@ class Abs(Function):
                     return Abs(base)**exponent
                 if base.is_positive == True:
                     return base**re(exponent)
-                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
-        if isinstance(arg, C.exp):
-            return C.exp(re(arg.args[0]))
+                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+        if isinstance(arg, exp):
+            return exp(re(arg.args[0]))
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_nonnegative:
@@ -552,15 +552,17 @@ class Abs(Function):
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
+        from sympy import Heaviside
         if arg.is_real:
-            return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+            return arg*(Heaviside(arg) - Heaviside(-arg))
 
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg):
-        return arg/C.sign(arg)
+        from sympy import sign
+        return arg/sign(arg)
 
 
 class arg(Function):
@@ -580,7 +582,7 @@ class arg(Function):
         else:
             arg_ = arg
         x, y = re(arg_), im(arg_)
-        rv = C.atan2(y, x)
+        rv = atan2(y, x)
         if rv.is_number and not rv.atoms(AppliedUndef):
             return rv
         if arg_ != arg:
@@ -743,7 +745,10 @@ class polar_lift(Function):
         from sympy import exp_polar, pi, I, arg as argument
         if arg.is_number:
             ar = argument(arg)
-            #if not ar.has(argument) and not ar.has(atan):
+            # In general we want to affirm that something is known,
+            # e.g. `not ar.has(argument) and not ar.has(atan)`
+            # but for now we will just be more restrictive and
+            # see that it has evaluated to one of the known values.
             if ar in (0, pi/2, -pi/2, pi):
                 return exp_polar(I*ar)*abs(arg)
 

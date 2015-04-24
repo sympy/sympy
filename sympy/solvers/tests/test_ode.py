@@ -3,7 +3,7 @@ from __future__ import division
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh, cosh,
+    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
@@ -141,13 +141,13 @@ def test_linear_2eq_order2():
     assert dsolve(eq7) == sol7
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = ("[x(t) == -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
+    sol8 = ("[Eq(x(t), -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
     "C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + O(t**6)) - (-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + "
     "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) - 4*C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
     "4*C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - 4*C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192, y(t) == -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
+    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192), Eq(y(t), -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
     "sqrt(133)*t**3/2 + 1) + C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266]")
+    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266)]")
     assert str(dsolve(eq8)) == sol8
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
@@ -299,10 +299,8 @@ def test_nonlinear_2eq_order1():
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
     tt = S(2)/3
     sol3 = [
-        Eq(x(t), 6**tt/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3),
-        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3)]
+        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1)*(C2 + t)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1)*(C2 + t)/2)**2)/3)]
     assert dsolve(eq3) == sol3
 
     eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
@@ -459,17 +457,17 @@ def test_nonlinear_3eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
     eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
-    sol1 = "[x(t) == (Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))) == "\
-    "C3 + Integral(-sqrt(15)/15, t)), y(t) == (Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), "\
-    "(_y, y(t))) == C3 + Integral(sqrt(5)/10, t)), z(t) == (Integral(5/(sqrt(-10*_y**2 - 3*C1 + C2)*sqrt(5*_y**2 + "\
-    "4*C1 - C2)), (_y, z(t))) == C3 + Integral(sqrt(3)/6, t))]"
+    sol1 = "[Eq(x(t), Eq(Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))), "\
+    "C3 + Integral(-sqrt(15)/15, t))), Eq(y(t), Eq(Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), "\
+    "(_y, y(t))), C3 + Integral(sqrt(5)/10, t))), Eq(z(t), Eq(Integral(5/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
+    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + Integral(sqrt(3)/6, t)))]"
     assert str(dsolve(eq1)) == sol1
 
     eq2 = (4*diff(x(t),t) + 2*y(t)*z(t)*sin(t), 3*diff(y(t),t) - z(t)*x(t)*sin(t), 5*diff(z(t),t) - x(t)*y(t)*sin(t))
-    sol2 = "[x(t) == (Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), (_y, x(t))) == "\
-    "C3 + Integral(-sqrt(5)*sin(t)/10, t)), y(t) == (Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 "\
-    "+ 5*C1 - C2)), (_y, y(t))) == C3 + Integral(sqrt(15)*sin(t)/15, t)), z(t) == (Integral(5/(sqrt(-10*_y**2 - "\
-    "3*C1 + C2)*sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))) == C3 + Integral(-sqrt(3)*sin(t)/6, t))]"
+    sol2 = "[Eq(x(t), Eq(Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), (_y, x(t))), C3 + "\
+    "Integral(-sqrt(5)*sin(t)/10, t))), Eq(y(t), Eq(Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), "\
+    "(_y, y(t))), C3 + Integral(sqrt(15)*sin(t)/15, t))), Eq(z(t), Eq(Integral(5/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
+    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + Integral(-sqrt(3)*sin(t)/6, t)))]"
     assert str(dsolve(eq2)) == sol2
 
 
@@ -970,8 +968,6 @@ def test_separable1():
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
     sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
-    #sol5 = Eq(f(x), C1*(C2 + sqrt(1 + tan(x)**2)))
-    #sol5 = Eq(-log(2 + f(x)), C1 - log(1 + tan(x)**2)/2)
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
@@ -994,13 +990,13 @@ def test_separable2():
             a**2*sin(f(x))*f(x).diff(x))
     # solve() messes this one up a little bit, so lets test _Integral here
     # We have to test strings with _Integral because y is a dummy variable.
-    sol6str = ("Integral((_y - 2)/_y**3, (_y, f(x))) "
-               "== C1 + Integral(x**(-2), x)")
+    sol6str = ("Eq(Integral((_y - 2)/_y**3, (_y, f(x))), "
+               "C1 + Integral(x**(-2), x))")
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
-    sol9str = ("Integral(cos(_y)/tan(_y), (_y, f(x)))"
-               " == C1 + Integral(-E*exp(x), x)")
+    sol9str = ("Eq(Integral(cos(_y)/tan(_y), (_y, f(x))), "
+                "C1 + Integral(-E*exp(x), x))")
     sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
     assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
@@ -1306,8 +1302,7 @@ def test_nth_linear_constant_coeff_homogeneous():
         C4*exp(-x*sqrt(a)))
     sol11 = Eq(f(x),
         C1*exp(x*(k - sqrt(k**2 + 2))) + C2*exp(x*(k + sqrt(k**2 + 2))))
-    sol12 = Eq(f(x),
-        C1*exp(2*x*(-2*abs(k) - k)) + C2*exp(2*x*(2*abs(k) - k)))
+    sol12 = Eq(f(x), C1*exp(-6*k*x) + C2*exp(2*k*x))
     sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
     sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))
@@ -2150,10 +2145,10 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        -acos(-sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        -acos(sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        acos(-sqrt(C1*exp(-2*x) + x**4)/x**2),
-        acos(sqrt(C1*exp(-2*x) + x**4)/x**2)]
+        -acos(-sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        -acos(sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        acos(-sqrt(C1*exp(-2*x)/x**4 + 1)),
+        acos(sqrt(C1*exp(-2*x)/x**4 + 1))]
 
 
 def test_separable_reduced():
@@ -2557,3 +2552,11 @@ def test_issue_7093():
     sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
     eq = Derivative(f(x), x)**2 - x**3
     assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)
+
+
+def test_dsolve_linsystem_symbol():
+    eps = Symbol('epsilon', positive=True)
+    eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
+    sol1 = [Eq(f(x), -eps*(C1*sin(eps*x) + C2*cos(eps*x))),
+            Eq(g(x), C1*eps*cos(eps*x) - C2*eps*sin(eps*x))]
+    assert dsolve(eq1) == sol1

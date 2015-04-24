@@ -65,7 +65,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
-from sympy.core.compatibility import default_sort_key, xrange
+from sympy.core.compatibility import default_sort_key, range
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
@@ -154,8 +154,6 @@ def add_formulae(formulae):
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # Complete elliptic integrals K(z) and E(z), both a 2F1 function
-    #add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
-    #add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
     addb([S.Half, S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[2/pi, 0]]),
@@ -533,6 +531,7 @@ class Hyper_Function(Expr):
                     n1 = 1, n2 = 1,   n2 = 2
              r = 1, t1 = 0
                     m1 = 2:
+
         >>> Hyper_Function(ap, bq).build_invariants()
         (1, ((0, 1), (1/3, 1), (1/2, 2)), ((0, 2),))
         """
@@ -694,7 +693,7 @@ class Formula(object):
 
         n = poly.degree() - 1
         b = [closed_form]
-        for _ in xrange(n):
+        for _ in range(n):
             b.append(self.z*b[-1].diff(self.z))
 
         self.B = Matrix(b)
@@ -1029,19 +1028,16 @@ class UnShiftA(Operator):
         m = Poly(z*ai, _x)
         for a in ap:
             m *= Poly(_x + a, _x)
-        #print m
 
         A = Dummy('A')
         n = D = Poly(ai*A - ai, A)
         for b in bq:
             n *= (D + b - 1)
-        #print n
 
         b0 = -n.nth(0)
         if b0 == 0:
             raise ValueError('Cannot decrement upper index: '
                              'cancels with lower')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, _x/ai + 1), _x)
 
@@ -1073,24 +1069,19 @@ class UnShiftB(Operator):
         m = Poly(_x*(bi - 1), _x)
         for b in bq:
             m *= Poly(_x + b - 1, _x)
-        #print m
 
         B = Dummy('B')
         D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
             n *= (D + a)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment index: cancels with upper')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, _x/(bi - 1) + 1), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1167,7 +1158,6 @@ class MeijerUnShiftA(Operator):
             m *= Poly(b - _x, _x)
         for b in bq:
             m *= Poly(_x - b, _x)
-        #print m
 
         A = Dummy('A')
         D = Poly(bi - A, A)
@@ -1176,16 +1166,12 @@ class MeijerUnShiftA(Operator):
             n *= (D + 1 - a)
         for a in ap:
             n *= (-D + a - 1)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot decrement upper b index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1218,7 +1204,6 @@ class MeijerUnShiftB(Operator):
             m *= Poly(1 - a + _x, _x)
         for a in ap:
             m *= Poly(a - 1 - _x, _x)
-        #print m
 
         B = Dummy('B')
         D = Poly(B + ai - 1, B)
@@ -1227,17 +1212,13 @@ class MeijerUnShiftB(Operator):
             n *= (-D + b)
         for b in bq:
             n *= (D - b)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment upper a index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, 1 - ai + _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1275,7 +1256,6 @@ class MeijerUnShiftC(Operator):
             m *= Poly(b - _x, _x)
         for b in bq:
             m *= Poly(_x - b, _x)
-        #print m
 
         C = Dummy('C')
         D = Poly(bi + C, C)
@@ -1284,16 +1264,12 @@ class MeijerUnShiftC(Operator):
             n *= (D + 1 - a)
         for a in ap:
             n *= (-D + a - 1)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot decrement lower b index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, _x - bi), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1328,7 +1304,6 @@ class MeijerUnShiftD(Operator):
             m *= Poly(1 - a + _x, _x)
         for a in ap:
             m *= Poly(a - 1 - _x, _x)
-        #print m
 
         B = Dummy('B')  # - this is the shift operator `D_I`
         D = Poly(ai - 1 - B, B)
@@ -1337,17 +1312,13 @@ class MeijerUnShiftD(Operator):
             n *= (-D + b)
         for b in bq:
             n *= (D - b)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment lower a index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, ai - 1 - _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1372,7 +1343,7 @@ class ReduceOrder(Operator):
         expr = Operator.__new__(cls)
 
         p = S(1)
-        for k in xrange(n):
+        for k in range(n):
             p *= (_x + bj + k)/(bj + k)
 
         expr._poly = Poly(p, _x)
@@ -1394,7 +1365,7 @@ class ReduceOrder(Operator):
         expr = Operator.__new__(cls)
 
         p = S(1)
-        for k in xrange(n):
+        for k in range(n):
             p *= (sign*_x + a + k)
 
         expr._poly = Poly(p, _x)
@@ -1433,7 +1404,7 @@ def _reduce_order(ap, bq, gen, key):
     operators = []
     for a in ap:
         op = None
-        for i in xrange(len(bq)):
+        for i in range(len(bq)):
             op = gen(a, bq[i])
             if op is not None:
                 bq.pop(i)
@@ -1575,7 +1546,7 @@ def devise_plan(target, origin, z):
 
     def do_shifts(fro, to, inc, dec):
         ops = []
-        for i in xrange(len(fro)):
+        for i in range(len(fro)):
             if to[i] - fro[i] > 0:
                 sh = inc
                 ch = 1
@@ -1680,7 +1651,7 @@ def try_shifted_sum(func, z):
     nbq = [x - k for x in nbq]
 
     ops = []
-    for n in xrange(r - 1):
+    for n in range(r - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
@@ -1693,7 +1664,7 @@ def try_shifted_sum(func, z):
     ops += [MultOperator(fac)]
 
     p = 0
-    for n in xrange(k):
+    for n in range(k):
         m = z**n/factorial(n)
         for a in nap:
             m *= rf(a, n)
@@ -1886,7 +1857,7 @@ def build_hypergeometric_formula(func):
         n = poly.degree()
         basis = []
         M = zeros(n)
-        for k in xrange(n):
+        for k in range(n):
             a = func.ap[0] + k
             basis += [hyper([a] + list(func.ap[1:]), func.bq, z)]
             if k < n - 1:
@@ -1895,7 +1866,7 @@ def build_hypergeometric_formula(func):
         B = Matrix(basis)
         C = Matrix([[1] + [0]*(n - 1)])
         derivs = [eye(n)]
-        for k in xrange(n):
+        for k in range(n):
             derivs.append(M*derivs[k])
         l = poly.all_coeffs()
         l.reverse()
@@ -2012,7 +1983,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     # First reduce order as much as possible.
     func, ops = reduce_order(func)
     if ops:
-        debug('  Reduced order to', func)
+        debug('  Reduced order to ', func)
     else:
         debug('  Could not reduce order.')
 
@@ -2029,7 +2000,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     res = try_shifted_sum(func, z0)
     if res is not None:
         func, nops, p = res
-        debug('  Recognised shifted sum, reduced order to', func)
+        debug('  Recognised shifted sum, reduced order to ', func)
         ops += nops
 
     # apply the plan for poly
@@ -2052,12 +2023,12 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         formula = try_lerchphi(func)
 
     if formula is None:
-        debug('  Could not find an origin.',
+        debug('  Could not find an origin. ',
               'Will return answer in terms of '
               'simpler hypergeometric functions.')
         formula = build_hypergeometric_formula(func)
 
-    debug('  Found an origin:', formula.closed_form, formula.func)
+    debug('  Found an origin: ', formula.closed_form, ' ', formula.func)
 
     # We need to find the operators that convert formula into func.
     ops += devise_plan(func, formula.func, z0)
@@ -2215,21 +2186,21 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
         rewrite = None
 
     func0 = func
-    debug('Try to expand meijer G function corresponding to', func)
+    debug('Try to expand Meijer G function corresponding to ', func)
 
     # We will play games with analytic continuation - rather use a fresh symbol
     z = Dummy('z')
 
     func, ops = reduce_order_meijer(func)
     if ops:
-        debug('  Reduced order to', func)
+        debug('  Reduced order to ', func)
     else:
         debug('  Could not reduce order.')
 
     # Try to find a direct formula
     f = _meijercollection.lookup_origin(func)
     if f is not None:
-        debug('  Found a Meijer G formula:', f.func)
+        debug('  Found a Meijer G formula: ', f.func)
         ops += devise_plan_meijer(f.func, func, z)
 
         # Now carry out the plan.
@@ -2241,7 +2212,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
         r = r[0].subs(z, z0)
         return powdenest(r, polar=True)
 
-    debug("  Could not find a direct formula. Trying slater's theorem.")
+    debug("  Could not find a direct formula. Trying Slater's theorem.")
 
     # TODO the following would be possible:
     # *) Paired Index Theorems
@@ -2436,7 +2407,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     #      is known to diverge.
     r = Piecewise((slater1, cond1), (slater2, cond2), (func0(z0), True))
     if r.has(hyper) and not allow_hyper:
-        debug('  Could express using hypergeometric functions, ' +
+        debug('  Could express using hypergeometric functions, '
               'but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r

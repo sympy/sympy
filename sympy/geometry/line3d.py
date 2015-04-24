@@ -10,18 +10,15 @@ Segment3D
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
-from sympy.core.logic import fuzzy_and
-from sympy.core.exprtools import factor_terms
+from sympy.core import S, Dummy, nan
+from sympy.functions.elementary.trigonometric import acos
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .util import _symbol
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 
 class LinearEntity3D(GeometryEntity):
     """An base class for all linear entities (line, ray and segment)
@@ -378,7 +375,7 @@ class LinearEntity3D(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes

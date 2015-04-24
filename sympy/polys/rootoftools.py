@@ -14,8 +14,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf,
-    ComplexInterval)
+    dup_isolate_real_roots_sqf)
 
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
@@ -29,12 +28,12 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import QQ
 
-from mpmath import mp, mpf, mpc, findroot, workprec
+from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 from math import log as mathlog
 def _ispow2(i):
@@ -273,7 +272,6 @@ class RootOf(Expr):
         """return complexes such that no bounding rectangles of non-conjugate
         roots would intersect if slid horizontally or vertically/
         """
-        from sympy.utilities.iterables import sift
         while complexes:  # break when all are distinct
             # get the intervals pairwise-disjoint. If rectangles were drawn around
             # the coordinates of the bounding rectangles, no rectangles would
@@ -399,7 +397,7 @@ class RootOf(Expr):
 
     @classmethod
     def _count_roots(cls, roots):
-        """Count the number of real or complex roots including multiplicites. """
+        """Count the number of real or complex roots including multiplicities."""
         return sum([ k for _, _, k in roots ])
 
     @classmethod
@@ -429,7 +427,7 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         return roots
@@ -445,14 +443,14 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         complexes = cls._get_complexes(factors)
         complexes = cls._complexes_sorted(complexes)
         complexes_count = cls._count_roots(complexes)
 
-        for index in xrange(0, complexes_count):
+        for index in range(0, complexes_count):
             roots.append(cls._complexes_index(complexes, index))
 
         return roots
@@ -554,39 +552,54 @@ class RootOf(Expr):
 
             while True:
                 if self.is_real:
+                    a = mpf(str(interval.a))
+                    b = mpf(str(interval.b))
+                    if a == b:
+                        root = a
+                        break
                     x0 = mpf(str(interval.center))
                 else:
+                    ax = mpf(str(interval.ax))
+                    bx = mpf(str(interval.bx))
+                    ay = mpf(str(interval.ay))
+                    by = mpf(str(interval.by))
+                    if ax == bx and ay == by:
+                        # the sign of the imaginary part will be assigned
+                        # according to the desired index using the fact that
+                        # roots are sorted with negative imag parts coming
+                        # before positive (and all imag roots coming after real
+                        # roots)
+                        deg = self.poly.degree()
+                        i = self.index  # a positive attribute after creation
+                        if (deg - i) % 2:
+                            if ay < 0:
+                                ay = -ay
+                        else:
+                            if ay > 0:
+                                ay = -ay
+                        root = mpc(ax, ay)
+                        break
                     x0 = mpc(*map(str, interval.center))
+
                 try:
-                    root = findroot(func, x0, verify=False)
+                    root = findroot(func, x0)
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
                     # interval because our initial estimate 'x0' was not close
-                    # enough.
+                    # enough. It is also possible that the secant method will
+                    # get trapped by a max/min in the interval; the root
+                    # verification by findroot will raise a ValueError in this
+                    # case and the interval will then be tightened -- and
+                    # eventually the root will be found.
                     if self.is_real:
-                        a = mpf(str(interval.a))
-                        b = mpf(str(interval.b))
-                        if a == b:
-                            root = a
+                        if (a <= root <= b):
                             break
-                        if not (a < root < b):
-                            raise ValueError("Root not in the interval.")
-                    else:
-                        ax = mpf(str(interval.ax))
-                        bx = mpf(str(interval.bx))
-                        ay = mpf(str(interval.ay))
-                        by = mpf(str(interval.by))
-                        if ax == bx and ay == by:
-                            root = ax + S.ImaginaryUnit*by
-                            break
-                        if not (ax < root.real < bx and ay < root.imag < by):
-                            raise ValueError("Root not in the interval.")
+                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
+                        break
                 except ValueError:
-                    interval = interval.refine()
-                    continue
-                else:
-                    break
+                    pass
+                interval = interval.refine()
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 

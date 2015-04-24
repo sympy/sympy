@@ -9,7 +9,6 @@ from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
-# import test:
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
 
@@ -402,9 +401,6 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -727,10 +723,8 @@ def test_intrinsic_math_codegen():
         ("test_acos", acos(x)),
         ("test_asin", asin(x)),
         ("test_atan", atan(x)),
-        # ("test_ceil", ceiling(x)),
         ("test_cos", cos(x)),
         ("test_cosh", cosh(x)),
-        # ("test_floor", floor(x)),
         ("test_log", log(x)),
         ("test_ln", ln(x)),
         ("test_sin", sin(x)),
@@ -1055,9 +1049,6 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')

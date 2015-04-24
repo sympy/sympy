@@ -10,7 +10,7 @@ IFT = inverse_fourier_transform
 ILT = inverse_laplace_transform
 IMT = inverse_mellin_transform
 
-from sympy.abc import x, s, a, b, c, d, t, y, z
+from sympy.abc import t, x, y
 nu, beta, rho = symbols('nu beta rho')
 
 apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
@@ -47,8 +47,6 @@ laplace = exp(-abs(x - mu)/bpos)/2/bpos
 
 u = Symbol('u', polar=True)
 tpos = Symbol('t', positive=True)
-
-from sympy import Chi as cosint
 
 
 def E(expr):
@@ -239,7 +237,6 @@ timings = []
 
 if __name__ == '__main__':
     for n, string in enumerate(bench):
-        #print string
         clear_cache()
         _t = time()
         exec(string)

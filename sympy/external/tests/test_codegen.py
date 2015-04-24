@@ -25,8 +25,7 @@ from __future__ import print_function
 
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
-from sympy.utilities.codegen import (codegen, make_routine, InputArgument,
-                                     Result, get_code_generator)
+from sympy.utilities.codegen import codegen, make_routine, get_code_generator
 import sys
 import os
 import tempfile
@@ -179,7 +178,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     elif language == "C":
         f_name = "main.c"
     else:
-        raise NotImplemented(
+        raise NotImplementedError(
             "FIXME: filename extension unknown for language: %s" % language)
 
     with open(f_name, "w") as f:

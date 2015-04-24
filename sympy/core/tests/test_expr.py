@@ -6,11 +6,11 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff, O, Heaviside, Si)
+    exp_polar, expand, diff, O, Heaviside, Si, Max)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -417,6 +417,11 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x) is True
     assert (sin(y)/x).is_rational_function(x, y) is False
 
+    assert (S.NaN).is_rational_function() is False
+    assert (S.Infinity).is_rational_function() is False
+    assert (-S.Infinity).is_rational_function() is False
+    assert (S.ComplexInfinity).is_rational_function() is False
+
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
@@ -539,7 +544,7 @@ def test_as_numer_denom():
     assert (a/x + b/2/x + c/.5/x).as_numer_denom() == \
         (2*a + b + 4.0*c, 2*x)
     # this should take no more than a few seconds
-    assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
+    assert int(log(Add(*[Dummy()/i/x for i in range(1, 705)]
                        ).as_numer_denom()[1]/x).n(4)) == 705
     for i in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
         assert (i + x/3).as_numer_denom() == \
@@ -606,6 +611,13 @@ def test_as_independent():
     # issue 5784
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
+
+
+@XFAIL
+def test_call_2():
+    # TODO UndefinedFunction does not subclass Expr
+    f = Function('f')
+    assert (2*f)(x) == 2*f(x)
 
 
 def test_replace():
@@ -1530,6 +1542,9 @@ def test_random():
     from sympy import posify, lucas
     assert posify(x)[0]._random() is not None
     assert lucas(n)._random(2, -2, 0, -1, 1) is None
+
+    # issue 8662
+    assert Piecewise((Max(x, y), z))._random() is None
 
 
 def test_round():

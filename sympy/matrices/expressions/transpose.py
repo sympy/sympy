@@ -1,10 +1,9 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Q
+from sympy import Basic
 from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices import MatrixBase
 
 class Transpose(MatrixExpr):
     """

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.combinatorics.permutations import Permutation, _af_rmul, _af_rmuln,\
+from sympy.core.compatibility import range
+from sympy.combinatorics.permutations import Permutation, _af_rmul, \
     _af_invert, _af_new
 from sympy.combinatorics.perm_groups import PermutationGroup, _orbit, \
     _orbit_transversal
@@ -1051,11 +1052,13 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     >>> Permutation.print_cyclic = True
 
     two symmetric tensors with 3 indices without free indices
+
     >>> base, gens = get_symmetric_group_sgs(3)
     >>> tensor_gens(base, gens, [[], []])
     (8, [0, 1, 3, 4], [Permutation(7)(0, 1), Permutation(7)(1, 2), Permutation(7)(3, 4), Permutation(7)(4, 5), Permutation(7)(0, 3)(1, 4)(2, 5)])
 
     two symmetric tensors with 3 indices with free indices in slot 1 and 0
+
     >>> tensor_gens(base, gens, [[1],[0]])
     (8, [0, 4], [Permutation(7)(0, 2), Permutation(7)(4, 5)])
 

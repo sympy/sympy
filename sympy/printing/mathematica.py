@@ -3,7 +3,6 @@ Mathematica code printer
 """
 
 from __future__ import print_function, division
-from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
@@ -25,6 +24,12 @@ known_functions = {
     "coth": [(lambda x: True, "Coth")],
     "sech": [(lambda x: True, "Sech")],
     "csch": [(lambda x: True, "Csch")],
+    "asinh": [(lambda x: True, "ArcSinh")],
+    "acosh": [(lambda x: True, "ArcCosh")],
+    "atanh": [(lambda x: True, "ArcTanh")],
+    "acoth": [(lambda x: True, "ArcCoth")],
+    "asech": [(lambda x: True, "ArcSech")],
+
 }
 
 
