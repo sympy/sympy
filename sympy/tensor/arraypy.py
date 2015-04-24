@@ -526,7 +526,6 @@ class Arraypy(Basic):
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
         >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
         >>> for i in a:
-<<<<<<< HEAD
         ...     print (i)
          
         1
@@ -538,7 +537,7 @@ class Arraypy(Basic):
         7
         8
 
-=======
+        >>> for i in a:
         ...     print(str(i) + ' ' + str(a.iter_index))
         ... 
         1 (0, 0, 0)
@@ -549,7 +548,6 @@ class Arraypy(Basic):
         6 (1, 0, 1)
         7 (1, 1, 0)
         8 (1, 1, 1)
->>>>>>> 397dc83c5e8f1fcc84f34875fc2a291d40c62b7a
         """
         if (self._iterator_index_number == self._loop_size):
             raise StopIteration
