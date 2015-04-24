@@ -303,9 +303,7 @@ Returns the square root of an expression. It is equivalent to raise to ``Rationa
     >>> sqrt(2) == 2**Rational(1,2)
     True
 
-.. autoclass:: sympy.functions.elementary.miscellaneous.sqrt
-   :members:
-
+.. autofunction:: sympy.functions.elementary.miscellaneous.sqrt
 
 sign
 ----
