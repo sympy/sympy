@@ -3621,7 +3621,7 @@ class MatrixBase(object):
                     # since `S` is rank deficient).
                     exclude_vectors = Ns[s-1]
                     for k in range(0, a[s-1]):
-                        S = S.col_join((exclude_vectors[k]).transpose())
+                        S = S.col_join((exclude_vectors[k]).adjoint())
                     # We also want to exclude the vectors in the chains for the bigger blocks
                     # that we have already computed (if there are any).
                     # (That is why we start with the biggest s).
@@ -3649,7 +3649,7 @@ class MatrixBase(object):
                     l = len(chain_vectors)
                     if l > 0:
                         for k in range(0, l):
-                            old = chain_vectors[k].transpose()
+                            old = chain_vectors[k].adjoint()
                             S = S.col_join(old)
                     e0s = S.nullspace()
                     # Determine the number of chain leaders which equals the number of blocks with that size.
