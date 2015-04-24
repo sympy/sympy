@@ -72,7 +72,8 @@ def test_cse_single2():
     substs, reduced = cse(e)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
-    assert isinstance(cse(Matrix([[1]]))[1], Matrix)
+    substs, reduced = cse(Matrix([[1]]))
+    assert isinstance(reduced[0], Matrix)
 
 
 def test_cse_not_possible():

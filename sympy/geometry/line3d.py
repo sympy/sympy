@@ -10,7 +10,8 @@ Segment3D
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, Dummy, nan
+from sympy.core import S, Dummy, nan
+from sympy.functions.elementary.trigonometric import acos
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -374,7 +375,7 @@ class LinearEntity3D(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes

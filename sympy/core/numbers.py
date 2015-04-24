@@ -6,7 +6,6 @@ import math
 import re as regex
 from collections import defaultdict
 
-from .core import C
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
@@ -30,6 +29,46 @@ from sympy.utilities.misc import debug
 rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
+
+
+def comp(z1, z2, tol=None):
+    """Return a bool indicating whether the error between z1 and z2 is <= tol.
+
+    If ``tol`` is None then True will be returned if there is a significant
+    difference between the numbers: ``abs(z1 - z2)*10**p <= 1/2`` where ``p``
+    is the lower of the precisions of the values. A comparison of strings will
+    be made if ``z1`` is a Number and a) ``z2`` is a string or b) ``tol`` is ''
+    and ``z2`` is a Number.
+
+    When ``tol`` is a nonzero value, if z2 is non-zero and ``|z1| > 1``
+    the error is normalized by ``|z1|``, so if you want to see if the
+    absolute error between ``z1`` and ``z2`` is <= ``tol`` then call this
+    as ``comp(z1 - z2, 0, tol)``.
+    """
+    if type(z2) is str:
+        if not isinstance(z1, Number):
+            raise ValueError('when z2 is a str z1 must be a Number')
+        return str(z1) == z2
+    if not z1:
+        z1, z2 = z2, z1
+    if not z1:
+        return True
+    if not tol:
+        if tol is None:
+            if type(z2) is str and getattr(z1, 'is_Number', False):
+                return str(z1) == z2
+            a, b = Float(z1), Float(z2)
+            return int(abs(a - b)*10**prec_to_dps(
+                min(a._prec, b._prec)))*2 <= 1
+        elif all(getattr(i, 'is_Number', False) for i in (z1, z2)):
+            return z1._prec == z2._prec and str(z1) == str(z2)
+        raise ValueError('exact comparison requires two Numbers')
+    diff = abs(z1 - z2)
+    az1 = abs(z1)
+    if z2 and az1 > 1:
+        return diff/az1 <= tol
+    else:
+        return diff <= tol
 
 
 def mpf_norm(mpf, prec):
@@ -297,8 +336,9 @@ class Number(AtomicExpr):
         return self
 
     def _eval_order(self, *symbols):
+        from sympy import Order
         # Order(5, x, y) -> Order(1,x,y)
-        return C.Order(S.One, *symbols)
+        return Order(S.One, *symbols)
 
     def _eval_subs(self, old, new):
         if old == -self:
@@ -738,11 +778,11 @@ class Float(Number):
         return (self._mpf_, self._prec)
 
     def floor(self):
-        return C.Integer(int(mlib.to_int(
+        return Integer(int(mlib.to_int(
             mlib.mpf_floor(self._mpf_, self._prec))))
 
     def ceiling(self):
-        return C.Integer(int(mlib.to_int(
+        return Integer(int(mlib.to_int(
             mlib.mpf_ceil(self._mpf_, self._prec))))
 
     @property
@@ -935,7 +975,7 @@ class Float(Number):
             return other.__le__(self)
         if other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__gt__(self, other)
@@ -949,7 +989,7 @@ class Float(Number):
             return other.__lt__(self)
         if other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__ge__(self, other)
@@ -963,7 +1003,7 @@ class Float(Number):
             return other.__ge__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__lt__(self, other)
@@ -977,7 +1017,7 @@ class Float(Number):
             return other.__gt__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__le__(self, other)
@@ -1394,8 +1434,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__le__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__gt__(expr, other)
@@ -1414,8 +1452,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__lt__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__ge__(expr, other)
@@ -1434,8 +1470,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__ge__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__lt__(expr, other)
@@ -1454,8 +1488,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__gt__(self)
         elif other.is_number and other.is_real:
             expr, other = Integer(self.p), self.q*other
         return Expr.__le__(expr, other)
@@ -1935,7 +1967,7 @@ class AlgebraicNumber(Expr):
 
     def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
         """Construct a new algebraic number. """
-
+        from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.core.symbol import Symbol
@@ -1946,7 +1978,7 @@ class AlgebraicNumber(Expr):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
-                minpoly = C.Poly(minpoly)
+                minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
             minpoly, root = expr.minpoly, expr.root
         else:
@@ -2003,13 +2035,14 @@ class AlgebraicNumber(Expr):
 
     def as_poly(self, x=None):
         """Create a Poly instance from ``self``. """
+        from sympy import Dummy, Poly, PurePoly
         if x is not None:
-            return C.Poly.new(self.rep, x)
+            return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
-                return C.Poly.new(self.rep, self.alias)
+                return Poly.new(self.rep, self.alias)
             else:
-                return C.PurePoly.new(self.rep, C.Dummy('x'))
+                return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
         """Create a Basic expression from ``self``. """
@@ -2025,13 +2058,14 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert ``self`` to an algebraic integer. """
+        from sympy import Poly
         f = self.minpoly
 
         if f.LC() == 1:
             return self
 
         coeff = f.LC()**(f.degree() - 1)
-        poly = f.compose(C.Poly(f.gen/f.LC()))
+        poly = f.compose(Poly(f.gen/f.LC()))
 
         minpoly = poly*coeff
         root = f.LC()*self.root
@@ -2710,19 +2744,22 @@ class NaN(with_metaclass(Singleton, Number)):
     """
     Not a Number.
 
-    This represents the corresponding data type to floating point nan, which
-    is defined in the IEEE 754 floating point standard, and corresponds to the
-    Python ``float('nan')``.
-
-    NaN serves as a place holder for numeric values that are indeterminate.
+    This serves as a place holder for numeric values that are indeterminate.
     Most operations on NaN, produce another NaN.  Most indeterminate forms,
     such as ``0/0`` or ``oo - oo` produce NaN.  Two exceptions are ``0**0``
     and ``oo**0``, which all produce ``1`` (this is consistent with Python's
     float).
 
+    NaN is loosely related to floating point nan, which is defined in the
+    IEEE 754 floating point standard, and corresponds to the Python
+    ``float('nan')``.  Differences are noted below.
+
     NaN is mathematically not equal to anything else, even NaN itself.  This
     explains the initially counter-intuitive results with ``Eq`` and ``==`` in
     the examples below.
+
+    NaN is not comparable so inequalities raise a TypeError.  This is in
+    constrast with floating point nan where all inequalities are false.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
@@ -2809,33 +2846,11 @@ class NaN(with_metaclass(Singleton, Number)):
         # NaN is not mathematically equal to anything, even NaN
         return S.false
 
-    def __gt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        return S.false
-
-    def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        return S.false
-
-    def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        return S.false
-
-    def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        return S.false
+    # Expr will _sympify and raise TypeError
+    __gt__ = Expr.__gt__
+    __ge__ = Expr.__ge__
+    __lt__ = Expr.__lt__
+    __le__ = Expr.__le__
 
 nan = S.NaN
 
@@ -3070,15 +3085,18 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
             pass
 
     def _eval_power(self, expt):
-        return C.exp(expt)
+        from sympy import exp
+        return exp(expt)
 
     def _eval_rewrite_as_sin(self):
+        from sympy import sin
         I = S.ImaginaryUnit
-        return C.sin(I + S.Pi/2) - I*C.sin(I)
+        return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self):
+        from sympy import cos
         I = S.ImaginaryUnit
-        return C.cos(I) + I*C.cos(I + S.Pi/2)
+        return cos(I) + I*cos(I + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage

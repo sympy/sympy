@@ -966,6 +966,7 @@ def test_issue_4737():
 
 
 def test_issue_4992():
+    # Note: psi in _check_antecedents becomes NaN.
     from sympy import simplify, expand_func, polygamma, gamma
     a = Symbol('a', positive=True)
     assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
@@ -992,6 +993,7 @@ def test_issue_4400():
 
 def test_issue_6253():
     # Note: this used to raise NotImplementedError
+    # Note: psi in _check_antecedents becomes NaN.
     assert integrate((sqrt(1 - x) + sqrt(1 + x))**2/x, x, meijerg=True) == \
         Integral((sqrt(-x + 1) + sqrt(x + 1))**2/x, x)
 
@@ -1085,3 +1087,9 @@ def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
+
+
+def test_issue_7130():
+    i, L, a, b = symbols('i L a b')
+    integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
+    assert x not in integrate(integrand, (x, 0, L)).free_symbols

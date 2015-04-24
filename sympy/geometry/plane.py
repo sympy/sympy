@@ -7,9 +7,9 @@ Plane
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, Dummy, Symbol, Rational
+from sympy.core import S, Dummy, Symbol, Rational
 from sympy.core.compatibility import is_sequence
-from sympy.functions.elementary.trigonometric import sqrt
+from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve
@@ -401,14 +401,14 @@ class Plane(GeometryEntity):
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
             e = sqrt(sum([i**2 for i in o.direction_ratio]))
-            return C.asin(c/(d*e))
+            return asin(c/(d*e))
         if isinstance(o, Plane):
             a = Matrix(self.normal_vector)
             b = Matrix(o.normal_vector)
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
             e = sqrt(sum([i**2 for i in o.normal_vector]))
-            return C.acos(c/(d*e))
+            return acos(c/(d*e))
 
 
     @staticmethod

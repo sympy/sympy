@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -14,17 +14,14 @@ from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.integrals.rationaltools import ratint
-from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
-from sympy.geometry import Curve
+from sympy.functions.elementary.exponential import log
 from sympy.series import limit
+from sympy.series.order import Order
 
 
 class Integral(AddWithLimits):
@@ -241,7 +238,7 @@ class Integral(AddWithLimits):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-
+        from sympy.solvers.solvers import solve, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -363,7 +360,7 @@ class Integral(AddWithLimits):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((2, log(x) == 0), (x**3/log(x) - x/log(x), True))
+        Piecewise((2, Eq(log(x), 0)), (x**3/log(x) - x/log(x), True))
 
         See Also
         ========
@@ -566,6 +563,7 @@ class Integral(AddWithLimits):
         0
 
         The previous must be true since there is no y in the evaluated integral:
+
         >>> i.free_symbols
         set([x])
         >>> i.doit()
@@ -707,6 +705,9 @@ class Integral(AddWithLimits):
              so that this can be deleted.
 
         """
+        from sympy.integrals.deltafunctions import deltaintegrate
+        from sympy.integrals.heurisch import heurisch, heurisch_wrapper
+        from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
 
         if risch:
@@ -810,11 +811,11 @@ class Integral(AddWithLimits):
 
                 if M is not None:
                     if g.exp == -1:
-                        h = C.log(g.base)
+                        h = log(g.base)
                     elif conds != 'piecewise':
                         h = g.base**(g.exp + 1) / (g.exp + 1)
                     else:
-                        h1 = C.log(g.base)
+                        h1 = log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
                         h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
 
@@ -945,7 +946,7 @@ class Integral(AddWithLimits):
                 symb = l[0]
                 break
         terms, order = expr.function.nseries(
-            x=symb, n=n, logx=logx).as_coeff_add(C.Order)
+            x=symb, n=n, logx=logx).as_coeff_add(Order)
         return integrate(terms, *expr.limits) + Add(*order)*x
 
     def as_sum(self, n, method="midpoint"):
@@ -1276,6 +1277,7 @@ def line_integrate(field, curve, vars):
 
     integrate, Integral
     """
+    from sympy.geometry import Curve
     F = sympify(field)
     if not F:
         raise ValueError(

@@ -397,7 +397,7 @@ class RootOf(Expr):
 
     @classmethod
     def _count_roots(cls, roots):
-        """Count the number of real or complex roots including multiplicites. """
+        """Count the number of real or complex roots including multiplicities."""
         return sum([ k for _, _, k in roots ])
 
     @classmethod
@@ -593,9 +593,9 @@ class RootOf(Expr):
                     # case and the interval will then be tightened -- and
                     # eventually the root will be found.
                     if self.is_real:
-                        if (a < root < b):
+                        if (a <= root <= b):
                             break
-                    elif (ax < root.real < bx and ay < root.imag < by):
+                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
                 except ValueError:
                     pass

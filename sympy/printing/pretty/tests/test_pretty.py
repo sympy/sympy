@@ -18,7 +18,7 @@ from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.trace import Tr
 
 from sympy.core.compatibility import u_decode as u
@@ -258,7 +258,7 @@ def test_upretty_sub_super():
     assert upretty( Symbol("F^1^2^3^4") ) == u('F¹ ² ³ ⁴')
 
 
-def test_upretty_subs_missingin_24():
+def test_upretty_subs_missing_in_24():
     assert upretty( Symbol('F_beta') ) == u('Fᵦ')
     assert upretty( Symbol('F_gamma') ) == u('Fᵧ')
     assert upretty( Symbol('F_rho') ) == u('Fᵨ')
@@ -273,6 +273,22 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_r') ) == u('Fᵣ')
     assert upretty( Symbol('F_v') ) == u('Fᵥ')
     assert upretty( Symbol('F_x') ) == u('Fₓ')
+
+
+@XFAIL
+def test_missing_in_2X_issue_9047():
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        assert upretty( Symbol('F_h') ) == u('Fₕ')
+        assert upretty( Symbol('F_k') ) == u('Fₖ')
+        assert upretty( Symbol('F_l') ) == u('Fₗ')
+        assert upretty( Symbol('F_m') ) == u('Fₘ')
+        assert upretty( Symbol('F_n') ) == u('Fₙ')
+        assert upretty( Symbol('F_p') ) == u('Fₚ')
+        assert upretty( Symbol('F_s') ) == u('Fₛ')
+        assert upretty( Symbol('F_t') ) == u('Fₜ')
+
 
 def test_upretty_modifiers():
     # Accents
@@ -878,8 +894,8 @@ def test_issue_5524():
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 u("""\
-        ⎛         ___    ⎞           2\n\
-(x - 5)⋅⎝-x - 2⋅╲╱ 2  + 5⎠ - (-y + 5) \
+                                  2\n\
+(x - 5)⋅(-x - 2⋅√2 + 5) - (-y + 5) \
 """)
 
 
@@ -1689,10 +1705,7 @@ def test_pretty_sqrt():
 \/ 2 \
 """
     ucode_str = \
-u("""\
-  ___\n\
-╲╱ 2 \
-""")
+u("√2")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1749,9 +1762,8 @@ u("""\
 """
     ucode_str = \
 u("""\
-   ___________\n\
-3 ╱       ___ \n\
-╲╱  1 + ╲╱ 5  \
+3 ________\n\
+╲╱ 1 + √5 \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1807,6 +1819,33 @@ u("""\
                     ╲╱  x  + 3 \
 """)
     assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_pretty_sqrt_char_knob():
+    # See PR #9234.
+    expr = sqrt(2)
+    ucode_str1 = \
+u("""\
+  ___\n\
+╲╱ 2 \
+""")
+    ucode_str2 = \
+u("√2")
+    assert xpretty(expr, use_unicode=True,
+                   use_unicode_sqrt_char=False) == ucode_str1
+    assert xpretty(expr, use_unicode=True,
+                   use_unicode_sqrt_char=True) == ucode_str2
+
+
+def test_pretty_sqrt_longsymbol_no_sqrt_char():
+    # Do not use unicode sqrt char for long symbols (see PR #9234).
+    expr = sqrt(Symbol('C1'))
+    ucode_str = \
+u("""\
+  ____\n\
+╲╱ C₁ \
+""")
     assert upretty(expr) == ucode_str
 
 
@@ -4286,10 +4325,9 @@ atan2|-------, \\/ x |\n\
 """
     ucode_str = \
 u("""\
-     ⎛  ___         ⎞\n\
-     ⎜╲╱ 2 ⋅y    ___⎟\n\
-atan2⎜───────, ╲╱ x ⎟\n\
-     ⎝   20         ⎠\
+     ⎛√2⋅y    ⎞\n\
+atan2⎜────, √x⎟\n\
+     ⎝ 20     ⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4545,10 +4583,9 @@ def test_issue_6739():
 """
     ucode_str = \
 u("""\
-  1  \n\
-─────\n\
-  ___\n\
-╲╱ x \
+1 \n\
+──\n\
+√x\
 """)
     assert pretty(1/sqrt(x)) == ascii_str
     assert upretty(1/sqrt(x)) == ucode_str
@@ -4831,6 +4868,15 @@ def test_pretty_Complement():
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
 
 
+def test_pretty_SymmetricDifference():
+    from sympy import SymmetricDifference, Interval
+    from sympy.utilities.pytest import raises
+    assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
+           evaluate = False)) == u('[2, 3] ∆ [3, 5]')
+    with raises(NotImplementedError):
+        pretty(SymmetricDifference(Interval(2,3), Interval(3,5), evaluate = False))
+
+
 def test_pretty_Contains():
     assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
     assert upretty(Contains(x, S.Integers)) == u('x ∈ ℤ')
@@ -4902,6 +4948,29 @@ u("""\
 ───\n\
   2\n\
 10 \
+""")
+    assert upretty(e) == ucode_str
+
+
+def test_issue_7927():
+    e = sin(x/2)**cos(x/2)
+    ucode_str = \
+u("""\
+           ⎛x⎞\n\
+        cos⎜─⎟\n\
+           ⎝2⎠\n\
+⎛   ⎛x⎞⎞      \n\
+⎜sin⎜─⎟⎟      \n\
+⎝   ⎝2⎠⎠      \
+""")
+    assert upretty(e) == ucode_str
+    e = sin(x)**(S(11)/13)
+    ucode_str = \
+u("""\
+        11\n\
+        ──\n\
+        13\n\
+(sin(x))  \
 """)
     assert upretty(e) == ucode_str
 

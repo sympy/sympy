@@ -29,12 +29,18 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
+import sys
+import subprocess
+import os
+import shutil
+import glob
+
 mpmath_version = '0.19'
 
 try:
     from setuptools import setup, Command
 except ImportError:
-    from distutils import setup, Command
+    from distutils.core import setup, Command
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
@@ -45,11 +51,6 @@ except ImportError:
     except ImportError:
         print("Please install the mpmath package with a version >= %s" % mpmath_version)
         sys.exit(-1)
-
-import sys
-import subprocess
-import os
-import shutil
 
 PY3 = sys.version_info[0] > 2
 
@@ -190,6 +191,11 @@ class clean(Command):
             elif os.path.isdir(f):
                 shutil.rmtree(f)
 
+        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules", \
+                                           "physics", "vector", "*.pdf")):
+            if os.path.isfile(name):
+                os.remove(name)
+
         os.chdir(curr_dir)
 
 
@@ -295,21 +301,6 @@ tests = [
     'sympy.utilities.tests',
     'sympy.vector.tests',
     ]
-
-classifiers = [
-    'License :: OSI Approved :: BSD License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Scientific/Engineering :: Mathematics',
-    'Topic :: Scientific/Engineering :: Physics',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.2',
-    'Programming Language :: Python :: 3.3',
-]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code

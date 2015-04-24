@@ -2,11 +2,12 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, I, pi, oo, ilcm, Mod, C
+from sympy.core import S, I, pi, oo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
 from sympy.core.mul import Mul
+from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
@@ -28,7 +29,9 @@ def _prep_tuple(v):
     Turn an iterable argument V into a Tuple and unpolarify, since both
     hypergeometric and meijer g-functions are unbranched in their parameters.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.functions.special.hyper import _prep_tuple
     >>> _prep_tuple([1, 2, 3])
     (1, 2, 3)
@@ -204,11 +207,12 @@ class hyper(TupleParametersBase):
 
     def _eval_rewrite_as_Sum(self, ap, bq, z):
         from sympy.functions import factorial, RisingFactorial, Piecewise
-        n = C.Dummy("n", integer=True)
+        from sympy import Sum
+        n = Dummy("n", integer=True)
         rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
         rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
         coeff = Mul(*rfap) / Mul(*rfbq)
-        return Piecewise((C.Sum(coeff * z**n / factorial(n), (n, 0, oo)),
+        return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
     @property

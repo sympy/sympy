@@ -1,9 +1,10 @@
 from __future__ import division
 import warnings
 
-from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sin, sqrt, symbols, tan, Derivative, asin, acos)
+from sympy import (Abs, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
+                   simplify, sin, sqrt, symbols, Derivative, asin, acos)
 from sympy.core.compatibility import range
+from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection,
@@ -12,6 +13,7 @@ from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.geometry.util import idiff, are_coplanar
+from sympy.integrals.integrals import Integral
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import verify_numerically
@@ -229,6 +231,15 @@ def test_point3D():
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
+
+def test_issue_9214():
+    p1 = Point3D(4, -2, 6)
+    p2 = Point3D(1, 2, 3)
+    p3 = Point3D(7, 2, 3)
+
+    assert Point3D.are_collinear(p1, p2, p3) is False
+
+
 def test_line_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
@@ -340,8 +351,8 @@ def test_line_geom():
     assert Ray((1, 1), angle=4.05*pi) == Ray(Point(1, 1),
                Point(2, -sqrt(5)*sqrt(2*sqrt(5) + 10)/4 - sqrt(2*sqrt(5) + 10)/4 + 2 + sqrt(5)))
     assert Ray((1, 1), angle=4.02*pi) == Ray(Point(1, 1),
-               Point(2, 1 + C.tan(4.02*pi)))
-    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
+               Point(2, 1 + tan(4.02*pi)))
+    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 
     # issue 7963
@@ -739,8 +750,6 @@ def test_plane():
     p4 = Point3D(x, x, x)
     p5 = Point3D(y, y, y)
 
-    raises(NotImplementedError, lambda: Plane(p1, p2, p4))
-    raises(NotImplementedError, lambda: Plane(p1, p2, p5))
     raises(ValueError, lambda: Plane(p1, p2))
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
@@ -964,7 +973,7 @@ def test_ellipse_geom():
     m = Symbol('m')
     c = Ellipse(p1, M, m).circumference
     _x = c.atoms(Dummy).pop()
-    assert c == 4*M*C.Integral(
+    assert c == 4*M*Integral(
         sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
 
     assert e2.arbitrary_point() in e2
@@ -1675,9 +1684,9 @@ def test_idiff():
 def test_issue_2941():
     def _check():
         for f, g in cartes(*[(Line, Ray, Segment)]*2):
-          l1 = f(a, b)
-          l2 = g(c, d)
-          assert l1.intersection(l2) == l2.intersection(l1)
+            l1 = f(a, b)
+            l2 = g(c, d)
+            assert l1.intersection(l2) == l2.intersection(l1)
     # intersect at end point
     c, d = (-2, -2), (-2, 0)
     a, b = (0, 0), (1, 1)

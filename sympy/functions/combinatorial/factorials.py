@@ -1,12 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy
+from sympy.core import S, sympify, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
+from sympy.core.numbers import Integer
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, as_int, range
+from sympy.core.compatibility import reduce, range
 from sympy.core.cache import cacheit
 
 from sympy.polys.polytools import poly_from_expr
@@ -78,8 +79,9 @@ class factorial(CombinatorialFunction):
     """
 
     def fdiff(self, argindex=1):
+        from sympy import gamma, polygamma
         if argindex == 1:
-            return C.gamma(self.args[0] + 1)*C.polygamma(0, self.args[0] + 1)
+            return gamma(self.args[0] + 1)*polygamma(0, self.args[0] + 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -161,15 +163,17 @@ class factorial(CombinatorialFunction):
 
                         result = cls._recursive(n)*2**(n - bits)
 
-                    return C.Integer(result)
+                    return Integer(result)
 
     def _eval_rewrite_as_gamma(self, n):
-        return C.gamma(n + 1)
+        from sympy import gamma
+        return gamma(n + 1)
 
     def _eval_rewrite_as_Product(self, n):
+        from sympy import Product
         if n.is_nonnegative and n.is_integer:
             i = Dummy('i', integer=True)
-            return C.Product(i, (i, 1, n))
+            return Product(i, (i, 1, n))
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
@@ -195,7 +199,7 @@ class MultiFactorial(CombinatorialFunction):
 
 
 class subfactorial(CombinatorialFunction):
-    """The subfactorial counts the derangements of n items and is
+    r"""The subfactorial counts the derangements of n items and is
     defined for non-negative integers as::
 
               ,
@@ -207,9 +211,14 @@ class subfactorial(CombinatorialFunction):
     It can also be written as int(round(n!/exp(1))) but the recursive
     definition with caching is implemented for this function.
 
-    This function is generalized to noninteger arguments [2]_ as
+    An interesting analytic expression is the following [2]_
 
     .. math:: !x = \Gamma(x + 1, -1)/e
+
+    which is valid for non-negative integers x. The above formula
+    is not very useful incase of non-integers. :math:`\Gamma(x + 1, -1)` is
+    single-valued only for integral arguments x, elsewhere on the positive real
+    axis it has an infinite number of branches none of which are real.
 
     References
     ==========
@@ -249,8 +258,10 @@ class subfactorial(CombinatorialFunction):
         if arg.is_Number:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
+            elif arg is S.NaN:
+                return S.NaN
             elif arg is S.Infinity:
-                return arg
+                return S.Infinity
 
     def _eval_is_even(self):
         if self.args[0].is_odd and self.args[0].is_nonnegative:
@@ -261,7 +272,8 @@ class subfactorial(CombinatorialFunction):
             return True
 
     def _eval_rewrite_as_uppergamma(self, arg):
-        return C.uppergamma(arg + 1, -1)/S.Exp1
+        from sympy import uppergamma
+        return uppergamma(arg + 1, -1)/S.Exp1
 
     def _eval_is_nonnegative(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
@@ -472,7 +484,8 @@ class RisingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
-        return C.gamma(x + k) / C.gamma(x)
+        from sympy import gamma
+        return gamma(x + k) / gamma(x)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -569,7 +582,8 @@ class FallingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
-        return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
+        from sympy import gamma
+        return (-1)**k * gamma(-x + k) / gamma(-x)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -590,134 +604,148 @@ ff = FallingFactorial
 
 class binomial(CombinatorialFunction):
     """Implementation of the binomial coefficient. It can be defined
-       in two ways depending on its desired interpretation:
+    in two ways depending on its desired interpretation:
 
-           C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!
+        C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!
 
-       First, in a strict combinatorial sense it defines the
-       number of ways we can choose 'k' elements from a set of
-       'n' elements. In this case both arguments are nonnegative
-       integers and binomial is computed using an efficient
-       algorithm based on prime factorization.
+    First, in a strict combinatorial sense it defines the
+    number of ways we can choose 'k' elements from a set of
+    'n' elements. In this case both arguments are nonnegative
+    integers and binomial is computed using an efficient
+    algorithm based on prime factorization.
 
-       The other definition is generalization for arbitrary 'n',
-       however 'k' must also be nonnegative. This case is very
-       useful when evaluating summations.
+    The other definition is generalization for arbitrary 'n',
+    however 'k' must also be nonnegative. This case is very
+    useful when evaluating summations.
 
-       For the sake of convenience for negative 'k' this function
-       will return zero no matter what valued is the other argument.
+    For the sake of convenience for negative 'k' this function
+    will return zero no matter what valued is the other argument.
 
-       To expand the binomial when n is a symbol, use either
-       expand_func() or expand(func=True). The former will keep the
-       polynomial in factored form while the latter will expand the
-       polynomial itself. See examples for details.
+    To expand the binomial when n is a symbol, use either
+    expand_func() or expand(func=True). The former will keep the
+    polynomial in factored form while the latter will expand the
+    polynomial itself. See examples for details.
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy import Symbol, Rational, binomial, expand_func
-       >>> n = Symbol('n', integer=True)
+    >>> from sympy import Symbol, Rational, binomial, expand_func
+    >>> n = Symbol('n', integer=True, positive=True)
 
-       >>> binomial(15, 8)
-       6435
+    >>> binomial(15, 8)
+    6435
 
-       >>> binomial(n, -1)
-       0
+    >>> binomial(n, -1)
+    0
 
-       >>> [ binomial(0, i) for i in range(1)]
-       [1]
-       >>> [ binomial(1, i) for i in range(2)]
-       [1, 1]
-       >>> [ binomial(2, i) for i in range(3)]
-       [1, 2, 1]
-       >>> [ binomial(3, i) for i in range(4)]
-       [1, 3, 3, 1]
-       >>> [ binomial(4, i) for i in range(5)]
-       [1, 4, 6, 4, 1]
+    Rows of Pascal's triangle can be generated with the binomial function:
 
-       >>> binomial(Rational(5,4), 3)
-       -5/128
+    >>> for N in range(8):
+    ...     print([ binomial(N, i) for i in range(N + 1)])
+    ...
+    [1]
+    [1, 1]
+    [1, 2, 1]
+    [1, 3, 3, 1]
+    [1, 4, 6, 4, 1]
+    [1, 5, 10, 10, 5, 1]
+    [1, 6, 15, 20, 15, 6, 1]
+    [1, 7, 21, 35, 35, 21, 7, 1]
 
-       >>> binomial(n, 3)
-       binomial(n, 3)
+    As can a given diagonal, e.g. the 4th diagonal:
 
-       >>> binomial(n, 3).expand(func=True)
-       n**3/6 - n**2/2 + n/3
+    >>> N = -4
+    >>> [ binomial(N, i) for i in range(1 - N)]
+    [1, -4, 10, -20, 35]
 
-       >>> expand_func(binomial(n, 3))
-       n*(n - 2)*(n - 1)/6
+    >>> binomial(Rational(5, 4), 3)
+    -5/128
+    >>> binomial(Rational(-5, 4), 3)
+    -195/128
+
+    >>> binomial(n, 3)
+    binomial(n, 3)
+
+    >>> binomial(n, 3).expand(func=True)
+    n**3/6 - n**2/2 + n/3
+
+    >>> expand_func(binomial(n, 3))
+    n*(n - 2)*(n - 1)/6
 
     """
 
     def fdiff(self, argindex=1):
+        from sympy import polygamma
         if argindex == 1:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
             n, k = self.args
-            return binomial(n, k)*(C.polygamma(0, n + 1) - C.polygamma(0, n - k + 1))
+            return binomial(n, k)*(polygamma(0, n + 1) - \
+                polygamma(0, n - k + 1))
         elif argindex == 2:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
             n, k = self.args
-            return binomial(n, k)*(C.polygamma(0, n - k + 1) - C.polygamma(0, k + 1))
+            return binomial(n, k)*(polygamma(0, n - k + 1) - \
+                polygamma(0, k + 1))
         else:
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    def _eval(self, n, k):
+        # n.is_Number and k.is_Integer and k != 1 and n != k
+        if k.is_Integer:
+            if n.is_Integer and n >= 0:
+                n, k = int(n), int(k)
+
+                if k > n:
+                    return S.Zero
+                elif k > n // 2:
+                    k = n - k
+
+                M, result = int(_sqrt(n)), 1
+
+                for prime in sieve.primerange(2, n + 1):
+                    if prime > n - k:
+                        result *= prime
+                    elif prime > n // 2:
+                        continue
+                    elif prime > M:
+                        if n % prime < k % prime:
+                            result *= prime
+                    else:
+                        N, K = n, k
+                        exp = a = 0
+
+                        while N > 0:
+                            a = int((N % prime) < (K % prime + a))
+                            N, K = N // prime, K // prime
+                            exp = a + exp
+
+                        if exp > 0:
+                            result *= prime**exp
+                return Integer(result)
+            else:
+                d = result = n - k + 1
+                for i in range(2, k + 1):
+                    d += 1
+                    result *= d
+                    result /= i
+                return result
+
+    @classmethod
     def eval(cls, n, k):
         n, k = map(sympify, (n, k))
-
-        if k.is_Number:
-            if k.is_Integer:
-                if k < 0:
-                    return S.Zero
-                elif k == 0 or n == k:
-                    return S.One
-                elif n.is_Integer and n >= 0:
-                    n, k = int(n), int(k)
-
-                    if k > n:
-                        return S.Zero
-                    elif k > n // 2:
-                        k = n - k
-
-                    M, result = int(_sqrt(n)), 1
-
-                    for prime in sieve.primerange(2, n + 1):
-                        if prime > n - k:
-                            result *= prime
-                        elif prime > n // 2:
-                            continue
-                        elif prime > M:
-                            if n % prime < k % prime:
-                                result *= prime
-                        else:
-                            N, K = n, k
-                            exp = a = 0
-
-                            while N > 0:
-                                a = int((N % prime) < (K % prime + a))
-                                N, K = N // prime, K // prime
-                                exp = a + exp
-
-                            if exp > 0:
-                                result *= prime**exp
-
-                    return C.Integer(result)
-                elif n.is_Number:
-                    result = n - k + 1
-                    for i in range(2, k + 1):
-                        result *= n - k + i
-                        result /= i
-                    return result
-
-        elif k.is_negative:
-            return S.Zero
-        elif (n - k).simplify().is_negative:
-            return S.Zero
-        else:
-            d = n - k
-
-            if d.is_Integer:
-                return cls.eval(n, d)
+        d = n - k
+        if d.is_zero or k.is_zero:
+            return S.One
+        elif d.is_zero is False:
+            if (k - 1).is_zero:
+                return n
+            elif k.is_negative:
+                return S.Zero
+            elif n.is_integer and n.is_nonnegative and d.is_negative:
+                return S.Zero
+        if k.is_Integer and k > 0 and n.is_Number:
+            return cls._eval(n, k)
 
     def _eval_expand_func(self, **hints):
         """
@@ -749,10 +777,15 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
     def _eval_rewrite_as_factorial(self, n, k):
-        return C.factorial(n)/(C.factorial(k)*C.factorial(n - k))
+        return factorial(n)/(factorial(k)*factorial(n - k))
 
     def _eval_rewrite_as_gamma(self, n, k):
-        return C.gamma(n + 1)/(C.gamma(k + 1)*C.gamma(n - k + 1))
+        from sympy import gamma
+        return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
     def _eval_is_integer(self):
-        return self.args[0].is_integer and self.args[1].is_integer
+        n, k = self.args
+        if n.is_integer and k.is_integer:
+            return True
+        elif k.is_integer is False:
+            return False

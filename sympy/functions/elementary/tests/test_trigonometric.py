@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc)
+        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
 
@@ -627,6 +627,34 @@ def test_cot_expansion():
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
 
 
+def test_sinc():
+    assert isinstance(sinc(x), sinc)
+
+    s = Symbol('s', zero=True)
+    assert sinc(s) == S.One
+    assert sinc(S.Infinity) == S.Zero
+    assert sinc(-S.Infinity) == S.Zero
+    assert sinc(S.NaN) == S.NaN
+    assert sinc(S.ComplexInfinity) == S.NaN
+
+    n = Symbol('n', integer=True, nonzero=True)
+    assert sinc(n*pi) == S.Zero
+    assert sinc(-n*pi) == S.Zero
+    assert sinc(pi/2) == 2 / pi
+    assert sinc(-pi/2) == 2 / pi
+    assert sinc(5*pi/2) == 2 / (5*pi)
+    assert sinc(7*pi/2) == -2 / (7*pi)
+
+    assert sinc(-x) == sinc(x)
+
+    assert sinc(x).diff() == (x*cos(x) - sin(x)) / x**2
+
+    assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+
+    assert sinc(x).rewrite(jn) == jn(0, x)
+    assert sinc(x).rewrite(sin) == sin(x) / x
+
+
 def test_asin():
     assert asin(nan) == nan
 
@@ -1122,6 +1150,62 @@ def test_sincos_rewrite_sqrt():
                     assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
                     assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
     assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
+    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
+    assert cos(-15*pi/2/11, evaluate=False).rewrite(
+        sqrt) == -sqrt(-cos(4*pi/11)/2 + S.Half)
+    assert cos(Mul(2, pi, S.Half, evaluate=False), evaluate=False).rewrite(
+        sqrt) == -1
+    e = cos(pi/3/17)  # don't use pi/15 since that is caught at instantiation
+    a = (
+        -3*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17) + 17)/64 -
+        3*sqrt(34)*sqrt(sqrt(17) + 17)/128 - sqrt(sqrt(17) +
+        17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) + 17)
+        + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 - sqrt(-sqrt(17)
+        + 17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 - S(1)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
+        3*sqrt(2)*sqrt(sqrt(17) + 17)/128 + sqrt(34)*sqrt(-sqrt(17) + 17)/128
+        + 13*sqrt(2)*sqrt(-sqrt(17) + 17)/128 + sqrt(17)*sqrt(-sqrt(17) +
+        17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) + 17)
+        + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 + 5*sqrt(17)/32
+        + sqrt(3)*sqrt(-sqrt(2)*sqrt(sqrt(17) + 17)*sqrt(sqrt(17)/32 +
+        sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/8 -
+        5*sqrt(2)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
+        S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 -
+        3*sqrt(2)*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 +
+        sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/32
+        + sqrt(34)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
+        S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
+        sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/2 +
+        S.Half + sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) +
+        17)/32 + sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
+        sqrt(2)*sqrt(-sqrt(17) + 17) + sqrt(34)*sqrt(-sqrt(17) + 17) +
+        6*sqrt(17) + 34)/32 + S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
+        sqrt(2)*sqrt(-sqrt(17) + 17) + sqrt(34)*sqrt(-sqrt(17) + 17) +
+        6*sqrt(17) + 34)/32 + sqrt(34)*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 +
+        sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
+        S(15)/32)/32)/2)
+    assert e.rewrite(sqrt) == a
+    assert e.n() == a.n()
+    # coverage of fermatCoords: multiplicity > 1; the following could be
+    # different but that portion of the code should be tested in some way
+    assert cos(pi/9/17).rewrite(sqrt) == \
+        sin(pi/9)*sin(2*pi/17) + cos(pi/9)*cos(2*pi/17)
 
 
 @slow
@@ -1282,6 +1366,8 @@ def test_csc():
 
 
 def test_asec():
+    z = Symbol('z', zero=True)
+    assert asec(z) == nan
     assert asec(nan) == nan
     assert asec(1) == 0
     assert asec(-1) == pi
@@ -1298,6 +1384,16 @@ def test_asec():
     assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
     assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
+
+
+def test_asec_is_real():
+    assert asec(S(1)/2).is_real is False
+    n = Symbol('n', positive=True, integer=True)
+    assert asec(n).is_real is True
+    assert asec(x).is_real is None
+    assert asec(r).is_real is None
+    t = Symbol('t', real=False)
+    assert asec(t).is_real is False
 
 
 def test_acsc():
@@ -1334,3 +1430,8 @@ def test_issue_8653():
     assert sin(n).is_irrational is None
     assert cos(n).is_irrational is None
     assert tan(n).is_irrational is None
+
+
+def test_issue_9157():
+    n = Symbol('n', integer=True, positive=True)
+    atan(n - 1).is_nonnegative is True

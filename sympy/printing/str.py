@@ -280,8 +280,8 @@ class StrPrinter(Printer):
 
         a = a or [S.One]
 
-        a_str = list(map(lambda x: self.parenthesize(x, prec), a))
-        b_str = list(map(lambda x: self.parenthesize(x, prec), b))
+        a_str = [self.parenthesize(x, prec) for x in a]
+        b_str = [self.parenthesize(x, prec) for x in b]
 
         if len(b) == 0:
             return sign + '*'.join(a_str)
@@ -554,6 +554,15 @@ class StrPrinter(Printer):
         return rv
 
     def _print_Relational(self, expr):
+
+        charmap = {
+            "==": "Eq",
+            "!=": "Ne",
+        }
+
+        if expr.rel_op in charmap:
+            return '%s(%s, %s)' % (charmap[expr.rel_op], expr.lhs, expr.rhs)
+
         return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
@@ -726,7 +735,7 @@ def sstr(expr, **settings):
     >>> from sympy import symbols, Eq, sstr
     >>> a, b = symbols('a b')
     >>> sstr(Eq(a + b, 0))
-    'a + b == 0'
+    'Eq(a + b, 0)'
     """
 
     p = StrPrinter(settings)

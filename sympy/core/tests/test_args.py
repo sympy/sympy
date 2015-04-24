@@ -975,6 +975,11 @@ def test_sympy__functions__combinatorial__numbers__catalan():
     assert _test_args(catalan(x))
 
 
+def test_sympy__functions__combinatorial__numbers__genocchi():
+    from sympy.functions.combinatorial.numbers import genocchi
+    assert _test_args(genocchi(x))
+
+
 def test_sympy__functions__combinatorial__numbers__euler():
     from sympy.functions.combinatorial.numbers import euler
     assert _test_args(euler(x))
@@ -1103,6 +1108,11 @@ def test_sympy__functions__elementary__hyperbolic__asinh():
 def test_sympy__functions__elementary__hyperbolic__atanh():
     from sympy.functions.elementary.hyperbolic import atanh
     assert _test_args(atanh(2))
+
+
+def test_sympy__functions__elementary__hyperbolic__asech():
+    from sympy.functions.elementary.hyperbolic import asech
+    assert _test_args(asech(2))
 
 
 def test_sympy__functions__elementary__hyperbolic__cosh():
@@ -1245,6 +1255,11 @@ def test_sympy__functions__elementary__trigonometric__cot():
 
 def test_sympy__functions__elementary__trigonometric__sin():
     assert _test_args(sin(2))
+
+
+def test_sympy__functions__elementary__trigonometric__sinc():
+    from sympy.functions.elementary.trigonometric import sinc
+    assert _test_args(sinc(2))
 
 
 def test_sympy__functions__elementary__trigonometric__sec():
@@ -1664,6 +1679,11 @@ def test_sympy__functions__special__zeta_functions__lerchphi():
 def test_sympy__functions__special__zeta_functions__polylog():
     from sympy.functions.special.zeta_functions import polylog
     assert _test_args(polylog(x, y))
+
+
+def test_sympy__functions__special__zeta_functions__stieltjes():
+    from sympy.functions.special.zeta_functions import stieltjes
+    assert _test_args(stieltjes(x, y))
 
 
 def test_sympy__integrals__integrals__Integral():

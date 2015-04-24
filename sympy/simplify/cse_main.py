@@ -49,8 +49,8 @@ def reps_toposort(r):
     >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
     ...     print(Eq(l, r))
     ...
-    y == 2
-    x == y + 1
+    Eq(y, 2)
+    Eq(x, y + 1)
 
     """
     r = sympify(r)
@@ -130,8 +130,6 @@ def postprocess_for_cse(expr, optimizations):
     expr : sympy expression
         The transformed expression.
     """
-    if optimizations is None:
-        optimizations = cse_optimizations
     for pre, post in reversed(optimizations):
         if post is not None:
             expr = post(expr)
@@ -156,7 +154,8 @@ def opt_cse(exprs, order='canonical'):
         The expression substitutions which can be useful to optimize CSE.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.simplify.cse_main import opt_cse
     >>> from sympy.abc import x
     >>> opt_subs = opt_cse([x**-2])
@@ -442,18 +441,12 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> isinstance(_[1][-1], SparseMatrix)
     True
     """
-    from sympy.matrices import (Matrix, SparseMatrix, ImmutableMatrix,
-        ImmutableSparseMatrix)
+    from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
+                                SparseMatrix, ImmutableSparseMatrix)
 
     # Handle the case if just one expression was passed.
-    if isinstance(exprs, Basic):
+    if isinstance(exprs, (Basic, MatrixBase)):
         exprs = [exprs]
-
-    is_singlematrix = False
-    if isinstance(exprs, (Matrix, SparseMatrix, ImmutableMatrix,
-            ImmutableSparseMatrix)):
-        exprs = [exprs]
-        is_singlematrix = True
 
     copy = exprs
     temp = []
@@ -515,10 +508,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
             if isinstance(e, ImmutableSparseMatrix):
                 m = m.as_immutable()
             reduced_exprs[i] = m
-
-    # In case of single matrix, there is no need for a list
-    if is_singlematrix is True:
-        reduced_exprs = reduced_exprs[0]
 
     if postprocess is None:
         return replacements, reduced_exprs

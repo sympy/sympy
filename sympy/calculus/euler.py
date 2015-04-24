@@ -23,7 +23,7 @@ def euler_equations(L, funcs=(), vars=()):
                       \frac{\partial g(x,y)}{\partial y},x,y\right)
 
         In many cases it is not necessary to provide anything, except the
-        Lagrangian, it will be autodetected (and an error raised if this
+        Lagrangian, it will be auto-detected (and an error raised if this
         couldn't be done).
 
     funcs : Function or an iterable of Functions
@@ -48,12 +48,12 @@ def euler_equations(L, funcs=(), vars=()):
     >>> t = Symbol('t')
     >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
     >>> euler_equations(L, x(t), t)
-    [-x(t) - Derivative(x(t), t, t) == 0]
+    [Eq(-x(t) - Derivative(x(t), t, t), 0)]
     >>> u = Function('u')
     >>> x = Symbol('x')
     >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
     >>> euler_equations(L, u(t, x), [t, x])
-    [-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0]
+    [Eq(-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x), 0)]
 
     References
     ==========

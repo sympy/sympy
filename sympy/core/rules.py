@@ -17,7 +17,7 @@ class Transform(object):
         If supplied, specifies which objects are in the mapping.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.core.rules import Transform
     >>> from sympy.abc import x

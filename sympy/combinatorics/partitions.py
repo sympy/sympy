@@ -1,15 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, C, Dict, sympify
+from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key, range
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
+from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict
 
 
-class Partition(C.FiniteSet):
+class Partition(FiniteSet):
     """
     This class represents an abstract partition.
 
@@ -48,7 +49,7 @@ class Partition(C.FiniteSet):
 
         """
         args = partition
-        if not all(isinstance(part, (list, C.FiniteSet)) for part in args):
+        if not all(isinstance(part, (list, FiniteSet)) for part in args):
             raise ValueError(
                 "Each argument to Partition should be a list or a FiniteSet")
 
@@ -57,7 +58,7 @@ class Partition(C.FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, *list(map(lambda x: C.FiniteSet(*x), args)))
+        obj = FiniteSet.__new__(cls, *[FiniteSet(*x) for x in args])
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -319,6 +320,7 @@ class IntegerPartition(Basic):
 
         If the value that the partion should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
+
         >>> IntegerPartition(10, [5, 4, 3, 1])
         Traceback (most recent call last):
         ...

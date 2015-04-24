@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
-from sympy import S, C, pi, I, Rational, Wild, cacheit, sympify
+from sympy import S, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.power import Pow
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt, root
@@ -697,7 +699,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     * method = "sympy": uses :func:`mpmath.besseljzero`
     * method = "scipy": uses the
-      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn.html>`_
+      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
       and
       `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
       to find all
@@ -908,27 +910,27 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*C.factorial(n) *
-                        gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*C.factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
+                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*factorial(n) *
+                        gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
             else:
                 return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
-                        C.factorial(n) * (root(3, 3)*x)**n)
+                        factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
-        a = C.Pow(-z, Rational(3, 2))
+        a = Pow(-z, Rational(3, 2))
         if re(z).is_negative:
             return ot*sqrt(-z) * (besselj(-ot, tt*a) + besselj(ot, tt*a))
 
     def _eval_rewrite_as_besseli(self, z):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
-        a = C.Pow(z, Rational(3, 2))
+        a = Pow(z, Rational(3, 2))
         if re(z).is_positive:
             return ot*sqrt(z) * (besseli(-ot, tt*a) - besseli(ot, tt*a))
         else:
-            return ot*(C.Pow(a, ot)*besseli(-ot, tt*a) - z*C.Pow(a, -ot)*besseli(ot, tt*a))
+            return ot*(Pow(a, ot)*besseli(-ot, tt*a) - z*Pow(a, -ot)*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
         pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
@@ -1076,28 +1078,28 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * C.factorial((n - S.One)/S(3)) /
-                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * C.factorial((n - 2)/S(3))) * p)
+                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
+                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
             else:
                 return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
-                        C.factorial(n) * (root(3, 3)*x)**n)
+                        factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
-        a = C.Pow(-z, Rational(3, 2))
+        a = Pow(-z, Rational(3, 2))
         if re(z).is_negative:
             return sqrt(-z/3) * (besselj(-ot, tt*a) - besselj(ot, tt*a))
 
     def _eval_rewrite_as_besseli(self, z):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
-        a = C.Pow(z, Rational(3, 2))
+        a = Pow(z, Rational(3, 2))
         if re(z).is_positive:
             return sqrt(z)/sqrt(3) * (besseli(-ot, tt*a) + besseli(ot, tt*a))
         else:
-            b = C.Pow(a, ot)
-            c = C.Pow(a, -ot)
+            b = Pow(a, ot)
+            c = Pow(a, -ot)
             return sqrt(ot)*(b*besseli(-ot, tt*a) + z*c*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
@@ -1234,20 +1236,20 @@ class airyaiprime(AiryBase):
 
     def _eval_rewrite_as_besselj(self, z):
         tt = Rational(2, 3)
-        a = C.Pow(-z, Rational(3, 2))
+        a = Pow(-z, Rational(3, 2))
         if re(z).is_negative:
             return z/3 * (besselj(-tt, tt*a) - besselj(tt, tt*a))
 
     def _eval_rewrite_as_besseli(self, z):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
-        a = tt * C.Pow(z, Rational(3, 2))
+        a = tt * Pow(z, Rational(3, 2))
         if re(z).is_positive:
             return z/3 * (besseli(tt, a) - besseli(-tt, a))
         else:
-            a = C.Pow(z, Rational(3, 2))
-            b = C.Pow(a, tt)
-            c = C.Pow(a, -tt)
+            a = Pow(z, Rational(3, 2))
+            b = Pow(a, tt)
+            c = Pow(a, -tt)
             return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
@@ -1390,20 +1392,20 @@ class airybiprime(AiryBase):
 
     def _eval_rewrite_as_besselj(self, z):
         tt = Rational(2, 3)
-        a = tt * C.Pow(-z, Rational(3, 2))
+        a = tt * Pow(-z, Rational(3, 2))
         if re(z).is_negative:
             return -z/sqrt(3) * (besselj(-tt, a) + besselj(tt, a))
 
     def _eval_rewrite_as_besseli(self, z):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
-        a = tt * C.Pow(z, Rational(3, 2))
+        a = tt * Pow(z, Rational(3, 2))
         if re(z).is_positive:
             return z/sqrt(3) * (besseli(-tt, a) + besseli(tt, a))
         else:
-            a = C.Pow(z, Rational(3, 2))
-            b = C.Pow(a, tt)
-            c = C.Pow(a, -tt)
+            a = Pow(z, Rational(3, 2))
+            b = Pow(a, tt)
+            c = Pow(a, -tt)
             return sqrt(ot) * (b*besseli(-tt, tt*a) + z**2*c*besseli(tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):

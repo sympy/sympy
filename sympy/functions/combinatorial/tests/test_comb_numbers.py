@@ -4,9 +4,9 @@ from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
     expand_func, diff, EulerGamma, cancel, re, im, Product)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, binomial,
-    gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial, sin,
-    cos, cot, zeta)
+    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
+    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
+    sin, cos, cot, zeta)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
@@ -59,6 +59,18 @@ def test_fibonacci():
     assert fibonacci(2, x) == x
     assert fibonacci(3, x) == x**2 + 1
     assert fibonacci(4, x) == x**3 + 2*x
+
+    # issue #8800
+    n = Dummy('n')
+    assert fibonacci(n).limit(n, S.Infinity) == S.Infinity
+    assert lucas(n).limit(n, S.Infinity) == S.Infinity
+
+    assert fibonacci(n).rewrite(sqrt) == \
+        2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
+    assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
+    assert lucas(n).rewrite(sqrt) == \
+        (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
+    assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
 
 
 def test_bell():
@@ -315,6 +327,25 @@ def test_catalan():
     c = catalan(I).evalf(3)
     assert str((re(c), im(c))) == '(0.398, -0.0209)'
 
+
+def test_genocchi():
+    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    for n, g in enumerate(genocchis):
+        assert genocchi(n + 1) == g
+
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True, positive=True)
+    assert genocchi(m) == genocchi(m)
+    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
+    assert genocchi(2 * n).is_odd
+    assert genocchi(4 * n).is_positive
+    # these are the only 2 prime Genocchi numbers
+    assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
+    assert genocchi(8, evaluate=False).is_prime
+    assert genocchi(4 * n + 2).is_negative
+    assert genocchi(4 * n - 2).is_negative
+
+
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
@@ -478,3 +509,15 @@ def test_issue_8496():
 
     raises(TypeError, lambda: catalan(n, k))
     raises(TypeError, lambda: euler(n, k))
+
+
+def test_issue_8601():
+    n = Symbol('n', integer=True, negative=True)
+
+    assert catalan(n - 1) == S.Zero
+    assert catalan(-S.Half) == S.ComplexInfinity
+    assert catalan(-S.One) == -S.Half
+    c1 = catalan(-5.6).evalf()
+    assert str(c1) == '6.93334070531408e-5'
+    c2 = catalan(-35.4).evalf()
+    assert str(c2) == '-4.14189164517449e-24'

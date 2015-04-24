@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.basic import C
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -14,7 +13,7 @@ from sympy.solvers import solve
 from sympy.core.compatibility import range
 
 
-class Sum(AddWithLimits,ExprWithIntLimits):
+class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
 
     ``Sum`` represents a finite or infinite series, with the first argument
@@ -168,6 +167,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         else:
             f = self.function
 
+        if self.function.is_Matrix:
+            return self.expand().doit()
+
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
@@ -279,6 +281,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
         """
+        from sympy.functions import bernoulli, factorial
+        from sympy.integrals import Integral
+
         m = int(m)
         n = int(n)
         f = self.function
@@ -316,7 +321,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
                 return s, S.Zero
             a += m
         x = Dummy('x')
-        I = C.Integral(f.subs(i, x), (x, a, b))
+        I = Integral(f.subs(i, x), (x, a, b))
         if eval_integral:
             I = I.doit()
         s += I
@@ -330,7 +335,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         g = f.diff(i)
         for k in range(1, n + 2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
+            term = bernoulli(2*k)/factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
@@ -574,13 +579,16 @@ def eval_sum(f, limits):
 
 
 def eval_sum_direct(expr, limits):
+    from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
-    return C.Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
+    return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
 
 
 def eval_sum_symbolic(f, limits):
+    from sympy.functions import harmonic, bernoulli
+
     f_orig = f
     (i, a, b) = limits
     if not f.has(i):
@@ -632,19 +640,19 @@ def eval_sum_symbolic(f, limits):
                 if (b is S.Infinity and not a is S.NegativeInfinity) or \
                    (a is S.NegativeInfinity and not b is S.Infinity):
                     return S.Infinity
-                return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
+                return ((bernoulli(n + 1, b + 1) - bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
-                    return C.harmonic(b) - C.harmonic(a - 1)
+                    return harmonic(b) - harmonic(a - 1)
                 else:
-                    return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
+                    return harmonic(b, abs(n)) - harmonic(a - 1, abs(n))
 
     if not (a.has(S.Infinity, S.NegativeInfinity) or
             b.has(S.Infinity, S.NegativeInfinity)):
         # Geometric terms
-        c1 = C.Wild('c1', exclude=[i])
-        c2 = C.Wild('c2', exclude=[i])
-        c3 = C.Wild('c3', exclude=[i])
+        c1 = Wild('c1', exclude=[i])
+        c2 = Wild('c2', exclude=[i])
+        c3 = Wild('c3', exclude=[i])
 
         e = f.match(c1**(c2*i + c3))
 

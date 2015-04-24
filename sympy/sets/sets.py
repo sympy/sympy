@@ -92,6 +92,12 @@ class Set(Basic):
         >>> Interval(1, 3).intersect(Interval(1, 2))
         [1, 2]
 
+        >>> from sympy import imageset, Lambda, symbols, S
+        >>> n, m = symbols('n m')
+        >>> a = imageset(Lambda(n, 2*n), S.Integers)
+        >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
+        EmptySet()
+
         """
         return Intersection(self, other)
 
@@ -207,7 +213,7 @@ class Set(Basic):
             return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     def symmetric_difference(self, other):
-         return SymmetricDifference(self, other)
+        return SymmetricDifference(self, other)
 
     def _symmetric_difference(self, other):
         return Union(Complement(self, other), Complement(other, self))
@@ -584,7 +590,7 @@ class ProductSet(Set):
         if len(self.args) != len(other.args):
             return false
 
-        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
 
     def _contains(self, element):
         """
@@ -1490,11 +1496,13 @@ class Complement(Set, EvalfMixin):
 
     See Also
     =========
+
     Intersection, Union
 
     References
     ==========
-    http://mathworld.wolfram.com/SetComplement.html
+
+    .. [1] http://mathworld.wolfram.com/ComplementSet.html
     """
 
     is_Complement = True
@@ -1698,7 +1706,7 @@ class FiniteSet(Set, EvalfMixin):
         if len(self) != len(other):
             return false
 
-        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
 
     def __iter__(self):
         return iter(self.args)

@@ -1,9 +1,12 @@
 """ Riemann zeta and related function. """
 from __future__ import print_function, division
 
-from sympy.core import Function, S, C, sympify, pi
+from sympy.core import Function, S, sympify, pi
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.elementary.exponential import log
+
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -439,17 +442,17 @@ class zeta(Function):
             elif z.is_Integer:
                 if a.is_Integer:
                     if z.is_negative:
-                        zeta = (-1)**z * C.bernoulli(-z + 1)/(-z + 1)
+                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
                     elif z.is_even:
-                        B, F = C.bernoulli(z), C.factorial(z)
+                        B, F = bernoulli(z), factorial(z)
                         zeta = 2**(z - 1) * abs(B) * pi**z / F
                     else:
                         return
 
                     if a.is_negative:
-                        return zeta + C.harmonic(abs(a), z)
+                        return zeta + harmonic(abs(a), z)
                     else:
-                        return zeta - C.harmonic(a - 1, z)
+                        return zeta - harmonic(a - 1, z)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:
@@ -507,10 +510,67 @@ class dirichlet_eta(Function):
     @classmethod
     def eval(cls, s):
         if s == 1:
-            return C.log(2)
+            return log(2)
         z = zeta(s)
         if not z.has(zeta):
             return (1 - 2**(1 - s))*z
 
     def _eval_rewrite_as_zeta(self, s):
         return (1 - 2**(1 - s)) * zeta(s)
+
+
+class stieltjes(Function):
+    r"""Represents Stieltjes constants, :math:`\gamma_{k}` that occur in
+    Laurent Series expansion of the Riemann zeta function.
+
+    Examples
+    ========
+
+    >>> from sympy import stieltjes
+    >>> from sympy.abc import n, m
+    >>> stieltjes(n)
+    stieltjes(n)
+
+    zero'th stieltjes constant
+
+    >>> stieltjes(0)
+    EulerGamma
+    >>> stieltjes(0, 1)
+    EulerGamma
+
+    For generalized stieltjes constants
+
+    >>> stieltjes(n, m)
+    stieltjes(n, m)
+
+    Constants are only defined for integers >= 0
+
+    >>> stieltjes(-1)
+    zoo
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Stieltjes_constants
+    """
+
+    @classmethod
+    def eval(cls, n, a=None):
+        n = sympify(n)
+
+        if a != None:
+            a = sympify(a)
+            if a is S.NaN:
+                return S.NaN
+            if a.is_Integer and a.is_nonpositive:
+                return S.ComplexInfinity
+
+        if n.is_Number:
+            if n is S.NaN:
+                return S.NaN
+            elif n < 0:
+                return S.ComplexInfinity
+            elif not n.is_Integer:
+                return S.ComplexInfinity
+            elif n == 0 and a in [None, 1]:
+                return S.EulerGamma

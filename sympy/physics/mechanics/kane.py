@@ -132,9 +132,9 @@ class KanesMethod(object):
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
+        self._initialize_kindiffeq_matrices(kd_eqs)
         self._initialize_constraint_matrices(configuration_constraints,
                 velocity_constraints, acceleration_constraints)
-        self._initialize_kindiffeq_matrices(kd_eqs)
 
     def _initialize_vectors(self, q_ind, q_dep, u_ind, u_dep, u_aux):
         """Initialize the coordinate and speed vectors."""
@@ -193,6 +193,14 @@ class KanesMethod(object):
             u_zero = dict((i, 0) for i in self.u)
             udot_zero = dict((i, 0) for i in self._udot)
 
+            # When calling kanes_equations, another class instance will be
+            # created if auxiliary u's are present. In this case, the
+            # computation of kinetic differential equation matrices will be
+            # skipped as this was computed during the original KanesMethod
+            # object, and the qd_u_map will not be available.
+            if self._qdot_u_map is not None:
+                vel = vel.subs(self._qdot_u_map)
+
             self._f_nh = vel.subs(u_zero)
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
@@ -201,6 +209,8 @@ class KanesMethod(object):
                                self._f_nh.diff(dynamicsymbols._t))
                 self._k_dnh = self._k_nh
             else:
+                if self._qdot_u_map is not None:
+                    acc = acc.subs(self._qdot_u_map)
                 self._f_dnh = acc.subs(udot_zero)
                 self._k_dnh = (acc - self._f_dnh).jacobian(self._udot)
 
