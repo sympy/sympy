@@ -1233,7 +1233,7 @@ def _divisors(n):
 def divisors(n, generator=False):
     r"""
     Return all divisors of n sorted from 1..n by default.
-    If generator is True an unordered generator is returned.
+    If generator is ``True`` an unordered generator is returned.
 
     The number of divisors of n can be quite large if there are many
     prime factors (counting repeated factors). If only the number of
@@ -1321,7 +1321,7 @@ def _udivisors(n):
 def udivisors(n, generator=False):
     r"""
     Return all unitary divisors of n sorted from 1..n by default.
-    If generator is True an unordered generator is returned.
+    If generator is ``True`` an unordered generator is returned.
 
     The number of unitary divisors of n can be quite large if there are many
     prime factors. If only the number of unitary divisors is desired use
