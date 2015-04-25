@@ -488,12 +488,6 @@ class Arraypy(Basic):
         >>> a = Arraypy((2,2))
         >>> b = copy(a)
         >>> c = a
-        >>> print(id(a))
-
-        >>> print(id(b))
-
-        >>> print(id(c))
-
         """
 
         # creating new instance of Arraypy. All parameters are coping from
@@ -524,7 +518,8 @@ class Arraypy(Basic):
 
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
         >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
-        >>> [print (i) for i in a]
+        >>> for i in a:
+        ...     print (i)
         1
         2
         3
@@ -534,7 +529,8 @@ class Arraypy(Basic):
         7
         8
 
-        >>> [print(str(i) + ' ' + str(a.iter_index)) for i in a]
+        >>> for i in a:
+        ...     print(str(i) + ' ' + str(a.iter_index))
         1 (0, 0, 0)
         2 (0, 0, 1)
         3 (0, 1, 0)
@@ -728,7 +724,8 @@ class Arraypy(Basic):
         ========
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
         >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
-        >>> [print(str(i) + ' ' + str(a.iter_index)) for i in a]
+        >>> for i in a:
+        ...     print(str(i) + ' ' + str(a.iter_index))
         1 (0, 0, 0)
         2 (0, 0, 1)
         3 (0, 1, 0)
@@ -737,7 +734,6 @@ class Arraypy(Basic):
         6 (1, 0, 1)
         7 (1, 1, 0)
         8 (1, 1, 1)
-
         """
         return self._current_index
 
@@ -994,12 +990,6 @@ class Tensor(Arraypy):
         >>> a = Tensor(Arraypy((2,2)), (1,1))
         >>> b = copy(a)
         >>> c = a
-        >>> print(id(a))
-
-        >>> print(id(b))
-
-        >>> print(id(c))
-
         """
 
         return Tensor(copy(self.base), copy(self._ind_char))
