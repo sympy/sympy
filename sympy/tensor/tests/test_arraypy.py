@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, \
     list2tensor, matrix2arraypy, matrix2tensor
 from sympy import Symbol, symbols

@@ -5,23 +5,24 @@ from sympy.tensor.arraypy import Arraypy, Tensor
 from random import randint
 from sympy.functions.combinatorial.factorials import factorial
 
+
 def symmetric(in_arr):
     """
     Creates the symmetric form of input tensor.
     Input: Arraypy or Tensor with equal axes (array shapes).
     Output: symmetric array. Output type - Arraypy or Tensor, depends of input
-            
+
     Examples
     ========
-    
+
     >>> from sympy.tensor.arraypy import list2arraypy
     >>> from sympy.tensor.tensor_methods import symmetric
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = symmetric(a)
     >>> print (b)
-    0.0 2.0 4.0
-    2.0 4.0 6.0
-    4.0 6.0 8.0
+    0  2.00000000000000  4.00000000000000
+    2.00000000000000  4.00000000000000  6.00000000000000
+    4.00000000000000  6.00000000000000  8.00000000000000
     """
     if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or Tensor type')
@@ -62,18 +63,18 @@ def asymmetric(in_arr):
     Creates the asymmetric form of input tensor.
     Input: Arraypy or Tensor with equal axes (array shapes).
     Output: asymmetric array. Output type - Arraypy or Tensor, depends of input
-            
+
     Examples
     ========
-    
+
     >>> from sympy.tensor.arraypy import list2arraypy
     >>> from sympy.tensor.tensor_methods import asymmetric
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = asymmetric(a)
     >>> print (b)
-    0.0 -1.0 -2.0
-    1.0 0.0 -1.0
-    2.0 1.0 0.0
+    0  -1.00000000000000  -2.00000000000000
+    1.00000000000000  0  -1.00000000000000
+    2.00000000000000  1.00000000000000  0
     """
     if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or Tensor type')
@@ -117,10 +118,10 @@ def asymmetric(in_arr):
 
     return res_arr
 
+
 def tensor_product(first_tensor, second_tensor):
-    """
-    Returns tensor product.
-    Rank of resulted tensor is a summary rank of two tensors.
+    """Returns tensor product. Rank of resulted tensor is a summary rank of two
+    tensors.
 
     Examples
     ========
@@ -128,26 +129,27 @@ def tensor_product(first_tensor, second_tensor):
     >>> from sympy.tensor.arraypy import Arraypy, Tensor
     >>> a = Tensor( Arraypy ('1..2', 'X'), 1)
     >>> b = Tensor( Arraypy ('1..2', 'Y'), -1)
-    >>> c = a * b
+    >>> c = tensor_product(a, b)
     >>> print (c)
     X[1]*Y[1] X[1]*Y[2]
     X[2]*Y[1] X[2]*Y[2]
 
-    >>> c.start_index
+    >>> print(c.start_index)
     (1, 1)
-    >>> c.end_index
+    >>> print(c.end_index)
     (2, 2)
-    >>> c.rank
+    >>> print(c.rank)
     2
-    >>> c.ind_char
+    >>> print(c.ind_char)
     (1, -1)
+
     """
-    
+
     if not isinstance(first_tensor, Tensor):
         raise TypeError('first attribute must be Tensor')
     if not isinstance(second_tensor, Tensor):
-        raise TypeError('second attribute must be Tensor')    
-    
+        raise TypeError('second attribute must be Tensor')
+
     # forming list of tuples for Arraypy constructor of type a = Arraypy(
     # [(a, b), (c, d), ... , (y, z)] )
     arg = [(first_tensor.start_index[i], first_tensor.end_index[i])
@@ -165,18 +167,17 @@ def tensor_product(first_tensor, second_tensor):
 
     # loop over current tensor
     for i in range(len(first_tensor)):
-
         # loop over second_tensor tensor
         for j in range(len(second_tensor)):
-            res[cur_idx +
-                second_tensor_idx] = first_tensor[cur_idx] * second_tensor[second_tensor_idx]
+            res[cur_idx + second_tensor_idx] = first_tensor[cur_idx] * \
+                second_tensor[second_tensor_idx]
             # second_tensor tensor next index
             second_tensor_idx = second_tensor.next_index(second_tensor_idx)
         # current tensor next index
         cur_idx = first_tensor.next_index(cur_idx)
 
-    return res    
-    
+    return res
+
 
 def wedge(first_tensor, second_tensor):
     """
@@ -184,203 +185,220 @@ def wedge(first_tensor, second_tensor):
     The algoritm is too find the asymmetric form of tensor product of
     two arguments. The resulted array is multiplied on coefficient which is
     coeff = factorial(p+s)/factorial(p)*factorial(s)
-    
+
     Examples
     ========
-    
+
     """
     if not isinstance(first_tensor, Tensor):
         raise TypeError('Input must be of Tensor type')
     if not isinstance(second_tensor, Tensor):
-            raise TypeError('Input must be of Tensor type')    
-    
+        raise TypeError('Input must be of Tensor type')
+
     p = len(first_tensor)
     s = len(second_tensor)
-    
-    coeff = factorial(p+s)/factorial(p)*factorial(s)
-    return coeff*asymmetric(tensor_product(first_tensor, second_tensor))
+
+    coeff = factorial(p + s) / factorial(p) * factorial(s)
+    return coeff * asymmetric(tensor_product(first_tensor, second_tensor))
+
 
 def lower_index(tensor, metric_tensor, index_number_to_low):
-    """
-    Lowering one upper index of the tensor
-    
+    """Lowering one upper index of the tensor.
+
     Examples
     ========
+    >>> from sympy import symbols
+    >>> from sympy.tensor.arraypy import list2arraypy
+    >>> from sympy.tensor.tensor_methods import lower_index
     >>> x, y, z, w, r, phi = symbols('x y z w r phi')
     >>> A = list2tensor([1, 0, 0, 0, r**2, 0, 0, 0, (r**2)*sin(phi)], (3, 3) ,(-1, -1))
-    print(A)
-    1  0  0  
-    0  r**2  0  
+    >>> print(A)
+    1  0  0
+    0  r**2  0
     0  0  r**2*sin(phi)
 
     >>> T = list2tensor([w, x, 0, y, z, 0, 0, y**2, x*y*w], (3, 3) ,(1, -1))
     >>> print(A)
-    w  x  0  
-    y  z  0  
-    0  y**2  w*x*y 
+    w  x  0
+    y  z  0
+    0  y**2  w*x*y
 
     >>> S1 = lower_index(T, A, 1)
-    print(S1)    
-    w  x  0  
-    r**2*y  r**2*z  0  
-    0  r**2*y**2*sin(phi)  r**2*w*x*y*sin(phi)   
-    
+    >>> print(S1)
+    w  x  0
+    r**2*y  r**2*z  0
+    0  r**2*y**2*sin(phi)  r**2*w*x*y*sin(phi)
+
     >>> print(S1.ind_char)
     (-1, -1)
+
     """
     index_number_to_low -= 1
-    
+
     if not isinstance(tensor, Tensor):
-        raise TypeError('Input tensor must be of Tensor type') 
-    
+        raise TypeError('Input tensor must be of Tensor type')
+
     if not isinstance(metric_tensor, Tensor):
-        raise TypeError('Metric tensor must be of Tensor type') 
-        
+        raise TypeError('Metric tensor must be of Tensor type')
+
     if not metric_tensor.rank == 2:
         raise ValueError('Metric tensor rank must be equal to 2')
-    
+
     if not metric_tensor.ind_char == (-1, -1):
         raise ValueError('Metric tensor must be covariant')
-    
+
     if tensor.ind_char[index_number_to_low] == -1:
         raise ValueError('Index number should point on upper index')
-    
+
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(tensor.start_index[i], tensor.end_index[i])
-                   for i in range(tensor.rank)]
+           for i in range(tensor.rank)]
     new_ind_char = [i for i in tensor.ind_char]
     new_ind_char[index_number_to_low] = -1
-    result_tensor = Tensor(Arraypy(arg), new_ind_char)   
-    
+    result_tensor = Tensor(Arraypy(arg), new_ind_char)
+
     cur_index = tensor.start_index
     # loop over all tensor elements
-    for i in range (len(tensor)):
+    for i in range(len(tensor)):
         # loop over dimension pointed in index_number_to_low
-        for j in range(tensor.start_index[index_number_to_low], tensor.end_index[index_number_to_low]+1):
+        for j in range(
+                tensor.start_index[index_number_to_low],
+                tensor.end_index[index_number_to_low] + 1):
             # forming indexes
             metric_tensor_index = (j, cur_index[index_number_to_low])
             temp_index = [i for i in cur_index]
             temp_index[index_number_to_low] = j
-            result_tensor[cur_index] += tensor[tuple(temp_index)]*metric_tensor[metric_tensor_index]
+            result_tensor[
+                cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
         cur_index = tensor.next_index(cur_index)
-    
+
     return result_tensor
 
+
 def raise_index(tensor, metric_tensor, index_number_to_low):
-    """
-    Raising one lower index of the tensor
-    
+    """Raising one lower index of the tensor.
+
     Examples
     ========
+    >>> from sympy import symbols
+    >>> from sympy.tensor.arraypy import list2arraypy
+    >>> from sympy.tensor.tensor_methods import raise_index
     >>> x, y, z, w, r, phi = symbols('x y z w r phi')
     >>> A = list2tensor([1, 0, 0, 0, r**2, 0, 0, 0, (r**2)*sin(phi)], (3, 3) ,(-1, -1))
-    print(A)
-    1  0  0  
-    0  r**2  0  
+    >>> print(A)
+    1  0  0
+    0  r**2  0
     0  0  r**2*sin(phi)
 
     >>> T = list2tensor([w, x, 0, y, z, 0, 0, y**2, x*y*w], (3, 3) ,(1, -1))
     >>> print(A)
-    w  x  0  
-    y  z  0  
-    0  y**2  w*x*y 
+    w  x  0
+    y  z  0
+    0  y**2  w*x*y
 
     >>> S = raise_index(T, A, 2)
-    print(S)    
-    w  x/r**2  0  
-    y  z/r**2  0  
-    0  y**2/r**2  w*x*y/(r**2*sin(phi))  
-    
+    >>> print(S)
+    w  x/r**2  0
+    y  z/r**2  0
+    0  y**2/r**2  w*x*y/(r**2*sin(phi))
+
     >>> print(S.ind_char)
     (1, 1)
+
     """
     index_number_to_low -= 1
-    
+
     if not isinstance(tensor, Tensor):
-        raise TypeError('Input tensor must be of Tensor type') 
-    
+        raise TypeError('Input tensor must be of Tensor type')
+
     if not isinstance(metric_tensor, Tensor):
-        raise TypeError('Metric tensor must be of Tensor type') 
-        
+        raise TypeError('Metric tensor must be of Tensor type')
+
     if not metric_tensor.rank == 2:
         raise ValueError('Metric tensor rank must be equal to 2')
-    
+
     if not metric_tensor.ind_char == (-1, -1):
         raise ValueError('Metric tensor must be covariant')
-    
+
     if tensor.ind_char[index_number_to_low] == 1:
         raise ValueError('Index number should point on lower index')
-    
+
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(tensor.start_index[i], tensor.end_index[i])
-                   for i in range(tensor.rank)]
+           for i in range(tensor.rank)]
     new_ind_char = [i for i in tensor.ind_char]
     new_ind_char[index_number_to_low] = 1
     result_tensor = Tensor(Arraypy(arg), new_ind_char)
-    
+
     # finding contravariant reversed matrix
     metric_tensor = metric_tensor.to_matrix().inv()
-    
+
     cur_index = tensor.start_index
     # loop over all tensor elements
-    for i in range (len(tensor)):
+    for i in range(len(tensor)):
         # loop over dimension pointed in index_number_to_low
-        for j in range(tensor.start_index[index_number_to_low], tensor.end_index[index_number_to_low]+1):
+        for j in range(
+                tensor.start_index[index_number_to_low],
+                tensor.end_index[index_number_to_low] + 1):
             # forming indexes
             metric_tensor_index = (j, cur_index[index_number_to_low])
             temp_index = [i for i in cur_index]
             temp_index[index_number_to_low] = j
-            result_tensor[cur_index] += tensor[tuple(temp_index)]*metric_tensor[metric_tensor_index]
+            result_tensor[
+                cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
         cur_index = tensor.next_index(cur_index)
-    
+
     return result_tensor
 
-def change_basis(tensor, transformation_matrix, old_to_new = True):
+
+def change_basis(tensor, transformation_matrix, old_to_new=True):
     if not isinstance(tensor, Tensor):
-            raise TypeError('First argiment must be of Tensor type')
+        raise TypeError('First argiment must be of Tensor type')
     if not isinstance(transformation_matrix, Arraypy):
         transformation_matrix = transormation_matrix.to_matrix()
     elif not isinstance(transformation_matrix, Matrix):
-        raise TypeError('Transformation_matrix must be of Matrix type or Arraypy with rank == 2')
+        raise TypeError(
+            'Transformation_matrix must be of Matrix type or Arraypy with rank == 2')
     inverse_transformation_matrix = transformation_matrix.inv()
-    
+
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(in_arr.start_index[i], in_arr.end_index[i])
-               for i in range(in_arr.rank)]    
+           for i in range(in_arr.rank)]
     result_tensor = Tensor(Arraypy(arg), tensor.ind_char)
     """
     idx = result_tensor.start_index
     for i in range(len(result_tensor)):
-        result_tensor[idx] = 
+        result_tensor[idx] =
     """
     # loop over index characters of tensor
     for i in tensor.ind_char:
         if old_to_new:
             if i == 1:
-                
+
                 pass
-                
+
             elif i == -1:
                 pass
         else:
             if i == 1:
                 pass
-            
+
             elif i == -1:
                 pass
+
 
 def perm_parity(lst):
     '''\
     THANKS TO Paddy McCarthy FROM http://code.activestate.com/ FOR THIS FUNCTION!
     Given a permutation of the digits 0..N in order as a list,
     returns its parity (or sign): +1 for even parity; -1 for odd.
-            
+
     Examples
     ========
-    
+
     >>> from sympy.matrices import zeros
     >>> from itertools import permutations
     >>> from sympy.tensor.tensor_methods import perm_parity
@@ -406,16 +424,12 @@ def perm_parity(lst):
             lst[i], lst[mn] = lst[mn], lst[i]
     return parity
 
+
 def is_symmetric(array):
-    """
-    Check if array or tensor is already symmetric
-    """
+    """Check if array or tensor is already symmetric."""
     return array == symmetric(array)
 
-def is_asymmetric(array):
-    """
-    Check if array or tensor is already asymmetric
-    """
-    return array == asymmetric(array)
 
-#====================================================
+def is_asymmetric(array):
+    """Check if array or tensor is already asymmetric."""
+    return array == asymmetric(array)

@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 from sympy.matrices import Matrix
 from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, list2tensor
-from sympy.tensor.tensor_fields import df, grad, curl, diverg, lie_xy, dw, lie_w
+from sympy.tensor.tensor_fields import df, grad, curl, diverg, lie_xy, dw, \
+    lie_w
 from sympy import symbols, cos, sin
 
 
@@ -210,7 +213,7 @@ def test_grad_gtnsr():
     k1[1] = x2
     k1[2] = x3
 
-    # g задано tensor, индекс с 1 и var-list
+    # g Р·Р°РґР°РЅРѕ tensor, РёРЅРґРµРєСЃ СЃ 1 Рё var-list
     a = Arraypy([2, 3, 1])
     b = a.to_tensor((-1, -1))
     b[1, 1] = 2
