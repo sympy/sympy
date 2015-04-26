@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from itertools import *
+from itertools import permutations
 from sympy.tensor.arraypy import Arraypy, Tensor
 from random import randint
 from sympy.functions.combinatorial.factorials import factorial
@@ -409,12 +409,12 @@ def perm_parity(lst):
     ...     signs[temp_i]=perm_parity(list(p))
     ...     print(signs[temp_i], p)
     ...     temp_i+=1
-   (1.0, (0, 1, 2))
-   (-1.0, (0, 2, 1))
-   (-1.0, (1, 0, 2))
-   (1.0, (1, 2, 0))
-   (1.0, (2, 0, 1))
-   (-1.0, (2, 1, 0))
+    1 (0, 1, 2)
+    -1 (0, 2, 1)
+    -1 (1, 0, 2)
+    1 (1, 2, 0)
+    1 (2, 0, 1)
+    -1 (2, 1, 0)
     '''
     parity = 1
     for i in range(0, len(lst) - 1):

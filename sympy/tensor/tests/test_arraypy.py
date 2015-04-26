@@ -142,7 +142,7 @@ def test_calculation():
     tensor2 = Tensor(Arraypy(2, 'Y'), -1)
     assert tensor1.rank == tensor2.rank == 1
 
-    res_tensor = tensor1 * tensor2
+    res_tensor = tensor_product(tensor1, tensor2)
     assert len(res_tensor) == 4
     assert res_tensor.rank == 2
     assert res_tensor[0, 0] == x0 * y0
