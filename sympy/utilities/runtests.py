@@ -605,6 +605,7 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/tensor/index_methods.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
