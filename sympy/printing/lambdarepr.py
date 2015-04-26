@@ -10,6 +10,9 @@ class LambdaPrinter(StrPrinter):
     lambdify.
     """
 
+    def _print_EinsteinSum(self, expr):
+        return expr._lambda_str()
+
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, str(expr.tolist()))
 

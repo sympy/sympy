@@ -4,6 +4,7 @@ from sympy.core.compatibility import range
 from sympy.simplify import simplify
 from sympy.tensor.indexed import IndexedBase, Idx, DeltaIndexedBase
 from sympy.tensor.indexed_sums import IndexConformanceException
+from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises
 
 # Import test:
@@ -30,6 +31,17 @@ def assert_equal_modulo_dummies(ein_sum1, ein_sum2):
     pattern = ein_sum1.subs(substitutions)
     if not (ein_sum2.match(pattern) or ein_sum2 == pattern):
         raise AssertionError('{!s} != {!s}'.format(ein_sum1, ein_sum2))
+
+
+def test_equality():
+    i, j = symbols('i j')
+    h, L = symbols('h L', cls=IndexedBase)
+    assert_equal(EinsteinSum(h[i] * h[j]),
+                 EinsteinSum(h[i] * h[j]))
+    assert_equal(EinsteinSum(h[i] * h[j]),
+                 EinsteinSum(h[i] * h[j], outer=(i, j)))
+    assert_not_equal(EinsteinSum(h[i] * h[j]),
+                     EinsteinSum(h[i] * h[j], outer=(j, i)))
 
 
 def test_differentiation():
@@ -162,46 +174,46 @@ def test_index_structure():
 
     expr = a * hi * delta[i, j] * hj
     expected_structure = {
-        'monomial_list': [expr], 'outer': set(), 'inner_list': [set([i, j])]}
+        'monomial_list': [expr], 'outer': [], 'inner_list': [[i, j]]}
     run_test(expr, expected_structure)
 
     expr = a * hi * hi
     expected_structure = {
-        'monomial_list': [expr], 'outer': set(), 'inner_list': [set([i])]}
+        'monomial_list': [expr], 'outer': [], 'inner_list': [[i]]}
     run_test(expr, expected_structure)
 
     expr = a * hi * delta[i, k] * delta[k, j] * hj
     expected_structure = {
-        'monomial_list': [expr], 'outer': set(), 'inner_list': [set([i, j, k])]}
+        'monomial_list': [expr], 'outer': [], 'inner_list': [[i, j, k]]}
     run_test(expr, expected_structure)
 
     expr = S(2) * hj * delta[i, j] * hk
     expected_structure = {
-        'monomial_list': [expr], 'outer': set([i, k]), 'inner_list': [set([j])]}
+        'monomial_list': [expr], 'outer': [i, k], 'inner_list': [[j]]}
     run_test(expr, expected_structure)
 
     expr = delta[i, j] * delta[i, j]
     expected_structure = {
-        'monomial_list': [expr], 'outer': set(), 'inner_list': [set([i, j])]}
+        'monomial_list': [expr], 'outer': [], 'inner_list': [[i, j]]}
     run_test(expr, expected_structure)
 
     expr = delta[i, j] * delta[j, k] * delta[k, i]
     expected_structure = {
-        'monomial_list': [expr], 'outer': set(), 'inner_list': [set([i, j, k])]}
+        'monomial_list': [expr], 'outer': [], 'inner_list': [[i, j, k]]}
     run_test(expr, expected_structure)
 
     expr = Ljk * (delta[i, j] * hi + a * hj)
     expected_structure = {
         'monomial_list': [a * Ljk * hj, Ljk * delta[i, j] * hi],
-        'outer': set([k]),
-        'inner_list': [set([j]), set([i, j])]}
+        'outer': [k],
+        'inner_list': [[j], [i, j]]}
     run_test(expr, expected_structure)
 
     expr = a * hi * delta[i, j] * hj + a * hi * delta[i, k] * delta[k, j] * hj
     expected_structure = {
         'monomial_list': [a * hi * delta[i, j] * hj,
                           a * hi * delta[i, k] * delta[k, j] * hj],
-        'outer': set(), 'inner_list': [set([i, j]), set([i, j, k])]}
+        'outer': [], 'inner_list': [[i, j], [i, j, k]]}
     run_test(expr, expected_structure)
 
     expr = (a * hi * delta[i, k] * delta[k, j] * hj
@@ -209,7 +221,7 @@ def test_index_structure():
     expected_structure = {
         'monomial_list': [delta[i, j] * delta[j, k] * delta[k, i],
                           a * hi * delta[i, k] * delta[k, j] * hj],
-        'outer': set(), 'inner_list': [set([i, j, k]), set([i, j, k])]}
+        'outer': [], 'inner_list': [[i, j, k], [i, j, k]]}
     run_test(expr, expected_structure)
 
 
@@ -227,7 +239,7 @@ def test_index_conformance():
         raises(IndexConformanceException, lambda: EinsteinSum(expr))
 
 
-def test_numpify_norm():
+def test_lambdify_norm():
     """Ensure numpification can compute vector norms."""
     try:
         import numpy as np
@@ -241,7 +253,7 @@ def test_numpify_norm():
     h_arr = np.random.rand(m)
 
     expr = EinsteinSum(S(-3) * h[i] * h[i])
-    func = expr.numpify([h], [])
+    func = lambdify([h], expr)
     val = func(h_arr)
 
     expected_val = 0.
@@ -250,7 +262,7 @@ def test_numpify_norm():
     assert np.allclose(val, expected_val)
 
 
-def test_numpify_matrix_mult():
+def test_lambdify_matrix_mult():
     """Ensure numpification can compute matrix multiplication."""
     try:
         import numpy as np
@@ -265,14 +277,14 @@ def test_numpify_matrix_mult():
     B_arr = np.random.rand(m, m)
 
     expr = EinsteinSum(A[i, j] * B[j, k])
-    func = expr.numpify([A, B], [i, k])
+    func = lambdify([A, B], expr)
     mult = func(A_arr, B_arr)
 
     expected_mult = A_arr.dot(B_arr)
     assert np.allclose(mult, expected_mult)
 
 
-def test_numpify_vec_1():
+def test_lambdify_vec_1():
     try:
         import numpy as np
     except ImportError:
@@ -288,7 +300,7 @@ def test_numpify_vec_1():
     L_arr = arr_func(m * n).reshape(m, n)
 
     expr = EinsteinSum(2 * s[i] - 0.5 * L[i, j] * h[j])
-    func = expr.numpify([L, h, s], [i])
+    func = lambdify([L, h, s], expr)
     vec = func(L_arr, h_arr, s_arr)
 
     expected_vec = np.zeros(m)
@@ -299,7 +311,7 @@ def test_numpify_vec_1():
     assert np.allclose(vec, expected_vec)
 
 
-def test_numpify_vec_2():
+def test_lambdify_vec_2():
     try:
         import numpy as np
     except ImportError:
@@ -317,9 +329,7 @@ def test_numpify_vec_2():
 
     expr = EinsteinSum(S(-3) * s[i] + S(7) * L[i, j] * h[j]
                        + Q[i, j, k] * h[j] * h[k])
-    func = expr.numpify([s, L, h, Q], [i])
-    raises(IndexConformanceException,
-           lambda: expr.numpify([s, L, h, Q], [i, j]))
+    func = lambdify([s, L, h, Q], expr)
     vec = func(s_arr, L_arr, h_arr, Q_arr)
 
     expected_vec = np.zeros(m)
@@ -333,7 +343,7 @@ def test_numpify_vec_2():
     assert np.allclose(vec, expected_vec)
 
 
-def test_numpify_internal_contraction():
+def test_lambdify_internal_contraction():
     try:
         import numpy as np
     except ImportError:
@@ -347,15 +357,15 @@ def test_numpify_internal_contraction():
     expected_result = np.array([8., -1.])
 
     expr = EinsteinSum(A[i, j, j])
-    func = expr.numpify([A], [i])
+    func = lambdify([A], expr)
     assert np.allclose(func(A_array), expected_result)
 
     expr = EinsteinSum(A[i, j, k] * delta[j, k])
-    func = expr.numpify([A], [i])
+    func = lambdify([A], expr)
     assert np.allclose(func(A_array), expected_result)
 
 
-def test_numpify_deltas():
+def test_lambdify_deltas():
     try:
         import numpy as np
     except ImportError:
@@ -370,34 +380,30 @@ def test_numpify_deltas():
 
     A_array = np.random.rand(N, N)
 
-    expr = EinsteinSum(delta1[i, j] * A[k, l])
-    func = expr.numpify([A], [k, i, l, j])
+    expr = EinsteinSum(delta1[i, j] * A[k, l], outer=(k, i, l, j))
+    func = lambdify([A], expr)
     assert np.allclose(func(A_array),
                        np.einsum('kl,ij->kilj', A_array, np.eye(M)))
 
     expr = EinsteinSum(delta1[i, j] * delta1[m, n])
-    func = expr.numpify([], [i, j, n, m])
+    func = lambdify([], expr)
     assert np.allclose(func(),
                        np.einsum('ij,mn->ijnm', np.eye(M), np.eye(M)))
 
-    expr = EinsteinSum(delta1[i, j] * delta2[m, n])
-    func = expr.numpify([], [i, n, j, m])
+    expr = EinsteinSum(delta1[i, j] * delta2[m, n], outer=[i, n, j, m])
+    func = lambdify([], expr)
     assert np.allclose(func(),
                        np.einsum('ij,mn->injm', np.eye(M), np.eye(M)))
 
     expr = EinsteinSum(delta1[i, j] * A[k, l]
-                       - 73 * delta2[i, j] * delta1[k, l])
-    func = expr.numpify([A], [l, k, i, j])
+                       - 73 * delta2[i, j] * delta1[k, l], outer=(l, k, i, j))
+    func = lambdify([A], expr)
     expected_result = np.einsum('kl,ij->lkij', A_array, np.eye(M))
     expected_result -= 73 * np.einsum('kl,ij->lkij', np.eye(N), np.eye(M))
     assert np.allclose(func(A_array), expected_result)
 
-    expr = EinsteinSum(delta1[i, j] * delta1[m, n])
-    func = expr.numpify([], [i, j, m, n])
-    assert np.allclose(func(), np.einsum('ij,mn->ijmn', np.eye(M), np.eye(M)))
 
-
-def test_numpify_symmetrize():
+def test_lambdify_symmetrize():
     try:
         import numpy as np
     except ImportError:
@@ -410,12 +416,12 @@ def test_numpify_symmetrize():
 
     A_array = np.random.rand(M, M)
 
-    expr = EinsteinSum(A[i, j] + A[j, i])
-    func = expr.numpify([A], [i, j])
+    expr = EinsteinSum(A[i, j] + A[j, i], outer=(i, j))
+    func = lambdify([A], expr)
     assert np.allclose(func(A_array), A_array + A_array.T)
 
 
-def test_numpify_complex_trace():
+def test_lambdify_complex_trace():
     try:
         import numpy as np
     except ImportError:
@@ -428,35 +434,8 @@ def test_numpify_complex_trace():
     A_array = np.random.rand(m, m) + np.random.rand(m, m) * 1j
 
     expr = EinsteinSum(A[i, i])
-    func = expr.numpify([A], [], dtype=complex)
+    func = lambdify([A], expr)
     assert np.allclose(func(A_array), A_array.trace())
-
-
-def test_numpify_exceptions():
-    try:
-        import numpy as np
-    except ImportError:
-        return
-
-    i, j, z = symbols('i j z', cls=Idx)
-    s = symbols('s', cls=IndexedBase)
-
-    # No exception.
-    expr = EinsteinSum(S(-7.8) * s[i, j, j])
-    func = expr.numpify([s], [i])
-    func(np.random.rand(2, 3, 3))
-
-    # Exceptions:
-    expr = EinsteinSum(S(-7.8) * s[i, j, j])
-    raises(IndexConformanceException, lambda: expr.numpify([s], [i, z]))
-    raises(TypeError, lambda: expr.numpify([z], [i]))
-    raises(ValueError, lambda: expr.numpify([], [i]))
-
-    expr = EinsteinSum(z * s[i, j, j])
-    raises(ValueError, lambda: expr.numpify([s], [i]))
-
-    expr = EinsteinSum(s[1])
-    raises(TypeError, lambda: expr.numpify([s], [1]))
 
 
 def test_get_indices_trivial():

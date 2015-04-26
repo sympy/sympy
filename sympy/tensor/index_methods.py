@@ -23,7 +23,6 @@ class IndexConformanceException(Exception):
     pass
 
 
-@deprecated(useinstead='EinsteinSum', issue=9284)
 def _remove_repeated(inds):
     """Removes repeated objects from sequences
 
@@ -46,7 +45,6 @@ def _remove_repeated(inds):
     return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
 
 
-@deprecated(useinstead='EinsteinSum', issue=9284)
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
 
@@ -83,7 +81,6 @@ def _get_indices_Mul(expr, return_dummies=False):
         return inds, symmetry
 
 
-@deprecated(useinstead='EinsteinSum', issue=9284)
 def _get_indices_Pow(expr):
     """Determine outer indices of a power or an exponential.
 
@@ -133,7 +130,6 @@ def _get_indices_Pow(expr):
     return inds, symmetries
 
 
-@deprecated(useinstead='EinsteinSum', issue=9284)
 def _get_indices_Add(expr):
     """Determine outer indices of an Add object.
 
