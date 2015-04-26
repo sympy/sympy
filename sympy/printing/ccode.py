@@ -92,7 +92,7 @@ class CCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
-        'contract': True,
+        'contract': 'auto',
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
@@ -287,12 +287,12 @@ def ccode(expr, assign_to=None, **settings):
         declarations for the number symbols. If False, the same information is
         returned in a tuple of (symbols_to_declare, not_supported_functions,
         code_text). [default=True].
-    contract: bool, optional
-        If True, ``Indexed`` instances are assumed to obey tensor contraction
-        rules and the corresponding nested loops over indices are generated.
-        Setting contract=False will not generate loops, instead the user is
-        responsible to provide values for the indices in the code.
-        [default=True].
+    contract: bool or 'auto', optional
+        Deprecated; use ``EinsteinSum`` instead.  If True, ``Indexed`` instances
+        are assumed to obey tensor contraction rules and the corresponding
+        nested loops over indices are generated. Setting contract=False will not
+        generate loops, instead the user is responsible to provide values for
+        the indices in the code. [default='auto'].
 
     Examples
     ========
@@ -336,20 +336,21 @@ def ccode(expr, assign_to=None, **settings):
     tau = x;
     }
 
-    Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
-    ``contract=False`` will just print the assignment expression that should be
-    looped over:
+    Support for loops is provided through ``Indexed`` types; automatic summation
+    of repeated indices occurs when expressions are wrapped in ``EinsteinSum``.
 
     >>> from sympy import Eq, IndexedBase, Idx
+    >>> from __future__ import print_function
     >>> len_y = 5
     >>> y = IndexedBase('y', shape=(len_y,))
     >>> t = IndexedBase('t', shape=(len_y,))
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
     >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-    >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+    >>> print(ccode(e.rhs, assign_to=e.lhs))
+    for (int i=0; i<4; i++){
+       Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
+    }
 
     Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
     must be provided to ``assign_to``. Note that any expression that can be

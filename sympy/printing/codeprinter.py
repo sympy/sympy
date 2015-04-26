@@ -10,6 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 from sympy.core.sympify import _sympify, sympify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class AssignmentError(Exception):
@@ -165,21 +166,35 @@ class CodePrinter(StrPrinter):
         return result
 
     def _doprint_loops(self, expr, assign_to=None):
+        from sympy.tensor import EinsteinSum
         # Here we print an expression that contains Indexed objects, they
         # correspond to arrays in the generated code.  The low-level
         # implementation involves looping over array elements and possibly
         # storing results in temporary variables or accumulate it in the
         # assign_to object.
 
-        if self._settings.get('contract', True):
-            # Setup loops over non-dummy indices -- all terms need these
+        contract_option = self._settings.get('contract', 'auto')
+        if contract_option == 'auto':
+            # Set up loops over non-dummy indices -- all terms need these
             indices = self._get_expression_indices(expr, assign_to)
-            # Setup loops over dummy indices -- each term needs separate
+            # Set up loops over dummy indices -- each term needs separate
             # treatment
             dummies = self._get_contraction_structure(expr)
         else:
-            indices = []
-            dummies = {None: (expr,)}
+            msg = ("Instead set `contract='auto'` (the default) and wrap "
+                   "expressions where implicit summation is desired in "
+                   "`EinsteinSum`. Expressions that are not wrapped will then "
+                   "not be summed.")
+            SymPyDeprecationWarning(
+                feature="The `contract` flag in code printing routines",
+                issue=9284, value=msg).warn()
+            if contract_option:
+                indices = self._get_expression_indices(EinsteinSum(expr),
+                                                       assign_to)
+                dummies = self._get_contraction_structure(EinsteinSum(expr))
+            else:
+                indices = []
+                dummies = {None: (expr,)}
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # terms with no summations first
@@ -253,8 +268,9 @@ class CodePrinter(StrPrinter):
         if linds and not rinds:
             rinds = linds
         if rinds != linds:
-            raise ValueError("lhs indices must match non-dummy rhs indices "
-                             "in %s" % expr)
+            raise ValueError("lhs indices, %s, must match non-dummy rhs "
+                             "indices, %s, in %s == %s" % (
+                                 linds, rinds, assign_to, expr))
 
         return self._sort_optimized(rinds, assign_to)
 
