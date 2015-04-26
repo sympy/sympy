@@ -219,7 +219,7 @@ def lower_index(tensor, metric_tensor, index_number_to_low):
     0  0  r**2*sin(phi)
 
     >>> T = list2tensor([w, x, 0, y, z, 0, 0, y**2, x*y*w], (3, 3) ,(1, -1))
-    >>> print(A)
+    >>> print(T)
     w  x  0
     y  z  0
     0  y**2  w*x*y
@@ -293,7 +293,7 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
     0  0  r**2*sin(phi)
 
     >>> T = list2tensor([w, x, 0, y, z, 0, 0, y**2, x*y*w], (3, 3) ,(1, -1))
-    >>> print(A)
+    >>> print(T)
     w  x  0
     y  z  0
     0  y**2  w*x*y

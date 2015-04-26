@@ -356,7 +356,7 @@ class Arraypy(Basic):
         >>> result1 = a[0,0]
         >>> result2 = a.__getitem__((1,1))
         >>> print (result1, result2)
-        0, 3
+        (0, 3)
 
         """
         if isinstance(index, int):
@@ -507,7 +507,7 @@ class Arraypy(Basic):
         self._current_index = self._start_index
         self._iterator_index_number = 0
 
-        return iter(self)   
+        return self
 
     def __next__(self):
         """Next elemenet in Arraypy in iteration process. Allows to use Arraypy
