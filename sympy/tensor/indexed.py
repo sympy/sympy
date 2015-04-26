@@ -1,4 +1,62 @@
-"""Module that defines indexed objects"""
+"""Module that defines indexed objects
+
+The classes ``IndexedBase``, ``Indexed``, and ``Idx`` represent a
+matrix element ``M[i, j]`` as in the following diagram::
+
+   1) The Indexed class represents the entire indexed object.
+              |
+           ___|___
+          '       '
+           M[i, j]
+          /   \__\______
+          |             |
+          |             |
+          |     2) The Idx class represents indices; each Idx can
+          |        optionally contain information about its range.
+          |
+    3) IndexedBase represents the 'stem' of an Indexed object, here M.
+
+There can be any number of indices on an ``Indexed`` object.  No symmetry
+properties are implemented in these objects. Implicit contraction of
+repeated indices is supported via the ``EinsteinSum`` function.
+
+Note that the support for complicated (i.e. non-atomic) integer
+expressions as indices is limited.  (This should be improved in
+future releases.)
+
+Basic Examples
+==============
+
+To express the above matrix element example:
+
+>>> from sympy import symbols, IndexedBase, Idx
+>>> M = IndexedBase('M')
+>>> i, j = symbols('i j', cls=Idx)
+>>> M[i, j]
+M[i, j]
+
+Repeated indices in a monomial imply summation when enclosed by the
+``EinsteinSum`` function. To express a matrix-vector product in terms of
+``Indexed`` objects:
+
+>>> from sympy import EinsteinSum
+>>> x = IndexedBase('x')
+>>> EinsteinSum(M[i, j] * x[j])
+EinsteinSum(x[j]*M[i, j])
+
+``EinsteinSum`` expressions can be differentiated:
+
+>>> EinsteinSum(x[j] * x[j]).diff(x[i])
+EinsteinSum(2*x[i])
+
+They can also be converted into Python functions accepting NumPy arrays:
+
+>>> from sympy import lambdify
+>>> func = lambdify([M, x], EinsteinSum(M[i, j] * x[j]))  # doctest: +SKIP
+>>> func([[1, -1], [0, 1]], [1, 2])  # doctest: +SKIP
+[-1 2]
+
+"""
 
 from __future__ import print_function, division
 
@@ -378,10 +436,10 @@ class Idx(Expr):
           bounds of the range, respectively.
 
     Note: the ``Idx`` constructor is rather pedantic in that it only accepts
-    integer arguments.  The only exception is that you can use -oo and oo to
-    specify an unbounded range.  For all other cases, both label and bounds
-    must be declared as integers, e.g. if ``n`` is given as an argument then
-    ``n.is_integer`` must return ``True``.
+    integer arguments.  The only exception is that you can use ``-oo`` and
+    ``oo`` to specify an unbounded range.  For all other cases, both label and
+    bounds must be declared as integers, e.g. if ``n`` is given as an argument
+    then ``n.is_integer`` must return ``True``.
 
     For convenience, if the label is given as a string it is automatically
     converted to an integer symbol.  (Note: this conversion is not done for
