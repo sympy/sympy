@@ -127,7 +127,7 @@ def tensor_product(first_tensor, second_tensor):
     ========
 
     >>> from sympy.tensor.arraypy import Arraypy, Tensor
-    >>> >>> from sympy.tensor.tensor_methods import tensor_product
+    >>> from sympy.tensor.tensor_methods import tensor_product
     >>> a = Tensor( Arraypy ('1..2', 'X'), 1)
     >>> b = Tensor( Arraypy ('1..2', 'Y'), -1)
     >>> c = tensor_product(a, b)
@@ -208,7 +208,7 @@ def lower_index(tensor, metric_tensor, index_number_to_low):
 
     Examples
     ========
-    >>> from sympy import symbols
+    >>> from sympy import symbols, sin
     >>> from sympy.tensor.arraypy import list2tensor
     >>> from sympy.tensor.tensor_methods import lower_index
     >>> x, y, z, w, r, phi = symbols('x y z w r phi')
@@ -282,7 +282,7 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
 
     Examples
     ========
-    >>> from sympy import symbols
+    >>> from sympy import symbols, sin
     >>> from sympy.tensor.arraypy import list2tensor
     >>> from sympy.tensor.tensor_methods import raise_index
     >>> x, y, z, w, r, phi = symbols('x y z w r phi')
@@ -409,12 +409,12 @@ def perm_parity(lst):
     ...     signs[temp_i]=perm_parity(list(p))
     ...     print(signs[temp_i], p)
     ...     temp_i+=1
-    1 (0, 1, 2)
-    -1 (0, 2, 1)
-    -1 (1, 0, 2)
-    1 (1, 2, 0)
-    1 (2, 0, 1)
-    -1 (2, 1, 0)
+    (1, (0, 1, 2))
+    (-1, (0, 2, 1))
+    (-1, (1, 0, 2))
+    (1, (1, 2, 0))
+    (1, (2, 0, 1))
+    (-1, (2, 1, 0))
     '''
     parity = 1
     for i in range(0, len(lst) - 1):

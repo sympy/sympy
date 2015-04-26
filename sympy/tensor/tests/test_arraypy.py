@@ -2,6 +2,7 @@
 
 from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, \
     list2tensor, matrix2arraypy, matrix2tensor
+from sympy.tensor.tensor_methods import tensor_product
 from sympy import Symbol, symbols
 from sympy.matrices import Matrix, MatrixSymbol
 
