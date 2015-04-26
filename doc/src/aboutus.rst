@@ -235,7 +235,6 @@ want to be mentioned here, so see our repository history for a full list).
 #. Huijun Mai: Chinese translation of the tutorial
 #. Marek Šuppa: Improvements to symbols, tests
 #. Prasoon Shukla: Bug fixes
-#. Sergey B Kirpichev: Bug fixes
 #. Stefen Yin: Fixes to the mechanics module
 #. Thomas Hisch: Improvements to the printing module
 #. Matthew Hoff: Addition to quantum module
@@ -401,6 +400,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jiaxing Liang: Fix infinite recursion issue in test_f
 #. Juha Remes: Fixed a typo in qubit_to_matrix documentation
 #. Gregory Ashton: Fix dsolve to allow symbols in systems of equations
+#. Renato Orsino: Add `applyfunc` to Dyadic and Vector
+#. Jennifer White: Added checks into polynomials.py
+#. Alistair Lynn: Removed duplicate classifiers list in setup.py
+#. Govind Sahai: Fixed some typos
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -421,6 +424,7 @@ Financial and Infrastructure Support
   * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
   * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
+  * in 2014 for 10 students (`GSoC 2014 <https://github.com/sympy/sympy/wiki/Gsoc-2014-report>`_)
 
 * `Python Software Foundation (PSF) <https://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:

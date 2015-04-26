@@ -1,7 +1,8 @@
 """A module for solving all kinds of equations.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.solvers import solve
     >>> from sympy.abc import x
     >>> solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)

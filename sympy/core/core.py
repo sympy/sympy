@@ -65,41 +65,14 @@ class Registry(object):
     def __delattr__(self, name):
         delattr(self.__class__, name)
 
-#A set containing all sympy class objects, kept in sync with C
+#A set containing all sympy class objects
 all_classes = set()
-
-
-class ClassRegistry(Registry):
-    """
-    Namespace for SymPy classes
-
-    This is needed to avoid problems with cyclic imports.
-    To get a SymPy class, use `C.<class_name>` e.g. `C.Rational`, `C.Add`.
-
-    For performance reasons, this is coupled with a set `all_classes` holding
-    the classes, which should not be modified directly.
-    """
-    __slots__ = []
-
-    def __setattr__(self, name, cls):
-        Registry.__setattr__(self, name, cls)
-        all_classes.add(cls)
-
-    def __delattr__(self, name):
-        cls = getattr(self, name)
-        Registry.__delattr__(self, name)
-        # The same class could have different names, so make sure
-        # it's really gone from C before removing it from all_classes.
-        if cls not in self.__class__.__dict__.itervalues():
-            all_classes.remove(cls)
-
-C = ClassRegistry()
 
 
 class BasicMeta(BasicType):
 
     def __init__(cls, *args, **kws):
-        setattr(C, cls.__name__, cls)
+        all_classes.add(cls)
 
     def __cmp__(cls, other):
         # If the other object is not a Basic subclass, then we are not equal to
@@ -133,5 +106,3 @@ class BasicMeta(BasicType):
         if cls.__cmp__(other) == 1:
             return True
         return False
-
-C.BasicMeta = BasicMeta

@@ -1557,14 +1557,17 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x
 
         Unspecified pattern:
+
         >>> sin(x).rewrite(exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
         Pattern as a single function:
+
         >>> sin(x).rewrite(sin, exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
         Pattern as a list of functions:
+
         >>> sin(x).rewrite([sin, ], exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
@@ -1808,7 +1811,8 @@ class preorder_traversal(Iterator):
         Skip yielding current node's (last yielded node's) subtrees.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.core import symbols
         >>> from sympy.core.basic import preorder_traversal
         >>> x, y, z = symbols('x y z')

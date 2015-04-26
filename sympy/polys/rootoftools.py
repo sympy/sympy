@@ -397,7 +397,7 @@ class RootOf(Expr):
 
     @classmethod
     def _count_roots(cls, roots):
-        """Count the number of real or complex roots including multiplicites. """
+        """Count the number of real or complex roots including multiplicities."""
         return sum([ k for _, _, k in roots ])
 
     @classmethod

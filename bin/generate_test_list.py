@@ -37,7 +37,9 @@ def get_paths(level=15):
     """
     Generates a set of paths for testfiles searching.
 
-    Example:
+    Examples
+    ========
+
     >>> get_paths(2)
     ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py']
     >>> get_paths(6)

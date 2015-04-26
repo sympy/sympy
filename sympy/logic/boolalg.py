@@ -56,7 +56,7 @@ class Boolean(Basic):
 
     def equals(self, other):
         """
-        Returns if the given formulas have the same truth table.
+        Returns True if the given formulas have the same truth table.
         For two formulas to be equal they must have the same literals.
 
         Examples
@@ -80,43 +80,6 @@ class Boolean(Basic):
                 not satisfiable(Not(Equivalent(self, other)))
 
 
-# Developer note: There is liable to be some confusion as to when True should
-# be used and when S.true should be used in various contexts throughout SymPy.
-# An important thing to remember is that sympify(True) returns S.true.  This
-# means that for the most part, you can just use True and it will
-# automatically be converted to S.true when necessary, similar to how you can
-# generally use 1 instead of S.One.
-
-# The rule of thumb is:
-
-#   "If the boolean in question can be replaced by an arbitrary symbolic
-#   Boolean, like Or(x, y) or x > 1, use S.true. Otherwise, use True"
-
-# In other words, use S.true only on those contexts where the boolean is being
-# used as a symbolic representation of truth.  For example, if the object ends
-# up in the .args of any expression, then it must necessarily be S.true
-# instead of True, as elements of .args must be Basic.  On the other hand, ==
-# is not a symbolic operation in SymPy, since it always returns True or False,
-# and does so in terms of structural equality rather than mathematical, so it
-# should return True. The assumptions system should use True and False. Aside
-# from not satisfying the above rule of thumb, the assumptions system uses a
-# three-valued logic (True, False, None), whereas S.true and S.false represent
-# a two-valued logic.  When it doubt, use True.
-
-# 2. "S.true == True" is True.
-
-# While "S.true is True" is False, "S.true == True" is True, so if there is
-# any doubt over whether a function or expression will return S.true or True,
-# just use "==" instead of "is" to do the comparison, and it will work in
-# either case.  Finally, for boolean flags, it's better to just use "if x"
-# instead of "if x is True". To quote PEP 8:
-
-#     Don't compare boolean values to True or False using ==.
-
-#       Yes:   if greeting:
-#       No:    if greeting == True:
-#       Worse: if greeting is True:
-
 class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
@@ -125,6 +88,7 @@ class BooleanAtom(Boolean):
     @property
     def canonical(self):
         return self
+
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
@@ -135,6 +99,53 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     operations like ~ and >> will work as expected on this class, whereas with
     True they act bitwise on 1. Functions in the logic module will return this
     class when they evaluate to true.
+
+    Notes
+    =====
+
+    There is liable to be some confusion as to when ``True`` should
+    be used and when ``S.true`` should be used in various contexts
+    throughout SymPy. An important thing to remember is that
+    ``sympify(True)`` returns ``S.true``. This means that for the most
+    part, you can just use ``True`` and it will automatically be converted
+    to ``S.true`` when necessary, similar to how you can generally use 1
+    instead of ``S.One``.
+
+    The rule of thumb is:
+
+    "If the boolean in question can be replaced by an arbitrary symbolic
+    ``Boolean``, like ``Or(x, y)`` or ``x > 1``, use ``S.true``.
+    Otherwise, use ``True``"
+
+    In other words, use ``S.true`` only on those contexts where the
+    boolean is being used as a symbolic representation of truth.
+    For example, if the object ends up in the ``.args`` of any expression,
+    then it must necessarily be ``S.true`` instead of ``True``, as
+    elements of ``.args`` must be ``Basic``. On the other hand,
+    ``==`` is not a symbolic operation in SymPy, since it always returns
+    ``True`` or ``False``, and does so in terms of structural equality
+    rather than mathematical, so it should return ``True``. The assumptions
+    system should use ``True`` and ``False``. Aside from not satisfying
+    the above rule of thumb, the
+    assumptions system uses a three-valued logic (``True``, ``False``, ``None``),
+    whereas ``S.true`` and ``S.false`` represent a two-valued logic. When in
+    doubt, use ``True``.
+
+    "``S.true == True is True``."
+
+    While "``S.true is True``" is ``False``, "``S.true == True``"
+    is ``True``, so if there is any doubt over whether a function or
+    expression will return ``S.true`` or ``True``, just use ``==``
+    instead of ``is`` to do the comparison, and it will work in either
+    case.  Finally, for boolean flags, it's better to just use ``if x``
+    instead of ``if x is True``. To quote PEP 8:
+
+    Don't compare boolean values to ``True`` or ``False``
+    using ``==``.
+
+    * Yes:   ``if greeting:``
+    * No:    ``if greeting == True:``
+    * Worse: ``if greeting is True:``
 
     Examples
     ========
@@ -185,6 +196,10 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     operations like ~ and >> will work as expected on this class, whereas with
     False they act bitwise on 0. Functions in the logic module will return this
     class when they evaluate to false.
+
+    Notes
+    ======
+    See note in :py:class`sympy.logic.boolalg.BooleanTrue`
 
     Examples
     ========

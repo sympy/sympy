@@ -31,6 +31,8 @@ known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
     "conjugate": "conj",
+    "DiracDelta": "dirac",
+    "Heaviside": "heaviside",
 }
 
 

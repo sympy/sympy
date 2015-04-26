@@ -549,7 +549,10 @@ class Mul(Expr, AssocOp):
 
         # 0
         elif coeff is S.Zero:
-            # we know for sure the result will be 0
+            # we know for sure the result will be 0 except the multiplicand
+            # is infinity
+            if any(c.is_finite == False for c in c_part):
+                return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols
 
         # check for straggling Numbers that were produced
@@ -1537,6 +1540,7 @@ def prod(a, start=1):
     True
 
     You can start the product at something other than 1:
+
     >>> prod([1, 2], 3)
     6
 

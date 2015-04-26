@@ -894,8 +894,8 @@ def test_issue_5524():
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 u("""\
-        ⎛         ___    ⎞           2\n\
-(x - 5)⋅⎝-x - 2⋅╲╱ 2  + 5⎠ - (-y + 5) \
+                                  2\n\
+(x - 5)⋅(-x - 2⋅√2 + 5) - (-y + 5) \
 """)
 
 
@@ -1705,10 +1705,7 @@ def test_pretty_sqrt():
 \/ 2 \
 """
     ucode_str = \
-u("""\
-  ___\n\
-╲╱ 2 \
-""")
+u("√2")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1765,9 +1762,8 @@ u("""\
 """
     ucode_str = \
 u("""\
-   ___________\n\
-3 ╱       ___ \n\
-╲╱  1 + ╲╱ 5  \
+3 ________\n\
+╲╱ 1 + √5 \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1823,6 +1819,33 @@ u("""\
                     ╲╱  x  + 3 \
 """)
     assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_pretty_sqrt_char_knob():
+    # See PR #9234.
+    expr = sqrt(2)
+    ucode_str1 = \
+u("""\
+  ___\n\
+╲╱ 2 \
+""")
+    ucode_str2 = \
+u("√2")
+    assert xpretty(expr, use_unicode=True,
+                   use_unicode_sqrt_char=False) == ucode_str1
+    assert xpretty(expr, use_unicode=True,
+                   use_unicode_sqrt_char=True) == ucode_str2
+
+
+def test_pretty_sqrt_longsymbol_no_sqrt_char():
+    # Do not use unicode sqrt char for long symbols (see PR #9234).
+    expr = sqrt(Symbol('C1'))
+    ucode_str = \
+u("""\
+  ____\n\
+╲╱ C₁ \
+""")
     assert upretty(expr) == ucode_str
 
 
@@ -4302,10 +4325,9 @@ atan2|-------, \\/ x |\n\
 """
     ucode_str = \
 u("""\
-     ⎛  ___         ⎞\n\
-     ⎜╲╱ 2 ⋅y    ___⎟\n\
-atan2⎜───────, ╲╱ x ⎟\n\
-     ⎝   20         ⎠\
+     ⎛√2⋅y    ⎞\n\
+atan2⎜────, √x⎟\n\
+     ⎝ 20     ⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4561,10 +4583,9 @@ def test_issue_6739():
 """
     ucode_str = \
 u("""\
-  1  \n\
-─────\n\
-  ___\n\
-╲╱ x \
+1 \n\
+──\n\
+√x\
 """)
     assert pretty(1/sqrt(x)) == ascii_str
     assert upretty(1/sqrt(x)) == ucode_str
@@ -4927,6 +4948,29 @@ u("""\
 ───\n\
   2\n\
 10 \
+""")
+    assert upretty(e) == ucode_str
+
+
+def test_issue_7927():
+    e = sin(x/2)**cos(x/2)
+    ucode_str = \
+u("""\
+           ⎛x⎞\n\
+        cos⎜─⎟\n\
+           ⎝2⎠\n\
+⎛   ⎛x⎞⎞      \n\
+⎜sin⎜─⎟⎟      \n\
+⎝   ⎝2⎠⎠      \
+""")
+    assert upretty(e) == ucode_str
+    e = sin(x)**(S(11)/13)
+    ucode_str = \
+u("""\
+        11\n\
+        ──\n\
+        13\n\
+(sin(x))  \
 """)
     assert upretty(e) == ucode_str
 

@@ -1,7 +1,7 @@
 """ Riemann zeta and related function. """
 from __future__ import print_function, division
 
-from sympy.core import Function, S, C, sympify, pi
+from sympy.core import Function, S, sympify, pi
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic

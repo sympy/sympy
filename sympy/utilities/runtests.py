@@ -599,6 +599,8 @@ def _doctest(*paths, **kwargs):
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
+    colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
     blacklist = kwargs.get("blacklist", [])
     split  = kwargs.get('split', None)
     blacklist.extend([
@@ -660,7 +662,8 @@ def _doctest(*paths, **kwargs):
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
 
-    r = PyTestReporter(verbose, split=split)
+    r = PyTestReporter(verbose, split=split, colors=colors,\
+                       force_colors=force_colors)
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')

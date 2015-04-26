@@ -302,21 +302,6 @@ tests = [
     'sympy.vector.tests',
     ]
 
-classifiers = [
-    'License :: OSI Approved :: BSD License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Scientific/Engineering :: Mathematics',
-    'Topic :: Scientific/Engineering :: Physics',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.2',
-    'Programming Language :: Python :: 3.3',
-]
-
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.

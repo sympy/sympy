@@ -1110,6 +1110,11 @@ def test_sympy__functions__elementary__hyperbolic__atanh():
     assert _test_args(atanh(2))
 
 
+def test_sympy__functions__elementary__hyperbolic__asech():
+    from sympy.functions.elementary.hyperbolic import asech
+    assert _test_args(asech(2))
+
+
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh
     assert _test_args(cosh(2))
@@ -1250,6 +1255,11 @@ def test_sympy__functions__elementary__trigonometric__cot():
 
 def test_sympy__functions__elementary__trigonometric__sin():
     assert _test_args(sin(2))
+
+
+def test_sympy__functions__elementary__trigonometric__sinc():
+    from sympy.functions.elementary.trigonometric import sinc
+    assert _test_args(sinc(2))
 
 
 def test_sympy__functions__elementary__trigonometric__sec():

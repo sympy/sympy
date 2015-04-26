@@ -227,16 +227,20 @@ def test_factorial2():
 
 
 def test_binomial():
+    x = Symbol('x')
     n = Symbol('n', integer=True)
     nz = Symbol('nz', integer=True, nonzero=True)
     k = Symbol('k', integer=True)
     kp = Symbol('kp', integer=True, positive=True)
-    u = Symbol('v', negative=True)
+    u = Symbol('u', negative=True)
     p = Symbol('p', positive=True)
+    z = Symbol('z', zero=True)
+    nt = Symbol('nt', integer=False)
 
     assert binomial(0, 0) == 1
     assert binomial(1, 1) == 1
     assert binomial(10, 10) == 1
+    assert binomial(n, z) == 1
     assert binomial(1, 2) == 0
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
@@ -247,7 +251,6 @@ def test_binomial():
     assert binomial(n, -1).func == binomial
     assert binomial(kp, -1) == 0
     assert binomial(nz, 0) == 1
-    assert binomial(n, 0).func == binomial
     assert expand_func(binomial(n, 1)) == n
     assert expand_func(binomial(n, 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
@@ -268,6 +271,8 @@ def test_binomial():
     assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
     assert binomial(n, k).is_integer
+    assert binomial(nt, k).is_integer is None
+    assert binomial(x, nt).is_integer is False
 
 
 def test_binomial_diff():
@@ -309,6 +314,7 @@ def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) == oo
+    assert subfactorial(nan) == nan
 
     x = Symbol('x')
     assert subfactorial(x).rewrite(uppergamma) == uppergamma(x + 1, -1)/S.Exp1

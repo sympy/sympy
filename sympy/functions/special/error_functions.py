@@ -5,13 +5,14 @@ from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.elementary.hyperbolic import cosh, sinh
-from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.core.compatibility import range
 
@@ -1640,6 +1641,12 @@ class Si(TrigonometricIntegral):
     -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
          expint(1, z*exp_polar(I*pi/2))/2) + pi/2
 
+    It can be rewritten in the form of sinc function (By definition)
+
+    >>> from sympy import sinc
+    >>> Si(z).rewrite(sinc)
+    Integral(sinc(t), (t, 0, z))
+
     See Also
     ========
 
@@ -1648,6 +1655,7 @@ class Si(TrigonometricIntegral):
     Chi: Hyperbolic cosine integral.
     Ei: Exponential integral.
     expint: Generalised exponential integral.
+    sinc: unnormalized sinc function
     E1: Special case of the generalised exponential integral.
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
@@ -1681,6 +1689,11 @@ class Si(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
+
+    def _eval_rewrite_as_sinc(self, z):
+        from sympy import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(sinc(t), (t, 0, z))
 
     def _sage_(self):
         import sage.all as sage

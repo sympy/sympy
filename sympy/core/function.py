@@ -1159,7 +1159,7 @@ class Derivative(Expr):
         * Derivatives wrt symbols and non-symbols don't commute.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import Derivative, Function, symbols
         >>> vsort = Derivative._sort_variables
@@ -1945,8 +1945,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     kind of 'expansion'.  For hints that simply rewrite an expression, use the
     .rewrite() API.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Expr, sympify
     >>> class MyClass(Expr):

@@ -901,7 +901,16 @@ def test_issues_8632_8633_8638_8675_8992():
     n = Dummy(negative=True)
     assert (n - 3).is_nonpositive
 
+
 def test_issue_9115():
     n = Dummy('n', integer=True, nonnegative=True)
     assert (factorial(n) >= 1) == True
     assert (factorial(n) < 1) == False
+
+
+def test_issue_9165():
+    z = Symbol('z', zero=True)
+    f = Symbol('f', finite=False)
+    assert 0/z == S.NaN
+    assert 0*(1/z) == S.NaN
+    assert 0*f == S.NaN
