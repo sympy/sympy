@@ -318,9 +318,7 @@ class LatexPrinter(Printer):
         def convert(expr):
             if not expr.is_Mul:
                 if denom == 1:
-                    return r"\left(%s\right)" % str(self._print(expr))
-                # print(numer)
-                # print(denom)
+                    return "(" + str(self._print(expr)) + ")"
                 return str(self._print(expr))
             else:
                 _tex = last_term_tex = ""
