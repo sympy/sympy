@@ -114,7 +114,7 @@ def test_sparse():
             assert i == 0
     else:
         idx = sparse_array.start_index
-        for i in len(start_index):
+        for i in len(sparse_array.start_index):
             assert sparse_array[idx] == 0
             idx = sparse_array.next_index(idx)
 
@@ -147,9 +147,9 @@ def test_calculation():
         for i in c:
             assert i == 8
     
-    else:
-        idx = c.start_index
+    else:        
         c = a + b
+        idx = c.start_index
         for i in len(c):
             assert c[idx] == 10
             idx = c.next_index(idx)
