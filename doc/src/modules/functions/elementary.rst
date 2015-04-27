@@ -22,6 +22,15 @@ Examples::
 acos
 ----
 
+Returns the inverse cosine value of the arguement in radians.
+
+Examples::
+    >>> from sympy.functions import acos
+    >>> acos(0)
+    pi/2
+    >>> acos(1)
+    0
+
 .. autoclass:: sympy.functions.elementary.trigonometric.acos
    :members:
 
@@ -33,6 +42,15 @@ acosh
 
 acot
 ----
+
+Returns the inverse cotangent value of the arguement in radians.
+
+Examples::
+    >>> from sympy.functions import acot
+    >>> acot(0)
+    pi/2
+    >>> acot(1)
+    pi/4
 
 .. autoclass:: sympy.functions.elementary.trigonometric.acot
    :members:
@@ -66,6 +84,15 @@ Examples::
 asin
 ----
 
+Returns the inverse sine value of the arguement in radians.
+
+Examples::
+    >>> from sympy.functions import asin
+    >>> acos(0)
+    0
+    >>> acos(1)
+    pi/2
+
 .. autoclass:: sympy.functions.elementary.trigonometric.asin
    :members:
 
@@ -77,6 +104,15 @@ asinh
 
 atan
 ----
+
+Returns the inverse tangent value of the arguement in radians.
+
+Examples::
+    >>> from sympy.functions import atan
+    >>> atan(0)
+    0
+    >>> atan(1)
+    pi/4
 
 .. autoclass:: sympy.functions.elementary.trigonometric.atan
    :members:
@@ -139,9 +175,9 @@ Examples::
     -1
     >>> cos(pi/3)
     1/2
-    >>> cos(-5*pi/3)
+    >>> cos(-5*pi/6)
     -sqrt(3)/2
-    
+
 .. autoclass:: sympy.functions.elementary.trigonometric.cos
    :members:
 
@@ -152,6 +188,18 @@ cosh
 
 cot
 ---
+
+Returns the trigonmetric cotangent value of the argument. Given that the argument is an angle value in radians, the cotangent of the argument is the ratio of the length of the adjacent side to the length of the opposite side of a triangle.
+
+Examples::
+
+    >>> from sympy.functions import cot
+    >>> cot(pi)
+    zoo
+    >>> cot(pi/3)
+    sqrt(3)/3
+    >>> cot(-5*pi/6)
+    sqrt(3)
 
 .. autoclass:: sympy.functions.elementary.trigonometric.cot
    :members:
@@ -164,6 +212,8 @@ coth
 
 exp
 ---
+
+Returns the 
 
 .. autoclass:: sympy.functions.elementary.exponential.exp
    :members:
@@ -221,6 +271,17 @@ LambertW
 
 log
 ---
+
+Returns the logarithm of the argument with default base argument, e. A different base can be specified.
+
+Examples::
+    >>> from sympy.functions import log
+    >>> log(E)
+    1
+    >>> log(4, 2)
+    2
+    >>> log(100000, 10)
+    5
 
 .. autoclass:: sympy.functions.elementary.exponential.log
    :members:
@@ -286,15 +347,54 @@ Examples::
 root
 ----
 
+Returns the i-th root of an argument.
+
+Examples::
+    >>> from sympy.functions import root
+    >>> from sympy.abc import x, i 
+    >>> root(x, 2)
+    sqrt(x)
+    >>> root(x, 5)
+    x**(1/5)
+    >>> root(x, i)
+    x**(1/i)
+
 .. autofunction:: sympy.functions.elementary.miscellaneous.root
 
 RoundFunction
 -------------
 
+Returns the rounded value of an argument with n decimal places.  If the number of decimal places is not specified, it returns the nearest integer value.
+
+round(x, n)
+
+Examples::
+    >>> from sympy.functions import round
+    >>> round(10.5)
+    10
+    >>> round(10.6)
+    11
+    >>> round(10.1234567, 1)
+    10.1
+    >>> round(10.1234567, 3)
+    10.123
+
 .. autoclass:: sympy.functions.elementary.integers.RoundFunction
 
 sin
 ---
+
+Returns the trigonmetric sine value of the argument. Given that the argument is an angle value in radians, the sine of the argument is the ratio of the length of the opposite side to the length of the hypotenuse of a triangle.
+
+Examples::
+
+    >>> from sympy.functions import sin
+    >>> sin(pi)
+    0
+    >>> sin(pi/3)
+    sqrt(3)/2
+    >>> sin(-5*pi/6)
+    -1/2
 
 .. autoclass:: sympy.functions.elementary.trigonometric.sin
    :members:
@@ -325,6 +425,18 @@ sign
 
 tan
 ---
+
+Returns the trigonmetric tangent value of the argument. Given that the argument is an angle value in radians, the tangent of the argument is the ratio of the length of the opposite side to the length of the adjacent side of a triangle.
+
+Examples::
+
+    >>> from sympy.functions import tan
+    >>> tan(pi)
+    0
+    >>> tan(pi/3)
+    sqrt(3)
+    >>> tan(-5*pi/6)
+    sqrt(3)/3
 
 .. autoclass:: sympy.functions.elementary.trigonometric.tan
    :members:
