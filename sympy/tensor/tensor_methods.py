@@ -392,7 +392,7 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
 
 
 def perm_parity(lst):
-    '''\
+    """\
     THANKS TO Paddy McCarthy FROM http://code.activestate.com/ FOR THIS FUNCTION!
     Given a permutation of the digits 0..N in order as a list,
     returns its parity (or sign): +1 for even parity; -1 for odd.
@@ -409,13 +409,13 @@ def perm_parity(lst):
     ...     signs[temp_i]=perm_parity(list(p))
     ...     print(signs[temp_i], p)
     ...     temp_i+=1
-    (1, (0, 1, 2))
-    (-1, (0, 2, 1))
-    (-1, (1, 0, 2))
-    (1, (1, 2, 0))
-    (1, (2, 0, 1))
-    (-1, (2, 1, 0))
-    '''
+    1 (0, 1, 2)
+    -1 (0, 2, 1)
+    -1 (1, 0, 2)
+    1 (1, 2, 0)
+    1 (2, 0, 1)
+    -1 (2, 1, 0)
+    """
     parity = 1
     for i in range(0, len(lst) - 1):
         if lst[i] != i:

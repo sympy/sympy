@@ -356,7 +356,7 @@ class Arraypy(Basic):
         >>> result1 = a[0,0]
         >>> result2 = a.__getitem__((1,1))
         >>> print (result1, result2)
-        (0, 3)
+        0 3
 
         """
         if isinstance(index, int):
