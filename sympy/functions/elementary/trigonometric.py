@@ -1466,7 +1466,7 @@ class sec(ReciprocalTrigonometricFunction):
 
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sec
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sec
     """
 
     _reciprocal_of = cos
