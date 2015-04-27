@@ -130,6 +130,18 @@ Examples::
 cos
 ---
 
+Returns the trigonmetric cosine value of the argument. Given that the argument is an angle value in radians, the cosine of the argument is the ratio of the length of the adjacent side to the length of the hypotenuse of a triangle.
+
+Examples::
+
+    >>> from sympy.functions import cos
+    >>> cos(pi)
+    -1
+    >>> cos(pi/3)
+    1/2
+    >>> cos(-5*pi/3)
+    -sqrt(3)/2
+    
 .. autoclass:: sympy.functions.elementary.trigonometric.cos
    :members:
 
