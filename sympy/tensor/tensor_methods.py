@@ -407,7 +407,7 @@ def perm_parity(lst):
     >>> temp_i=0
     >>> for p in permutations(range(3)):
     ...     signs[temp_i]=perm_parity(list(p))
-    ...     print(signs[temp_i], p)
+    ...     print(str(signs[temp_i]) + ' ' + str(p))
     ...     temp_i+=1
     1 (0, 1, 2)
     -1 (0, 2, 1)

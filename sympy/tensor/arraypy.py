@@ -353,10 +353,10 @@ class Arraypy(Basic):
         >>> print (a)
         0 1
         2 3
-        >>> result1 = a[0,0]
-        >>> result2 = a.__getitem__((1,1))
-        >>> print (result1, result2)
-        0 3
+        >>> print(a[0,0])
+        0
+        >>> print(a.__getitem__((1,1)))
+        3
 
         """
         if isinstance(index, int):
@@ -517,9 +517,11 @@ class Arraypy(Basic):
         ========
 
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
-        >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
-        >>> for i in a:
-        ...     print (i)
+        >>> import sys
+        >>> if sys.version_info[0] >= 3:
+        ...     a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
+        ...     for i in a:
+        ...         print (i)
         1
         2
         3
@@ -723,9 +725,11 @@ class Arraypy(Basic):
         Examples
         ========
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
-        >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
-        >>> for i in a:
-        ...     print(str(i) + ' ' + str(a.iter_index))
+        >>> import sys
+        >>> if sys.version_info[0] >= 3:
+        ...     a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2)) 
+        ...     for i in a:
+        ...         print(str(i) + ' ' + str(a.iter_index))
         1 (0, 0, 0)
         2 (0, 0, 1)
         3 (0, 1, 0)
