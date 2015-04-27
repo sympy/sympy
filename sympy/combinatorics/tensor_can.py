@@ -484,7 +484,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
                         s1 = [s[ix] for ix in s1]
                 else:
                     s1 = s
-                #assert s1[b] == j  # invariant
+                # assert s1[b] == j  # invariant
                 # solve d1*g*j = p_i with d1 = dx*d for some element dg
                 # of the stabilizer of ..., p_{i-1}
                 # dx**-1*p_i = d*g*j; dx**-1 = trace_D(d*g*j,...)
@@ -502,7 +502,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
                 assert d1[dg[j]] == p_i  # invariant
                 d1 = [d1[ix] for ix in d]
                 h1 = [d1[g[ix]] for ix in s1]
-                #assert h1[b] == p_i  # invariant
+                # assert h1[b] == p_i  # invariant
                 TAB1.append((s1, d1, h1))
 
         # if TAB contains equal permutations, keep only one of them;
@@ -570,7 +570,7 @@ def canonical_free(base, gens, g, num_free):
 
     >>> from sympy.combinatorics.tensor_can import riemann_bsgs, tensor_gens
     >>> base, gens = riemann_bsgs
-    >>> size, sbase, sgens = tensor_gens(base, gens, [[],[]], 0)
+    >>> size, sbase, sgens = tensor_gens(base, gens, [[], []], 0)
     >>> g = Permutation([0, 3, 4, 6, 7, 5, 2, 1, 8, 9])
     >>> canonical_free(sbase, [Permutation(h) for h in sgens], g, 2)
     [0, 3, 4, 6, 1, 2, 7, 5, 9, 8]
@@ -988,7 +988,7 @@ def _is_minimal_bsgs(base, gens):
     >>> from sympy.combinatorics.tensor_can import riemann_bsgs, _is_minimal_bsgs
     >>> _is_minimal_bsgs(*riemann_bsgs)
     True
-    >>> riemann_bsgs1 = ([2, 0], ([Permutation(5)(0,1)(4,5), Permutation(5)(0,2)(1,3)]))
+    >>> riemann_bsgs1 = ([2, 0], ([Permutation(5)(0, 1)(4, 5), Permutation(5)(0, 2)(1, 3)]))
     >>> _is_minimal_bsgs(*riemann_bsgs1)
     False
     """
@@ -1033,7 +1033,8 @@ def get_minimal_bsgs(base, gens):
 
 def tensor_gens(base, gens, list_free_indices, sym=0):
     """
-    Returns size, res_base, res_gens BSGS for n tensors of the same type
+    Returns size, res_base, res_gens BSGS for n tensors of the
+    same type
 
     base, gens BSGS for tensors of this type
     list_free_indices  list of the slots occupied by fixed indices
