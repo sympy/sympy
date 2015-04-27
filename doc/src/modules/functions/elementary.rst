@@ -22,9 +22,10 @@ Examples::
 acos
 ----
 
-Returns the inverse cosine value of the arguement in radians.
+Returns the inverse cosine value of the argument in radians.
 
 Examples::
+
     >>> from sympy.functions import acos
     >>> acos(0)
     pi/2
@@ -43,9 +44,10 @@ acosh
 acot
 ----
 
-Returns the inverse cotangent value of the arguement in radians.
+Returns the inverse cotangent value of the argument in radians.
 
 Examples::
+
     >>> from sympy.functions import acot
     >>> acot(0)
     pi/2
@@ -84,13 +86,14 @@ Examples::
 asin
 ----
 
-Returns the inverse sine value of the arguement in radians.
+Returns the inverse sine value of the argument in radians.
 
 Examples::
+
     >>> from sympy.functions import asin
-    >>> acos(0)
+    >>> asin(0)
     0
-    >>> acos(1)
+    >>> asin(1)
     pi/2
 
 .. autoclass:: sympy.functions.elementary.trigonometric.asin
@@ -105,9 +108,10 @@ asinh
 atan
 ----
 
-Returns the inverse tangent value of the arguement in radians.
+Returns the inverse tangent value of the argument in radians.
 
 Examples::
+
     >>> from sympy.functions import atan
     >>> atan(0)
     0
@@ -275,6 +279,7 @@ log
 Returns the logarithm of the argument with default base argument, e. A different base can be specified.
 
 Examples::
+
     >>> from sympy.functions import log
     >>> log(E)
     1
@@ -313,6 +318,14 @@ Max
 
 Returns the maximum of two (comparable) expressions
 
+Examples::
+
+    >>> from sympy.functions import Max
+    >>> Max(1, 2)
+    2
+    >>> Max(5, 5)
+    5
+
 It is named ``Max`` and not ``max`` to avoid conflicts with the built-in function ``max``.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Max
@@ -350,6 +363,7 @@ root
 Returns the i-th root of an argument.
 
 Examples::
+
     >>> from sympy.functions import root
     >>> from sympy.abc import x, i 
     >>> root(x, 2)
@@ -369,6 +383,7 @@ Returns the rounded value of an argument with n decimal places.  If the number o
 round(x, n)
 
 Examples::
+
     >>> from sympy.functions import round
     >>> round(10.5)
     10
@@ -414,6 +429,14 @@ Returns the square root of an expression. It is equivalent to raise to ``Rationa
     >>> from sympy import Rational
     >>> sqrt(2) == 2**Rational(1,2)
     True
+
+Examples::
+
+    >>> from sympy.functions import sqrt
+    >>> sqrt(4)
+    2
+    >>> sqrt(10)
+    sqrt(10)
 
 .. autofunction:: sympy.functions.elementary.miscellaneous.sqrt
 
