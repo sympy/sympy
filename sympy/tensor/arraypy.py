@@ -518,9 +518,12 @@ class Arraypy(Basic):
 
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
         >>> import sys
-        >>> if sys.version_info[0] >= 3:
-        ...     a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
+        >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
+        >>> if sys.version_info[0] >= 3:   
         ...     for i in a:
+        ...         print (i)
+        ... else:
+        ...     for i in iter(a):
         ...         print (i)
         1
         2
@@ -530,17 +533,6 @@ class Arraypy(Basic):
         6
         7
         8
-
-        >>> for i in a:
-        ...     print(str(i) + ' ' + str(a.iter_index))
-        1 (0, 0, 0)
-        2 (0, 0, 1)
-        3 (0, 1, 0)
-        4 (0, 1, 1)
-        5 (1, 0, 0)
-        6 (1, 0, 1)
-        7 (1, 1, 0)
-        8 (1, 1, 1)
 
         """
         if (self._iterator_index_number == self._loop_size):
@@ -726,9 +718,12 @@ class Arraypy(Basic):
         ========
         >>> from sympy.tensor.arraypy import Arraypy, list2arraypy
         >>> import sys
-        >>> if sys.version_info[0] >= 3:
-        ...     a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2)) 
+        >>> a = list2arraypy([1,2,3,4,5,6,7,8], (2,2,2))
+        >>> if sys.version_info[0] >= 3:   
         ...     for i in a:
+        ...         print(str(i) + ' ' + str(a.iter_index))
+        ... else:
+        ...     for i in iter(a):
         ...         print(str(i) + ' ' + str(a.iter_index))
         1 (0, 0, 0)
         2 (0, 0, 1)

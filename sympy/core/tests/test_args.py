@@ -2994,6 +2994,15 @@ def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
     assert _test_args(G_Function([2], [1], [], []))
 
+@XFAIL
+def test_sympy__tensor__arraypy__Arraypy():
+    from sympy.tensor.arraypy import Arraypy
+    assert _test_args(Arraypy( [2, 4, 1] ))
+
+@XFAIL
+def test_sympy__tensor__arraypy__Tensor():
+    from sympy.tensor.arraypy import Arraypy, Tensor
+    assert _test_args(Tensor(Arraypy((2,2)), (1,1)))
 
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
