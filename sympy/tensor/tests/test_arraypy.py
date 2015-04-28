@@ -155,7 +155,7 @@ def test_calculation():
             idx = c.next_index(idx)
 
         idx = c.start_index
-        c = a + b
+        c = b - a
         for i in range(len(c)):
             assert c[idx] == 8
             idx = c.next_index(idx)
