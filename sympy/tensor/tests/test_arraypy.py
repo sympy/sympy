@@ -94,7 +94,7 @@ def test_iterator():
         for i in array:
             assert i == j
             j += 1
-    
+
         array = array.reshape(4)
         j = 0
         for i in array:
@@ -108,13 +108,13 @@ def test_sparse():
     # dictionary where all data is
     assert len(sparse_array._output) == 0
     # it's empty, even thought Arraypy knows that 'empty' data is zero
-    
+
     if sys.version_info[0] >= 3:
         for i in sparse_array:
             assert i == 0
     else:
         idx = sparse_array.start_index
-        for i in len(sparse_array.start_index):
+        for i in range(len(sparse_array.start_index)):
             assert sparse_array[idx] == 0
             idx = sparse_array.next_index(idx)
 
@@ -137,28 +137,28 @@ def test_calculation():
 
     a = list2arraypy(list_of_ones, shape)
     b = list2arraypy(list_of_nines, shape)
-    
+
     if sys.version_info[0] >= 3:
         c = a + b
         for i in c:
             assert i == 10
-    
+
         c = b - a
         for i in c:
             assert i == 8
-    
-    else:        
+
+    else:
         c = a + b
         idx = c.start_index
-        for i in len(c):
+        for i in range(len(c)):
             assert c[idx] == 10
             idx = c.next_index(idx)
-            
+
         idx = c.start_index
         c = a + b
         for i in len(c):
             assert c[idx] == 8
-            idx = c.next_index(idx)        
+            idx = c.next_index(idx)
 
     # Tensor
     x0, x1, y0, y1 = symbols('X[0], X[1], Y[0], Y[1]')
