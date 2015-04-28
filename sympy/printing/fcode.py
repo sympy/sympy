@@ -59,6 +59,7 @@ class FCodePrinter(CodePrinter):
         'human': True,
         'source_format': 'fixed',
         'contract': 'auto',
+        'loops': True,
         'standard': 77
     }
 
@@ -429,9 +430,13 @@ def fcode(expr, assign_to=None, **settings):
     contract: bool or 'auto', optional
         Deprecated; use ``EinsteinSum`` instead.  If True, ``Indexed`` instances
         are assumed to obey tensor contraction rules and the corresponding
-        nested loops over indices are generated. Setting contract=False will not
-        generate loops, instead the user is responsible to provide values for
-        the indices in the code. [default='auto'].
+        nested loops over indices are generated. Setting contract=False implies
+        loops=False (see below). [default='auto']
+    loops: bool, optional
+        If True, loops are automatically generated for assignments to
+        ``Indexed`` instances. If False, loops are not generated; instead the
+        user is responsible for providing values for the indices in the code.
+        [default=True]
     source_format : optional
         The source format can be either 'fixed' or 'free'. [default='fixed']
     standard : integer, optional
@@ -495,6 +500,8 @@ def fcode(expr, assign_to=None, **settings):
     do i = 1, 4
      Dy(i) = (y(i + 1) - y(i))/(t(i + 1) - t(i))
     end do
+    >>> print(fcode(e.rhs, assign_to=e.lhs, loops=False))
+    Dy(i) = (y(i + 1) - y(i))/(t(i + 1) - t(i))
 
     Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
     must be provided to ``assign_to``. Note that any expression that can be

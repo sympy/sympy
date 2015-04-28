@@ -223,6 +223,10 @@ def test_ccode_Indexed_without_looking_for_contraction():
                 "}")
     assert code0 == expected
 
+    code0 = ccode(e.rhs, assign_to=e.lhs, loops=False)
+    expected = ("Dy[i] = (y[i + 1] - y[i])/(x[i + 1] - x[i]);")
+    assert code0 == expected
+
 
 def test_ccode_loops_matrix_vector():
     n, m = symbols('n m', integer=True)

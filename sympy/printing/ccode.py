@@ -93,6 +93,7 @@ class CCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': 'auto',
+        'loops': True,
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
@@ -290,9 +291,13 @@ def ccode(expr, assign_to=None, **settings):
     contract: bool or 'auto', optional
         Deprecated; use ``EinsteinSum`` instead.  If True, ``Indexed`` instances
         are assumed to obey tensor contraction rules and the corresponding
-        nested loops over indices are generated. Setting contract=False will not
-        generate loops, instead the user is responsible to provide values for
-        the indices in the code. [default='auto'].
+        nested loops over indices are generated. Setting contract=False implies
+        loops=False (see below). [default='auto']
+    loops: bool, optional
+        If True, loops are automatically generated for assignments to
+        ``Indexed`` instances. If False, loops are not generated; instead the
+        user is responsible for providing values for the indices in the code.
+        [default=True]
 
     Examples
     ========
@@ -351,6 +356,8 @@ def ccode(expr, assign_to=None, **settings):
     for (int i=0; i<4; i++){
        Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
     }
+    >>> print(ccode(e.rhs, assign_to=e.lhs, loops=False))
+    Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
 
     Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
     must be provided to ``assign_to``. Note that any expression that can be

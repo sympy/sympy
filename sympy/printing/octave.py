@@ -56,6 +56,7 @@ class OctaveCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': 'auto',
+        'loops': True,
         'inline': True,
     }
     # Note: contract is for expressing tensors as loops (if True), or just
@@ -468,9 +469,13 @@ def octave_code(expr, assign_to=None, **settings):
     contract: bool or 'auto', optional
         Deprecated; use ``EinsteinSum`` instead.  If True, ``Indexed`` instances
         are assumed to obey tensor contraction rules and the corresponding
-        nested loops over indices are generated. Setting contract=False will not
-        generate loops, instead the user is responsible to provide values for
-        the indices in the code. [default='auto'].
+        nested loops over indices are generated. Setting contract=False implies
+        loops=False (see below). [default='auto']
+    loops: bool, optional
+        If True, loops are automatically generated for assignments to
+        ``Indexed`` instances. If False, loops are not generated; instead the
+        user is responsible for providing values for the indices in the code.
+        [default=True]
     inline: bool, optional
         If True, we try to create single-statement code instead of multiple
         statements.  [default=True].
@@ -574,6 +579,8 @@ def octave_code(expr, assign_to=None, **settings):
     for i = 1:4
       Dy(i) = (y(i + 1) - y(i))./(t(i + 1) - t(i));
     end
+    >>> print(octave_code(e.rhs, assign_to=e.lhs, loops=False))
+    Dy(i) = (y(i + 1) - y(i))./(t(i + 1) - t(i));
     """
     return OctaveCodePrinter(settings).doprint(expr, assign_to)
 

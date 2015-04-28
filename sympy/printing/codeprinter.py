@@ -173,28 +173,25 @@ class CodePrinter(StrPrinter):
         # storing results in temporary variables or accumulate it in the
         # assign_to object.
 
-        contract_option = self._settings.get('contract', 'auto')
-        if contract_option == 'auto':
+        contract = self._settings.get('contract', 'auto')
+        loops = self._settings.get('loops', True)
+
+        if contract != 'auto':
+            if contract:
+                expr = EinsteinSum(expr)
+            else:
+                loops = False
+
+        if loops:
             # Set up loops over non-dummy indices -- all terms need these
             indices = self._get_expression_indices(expr, assign_to)
             # Set up loops over dummy indices -- each term needs separate
             # treatment
             dummies = self._get_contraction_structure(expr)
         else:
-            msg = ("Instead set `contract='auto'` (the default) and wrap "
-                   "expressions where implicit summation is desired in "
-                   "`EinsteinSum`. Expressions that are not wrapped will then "
-                   "not be summed.")
-            SymPyDeprecationWarning(
-                feature="The `contract` flag in code printing routines",
-                issue=9284, value=msg).warn()
-            if contract_option:
-                indices = self._get_expression_indices(EinsteinSum(expr),
-                                                       assign_to)
-                dummies = self._get_contraction_structure(EinsteinSum(expr))
-            else:
-                indices = []
-                dummies = {None: (expr,)}
+            indices = []
+            dummies = {None: (expr,)}
+
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # terms with no summations first
@@ -353,6 +350,16 @@ class CodePrinter(StrPrinter):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
+
+        if self._settings["contract"] != 'auto':
+            msg = ("Instead set `contract='auto'` (the default) and wrap "
+                   "expressions where implicit summation is desired in "
+                   "`EinsteinSum`. Expressions that are not wrapped will then "
+                   "not be summed.")
+            SymPyDeprecationWarning(
+                feature="The `contract` flag in code printing routines",
+                issue=9284, value=msg).warn()
+
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
@@ -375,8 +382,8 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif self._settings["contract"] and (lhs.has(IndexedBase) or
-                rhs.has(IndexedBase)):
+        elif (self._settings["contract"] and self._settings["loops"]
+              and (lhs.has(IndexedBase) or rhs.has(IndexedBase))):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
             return self._doprint_loops(rhs, lhs)
