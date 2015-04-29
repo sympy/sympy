@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.permutations import Permutation
@@ -289,7 +290,8 @@ def SymmetricGroup(n):
 
 
 def RubikGroup(n):
-    """Return a group of Rubik's cube generators.
+    """Return a group of Rubik's cube generators
+
     >>> from sympy.combinatorics.named_groups import RubikGroup
     >>> RubikGroup(2).is_group()
     False

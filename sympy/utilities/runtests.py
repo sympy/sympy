@@ -33,7 +33,7 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, xrange
+from sympy.core.compatibility import exec_, PY3, string_types, range
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -424,7 +424,7 @@ def test(*paths, **kwargs):
 
     if subprocess:
         # loop backwards so last i is 0
-        for i in xrange(rerun, -1, -1):
+        for i in range(rerun, -1, -1):
             print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_test",
                         function_args=paths, function_kwargs=kwargs)
@@ -436,7 +436,7 @@ def test(*paths, **kwargs):
                 return val
 
     # rerun even if hash randomization is not supported
-    for i in xrange(rerun, -1, -1):
+    for i in range(rerun, -1, -1):
         print_counter(i)
         val = not bool(_test(*paths, **kwargs))
         if not val or i == 0:
@@ -568,7 +568,7 @@ def doctest(*paths, **kwargs):
 
     if subprocess:
         # loop backwards so last i is 0
-        for i in xrange(rerun, -1, -1):
+        for i in range(rerun, -1, -1):
             print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_doctest",
                         function_args=paths, function_kwargs=kwargs)
@@ -580,7 +580,7 @@ def doctest(*paths, **kwargs):
                 return val
 
     # rerun even if hash randomization is not supported
-    for i in xrange(rerun, -1, -1):
+    for i in range(rerun, -1, -1):
         print_counter(i)
         val = not bool(_doctest(*paths, **kwargs))
         if not val or i == 0:
@@ -599,6 +599,8 @@ def _doctest(*paths, **kwargs):
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
+    colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
     blacklist = kwargs.get("blacklist", [])
     split  = kwargs.get('split', None)
     blacklist.extend([
@@ -659,7 +661,8 @@ def _doctest(*paths, **kwargs):
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
 
-    r = PyTestReporter(verbose, split=split)
+    r = PyTestReporter(verbose, split=split, colors=colors,\
+                       force_colors=force_colors)
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')

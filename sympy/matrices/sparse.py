@@ -4,7 +4,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -96,7 +96,8 @@ class SparseMatrix(MatrixBase):
                 return self._smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    i = range(self.rows)[i]
+                    # XXX remove list() when PY2 support is dropped
+                    i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
                 else:
@@ -104,7 +105,8 @@ class SparseMatrix(MatrixBase):
                         raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
-                    j = range(self.cols)[j]
+                    # XXX remove list() when PY2 support is dropped
+                    j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
                 else:
@@ -487,6 +489,7 @@ class SparseMatrix(MatrixBase):
 
         Only the non-zero elements are stored, so the resulting dictionary
         that is used to represent the sparse matrix is empty:
+
         >>> _._smat
         {}
 

@@ -1,14 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core import S
 from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.expr import Expr
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
@@ -17,31 +19,30 @@ from sympy.functions.elementary.trigonometric import atan2
 
 
 class re(Function):
-    """Returns real part of expression. This function performs only
-       elementary analysis and so it will fail to decompose properly
-       more complicated expressions. If completely simplified result
-       is needed then use Basic.as_real_imag() or perform complex
-       expansion on instance of this function.
+    """
+    Returns real part of expression. This function performs only
+    elementary analysis and so it will fail to decompose properly
+    more complicated expressions. If completely simplified result
+    is needed then use Basic.as_real_imag() or perform complex
+    expansion on instance of this function.
 
-       >>> from sympy import re, im, I, E
-       >>> from sympy.abc import x, y
+    Examples
+    ========
 
-       >>> re(2*E)
-       2*E
+    >>> from sympy import re, im, I, E
+    >>> from sympy.abc import x, y
+    >>> re(2*E)
+    2*E
+    >>> re(2*I + 17)
+    17
+    >>> re(2*I)
+    0
+    >>> re(im(x) + x*I + 2)
+    2
 
-       >>> re(2*I + 17)
-       17
-
-       >>> re(2*I)
-       0
-
-       >>> re(im(x) + x*I + 2)
-       2
-
-       See Also
-       ========
-
-       im
+    See Also
+    ========
+    im
     """
 
     is_real = True
@@ -80,8 +81,7 @@ class re(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
 
@@ -122,16 +122,12 @@ class im(Function):
 
     >>> from sympy import re, im, E, I
     >>> from sympy.abc import x, y
-
     >>> im(2*E)
     0
-
     >>> re(2*I + 17)
     17
-
     >>> im(x*I)
     re(x)
-
     >>> im(re(x) + y)
     im(y)
 
@@ -176,8 +172,7 @@ class im(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
 
@@ -365,8 +360,9 @@ class sign(Function):
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, arg):
+        from sympy import Heaviside
         if arg.is_real:
-            return C.Heaviside(arg)*2-1
+            return Heaviside(arg)*2-1
 
     def _eval_simplify(self, ratio, measure):
         return self.func(self.args[0].factor())
@@ -438,7 +434,7 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
-        if not isinstance(arg, C.Expr):
+        if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
@@ -469,9 +465,9 @@ class Abs(Function):
                     return Abs(base)**exponent
                 if base.is_positive == True:
                     return base**re(exponent)
-                return (-base)**re(exponent)*C.exp(-S.Pi*im(exponent))
-        if isinstance(arg, C.exp):
-            return C.exp(re(arg.args[0]))
+                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+        if isinstance(arg, exp):
+            return exp(re(arg.args[0]))
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_nonnegative:
@@ -551,19 +547,37 @@ class Abs(Function):
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
+        from sympy import Heaviside
         if arg.is_real:
-            return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+            return arg*(Heaviside(arg) - Heaviside(-arg))
 
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg):
-        return arg/C.sign(arg)
+        from sympy import sign
+        return arg/sign(arg)
 
 
 class arg(Function):
-    """Returns the argument (in radians) of a complex number"""
+    """
+    Returns the argument (in radians) of a complex number. For a real
+    number, the argument is always 0.
+
+    Examples
+    ========
+
+    >>> from sympy.functions import arg
+    >>> from sympy import I, sqrt
+    >>> arg(2.0)
+    0
+    >>> arg(I)
+    pi/2
+    >>> arg(sqrt(2) + I*sqrt(2))
+    pi/4
+
+    """
 
     is_real = True
     is_finite = True
@@ -579,7 +593,7 @@ class arg(Function):
         else:
             arg_ = arg
         x, y = re(arg_), im(arg_)
-        rv = C.atan2(y, x)
+        rv = atan2(y, x)
         if rv.is_number and not rv.atoms(AppliedUndef):
             return rv
         if arg_ != arg:
@@ -594,22 +608,34 @@ class arg(Function):
         x, y = re(self.args[0]), im(self.args[0])
         return atan2(y, x)
 
+
 class conjugate(Function):
     """
-    Changes the sign of the imaginary part of a complex number.
+    Returns the `complex conjugate` Ref[1] of an argument.
+    In mathematics, the complex conjugate of a complex number
+    is given by changing the sign of the imaginary part.
+
+    Thus, the conjugate of the complex number
+    :math:`a + ib` (where a and b are real numbers) is :math:`a - ib`
 
     Examples
     ========
 
     >>> from sympy import conjugate, I
-
-    >>> conjugate(1 + I)
-    1 - I
+    >>> conjugate(2)
+    2
+    >>> conjugate(I)
+    -I
 
     See Also
     ========
 
     sign, Abs
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Complex_conjugation
     """
 
     @classmethod

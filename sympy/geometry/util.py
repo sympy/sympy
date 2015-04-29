@@ -11,7 +11,7 @@ are_similar
 from __future__ import print_function, division
 
 from sympy import Symbol, Function, solve
-from sympy.core.compatibility import string_types, is_sequence
+from sympy.core.compatibility import string_types, is_sequence, range
 
 
 def idiff(eq, y, x, n=1):

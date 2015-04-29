@@ -11,6 +11,7 @@ due to the improvements in trigsimp.
 
 from sympy import expand, Mul, Add, Symbol, S, Pow, diff, trigsimp, \
     simplify, sin, cos, symbols
+from sympy.core.compatibility import range
 
 try:
     from numpy import matrix

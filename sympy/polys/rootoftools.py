@@ -33,7 +33,7 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 from math import log as mathlog
 def _ispow2(i):
@@ -397,7 +397,7 @@ class RootOf(Expr):
 
     @classmethod
     def _count_roots(cls, roots):
-        """Count the number of real or complex roots including multiplicites. """
+        """Count the number of real or complex roots including multiplicities."""
         return sum([ k for _, _, k in roots ])
 
     @classmethod
@@ -427,7 +427,7 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         return roots
@@ -443,14 +443,14 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         complexes = cls._get_complexes(factors)
         complexes = cls._complexes_sorted(complexes)
         complexes_count = cls._count_roots(complexes)
 
-        for index in xrange(0, complexes_count):
+        for index in range(0, complexes_count):
             roots.append(cls._complexes_index(complexes, index))
 
         return roots
@@ -593,9 +593,9 @@ class RootOf(Expr):
                     # case and the interval will then be tightened -- and
                     # eventually the root will be found.
                     if self.is_real:
-                        if (a < root < b):
+                        if (a <= root <= b):
                             break
-                    elif (ax < root.real < bx and ay < root.imag < by):
+                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
                 except ValueError:
                     pass

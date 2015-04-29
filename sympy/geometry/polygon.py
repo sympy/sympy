@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Expr, S, sympify, oo, pi, Symbol
-from sympy.core.compatibility import as_int, xrange
+from sympy.core.compatibility import as_int, range
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -180,7 +180,7 @@ class Polygon(GeometryEntity):
             for i, si in enumerate(sides):
                 pts = si.args
                 # exclude the sides connected to si
-                for j in xrange(1 if i == len(sides) - 1 else 0, i - 1):
+                for j in range(1 if i == len(sides) - 1 else 0, i - 1):
                     sj = sides[j]
                     if sj.p1 not in pts and sj.p2 not in pts:
                         hit = si.intersection(sj)
@@ -227,7 +227,7 @@ class Polygon(GeometryEntity):
         """
         area = 0
         args = self.args
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             x1, y1 = args[i - 1].args
             x2, y2 = args[i].args
             area += x1*y2 - x2*y1
@@ -278,7 +278,7 @@ class Polygon(GeometryEntity):
         cw = self._isright(args[-1], args[0], args[1])
 
         ret = {}
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
             if cw ^ self._isright(a, b, c):
@@ -312,7 +312,7 @@ class Polygon(GeometryEntity):
         """
         p = 0
         args = self.vertices
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             p += args[i - 1].distance(args[i])
         return simplify(p)
 
@@ -379,7 +379,7 @@ class Polygon(GeometryEntity):
         A = 1/(6*self.area)
         cx, cy = 0, 0
         args = self.args
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             x1, y1 = args[i - 1].args
             x2, y2 = args[i].args
             v = x1*y2 - x2*y1
@@ -423,7 +423,7 @@ class Polygon(GeometryEntity):
         """
         res = []
         args = self.vertices
-        for i in xrange(-len(args), 0):
+        for i in range(-len(args), 0):
             res.append(Segment(args[i], args[i + 1]))
         return res
 
@@ -458,7 +458,7 @@ class Polygon(GeometryEntity):
         # Determine orientation of points
         args = self.vertices
         cw = self._isright(args[-2], args[-1], args[0])
-        for i in xrange(1, len(args)):
+        for i in range(1, len(args)):
             if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
 
@@ -524,7 +524,7 @@ class Polygon(GeometryEntity):
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
         args = poly.args
-        indices = range(-len(args), 1)
+        indices = list(range(-len(args), 1))
 
         if poly.is_convex():
             orientation = None
@@ -727,7 +727,7 @@ class Polygon(GeometryEntity):
         sympy.geometry.point.Point.distance
 
         Examples
-        =======
+        ========
 
         >>> from sympy.geometry import Point, Polygon
         >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
@@ -917,11 +917,11 @@ class Polygon(GeometryEntity):
         oargs = o.args
         n = len(args)
         o0 = oargs[0]
-        for i0 in xrange(n):
+        for i0 in range(n):
             if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
                     return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
                     return True
         return False
 
@@ -1578,7 +1578,7 @@ class RegularPolygon(Polygon):
         v = 2*S.Pi/self._n
 
         return [Point(c.x + r*cos(k*v + rot), c.y + r*sin(k*v + rot))
-                for k in xrange(self._n)]
+                for k in range(self._n)]
 
     def __eq__(self, o):
         if not isinstance(o, Polygon):

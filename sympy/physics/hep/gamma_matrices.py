@@ -3,6 +3,7 @@ from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensorHead, tensorsymmetry, TensorType,\
     TensAdd, tensor_mul, get_lines, Tensor
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import range
 
 
 DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")

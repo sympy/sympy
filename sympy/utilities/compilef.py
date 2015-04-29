@@ -86,6 +86,7 @@ import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
 from sympy.external import import_module
+from sympy.core.compatibility import range
 
 libtccpath = './libtcc.so'
 dps = 17  # decimal places of float precision
@@ -439,7 +440,7 @@ def test_clambdify():
     f1 = sqrt(x*y)
     pf1 = lambdify((x, y), f1, 'math')
     cf1 = clambdify((x, y), f1)
-    for i in xrange(10):
+    for i in range(10):
         if cf1(i, 10 - i) != pf1(i, 10 - i):
             raise ValueError("Values should be equal")
     f2 = (x - y) / z * pi
@@ -457,7 +458,7 @@ def test_frange():
     args = range(30, 168, 3)
     if len(a) != len(args):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if a[i] != f(args[i]):
             raise ValueError("Values should be equal")
     if len(frange('lambda x: x', 0, -10000)) != 0:
@@ -468,21 +469,21 @@ def test_frange():
     b = range(-50, 50)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if int(round(a[i]*10)) != b[i]:
             raise ValueError("Values should be equal")
     a = frange('lambda x: x', 17, -9, -3)
     b = range(17, -9, -3)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if a[i] != b[i]:
             raise ValueError("a and b should be equal")
     a = frange('lambda x: x', 2.7, -3.1, -1.01)
     b = range(270, -310, -101)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if int(round(a[i]*100)) != b[i]:
             raise ValueError("Values should be equal")
     assert frange('lambda x: x', 0.2, 0.1, -0.1)[0] == 0.2
@@ -530,7 +531,7 @@ def test_use_cse():
     b = frange(*args, **kwargs)
     if len(a) != len(b):
         raise ValueError("Lengths should be equal")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         if a[i] != b[i]:
             raise ValueError("a and b should be equal")
 

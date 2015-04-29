@@ -23,7 +23,7 @@ from sympy.stats.rv import ProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 oo = S.Infinity
 
@@ -549,7 +549,7 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     for var in variables:
-        for i in xrange(niter):
+        for i in range(niter):
             assert sample(var) in var.pspace.domain.set
 
 

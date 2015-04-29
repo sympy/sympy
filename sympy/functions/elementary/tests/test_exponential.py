@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
+    symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
 
@@ -131,6 +131,10 @@ def test_exp_leading_term():
     assert exp(1/x).as_leading_term(x) == exp(1/x)
     assert exp(2 + x).as_leading_term(x) == exp(2)
 
+def test_exp_taylor_term():
+    x = symbols('x')
+    assert exp(x).taylor_term(1, x) == x
+    assert exp(x).taylor_term(3, x) == x**3/6
 
 def test_log_values():
     assert log(nan) == nan
@@ -257,6 +261,10 @@ def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     z = symbols('z', zero=True)
+    x = symbols('x', infinite=True, positive=True)
+
+    assert log(z).is_positive is False
+    assert log(x).is_positive is True
     assert log(2) > 0
     assert log(1, evaluate=False).is_zero
     assert log(1 + z).is_zero
@@ -439,3 +447,24 @@ def test_log_product():
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+
+
+def test_issue_8866():
+    x = Symbol('x')
+    assert simplify(log(x, 10, evaluate=False)) == simplify(log(x, 10))
+    assert expand_log(log(x, 10, evaluate=False)) == expand_log(log(x, 10))
+
+    y = Symbol('y', positive=True)
+    l1 = log(exp(y), exp(10))
+    b1 = log(exp(y), exp(5))
+    l2 = log(exp(y), exp(10), evaluate=False)
+    b2 = log(exp(y), exp(5), evaluate=False)
+    assert simplify(log(l1, b1)) == simplify(log(l2, b2))
+    assert expand_log(log(l1, b1)) == expand_log(log(l2, b2))
+
+
+def test_issue_9116():
+    n = Symbol('n', positive=True, integer=True)
+
+    assert ln(n).is_nonnegative is True
+    assert log(n).is_nonnegative is True

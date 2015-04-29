@@ -5,7 +5,8 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
-from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+    mpf_norm, comp)
 from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
@@ -337,10 +338,10 @@ def test_Rational_cmp():
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
-    assert (n1 < S.NaN) is S.false
-    assert (n1 <= S.NaN) is S.false
-    assert (n1 > S.NaN) is S.false
-    assert (n1 >= S.NaN) is S.false
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Float():
@@ -755,14 +756,14 @@ def test_NaN():
     assert 1/nan == nan
     assert 1/(-nan) == nan
     assert 8/nan == nan
-    assert not nan > 0
-    assert not nan < 0
-    assert not nan >= 0
-    assert not nan <= 0
-    assert not 0 < nan
-    assert not 0 > nan
-    assert not 0 <= nan
-    assert not 0 >= nan
+    raises(TypeError, lambda: nan > 0)
+    raises(TypeError, lambda: nan < 0)
+    raises(TypeError, lambda: nan >= 0)
+    raises(TypeError, lambda: nan <= 0)
+    raises(TypeError, lambda: 0 < nan)
+    raises(TypeError, lambda: 0 > nan)
+    raises(TypeError, lambda: 0 <= nan)
+    raises(TypeError, lambda: 0 >= nan)
     assert S.One + nan == nan
     assert S.One - nan == nan
     assert S.One*nan == nan
@@ -1465,3 +1466,16 @@ def test_Float_idempotence():
     z = Float(x, 15)
     assert same_and_same_prec(y, x)
     assert not same_and_same_prec(z, x)
+
+
+def test_comp():
+    # sqrt(2) = 1.414213 5623730950...
+    a = sqrt(2).n(7)
+    assert comp(a, 1.41421346) is False
+    assert comp(a, 1.41421347)
+    assert comp(a, 1.41421366)
+    assert comp(a, 1.41421367) is False
+    assert comp(sqrt(2).n(2), '1.4')
+    assert comp(sqrt(2).n(2), Float(1.4, 2), '')
+    raises(ValueError, lambda: comp(sqrt(2).n(2), 1.4, ''))
+    assert comp(sqrt(2).n(2), Float(1.4, 3), '') is False

@@ -9,7 +9,7 @@ def finite_diff(expression, variable, increment=1):
     other than one supply it as a third argument.
 
     Examples
-    =========
+    ========
 
     >>> from sympy.abc import x, y, z, k, n
     >>> from sympy.series.kauers import finite_diff

@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy.core.basic import Basic
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSysCartesian

@@ -5,7 +5,7 @@ from sympy.logic.boolalg import (
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
     simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal
+    BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table
 )
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
@@ -272,6 +272,15 @@ def test_bool_symbol():
     assert And(A, True, False) is false
     assert Or(A, True) is true
     assert Or(A, False) == A
+
+
+def test_is_boolean():
+
+    assert true.is_Boolean
+    assert (A & B).is_Boolean
+    assert (A | B).is_Boolean
+    assert (~A).is_Boolean
+    assert (A ^ B).is_Boolean
 
 
 def test_subs():
@@ -675,3 +684,27 @@ def test_issue_8777():
     assert And(x >= 1, x < oo).as_set() == Interval(1, oo)
     assert (x < oo).as_set() == Interval(-oo, oo)
     assert (x > -oo).as_set() == Interval(-oo, oo)
+
+
+def test_issue_8975():
+    x = symbols('x')
+    assert Or(And(-oo < x, x <= -2), And(2 <= x, x < oo)).as_set() == \
+        Interval(-oo, -2) + Interval(2, oo)
+
+
+def test_term_to_integer():
+    assert term_to_integer([1, 0, 1, 0, 0, 1, 0]) == 82
+    assert term_to_integer('0010101000111001') == 10809
+
+
+def test_integer_to_term():
+    assert integer_to_term(777) == [1, 1, 0, 0, 0, 0, 1, 0, 0, 1]
+    assert integer_to_term(123, 3) == [1, 1, 1, 1, 0, 1, 1]
+    assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0]
+
+
+def test_truth_table():
+    x, y = symbols('x,y')
+    assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
+    assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
+    assert list(truth_table('x >> y', ['x', 'y'], input=False)) == [True, True, False, True]

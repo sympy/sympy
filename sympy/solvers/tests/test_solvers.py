@@ -6,6 +6,7 @@ from sympy import (
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
 
+from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -118,10 +119,20 @@ def test_solve_args():
     assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    assert solve(a*x**2 + b*x + c -
-                ((x - h)**2 + 4*p*k)/4/p,
-                [h, p, k], exclude=[a, b, c], dict=True) == \
+    args = (a + b)*x - b**2 + 2, a, b
+    assert solve(*args) == \
+        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
+    assert solve(*args, set=True) == \
+        ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
+    assert solve(*args, dict=True) == \
+        [{b: sqrt(2), a: -sqrt(2)}, {b: -sqrt(2), a: sqrt(2)}]
+    eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
+    flags = dict(dict=True)
+    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
         [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
+    flags.update(dict(simplify=False))
+    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
+        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
@@ -676,8 +687,8 @@ def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
         set([(
-            -sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
-            (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))])
+            -sqrt(r*cos(t)**2), -1*sqrt(r*cos(t)**2)*tan(t)),
+            (sqrt(r*cos(t)**2), sqrt(r*cos(t)**2)*tan(t))])
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -732,8 +743,9 @@ def test_issue_5335():
     assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 
+@XFAIL
 def test_issue_5335_float():
-    skip("This test hangs.")
+    # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
            a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
@@ -811,10 +823,11 @@ def test_unrad1():
         (x**2 - x + 16, []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x)),
         (5*x**2 - 2*x + 1, []))
-    assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - 3),
-        (25*x**4 + 376*x**3 + 1256*x**2 - 2272*x + 784, []))
-    assert check(unrad(sqrt(x) + sqrt(1 - x) - sqrt(2 + x) - sqrt(1 - 2*x)),
-        (41*x**4 + 40*x**3 + 232*x**2 - 160*x + 16, []))  # orig has 1 real root: 0.49
+    assert unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - 3) in [
+        (25*x**4 + 376*x**3 + 1256*x**2 - 2272*x + 784, []),
+        (25*x**8 - 476*x**6 + 2534*x**4 - 1468*x**2 + 169, [])]
+    assert unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - sqrt(1 - 2*x)) == \
+        (41*x**4 + 40*x**3 + 232*x**2 - 160*x + 16, [])  # orig root at 0.487
     assert check(unrad(sqrt(x) + sqrt(x + 1)), (S(1), []))
 
     eq = sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x))
@@ -861,29 +874,33 @@ def test_unrad1():
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
     # don't posify the expression in unrad and do use _mexpand
-    e = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
-    p = posify(e)[0]
+    z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
+    p = posify(z)[0]
     assert solve(p) == []
-    assert solve(e) == []
-    assert solve(e + 6*I) == [-S(1)/11]
+    assert solve(z) == []
+    assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
     # issue 8622
     assert unrad((root(x + 1, 5) - root(x, 3))) == (
         x**5 - x**3 - 3*x**2 - 3*x - 1, [])
+    # issue #8679
+    assert check(unrad(x + root(x, 3) + root(x, 3)**2 + sqrt(y), x),
+        (s**3 + s**2 + s + sqrt(y), [s, s**3 - x]))
 
     # for coverage
     assert check(unrad(sqrt(x) + root(x, 3) + y),
         (s**3 + s**2 + y, [s, s**6 - x]))
     assert solve(sqrt(x) + root(x, 3) - 2) == [1]
     raises(NotImplementedError, lambda:
-        unrad((root(x, 2) + root(x, 3) + root(x, 4)).subs(x, x**5 - x + 1)))
-    raises(NotImplementedError, lambda:
         solve(sqrt(x) + root(x, 3) + root(x + 1, 5) - 2))
     # fails through a different code path
     raises(NotImplementedError, lambda: solve(-sqrt(2) + cosh(x)/x))
-    # unrad symbol of interest; this leads to simpler solutions
+    # unrad some
     assert solve(sqrt(x + root(x, 3))+root(x - y, 5), y) == [
         x + (x**(S(1)/3) + x)**(S(5)/2)]
+    assert check(unrad(sqrt(x) - root(x + 1, 3)*sqrt(x + 2) + 2),
+        (s**10 + 8*s**8 + 24*s**6 - 12*s**5 - 22*s**4 - 160*s**3 - 212*s**2 -
+        192*s - 56, [s, s**2 - x]))
     e = root(x + 1, 3) + root(x, 3)
     assert unrad(e) == (2*x + 1, [])
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
@@ -894,27 +911,66 @@ def test_unrad1():
     assert check(unrad(root(x, 2) + root(x, 2)**3 - 1),
         (x**3 + 2*x**2 + x - 1, []))
     assert unrad(x**0.5) is None
-    assert check(unrad(z + root(x + y, 5) + root(x + y, 5)**3),
-        (s**3 + s + z, [s, s**5 - x - y]))
+    assert check(unrad(t + root(x + y, 5) + root(x + y, 5)**3),
+        (s**3 + s + t, [s, s**5 - x - y]))
     assert check(unrad(x + root(x + y, 5) + root(x + y, 5)**3, y),
         (s**3 + s + x, [s, s**5 - x - y]))
     assert check(unrad(x + root(x + y, 5) + root(x + y, 5)**3, x),
         (s**5 + s**3 + s - y, [s, s**5 - x - y]))
+    assert check(unrad(root(x - 1, 3) + root(x + 1, 5) + root(2, 5)),
+        (s**5 + 5*2**(S(1)/5)*s**4 + s**3 + 10*2**(S(2)/5)*s**3 +
+        10*2**(S(3)/5)*s**2 + 5*2**(S(4)/5)*s + 4, [s, s**3 - x + 1]))
+    raises(NotImplementedError, lambda:
+        unrad((root(x, 2) + root(x, 3) + root(x, 4)).subs(x, x**5 - x + 1)))
+
     # the simplify flag should be reset to False for unrad results;
     # if it's not then this next test will take a long time
     assert solve(root(x, 3) + root(x, 5) - 2) == [1]
+    eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    assert check(unrad(eq),
+        ((5*x - 4)*(3125*x**3 + 37100*x**2 + 100800*x - 82944), []))
+    ans = S('''
+        [4/5, -1484/375 + 172564/(140625*(114*sqrt(12657)/78125 +
+        12459439/52734375)**(1/3)) +
+        4*(114*sqrt(12657)/78125 + 12459439/52734375)**(1/3)]''')
+    assert solve(eq) == ans
+    # duplicate radical handling
+    assert check(unrad(sqrt(x + root(x + 1, 3)) - root(x + 1, 3) - 2),
+        (s**3 - s**2 - 3*s - 5, [s, s**3 - x - 1]))
+    # cov post-processing
+    e = root(x**2 + 1, 3) - root(x**2 - 1, 5) - 2
+    assert check(unrad(e),
+        (s**5 - 10*s**4 + 39*s**3 - 80*s**2 + 80*s - 30,
+        [s, s**3 - x**2 - 1]))
 
-    raises(NotImplementedError, lambda:
-        solve(sqrt(x) - sin(x)))
+    e = sqrt(x + root(x + 1, 2)) - root(x + 1, 3) - 2
+    assert check(unrad(e),
+        (s**6 - 2*s**5 - 7*s**4 - 3*s**3 + 26*s**2 + 40*s + 25,
+        [s, s**3 - x - 1]))
+    assert check(unrad(e, _reverse=True),
+        (s**6 - 14*s**5 + 73*s**4 - 187*s**3 + 276*s**2 - 228*s + 89,
+        [s, s**2 - x - sqrt(x + 1)]))
+    # this one needs r0, r1 reversal to work
+    assert check(unrad(sqrt(x + sqrt(root(x, 3) - 1)) - root(x, 6) - 2),
+        (s**12 - 2*s**8 - 8*s**7 - 8*s**6 + s**4 + 8*s**3 + 23*s**2 +
+        32*s + 17, [s, s**6 - x]))
+
+    # is this needed?
+    #assert unrad(root(cosh(x), 3)/x*root(x + 1, 5) - 1) == (
+    #    x**15 - x**3*cosh(x)**5 - 3*x**2*cosh(x)**5 - 3*x*cosh(x)**5 - cosh(x)**5, [])
     raises(NotImplementedError, lambda:
         unrad(sqrt(cosh(x)/x) + root(x + 1,3)*sqrt(x) - 1))
     assert unrad(S('(x+y)**(2*y/3) + (x+y)**(1/3) + 1')) is None
     assert check(unrad(S('(x+y)**(2*y/3) + (x+y)**(1/3) + 1'), x),
         (s**(2*y) + s + 1, [s, s**3 - x - y]))
 
-    # issue #8679
-    assert check(unrad(x + root(x, 3) + root(x, 3)**2 + sqrt(y), x),
-        (s**3 + s**2 + s + sqrt(y), [s, s**3 - x]))
+    # This tests two things: that if full unrad is attempted and fails
+    # the solution should still be found; also it tests that the use of
+    # composite
+    assert len(solve(sqrt(y)*x + x**3 - 1, x)) == 3
+    assert len(solve(-512*y**3 + 1344*(x + 2)**(S(1)/3)*y**2 -
+        1176*(x + 2)**(S(2)/3)*y - 169*x + 686, y, _unrad=False)) == 3
+
     # watch out for when the cov doesn't involve the symbol of interest
     eq = S('-x + (7*y/8 - (27*x/2 + 27*sqrt(x**2)/2)**(1/3)/3)**3 - 1')
     assert solve(eq, y) == [
@@ -926,29 +982,67 @@ def test_unrad1():
         27*sqrt(x**2))**(S(1)/3)/21 - (-6912*x/343 + sqrt((-13824*x/343 -
         S(13824)/343)**2)/2 - S(6912)/343)**(S(1)/3)/3]
 
-    eq = S('''
-        -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
-        + x*(3*x**2 - 34) + 90)**2/4 - 39304/27) - 45)**(1/3) + 34/(3*(1/2 -
-        sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
-        - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
+    eq = root(x + 1, 3) - (root(x, 3) + root(x, 5))
     assert check(unrad(eq),
-        (s*(-s**6 + sqrt(3)*s**6*I - 102*root(12, 3)*s**4 -
-        102*root(2, 3)**2*root(3, 6)**5*s**4*I - 1620*s**3 + 1620*sqrt(3)*s**3*I +
-        13872*root(18, 3)*s**2 - 471648 + 471648*sqrt(3)*I), [s, s**3 - 306*x -
-        sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) + 810]))
+        (3*s**13 + 3*s**11 + s**9 - 1, [s, s**15 - x]))
+    assert check(unrad(eq - 2),
+        (3*s**13 + 3*s**11 + 6*s**10 + s**9 + 12*s**8 + 6*s**6 + 12*s**5 +
+        12*s**3 + 7, [s, s**15 - x]))
+    assert check(unrad(root(x, 3) - root(x + 1, 4)/2 + root(x + 2, 3)),
+        (4096*s**13 + 960*s**12 + 48*s**11 - s**10 - 1728*s**4,
+        [s, s**4 - x - 1]))  # orig expr has two real roots: -1, -.389
+    assert check(unrad(root(x, 3) + root(x + 1, 4) - root(x + 2, 3)/2),
+        (343*s**13 + 2904*s**12 + 1344*s**11 + 512*s**10 - 1323*s**9 -
+        3024*s**8 - 1728*s**7 + 1701*s**5 + 216*s**4 - 729*s, [s, s**4 - x -
+        1]))  # orig expr has one real root: -0.048
+    assert check(unrad(root(x, 3)/2 - root(x + 1, 4) + root(x + 2, 3)),
+        (729*s**13 - 216*s**12 + 1728*s**11 - 512*s**10 + 1701*s**9 -
+        3024*s**8 + 1344*s**7 + 1323*s**5 - 2904*s**4 + 343*s, [s, s**4 - x -
+        1]))  # orig expr has 2 real roots: -0.91, -0.15
+    assert check(unrad(root(x, 3)/2 - root(x + 1, 4) + root(x + 2, 3) - 2),
+        (729*s**13 + 1242*s**12 + 18496*s**10 + 129701*s**9 + 388602*s**8 +
+        453312*s**7 - 612864*s**6 - 3337173*s**5 - 6332418*s**4 - 7134912*s**3
+        - 5064768*s**2 - 2111913*s - 398034, [s, s**4 - x - 1]))
+        # orig expr has 1 real root: 19.53
 
+    ans = solve(sqrt(x) + sqrt(x + 1) -
+                sqrt(1 - x) - sqrt(2 + x))
+    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
     # the fence optimization problem
     # https://github.com/sympy/sympy/issues/4793#issuecomment-36994519
     F = Symbol('F')
     eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
     ans = 2*F/7 - sqrt(2)*F/14
     X = solve(eq, x, check=False)
-    for xi in reversed(X):  # reverse since ans (currently) is the 2nd one
+    for xi in reversed(X):  # reverse since currently, ans is the 2nd one
         Y = solve((x*y).subs(x, xi).diff(y), y, simplify=False, check=False)
         if any((a - ans).expand().is_zero for a in Y):
             break
     else:
         assert None  # no answer was found
+    assert solve(sqrt(x + 1) + root(x, 3) - 2) == S('''
+        [(-11/(9*(47/54 + sqrt(93)/6)**(1/3)) + 1/3 + (47/54 +
+        sqrt(93)/6)**(1/3))**3]''')
+    assert solve(sqrt(sqrt(x + 1)) + x**Rational(1, 3) - 2) == S('''
+        [(-sqrt(-2*(-1/16 + sqrt(6913)/16)**(1/3) + 6/(-1/16 +
+        sqrt(6913)/16)**(1/3) + 17/2 + 121/(4*sqrt(-6/(-1/16 +
+        sqrt(6913)/16)**(1/3) + 2*(-1/16 + sqrt(6913)/16)**(1/3) + 17/4)))/2 +
+        sqrt(-6/(-1/16 + sqrt(6913)/16)**(1/3) + 2*(-1/16 +
+        sqrt(6913)/16)**(1/3) + 17/4)/2 + 9/4)**3]''')
+    assert solve(sqrt(x) + root(sqrt(x) + 1, 3) - 2) == S('''
+        [(-(81/2 + 3*sqrt(741)/2)**(1/3)/3 + (81/2 + 3*sqrt(741)/2)**(-1/3) +
+        2)**2]''')
+    eq = S('''
+        -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
+        + x*(3*x**2 - 34) + 90)**2/4 - 39304/27) - 45)**(1/3) + 34/(3*(1/2 -
+        sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
+        - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
+    assert check(unrad(eq),
+        (s**7 - sqrt(3)*s**7*I + 102*12**(S(1)/3)*s**5 +
+        102*2**(S(2)/3)*3**(S(5)/6)*s**5*I + 1620*s**4 - 1620*sqrt(3)*s**4*I -
+        13872*18**(S(1)/3)*s**3 + 471648*s - 471648*sqrt(3)*s*I, [s, s**3 - 306*x
+        - sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) + 810]))
+    assert solve(eq) == [] # not other code errors
 
 
 @slow
@@ -1025,7 +1119,9 @@ def test_issue_5849():
     Q2: 2*I3 + 2*I5 + 3*I6,
     I1: I2 + I3,
     Q4: -I3/2 + 3*I5/2 - dI4/2}]
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == ans
+    v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
+    assert solve(e, *v, **dict(manual=True, check=False)) == ans
+    assert solve(e, *v, **dict(manual=True)) == []
     # the matrix solver (tested below) doesn't like this because it produces
     # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
@@ -1076,8 +1172,8 @@ def test_issue_5901():
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
                 h(a), g(a), set=True) == \
         ([g(a)], set([
-        (-sqrt(h(a)**2 + G/f(a)**2),),
-        (sqrt(h(a)**2 + G/f(a)**2),)]))
+        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
+        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)]))
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))])
@@ -1262,14 +1358,13 @@ def test_real_roots():
     assert len(solve(x**5 + x**3 + 1)) == 1
 
 
-@slow
 def test_issue_6528():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
         895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
-    assert len(solve(eqs, y, x)) == len(solve(eqs, y, x, manual=True)) == 4
+    # two expressions encountered are > 1400 ops long so if this hangs
+    # it is likely because simplification is being done
+    assert len(solve(eqs, y, x, check=False)) == 4
 
 
 def test_overdetermined():
@@ -1474,16 +1569,18 @@ def test_uselogcombine():
         [-3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
         -3 - sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2],
         ]
+    assert solve(log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)) == []
 
 
 def test_atan2():
     assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
 
+
 def test_errorinverses():
-    assert solve(erf(x)-y,x)==[erfinv(y)]
-    assert solve(erfinv(x)-y,x)==[erf(y)]
-    assert solve(erfc(x)-y,x)==[erfcinv(y)]
-    assert solve(erfcinv(x)-y,x)==[erfc(y)]
+    assert solve(erf(x) - y, x) == [erfinv(y)]
+    assert solve(erfinv(x) - y, x) == [erf(y)]
+    assert solve(erfc(x) - y, x) == [erfcinv(y)]
+    assert solve(erfcinv(x) - y, x) == [erfc(y)]
 
 
 def test_issue_2725():
@@ -1507,7 +1604,7 @@ def test_issue_5114_6611():
         [-c/g + f*(1/j + 1/i + 1/g) - h/i], [-f/i + h*(1/m + 1/l + 1/i) - k/m],
         [-h/m + k*(1/p + 1/o + 1/m) - n/p], [-k/p + n*(1/q + 1/p)]])
     v = Matrix([f, h, k, n, b, c])
-    ans = solve(list(eqs) , list(v), simplify=False)
+    ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
     assert sum([s.count_ops() for s in ans.values()]) <= 2617
@@ -1626,3 +1723,50 @@ def test_issue_8755():
     assert len(solve(sqrt(y)*x + x**3 - 1, x)) == 3
     assert len(solve(-512*y**3 + 1344*(x + 2)**(S(1)/3)*y**2 -
         1176*(x + 2)**(S(2)/3)*y - 169*x + 686, y, _unrad=False)) == 3
+
+
+@slow
+def test_issue_8828():
+    x1 = 0
+    y1 = -620
+    r1 = 920
+    x2 = 126
+    y2 = 276
+    x3 = 51
+    y3 = 205
+    r3 = 104
+    v = x, y, z
+
+    f1 = (x - x1)**2 + (y - y1)**2 - (r1 - z)**2
+    f2 = (x2 - x)**2 + (y2 - y)**2 - z**2
+    f3 = (x - x3)**2 + (y - y3)**2 - (r3 - z)**2
+    F = f1,f2,f3
+
+    g1 = sqrt((x - x1)**2 + (y - y1)**2) + z - r1
+    g2 = f2
+    g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
+    G = g1,g2,g3
+
+    A = solve(F, v)
+    B = solve(G, v)
+    C = solve(G, v, manual=True)
+
+    p, q, r = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in [A, B, C]]
+    assert p == q == r
+
+
+def test_issue_2840_8155():
+    assert solve(sin(3*x) + sin(6*x)) == [
+        0, -pi, pi, 2*pi, -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
+        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-S(1)/2 -
+        sqrt(3)*I/2), -2*I*log(-S(1)/2 + sqrt(3)*I/2), -2*I*log(S(1)/2 -
+        sqrt(3)*I/2), -2*I*log(S(1)/2 + sqrt(3)*I/2), -2*I*log(-sqrt(3)/2 - I/2),
+        -2*I*log(-sqrt(3)/2 + I/2), -2*I*log(sqrt(3)/2 - I/2),
+        -2*I*log(sqrt(3)/2 + I/2), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
+        -2*I*log(-sin(pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) -
+        I*cos(pi/18)), -2*I*log(sin(pi/18) + I*cos(pi/18)),
+        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
+        -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [
+        0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
+        -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]

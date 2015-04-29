@@ -15,6 +15,7 @@ import random
 from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
+from sympy.core.compatibility import range
 from sympy.ntheory import continued_fraction_periodic as continued_fraction
 from sympy.utilities.iterables import variations
 

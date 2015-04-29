@@ -5,6 +5,7 @@ The reference D&L is "Geometric Algebra for Physicists" by Doran and Lasenby
 """
 
 from sympy.core import expand, Rational, S, Symbol, symbols
+from sympy.core.compatibility import range
 from sympy.functions import sin, cos
 from sympy.galgebra.ga import MV, Nga, Com
 from sympy.galgebra.printing import GA_Printer

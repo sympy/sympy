@@ -4,6 +4,7 @@ import inspect
 from sympy.external import import_module
 
 from sympy.printing.printer import Printer
+from sympy.core.compatibility import range
 import sympy
 from functools import partial
 

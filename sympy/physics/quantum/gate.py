@@ -20,7 +20,7 @@ import random
 
 from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence, u, unicode, xrange
+from sympy.core.compatibility import is_sequence, u, unicode, range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -130,7 +130,7 @@ class Gate(UnitaryOperator):
         A list of the target qubits (as ints) that the gate will apply to.
 
     Examples
-    --------
+    ========
 
 
     """
@@ -315,7 +315,7 @@ class CGate(Gate):
         instance that is the target operator.
 
     Examples
-    --------
+    ========
 
     """
 
@@ -615,7 +615,7 @@ class IdentityGate(OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
     gate_name = u('1')
@@ -640,7 +640,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import sqrt
     >>> from sympy.physics.quantum.qubit import Qubit
@@ -691,7 +691,7 @@ class XGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
     gate_name = u('X')
@@ -730,7 +730,7 @@ class YGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
     gate_name = u('Y')
@@ -758,7 +758,7 @@ class ZGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
     gate_name = u('Z')
@@ -786,7 +786,7 @@ class PhaseGate(OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
     gate_name = u('S')
@@ -814,7 +814,7 @@ class TGate(OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
     gate_name = u('T')
@@ -856,7 +856,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
         A tuple of the form (control, target).
 
     Examples
-    --------
+    ========
 
     >>> from sympy.physics.quantum.gate import CNOT
     >>> from sympy.physics.quantum.qapply import qapply
@@ -969,7 +969,7 @@ class SwapGate(TwoQubitGate):
         A tuple of the form (target1, target2).
 
     Examples
-    --------
+    ========
 
     """
     gate_name = 'SWAP'
@@ -1066,7 +1066,7 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         The format of the final matrix ('sympy', 'numpy', 'scipy.sparse').
 
     Examples
-    --------
+    ========
 
     References
     ----------
@@ -1145,7 +1145,7 @@ def gate_simp(circuit):
         return circuit
 
     # Iterate through each element in circuit, simplify if possible.
-    for i in xrange(len(circuit_args)):
+    for i in range(len(circuit_args)):
         # H,X,Y or Z squared is 1.
         # T**2 = S, S**2 = Z
         if isinstance(circuit_args[i], Pow):
@@ -1214,7 +1214,7 @@ def gate_sort(circuit):
     while changes:
         changes = False
         circ_array = circuit.args
-        for i in xrange(len(circ_array) - 1):
+        for i in range(len(circ_array) - 1):
             # Go through each element and switch ones that are in wrong order
             if isinstance(circ_array[i], (Gate, Pow)) and \
                     isinstance(circ_array[i + 1], (Gate, Pow)):
@@ -1268,7 +1268,7 @@ def random_circuit(ngates, nqubits, gate_space=(X, Y, Z, S, T, H, CNOT, SWAP)):
     """
     qubit_space = range(nqubits)
     result = []
-    for i in xrange(ngates):
+    for i in range(ngates):
         g = random.choice(gate_space)
         if g == CNotGate or g == SwapGate:
             qubits = random.sample(qubit_space, 2)

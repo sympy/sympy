@@ -1,4 +1,5 @@
 from sympy import exp, integrate, oo, S, simplify, sqrt, symbols
+from sympy.core.compatibility import range
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
 from sympy.utilities.pytest import raises
 

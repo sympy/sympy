@@ -5,6 +5,7 @@ from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, 
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factor_list
 from sympy.core.function import _mexpand
+from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import sin
 from sympy.utilities.pytest import slow, raises
 from sympy.utilities import default_sort_key
@@ -117,12 +118,15 @@ def test_quadratic_non_perfect_square():
     assert check_solutions(x**2 - x*y - y**2 - 3*y)
     assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
 
+def test_issue_9106():
+    assert check_integrality(-48 - 2*x*(3*x - 1) + y*(3*y - 1))
 
 @slow
 def test_quadratic_non_perfect_slow():
 
     assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23)
-    assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15)
+    # This leads to very large numbers.
+    # assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15)
     assert check_solutions(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7)
     assert check_solutions(-4 - x + 4*x**2 - y - 3*x*y - 4*y**2)
     assert check_solutions(1 + 2*x + 2*x**2 + 2*y + x*y - 2*y**2)
@@ -578,3 +582,23 @@ def check_solutions(eq):
                 break
 
     return okay
+
+def check_integrality(eq):
+    """
+    Check that the solutions returned by diophantine() are integers.
+    This should be seldom needed except for general quadratic
+    equations which are solved with rational transformations.
+    """
+    def _check_values(x):
+        """ Check a number of values. """
+        for i in range(-4, 4):
+            if not isinstance(simplify(x.subs(t, i)), Integer):
+                return False
+        return True
+
+    for soln in diophantine(eq, param=t):
+        for x in soln:
+            if not _check_values(x):
+                return False
+
+    return True

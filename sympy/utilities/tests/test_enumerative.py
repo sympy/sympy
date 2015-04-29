@@ -1,4 +1,4 @@
-from sympy.core.compatibility import xrange, zip_longest
+from sympy.core.compatibility import range, zip_longest
 from sympy.utilities.enumerative import (
     list_visitor,
     MultisetPartitionTraverser,
@@ -70,8 +70,8 @@ def multiset_partitions_baseline(multiplicities, components):
     cache = set()
     n = len(canon)
     for nc, q in _set_partitions(n):
-        rv = [[] for i in xrange(nc)]
-        for i in xrange(n):
+        rv = [[] for i in range(nc)]
+        for i in range(n):
             rv[q[i]].append(canon[i])
         canonical = tuple(
             sorted([tuple(p) for p in rv]))

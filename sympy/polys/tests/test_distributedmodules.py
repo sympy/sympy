@@ -12,6 +12,7 @@ from sympy.polys.orderings import lex, grlex, InverseOrder
 from sympy.polys.domains import QQ
 
 from sympy.abc import x, y, z
+from sympy.core.compatibility import range
 
 
 def test_sdm_monomial_mul():

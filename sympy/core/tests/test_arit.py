@@ -2,9 +2,9 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
-        sign, im, nan, Dummy, factorial
+        sign, im, nan, Dummy, factorial, comp
 )
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
@@ -1476,17 +1476,15 @@ def test_Mod():
     assert Mod(-3.3, 1) == 1 - point3
     assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
-    point3 = Float._new(Float(.3)._mpf_, 51)
-    assert e == point3 and e.is_Float
+    assert comp(e, .3) and e.is_Float
     e = Mod(1.3, .7)
-    point6 = Float._new(Float(.6)._mpf_, 51)
-    assert e == point6 and e.is_Float
+    assert comp(e, .6) and e.is_Float
     e = Mod(1.3, Rational(7, 10))
-    assert e == point6 and e.is_Float
+    assert comp(e, .6) and e.is_Float
     e = Mod(Rational(13, 10), 0.7)
-    assert e == point6 and e.is_Float
+    assert comp(e, .6) and e.is_Float
     e = Mod(Rational(13, 10), Rational(7, 10))
-    assert e == .6 and e.is_Rational
+    assert comp(e, .6) and e.is_Rational
 
     # check that sign is right
     r2 = sqrt(2)
@@ -1549,6 +1547,12 @@ def test_Mod():
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
     assert (factorial(n) % n).equals(0) is not False
+
+    # symbolic with known parity
+    n = Symbol('n', even=True)
+    assert Mod(n, 2) == 0
+    n = Symbol('n', odd=True)
+    assert Mod(n, 2) == 1
 
 
 def test_Mod_is_integer():

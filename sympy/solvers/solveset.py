@@ -4,13 +4,15 @@ This module contains functions to solve a single equation for a single variable.
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, C, Expr, Wild, Mul
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul
 from sympy.core.numbers import I, Number, Rational
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)
+from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
+                                                      HyperbolicFunction)
 from sympy.sets import FiniteSet, EmptySet, imageset, Union
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -66,7 +68,7 @@ def _invert_real(f, g_ys, symbol):
         return (f, g_ys)
 
     n = Dummy('n')
-    if hasattr(f, 'inverse') and not isinstance(f, C.TrigonometricFunction):
+    if hasattr(f, 'inverse') and not isinstance(f, TrigonometricFunction):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
         return _invert_real(f.args[0],
@@ -137,12 +139,12 @@ def invert_complex(f_x, y, x):
     the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
     Here, ``y`` is not necessarily a symbol.
 
-    Note that `invert_complex` and `invert_real` don't always produce the
+    Note that `invert\_complex` and `invert\_real` don't always produce the
     same result even for a seemingly simple function like ``exp(x)`` because
     the complex extension of real valued ``log`` is multivariate in the complex
     system and has infinitely many branches. If you are working with real
     values only or you are not sure with function to use you should use
-    `invert_real`.
+    `invert\_real`.
 
 
     Examples
@@ -193,7 +195,7 @@ def _invert_complex(f, g_ys, symbol):
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
     if hasattr(f, 'inverse') and \
-       not isinstance(f, C.TrigonometricFunction) and \
+       not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, exp):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
@@ -228,13 +230,13 @@ def domain_check(f, symbol, p):
     >>> domain_check(1/x, x, oo)
     False
 
-    The function relies on the assumption that the original form
-    of the equation has not been changed by automatic simplification.
+    * The function relies on the assumption that the original form
+      of the equation has not been changed by automatic simplification.
 
     >>> domain_check(x/x, x, 0) # x/x is automatically simplified to 1
     True
 
-    To deal with automatic evaluations use evaluate=False:
+    * To deal with automatic evaluations use evaluate=False:
 
     >>> domain_check(Mul(x, 1/x, evaluate=False), x, 0)
     False
@@ -278,17 +280,19 @@ def _is_function_class_equation(func_class, f, symbol):
     ========
 
     >>> from sympy.solvers.solveset import _is_function_class_equation
-    >>> from sympy import C, tan, sin, tanh, sinh, exp
+    >>> from sympy import tan, sin, tanh, sinh, exp
     >>> from sympy.abc import x
-    >>> _is_function_class_equation(C.TrigonometricFunction, exp(x) + tan(x), x)
+    >>> from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
+    ... HyperbolicFunction)
+    >>> _is_function_class_equation(TrigonometricFunction, exp(x) + tan(x), x)
     False
-    >>> _is_function_class_equation(C.TrigonometricFunction, tan(x) + sin(x), x)
+    >>> _is_function_class_equation(TrigonometricFunction, tan(x) + sin(x), x)
     True
-    >>> _is_function_class_equation(C.TrigonometricFunction, tan(x**2), x)
+    >>> _is_function_class_equation(TrigonometricFunction, tan(x**2), x)
     False
-    >>> _is_function_class_equation(C.TrigonometricFunction, tan(x + 2), x)
+    >>> _is_function_class_equation(TrigonometricFunction, tan(x + 2), x)
     True
-    >>> _is_function_class_equation(C.HyperbolicFunction, tanh(x) + sinh(x), x)
+    >>> _is_function_class_equation(HyperbolicFunction, tanh(x) + sinh(x), x)
     True
     """
     if f.is_Mul or f.is_Add:
@@ -370,14 +374,14 @@ def solveset_real(f, symbol):
     >>> solveset_real(exp(x) - a, x)
     {log(a)}
 
-    In case the equation has infinitely many solutions an infinitely indexed
-    `ImageSet` is returned.
+    * In case the equation has infinitely many solutions an infinitely indexed
+      `ImageSet` is returned.
 
     >>> solveset_real(sin(x) - 1, x)
     ImageSet(Lambda(_n, 2*_n*pi + pi/2), Integers())
 
-    If the equation is true for any arbitrary value of the symbol a `S.Reals`
-    set is returned.
+    * If the equation is true for any arbitrary value of the symbol a `S.Reals`
+      set is returned.
 
     >>> solveset_real(x - x, x)
     (-oo, oo)
@@ -409,8 +413,8 @@ def solveset_real(f, symbol):
         # wrong solutions we are using this technique only if both f and g and
         # finite for a finite input.
         result = Union(*[solveset_real(m, symbol) for m in f.args])
-    elif _is_function_class_equation(C.TrigonometricFunction, f, symbol) or \
-            _is_function_class_equation(C.HyperbolicFunction, f, symbol):
+    elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
+            _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_real_trig(f, symbol)
     elif f.is_Piecewise:
         result = EmptySet()
@@ -697,8 +701,9 @@ def solveset_complex(f, symbol):
     >>> solveset_complex(a*x**2 + b*x +c, x)
     {-b/(2*a) - sqrt(-4*a*c + b**2)/(2*a), -b/(2*a) + sqrt(-4*a*c + b**2)/(2*a)}
 
-    Due to the fact that complex extension of my real valued functions are
-    multivariate even some simple equations can have infinitely many solution.
+    * Due to the fact that complex extension of my real valued functions are
+      multivariate even some simple equations can have infinitely many
+      solution.
 
     >>> solveset_complex(exp(x) - 1, x)
     ImageSet(Lambda(_n, 2*_n*I*pi), Integers())
@@ -808,22 +813,25 @@ def solveset(f, symbol=None):
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy.abc import x
 
-    Symbols in Sympy are complex by default. A complex variable
-    will lead to the solving of the equation in complex domain
+    * Symbols in Sympy are complex by default. A complex variable
+      will lead to the solving of the equation in complex domain.
+
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
-    If you want to solve equation in real domain by the `solveset`
-    interface, then specify the variable to real. Alternatively use
-    `solveset_real`.
+    * If you want to solve equation in real domain by the `solveset`
+      interface, then specify the variable to real. Alternatively use
+      `solveset\_real`.
+
     >>> x = Symbol('x', real=True)
     >>> solveset(exp(x) - 1, x)
     {0}
     >>> solveset(Eq(exp(x), 1), x)
     {0}
 
-    Inequalities are always solved in the real domain irrespective of
-    the assumption on the variable for which the inequality is solved.
+    * Inequalities are always solved in the real domain irrespective of
+      the assumption on the variable for which the inequality is solved.
+
     >>> solveset(exp(x) > 1, x)
     (0, oo)
 

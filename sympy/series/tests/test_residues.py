@@ -26,9 +26,8 @@ def test_basic2():
 
 
 def _test_f():
-    # FIXME: we get infinite recursion here:
     f = Function("f")
-    assert residue(f(x)/x**5, x, 0) == f.diff(x, 4)/24
+    assert residue(f(x)/x**5, x, 0) == f(x).diff(x, 4).subs(x, 0)/24
 
 
 def test_functions():

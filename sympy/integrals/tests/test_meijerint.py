@@ -1,13 +1,15 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
+from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
-         meijerint_indefinite, _inflate_g, _create_lookup_table,
-         meijerint_definite, meijerint_inversion)
+        meijerint_indefinite, _inflate_g, _create_lookup_table,
+        meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
 from sympy.utilities.randtest import (verify_numerically,
-         random_complex_number as randcplx)
+        random_complex_number as randcplx)
+from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
+
 
 
 def test_rewrite_single():
@@ -152,6 +154,7 @@ def test_meijerint():
 
     # Test substitutions to change limits
     assert meijerint_definite(exp(x), x, -oo, 2) == (exp(2), True)
+    # Note: causes a NaN in _check_antecedents
     assert expand(meijerint_definite(exp(x), x, 0, I)[0]) == exp(I) - 1
     assert expand(meijerint_definite(exp(-x), x, 0, x)[0]) == \
         1 - exp(-exp(I*arg(x))*abs(x))
@@ -631,5 +634,11 @@ def test_fresnel():
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
+
 def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None
+
+
+def test_issue_8368():
+    assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
+        (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)

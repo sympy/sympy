@@ -176,6 +176,13 @@ class Operator(QExpr):
     def _eval_inverse(self):
         return self**(-1)
 
+    def __mul__(self, other):
+
+        if isinstance(other, IdentityOperator):
+            return self
+
+        return Mul(self, other)
+
 
 class HermitianOperator(Operator):
     """A Hermitian operator that satisfies H == Dagger(H).
@@ -304,13 +311,6 @@ class IdentityOperator(Operator):
             return other
 
         return Mul(self, other)
-
-    def __rmul__(self, other):
-
-        if isinstance(other, Operator):
-            return other
-
-        return Mul(other, self)
 
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:

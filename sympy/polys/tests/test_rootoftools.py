@@ -15,6 +15,7 @@ from sympy import (
 )
 
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
 
@@ -232,6 +233,11 @@ def test_RootOf_evalf():
     # issue 8617
     ans = [w.n(2) for w in solve(x**3 - x - 4)]
     assert RootOf(exp(x)**3 - exp(x) - 4, 0).n(2) in ans
+    # issue 9019
+    r0 = RootOf(x**2 + 1, 0, radicals=False)
+    r1 = RootOf(x**2 + 1, 1, radicals=False)
+    assert r0.n(4) == -1.0*I
+    assert r1.n(4) == 1.0*I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(RootOf(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'

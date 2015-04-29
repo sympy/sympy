@@ -13,7 +13,7 @@ from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    zeros)
 from sympy.printing.str import StrPrinter
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 from sympy.utilities.iterables import has_dups
 from sympy.utilities import default_sort_key
 
@@ -1032,6 +1032,7 @@ class FermionState(FockState):
         FockStateFermionKet((a,))
 
         A creator acting on vacuum below fermi vanishes
+
         >>> FKet([]).up(i)
         0
 
@@ -1074,10 +1075,12 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         An annihilator acting on vacuum above fermi vanishes
+
         >>> FKet([]).down(a)
         0
 
         Also below fermi, it vanishes, unless we specify a fermi level > 0
+
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)
@@ -1985,7 +1988,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = xrange(len(ops) - 1, -1, -1)
+        iter = range(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2015,7 +2018,7 @@ class NO(Expr):
         """
 
         ops = self.args[0].args
-        iter = xrange(0, len(ops))
+        iter = range(0, len(ops))
         for i in iter:
             if ops[i].is_q_creator:
                 yield i

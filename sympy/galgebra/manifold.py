@@ -22,6 +22,7 @@ from os import system
 import copy
 
 from sympy import trigsimp, simplify
+from sympy.core.compatibility import range
 
 from sympy.galgebra.ga import MV
 from sympy.galgebra.debug import oprint

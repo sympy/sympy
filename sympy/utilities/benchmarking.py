@@ -11,7 +11,7 @@ import timeit
 
 from inspect import getsource
 
-from sympy.core.compatibility import exec_
+from sympy.core.compatibility import exec_, range
 
 
 # from IPython.Magic.magic_timeit

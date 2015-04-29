@@ -14,7 +14,7 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma)
+    Contains, divisor_sigma, SymmetricDifference)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -23,6 +23,7 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.core.trace import Tr
+from sympy.core.compatibility import range
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -221,9 +222,8 @@ def test_latex_functions():
 
     assert latex(binomial(2, k)) == r"{\binom{2}{k}}"
 
-    assert latex(
-        FallingFactorial(3, k)) == r"{\left(3\right)}_{\left(k\right)}"
-    assert latex(RisingFactorial(3, k)) == r"{\left(3\right)}^{\left(k\right)}"
+    assert latex(FallingFactorial(3, k)) == r"{\left(3\right)}_{k}"
+    assert latex(RisingFactorial(3, k)) == r"{3}^{\left(k\right)}"
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
@@ -231,7 +231,7 @@ def test_latex_functions():
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
-    assert latex(Abs(x)) == r"\left\lvert{x}\right\rvert"
+    assert latex(Abs(x)) == r"\left|{x}\right|"
     assert latex(re(x)) == r"\Re{x}"
     assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
@@ -502,6 +502,11 @@ def test_latex_union():
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
+
+
+def test_latex_symmetric_difference():
+    assert latex(SymmetricDifference(Interval(2,5), Interval(4,7), \
+        evaluate = False)) == r'\left[2, 5\right] \triangle \left[4, 7\right]'
 
 
 def test_latex_Complement():
@@ -1166,14 +1171,14 @@ def test_modifiers():
     assert latex(symbols("xDdDot")) == r"\dddot{x}"
     assert latex(symbols("xDDot")) == r"\ddot{x}"
     assert latex(symbols("xBold")) == r"\boldsymbol{x}"
-    assert latex(symbols("xnOrM")) == r"\left\lVert{x}\right\rVert"
+    assert latex(symbols("xnOrM")) == r"\left\|{x}\right\|"
     assert latex(symbols("xAVG")) == r"\left\langle{x}\right\rangle"
     assert latex(symbols("xHat")) == r"\hat{x}"
     assert latex(symbols("xDot")) == r"\dot{x}"
     assert latex(symbols("xBar")) == r"\bar{x}"
     assert latex(symbols("xVec")) == r"\vec{x}"
-    assert latex(symbols("xAbs")) == r"\left\lvert{x}\right\rvert"
-    assert latex(symbols("xMag")) == r"\left\lvert{x}\right\rvert"
+    assert latex(symbols("xAbs")) == r"\left|{x}\right|"
+    assert latex(symbols("xMag")) == r"\left|{x}\right|"
     assert latex(symbols("xPrM")) == r"{x}'"
     assert latex(symbols("xBM")) == r"\boldsymbol{x}"
     # Test strings that are *only* the names of modifiers
@@ -1200,9 +1205,9 @@ def test_modifiers():
     # Check a few combinations
     assert latex(symbols("xvecdot")) == r"\dot{\vec{x}}"
     assert latex(symbols("xDotVec")) == r"\vec{\dot{x}}"
-    assert latex(symbols("xHATNorm")) == r"\left\lVert{\hat{x}}\right\rVert"
+    assert latex(symbols("xHATNorm")) == r"\left\|{\hat{x}}\right\|"
     # Check a couple big, ugly combinations
-    assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left\lvert{\breve{z}}\right\rvert}_{{\check{y}}'}"
+    assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left|{\breve{z}}\right|}_{{\check{y}}'}"
     assert latex(symbols('alphadothat_nVECDOT__tTildePrime')) == r"\hat{\dot{\alpha}}^{{\tilde{t}}'}_{\dot{\vec{n}}}"
 
 
@@ -1330,3 +1335,7 @@ def test_issue_7117():
     assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
     q = Pow(e, 2, evaluate=False)
     assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
+
+
+def test_issue_2934():
+    assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'

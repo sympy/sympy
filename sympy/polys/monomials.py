@@ -4,8 +4,8 @@ from __future__ import print_function, division
 
 from textwrap import dedent
 
-from sympy.core import S, C, Mul, Tuple, sympify
-from sympy.core.compatibility import exec_, iterable, xrange
+from sympy.core import S, Mul, Tuple, sympify
+from sympy.core.compatibility import exec_, iterable, range
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import public
@@ -87,7 +87,8 @@ def monomial_count(V, N):
     6
 
     """
-    return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
+    from sympy import factorial
+    return factorial(V + N) / factorial(V) / factorial(N)
 
 def monomial_mul(A, B):
     """
@@ -286,7 +287,7 @@ class MonomialOps(object):
         return ns[name]
 
     def _vars(self, name):
-        return [ "%s%s" % (name, i) for i in xrange(self.ngens) ]
+        return [ "%s%s" % (name, i) for i in range(self.ngens) ]
 
     def mul(self):
         name = "monomial_mul"
@@ -353,7 +354,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in xrange(self.ngens) ]
+        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in range(self.ngens) ]
         R = self._vars("r")
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), RAB="\n    ".join(RAB), R=", ".join(R))
         return self._build(code, name)
@@ -482,7 +483,7 @@ class Monomial(PicklableWithSlots):
         elif n > 0:
             exponents = self.exponents
 
-            for i in xrange(1, n):
+            for i in range(1, n):
                 exponents = monomial_mul(exponents, self.exponents)
 
             return self.rebuild(exponents)

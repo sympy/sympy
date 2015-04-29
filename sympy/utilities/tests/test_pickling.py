@@ -4,7 +4,7 @@ import warnings
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicType, ClassRegistry
+from sympy.core.core import BasicType
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
@@ -78,9 +78,7 @@ def test_core_basic():
     for c in (Atom, Atom(),
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
-              # BasicMeta, BasicMeta("test", (), {}),
               # BasicType, BasicType("test", (), {}),
-              ClassRegistry, ClassRegistry(),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 

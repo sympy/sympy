@@ -37,9 +37,6 @@ def test_basic1():
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
-    assert limit(gamma(1/x + 3), x, oo) == 2
-    assert limit(S.NaN, x, -oo) == S.NaN
-    assert limit(Order(2)*x, x, S.NaN) == S.NaN
     assert limit(1/(x - 1), x, 1, dir="+") == oo
     assert limit(1/(x - 1), x, 1, dir="-") == -oo
     assert limit(1/(5 - x)**3, x, 5, dir="+") == -oo
@@ -340,9 +337,8 @@ def test_extended_real_line():
 
 @XFAIL
 def test_order_oo():
-    from sympy import C
     x = Symbol('x', positive=True, finite=True)
-    assert C.Order(x)*oo != C.Order(1, x)
+    assert Order(x)*oo != Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
 

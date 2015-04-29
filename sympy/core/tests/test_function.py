@@ -9,6 +9,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
 
 f, g, h = symbols('f g h', cls=Function)
 

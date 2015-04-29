@@ -4,7 +4,7 @@ The dense matrix is stored as a list of lists
 
 """
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def trace(matlist, K):
@@ -28,7 +28,7 @@ def trace(matlist, K):
 
     """
     result = K.zero
-    for i in xrange(len(matlist)):
+    for i in range(len(matlist)):
         result += matlist[i][i]
     return result
 
@@ -154,7 +154,7 @@ def eye(n, K):
     [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     """
     result = []
-    for i in xrange(n):
+    for i in range(n):
         result.append([])
         for j in range(n):
             if (i == j):
@@ -216,7 +216,7 @@ def rowmul(matlist, index, k,  K):
     """
     Multiplies index row with k
     """
-    for i in xrange(len(matlist[index])):
+    for i in range(len(matlist[index])):
         matlist[index][i] = k*matlist[index][i]
     return matlist
 
@@ -226,7 +226,7 @@ def rowadd(matlist, index1, index2 , k, K):
     Adds the index1 row with index2 row which in turn is multiplied by k
     """
     result = []
-    for i in xrange(len(matlist[index1])):
+    for i in range(len(matlist[index1])):
         matlist[index1][i] = (matlist[index1][i] + k*matlist[index2][i])
     return matlist
 

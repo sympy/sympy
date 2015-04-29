@@ -34,7 +34,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered, xrange
+from sympy.core.compatibility import reduce, ordered, range
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
@@ -1358,7 +1358,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
         return(qa, qd, b)
 
     with DecrementLevel(DE):
-        for i in xrange(-p.degree(z), p.degree(t1) + 1):
+        for i in range(-p.degree(z), p.degree(t1) + 1):
             if not i:
                 continue
             elif i < 0:
@@ -1528,8 +1528,8 @@ class NonElementaryIntegral(Integral):
     part, so that the result of integrate will be the sum of an elementary
     expression and a NonElementaryIntegral.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import integrate, exp, log, Integral
     >>> from sympy.abc import x

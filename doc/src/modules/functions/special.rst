@@ -107,6 +107,7 @@ Riemann Zeta and Related Functions
 .. autoclass:: dirichlet_eta
 .. autoclass:: polylog
 .. autoclass:: lerchphi
+.. autoclass:: stieltjes
 
 Hypergeometric Functions
 ------------------------

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import random
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
@@ -74,13 +74,15 @@ class DenseMatrix(MatrixBase):
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    i = range(self.rows)[i]
+                    # XXX remove list() when PY2 support is dropped
+                    i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
                 else:
                     i = [i]
                 if isinstance(j, slice):
-                    j = range(self.cols)[j]
+                    # XXX remove list() when PY2 support is dropped
+                    j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
                 else:
@@ -501,9 +503,9 @@ class DenseMatrix(MatrixBase):
         """Returns an Immutable version of this Matrix
         """
         from .immutable import ImmutableMatrix as cls
-        if self.rows:
+        if self.rows and self.cols:
             return cls._new(self.tolist())
-        return cls._new(0, self.cols, [])
+        return cls._new(self.rows, self.cols, [])
 
     @classmethod
     def zeros(cls, r, c=None):
@@ -802,8 +804,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col
         row_op
         """
-        self._mat[j::self.cols] = list(map(lambda t: f(*t),
-            list(zip(self._mat[j::self.cols], list(range(self.rows))))))
+        self._mat[j::self.cols] = [f(*t) for t in list(zip(self._mat[j::self.cols], list(range(self.rows))))]
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -990,7 +991,7 @@ def symarray(prefix, shape):  # pragma: no cover
       more than one dimension the shape must be a tuple.
 
     Examples
-    --------
+    ========
     These doctests require numpy.
 
     >>> from sympy import symarray

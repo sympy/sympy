@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
 

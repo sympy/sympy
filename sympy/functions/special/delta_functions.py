@@ -162,6 +162,10 @@ class DiracDelta(Function):
     def _latex_no_arg(printer):
         return r'\delta'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.dirac_delta(self.args[0]._sage_())
+
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -244,3 +248,7 @@ class Heaviside(Function):
     def _eval_rewrite_as_sign(self, arg):
         if arg.is_real:
             return (sign(arg)+1)/2
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.heaviside(self.args[0]._sage_())
