@@ -20,7 +20,7 @@ First, make sure that you have done the following things
 - Change the version in the release branch in sympy/release.py. If you want to
   do a release candidate, change it to a [PEP
   440](https://www.python.org/dev/peps/pep-0440) compliant version like
-  0.7.3rc1.
+  0.7.3.rc1.
 
 - Change the version in master. This way, any additional changes made in master
   will be shown as coming from the right place. The master release should be
