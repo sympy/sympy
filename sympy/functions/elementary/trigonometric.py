@@ -1832,8 +1832,11 @@ class acos(InverseTrigonometricFunction):
     Notes
     =====
 
-    acos(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    ``acos(x)`` will evaluate automatically in the cases
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+
+    ``acos(zoo)`` evaluates to ``zoo``
+    (see note in :py:class`sympy.functions.elementary.trigonometric.asec`)
 
     Examples
     ========
@@ -2282,8 +2285,26 @@ class asec(InverseTrigonometricFunction):
     Notes
     =====
 
-    asec(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    ``asec(x)`` will evaluate automatically in the cases
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+
+    ``asec(x)`` has branch cut in the interval [-1, 1]. For complex arguments,
+    it can be defined [4]_ as
+
+    .. math::
+        sec^{-1}(z) = -i*(log(\sqrt{1 - z^2} + 1) / z)
+
+    At ``x = 0``, for positive branch cut, the limit evaluates to ``zoo``. For
+    negative branch cut, the limit
+
+    .. math::
+        \lim_{z \to 0}-i*(log(-\sqrt{1 - z^2} + 1) / z)
+
+    simplifies to :math:`-i*log(z/2 + O(z^3))` which ultimately evaluates to
+    ``zoo``.
+
+    As ``asex(x)`` = ``asec(1/x)``, a similar argument can be given for
+    ``acos(x)``.
 
     Examples
     ========
@@ -2306,6 +2327,7 @@ class asec(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
+    .. [4] http://refrence.wolfram.com/language/ref/ArcSec.html
     """
 
     @classmethod
