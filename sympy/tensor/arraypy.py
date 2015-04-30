@@ -708,16 +708,16 @@ class Arraypy(Basic):
 
         """
         return self._rank
-    
+
     @property
     def index_list(self):
         """Returns list of all possible indicies.
         The indices are sorted in ascending: from very first to very last.
         Another way to organize loops over Arraypy or Tensor.
-        
+
         Examples
         ========
-        
+
         >>> from sympy.tensor.arraypy import Arraypy
         >>> a = Arraypy((2,2))
         >>> print(a.index_list)
@@ -727,14 +727,14 @@ class Arraypy(Basic):
         >>> print(a)
         5  5  
         5  5  
-        
+
         """
         result_list = []
         idx = self.start_index
         for i in range(len(self)):
             result_list.append(idx)
             idx = self.next_index(idx)
-            
+
         return result_list
 
     def to_matrix(self):
