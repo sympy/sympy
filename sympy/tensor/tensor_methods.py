@@ -4,6 +4,7 @@ from itertools import permutations
 from sympy.tensor.arraypy import Arraypy, Tensor
 from random import randint
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.simplify import simplify
 
 
 def symmetric(in_arr):
@@ -350,46 +351,83 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
             result_tensor[
                 cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
         cur_index = tensor.next_index(cur_index)
-
+    
     return result_tensor
 
 
 def change_basis(tensor, transformation_matrix, old_to_new=True):
+    """
+    WORK IN PROGRESS
+    
+    Changes basis of input Tensor with help of transformation matrix from old to new (if corresponding argument is True) or from new to old (if False).
+
     if not isinstance(tensor, Tensor):
-        raise TypeError('First argiment must be of Tensor type')
-    if not isinstance(transformation_matrix, Arraypy):
-        transformation_matrix = transormation_matrix.to_matrix()
-    elif not isinstance(transformation_matrix, Matrix):
+        raise TypeError('First argument must be of Tensor type')
+    if not isinstance(transformation_matrix, Tensor):
         raise TypeError(
-            'Transformation_matrix must be of Matrix type or Arraypy with rank == 2')
-    inverse_transformation_matrix = transformation_matrix.inv()
+            'Transformation matrix must be of Tensor type')
+    if transformation_matrix.rank != 2:
+        raise ValueError('Transformation matrix must be of rank == 2')
+    if transformation_matrix.ind_char != (-1, 1):
+        raise ValueError('Transformation matrix valency must be (-1, 1)')
+
+    inv_transformation_matrix = transformation_matrix.to_matrix().inv()
 
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
-    arg = [(in_arr.start_index[i], in_arr.end_index[i])
-           for i in range(in_arr.rank)]
+    arg = [(tensor.start_index[i], tensor.end_index[i])
+           for i in range(tensor.rank)]
     result_tensor = Tensor(Arraypy(arg), tensor.ind_char)
+    
+    # lists, that represents where is upper index and where is low
+    upper_idx_numbers = [i for i in range(len(tensor.ind_char)) \
+                         if tensor.ind_char[i] == 1]
+    low_idx_numbers = [i for i in range(len(tensor.ind_char)) \
+                         if tensor.ind_char[i] == -1]
+    
+    # summ over upper indicies
+    for idx in tensor.index_list:
+        for i in upper_idx_numbers:
+            for j in range(tensor.start_index[i], tensor.end_index[i] + 1):
+                # forming index for multiplied tensor element
+                temp_idx = []
+                for k in range(len(idx)):
+                    if k == i:
+                        temp_idx.append(j)
+                    else:
+                        temp_idx.append(idx[k])
+                print(idx)
+                print(temp_idx)
+                print((idx[i], j))
+                print('______')
+                result_tensor[idx] += transformation_matrix[(j, idx[i])] * tensor[tuple(temp_idx)]
+        print('Summed element:' + str(result_tensor[idx]))
+
+    print('LOW INDICIES')
+    # summ over low indicies
+    for idx in tensor.index_list:
+        for i in low_idx_numbers:
+            for j in range(tensor.start_index[i], tensor.end_index[i] + 1):
+                # forming index for multiplied tensor element
+                temp_idx = []
+                for k in range(len(idx)):
+                    if k == i:
+                        temp_idx.append(j)
+                    else:
+                        temp_idx.append(idx[k])
+                print(idx)
+                print(temp_idx)
+                print((j, idx[i]))
+                print('______')                
+                result_tensor[idx] += inv_transformation_matrix[(idx[i], j)] * tensor[tuple(temp_idx)]
+        print('Summed element:' + str(result_tensor[idx]))
+    
+    for idx in result_tensor.index_list:
+        result_tensor[idx] = simplify(result_tensor[idx])
+        
+    return result_tensor
     """
-    idx = result_tensor.start_index
-    for i in range(len(result_tensor)):
-        result_tensor[idx] =
-    """
-    # loop over index characters of tensor
-    for i in tensor.ind_char:
-        if old_to_new:
-            if i == 1:
-
-                pass
-
-            elif i == -1:
-                pass
-        else:
-            if i == 1:
-                pass
-
-            elif i == -1:
-                pass
-
+    pass
 
 def perm_parity(lst):
     """\
@@ -433,3 +471,4 @@ def is_symmetric(array):
 def is_asymmetric(array):
     """Check if array or tensor is already asymmetric."""
     return array == asymmetric(array)
+
