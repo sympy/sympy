@@ -198,7 +198,7 @@ def gitrepos(branch=None, fork='sympy'):
 @task
 def get_sympy_version(version_cache=[]):
     """
-    Get the full version of SymPy being released (like 0.7.3.__weakrefoffset__rc1)
+    Get the full version of SymPy being released (like 0.7.3.rc1)
     """
     if version_cache:
         return version_cache[0]
