@@ -85,6 +85,14 @@ def test_next_index():
     assert array.next_index((0, 1)) == (1, 0)
     assert array.next_index((1, 0)) == (1, 1)
     assert array.next_index((1, 1)) == (0, 0)
+    
+def test_index_list():
+    array = Arraypy((2,2))
+    indecies = array.index_list
+    assert indecies[0] == (0, 0) == array.start_index
+    assert indecies[1] == (0, 1)
+    assert indecies[2] == (1, 0)
+    assert indecies[3] == (1, 1) == array.end_index
 
 
 def test_iterator():
