@@ -351,14 +351,13 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
             result_tensor[
                 cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
         cur_index = tensor.next_index(cur_index)
-    
+
     return result_tensor
 
 
 def change_basis(tensor, transformation_matrix, old_to_new=True):
-    """
-    WORK IN PROGRESS
-    
+    """WORK IN PROGRESS.
+
     Changes basis of input Tensor with help of transformation matrix from old to new (if corresponding argument is True) or from new to old (if False).
 
     if not isinstance(tensor, Tensor):
@@ -378,13 +377,13 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
     arg = [(tensor.start_index[i], tensor.end_index[i])
            for i in range(tensor.rank)]
     result_tensor = Tensor(Arraypy(arg), tensor.ind_char)
-    
+
     # lists, that represents where is upper index and where is low
     upper_idx_numbers = [i for i in range(len(tensor.ind_char)) \
                          if tensor.ind_char[i] == 1]
     low_idx_numbers = [i for i in range(len(tensor.ind_char)) \
                          if tensor.ind_char[i] == -1]
-    
+
     # summ over upper indicies
     for idx in tensor.index_list:
         for i in upper_idx_numbers:
@@ -418,16 +417,18 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
                 print(idx)
                 print(temp_idx)
                 print((j, idx[i]))
-                print('______')                
+                print('______')
                 result_tensor[idx] += inv_transformation_matrix[(idx[i], j)] * tensor[tuple(temp_idx)]
         print('Summed element:' + str(result_tensor[idx]))
-    
+
     for idx in result_tensor.index_list:
         result_tensor[idx] = simplify(result_tensor[idx])
-        
+
     return result_tensor
+
     """
     pass
+
 
 def perm_parity(lst):
     """\
@@ -471,4 +472,3 @@ def is_symmetric(array):
 def is_asymmetric(array):
     """Check if array or tensor is already asymmetric."""
     return array == asymmetric(array)
-
