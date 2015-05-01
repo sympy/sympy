@@ -5,6 +5,7 @@ from sympy.core import diff, Add, Symbol
 from sympy.simplify import simplify
 from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy, \
     matrix2tensor, list2arraypy, list2tensor
+from sympy.tensor.tensor_methods import is_asymmetric
 from sympy import sqrt
 
 """Module tensor_fields contains functions for working with the tensor fields:
@@ -622,6 +623,8 @@ def dw(omega, args):
 # Handling of a differential form
     if not isinstance(omega, (Tensor, Arraypy)):
         raise ValueError("The type of tensor must be Tensor or Arraypy")
+    if not is_asymmetric(omega):
+        raise ValueError("The differential form must be a skew-symmetric")
     idx_omega = omega.start_index[0]
 
     # Define the start index in the output tensor
@@ -750,6 +753,8 @@ def lie_w(omega, X, args):
     if not isinstance(omega, (Tensor, Arraypy)):
         raise ValueError(
             "The type of differential form must be Tensor or Arraypy")
+    if not is_asymmetric(omega):
+        raise ValueError("The differential form must be a skew-symmetric")
     idx_omega = omega.start_index[0]
 
 

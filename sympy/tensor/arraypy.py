@@ -488,6 +488,7 @@ class Arraypy(Basic):
         >>> a = Arraypy((2,2))
         >>> b = copy(a)
         >>> c = a
+
         """
 
         # creating new instance of Arraypy. All parameters are coping from
@@ -510,8 +511,10 @@ class Arraypy(Basic):
         return self
 
     def __next__(self):
-        """Next elemenet in Arraypy in iteration process. Allows to use Arraypy
-        instance in for loop.
+        """Next elemenet in Arraypy in iteration process.
+
+        Allows to use Arraypy instance in for loop.
+
         """
         if (self._iterator_index_number == self._loop_size):
             raise StopIteration
@@ -691,6 +694,7 @@ class Arraypy(Basic):
         """Return current index in iteration process.
 
         Use it only in loops over Arraypy/Tensor.
+
         """
         return self._current_index
 
@@ -723,10 +727,10 @@ class Arraypy(Basic):
         >>> print(a.index_list)
         [(0, 0), (0, 1), (1, 0), (1, 1)]
         >>> for i in a.index_list:
-        ...     a[i] = 5 
+        ...     a[i] = 5
         >>> print(a)
-        5  5  
-        5  5  
+        5  5
+        5  5
 
         """
         result_list = []
@@ -975,6 +979,7 @@ class Tensor(Arraypy):
         >>> a = Tensor(Arraypy((2,2)), (1,1))
         >>> b = copy(a)
         >>> c = a
+
         """
 
         return Tensor(copy(self.base), copy(self._ind_char))
