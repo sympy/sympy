@@ -723,7 +723,7 @@ class Arraypy(Basic):
         >>> print(a.index_list)
         [(0, 0), (0, 1), (1, 0), (1, 1)]
         >>> for i in a.index_list:
-        ...     a[i] = 5 
+        ...     a[i] = 5
         >>> print(a)
         5  5  
         5  5  
