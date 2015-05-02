@@ -351,7 +351,7 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
             result_tensor[
                 cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
         cur_index = tensor.next_index(cur_index)
-    
+
     return result_tensor
 
 
@@ -363,7 +363,6 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
     to new (if corresponding argument is True) or from new to old (if False).
     
     """
-
     if not isinstance(tensor, Tensor):
         raise TypeError('First argument must be of Tensor type')
     if not isinstance(transformation_matrix, Tensor):
@@ -384,13 +383,13 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
            for i in range(tensor.rank)]
     temp_tensor = Tensor(Arraypy(arg), tensor.ind_char)
     result_tensor = Tensor(Arraypy(arg), tensor.ind_char)
-    
+
     # lists, that represents where is upper index and where is low
     upper_idx_numbers = [i for i in range(len(tensor.ind_char)) \
                          if tensor.ind_char[i] == 1]
     low_idx_numbers = [i for i in range(len(tensor.ind_char)) \
                          if tensor.ind_char[i] == -1]
-    
+
     # summ over upper indicies
     for idx in tensor.index_list:
         for i in upper_idx_numbers:
@@ -422,6 +421,7 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
         result_tensor[idx] = expand(result_tensor[idx])
         
     return result_tensor
+
 
 def perm_parity(lst):
     """\
