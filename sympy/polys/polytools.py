@@ -6288,7 +6288,7 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative and not x.has(Piecewise))
+            sifted = sift(f.args, lambda x: bool(x.is_commutative) and not x.has(Piecewise))
             c, nc = sifted[True], sifted[False]
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
