@@ -1965,7 +1965,7 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
-    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
+    def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
         from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
@@ -1987,7 +1987,7 @@ class AlgebraicNumber(Expr):
 
         dom = minpoly.get_domain()
 
-        if coeffs != Tuple():
+        if coeffs is not None:
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
                 scoeffs = Tuple(*coeffs)
@@ -1998,8 +1998,6 @@ class AlgebraicNumber(Expr):
             if rep.degree() >= minpoly.degree():
                 rep = rep.rem(minpoly.rep)
 
-            sargs = (root, scoeffs)
-
         else:
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
@@ -2008,7 +2006,7 @@ class AlgebraicNumber(Expr):
                 rep = -rep
                 scoeffs = Tuple(-1, 0)
 
-            sargs = (root, scoeffs)
+        sargs = (root, scoeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):

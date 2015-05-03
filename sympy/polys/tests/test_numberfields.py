@@ -545,6 +545,8 @@ def test_AlgebraicNumber():
     assert a.is_aliased is True
 
     assert AlgebraicNumber(sqrt(2), []).rep == DMP([], QQ)
+    assert AlgebraicNumber(sqrt(2), ()).rep == DMP([], QQ)
+    assert AlgebraicNumber(sqrt(2), (0, 0)).rep == DMP([], QQ)
 
     assert AlgebraicNumber(sqrt(2), [8]).rep == DMP([QQ(8)], QQ)
     assert AlgebraicNumber(sqrt(2), [S(8)/3]).rep == DMP([QQ(8, 3)], QQ)
