@@ -26,7 +26,7 @@ def test_adjoint():
     MA = Matrix(2, 2, [1, 3, 2 - I, 4])
     assert adjoint(M) == MA
     assert adjoint(2*M) == 2*MA
-    assert adjoint(MatMul(2, M)) == MatMul(2, MA)
+    assert adjoint(MatMul(2, M)) == MatMul(2, MA).doit()
 
 
 def test_transpose():
@@ -38,7 +38,7 @@ def test_transpose():
     MT = Matrix(2, 2, [1, 3, 2 + I, 4])
     assert transpose(M) == MT
     assert transpose(2*M) == 2*MT
-    assert transpose(MatMul(2, M)) == MatMul(2, MT)
+    assert transpose(MatMul(2, M)) == MatMul(2, MT).doit()
 
 
 def test_factor_in_front():
