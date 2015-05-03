@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from itertools import permutations
-from sympy.tensor.arraypy import Arraypy, Tensor
+from sympy.tensor.arraypy import Arraypy, Tensor, copy
 from random import randint
 from sympy.functions.combinatorial.factorials import factorial
 from sympy import expand
@@ -204,8 +204,9 @@ def wedge(first_tensor, second_tensor):
     return coeff * asymmetric(tensor_product(first_tensor, second_tensor))
 
 
-def lower_index(tensor, metric_tensor, index_number_to_low):
+def lower_index(tensor, metric_tensor, *index_numbers_to_low):
     """Lowering one upper index of the tensor.
+    The index count starts from 1.
 
     Examples
     ========
@@ -235,7 +236,9 @@ def lower_index(tensor, metric_tensor, index_number_to_low):
     (-1, -1)
 
     """
-    index_number_to_low -= 1
+    index_numbers_to_low = list(index_numbers_to_low)
+    for i in range(len(index_numbers_to_low)):
+        index_numbers_to_low[i] -= 1
 
     if not isinstance(tensor, Tensor):
         raise TypeError('Input tensor must be of Tensor type')
@@ -249,37 +252,40 @@ def lower_index(tensor, metric_tensor, index_number_to_low):
     if not metric_tensor.ind_char == (-1, -1):
         raise ValueError('Metric tensor must be covariant')
 
-    if tensor.ind_char[index_number_to_low] == -1:
-        raise ValueError('Index number should point on upper index')
+    for index_number in index_numbers_to_low:
+        if tensor.ind_char[index_number] == -1:
+            raise ValueError('Index number should point on upper index')
 
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(tensor.start_index[i], tensor.end_index[i])
            for i in range(tensor.rank)]
     new_ind_char = [i for i in tensor.ind_char]
-    new_ind_char[index_number_to_low] = -1
+    for i in index_numbers_to_low:
+        new_ind_char[i] = -1
     result_tensor = Tensor(Arraypy(arg), new_ind_char)
-
-    cur_index = tensor.start_index
-    # loop over all tensor elements
-    for i in range(len(tensor)):
-        # loop over dimension pointed in index_number_to_low
-        for j in range(
-                tensor.start_index[index_number_to_low],
-                tensor.end_index[index_number_to_low] + 1):
-            # forming indexes
-            metric_tensor_index = (j, cur_index[index_number_to_low])
-            temp_index = [i for i in cur_index]
-            temp_index[index_number_to_low] = j
-            result_tensor[
-                cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
-        cur_index = tensor.next_index(cur_index)
+    
+    for index_number in index_numbers_to_low:
+        # loop over all tensor elements
+        for cur_index in tensor.index_list:
+            # loop over dimension pointed in index_number_to_low
+            for j in range(
+                    tensor.start_index[index_number],
+                    tensor.end_index[index_number] + 1):
+                # forming indexes
+                metric_tensor_index = (j, cur_index[index_number])
+                temp_index = [i for i in cur_index]
+                temp_index[index_number] = j
+                result_tensor[
+                    cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
+                tensor = copy(result_tensor)
 
     return result_tensor
 
 
-def raise_index(tensor, metric_tensor, index_number_to_low):
+def raise_index(tensor, metric_tensor, *index_numbers_to_raise):
     """Raising one lower index of the tensor.
+    The index count starts from 1.
 
     Examples
     ========
@@ -309,7 +315,9 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
     (1, 1)
 
     """
-    index_number_to_low -= 1
+    index_numbers_to_raise = list(index_numbers_to_raise)
+    for i in range(len(index_numbers_to_raise)):
+        index_numbers_to_raise[i] -= 1
 
     if not isinstance(tensor, Tensor):
         raise TypeError('Input tensor must be of Tensor type')
@@ -323,34 +331,36 @@ def raise_index(tensor, metric_tensor, index_number_to_low):
     if not metric_tensor.ind_char == (-1, -1):
         raise ValueError('Metric tensor must be covariant')
 
-    if tensor.ind_char[index_number_to_low] == 1:
-        raise ValueError('Index number should point on lower index')
+    for index_number in index_numbers_to_raise:
+        if tensor.ind_char[index_number] == 1:
+            raise ValueError('Index number should point on lower index')
 
     # forming list of tuples for Arraypy constructor of type a = Arraypy( [(a,
     # b), (c, d), ... , (y, z)] )
     arg = [(tensor.start_index[i], tensor.end_index[i])
            for i in range(tensor.rank)]
     new_ind_char = [i for i in tensor.ind_char]
-    new_ind_char[index_number_to_low] = 1
+    for i in index_numbers_to_raise:
+        new_ind_char[i] = 1
     result_tensor = Tensor(Arraypy(arg), new_ind_char)
 
     # finding contravariant reversed matrix
     metric_tensor = metric_tensor.to_matrix().inv()
 
-    cur_index = tensor.start_index
-    # loop over all tensor elements
-    for i in range(len(tensor)):
-        # loop over dimension pointed in index_number_to_low
-        for j in range(
-                tensor.start_index[index_number_to_low],
-                tensor.end_index[index_number_to_low] + 1):
-            # forming indexes
-            metric_tensor_index = (j, cur_index[index_number_to_low])
-            temp_index = [i for i in cur_index]
-            temp_index[index_number_to_low] = j
-            result_tensor[
-                cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
-        cur_index = tensor.next_index(cur_index)
+    for index_number in index_numbers_to_raise:
+        # loop over all tensor elements
+        for cur_index in tensor.index_list:
+            # loop over dimension pointed in index_number_to_low
+            for j in range(
+                    tensor.start_index[index_number],
+                    tensor.end_index[index_number] + 1):
+                # forming indexes
+                metric_tensor_index = (j, cur_index[index_number])
+                temp_index = [i for i in cur_index]
+                temp_index[index_number] = j
+                result_tensor[
+                    cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
+                tensor = copy(result_tensor)
 
     return result_tensor
 

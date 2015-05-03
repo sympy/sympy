@@ -1027,7 +1027,7 @@ class Tensor(Arraypy):
         """Method returns new Tensor instance, contract of current tensor.
         Result.
 
-        tensor rank will be current rank – 2 end valency will be (p - 1, q - 1).
+        tensor rank will be current rank – 2 and valency will be (p - 1, q - 1).
         Takes 2 parameters: first and second index number.
         Index numbers counts from “1”.
 
