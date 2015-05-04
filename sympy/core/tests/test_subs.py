@@ -640,3 +640,13 @@ def test_issue_5217():
     assert z.subs(sub) == 1 - s
     assert q == 4*x**2*y**2
     assert q.subs(sub) == 2*y**2*s
+
+
+def test_pow_eval_subs_no_cache():
+    from sympy.core.cache import clear_cache
+    from sympy.abc import x, y
+
+    s = 1/sqrt(x**2)
+    clear_cache()
+    result = s.subs(sqrt(x**2), y)
+    assert result == 1/y
