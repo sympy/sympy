@@ -264,7 +264,7 @@ def lower_index(tensor, metric_tensor, *index_numbers_to_low):
     for i in index_numbers_to_low:
         new_ind_char[i] = -1
     result_tensor = Tensor(Arraypy(arg), new_ind_char)
-    
+
     for index_number in index_numbers_to_low:
         # loop over all tensor elements
         for cur_index in tensor.index_list:
@@ -278,7 +278,7 @@ def lower_index(tensor, metric_tensor, *index_numbers_to_low):
                 temp_index[index_number] = j
                 result_tensor[
                     cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
-                tensor = copy(result_tensor)
+        tensor = copy(result_tensor)
 
     return result_tensor
 
@@ -360,7 +360,7 @@ def raise_index(tensor, metric_tensor, *index_numbers_to_raise):
                 temp_index[index_number] = j
                 result_tensor[
                     cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
-                tensor = copy(result_tensor)
+        tensor = copy(result_tensor)
 
     return result_tensor
 
