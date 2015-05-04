@@ -373,7 +373,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 
     if isinstance(eq, Expr):
         eq = [eq]
-    elif not is_iterable(eq):
+    elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
     atom_set = set().union(*[i.free_symbols for i in eq])
@@ -1286,8 +1286,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     whether given equation is linear or Non-linear based on the coefficients
     of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc
     which itself is a parameter named 'func_coeff'.
-    If the coefficient is constant, then the equation is said to be linear and 'is_linear'
-    returns True otherwise 'is_linear' returns False.
+    Note that "linear" here refers to the operator: terms such as ``x*diff(x,t)`` are
+    nonlinear, whereas terms like ``sin(t)*diff(x,t)`` are still linear operators.
     Second parameter is order of equation, it provides information about order
     of differential equations provided. The third parameters is the number of equation
     in the system.
@@ -1703,7 +1703,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     f = Wild('f')
     g = Wild('g')
-    u, v = symbols('u, v')
+    u, v = symbols('u, v', cls=Dummy)
     def check_type(x, y):
         r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
         r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
@@ -1778,7 +1778,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
     z = func[2].func
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    u, v, w = symbols('u, v, w')
+    u, v, w = symbols('u, v, w', cls=Dummy)
     a = Wild('a', exclude=[x(t), y(t), z(t), t])
     b = Wild('b', exclude=[x(t), y(t), z(t), t])
     c = Wild('c', exclude=[x(t), y(t), z(t), t])
@@ -6355,7 +6355,6 @@ def sysode_linear_2eq_order1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
-    l = Symbol('l')
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
@@ -6364,7 +6363,7 @@ def sysode_linear_2eq_order1(match_):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
 
-    # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
+    # for equations Eq(a1*diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
     r['a'] = -fc[0,x(t),0]/fc[0,x(t),1]
     r['c'] = -fc[1,x(t),0]/fc[1,y(t),1]
@@ -6425,7 +6424,7 @@ def _linear_2eq_order1_type1(x, y, t, r):
 
     .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t}
 
-    .. math:: y = c_1 (\lambda_1 - a) e^{\lambda_1 t} + c_2 (\lambda_2 - a) e^{\lambda_2 t}
+    .. math:: y = C_1 (\lambda_1 - a) e^{\lambda_1 t} + C_2 (\lambda_2 - a) e^{\lambda_2 t}
 
     where `C_1` and `C_2` being arbitary constants
 
@@ -6510,7 +6509,7 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
     .. math:: x' = ax + by + k1 , y' = cx + dy + k2
 
-    The general solution og this system is given by sum of its particular solution and the
+    The general solution of this system is given by sum of its particular solution and the
     general solution of the corresponding homogeneous system is obtained from type1.
 
     1. When `ad - bc \neq 0`. The particular solution will be
@@ -6536,8 +6535,8 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
     """
     r['k1'] = -r['k1']; r['k2'] = -r['k2']
-    x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
+        x0, y0 = symbols('x0, y0', cls=Dummy)
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
     elif (r['a']*a[d] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
