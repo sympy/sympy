@@ -222,14 +222,14 @@ is defined as the vector of the 3 partial derivatives of :math:`f` with respect 
 :math:`x`, :math:`y` and :math:`z` in the :math:`X`, :math:`Y` and :math:`Z`
 directions respectively.
 
-In the 3D Cartesian system, the divergence of a scalar field :math:`f`,
+In the 3D Cartesian system, the gradient of a scalar field :math:`f`,
 denoted by :math:`\nabla f` is given by -
 
 :math:`\nabla f = \frac{\partial f}{\partial x} \mathbf{\hat{i}} +
 \frac{\partial f}{\partial y}  \mathbf{\hat{j}} +
 \frac{\partial f}{\partial z} \mathbf{\hat{k}}`
 
-To compute the divergence of a scalar field in :mod:`physics.vector`, you
+To compute the gradient of a scalar field in :mod:`physics.vector`, you
 would do
 
   >>> from sympy.physics.vector import ReferenceFrame
