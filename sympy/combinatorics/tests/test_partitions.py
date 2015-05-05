@@ -82,7 +82,7 @@ def test_integer_partition():
     raises(ValueError, lambda: random_integer_partition(-1))
     assert random_integer_partition(1) == [1]
     assert random_integer_partition(10, seed=[1, 3, 2, 1, 5, 1]
-            ) == [5, 2, 1, 1, 1]
+                                    ) == [5, 2, 1, 1, 1]
 
 
 def test_rgs():
