@@ -229,7 +229,7 @@ denoted by :math:`\nabla f` is given by -
 \frac{\partial f}{\partial y}  \mathbf{\hat{j}} +
 \frac{\partial f}{\partial z} \mathbf{\hat{k}}`
 
-To compute the divergence of a vector field in :mod:`physics.vector`, you
+To compute the divergence of a scalar field in :mod:`physics.vector`, you
 would do
 
   >>> from sympy.physics.vector import ReferenceFrame
