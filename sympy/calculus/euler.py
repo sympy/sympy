@@ -3,7 +3,7 @@ from sympy.core.compatibility import (
     combinations_with_replacement, iterable, range)
 
 
-def euler_equations(L, funcs=(), varibs=()):
+def euler_equations(L, funcs=(), variables=()):
     r"""
     Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 
@@ -30,7 +30,7 @@ def euler_equations(L, funcs=(), varibs=()):
         The functions that the Lagrangian depends on. The Euler equations
         are differential equations for each of these functions.
 
-    varibs : Symbol or an iterable of Symbols
+    variables : Symbol or an iterable of Symbols
         The Symbols that are the independent variables of the functions.
 
     Returns
@@ -71,19 +71,19 @@ def euler_equations(L, funcs=(), varibs=()):
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
-    varibs = tuple(varibs) if iterable(varibs) else (varibs,)
+    variables = tuple(variables) if iterable(variables) else (variables,)
 
-    if not varibs:
-        varibs = funcs[0].args
+    if not variables:
+        variables = funcs[0].args
     else:
-        varibs = tuple(sympify(var) for var in varibs)
+        variables = tuple(sympify(var) for var in variables)
 
-    if not all(isinstance(v, Symbol) for v in varibs):
-        raise TypeError('Variables are not symbols, got %s' % varibs)
+    if not all(isinstance(v, Symbol) for v in variables):
+        raise TypeError('Variables are not symbols, got %s' % variables)
 
     for f in funcs:
-        if not varibs == f.args:
-            raise ValueError("Variables %s don't match args: %s" % (varibs, f))
+        if not variables == f.args:
+            raise ValueError("Variables %s don't match args: %s" % (variables, f))
 
     order = max(len(d.variables) for d in L.atoms(Derivative)
                 if d.expr in funcs)
@@ -92,7 +92,7 @@ def euler_equations(L, funcs=(), varibs=()):
     for f in funcs:
         eq = diff(L, f)
         for i in range(1, order + 1):
-            for p in combinations_with_replacement(varibs, i):
+            for p in combinations_with_replacement(variables, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
         eqns.append(Eq(eq))
 
