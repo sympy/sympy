@@ -3,7 +3,7 @@ from sympy.core.compatibility import (
     combinations_with_replacement, iterable, range)
 
 
-def euler_equations(L, funcs=(), vars=()):
+def euler_equations(L, funcs=(), varibs=()):
     r"""
     Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 
@@ -30,7 +30,7 @@ def euler_equations(L, funcs=(), vars=()):
         The functions that the Lagrangian depends on. The Euler equations
         are differential equations for each of these functions.
 
-    vars : Symbol or an iterable of Symbols
+    varibs : Symbol or an iterable of Symbols
         The Symbols that are the independent variables of the functions.
 
     Returns
@@ -71,19 +71,19 @@ def euler_equations(L, funcs=(), vars=()):
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
-    vars = tuple(vars) if iterable(vars) else (vars,)
+    varibs = tuple(varibs) if iterable(varibs) else (varibs,)
 
-    if not vars:
-        vars = funcs[0].args
+    if not varibs:
+        varibs = funcs[0].args
     else:
-        vars = tuple(sympify(var) for var in vars)
+        varibs = tuple(sympify(var) for var in varibs)
 
-    if not all(isinstance(v, Symbol) for v in vars):
-        raise TypeError('Variables are not symbols, got %s' % vars)
+    if not all(isinstance(v, Symbol) for v in varibs):
+        raise TypeError('Variables are not symbols, got %s' % varibs)
 
     for f in funcs:
-        if not vars == f.args:
-            raise ValueError("Variables %s don't match args: %s" % (vars, f))
+        if not varibs == f.args:
+            raise ValueError("Variables %s don't match args: %s" % (varibs, f))
 
     order = max(len(d.variables) for d in L.atoms(Derivative)
                 if d.expr in funcs)
@@ -92,7 +92,7 @@ def euler_equations(L, funcs=(), vars=()):
     for f in funcs:
         eq = diff(L, f)
         for i in range(1, order + 1):
-            for p in combinations_with_replacement(vars, i):
+            for p in combinations_with_replacement(varibs, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
         eqns.append(Eq(eq))
 
