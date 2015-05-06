@@ -407,6 +407,10 @@ def test_order_subs_limits():
     assert Order(10*x**2, (x, 2)).subs(x, y - 1) == Order(1, (y, 3))
 
 
+def test_issue_9351():
+    assert exp(x).series(x, 10, 1) == exp(10) + Order(x - 10, (x, 10))
+
+
 def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
