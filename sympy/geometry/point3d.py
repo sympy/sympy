@@ -77,7 +77,6 @@ class Point3D(GeometryEntity):
             if not eval:
                 return args[0]
             args = args[0].args
-        # elif was satisfied by the initial if statement and thus redundant
         else:
             if iterable(args[0]):
                 args = args[0]
