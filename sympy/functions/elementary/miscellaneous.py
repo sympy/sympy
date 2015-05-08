@@ -326,14 +326,16 @@ class MinMaxBase(Expr, LatticeOp):
         if not args:
             raise ValueError("The Max/Min functions must have arguments.")
 
-        args = (sympify(arg) for arg in args)
-
-        # first standard filter, for cls.zero and cls.identity
+        # first standard mapping and filters: for S.NaN, cls.zero, and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
         try:
+            args = frozenset(cls._new_args_map_sympify_nan(args))
             _args = frozenset(cls._new_args_filter(args))
-        except ShortCircuit:
-            return cls.zero
+        except ShortCircuit as sc:
+            # each of _new_args_map_sympify_nan and _new_args_filter
+            # throw ShortCircuit, with args[0] being the expected
+            # eval output
+            return sc.args[0]
 
         # second filter
         # variant I: remove ones which can be removed
@@ -355,6 +357,21 @@ class MinMaxBase(Expr, LatticeOp):
             return obj
 
     @classmethod
+    def _new_args_map_sympify_nan(cls, arg_sequence):
+        """
+        Generator mapping args.
+
+        sympify each arg, escape control flow if S.NaN is found.
+        """
+        for arg in arg_sequence:
+            arg = sympify(arg)
+            if arg is S.NaN:
+                # args[0] is what __new__ will return
+                raise ShortCircuit(S.NaN)
+            else:
+                yield arg
+
+    @classmethod
     def _new_args_filter(cls, arg_sequence):
         """
         Generator filtering args.
@@ -370,7 +387,8 @@ class MinMaxBase(Expr, LatticeOp):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:
-                raise ShortCircuit(arg)
+                # args[0] is what __new__ will return
+                raise ShortCircuit(cls.zero)
             elif arg == cls.identity:
                 continue
             elif arg.func == cls:
