@@ -405,6 +405,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Alistair Lynn: Removed duplicate classifiers list in setup.py
 #. Govind Sahai: Fixed some typos
 #. Adam Bloomston: Improve conversion of Decimal to Float
+#. Nguyen Truong Duy: Fix a bug in cancelling MatrixElement expressions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
