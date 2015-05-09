@@ -4,7 +4,7 @@ from sympy import (
     Derivative, diff, Dummy, E, Eq, erf, exp, exp_polar, expand,
     expand_multinomial, exptrigsimp, factor, factorial, FallingFactorial,
     Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Matrix,
+    hypersimp, I, Integral, integrate, log, logcombine, Matrix, MatrixSymbol,
     Mul, nsimplify, O, oo, pi, Piecewise,
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
@@ -1913,3 +1913,16 @@ def test_inequality_no_auto_simplify():
     e = Lt(lhs, rhs)
     assert e == Lt(lhs, rhs, evaluate=False)
     assert simplify(e)
+
+
+def test_issue_9324_simplify():
+    M = MatrixSymbol('M', 10, 10)
+    e = M[0, 0] + M[5, 4] + 1304
+    assert simplify(e) == e
+
+
+def test_issue_9324_powsimp_on_matrix_symbol():
+    M = MatrixSymbol('M', 10, 10)
+    expr = powsimp(M, deep=True)
+    assert expr == M
+    assert expr.args[0] == 'M'
