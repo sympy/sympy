@@ -118,10 +118,6 @@ class Limit(Expr):
         if e == z:
             return z0
 
-        for s in e.atoms(Symbol):
-            if s.is_zero:
-                e = e.subs(s, 0)
-
         if not e.has(z):
             return e
 
