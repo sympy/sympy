@@ -1218,7 +1218,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 matching_hints[s + "_Integral"] = r
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
+                    matching_hints[
+                        "nth_linear_constant_coeff_undetermined_coefficients"
+                            ] = r
+
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
