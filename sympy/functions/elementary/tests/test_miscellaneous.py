@@ -20,6 +20,7 @@ def test_Min():
     p_ = Symbol('p_', positive=True)
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
+    nan = S.NaN
 
     assert Min(5, 4) == 4
     assert Min(-oo, -oo) == -oo
@@ -71,6 +72,15 @@ def test_Min():
     assert Min(p, oo) == p
     assert Min(oo, p) == p
     assert Min(oo, oo) == oo
+
+    assert Min(nan, 4) == nan
+    assert Min(4, nan) == nan
+    assert Min(nan, oo) == nan
+    assert Min(oo, nan) == nan
+    assert Min(nan, -oo) == nan
+    assert Min(-oo, nan) == nan
+    assert Min(nan, x) == nan
+    assert Min(x, nan) == nan
 
     assert Min(n, n_).func is Min
     assert Min(nn, nn_).func is Min
@@ -127,8 +137,18 @@ def test_Max():
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
     r = Symbol('r', real=True)
+    nan = S.NaN
 
     assert Max(5, 4) == 5
+
+    assert Max(nan, 4) == nan
+    assert Max(4, nan) == nan
+    assert Max(nan, oo) == nan
+    assert Max(oo, nan) == nan
+    assert Max(nan, -oo) == nan
+    assert Max(-oo, nan) == nan
+    assert Max(nan, x) == nan
+    assert Max(x, nan) == nan
 
     # lists
 
