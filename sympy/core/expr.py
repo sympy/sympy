@@ -910,7 +910,10 @@ class Expr(Basic, EvalfMixin):
         gens, terms = set([]), []
 
         for term in Add.make_args(self):
-            coeff, _term = term.as_coeff_Mul()
+            try:
+                coeff, _term = term.as_coeff_Mul()
+            except AttributeError:
+                coeff, _term = S.One, term
 
             coeff = complex(coeff)
             cpart, ncpart = {}, []
