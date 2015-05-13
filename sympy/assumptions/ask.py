@@ -81,7 +81,7 @@ def _extract_facts(expr, symbol):
         args = [x for x in args if x is not None]
         if args:
             return expr.func(*args)
-    if args and all(x != None for x in args):
+    if args and all(x is not None for x in args):
         return expr.func(*args)
 
 
@@ -142,7 +142,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return bool(res)
 
-    if assumptions == True:
+    if assumptions is True:
         return
 
     if local_facts is None:
