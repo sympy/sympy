@@ -2469,3 +2469,7 @@ def test_doit():
     a = Matrix([[Add(x,x, evaluate=False)]])
     assert a[0] != 2*x
     assert a.doit() == Matrix([[2*x]])
+
+def test_issue_9396():
+    M = (x + y).subs(x, Matrix([[1, 2]]))
+    assert Matrix([[1, 2]]) in [t[0] for t in M.as_terms()[0]]
