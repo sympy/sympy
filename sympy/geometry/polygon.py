@@ -2217,7 +2217,7 @@ class Triangle(Polygon):
 
     @property
     def eulerline(self):
-        """The euler line of the triangle.
+        """The Euler line of the triangle.
 
         The line which passes through circumcenter, orthocenter and the median
         of a triangle.
@@ -2225,10 +2225,10 @@ class Triangle(Polygon):
         Returns
         =======
 
-        eulerline : Line if triangle is isoceles or right angled
+        eulerline : Line if triangle is isosceles or right angled
 
-        common center: Point if the triangle is equilateral in which case all the all
-        those points coincide at the same place.
+        common center: Point if the triangle is equilateral in which case all
+        those points coincide.
 
         Examples
         ========
