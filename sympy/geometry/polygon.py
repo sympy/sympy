@@ -2215,6 +2215,37 @@ class Triangle(Polygon):
         s = self.sides
         return Triangle(s[0].midpoint, s[1].midpoint, s[2].midpoint)
 
+    @property
+    def eulerline(self):
+        """The euler line of the triangle.
+
+        The line which passes through circumcenter, orthocenter and the median
+        of a triangle.
+
+        Returns
+        =======
+
+        eulerline : Line if triangle is isoceles or right angled
+
+        common center: Point if the triangle is equilateral in which case all the all
+        those points coincide at the same place.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.eulerline
+        Line(Point(1/2, 1/2), Point(1/3, 1/3))
+
+        """
+        if not self.is_equilateral():
+            points = list(set([self.circumcenter, self.orthocenter,
+                            self.centroid]))
+            return Line(points[0], points[1])
+        else:
+            return self.circumcenter
 
 def rad(d):
     """Return the radian value for the given degrees (pi = 180 degrees)."""

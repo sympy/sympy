@@ -1436,6 +1436,12 @@ def test_polygon():
     '''20151573611150265741278060334545897615974257/16073686192120448448157'''
     '''8148466200000000000)''')
 
+    # Eulerline
+    print(t1.eulerline)
+    assert t1.eulerline in (Line(Point(5/3, 5/3), Point(5/2, 5/2)), 
+                            Line(Point(0, 0), Point(5/3, 5/3)),
+                            Line(Point(0, 0), Point(5/2, 5/2)))
+
     # Ensure
     assert len(intersection(*bisectors.values())) == 1
     assert len(intersection(*altitudes.values())) == 1
