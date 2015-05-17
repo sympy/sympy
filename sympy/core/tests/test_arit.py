@@ -1537,7 +1537,7 @@ def test_Mod():
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
     assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
     assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
-    assert (6*pi) % (.3*x*pi) == pi*Mod(6, 0.3*x)
+    assert (6*pi) % (.3*x*pi) == 0.3*pi*Mod(20, x)
     assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
     assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)

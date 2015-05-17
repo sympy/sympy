@@ -50,7 +50,7 @@ def _construct_simple(coeffs, opt):
             # Use the maximum precision of all coefficients and add two extra
             # guard bits
             max_prec = max([c._prec for c in coeffs])
-            domain = RealField(prec=max_prec+2)
+            domain = RealField(prec=max_prec)
         else:
             if opt.field or rationals:
                 domain = QQ
