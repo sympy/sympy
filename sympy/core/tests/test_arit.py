@@ -1519,7 +1519,7 @@ def test_Mod():
     assert (x + 3) % 1 == Mod(x, 1)
     assert (x + 3.0) % 1 == Mod(1.*x, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
-    assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
+    #assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
@@ -1539,7 +1539,7 @@ def test_Mod():
     assert (-2*pi) % (3*pi) == pi
     assert (2*x + 2) % (x + 1) == 0
     assert (x*(x + 1)) % (x + 1) == (x + 1)*Mod(x, 1)
-    #assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
+    assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
     i = Symbol('i', integer=True)
     assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
     assert Mod(4*i, 4) == 0
