@@ -1913,3 +1913,13 @@ def test_inequality_no_auto_simplify():
     e = Lt(lhs, rhs)
     assert e == Lt(lhs, rhs, evaluate=False)
     assert simplify(e)
+
+def test_issue_9398():
+    from sympy import Number, cancel
+    assert cancel(1e-14) != 0
+    assert cancel(1e-14*I) != 0
+
+    assert simplify(1e-14) != 0
+    assert simplify(1e-14*I) != 0
+
+    assert (I*Number(1.)*Number(10)**Number(-14)).simplify() != 0
