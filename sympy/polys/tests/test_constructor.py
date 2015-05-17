@@ -4,7 +4,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.polys.domains.realfield import RealField
 
-from sympy import S, sqrt, sin
+from sympy import S, sqrt, sin, Float
 from sympy.abc import x, y
 
 def test_construct_domain():
@@ -106,7 +106,18 @@ def test_composite_option():
         (EX, {(1, 0): EX(y)})
 
 def test_precision():
-    for x in [1, 1e-2, 1e-6, 1e-13, 1e-14, 1e-16, 1e-20, 1e-100, 1e-300]:
+    f1 = Float("1.01")
+    f2 = Float("1.0000000000000000000001")
+    for x in [1, 1e-2, 1e-6, 1e-13, 1e-14, 1e-16, 1e-20, 1e-100, 1e-300,
+            f1, f2]:
         result = construct_domain([x])
         y = float(result[1][0])
         assert abs(x - y) / x < 1e-14  # Test relative accuracy
+
+    result = construct_domain([f1])
+    y = result[1][0]
+    assert y-1 > 1e-50
+
+    result = construct_domain([f2])
+    y = result[1][0]
+    assert y-1 > 1e-50
