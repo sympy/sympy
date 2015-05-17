@@ -1923,3 +1923,15 @@ def test_issue_9398():
     assert simplify(1e-14*I) != 0
 
     assert (I*Number(1.)*Number(10)**Number(-14)).simplify() != 0
+
+    assert cancel(1e-20) != 0
+    assert cancel(1e-20*I) != 0
+
+    assert simplify(1e-20) != 0
+    assert simplify(1e-20*I) != 0
+
+    assert cancel(1e-100) != 0
+    assert cancel(1e-100*I) != 0
+
+    assert simplify(1e-100) != 0
+    assert simplify(1e-100*I) != 0
