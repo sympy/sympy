@@ -1,9 +1,10 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly
+from sympy import S, sqrt, sin, oo, Poly, Float
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
+from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
@@ -740,3 +741,15 @@ def test_RR_double():
     assert RR(1e-15) > 1e-50
     assert RR(1e-20) > 1e-50
     assert RR(1e-40) > 1e-50
+
+def test_RR_Float():
+    f1 = Float("1.01")
+    f2 = Float("1.0000000000000000000001")
+    assert f1._prec == 53
+    assert f2._prec == 80
+    assert RR(f1)-1 > 1e-50
+    assert RR(f2)-1 < 1e-50 # RR's precision is lower than f2's
+
+    RR2 = RealField(prec=f2._prec)
+    assert RR2(f1)-1 > 1e-50
+    assert RR2(f2)-1 > 1e-50 # RR's precision is equal to f2's
