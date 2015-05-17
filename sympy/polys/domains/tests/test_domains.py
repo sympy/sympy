@@ -732,3 +732,11 @@ def test_ModularInteger():
 def test_QQ_int():
     assert int(QQ(2**2000, 3**1250)) == 455431
     assert int(QQ(2**100, 3)) == 422550200076076467165567735125
+
+def test_RR_double():
+    assert RR(3.14) > 1e-50
+    assert RR(1e-13) > 1e-50
+    assert RR(1e-14) > 1e-50
+    assert RR(1e-15) > 1e-50
+    assert RR(1e-20) > 1e-50
+    assert RR(1e-40) > 1e-50
