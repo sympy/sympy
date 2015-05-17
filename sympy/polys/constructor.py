@@ -47,8 +47,8 @@ def _construct_simple(coeffs, opt):
         domain, result = _construct_algebraic(coeffs, opt)
     else:
         if reals:
-            # Use the maximum precision of all coefficients and add two extra
-            # guard bits
+            # Use the maximum precision of all coefficients for the RR's
+            # precision
             max_prec = max([c._prec for c in coeffs])
             domain = RealField(prec=max_prec)
         else:
