@@ -22,10 +22,7 @@ class RealElement(_mpf, DomainElement):
         prec, rounding = self.context._prec_rounding
         tol = self.context.tol
 
-        if mpf_lt(mpf_abs(val, prec, rounding), tol):
-            self.__mpf__ = fzero
-        else:
-            self.__mpf__ = val
+        self.__mpf__ = val
 
     _mpf_ = property(lambda self: self.__mpf__, _set_mpf)
 

@@ -47,16 +47,10 @@ def _construct_simple(coeffs, opt):
         domain, result = _construct_algebraic(coeffs, opt)
     else:
         if reals:
-            # Use the maximum precision of all coefficients and add 8 extra
+            # Use the maximum precision of all coefficients and add two extra
             # guard bits
-            def get_prec(x):
-                if abs(x) < 1 and abs(x) > 1e-323:
-                    prec = int(- log(abs(x)) / log(2)) + 1
-                    return max([x._prec, prec])
-                else:
-                    return x._prec
-            max_prec = max([get_prec(c) for c in coeffs])
-            domain = RealField(prec=max_prec+8)
+            max_prec = max([c._prec for c in coeffs])
+            domain = RealField(prec=max_prec+2)
         else:
             if opt.field or rationals:
                 domain = QQ
