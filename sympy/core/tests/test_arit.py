@@ -1519,7 +1519,14 @@ def test_Mod():
     assert (x + 3) % 1 == Mod(x, 1)
     assert (x + 3.0) % 1 == Mod(1.*x, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
-    #assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
+
+    a = Mod(.6*x + y, .3*y)
+    b = Mod(0.1*y + 0.6*x, 0.3*y)
+    # Test that a, b are equal, with 1e-14 accuracy in coefficients
+    eps = 1e-14
+    assert abs((a.args[0] - b.args[0]).subs({x: 1, y: 1})) < eps
+    assert abs((a.args[1] - b.args[1]).subs({x: 1, y: 1})) < eps
+
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
