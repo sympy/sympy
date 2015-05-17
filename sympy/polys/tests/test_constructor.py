@@ -104,3 +104,9 @@ def test_composite_option():
 
     assert construct_domain({(1, 0): y}, composite=False) == \
         (EX, {(1, 0): EX(y)})
+
+def test_precision():
+    for x in [1, 1e-2, 1e-6, 1e-13, 1e-14]: # Fails for 1e-16, 1e-20
+        result = construct_domain([x])
+        y = float(result[1][0])
+        assert abs(x - y) / x < 1e-14  # Test relative accuracy
