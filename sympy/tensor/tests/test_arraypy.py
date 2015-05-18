@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, \
+from sympy.tensor.arraypy import Arraypy, TensorArray, list2arraypy, \
     list2tensor, matrix2arraypy, matrix2tensor
 from sympy.tensor.tensor_methods import tensor_product
 from sympy import Symbol, symbols
@@ -169,10 +169,10 @@ def test_calculation():
             assert c[idx] == 8
             idx = c.next_index(idx)
 
-    # Tensor
+    # TensorArray
     x0, x1, y0, y1 = symbols('X[0], X[1], Y[0], Y[1]')
-    tensor1 = Tensor(Arraypy(2, 'X'), 1)
-    tensor2 = Tensor(Arraypy(2, 'Y'), -1)
+    tensor1 = TensorArray(Arraypy(2, 'X'), 1)
+    tensor2 = TensorArray(Arraypy(2, 'Y'), -1)
     assert tensor1.rank == tensor2.rank == 1
 
     res_tensor = tensor_product(tensor1, tensor2)
@@ -204,7 +204,7 @@ def test_arraypy_converting():
     assert (isinstance(arr_list, list))
 
     arr_tensor = arr_arraypy.to_tensor((1, -1))
-    assert (isinstance(arr_tensor, Tensor))
+    assert (isinstance(arr_tensor, TensorArray))
 
     arr_matrix = arr_arraypy.to_matrix()
     assert (isinstance(arr_matrix, Matrix))
@@ -219,7 +219,7 @@ def test_tensor_initiation():
     base_shape = (2, 2, 2)
     tensor_base = Arraypy(base_shape)
     index_character = (1, -1, 1)
-    tensor = Tensor(tensor_base, index_character)
+    tensor = TensorArray(tensor_base, index_character)
 
     assert tensor.ind_char == index_character
     assert tensor.shape == base_shape
@@ -228,7 +228,7 @@ def test_tensor_initiation():
 
 
 def test_tensor_converting():
-    arr_tensor = Tensor(Arraypy((2, 2)), (1, 1))
+    arr_tensor = TensorArray(Arraypy((2, 2)), (1, 1))
 
     arr_list = arr_tensor.to_list()
     assert (isinstance(arr_list, list))
@@ -249,14 +249,14 @@ def test_converting_functions():
     assert (isinstance(arr_arraypy, Arraypy))
 
     arr_tensor = list2tensor(arr_list, (2, 2), (-1, -1))
-    assert (isinstance(arr_tensor, Tensor))
+    assert (isinstance(arr_tensor, TensorArray))
 
     # Matrix
     arr_arraypy = matrix2arraypy(arr_matrix)
     assert (isinstance(arr_arraypy, Arraypy))
 
     arr_tensor = matrix2tensor(arr_matrix, (-1, -1))
-    assert (isinstance(arr_tensor, Tensor))
+    assert (isinstance(arr_tensor, TensorArray))
 
 
 def test_equality():

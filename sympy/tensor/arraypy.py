@@ -7,8 +7,8 @@ from itertools import permutations
 from sympy.core.basic import Basic
 
 """
-Module "arraypy" describes Tensor and it's bases - Multidimentional arrays.
-Module consists of Arraypy class, Tensor class and converting functions:
+Module "arraypy" describes tensor and it's bases - Multidimentional arrays.
+Module consists of Arraypy class, TensorArray class and converting functions:
 list2arraypy, matrix2arraypy, list2tensor, matrix2tensor.
 """
 
@@ -693,7 +693,7 @@ class Arraypy(Basic):
     def iter_index(self):
         """Return current index in iteration process.
 
-        Use it only in loops over Arraypy/Tensor.
+        Use it only in loops over Arraypy/TensorArray.
 
         """
         return self._current_index
@@ -717,7 +717,7 @@ class Arraypy(Basic):
     def index_list(self):
         """Returns list of all possible indicies.
         The indices are sorted in ascending: from very first to very last.
-        Another way to organize loops over Arraypy or Tensor.
+        Another way to organize loops over Arraypy or TensorArray.
 
         Examples
         ========
@@ -777,8 +777,8 @@ class Arraypy(Basic):
         return res_matrix
 
     def to_tensor(self, ind_char):
-        """Convert Arraypy to Tensor. Tensor uses Arraypy as base. The only
-        parametrer is used to set valency of Tensor. Valency tuple length must
+        """Convert Arraypy to TensorArray. TensorArray uses Arraypy as base. The only
+        parametrer is used to set valency of TensorArray. Valency tuple length must
         be equal to shape tuple legth.
 
         Examples
@@ -788,10 +788,10 @@ class Arraypy(Basic):
         >>> a = list2arraypy(list(range(9)), (3,3))
         >>> b = a.to_tensor((-1,1))
         >>> type(b)
-        <class 'sympy.tensor.arraypy.Tensor'>
+        <class 'sympy.tensor.arraypy.TensorArray'>
 
         """
-        return Tensor(self, ind_char)
+        return TensorArray(self, ind_char)
 
     def to_list(self):
         """
@@ -820,9 +820,9 @@ class Arraypy(Basic):
         return res
 
 
-class Tensor(Arraypy):
+class TensorArray(Arraypy):
 
-    """Tensor based on Arraypy.
+    """TensorArray based on Arraypy.
 
     Parameters
     ==========
@@ -845,7 +845,7 @@ class Tensor(Arraypy):
 
     def __init__(self, array, ind_char):
         """
-        Class Tensor constructor.
+        Class TensorArray constructor.
         Input:
         -array - Arraypy array
         -_ind_char - tuple type, index character (valency). For example (-1,1,1)
@@ -867,7 +867,7 @@ class Tensor(Arraypy):
             raise ValueError(
                 'Length of Valency (ind_char) must be equal to length of Dimension of array')
 
-        if isinstance(array, Tensor):
+        if isinstance(array, TensorArray):
             raise TypeError('Wrong type. Fisrt argument must be array')
         elif isinstance(array, Arraypy):
             # overwriting parameters
@@ -891,7 +891,7 @@ class Tensor(Arraypy):
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor
         >>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
         >>> b = list2tensor ([2 for i in range(9)], (3,3), (1,-1))
         >>> c = a + b
@@ -907,7 +907,7 @@ class Tensor(Arraypy):
 
         res_base = self.base + other.base
 
-        res_tensor = Tensor(res_base, self._ind_char)
+        res_tensor = TensorArray(res_base, self._ind_char)
 
         return res_tensor
 
@@ -919,7 +919,7 @@ class Tensor(Arraypy):
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor
         >>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
         >>> b = list2tensor ([2 for i in range(9)], (3,3), (1,-1))
         >>> c = a - b
@@ -933,20 +933,20 @@ class Tensor(Arraypy):
 
         res_base = self.base - other.base
 
-        res_tensor = Tensor(res_base, self._ind_char)
+        res_tensor = TensorArray(res_base, self._ind_char)
 
         return res_tensor
 
     def __eq__(self, other):
         """
         Overloads '=='.
-        Tensor instances can be compared to each other.
+        TensorArray instances can be compared to each other.
         Instances equal if they have same shape, indexes and data.
 
         Examples
         ========
 
-        >>> from sympy import Arraypy, Tensor, list2tensor
+        >>> from sympy import Arraypy, TensorArray, list2tensor
         >>> a = list2tensor ([i for i in range(9)], (3, 3), (1, -1))
         >>> b = list2tensor ([i for i in range(9)], (3, 3), (1, 1))
         >>> c = list2tensor ([0 for i in range(9)], (3, 3), (1, -1))
@@ -961,8 +961,8 @@ class Tensor(Arraypy):
         >>> a == e
         True
         """
-        if not isinstance(other, Tensor):
-            raise TypeError('Compared instances must be Tensor type')
+        if not isinstance(other, TensorArray):
+            raise TypeError('Compared instances must be TensorArray type')
         if (self._ind_char != other._ind_char or self.base != other.base):
             return False
 
@@ -975,25 +975,25 @@ class Tensor(Arraypy):
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, copy
-        >>> a = Tensor(Arraypy((2,2)), (1,1))
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, copy
+        >>> a = TensorArray(Arraypy((2,2)), (1,1))
         >>> b = copy(a)
         >>> c = a
 
         """
 
-        return Tensor(copy(self.base), copy(self._ind_char))
+        return TensorArray(copy(self.base), copy(self._ind_char))
 
     @property
     def type_pq(self):
-        """Returns tuple, that represents valency of the Tensor in (P,Q)
+        """Returns tuple, that represents valency of the TensorArray in (P,Q)
         format, where P is upper (contrvarian) index and Q is lower
         (covariant).
 
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray
         >>> a = Arraypy ((3,3,3,3,3)).to_tensor((1, 1, -1, 1, -1))
         >>> a.type_pq
         (3, 2)
@@ -1015,7 +1015,7 @@ class Tensor(Arraypy):
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor
         >>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
         >>> a.ind_char
         (1, -1)
@@ -1024,17 +1024,17 @@ class Tensor(Arraypy):
         return self._ind_char
 
     def contract(self, idx1, idx2):
-        """Method returns new Tensor instance, contract of current tensor.
-        Result.
+        """Method returns new TensorArray instance, contract of current tensor.
 
-        tensor rank will be current rank – 2 and valency will be (p - 1, q - 1).
+        Result tensor rank will be current rank – 2 and valency will be
+        (p - 1, q - 1).
         Takes 2 parameters: first and second index number.
         Index numbers counts from “1”.
 
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor, list2arraypy
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor, list2arraypy
         >>> a = list2tensor(list(range(27)), (3,3,3), (1, -1, 1))
         >>> b = a.contract(1,2)
         >>> print (b)
@@ -1190,7 +1190,7 @@ class Tensor(Arraypy):
             new_valency.pop(idx2)
 
         # creating tensor
-        res_tensor = Tensor(res_array, tuple(new_valency))
+        res_tensor = TensorArray(res_array, tuple(new_valency))
 
         return res_tensor
 
@@ -1203,7 +1203,7 @@ class Tensor(Arraypy):
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor
         >>> a = list2tensor(list(range(6)), (3,2), (1, -1))
         >>> print (a)
         0 1
@@ -1237,18 +1237,18 @@ class Tensor(Arraypy):
                     raise ValueError('!!!ind_char elements must be 1 or -1')
         # reshaping Arraypy and creating tensor with new base
         new_base = self.base.reshape(new_shape)
-        new_tensor = Tensor(new_base, ind_char)
+        new_tensor = TensorArray(new_base, ind_char)
 
         return new_tensor
 
     def to_arraypy(self):
         """
-        Returns Arraypy - base of the current Tensor object.
+        Returns Arraypy - base of the current TensorArray object.
 
         Examples
         ========
 
-        >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor
         >>> a = list2tensor (list(range(9)), (3, 3), (1, -1))
         >>> b = a.to_arraypy()
         >>> type(b)
@@ -1261,7 +1261,7 @@ class Tensor(Arraypy):
         return copy(self.base)
 
     def to_tensor(self, ind_char):
-        """Converting Tensor to Tensor is not required, so this method is not
+        """Converting TensorArray to TensorArray is not required, so this method is not
         implemented."""
         raise NotImplementedError()
 
@@ -1274,7 +1274,7 @@ def matrix2arraypy(matrix):
     Examples
     ========
 
-    >>> from sympy.tensor.arraypy import Arraypy, Tensor, matrix2arraypy
+    >>> from sympy.tensor.arraypy import Arraypy, TensorArray, matrix2arraypy
     >>> from sympy import Matrix
     >>> a = Matrix(((1,2),(3,4)))
     >>> print (a)
@@ -1303,21 +1303,21 @@ def matrix2arraypy(matrix):
 
 def matrix2tensor(matrix, ind_char=(-1, -1)):
     """
-    Convert Matrix to Tensor.
+    Convert Matrix to TensorArray.
     Function take 2 arguments. First is a Matrix. The second is a tuple that
     represents index character. By default it is (-1,-1).
 
     Examples
     ========
 
-    >>> from sympy.tensor.arraypy import Arraypy, Tensor, matrix2tensor
+    >>> from sympy.tensor.arraypy import Arraypy, TensorArray, matrix2tensor
     >>> from sympy import Matrix
     >>> a = Matrix(((1,2),(3,4)))
     >>> print (a)
     Matrix([[1, 2], [3, 4]])
     >>> b = matrix2tensor(a, (1,-1))
     >>> type(b)
-    <class 'sympy.tensor.arraypy.Tensor'>
+    <class 'sympy.tensor.arraypy.TensorArray'>
     >>> print (b)
     1 2
     3 4
@@ -1326,7 +1326,7 @@ def matrix2tensor(matrix, ind_char=(-1, -1)):
         raise TypeError('Input attr must be Matrix type')
     else:
         n = matrix.shape
-        massiv = Tensor(Arraypy(n), ind_char)
+        massiv = TensorArray(Arraypy(n), ind_char)
 
         idx = massiv._start_index
         for i in range(len(matrix)):
@@ -1379,7 +1379,7 @@ def list2arraypy(list_arr, shape=0):
 
 
 def list2tensor(list_arr, shape=0, ind_char=0):
-    """Convert list to Tensor. It takes 3 arguments.
+    """Convert list to TensorArray. It takes 3 arguments.
 
     -a list, which elements will be elements of the tensor base.
     -a tuple, shape of the new tensor (by default it is 0, which will mean that
@@ -1389,10 +1389,10 @@ def list2tensor(list_arr, shape=0, ind_char=0):
     Examples
     ========
 
-    >>> from sympy.tensor.arraypy import Arraypy, Tensor, list2tensor
+    >>> from sympy.tensor.arraypy import Arraypy, TensorArray, list2tensor
     >>> a = list2tensor([i*2 for i in range(9)], (3,3), (-1,1))
     >>> type(a)
-    <class 'sympy.tensor.arraypy.Tensor'>
+    <class 'sympy.tensor.arraypy.TensorArray'>
     >>> print (a)
     0 2 4
     6 8 10
@@ -1425,7 +1425,7 @@ def list2tensor(list_arr, shape=0, ind_char=0):
             ind_char = -1
 
     # creating new tensor and filling it with list elements
-    result = Tensor(Arraypy(shape), ind_char)
+    result = TensorArray(Arraypy(shape), ind_char)
     idx = result._start_index
     for i in range(len(list_arr)):
         result[idx] = list_arr[i]

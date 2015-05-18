@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sympy.tensor.arraypy import Arraypy, Tensor, list2arraypy, \
+from sympy.tensor.arraypy import Arraypy, TensorArray, list2arraypy, \
     list2tensor, matrix2arraypy, matrix2tensor
 from sympy.tensor.tensor_methods import symmetric, asymmetric
 from sympy import Symbol, symbols
@@ -21,7 +21,7 @@ def test_symmetric():
     assert sym_arr[0, 2] == sym_arr[1, 1] == sym_arr[2, 0]
     assert sym_arr[2, 1] == sym_arr[1, 2]
 
-    # Tensor
+    # TensorArray
     tensor = arr.to_tensor((1, 1))
     sym_tensor = asymmetric(tensor)
 
@@ -40,7 +40,7 @@ def test_assymteric():
     assert asym_arr[0, 2] == -asym_arr[2, 0]
     assert asym_arr[2, 1] == -asym_arr[1, 2]
 
-    # Tensor
+    # TensorArray
     tensor = arr.to_tensor((1, 1))
     asym_tensor = asymmetric(tensor)
 
@@ -58,5 +58,5 @@ def test_input_and_output_arguments():
     tensor = arr.to_tensor((1, 1))
     sym_tensor = symmetric(tensor)
     asym_tensor = asymmetric(tensor)
-    assert isinstance(sym_tensor, Tensor)
-    assert isinstance(asym_tensor, Tensor)
+    assert isinstance(sym_tensor, TensorArray)
+    assert isinstance(asym_tensor, TensorArray)

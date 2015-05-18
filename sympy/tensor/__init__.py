@@ -4,7 +4,7 @@
 """
 from .indexed import IndexedBase, Idx, Indexed
 from .index_methods import get_contraction_structure, get_indices
-from .arraypy import Arraypy, Tensor, matrix2arraypy, matrix2tensor,\
+from .arraypy import Arraypy, TensorArray, matrix2arraypy, matrix2tensor,\
      list2arraypy, list2tensor
 from .tensor_fields import df, grad, curl, diverg, lie_xy, dw, lie_w
 from .riemannian_geometry import scal_prod, christoffel_1, christoffel_2,\
