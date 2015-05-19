@@ -14,6 +14,7 @@ from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
 
+
 def test_karr_convention():
     # Test the Karr summation convention that we want to hold.
     # See his paper "Summation in Finite Terms" for a detailed
@@ -129,11 +130,11 @@ def test_karr_proposition_2a():
         assert simplify(S - (g.subs(i, n) - g.subs(i, m))) == 0
 
     # m < n
-    test_the_sum(u,   u+v)
+    test_the_sum(u, u+v)
     # m = n
-    test_the_sum(u,   u  )
+    test_the_sum(u, u)
     # m > n
-    test_the_sum(u+v, u  )
+    test_the_sum(u+v, u)
 
 
 def test_karr_proposition_2b():
@@ -162,23 +163,23 @@ def test_karr_proposition_2b():
         assert S1 - (S2 + S3) == 0
 
     # l < m < n
-    test_the_sum(u,     u+v,   u+v+w)
+    test_the_sum(u, u+v, u+v+w)
     # l < m = n
-    test_the_sum(u,     u+v,   u+v  )
+    test_the_sum(u, u+v, u+v)
     # l < m > n
-    test_the_sum(u,     u+v+w, v    )
+    test_the_sum(u, u+v+w, v)
     # l = m < n
-    test_the_sum(u,     u,     u+v  )
+    test_the_sum(u, u, u+v)
     # l = m = n
-    test_the_sum(u,     u,     u    )
+    test_the_sum(u, u, u)
     # l = m > n
-    test_the_sum(u+v,   u+v,   u    )
+    test_the_sum(u+v, u+v, u)
     # l > m < n
-    test_the_sum(u+v,   u,     u+w  )
+    test_the_sum(u+v, u, u+w)
     # l > m = n
-    test_the_sum(u+v,   u,     u    )
+    test_the_sum(u+v, u, u)
     # l > m > n
-    test_the_sum(u+v+w, u+v,   u    )
+    test_the_sum(u+v+w, u+v, u)
 
 
 def test_arithmetic_sums():
@@ -453,7 +454,7 @@ def test_wallis_product():
 
 
 def test_telescopic_sums():
-    #checks also input 2 of comment 1 issue 4127
+    # checks also input 2 of comment 1 issue 4127
     assert Sum(1/k - 1/(k + 1), (k, 1, n)).doit() == 1 - 1/(1 + n)
     f = Function("f")
     assert Sum(
@@ -485,15 +486,15 @@ def test_limit_subs():
 
 def test_function_subs():
     f = Function("f")
-    S = Sum(x*f(y),(x,0,oo),(y,0,oo))
-    assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
-    assert S.subs(f(x),x) == S
-    raises(ValueError, lambda: S.subs(f(y),x+y) )
-    S = Sum(x*log(y),(x,0,oo),(y,0,oo))
-    assert S.subs(log(y),y) == S
+    S = Sum(x*f(y), (x, 0, oo), (y, 0, oo))
+    assert S.subs(f(y), y) == Sum(x*y, (x, 0, oo), (y, 0, oo))
+    assert S.subs(f(x), x) == S
+    raises(ValueError, lambda: S.subs(f(y), x+y))
+    S = Sum(x*log(y), (x, 0, oo), (y, 0, oo))
+    assert S.subs(log(y), y) == S
     f = Symbol('f')
-    S = Sum(x*f(y),(x,0,oo),(y,0,oo))
-    assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
+    S = Sum(x*f(y), (x, 0, oo), (y, 0, oo))
+    assert S.subs(f(y), y) == Sum(x*y, (x, 0, oo), (y, 0, oo))
 
 
 def test_equality():
@@ -525,7 +526,7 @@ def test_Sum_doit():
     assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
     # test nested sum evaluation
-    s = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
+    s = Sum(Sum(Sum(2, (z, 1, n+1)), (y, x+1, n)), (x, 1, n))
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
@@ -718,17 +719,17 @@ def test_change_index():
 
     assert Sum(x, (x, a, b)).change_index(x, x + 1, y) == \
         Sum(y - 1, (y, a + 1, b + 1))
-    assert Sum(x**2, (x, a, b)).change_index( x, x - 1) == \
+    assert Sum(x**2, (x, a, b)).change_index(x, x - 1) == \
         Sum((x+1)**2, (x, a - 1, b - 1))
-    assert Sum(x**2, (x, a, b)).change_index( x, -x, y) == \
+    assert Sum(x**2, (x, a, b)).change_index(x, -x, y) == \
         Sum((-y)**2, (y, -b, -a))
-    assert Sum(x, (x, a, b)).change_index( x, -x - 1) == \
+    assert Sum(x, (x, a, b)).change_index(x, -x - 1) == \
         Sum(-x - 1, (x, -b - 1, -a - 1))
-    assert Sum(x*y, (x, a, b), (y, c, d)).change_index( x, x - 1, z) == \
+    assert Sum(x*y, (x, a, b), (y, c, d)).change_index(x, x - 1, z) == \
         Sum((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
-    assert Sum(x, (x, a, b)).change_index( x, x + v) == \
+    assert Sum(x, (x, a, b)).change_index(x, x + v) == \
         Sum(-v + x, (x, a + v, b + v))
-    assert Sum(x, (x, a, b)).change_index( x, -x - v) == \
+    assert Sum(x, (x, a, b)).change_index(x, -x - v) == \
         Sum(-v - x, (x, -b - v, -a - v))
 
 
@@ -785,25 +786,25 @@ def test_factor_expand_subs():
     assert Sum(4 * x * y, (x, 1, y)).factor() == 4 * y * Sum(x, (x, 1, y))
 
     # test expand
-    assert Sum(x+1,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(1,(x,1,y))
-    assert Sum(x+a*x**2,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(a*x**2,(x,1,y))
+    assert Sum(x+1, (x, 1, y)).expand() == Sum(x, (x, 1, y)) + Sum(1, (x, 1, y))
+    assert Sum(x+a*x**2, (x, 1, y)).expand() == Sum(x, (x, 1, y)) + Sum(a*x**2, (x, 1, y))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand() \
         == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(power_exp=False) \
         == Sum(n*x**(n+1), (n, -1, oo)) + Sum(x**(n+1), (n, -1, oo))
-    assert Sum(a*n+a*n**2,(n,0,4)).expand() \
-        == Sum(a*n,(n,0,4)) + Sum(a*n**2,(n,0,4))
-    assert Sum(x**a*x**n,(x,0,3)) \
-        == Sum(x**(a+n),(x,0,3)).expand(power_exp=True)
-    assert Sum(x**(a+n),(x,0,3)) \
-        == Sum(x**(a+n),(x,0,3)).expand(power_exp=False)
+    assert Sum(a*n+a*n**2, (n, 0, 4)).expand() \
+        == Sum(a*n, (n, 0, 4)) + Sum(a*n**2, (n, 0, 4))
+    assert Sum(x**a*x**n, (x, 0, 3)) \
+        == Sum(x**(a+n), (x, 0, 3)).expand(power_exp=True)
+    assert Sum(x**(a+n), (x, 0, 3)) \
+        == Sum(x**(a+n), (x, 0, 3)).expand(power_exp=False)
 
     # test subs
-    assert Sum(1/(1+a*x**2),(x,0,3)).subs([(a,3)]) == Sum(1/(1+3*x**2),(x,0,3))
-    assert Sum(x*y,(x,0,y),(y,0,x)).subs([(x,3)]) == Sum(x*y,(x,0,y),(y,0,3))
-    assert Sum(x,(x,1,10)).subs([(x,y-2)]) == Sum(x,(x,1,10))
-    assert Sum(1/x,(x,1,10)).subs([(x,(3+n)**3)]) == Sum(1/x,(x,1,10))
-    assert Sum(1/x,(x,1,10)).subs([(x,3*x-2)]) == Sum(1/x,(x,1,10))
+    assert Sum(1/(1+a*x**2), (x, 0, 3)).subs([(a, 3)]) == Sum(1/(1+3*x**2), (x, 0, 3))
+    assert Sum(x*y, (x, 0, y), (y, 0, x)).subs([(x, 3)]) == Sum(x*y, (x, 0, y), (y, 0, 3))
+    assert Sum(x, (x, 1, 10)).subs([(x, y-2)]) == Sum(x, (x, 1, 10))
+    assert Sum(1/x, (x, 1, 10)).subs([(x, (3+n)**3)]) == Sum(1/x, (x, 1, 10))
+    assert Sum(1/x, (x, 1, 10)).subs([(x, 3*x-2)]) == Sum(1/x, (x, 1, 10))
 
 
 def test_distribution_over_equality():
@@ -829,5 +830,5 @@ def test_issue_4668():
 
 
 def test_matrix_sum():
-    A = Matrix([[0,1],[n,0]])
-    assert Sum(A,(n,0,3)).doit() == Matrix([[0, 4], [6, 0]])
+    A = Matrix([[0, 1], [n, 0]])
+    assert Sum(A, (n, 0, 3)).doit() == Matrix([[0, 4], [6, 0]])
