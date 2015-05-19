@@ -16,8 +16,6 @@ from sympy.utilities.iterables import sift
 from sympy.matrices import Matrix
 
 
-
-
 def _process_limits(*symbols):
     """Process the list of symbols and convert them to canonical limits,
     storing them as Tuple(symbol, lower, upper). The orientation of
@@ -47,7 +45,7 @@ def _process_limits(*symbols):
                         nlim = []
                     else:
                         nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim ))
+                    limits.append(Tuple(newsymbol, *nlim))
                     continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
@@ -59,6 +57,7 @@ def _process_limits(*symbols):
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
     return limits, orientation
+
 
 class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
@@ -248,7 +247,7 @@ class ExprWithLimits(Expr):
         return self.func(f, *limits)
 
     def _eval_interval(self, x, a, b):
-        limits = [( i if i[0] != x else (x,a,b) ) for i in self.limits]
+        limits = [(i if i[0] != x else (x, a, b)) for i in self.limits]
         integrand = self.function
         return self.func(integrand, *limits)
 
@@ -262,13 +261,13 @@ class ExprWithLimits(Expr):
         ========
 
         >>> from sympy import Sum, oo
-        >>> from sympy.abc import s,n
+        >>> from sympy.abc import s, n
         >>> Sum(1/n**s, (n, 1, oo)).subs(s, 2)
         Sum(n**(-2), (n, 1, oo))
 
         >>> from sympy import Integral
-        >>> from sympy.abc import x,a
-        >>> Integral(a*x**2,x).subs(x,4)
+        >>> from sympy.abc import x, a
+        >>> Integral(a*x**2, x).subs(x, 4)
         Integral(a*x**2, (x, 4))
 
         See Also
@@ -328,6 +327,7 @@ class ExprWithLimits(Expr):
         limits.reverse()
 
         return self.func(func, *limits)
+
 
 class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.
@@ -412,7 +412,7 @@ class AddWithLimits(ExprWithLimits):
     def _eval_expand_basic(self, **hints):
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
-            return Add(*[ self.func(i, *self.limits) for i in summand.args ])
+            return Add(*[self.func(i, *self.limits) for i in summand.args])
         elif summand.is_Matrix:
             return Matrix._new(summand.rows, summand.cols,
                 [self.func(i, *self.limits) for i in summand._mat])
