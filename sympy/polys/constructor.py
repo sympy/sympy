@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-from math import log
-
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
