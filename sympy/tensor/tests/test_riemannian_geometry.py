@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy.matrices import Matrix
-from sympy.tensor.arraypy import Arraypy, Tensor
+from sympy.tensor.arraypy import Arraypy, TensorArray
 from sympy.tensor.riemannian_geometry import scal_prod, christoffel_1,\
     christoffel_2, covar_der, covar_der_XY, riemann, ricci, scal_curv, k_sigma
 from sympy import symbols, cos, sin
@@ -54,11 +54,11 @@ def test_christoffel_1_gtnsr():
 
     print('test_christoffel_1_gtnsr_t  <=== actual test code')
     assert christoffel_1(g, var_list) == res_ten
-    assert isinstance(christoffel_1(g, var_list), Tensor)
+    assert isinstance(christoffel_1(g, var_list), TensorArray)
     assert christoffel_1(g, var_list).type_pq == (0, 3)
 
     assert christoffel_1(g, var_list, 't') == res_ten
-    assert isinstance(christoffel_1(g, var_list, 't'), Tensor)
+    assert isinstance(christoffel_1(g, var_list, 't'), TensorArray)
     assert christoffel_1(g, var_list).type_pq == (0, 3)
 
     print('test_christoffel_1_gtnsr_a  <=== actual test code')
@@ -84,11 +84,11 @@ def test_christoffel_1_gm():
 
     print('test_christoffel_1_gm_t  <=== actual test code')
     assert christoffel_1(g, var_list) == res_ten
-    assert isinstance(christoffel_1(g, var_list), Tensor)
+    assert isinstance(christoffel_1(g, var_list), TensorArray)
     assert christoffel_1(g, var_list).type_pq == (0, 3)
 
     assert christoffel_1(g, var_list, 't') == res_ten
-    assert isinstance(christoffel_1(g, var_list, 't'), Tensor)
+    assert isinstance(christoffel_1(g, var_list, 't'), TensorArray)
     assert christoffel_1(g, var_list).type_pq == (0, 3)
 
     print('test_christoffel_1_gm_a  <=== actual test code')
@@ -119,11 +119,11 @@ def test_christoffel_2_gtnsr():
 
     print('test_christoffel_2_gtnsr_t  <=== actual test code')
     assert christoffel_2(g, var_list) == res_ten
-    assert isinstance(christoffel_2(g, var_list), Tensor)
+    assert isinstance(christoffel_2(g, var_list), TensorArray)
     assert christoffel_2(g, var_list).type_pq == (0, 3)
 
     assert christoffel_2(g, var_list) == res_ten
-    assert isinstance(christoffel_2(g, var_list, 't'), Tensor)
+    assert isinstance(christoffel_2(g, var_list, 't'), TensorArray)
     assert christoffel_2(g, var_list).type_pq == (0, 3)
 
     print('test_christoffel_2_gtnsr_a  <=== actual test code')
@@ -149,11 +149,11 @@ def test_christoffel_2_gm():
 
     print('test_christoffel_2_gm_t  <=== actual test code')
     assert christoffel_2(g, var_list) == res_ten
-    assert isinstance(christoffel_2(g, var_list), Tensor)
+    assert isinstance(christoffel_2(g, var_list), TensorArray)
     assert christoffel_2(g, var_list).type_pq == (0, 3)
 
     assert christoffel_2(g, var_list, 't') == res_ten
-    assert isinstance(christoffel_2(g, var_list, 't'), Tensor)
+    assert isinstance(christoffel_2(g, var_list, 't'), TensorArray)
     assert christoffel_2(g, var_list).type_pq == (0, 3)
 
     print('test_christoffel_2_gm_a  <=== actual test code')
@@ -176,11 +176,11 @@ def test_covar_der():
 
     print('test_covar_der_t  <=== actual test code')
     assert covar_der(X, g, var_list) == res_ten
-    assert isinstance(covar_der(X, g, var_list), Tensor)
+    assert isinstance(covar_der(X, g, var_list), TensorArray)
     assert covar_der(X, g, var_list).type_pq == (1, 1)
 
     assert covar_der(X, g, var_list, 't') == res_ten
-    assert isinstance(covar_der(X, g, var_list, 't'), Tensor)
+    assert isinstance(covar_der(X, g, var_list, 't'), TensorArray)
     assert covar_der(X, g, var_list, 't').type_pq == (1, 1)
 
     print('test_covar_der_a  <=== actual test code')
@@ -204,11 +204,11 @@ def test_covar_der_XY():
 
     print('test_covar_der_XY_t  <=== actual test code')
     assert covar_der_XY(X, Y, g, var_list) == res_ten
-    assert isinstance(covar_der_XY(X, Y, g, var_list), Tensor)
+    assert isinstance(covar_der_XY(X, Y, g, var_list), TensorArray)
     assert covar_der_XY(X, Y, g, var_list).type_pq == (1, 0)
 
     assert covar_der_XY(X, Y, g, var_list, 't') == res_ten
-    assert isinstance(covar_der_XY(X, Y, g, var_list, 't'), Tensor)
+    assert isinstance(covar_der_XY(X, Y, g, var_list, 't'), TensorArray)
     assert covar_der_XY(X, Y, g, var_list).type_pq == (1, 0)
 
     print('test_covar_der_XY_a  <=== actual test code')
@@ -247,11 +247,11 @@ def test_riemann_gtnsr():
 
     print('test_riemann_gtnsr_t  <=== actual test code')
     assert riemann(g, var_list) == res_ten
-    assert isinstance(riemann(g, var_list), Tensor)
+    assert isinstance(riemann(g, var_list), TensorArray)
     assert riemann(g, var_list).type_pq == (1, 3)
 
     assert riemann(g, var_list, 't') == res_ten
-    assert isinstance(riemann(g, var_list, 't'), Tensor)
+    assert isinstance(riemann(g, var_list, 't'), TensorArray)
     assert riemann(g, var_list).type_pq == (1, 3)
 
     print('test_riemann_gtnsr_a  <=== actual test code')
@@ -285,11 +285,11 @@ def test_riemann_gm():
 
     print('test_riemann_gm_t  <=== actual test code')
     assert riemann(g, var_list) == res_ten
-    assert isinstance(riemann(g, var_list), Tensor)
+    assert isinstance(riemann(g, var_list), TensorArray)
     assert riemann(g, var_list).type_pq == (1, 3)
 
     assert riemann(g, var_list, 't') == res_ten
-    assert isinstance(riemann(g, var_list, 't'), Tensor)
+    assert isinstance(riemann(g, var_list, 't'), TensorArray)
     assert riemann(g, var_list).type_pq == (1, 3)
 
     print('test_riemann_gm_a  <=== actual test code')
@@ -329,11 +329,11 @@ def test_ricci_riemtnsr1():
 
     print('test_ricci_riemtnsr1_t  <=== actual test code')
     assert ricci(riemann_ten, var_list) == res_ten
-    assert isinstance(ricci(riemann_ten, var_list), Tensor)
+    assert isinstance(ricci(riemann_ten, var_list), TensorArray)
     assert ricci(riemann_ten, var_list).type_pq == (0, 2)
 
     assert ricci(riemann_ten, var_list, 't') == res_ten
-    assert isinstance(ricci(riemann_ten, var_list, 't'), Tensor)
+    assert isinstance(ricci(riemann_ten, var_list, 't'), TensorArray)
     assert ricci(riemann_ten, var_list, 't').type_pq == (0, 2)
 
     print('test_ricci_riemtnsr1_a  <=== actual test code')
@@ -373,11 +373,11 @@ def test_ricci_riemtnsr0():
 
     print('test_ricci_riemtnsr0_t  <=== actual test code')
     assert ricci(riemann_ten, var_list) == res_ten
-    assert isinstance(ricci(riemann_ten, var_list), Tensor)
+    assert isinstance(ricci(riemann_ten, var_list), TensorArray)
     assert ricci(riemann_ten, var_list).type_pq == (0, 2)
 
     assert ricci(riemann_ten, var_list, 't') == res_ten
-    assert isinstance(ricci(riemann_ten, var_list, 't'), Tensor)
+    assert isinstance(ricci(riemann_ten, var_list, 't'), TensorArray)
     assert ricci(riemann_ten, var_list, 't').type_pq == (0, 2)
 
     print('test_ricci_riemtnsr0_a  <=== actual test code')
