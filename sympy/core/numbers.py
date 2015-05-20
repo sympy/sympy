@@ -664,18 +664,20 @@ class Float(Number):
     is_Float = True
 
     def __new__(cls, num, prec=None):
-        if isinstance(num, string_types):
-            num = num.replace(' ', '')
-            if num.startswith('.') and len(num) > 1:
-                num = '0' + num
-            elif num.startswith('-.') and len(num) > 2:
-                num = '-0.' + num[2:]
-        elif isinstance(num, float) and num == 0:
+        if isinstance(num, float) and num == 0:
             num = '0'
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
+        else:
+            if not isinstance(num, string_types):
+                num = str(num)
+            num = num.replace(' ', '')
+            if num.startswith('.') and len(num) > 1:
+                num = '0' + num
+            elif num.startswith('-.') and len(num) > 2:
+                num = '-0.' + num[2:]
 
         if prec is None:
             dps = 15
