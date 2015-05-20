@@ -1935,3 +1935,10 @@ def test_issue_9398():
 
     assert simplify(1e-100) != 0
     assert simplify(1e-100*I) != 0
+
+    f = Float("1e-1000")
+    assert cancel(f) != 0
+    assert cancel(f*I) != 0
+
+    assert simplify(f) != 0
+    assert simplify(f*I) != 0
