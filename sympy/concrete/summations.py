@@ -1,5 +1,8 @@
 from __future__ import print_function, division
 
+from sympy.solvers.solvers import denoms
+from sympy.core.numbers import Integer
+from sympy.core.symbol import Symbol
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
@@ -466,6 +469,59 @@ def summation(f, *symbols, **kwargs):
     Product, product
 
     """
+    if not (isinstance(f, int) or isinstance(f, Integer)):
+        numer,denom = f.as_numer_denom()
+        # if f not an integer
+        # find the poles of the function if algorithm implemented
+        try:
+            poles = solve(denom)
+        except NotImplementedError:
+            return Sum(f, *symbols, **kwargs).doit(deep=False)
+        intPoles = []
+        # integer poles makes added into the list
+        for i in poles:
+            if (isinstance(i, Integer) or isinstance(i, int)):
+                intPoles.append(i)
+
+        # if integer poles are there
+        if intPoles != []:
+            min_intPole = min(intPoles)
+            max_intPole = max(intPoles)
+            # if in summation limits first value is an integer and second limit is a symbol
+            if ((isinstance(symbols[0][1], int) or isinstance(symbols[0][1], Integer)) and isinstance(symbols[0][2], Symbol)):
+                if symbols[0][1] >= min_intPole and symbols[0][1] <= max_intPole:
+                    return Sum(f, *symbols, **kwargs)
+
+                # if first limit is less the minimum poles
+                # then if the min_intPole is positive then summation should be done
+                # and else returned unevaluated
+                elif symbols[0][1] < min_intPole:
+                    if min_intPole > 0:
+                        return Sum(f, *symbols, **kwargs).doit(deep=False)
+                    else:
+                        return Sum(f, *symbols, **kwargs)
+
+                # if first limit is greater than max_intPole summation done
+                elif symbols[0][1] > max_intPole:
+                    return Sum(f, *symbols, **kwargs).doit(deep=False)
+
+            # if first limit is a Symbol and second limit is an integer
+            elif (isinstance(symbols[0][1], Symbol) and (isinstance(symbols[0][2], int) or isinstance(symbols[0][2], Integer))):
+                # if the second limit lies between the intPoles
+                # then returned unevaluated
+                if symbols[0][2] >= min_intPole and symbols[0][2] <= max_intPole:
+                    return Sum(f, *symbols, **kwargs)
+
+                # if first limit is less the minimum polesthen summation done
+                elif symbols[0][2] < min_intPole:
+                    return Sum(f, *symbols, **kwargs).doit(deep=False)
+
+                # else if second min_intPole is negative and max_intPoles
+                # is positive and second limit is greater than max_intPoles
+                # then returned unevaluated
+                elif min_intPole < 0 and max_intPole > 0 and symbols[0][2] > max_intPole:
+                    return Sum(f, *symbols, **kwargs)
+
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
 

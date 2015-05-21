@@ -828,6 +828,108 @@ def test_issue_4668():
     assert summation(1/n, (n, 2, oo)) == oo
 
 
+<<<<<<< HEAD
 def test_matrix_sum():
     A = Matrix([[0,1],[n,0]])
     assert Sum(A,(n,0,3)).doit() == Matrix([[0, 4], [6, 0]])
+=======
+
+def test_summation_over_poles_of_rational_functions():
+
+    ### When the first limit is an int or Integer and second limit is Symbol
+
+    ## When limit is less than the minimum integer limit
+    assert summation(1/((k+2)*(k+5)), (k, -7, n)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, -7, n))
+    assert summation(1/((k+5)*(k-2)), (k, -7, n)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, -7, n))
+    assert simplify(summation(1/((k-5)*(k-2)), (k, -5, n))) \
+    == simplify(-(n + 6)*(121*n**2 - 735*n + 1076)/(1080*(n - 4)*(n - 3)*(n - 2)))
+    assert simplify(summation(1/((k-5)*(k-2)), (k, 1, n))) \
+    == simplify(-n*(13*n**2 - 81*n + 122)/(36*(n - 4)*(n - 3)*(n - 2)))
+
+    ## When limit lies between the min integer pole and max integer pole
+    assert summation(1/((k+2)*(k+5)), (k, -3, n)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, -3, n))
+    assert summation(1/((k+5)*(k-2)), (k, -3, n)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, -3, n))
+    assert summation(1/((k+5)*(k-2)), (k, 1, n)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, 1, n))
+    assert summation(1/((k+5)*(k-2)), (k, 2, n)) \
+    == Sum(1/((k+5)*(k-2)), (k, 2, n))
+    assert summation(1/((k-5)*(k-2)), (k, 3, n)) \
+    == Sum(1/((k - 5)*(k - 2)), (k, 3, n))
+
+    ## When limit equals one of the integer poles
+    assert summation(1/((k+2)*(k+5)), (k, -5, n)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, -5, n))
+    assert summation(1/((k+2)*(k+5)), (k, -2, n)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, -2, n))
+    assert summation(1/((k+5)*(k-2)), (k, -5, n)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, -5, n))
+    assert summation(1/((k-5)*(k-2)), (k, 2, n)) \
+    == Sum(1/((k - 5)*(k - 2)), (k, 2, n))
+    assert summation(1/((k-5)*(k-2)), (k, 5, n)) \
+    == Sum(1/((k - 5)*(k - 2)), (k, 5, n))
+
+    ## When limit is greater than maximum integer pole
+    assert simplify(summation(1/((k+2)*(k+5)), (k, -1, n))) \
+    == simplify((n + 2)*(11*n**2 + 92*n + 189)/(18*(n + 3)*(n + 4)*(n + 5)))
+    assert simplify(summation(1/((k+2)*(k+5)), (k, 2, n))) \
+    == simplify((n - 1)*(37*n**2 + 301*n + 600)/(180*(n + 3)*(n + 4)*(n + 5)))
+    assert simplify(summation(1/(k*(k-2)), (k, 3, n))) \
+    == simplify((n - 2)*(3*n - 1)/(4*n*(n - 1)))
+    assert simplify(summation(1/((k-5)*(k-2)), (k, 7, n))) \
+    == simplify((n - 6)*(13*n**2 - 75*n + 104)/(36*(n - 4)*(n - 3)*(n - 2)))
+
+
+    ### When the first limit is an int or Integer and second limit is Symbol
+
+    ## When limit is less than the minimum integer limit
+    assert simplify(summation(1/((k+2)*(k+5)), (k, n, -7))) \
+    == simplify((n + 6)*(13*n**2 + 75*n + 104)/(36*(n + 2)*(n + 3)*(n + 4)))
+    assert simplify(summation(1/(k*(k-2)), (k, n, -7))) \
+    == simplify((n + 6)*(15*n - 23)/(112*(n - 2)*(n - 1)))
+    assert simplify(summation(1/((k-5)*(k-2)), (k, n, -5))) \
+    == simplify((n + 4)*(191*n**2 - 1544*n + 3057)/(1512*(n - 5)*(n - 4)*(n - 3)))
+    assert simplify(summation(1/((k-5)*(k-2)), (k, n, 1))) \
+    == simplify((n - 2)*(11*n**2 - 92*n + 189)/(18*(n - 5)*(n - 4)*(n - 3)))
+
+    ## When limit lies between the min integer pole and max integer pole
+    assert summation(1/((k+2)*(k+5)), (k, n, -3)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, n, -3))
+    assert summation(1/((k+5)*(k-2)), (k, n, -3)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, n, -3))
+    assert summation(1/((k+5)*(k-2)), (k, n, 1)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, n, 1))
+    assert summation(1/((k-5)*(k-2)), (k, n, 3)) \
+    == Sum(1/((k - 5)*(k - 2)), (k, n, 3))
+
+    ## When limit equals one of the integer poles
+    assert summation(1/((k+2)*(k+5)), (k, n, -5)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, n, -5))
+    assert summation(1/((k+2)*(k+5)), (k, n, -2)) \
+    == Sum(1/((k + 2)*(k + 5)), (k, n, -2))
+    assert summation(1/((k+5)*(k-2)), (k, n, -5)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, n, -5))
+    assert summation(1/((k+5)*(k-2)), (k, n, 2)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, n, 2))
+    assert summation(1/((k-5)*(k-2)), (k, n, 5)) \
+    == Sum(1/((k - 5)*(k - 2)), (k, n, 5))
+    assert summation(1/((k-5)*(k-2)), (k, n, 2)) \
+    == Sum(1/((k - 5)*(k - 2)), (k, n, 2))
+
+    ## When limit is greater than maximum integer pole
+    assert simplify(summation(1/((k+2)*(k+5)), (k, n, -1))) \
+    == simplify(-n*(13*n**2 + 81*n + 122)/(36*(n + 2)*(n + 3)*(n + 4)))
+    assert simplify(summation(1/((k+2)*(k+5)), (k, n, 2))) \
+    == simplify(-(n - 3)*(107*n**2 + 654*n + 964)/(630*(n + 2)*(n + 3)*(n + 4)))
+    assert summation(1/((k+5)*(k-2)), (k, n, 3)) \
+    == Sum(1/((k - 2)*(k + 5)), (k, n, 3))
+    assert simplify(summation(1/((k-5)*(k-2)), (k, n, 7))) \
+    == simplify(-(n - 8)*(47*n**2 - 368*n + 705)/(180*(n - 5)*(n - 4)*(n - 3)))
+
+
+    ### When both the limits are Symbols
+    assert simplify(summation(1/(k*(k+1)), (k, n, m))) == simplify((m - n + 1)/(n*(m + 1)))
+>>>>>>> 50492ca05caa19668582a4a4eea6987a8ecc2783
