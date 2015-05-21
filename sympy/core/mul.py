@@ -1025,7 +1025,9 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
-        real = True
+        return self._eval_real_imag(True)
+
+    def _eval_real_imag(self, real):
         zero = one_neither = False
 
         for t in self.args:
@@ -1062,10 +1064,12 @@ class Mul(Expr, AssocOp):
         if z:
             return False
         elif z is False:
-            return (S.ImaginaryUnit*self).is_real
+            return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
-        real = True
+        return self._eval_herm_antiherm(True)
+
+    def _eval_herm_antiherm(self, real):
         one_nc = zero = one_neither = False
 
         for t in self.args:
@@ -1099,7 +1103,7 @@ class Mul(Expr, AssocOp):
         if z:
             return False
         elif z is False:
-            return (S.ImaginaryUnit*self).is_hermitian
+            return self._eval_herm_antiherm(False)
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1127,8 +1131,9 @@ class Mul(Expr, AssocOp):
             pos * neg * nonpositive -> pos or zero -> None is returned
             pos * neg * nonnegative -> neg or zero -> False is returned
         """
+        return self._eval_pos_neg(1)
 
-        sign = 1
+    def _eval_pos_neg(self, sign):
         saw_NON = False
         for t in self.args:
             if t.is_positive:
@@ -1150,7 +1155,9 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_negative(self):
-        return (-self).is_positive
+        if self.args[0] == -1:
+            return (-self).is_positive  # remove -1
+        return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
         is_integer = self.is_integer
