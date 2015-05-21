@@ -24,7 +24,7 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Function, expand_power_exp, Lambda, _mexpand)
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
-from sympy.core.relational import Relational, Ge
+from sympy.core.relational import Relational, Ge, Gt, Le, Lt
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
@@ -802,6 +802,11 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
+        if not isinstance(fi, Ge) and not isinstance(fi, Gt) and not isinstance(fi, Le) and not isinstance(fi, Lt):
+            if not fi.has(Dummy):
+                gi = fi.doit()
+                if S.Infinity in fi.atoms() or S.NegativeInfinity in fi.atoms():
+                    return []
         if isinstance(fi, Equality):
             if 'ImmutableMatrix' in [type(a).__name__ for a in fi.args]:
                 f[i] = fi.lhs - fi.rhs

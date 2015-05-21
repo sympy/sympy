@@ -401,7 +401,15 @@ def solve_univariate_inequality(expr, gen, relational=True):
     e = expr.lhs - expr.rhs
     parts = n, d = e.as_numer_denom()
     if all(i.is_polynomial(gen) for i in parts):
-        solns = solve(n, gen, check=False)
+        if S.Infinity in n.atoms() or S.NegativeInfinity in n.atoms():
+            n = n.doit()
+            pop1 = Symbol('pop1')
+            pop2 = Symbol('pop2')
+            q = n.xreplace({S.Infinity: pop1, S.NegativeInfinity: pop2})
+            solns = solve(q, gen, check=False)
+            solns = [j.xreplace({pop1: S.Infinity, pop2: S.NegativeInfinity}) for j in solns]
+        else:
+            solns = solve(n, gen, check=False)
         singularities = solve(d, gen, check=False)
     else:
         solns = solve(e, gen, check=False)
