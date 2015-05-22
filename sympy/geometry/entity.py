@@ -14,7 +14,7 @@ from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
-from sympy.matrices import eye
+from sympy.matrices import eye, Transpose
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -344,8 +344,8 @@ class GeometryEntity(Basic):
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""
     rv = eye(3)
-    rv[2, 0] = x
-    rv[2, 1] = y
+    rv[0, 2] = x
+    rv[1, 2] = y
     return rv
 
 
@@ -366,19 +366,31 @@ def scale(x, y, pt=None):
 
 
 def rotate(th):
-    """Return the matrix to rotate a 2-D point about the origin by ``angle``.
+    """Return the matrix to rotate a 2-D point counterclockwise about the origin
+     by ``angle``.
 
-    The angle is measured in radians. To Point a point about a point other
+    The angle is measured in radians. To rotate a point about a point other
     then the origin, translate the Point, do the rotation, and
     translate it back:
 
     >>> from sympy.geometry.entity import rotate, translate
     >>> from sympy import Point, pi
-    >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
-    >>> Point(1, 1).transform(rot_about_11)
+    >>> t1 = translate(-1, -1)
+    >>> r1 = rotate(pi/2)
+    >>> t2 = translate(1, 1)
+    >>> p = Point(1, 1)
+    >>> p = p.transform(t1)
+    >>> p
+    Point(0, 0)
+    >>> p = p.transform(r1)
+    >>> p
+    Point(0, 0)
+    >>> p = p.transform(t2)
+    >>> p
     Point(1, 1)
-    >>> Point(0, 0).transform(rot_about_11)
-    Point(2, 0)
+    >>>
+    >>> Point(0, 0).transform(t1).transform(r1).transform(t2)
+    Point(0, 2)
     """
     s = sin(th)
     rv = eye(3)*cos(th)
