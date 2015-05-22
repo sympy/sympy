@@ -1081,10 +1081,14 @@ class Mul(Expr, AssocOp):
             if t.is_antihermitian:
                 real = not real
             elif t.is_hermitian:
-                if zero is False:
-                    zero = fuzzy_not(t.is_nonzero)
-                    if zero:
-                        return True
+                if not zero:
+                    z = t.is_zero
+                    if not z and zero is False:
+                        zero = z
+                    elif z:
+                        if all(a.is_finite for a in self.args):
+                            return True
+                        return
             elif t.is_hermitian is False:
                 if one_neither:
                     return
@@ -1141,7 +1145,9 @@ class Mul(Expr, AssocOp):
             elif t.is_negative:
                 sign = -sign
             elif t.is_zero:
-                return False
+                if all(a.is_finite for a in self.args):
+                    return False
+                return
             elif t.is_nonpositive:
                 sign = -sign
                 saw_NON = True
