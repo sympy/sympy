@@ -182,6 +182,8 @@ def test_point():
     assert p4.transform(Matrix([[-1, 0, 0], [0, -1, 0], [0, 0, 0]])) == \
            Point(-1, -1)
     raises(ValueError, lambda: p3.transform(p3))
+    raises(ValueError, lambda: p.transform(Matrix([[1, 0], [0, 1]])))
+    
 
 def test_point3D():
     p1 = Point3D(x1, x2, x3)
@@ -280,6 +282,7 @@ def test_point3D():
     trans = Matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]])
     assert p.transform(trans) == Point3D(2, 2, 2)
     raises(ValueError, lambda: p.transform(p))
+    raises(ValueError, lambda: p.transform(Matrix([[1, 0], [0, 1]])))
 
     # Test Equals
     assert p.equals(x1) == False

@@ -513,7 +513,7 @@ class Point3D(GeometryEntity):
         geometry.entity.scale
         geometry.entity.translate
         """
-        if isinstance(matrix, Matrix):
+        if isinstance(matrix, Matrix) and matrix.shape == (4, 4):
             from sympy.matrices.expressions import Transpose
             x, y, z = self.args
             m = Transpose(matrix)

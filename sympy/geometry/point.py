@@ -516,7 +516,7 @@ class Point(GeometryEntity):
         geometry.entity.scale
         geometry.entity.translate
         """
-        if isinstance(matrix, Matrix):
+        if isinstance(matrix, Matrix) and matrix.shape == (3, 3):
             x, y = self.args
             matrix_t = Transpose(matrix)
             return Point(*(Matrix(1, 3, [x, y, 1])*matrix_t).tolist()[0][:2])
