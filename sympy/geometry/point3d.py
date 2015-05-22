@@ -513,10 +513,13 @@ class Point3D(GeometryEntity):
         geometry.entity.scale
         geometry.entity.translate
         """
-        from sympy.matrices.expressions import Transpose
-        x, y, z = self.args
-        m = Transpose(matrix)
-        return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
+        if isinstance(matrix, Matrix):
+            from sympy.matrices.expressions import Transpose
+            x, y, z = self.args
+            m = Transpose(matrix)
+            return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
+        else:
+            raise ValueError("You must specify a 4x4 matrix to transform by")
 
     def dot(self, p2):
         """Return dot product of self with another Point."""
