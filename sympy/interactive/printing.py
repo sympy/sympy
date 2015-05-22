@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+import sys
 from distutils.version import LooseVersion as V
 from io import BytesIO
 
@@ -212,6 +213,23 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     else:
         ip.set_hook('result_display', _result_display)
 
+def _is_ipython(shell):
+    """Is a shell instance an IPython shell?"""
+    # shortcut, so we don't import IPython if we don't have to
+    if 'IPython' not in sys.modules:
+        return False
+    try:
+        from IPython.core.interactiveshell import InteractiveShell
+    except ImportError:
+        # IPython < 0.11
+        try:
+            from IPython.iplib import InteractiveShell
+        except ImportError:
+            # Reaching this points means IPython has changed in a backward-incompatible way
+            # that we don't know about. Warn?
+            return False
+    return isinstance(shell, InteractiveShell)
+
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
@@ -339,13 +357,19 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             from sympy.printing import sstrrepr as stringify_func
 
     # Even if ip is not passed, double check that not in IPython shell
+    in_ipython = False
     if ip is None:
         try:
             ip = get_ipython()
         except NameError:
             pass
+        else:
+            in_ipython = (ip is not None)
 
-    if ip and ip.__module__.startswith('IPython') and pretty_print:
+    if ip and not in_ipython:
+        in_ipython = _is_ipython(ip)
+
+    if in_ipython and pretty_print:
         try:
             import IPython
             # IPython 1.0 deprecates the frontend module, so we import directly
@@ -384,7 +408,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
-    if ip is not None and ip.__module__.startswith('IPython'):
+    if in_ipython:
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
                                print_builtin, latex_printer)
