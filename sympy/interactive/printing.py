@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from distutils.version import LooseVersion as V
 from io import BytesIO
 
 from sympy import latex as default_latex
@@ -166,7 +167,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             print(repr(arg))
 
     import IPython
-    if IPython.__version__ >= '0.11':
+    if V(IPython.__version__) >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
@@ -350,7 +351,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             # IPython 1.0 deprecates the frontend module, so we import directly
             # from the terminal module to prevent a deprecation message from being
             # shown.
-            if IPython.__version__ >= '1.0':
+            if V(IPython.__version__) >= '1.0':
                 from IPython.terminal.interactiveshell import TerminalInteractiveShell
             else:
                 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
