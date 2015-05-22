@@ -1,6 +1,8 @@
 """ Caching facility for SymPy """
 from __future__ import print_function, division
 
+from distutils.version import LooseVersion as V
+
 class _cache(list):
     """ List of cached functions """
 
@@ -49,7 +51,7 @@ try:
         warn("fastcache version >= 0.4.0 required", UserWarning)
         raise ImportError
         # ensure minimum required version of fastcache is present
-    if fastcache.__version__ < '0.4.0':
+    if V(fastcache.__version__) < '0.4.0':
         warn("fastcache version >= 0.4.0 required, detected {}"\
              .format(fastcache.__version__), UserWarning)
         raise ImportError
