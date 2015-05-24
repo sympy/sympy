@@ -3072,7 +3072,7 @@ def test_sympy__tensor__arraypy__Arraypy():
 
 
 @XFAIL
-def test_sympy__tensor__arraypy__Tensor():
+def test_sympy__tensor__arraypy__TensorArray():
     from sympy.tensor.arraypy import Arraypy, TensorArray
     assert _test_args(TensorArray(Arraypy((2, 2)), (1, 1)))
 

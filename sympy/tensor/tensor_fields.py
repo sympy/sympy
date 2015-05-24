@@ -753,8 +753,11 @@ def tensor2wedgearray(A):
     >>> y2[2, 0] = x2
     >>> y2[2, 1] = -x1
     >>> A=tensor2wedgearray(y2)
-    >>> print(A._output)
-    {(0, 1): x3, (1, 2): x1, (0, 2): -x2}
+    >>> for key in sorted(A._output):
+    ...     print(str(key) +'=>'+ str(A._output[key]))
+    (0, 1)=>x3
+    (0, 2)=>-x2
+    (1, 2)=>x1
 
     """
     # Handling of a tensor
@@ -808,8 +811,6 @@ def wedgearray2tensor(B):
     >>> y2[2, 0] = x2
     >>> y2[2, 1] = -x1
     >>> A=tensor2wedgearray(y2)
-    >>> print(A._output)
-    {(0, 1): x3, (1, 2): x1, (0, 2): -x2}
     >>> wdg=wedgearray2tensor(A)
     >>> print(wdg)
     0  x3  -x2
@@ -868,7 +869,7 @@ def int_product(w, X):
     >>> X_t[2]=m
     >>> X_t[3]=n
 
-    >>> int_prod = int_product(omega2, X_t)
+    >>> print(int_prod = int_product(omega2, X_t))
     -m*x3 + n*x2  l*x2 - n*x1  -l*x2 + m*x1
 
     """
@@ -943,8 +944,7 @@ def g_tensor(T, S, g):
     >>> omega[2,1]=y*y
     >>> omega[2,2]=x*y*w
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
-
-    >>> f1=g_tensor(omega,omega,g)
+    >>> print(g_tensor(omega,omega,g))
     w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*\
     (2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
 
@@ -1062,18 +1062,18 @@ def hodge_star(T, g):
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import hodge_star
 
-    >>> x, y, z, w = symbols('x, y, z, w')
-    >>> omega1=Arraypy([2,3,0]).to_tensor((-1,-1))
-    >>> omega1[0,0]=w
-    >>> omega1[0,1]=x
-    >>> omega1[1,0]=y
-    >>> omega1[1,1]=z
-    >>> omega1[2,1]=y*y
-    >>> omega1[2,2]=x*y*w
+    >>> x1, x2, x3 = symbols('x1 x2 x3')
+    >>> omega2=Arraypy([2,3,0]).to_tensor((-1,-1))
+    >>> omega2[0,1]=x3
+    >>> omega2[0,2]=-x2
+    >>> omega2[1,0]=-x3
+    >>> omega2[1,2]=x1
+    >>> omega2[2,0]=x2
+    >>> omega2[2,1]=-x1
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
-    >>> hodge_star(omega1,g)
-    -5*sqrt(5)*w - 7*sqrt(5)*y  -5*sqrt(5)*x - sqrt(5)*y**2 - \
-    7*sqrt(5)*z  -sqrt(5)*w*x*y
+    >>> print(hodge_star(omega2,g))
+    -sqrt(5)*x2 + 7*sqrt(5)*x3  sqrt(5)*x1 - 5*sqrt(5)*x3  \
+    -7*sqrt(5)*x1 + 5*sqrt(5)*x2
 
     """
     if isinstance(T, (TensorArray)) and T.type_pq[0] != 0:
@@ -1126,7 +1126,7 @@ def hodge_star(T, g):
     return uT
 
 
-def codiff(w, g, args, nn=None):
+def codiff(w, g, args, eta=0):
     """Calculation of codifferential form.
 
     Examples:
@@ -1135,32 +1135,27 @@ def codiff(w, g, args, nn=None):
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import codiff
 
-    >>> x, y, z, w = symbols('x, y, z, w')
-    >>> omega1=Arraypy([2,3,0]).to_tensor((-1,-1))
-    >>> omega1[0,0]=w
-    >>> omega1[0,1]=x
-    >>> omega1[1,0]=y
-    >>> omega1[1,1]=z
-    >>> omega1[2,1]=y*y
-    >>> omega1[2,2]=x*y*w
+    >>> x1, x2, x3 = symbols('x1 x2 x3')
+    >>> omega2=Arraypy([2,3,0]).to_tensor((-1,-1))
+    >>> omega2[0,1]=x3*x2
+    >>> omega2[0,2]=-x2
+    >>> omega2[1,0]=-x3*x2
+    >>> omega2[1,2]=x1
+    >>> omega2[2,0]=x2
+    >>> omega2[2,1]=-x1
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
-    >>> codiff(omega1, g, [w,x,y,z], 0)
-    55*x*y - 385  55*y*(w - 2)  -275*x*y + 385*y*(-w + 2) + 1925
+    >>> print(codiff(omega2, g, [x1, x2, x3]))
+    385*x2 + 2695*x3 - 385  -275*x2 - 1925*x3 + 275  0
 
     """
-    if nn is None:
-        nn = 0
     n = w.shape[0]  # the dimension of the input array
     k = w.rank
     # hodge star
     hodge_star1 = hodge_star(w, g)
-    # print(hodge_star1)
     hodge_dw = dw(hodge_star1, args)
-    # print(hodge_dw)
     hodge_dw_hodge = hodge_star(hodge_dw, g)
 
-    sign = (-1) ^ (n * (k + 1) + 1 + nn)
+    sign = (-1) ^ (n * (k + 1) + 1 + eta)
     for i in hodge_dw_hodge.index_list:
         hodge_dw_hodge[i] = simplify(sign * hodge_dw_hodge[i])
-        # hodge_dw_hodge[i]=sign*hodge_dw_hodge[i]
     return hodge_dw_hodge

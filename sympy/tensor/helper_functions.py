@@ -108,8 +108,8 @@ def sign_permutations(lst):
     list_sort = sorted(lst)
     if(list_sort) == lst:
         parity = 1
-        if(len(set(lst)) != len(lst)):
-            parity = 0
+    elif(len(set(lst)) != len(lst)):
+        parity = 0
     else:
         p = 0
         while len(lst) != 1:
