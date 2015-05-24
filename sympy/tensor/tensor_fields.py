@@ -857,7 +857,7 @@ def int_product(w, X):
 
     >>> x1, x2, x3, l, m, n = symbols('x1 x2 x3 l m n')
     >>> omega2=Arraypy([2,3,1]).to_tensor((-1,-1))
-    >>> omega2[1,2]=x3
+    >>> omega2[1,2]=x2
     >>> omega2[1,3]=-x2
     >>> omega2[2,1]=-x3
     >>> omega2[2,3]=x1
@@ -1055,7 +1055,8 @@ def g_wedge(T, S, g):
 
 
 def hodge_star(T, g):
-    """The calculation actions on the forms of the Hodge operator's.
+    """
+    The calculation actions on the forms of the Hodge operator's.
 
     Examples:
     =========
@@ -1064,18 +1065,18 @@ def hodge_star(T, g):
     >>> from sympy.tensor.tensor_fields import hodge_star
 
     >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> omega2=Arraypy([2,3,0]).to_tensor((-1,-1))
-    >>> omega2[0,1]=x3
-    >>> omega2[0,2]=-x2
-    >>> omega2[1,0]=-x3
-    >>> omega2[1,2]=x1
-    >>> omega2[2,0]=x2
-    >>> omega2[2,1]=-x1
+    >>> y3 = TensorArray(Arraypy((3, 3, 3)), (-1, -1, -1))
+    >>> y3[0, 1, 2] = 3
+    >>> y3[0, 2, 1] = -3
+    >>> y3[1, 0, 2] = -3
+    >>> y3[1, 2, 0] = 3
+    >>> y3[2, 0, 1] = 3
+    >>> y3[2, 1, 0] = -3
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
-    >>> print(hodge_star(omega2,g))
-    sqrt(5)*x2 - sqrt(5)*x3  -sqrt(5)*x1 + sqrt(5)*x3  sqrt(5)*x1 - sqrt(5)*x2
-
+    >>> print(hodge_star(y3,g))
+    96*sqrt(5)/5
     """
+
     if not isinstance(T, (TensorArray)):
         raise ValueError(
             "The type of tensor must be TensorArray")
@@ -1091,9 +1092,11 @@ def hodge_star(T, g):
     check_metric_tensor(g)
     if isinstance(g, (TensorArray, Arraypy)):
         idx_start_g = g.start_index[0]
+        det_g = det(g.to_matrix())
     else:
-        g = matrix2tensor(g)
         idx_start_g = 0
+        det_g = det(g)
+        g = matrix2tensor(g)
 
     # The definition of the start index
     idx_start_T = T.start_index[0]
@@ -1105,13 +1108,14 @@ def hodge_star(T, g):
     # 1. Calculating of tensor mu
     n = T.shape[0]  # the dimension of the input array
     k = T.rank
-    sqrt_det_g = simplify(sqrt(abs(det(g.to_matrix()))))
+    sqrt_det_g = simplify(sqrt(abs(det_g)))
 
     valence_list_mu = [(-1) for i in range(n)]
     mu = Arraypy([n, n, idx_start_g]).to_tensor(valence_list_mu)
 
     for idx in mu.index_list:
         mu[idx] = simplify(sqrt_det_g * sign_permutations(list(idx)))
+
     # 2. Tensor product mu and T
     uT = tensor_product(mu, T)
 
@@ -1150,7 +1154,7 @@ def codiff(w, g, args, eta=0):
     >>> omega2[2,1]=-x1
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(codiff(omega2, g, [x1, x2, x3]))
-    55*x2 + 55*x3 - 55  -55*x2 - 55*x3 + 55  0
+    0 0 0
 
     """
     n = w.shape[0]  # the dimension of the input array
@@ -1158,9 +1162,10 @@ def codiff(w, g, args, eta=0):
     # hodge star
     hodge_star1 = hodge_star(w, g)
     hodge_dw = dw(hodge_star1, args)
-    hodge_dw_hodge = hodge_star(hodge_dw, g)
 
+    hodge_dw_hodge = hodge_star(hodge_dw, g)
     sign = (-1) ^ (n * (k + 1) + 1 + eta)
     for i in hodge_dw_hodge.index_list:
         hodge_dw_hodge[i] = simplify(sign * hodge_dw_hodge[i])
+
     return hodge_dw_hodge
