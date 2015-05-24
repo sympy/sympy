@@ -29,6 +29,9 @@ def check_metric_tensor(g):
         if isinstance(g, (TensorArray)) and g.type_pq != (0, 2):
             raise ValueError(
                 "The indices of metric tensor must be (-1,-1)")
+    if isinstance(g, Matrix):
+        if not g.is_symmetric:
+            raise ValueError("The metric is not symmetric")
 
 
 def check_the_vector_field(X):
@@ -73,9 +76,9 @@ def replace_index_to_k(_data, index, k):
     =========
 
     >>> from sympy.tensor.helper_functions import replace_index_to_k
-    >>> replace_index_to_k([10, 20, 30, 40], 0, 100)
+    >>> print(replace_index_to_k([10, 20, 30, 40], 0, 100))
     (100, 20, 30, 40)
-    >>> replace_index_to_k((10, 20, 30, 40), 2, 100)
+    >>> print(replace_index_to_k((10, 20, 30, 40), 2, 100))
     (10, 20, 100, 40)
 
     """
@@ -95,29 +98,33 @@ def sign_permutations(lst):
     =========
 
     >>> from sympy.tensor.helper_functions import sign_permutations
-    >>> sign_permutations([0, 1, 0])
+    >>> print(sign_permutations([0, 1, 0]))
     0
-    >>> sign_permutations([1, 1])
+    >>> print(sign_permutations([1, 1]))
     0
-    >>> sign_permutations([3, 7, 10, 5])
+    >>> print(sign_permutations([3, 7, 10, 5]))
     1
-    >>> sign_permutations([10, 5, 8, 11, 6])
+    >>> print(sign_permutations([10, 5, 8, 11, 6]))
     -1
 
     """
     list_sort = sorted(lst)
-    if(list_sort) == lst:
-        parity = 1
-    elif(len(set(lst)) != len(lst)):
-        parity = 0
-    else:
-        p = 0
-        while len(lst) != 1:
-            pos = lst.index(min(lst))
-            p += pos
-            lst.remove(min(lst))
-        if p % 2 == 0:
-            parity = 1
+    if (list_sort) == lst:
+        if len(set(lst)) != len(lst):
+            parity = 0
         else:
-            parity = -1
+            parity = 1
+    else:
+        if len(set(lst)) != len(lst):
+            parity = 0
+        else:
+            p = 0
+            while len(lst) != 1:
+                pos = lst.index(min(lst))
+                p += pos
+                lst.remove(min(lst))
+            if p % 2 == 0:
+                parity = 1
+            else:
+                parity = -1
     return parity
