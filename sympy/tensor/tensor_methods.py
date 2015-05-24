@@ -351,14 +351,15 @@ def raise_index(tensor, metric_tensor, *index_numbers_to_raise):
     result_tensor = TensorArray(Arraypy(arg), new_ind_char)
 
     # finding contravariant reversed matrix
-    matrix_metric_tensor = metric_tensor.to_matrix().inv()
+    matrix_reversed_metric_tensor = metric_tensor.to_matrix().inv()
+    reversed_metric_tensor = copy(metric_tensor)
     
     # This is a strange way to transfer data from Matrix to TensorArray bellow.
     # But it's neccecery because TensorArray might have different index range.
-    index = metric_tensor.start_index
+    index = reversed_metric_tensor.start_index
     for i in matrix_metric_tensor:
-        metric_tensor[index] = i
-        index = metric_tensor.next_index(index)
+        reversed_metric_tensor[index] = i
+        index = reversed_metric_tensor.next_index(index)
         
 
     for index_number in index_numbers_to_raise:
@@ -373,7 +374,7 @@ def raise_index(tensor, metric_tensor, *index_numbers_to_raise):
                 temp_index = [i for i in cur_index]
                 temp_index[index_number] = j
                 result_tensor[
-                    cur_index] += tensor[tuple(temp_index)] * metric_tensor[metric_tensor_index]
+                    cur_index] += tensor[tuple(temp_index)] * reversed_metric_tensor[metric_tensor_index]
         tensor = copy(result_tensor)
 
     return result_tensor
