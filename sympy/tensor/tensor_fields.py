@@ -869,7 +869,7 @@ def int_product(w, X):
     >>> X_t[2]=m
     >>> X_t[3]=n
 
-    >>> print(int_prod = int_product(omega2, X_t))
+    >>> print(int_product(omega2, X_t))
     -m*x3 + n*x2  l*x2 - n*x1  -l*x2 + m*x1
 
     """
@@ -879,7 +879,8 @@ def int_product(w, X):
             "The type of differential form must be TensorArray or Arraypy")
 
     # The valency (0,q)
-    if isinstance(w, (TensorArray)) and w.type_pq[0] != 0:
+    if (len(w.type_pq) == 1 and w.type_pq[0] != 1) or (
+            len(w.type_pq) > 1 and w.type_pq[0] != 0):
         raise ValueError("The valency of tensor must be (0,q)")
     if not is_asymmetric(w):
         raise ValueError("The form must be a skew-symmetric")
@@ -945,8 +946,7 @@ def g_tensor(T, S, g):
     >>> omega[2,2]=x*y*w
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(g_tensor(omega,omega,g))
-    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*\
-    (2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
+    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*(2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
 
     """
     # Handling of a input tensors
@@ -1044,7 +1044,8 @@ def g_wedge(T, S, g):
 
     g_t = g_tensor(T, S, g)
 
-    if T.type_pq[0] != 0 and S.type_pq[0] != 0:
+    if (len(T.type_pq) == 1 and T.type_pq[0] != 1) or (
+            len(T.type_pq) > 1 and T.type_pq[0] != 0):
         raise ValueError("The valency of tensor must be (0,q)")
 
     p = len(T.start_index)
@@ -1072,12 +1073,16 @@ def hodge_star(T, g):
     >>> omega2[2,1]=-x1
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(hodge_star(omega2,g))
-    -sqrt(5)*x2 + 7*sqrt(5)*x3  sqrt(5)*x1 - 5*sqrt(5)*x3  \
-    -7*sqrt(5)*x1 + 5*sqrt(5)*x2
+    sqrt(5)*x2 - sqrt(5)*x3  -sqrt(5)*x1 + sqrt(5)*x3  sqrt(5)*x1 - sqrt(5)*x2
 
     """
-    if isinstance(T, (TensorArray)) and T.type_pq[0] != 0:
-        raise ValueError("The valency of tensor T must be (0,q)")
+    if not isinstance(T, (TensorArray)):
+        raise ValueError(
+            "The type of tensor must be TensorArray")
+
+    if (len(T.type_pq) == 1 and T.type_pq[0] != 1) or (len(T.type_pq) > 1 and
+                                                       T.type_pq[0] != 0):
+        raise ValueError("The valency of tensor must be (0,q)")
     if T.rank > 1:
         if not is_asymmetric(T):
             raise ValueError("The tensor must be a skew-symmetric")
@@ -1100,7 +1105,7 @@ def hodge_star(T, g):
     # 1. Calculating of tensor mu
     n = T.shape[0]  # the dimension of the input array
     k = T.rank
-    sqrt_det_g = sqrt(abs(det(g.to_matrix())))
+    sqrt_det_g = simplify(sqrt(abs(det(g.to_matrix()))))
 
     valence_list_mu = [(-1) for i in range(n)]
     mu = Arraypy([n, n, idx_start_g]).to_tensor(valence_list_mu)
@@ -1145,7 +1150,7 @@ def codiff(w, g, args, eta=0):
     >>> omega2[2,1]=-x1
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(codiff(omega2, g, [x1, x2, x3]))
-    385*x2 + 2695*x3 - 385  -275*x2 - 1925*x3 + 275  0
+    55*x2 + 55*x3 - 55  -55*x2 - 55*x3 + 55  0
 
     """
     n = w.shape[0]  # the dimension of the input array
