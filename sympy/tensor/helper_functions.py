@@ -44,17 +44,17 @@ def check_the_vector_field(X):
 
 
 def delete_index_from_list(_data, index):
-    """The function takes the arguments(_data) list or tuple. It returns tuple
-    after remove the element standing in the position 'index'.
+    """The function takes the arguments '_data', which can be list or tuple. It
+    returns tuple after remove the element standing in the position 'index'.
 
     Examples:
     =========
 
-    >>> from sympy import delete_index_from_list
-    >>> print(delete_index_from_list([10,20,30,40,50,60], 3))
-    (10,20,30,50,60)
-    >>> print(delete_index_from_list((10,20,30,40,50,60), 0))
-    (20,30,40,50,60)
+    >>> from sympy.tensor.helper_functions import delete_index_from_list
+    >>> print(delete_index_from_list([10, 20, 30, 40, 50, 60], 3))
+    (10, 20, 30, 50, 60)
+    >>> print(delete_index_from_list((10, 20, 30, 40, 50, 60), 0))
+    (20, 30, 40, 50, 60)
 
     """
     res = []
@@ -65,16 +65,17 @@ def delete_index_from_list(_data, index):
 
 
 def replace_index_to_k(_data, index, k):
-    """The function takes the arguments(_data) it's list or tuple,
+    """The function takes the arguments '_data' it's list or tuple,
     index-it's integer and k-any element.
     It returns tuple after replaces the item "index" on the element "k".
 
     Examples:
     =========
 
-    >>> replace_index_to_k([10,20,30,40], 0, 100)
+    >>> from sympy.tensor.helper_functions import replace_index_to_k
+    >>> replace_index_to_k([10, 20, 30, 40], 0, 100)
     (100, 20, 30, 40)
-    >>> replace_index_to_k((10,20,30,40), 2, 100)
+    >>> replace_index_to_k((10, 20, 30, 40), 2, 100)
     (10, 20, 100, 40)
 
     """
@@ -87,17 +88,20 @@ def replace_index_to_k(_data, index, k):
     return (tuple(output))
 
 
-def permutations_sign(lst):
+def sign_permutations(lst):
     """Return the sign of index.
 
-    Examale:
-    >>> permutations_sign([0,1,0])
+    Examales:
+    =========
+
+    >>> from sympy.tensor.helper_functions import sign_permutations
+    >>> sign_permutations([0, 1, 0])
     0
-    >>> permutations_sign([1,1])
+    >>> sign_permutations([1, 1])
     0
-    permutations_sign([3, 7, 10, 5])
+    >>> sign_permutations([3, 7, 10, 5])
     1
-    permutations_sign([10, 5, 8, 11, 6])
+    >>> sign_permutations([10, 5, 8, 11, 6])
     -1
 
     """

@@ -11,7 +11,7 @@ from sympy import sqrt
 from itertools import permutations
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.tensor.helper_functions import check_vector_of_arguments, \
-    check_metric_tensor, check_the_vector_field, permutations_sign, \
+    check_metric_tensor, check_the_vector_field, sign_permutations, \
     delete_index_from_list, replace_index_to_k
 
 """Module tensor_fields contains functions for working with the tensor fields:
@@ -371,12 +371,12 @@ def diverg(X, args, g=None):
 
     # Calculation
     sq = sqrt(abs(det(g)))
-    divergenc = 0
+    diver = 0
     for k in range(len(args)):
-        divergenc += simplify(1 / sq *
-                              sum([diff(X[k + idx_X] * sq, args[k + idx_X])]))
+        diver += simplify(1 / sq *
+                          sum([diff(X[k + idx_X] * sq, args[k + idx_X])]))
     # Output
-    return divergenc
+    return diver
 
 
 def lie_xy(X, Y, args, output_type=None):
@@ -580,7 +580,10 @@ def dw(omega, args):
     for i in range(len(d_omega)):
         # tuple_list_indx it's list of tuple. Example:[(0, 1), (0, 1), (0, 0)]
         tuple_list_indx = [
-            delete_index_from_list(idx, f) for f in range(len(idx))]
+            delete_index_from_list(
+                idx,
+                f) for f in range(
+                len(idx))]
         for k in range(p + 1):
             d_omega[idx] += Add(((-1)**k) * diff(omega[tuple_list_indx[k]],
                                                  args[idx[k] - idx_st]))
@@ -687,14 +690,14 @@ def lie_w(omega, X, args):
         args = args.to_list()
     if isinstance(X, (TensorArray, Arraypy)):
         X = X.to_list()
-    l_X = len(idx)
+    l_idx = len(idx)
     for p in range(len(diff_Lie)):
-        for k in range(l_X + 1):
+        for k in range(l_idx + 1):
             tuple_list_indx = [
-                replace_index_to_k(idx, f, k + idx_st) for f in range(l_X)]
+                replace_index_to_k(idx, f, k + idx_st) for f in range(l_idx)]
             # the intermediate value
             diff_omega = diff(omega[idx], args[k]) * X[k]
-            for j in range(l_X):
+            for j in range(l_idx):
                 diff_Lie[idx] += diff(X[k], args[idx[j] - idx_st]) *\
                     omega[tuple_list_indx[j]]
             diff_Lie[idx] = diff_Lie[idx] + diff_omega
@@ -731,8 +734,9 @@ class Wedge_array():
 
 def tensor2wedgearray(A):
     """
-    Function takes a skew-symmetric array and will give array in which
-    the indices are in ascending order. Return array of type Wedge_array.
+    Function takes a skew-symmetric array and will give array in
+    which the indices are in ascending order. Return array of type
+    Wedge_array.
 
     Examples:
     =========
@@ -790,7 +794,6 @@ def wedgearray2tensor(B):
 
     Examples:
     =========
-
     >>> from sympy import symbols
     >>> from sympy.tensor.arraypy import Arraypy, TensorArray
     >>> from sympy.tensor.tensor_fields import tensor2wedgearray, \
@@ -807,19 +810,19 @@ def wedgearray2tensor(B):
     >>> A=tensor2wedgearray(y2)
     >>> print(A._output)
     {(0, 1): x3, (1, 2): x1, (0, 2): -x2}
-    >>> b=wedgearray2tensor(A)
+    >>> wdg=wedgearray2tensor(A)
+    >>> print(wdg)
     0  x3  -x2
     -x3  0  x1
     x2  -x1  0
 
     """
-    if not isinstance(B, Wedge_array):
-        raise TypeError('Input tensor must be of Wedge_array or dict type')
-    else:
+    if isinstance(B, Wedge_array):
         B = B._output
+    else:
+        raise TypeError('Input tensor must be of Wedge_array or dict type')
 
     list_indices = sorted(B.keys())
-
     # (min_index, max_index) - the range of indexes
     max_index = max(max(list_indices))
     # for the start index of arraypy
@@ -836,7 +839,7 @@ def wedgearray2tensor(B):
         tensor[key] = value
         # multiply by the sign of the permutation
         for p in permutations(list(key)):
-            tensor[p] = permutations_sign(list(p)) * value
+            tensor[p] = sign_permutations(list(p)) * value
 
     return tensor
 
@@ -851,9 +854,9 @@ def int_product(w, X):
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import int_product
 
-    >>> x1, x2, x3 = symbols('x1 x2 x3')
+    >>> x1, x2, x3, l, m, n = symbols('x1 x2 x3 l m n')
     >>> omega2=Arraypy([2,3,1]).to_tensor((-1,-1))
-    >>> omega2[1,2]=x2
+    >>> omega2[1,2]=x3
     >>> omega2[1,3]=-x2
     >>> omega2[2,1]=-x3
     >>> omega2[2,3]=x1
@@ -864,7 +867,6 @@ def int_product(w, X):
     >>> X_t[1]=l
     >>> X_t[2]=m
     >>> X_t[3]=n
-    >>> X = [l, m, n]
 
     >>> int_prod = int_product(omega2, X_t)
     -m*x3 + n*x2  l*x2 - n*x1  -l*x2 + m*x1
@@ -928,7 +930,7 @@ def g_tensor(T, S, g):
     Examples:
     =========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Matrix
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import g_tensor
 
@@ -943,7 +945,7 @@ def g_tensor(T, S, g):
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
 
     >>> f1=g_tensor(omega,omega,g)
-    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + \(3*w/5 - y/5)* \
+    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*\
     (2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
 
     """
@@ -1056,7 +1058,7 @@ def hodge_star(T, g):
 
     Examples:
     =========
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Matrix
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import hodge_star
 
@@ -1070,8 +1072,8 @@ def hodge_star(T, g):
     >>> omega1[2,2]=x*y*w
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> hodge_star(omega1,g)
-    -5*sqrt(5)*w - 7*sqrt(5)*y  -5*sqrt(5)*x - sqrt(5)*y**2 - 7*sqrt(5)*z  \
-    -sqrt(5)*w*x*y
+    -5*sqrt(5)*w - 7*sqrt(5)*y  -5*sqrt(5)*x - sqrt(5)*y**2 - \
+    7*sqrt(5)*z  -sqrt(5)*w*x*y
 
     """
     if isinstance(T, (TensorArray)) and T.type_pq[0] != 0:
@@ -1104,7 +1106,7 @@ def hodge_star(T, g):
     mu = Arraypy([n, n, idx_start_g]).to_tensor(valence_list_mu)
 
     for idx in mu.index_list:
-        mu[idx] = simplify(sqrt_det_g * permutations_sign(list(idx)))
+        mu[idx] = simplify(sqrt_det_g * sign_permutations(list(idx)))
     # 2. Tensor product mu and T
     uT = tensor_product(mu, T)
 
@@ -1129,7 +1131,7 @@ def codiff(w, g, args, nn=None):
 
     Examples:
     =========
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Matrix
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import codiff
 
