@@ -168,23 +168,12 @@ def tensor_product(first_tensor, second_tensor):
         Arraypy(arg),
         first_tensor.ind_char +
         second_tensor.ind_char)
-
-    # start indexes of: current tensor and second_tensor tensor
-    cur_idx = first_tensor.start_index
-    second_tensor_idx = second_tensor.start_index
-
+    
     # loop over current tensor
-    for i in range(len(first_tensor)):
+    for i in first_tensor.index_list:
         # loop over second_tensor tensor
-        for j in range(len(second_tensor)):
-            res[cur_idx + second_tensor_idx] = first_tensor[cur_idx] * \
-                second_tensor[second_tensor_idx]
-            # second_tensor tensor next index
-            second_tensor_idx = second_tensor.next_index(second_tensor_idx)
-        # current tensor next index
-        cur_idx = first_tensor.next_index(cur_idx)
-
-    return res
+        for j in second_tensor.index_list:
+            res[i + j] = first_tensor[i] * second_tensor[j]
 
 
 def wedge(first_tensor, second_tensor):
