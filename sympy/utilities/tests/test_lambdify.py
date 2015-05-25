@@ -45,6 +45,11 @@ def test_str_args():
     # make sure correct number of args required
     raises(TypeError, lambda: f(0))
 
+def test_incorrect_arg_expr():
+    raises(TypeError, lambda: lambdify(x, "numpy"))
+
+def test_incorrect_arg_args():
+    raises(TypeError, lambda: lambdify("numpy", x))
 
 def test_own_namespace():
     myfunc = lambda x: 1
