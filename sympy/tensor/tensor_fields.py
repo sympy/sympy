@@ -857,7 +857,7 @@ def int_product(w, X):
 
     >>> x1, x2, x3, l, m, n = symbols('x1 x2 x3 l m n')
     >>> omega2=Arraypy([2,3,1]).to_tensor((-1,-1))
-    >>> omega2[1,2]=x2
+    >>> omega2[1,2]=x3
     >>> omega2[1,3]=-x2
     >>> omega2[2,1]=-x3
     >>> omega2[2,3]=x1
@@ -870,7 +870,7 @@ def int_product(w, X):
     >>> X_t[3]=n
 
     >>> print(int_product(omega2, X_t))
-    -m*x3 + n*x2  l*x2 - n*x1  -l*x2 + m*x1
+    -m*x3 + n*x2  l*x3 - n*x1  -l*x2 + m*x1
 
     """
     # Handling of a differential form
@@ -1055,13 +1055,12 @@ def g_wedge(T, S, g):
 
 
 def hodge_star(T, g):
-    """
-    The calculation actions on the forms of the Hodge operator's.
+    """The calculation actions on the forms of the Hodge operator's.
 
     Examples:
     =========
     >>> from sympy import symbols, Matrix
-    >>> from sympy.tensor.arraypy import Arraypy
+    >>> from sympy.tensor.arraypy import Arraypy, TensorArray
     >>> from sympy.tensor.tensor_fields import hodge_star
 
     >>> x1, x2, x3 = symbols('x1 x2 x3')
@@ -1075,6 +1074,7 @@ def hodge_star(T, g):
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(hodge_star(y3,g))
     96*sqrt(5)/5
+
     """
 
     if not isinstance(T, (TensorArray)):

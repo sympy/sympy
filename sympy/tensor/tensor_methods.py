@@ -353,14 +353,13 @@ def raise_index(tensor, metric_tensor, *index_numbers_to_raise):
     # finding contravariant reversed matrix
     matrix_reversed_metric_tensor = metric_tensor.to_matrix().inv()
     reversed_metric_tensor = copy(metric_tensor)
-    
+
     # This is a strange way to transfer data from Matrix to TensorArray bellow.
     # But it's neccecery because TensorArray might have different index range.
     index = reversed_metric_tensor.start_index
-    for i in matrix_metric_tensor:
+    for i in matrix_reversed_metric_tensor:
         reversed_metric_tensor[index] = i
         index = reversed_metric_tensor.next_index(index)
-        
 
     for index_number in index_numbers_to_raise:
         # loop over all tensor elements
@@ -381,11 +380,11 @@ def raise_index(tensor, metric_tensor, *index_numbers_to_raise):
 
 
 def change_basis(tensor, transformation_matrix, old_to_new=True):
-    """
-    WORK IN PROGRESS
+    """WORK IN PROGRESS.
 
-    Changes basis of input TensorArray with help of transformation matrix from old
-    to new (if corresponding argument is True) or from new to old (if False).
+    Changes basis of input TensorArray with help of transformation
+    matrix from old to new (if corresponding argument is True) or from
+    new to old (if False).
 
     """
     if not isinstance(tensor, TensorArray):
@@ -405,7 +404,7 @@ def change_basis(tensor, transformation_matrix, old_to_new=True):
     index = transformation_matrix.start_index
     for i in temp_matrix:
         inv_transformation_matrix[index] = i
-        index = inv_transformation_matrix.next_index(index)    
+        index = inv_transformation_matrix.next_index(index)
     # for testing reasons
     # inv_transformation_matrix = TensorArray(Arraypy((2,2), 'B'), (-1, 1))
 
