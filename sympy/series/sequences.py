@@ -1,10 +1,12 @@
 from sympy.core.expr import Expr
-from sympy.core.compatibility import (range, integer_types)
+from sympy.core.singleton import (S, Singleton)
+from sympy.core.compatibility import (range, integer_types, with_metaclass)
 from sympy.utilities.misc import filldedent
 
 
 class SeqBase(Expr):
     """Base class for sequences"""
+
     @property
     def gen(self):
         """Returns the generator for the sequence"""
@@ -74,3 +76,25 @@ class SeqBase(Expr):
                 stop = self.length
             return [self.coeff(i + self.start) for i in range(start, stop,\
                                                  index.step or 1)]
+
+
+class EmptySequence(with_metaclass(Singleton, SeqBase)):
+    """
+    Represents an empty sequence. The empty sequence is available as a
+    singleton as S.EmptySequence.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.EmptySequence
+    EmptySequence()
+    """
+
+    @property
+    def _interval(self):
+        return S.EmptySet
+
+    @property
+    def _length(self):
+        return S.Zero

@@ -3006,9 +3006,14 @@ def test_sympy__series__order__Order():
     assert _test_args(Order(1, x, y))
 
 
+@SKIP('Abstract Class')
 def test_sympy__series__sequences__SeqBase():
-    from sympy.series.sequences import SeqBase
-    assert _test_args(SeqBase())
+    pass
+
+
+def test_sympy__series__sequences__EmptySequence():
+    from sympy.series.sequences import EmptySequence
+    assert _test_args(EmptySequence())
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():
