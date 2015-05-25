@@ -1,7 +1,9 @@
 from sympy.core.expr import Expr
 from sympy.core.singleton import (S, Singleton)
 from sympy.core.compatibility import (range, integer_types, with_metaclass)
+from sympy.core.sympify import sympify
 from sympy.utilities.misc import filldedent
+from sympy.sets.sets import Interval
 
 
 class SeqBase(Expr):
@@ -14,7 +16,7 @@ class SeqBase(Expr):
 
     @property
     def _gen(self):
-        raise NotImplementedError()
+        raise NotImplementedError("(%s)._gen" % self)
 
     @property
     def interval(self):
@@ -23,7 +25,8 @@ class SeqBase(Expr):
 
     @property
     def _interval(self):
-        raise NotImplementedError()
+        raise NotImplementedError("(%s)._interval" % self)
+
 
     @property
     def start(self):
@@ -32,7 +35,7 @@ class SeqBase(Expr):
 
     @property
     def _start(self):
-        raise NotImplementedError()
+        raise NotImplementedError("(%s)._start" % self)
 
     @property
     def end(self):
@@ -41,7 +44,7 @@ class SeqBase(Expr):
 
     @property
     def _end(self):
-        raise NotImplementedError()
+        raise NotImplementedError("(%s)._end" % self)
 
     @property
     def length(self):
@@ -50,7 +53,7 @@ class SeqBase(Expr):
 
     @property
     def _length(self):
-        raise NotImplementedError()
+        raise NotImplementedError("(%s)._length" % self)
 
     def coeff(self, i):
         """Returns the coefficient at point i"""
@@ -89,8 +92,8 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     >>> from sympy import S
     >>> S.EmptySequence
     EmptySequence()
-    """
 
+    """
     @property
     def _interval(self):
         return S.EmptySet
@@ -98,3 +101,56 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     @property
     def _length(self):
         return S.Zero
+
+
+def _parse_interval(interval):
+    if len(interval) != 2 or None in interval:
+        raise ValueError(filldedent("""Sequence requires values for lower\
+                                    and upper bounds."""))
+    return Interval(*interval)
+
+
+class SeqExpr(SeqBase):
+    """Sequence expression class
+    Various sequences (SeqPer, SeqFormula, SeqFunc...) should inherit from
+    this class
+
+    Examples
+    ========
+
+    >>> from sympy.series.sequences import SeqExpr
+    >>> s = SeqExpr((1, 2, 3), (0, 10))
+    >>> s.gen
+    (1, 2, 3)
+    >>> s.interval
+    [0, 10]
+    >>> s.length
+    11
+
+    """
+    def __new__(cls, gen, interval=(0, S.Infinity)):
+        interval = _parse_interval(interval)
+        if interval is S.EmptySet:
+            return S.EmptySequence
+        gen = sympify(gen)
+        return Expr.__new__(cls, gen, interval)
+
+    @property
+    def _gen(self):
+        return self.args[0]
+
+    @property
+    def _interval(self):
+        return self.args[1]
+
+    @property
+    def _start(self):
+        return self.interval.start
+
+    @property
+    def _end(self):
+        return self.interval.end
+
+    @property
+    def _length(self):
+        return self.end - self.start + 1
