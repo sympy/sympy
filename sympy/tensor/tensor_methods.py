@@ -174,6 +174,8 @@ def tensor_product(first_tensor, second_tensor):
         # loop over second_tensor tensor
         for j in second_tensor.index_list:
             res[i + j] = first_tensor[i] * second_tensor[j]
+            
+    return res
 
 
 def wedge(first_tensor, second_tensor):
