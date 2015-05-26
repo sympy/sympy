@@ -1,4 +1,4 @@
-from sympy import (S, Tuple, Interval, EmptySequence, oo)
+from sympy import (S, Tuple, Interval, EmptySequence, oo, SeqPer)
 from sympy.series.sequences import SeqExpr
 from sympy.utilities.pytest import raises
 
@@ -30,3 +30,17 @@ def test_SeqExpr():
     raises(ValueError, lambda: SeqExpr((1, 2, 3), (0, 1, 2, 3)))
     raises(ValueError, lambda: SeqExpr((1, 2, 3), (-oo, oo)))
     raises(ValueError, lambda: SeqExpr((1, 2, 3), (0, oo, oo)))
+
+
+def test_SeqPer():
+    s = SeqPer((1, 2, 3), (0, 5))
+
+    assert isinstance(s, SeqPer)
+    assert s.periodical == Tuple(1, 2, 3)
+    assert s.period == 3
+    assert s.coeff(3) == 1
+
+    assert list(s) == [1, 2, 3, 1, 2, 3]
+    assert s[:] == [1, 2, 3, 1, 2, 3]
+    assert SeqPer((1, 2, 3), (0, 5, 2))[:] == [1, 3, 2]
+    assert SeqPer((1, 2, 3), (-oo, 0))[0:6] == [1, 2, 3, 1, 2, 3]

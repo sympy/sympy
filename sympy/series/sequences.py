@@ -195,7 +195,7 @@ def _parse_interval(interval):
     if step in [S.NegativeInfinity, S.Infinity]:
         raise ValueError("step cannot be unbounded")
 
-    return Interval(start, stop), step
+    return Interval(start, stop), sympify(step)
 
 
 class SeqExpr(SeqBase):
@@ -215,7 +215,7 @@ class SeqExpr(SeqBase):
     >>> s.length
     11
 
-    change the step size
+    for changing the step size
 
     >>> SeqExpr((1, 2, 3), (0, 10, 2)).length
     6
@@ -261,3 +261,62 @@ class SeqExpr(SeqBase):
     @property
     def _length(self):
         return ceiling((self.stop - self.start + 1) / self.step)
+
+
+class SeqPer(SeqExpr):
+    """Represents a periodical sequence
+
+    The elements are repeated after a given period.
+
+    Examples
+    ========
+
+    >>> from sympy import SeqPer, oo
+    >>> s = SeqPer((1, 2, 3), (0, 5))
+    >>> s.periodical
+    (1, 2, 3)
+    >>> s.period
+    3
+
+    For value at a particular point
+
+    >>> s.coeff(3)
+    1
+
+    supports slicing
+
+    >>> s[:]
+    [1, 2, 3, 1, 2, 3]
+
+    iterable
+
+    >>> list(s)
+    [1, 2, 3, 1, 2, 3]
+
+    changing step size
+
+    >>> SeqPer((1, 2, 3), (0, 5, 2))[:]
+    [1, 3, 2]
+
+    sequence starts from negative infinity
+
+    >>> s = SeqPer((1, 2, 3), (-oo, 0))
+    >>> s[0:6]
+    [1, 2, 3, 1, 2, 3]
+
+    """
+
+    @property
+    def period(self):
+        return len(self.gen)
+
+    @property
+    def periodical(self):
+        return self.gen
+
+    def _eval_coeff(self, i):
+        if self.start is S.NegativeInfinity:
+            idx = (self.stop - i) % self.period
+        else:
+            idx = (i - self.start) % self.period
+        return self.periodical[idx]
