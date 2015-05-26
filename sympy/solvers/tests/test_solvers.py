@@ -1771,3 +1771,7 @@ def test_issue_2840_8155():
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
+
+def test_issue_8260():
+    assert solve(x-oo, x) == []
+    assert solve(x+oo, x) == []
