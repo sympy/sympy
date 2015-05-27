@@ -1077,7 +1077,7 @@ class Basic(with_metaclass(ManagedProperties)):
               themselves.
 
         """
-        (value, _) = self._xreplace(rule)
+        value, _ = self._xreplace(rule)
         return value
 
     def _xreplace(self, rule):
@@ -1085,7 +1085,7 @@ class Basic(with_metaclass(ManagedProperties)):
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
         if self in rule:
-            return (rule[self], True)
+            return rule[self], True
         elif rule:
             args = []
             changed = False
@@ -1098,8 +1098,8 @@ class Basic(with_metaclass(ManagedProperties)):
                     args.append(a)
             args = tuple(args)
             if changed:
-                return (self.func(*args), True)
-        return (self, False)
+                return self.func(*args), True
+        return self, False
 
     @cacheit
     def has(self, *patterns):
