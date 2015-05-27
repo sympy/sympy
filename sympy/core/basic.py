@@ -1077,7 +1077,7 @@ class Basic(with_metaclass(ManagedProperties)):
               themselves.
 
         """
-        (value, changed) = self._xreplace(rule)
+        (value, _) = self._xreplace(rule)
         return value
 
     def _xreplace(self, rule):
