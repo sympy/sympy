@@ -98,8 +98,8 @@ except ImportError:
             wrapper.__wrapped__ = cfunc.__wrapped__
             wrapper.cache_info = cfunc.cache_info
             wrapper.cache_clear = cfunc.cache_clear
-            uw = update_wrapper(wrapper, func)
-            CACHE.append(uw)
+            update_wrapper(wrapper, func)
+            CACHE.append(wrapper)
             return wrapper
 
         return func_wrapper
