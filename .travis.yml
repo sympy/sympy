@@ -83,49 +83,49 @@ matrix:
         - SPLIT="4/4"
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
-      pip install fastcache;
+      travis_retry pip install fastcache;
     fi
   - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
       pip uninstall -y numpy;
-      sudo apt-get update;
-      sudo apt-get install gfortran gcc python-numpy cython;
+      travis_retry sudo apt-get update;
+      travis_retry sudo apt-get install gfortran gcc python-numpy cython;
     fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install libgmp-dev;
-      pip install "gmpy==1.16";
+      travis_retry sudo apt-get update;
+      travis_retry sudo apt-get install libgmp-dev;
+      travis_retry pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick docbook2x;
-      pip install "sphinx==1.3.1";
+      travis_retry sudo apt-get update;
+      travis_retry sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick docbook2x;
+      travis_retry pip install "sphinx==1.3.1";
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
-      pip install "numpy==1.7.1";
-      pip install --allow-external "matplotlib==1.2.1";
+      travis_retry pip install "numpy==1.7.1";
+      travis_retry pip install --allow-external "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran;
-      pip install "numpy==1.7.1";
-      pip install "scipy==0.12.0";
-      pip install --no-deps https://github.com/Theano/Theano/archive/rel-0.6.zip;
+      travis_retry sudo apt-get update;
+      travis_retry sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran;
+      travis_retry pip install "numpy==1.7.1";
+      travis_retry pip install "scipy==0.12.0";
+      travis_retry pip install --no-deps https://github.com/Theano/Theano/archive/rel-0.6.zip;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
-      sudo apt-add-repository -y ppa:aims/sagemath;
-      sudo apt-get update;
-      sudo apt-get install sagemath-upstream-binary;
+      travis_retry sudo apt-add-repository -y ppa:aims/sagemath;
+      travis_retry sudo apt-get update;
+      travis_retry sudo apt-get install sagemath-upstream-binary;
     fi
 install:
 #The install cycle below is to test installation on systems without setuptools.
   - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
       pip uninstall -y setuptools;
-      python setup.py install;
+      travis_retry python setup.py install;
       pip uninstall -y sympy;
-      pip install setuptools;
-      python setup.py install;
+      travis_retry pip install setuptools;
+      travis_retry python setup.py install;
     elif [[ "${TEST_SAGE}" != "true" ]]; then
-      python setup.py install;
+      travis_retry python setup.py install;
     fi
 script:
   - bin/test_travis.sh
