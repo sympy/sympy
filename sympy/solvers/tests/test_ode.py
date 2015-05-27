@@ -81,6 +81,19 @@ def test_linear_2eq_order1():
     assert dsolve(eq10) == sol10
 
 
+def test_linear_2eq_order1_nonhomog_linear():
+    e = [Eq(diff(f(x), x), f(x) + g(x) + 5*x),
+         Eq(diff(g(x), x), f(x) - g(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
+def test_linear_2eq_order1_nonhomog():
+    # Note: once implemented, add some tests esp. with resonance
+    e = [Eq(diff(f(x), x), f(x) + exp(x)),
+         Eq(diff(g(x), x), f(x) + g(x) + x*exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -267,6 +280,13 @@ def test_linear_3eq_order1():
     sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), \
     Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
     assert dsolve(eq6) == sol6
+
+
+def test_linear_3eq_order1_nonhomog():
+    e = [Eq(diff(f(x), x), -9*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*g(x)),
+         Eq(diff(h(x), x), h(x) + exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
 
 
 def test_nonlinear_2eq_order1():
