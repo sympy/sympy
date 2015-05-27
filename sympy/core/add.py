@@ -500,7 +500,7 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_positive and a.is_nonnegative:
+                if self != s and s.is_positive and a.is_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
@@ -553,7 +553,7 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonnegative:
+                    if self != s and s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
@@ -568,7 +568,7 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonpositive:
+                    if self != s and s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
@@ -584,7 +584,7 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_negative and a.is_nonpositive:
+                if self != s and s.is_negative and a.is_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)

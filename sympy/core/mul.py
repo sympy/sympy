@@ -1058,11 +1058,31 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        z = self.is_zero
-        if z:
-            return False
-        elif z is False:
-            return (S.ImaginaryUnit*self).is_real
+        real = True
+        zero = one_neither = False
+
+        for t in self.args:
+            if t.is_imaginary:
+                real = not real
+            elif t.is_real:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
+                        return False
+            elif t.is_real is False:
+                if one_neither:
+                    return  # complex terms might cancel
+                one_neither = True
+            else:
+                return
+
+        if zero is False:
+            if one_neither:  # N = a+I*b or I*b
+                if real:
+                    return  # r*N is like N: could be either
+                return False  # neither I*N values is imaginary
+            if not real:
+                return True
 
     def _eval_is_hermitian(self):
         real = True
@@ -1095,11 +1115,34 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        z = self.is_zero
-        if z:
-            return False
-        elif z is False:
-            return (S.ImaginaryUnit*self).is_hermitian
+        imag = False
+        one_nc = zero = one_neither = False
+
+        for t in self.args:
+            if not t.is_commutative:
+                if one_nc:
+                    return
+                one_nc = True
+
+            if t.is_antihermitian:
+                imag = not imag
+            elif t.is_hermitian:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
+                        return True
+            elif t.is_hermitian is False:
+                if one_neither:
+                    return
+                one_neither = True
+            else:
+                return
+
+        if one_neither:
+            if imag:
+                return zero
+        elif zero is False or imag:
+            return imag
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1130,27 +1173,79 @@ class Mul(Expr, AssocOp):
 
         sign = 1
         saw_NON = False
+        not_real = 0
         for t in self.args:
             if t.is_positive:
                 continue
             elif t.is_negative:
                 sign = -sign
             elif t.is_zero:
-                return False
+                if all(a.is_finite for a in self.args):
+                    return False
+                return
             elif t.is_nonpositive:
                 sign = -sign
                 saw_NON = True
             elif t.is_nonnegative:
                 saw_NON = True
+            elif t.is_positive is False:
+                sign = -sign
+                saw_NON = True
+                not_real += 1
+            elif t.is_negative is False:
+                saw_NON = True
+                not_real += 1
             else:
                 return
-        if sign == 1 and saw_NON is False:
+        if sign == 1 and saw_NON is False and not_real == 0:
             return True
-        if sign < 0:
+        if sign < 0 and not_real <= 1:
             return False
 
     def _eval_is_negative(self):
-        return (-self).is_positive
+        """Return True if self is negative, False if not, and None if it
+        cannot be determined.
+
+        This algorithm is non-recursive and works by keeping track of the
+        sign which changes when a negative or nonpositive is encountered.
+        Whether a nonpositive or nonnegative is seen is also tracked since
+        the presence of these makes it impossible to return True, but
+        possible to return False if the end result is nonnegative. e.g.
+
+            pos * neg * nonpositive -> pos or zero -> False is returned
+            pos * neg * nonnegative -> neg or zero -> None is returned
+        """
+
+        sign = 1
+        saw_NON = False
+        not_real = 0
+        for t in self.args:
+            if t.is_positive:
+                continue
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
+                if all(a.is_finite for a in self.args):
+                    return False
+                return
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            elif t.is_positive is False:
+                sign = -sign
+                saw_NON = True
+                not_real += 1
+            elif t.is_negative is False:
+                saw_NON = True
+                not_real += 1
+            else:
+                return
+        if sign == -1 and saw_NON is False and not_real == 0:
+            return True
+        if sign > 0 and not_real <= 1:
+            return False
 
     def _eval_is_odd(self):
         is_integer = self.is_integer

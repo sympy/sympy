@@ -520,7 +520,7 @@ class Pow(Expr):
         if old == self.base:
             return new**self.exp._subs(old, new)
 
-        if old.func is self.func and self.base is old.base:
+        if old.func is self.func and self.base == old.base:
             if self.exp.is_Add is False:
                 ct1 = self.exp.as_independent(Symbol, as_Add=False)
                 ct2 = old.exp.as_independent(Symbol, as_Add=False)
