@@ -1061,10 +1061,6 @@ class PrettyPrinter(Printer):
 
         prettyFunc = self._print(Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
-        #postioning func_name
-        mid = prettyArgs.height()//2
-        if mid > 2:
-            prettyFunc.baseline = -mid + 1
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
