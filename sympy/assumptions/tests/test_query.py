@@ -2070,6 +2070,7 @@ def test_compute_known_facts():
     s = compute_known_facts(known_facts, known_facts_keys)
 
 
+@slow
 def test_known_facts_consistent():
     from sympy.assumptions.ask import known_facts, known_facts_keys
     ns = {}

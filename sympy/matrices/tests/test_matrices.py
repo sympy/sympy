@@ -16,7 +16,7 @@ from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
 
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, d, x, y, z
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -2345,14 +2345,12 @@ def test_replace_map():
     assert N == K
 
 def test_atoms():
-    from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.atoms() == set([S(1),S(2),S(-1), x])
     assert m.atoms(Symbol) == set([x])
 
 @slow
 def test_pinv():
-    from sympy.abc import a, b, c, d
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
     assert simplify(A1.pinv()) == simplify(A1.inv())

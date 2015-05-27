@@ -3,7 +3,7 @@ from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import XFAIL, skip, slow
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.
@@ -27,6 +27,7 @@ def _sskip():
         skip("slow")
 
 
+@slow
 def test_gruntz_evaluation():
     # Gruntz' thesis pp. 122 to 123
     # 8.1
@@ -94,6 +95,7 @@ def test_gruntz_evaluation_slow():
                   / (exp(-x/(1 + exp(-x))))**2 - exp(x) + x, x, oo) == 2
 
 
+@slow
 def test_gruntz_eval_special():
     # Gruntz, p. 126
     assert gruntz(exp(x)*(sin(1/x + exp(-x)) - sin(1/x + exp(-x**2))), x, oo) == 1
