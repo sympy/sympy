@@ -3026,6 +3026,11 @@ def test_sympy__series__sequences__SeqPer():
     assert _test_args(SeqPer((1, 2, 3), (0, 10, 2)))
 
 
+def test_sympy__series__sequences__SeqFormula():
+    from sympy.series.sequences import SeqFormula
+    assert _test_args(SeqFormula((x**2, x), (0, 10, 2)))
+
+
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))

@@ -2,11 +2,13 @@ from __future__ import print_function, division
 
 from sympy.core.expr import Expr
 from sympy.core.singleton import (S, Singleton)
-from sympy.core.compatibility import (range, integer_types, with_metaclass)
+from sympy.core.compatibility import (range, integer_types, with_metaclass\
+                                      , is_sequence)
 from sympy.core.sympify import sympify
+from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import ceiling
 from sympy.utilities.misc import filldedent
-from sympy.sets.sets import Interval
+from sympy.sets.sets import Interval, Set
 
 
 class SeqBase(Expr):
@@ -68,6 +70,15 @@ class SeqBase(Expr):
     def _length(self):
         raise NotImplementedError("(%s)._length" % self)
 
+    @property
+    def dummy(self):
+        """Returns a tuple of variables that are bounded"""
+        return self._dummy
+
+    @property
+    def _dummy(self):
+        return ()
+
     def coeff(self, i):
         """Returns the coefficient at point i"""
         if i < self.start or i > self.stop:
@@ -115,7 +126,6 @@ class SeqBase(Expr):
         -5
         >>> SeqExpr((1, 2, 3), (-oo, 0, 2))._ith_point(5)
         -10
-
         """
         if self.start is S.NegativeInfinity:
             initial = self.stop
@@ -155,7 +165,6 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     >>> from sympy import S
     >>> S.EmptySequence
     EmptySequence()
-
     """
 
     is_iterable = True
@@ -177,25 +186,56 @@ def _parse_interval(interval):
     interval should be of the form (start, step) or (start, stop, step)
     Both start and stop cannot be unbounded
     step cannot be unbounded
+
+    Allowed:
+    * Any instance of set
+    * (Set, step)
+    * (start, stop)
+    * (start, stop, step)
+
+    returns an Interval object and a step value
+
+    Examples
+    ========
+
+    >>> from sympy.series.sequences import _parse_interval as pari
+    >>> from sympy import Interval
+    >>> pari(Interval(0, 5))
+    ([0, 5], 1)
+    >>> pari((Interval(0, 5), 2))
+    ([0, 5], 2)
+    >>> pari((0, 5))
+    ([0, 5], 1)
+    >>> pari((0, 5, 2))
+    ([0, 5], 2)
     """
-    if len(interval) == 2:
-        start, stop = interval
-        step = 1
-    elif len(interval) == 3:
-        start, stop, step = interval
-        if step == None:
-            step = 1
-    else:
-        raise ValueError(filldedent("""interval should be of the form\
-                                    (start, stop) or (start, stop, step)"""))
+    start, stop, step = None, None, None
+    if isinstance(interval, Set):
+        start, stop = interval.inf, interval.sup
+    elif is_sequence(interval, Tuple):
+        if len(interval) == 2:
+            if isinstance(interval[0], Set):
+                start, stop = interval[0].inf, interval[0].sup
+                step = interval[1]
+            else:
+                start, stop = interval
+        elif len(interval) == 3:
+            start, stop, step = interval
+
+    if step == None:
+        step = 1 # default
+
+    if start == None or stop == None:
+        raise ValueError('Invalid limits given: %s' % str(interval))
 
     if start is S.NegativeInfinity and stop is S.Infinity:
             raise ValueError(filldedent("""Both the start and end value\
                                         cannot be unbounded"""))
+
     if step in [S.NegativeInfinity, S.Infinity]:
         raise ValueError("step cannot be unbounded")
 
-    return Interval(start, stop), sympify(step)
+    return (Interval(start, stop), sympify(step))
 
 
 class SeqExpr(SeqBase):
@@ -215,7 +255,7 @@ class SeqExpr(SeqBase):
     >>> s.length
     11
 
-    for changing the step size
+    changing the step size
 
     >>> SeqExpr((1, 2, 3), (0, 10, 2)).length
     6
@@ -225,11 +265,12 @@ class SeqExpr(SeqBase):
     is_iterable = True
 
     def __new__(cls, gen, interval=(0, S.Infinity, 1)):
-        interval, step = _parse_interval(interval)
-        if interval is S.EmptySet:
+        bounds, step = _parse_interval(interval)
+        if bounds is S.EmptySet:
             return S.EmptySequence
         gen = sympify(gen)
-        return Expr.__new__(cls, gen, interval, step)
+        interval = Tuple(bounds, step)
+        return Expr.__new__(cls, gen, interval)
 
     def __iter__(self):
         i = 0
@@ -239,12 +280,32 @@ class SeqExpr(SeqBase):
             i += 1
 
     @property
+    def free_symbols(self):
+        """
+        This method returns the symbols in the object, excluding those
+        that take on a specific value (i.e. the dummy symbols).
+
+        Examples
+        ========
+
+        >>> from sympy import SeqFormula
+        >>> from sympy.abc import n, m
+        >>> SeqFormula((m*n**2, n), (0, 5)).free_symbols
+        set([m])
+        """
+        fsyms = set().union(*[a.free_symbols for a in self.args])
+        for d in self.dummy:
+            if d in fsyms:
+                fsyms.remove(d)
+        return fsyms
+
+    @property
     def _gen(self):
         return self.args[0]
 
     @property
     def _interval(self):
-        return self.args[1]
+        return self.args[1][0]
 
     @property
     def _start(self):
@@ -256,7 +317,7 @@ class SeqExpr(SeqBase):
 
     @property
     def _step(self):
-        return self.args[2]
+        return self.args[1][1]
 
     @property
     def _length(self):
@@ -304,6 +365,10 @@ class SeqPer(SeqExpr):
     >>> s[0:6]
     [1, 2, 3, 1, 2, 3]
 
+    See Also
+    ========
+
+    sympy.series.sequences.SeqFormula
     """
 
     @property
@@ -320,3 +385,76 @@ class SeqPer(SeqExpr):
         else:
             idx = (i - self.start) % self.period
         return self.periodical[idx]
+
+
+class SeqFormula(SeqExpr):
+    """Represents sequence based on a formula
+
+    Elements are generated using a formula
+
+    Examples
+    ========
+
+    >>> from sympy import SeqFormula, oo, Symbol
+    >>> n = Symbol('n')
+    >>> s = SeqFormula((n**2, n), (0, 5))
+    >>> s.formula
+    n**2
+
+    For value at a particular point
+
+    >>> s.coeff(3)
+    9
+
+    supports slicing
+
+    >>> s[:]
+    [0, 1, 4, 9, 16, 25]
+
+    iterable
+
+    >>> list(s)
+    [0, 1, 4, 9, 16, 25]
+
+    changing step size
+
+    >>> SeqFormula((n**2, n), (0, 5, 2))[:]
+    [0, 4, 16]
+
+    sequence starts from negative infinity
+
+    >>> s = SeqFormula((n**2, n), (-oo, 0))
+    >>> s[0:6]
+    [0, 1, 4, 9, 16, 25]
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqPer
+    """
+
+    def __new__(cls, formula, interval=(0, S.Infinity, 1)):
+        # try to find the dummy symbol
+        formula = sympify(formula)
+        if not is_sequence(formula, Tuple):
+            free = formula.free_symbols
+            if len(free) != 1:
+                raise ValueError(filldedent(
+                    " specify dummy variables for %s. If the formula contains"
+                    " more than one free symbol, a dummy variable should be"
+                    " supplied explicitly e.g., SeqFormula((m*n**2, n), (0, 5))"
+                    % formula))
+            formula = (formula, free.pop())
+        return SeqExpr.__new__(cls, formula, interval)
+
+    @property
+    def formula(self):
+        return self.gen[0]
+
+    @property
+    def _dummy(self):
+        return (self.gen[1],)
+
+    def _eval_coeff(self, i):
+        d = self.dummy[0]
+        return self.formula.subs(d, i)

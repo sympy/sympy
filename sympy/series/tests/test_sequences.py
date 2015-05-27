@@ -1,6 +1,10 @@
-from sympy import (S, Tuple, Interval, EmptySequence, oo, SeqPer)
+from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer\
+                   , SeqFormula)
 from sympy.series.sequences import SeqExpr
 from sympy.utilities.pytest import raises
+
+x, y, z = symbols('x y z')
+n, m = symbols('n m')
 
 
 def test_EmptySequence():
@@ -44,3 +48,23 @@ def test_SeqPer():
     assert s[:] == [1, 2, 3, 1, 2, 3]
     assert SeqPer((1, 2, 3), (0, 5, 2))[:] == [1, 3, 2]
     assert SeqPer((1, 2, 3), (-oo, 0))[0:6] == [1, 2, 3, 1, 2, 3]
+
+
+def test_SeqFormula():
+    s = SeqFormula((n**2, n), (0, 5))
+
+    assert isinstance(s, SeqFormula)
+    assert s.formula == n**2
+    assert s.coeff(3) == 9
+
+    assert list(s) == [i**2 for i in range(6)]
+    assert s[:] == [i**2 for i in range(6)]
+    assert SeqFormula((n**2, n), (0, 5, 2))[:] == [0, 4, 16]
+    assert SeqFormula((n**2, n), (-oo, 0))[0:6] == [i**2 for i in range(6)]
+
+    assert SeqFormula(n**2, (0, oo)) == SeqFormula((n**2, n), (0, oo))
+
+    assert SeqFormula((m*n**2, n), (0, oo)).subs(m, x) == \
+        SeqFormula((x*n**2, n), (0, oo))
+    assert SeqFormula((n**2, n), (0, m)).subs(m, x) == \
+        SeqFormula((n**2, n), (0, x))

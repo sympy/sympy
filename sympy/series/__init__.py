@@ -5,6 +5,6 @@ from .limits import limit, Limit
 from .gruntz import gruntz
 from .series import series
 from .residues import residue
-from .sequences import EmptySequence, SeqPer
+from .sequences import (EmptySequence, SeqPer, SeqFormula)
 
 O = Order
