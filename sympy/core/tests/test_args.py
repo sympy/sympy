@@ -9,7 +9,7 @@ import re
 import warnings
 import io
 
-from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
+from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -240,7 +240,6 @@ def test_sympy__core__function__Function():
 
 
 def test_sympy__core__function__Lambda():
-    from sympy.core.function import Lambda
     assert _test_args(Lambda((x, y), x + y + z))
 
 
@@ -498,7 +497,7 @@ def test_sympy__sets__fancysets__Reals():
 
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet
-    from sympy import S, Lambda, Symbol
+    from sympy import S, Symbol
     x = Symbol('x')
     assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
@@ -2065,7 +2064,7 @@ def test_sympy__matrices__expressions__determinant__Determinant():
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
-    from sympy import Lambda, symbols
+    from sympy import symbols
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
@@ -3029,6 +3028,11 @@ def test_sympy__series__sequences__SeqPer():
 def test_sympy__series__sequences__SeqFormula():
     from sympy.series.sequences import SeqFormula
     assert _test_args(SeqFormula((x**2, x), (0, 10, 2)))
+
+
+def test_sympy__series__sequences__SeqFunc():
+    from sympy.series.sequences import SeqFunc
+    assert _test_args(SeqFunc(Lambda(x, x**2), (0, 10, 2)))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():

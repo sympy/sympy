@@ -1,5 +1,5 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer\
-                   , SeqFormula)
+                   , SeqFormula, SeqFunc, Lambda)
 from sympy.series.sequences import SeqExpr
 from sympy.utilities.pytest import raises
 
@@ -64,7 +64,19 @@ def test_SeqFormula():
 
     assert SeqFormula(n**2, (0, oo)) == SeqFormula((n**2, n), (0, oo))
 
+    assert SeqFormula(n**2, (0, m)).subs(m, x) == SeqFormula(n**2, (0, x))
     assert SeqFormula((m*n**2, n), (0, oo)).subs(m, x) == \
         SeqFormula((x*n**2, n), (0, oo))
-    assert SeqFormula((n**2, n), (0, m)).subs(m, x) == \
-        SeqFormula((n**2, n), (0, x))
+
+
+def test_SeqFunc():
+    s = SeqFunc(Lambda(n, n**2), (0, 5))
+
+    assert isinstance(s, SeqFunc)
+    assert s.function == Lambda(n, n**2)
+    assert s.coeff(3) == 9
+
+    assert list(s) == [i**2 for i in range(6)]
+    assert s[:] == [i**2 for i in range(6)]
+    assert SeqFunc(Lambda(n, n**2), (0, 5, 2))[:] == [0, 4, 16]
+    assert SeqFunc(Lambda(n, n**2), (-oo, 0))[0:6] == [i**2 for i in range(6)]
