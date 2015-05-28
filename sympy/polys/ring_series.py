@@ -1,5 +1,3 @@
-"""Power series manipulating functions acting on polys.ring.PolyElement()"""
-
 from sympy.polys.domains import QQ
 from sympy.polys.rings import PolyElement, ring
 from sympy.polys.monomials import monomial_min, monomial_mul
@@ -219,7 +217,7 @@ def rs_pow(p1, n, x, prec):
 
 def _has_constant_term(p, x):
     """
-    test if ``p`` has a constant term in ``x``
+    Check if ``p`` has a constant term in ``x``
 
     Examples
     ========
@@ -471,6 +469,104 @@ def fun(p, f, *args):
     p1 = rs_series_from_list(p1, c, args[-2], args[-1])
     return p1
 
+def mul_xin(p, i, n):
+    """
+    Computes p*x_i**n
+
+    x_i is the ith variable
+    """
+
+    n = as_int(n)
+    ring = p.ring
+    q = ring(0)
+    for k, v in p.items():
+        k1 = list(k)
+        k1[i] += n
+        q[tuple(k1)] = v
+    return q
+
+def nth_root(p, n, iv, prec):
+    """
+    Multivariate series of nth root of p
+    Computes p**(1/n)
+
+    n: Integer
+    iv: List of variable names or variable indices
+    prec: List of truncations for these variables
+
+    In the case of one variable it can also be used as:
+
+    iv: Variable name or variable index (0)
+    prec: Truncation value for the variable
+
+    p is a series with O(x_1**n_1*..x_m**n_m) in
+    variables x_k with index or name iv[k - 1]
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x, y = lgens('x, y', QQ)
+    >>> (1 + x + x*y).nth_root(-3, x, 3)
+    2/9*x**2*y**2 + 4/9*x**2*y + 2/9*x**2 - 1/3*x*y - 1/3*x + 1
+    """
+    if n == 0:
+        if p == 0:
+            raise ValueError('0**0 expression')
+        else:
+            return p.ring(1)
+    if n == 1:
+        return rs_trunc(p, iv, prec)
+    ring = p.ring
+    ii = ring.gens.index(iv)
+    m = min(p, key=lambda k: k[ii])[ii]
+    try:
+        mq, mr = divmod(m, n)
+    except TypeError:
+        if not gmpy_mode:
+            raise ValueError
+    if mr:
+        raise TaylorEvalError('Not analytic in the series variable')
+    p = mul_xin(p, ii, -m)
+    prec -= mq
+    if _has_constant_term(p-1, iv):
+        if ring.zero_monom in p:
+            c = p[ring.zero_monom]
+    #####
+            if isinstance(c, PythonRationalType):
+                c1 = Rational(c.p, c.q)
+                cn = Pow(c1, S.One/n)
+            else:
+                cn = Pow(c, S.One/n)
+            if cn.is_Rational:
+                if not lp.SR:
+                    cn = lp.ring(cn.p, cn.q)
+                res = cn*(p/c).nth_root(n, iv, prec)
+                if mq:
+                    res = res.mul_xin(iv, mq)
+                return res
+        if not lp.SR:
+            raise TaylorEvalError('p - 1 must not have a constant term in the series variables')
+        else:
+            if lp.zero_mon in p:
+                c = p[lp.zero_mon]
+                if c.is_positive:
+                    res = (p/c).nth_root(n, iv, prec)*c**Rational(1, n)
+                    if mq:
+                        res = res.mul_xin(iv, mq)
+                    return res
+                else:
+                    raise NotImplementedError
+    if lp.commuting and lp.ngens == 1:
+        res = p._nth_root1(n, iv, prec)
+    else:
+        res = p.fun('_nth_root1', n, iv, prec)
+    if mq:
+        res = res.mul_xin(ii, mq)
+    return res
+#######
+
 def rs_log(p, x, prec):
     """
     logarithm of ``p`` modulo ``O(x**prec)``
@@ -498,6 +594,36 @@ def rs_log(p, x, prec):
     dlog = p.diff(x)
     dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
     return rs_integrate(dlog, x)
+
+def rs_LambertW(p, iv, prec):
+    """
+    Calculates the series expansion of principal branch of the Lambert W function. For further
+    imformation, refer to the doc of LambertW function.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.lambert(x, 8)
+    16807/720*x**7 - 54/5*x**6 + 125/24*x**5 - 8/3*x**4 + 3/2*x**3 - x**2 + x
+    """
+    ring = p.ring
+    p1 = ring(0)
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('polynomial must not have constant term in the series variables')
+    if iv in ring.gens:
+        for precx in _giant_steps(prec):
+            e = rs_exp(p1, iv, precx)
+            p2 = rs_mul(e, p1, iv, precx) - p
+            p3 = rs_mul(e, p1 + 1, iv, precx)
+            p3 = rs_series_inversion(p3, iv, precx)
+            tmp = rs_mul(p2, p3, iv, precx)
+            p1 -= tmp
+        return p1
+    else:
+        raise NotImplementedError
 
 def _exp1(p, x, prec):
     """
@@ -541,6 +667,40 @@ def rs_exp(p, x, prec):
 
     r = rs_series_from_list(p, c, x, prec)
     return r
+
+def asin(p, iv, prec):
+    """
+    arcsine of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.asin(x, 8)
+    5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x
+    """
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in the series variables')
+    ring = p.ring
+    if iv in ring.gens:
+        # get a good value
+        if len(p) > 20:
+            dp = p.diff(iv)
+            p1 = 1 - rs_square(p, iv, prec - 1)
+           ##### p1 = p1.nth_root(-2, iv, prec - 1)
+            p1 = rs_mul(dp, p1, iv, prec - 1)
+            return rs_integrate(p1, iv)
+        one = ring(1)
+        c = [0, one, 0]
+        for k in range(3, prec, 2):
+            c.append((k - 2)**2*c[-2]/(k*(k - 1)))
+            c.append(0)
+        return rs_series_from_list(p, c, iv, prec)
+
+    else:
+        raise NotImplementedError
 
 def _atan_series(p, iv, prec):
     ring = p.ring
@@ -647,9 +807,195 @@ def rs_sin(p, x, prec):
         n *= -k*(k + 1)
     return rs_series_from_list(p, c, x, prec)
 
+def rs_cos(p, iv, prec):
+    """
+    cosine of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.cos(x, 6)
+    1/24*x**4 - 1/2*x**2 + 1
+    """
+    ring = p.ring
+    if _has_constant_term(p, iv):
+        zm = ring.zero_monom
+        #if not lp.SR:    Needs to be checked
+        #    raise TaylorEvalError
+        c = p[zm]
+        if not c.is_real:
+            raise NotImplementedError
+        p1 = p - c
+        return sympy.functions.cos(c)*p1.cos(iv, prec) - \
+                sympy.functions.sin(c)*p1.sin(iv, prec)
+    # get a good value
+    if len(p) > 20 and ring.ngens == 1:
+        t = rs_tan(p/2, iv, prec)
+        t2 = rs_square(t, iv, prec)
+        p1 = rs_series_inversion(1+t2, iv, prec)
+        return rs_mul_trunc([p1 ,1 - t2, iv, prec)
+    one = ring(1)
+    n = 1
+    c = []
+    for k in range(2, prec + 2, 2):
+        c.append(one/n)
+        c.append(0)
+        n *= -k*(k - 1)
+    return rs_series_from_list(p, c, iv, prec)
+
+def rs_cos_sin(p, iv, prec):
+    """
+    Returns the tuple (rs_cos(p, iv, iv), rs_sin(p, iv, iv))
+    Is faster than calling rs_cos and rs_sin separately
+    """
+    t = rs_tan(p/2, iv, prec)
+    t2 = rs_square(t, iv, prec)
+    p1 = rs_series_inversion(1+t2, iv, prec)
+    return (rs_mul(p1, 1 - t2, iv, prec), rs_mul(p1, 2*t, iv, prec))
+
+def check_series_var(p, iv):
+    # TODO 
+    #Double check whether an error needs to be raised
+    ii = p.ring.gens.index(iv)
+    m = min(p, key=lambda k: k[ii])[ii]
+    return ii, m
+
+def rs_cot(p, iv, prec):
+    """
+    cotangent of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.cot(x, 6)
+    -2/945*x**5 - 1/45*x**3 - 1/3*x + x**-1
+    """
+
+    # i, m = p.check_series_var(iv, PoleError, 'cot')
+    # Probably not needed
+    i, m = check_series_var(p, iv)
+    # see _taylor_term1 comment  sin(x**m) = x**pw*sin(x**m)/x**n0
+    # prec1 = prec + pw + n0, with pw = n0 = m
+    prec1 = prec + 2*m
+    c, s = rs_cos_sin(p, iv, prec1)
+    s = mul_xin(s, i, -1)
+    s = rs_series_inversion(s, iv, prec1)
+    res = rs_mul(c, s, iv, prec1)
+    res = rs_mul(res, i, -1)
+    res = rs_trunc(res, iv, prec)
+    return res
+
+def _atanh(p, iv, prec):
+    ring = p.ring
+    one = ring(1)
+    c = [one]
+    p2 = rs_square(p, iv, prec)
+    for k in range(1, prec):
+        c.append(one/(2*k + 1))
+    s = rs_series_from_list(p2, c, iv, prec)
+    s = rs_mul(s, p, iv, prec)
+    return s
+
+def atanh(p, iv, prec):
+    """
+    Hyperbolic arctangent of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.atanh(x, 8)
+    1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
+    """
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in the series variables')
+    ring = p.ring
+    if iv in ring.gens:
+        dp = rs_diff(p, iv)
+        p1 = - rs_square(p, iv, prec) + 1
+        p1 = rs_series_inversion(p1, iv, prec - 1)
+        p1 = rs_mul(dp, p1, iv, prec - 1)
+        return rs_integrate(p1, iv)
+    else:
+        return _atanh(iv, prec)
+
+def rs_sinh(p, iv, prec):
+    """
+    Hyperbolic sine of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> p = x.sinh(x, 8)
+    >>> p
+    1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
+    """
+    #self.check_series_var(iv, NotImplementedError, 'sinh')
+    t = rs_exp(p, iv, prec)
+    t1 = rs_series_inversion(t, iv, prec)
+    return (t - t1)/2
+
+def rs_cosh(p, iv, prec):
+    """
+    Hyperbolic cosine of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.cosh(x, 8)
+    1/720*x**6 + 1/24*x**4 + 1/2*x**2 + 1
+    """
+    #p.check_series_var(iv, NotImplementedError, 'cosh')
+    t = rs_exp(p, iv, prec)
+    t1 = rs_series_inversion(t, iv, prec)
+    return (t + t1)/2
+
+def _tanh(p, iv, prec):
+    ring = p.ring
+    p1 = ring(0)
+    for precx in _giant_steps(prec):
+        tmp = p - atanh(p1, iv, precx)
+        tmp = rs_mul(tmp, 1 - p1.square(), iv, precx)
+        p1 += tmp
+    return p1
+
+def tanh(p, iv, prec):
+    """
+    Hyperbolic tangent of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x = lgens('x', QQ)
+    >>> x.tanh(x, 8)
+    -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
+    """
+    ring = p.ring
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in the series variables')
+    if and ring.ngens == 1:
+        return _tanh(p, iv, prec)
+    return fun(p, '_tanh', iv, prec)
+
 def rs_newton(p, x, prec):
     """
-    compute the truncated Newton sum of the polynomial ``p``
+    Compute the truncated Newton sum of the polynomial ``p``
 
     Examples
     ========
