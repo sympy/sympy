@@ -16,6 +16,11 @@ class SeqBase(Expr):
 
     is_iterable = False
 
+    is_EmptySequence = False
+    is_Periodic = False
+    is_Functional = False
+    is_Formula = False
+
     @property
     def gen(self):
         """Returns the generator for the sequence"""
@@ -168,6 +173,7 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     """
 
     is_iterable = True
+    is_EmptySequence = True
 
     @property
     def _interval(self):
@@ -371,6 +377,8 @@ class SeqPer(SeqExpr):
     sympy.series.sequences.SeqFunc
     """
 
+    is_Periodic = True
+
     @property
     def period(self):
         return len(self.gen)
@@ -432,6 +440,8 @@ class SeqFormula(SeqExpr):
     sympy.series.sequences.SeqPer
     sympy.series.sequences.SeqFunc
     """
+
+    is_Formula = True
 
     def __new__(cls, formula, interval=(0, S.Infinity, 1)):
         # try to find the dummy symbol
@@ -507,6 +517,8 @@ class SeqFunc(SeqExpr):
     sympy.series.sequences.SeqFormula
     """
 
+    is_Functional = True
+
     def __new__(cls, function, interval=(0, S.Infinity, 1)):
         function = sympify(function)
         if len(function.variables) != 1:
@@ -520,3 +532,47 @@ class SeqFunc(SeqExpr):
 
     def _eval_coeff(self, i):
         return self.function(i)
+
+
+def sequence(**kwargs):
+    """Returns appropriate sequence object.
+
+    Examples
+    ========
+
+    >>> from sympy import sequence, SeqPer, SeqFunc, SeqFormula, Lambda
+    >>> from sympy.abc import n
+
+    >>> sequence(formula=(n**2, n), interval=(0, 5))
+    SeqFormula((n**2, n), ([0, 5], 1))
+
+    >>> sequence(periodical=(1, 2, 3), interval=(0, 5))
+    SeqPer((1, 2, 3), ([0, 5], 1))
+
+    >>> sequence(func=Lambda(n, n**2), interval=(0, 5))
+    SeqFunc(Lambda(n, n**2), ([0, 5], 1))
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqPer
+    sympy.series.sequences.SeqFormula
+    sympy.series.sequences.SeqFunc
+    """
+    interval = kwargs.pop('interval', None)
+    if interval == None:
+        interval = (0, S.Infinity, 1)
+
+    key = kwargs.pop('periodical', None)
+    if not key == None:
+        return SeqPer(key, interval)
+
+    key = kwargs.pop('func', None)
+    if not key == None:
+        return SeqFunc(key, interval)
+
+    key = kwargs.pop('formula', None)
+    if not key == None:
+        return SeqFormula(key, interval)
+
+    raise ValueError('Invalid Arguments')
