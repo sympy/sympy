@@ -19,9 +19,6 @@ class RealElement(_mpf, DomainElement):
     __slots__ = ['__mpf__']
 
     def _set_mpf(self, val):
-        prec, rounding = self.context._prec_rounding
-        tol = self.context.tol
-
         self.__mpf__ = val
 
     _mpf_ = property(lambda self: self.__mpf__, _set_mpf)
