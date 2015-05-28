@@ -7,9 +7,11 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
+from sympy.core.decorators import deprecated
+from sympy.utilities.decorator import classproperty, ClassPropertyDescriptor
 
 
-class Q:
+class Q(object):
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
     finite = Predicate('finite')
@@ -55,6 +57,16 @@ class Q:
     real_elements = Predicate('real_elements')
     complex_elements = Predicate('complex_elements')
     integer_elements = Predicate('integer_elements')
+
+    @classproperty
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    def bounded(self):
+        return Predicate('finite')
+
+    @classproperty
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    def infinity(self):
+        return Predicate('infinite')
 
 
 def _extract_facts(expr, symbol):
@@ -325,7 +337,8 @@ for name, value in _handlers:
     register_handler(name, _val_template % value)
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
-                    if not attr.startswith('__')]
+                    if not (attr.startswith('__') or isinstance(Q.__dict__[attr], ClassPropertyDescriptor))]
+
 known_facts = And(
     Implies(Q.infinite, ~Q.finite),
     Implies(Q.real, Q.complex),
