@@ -2,19 +2,20 @@ from __future__ import print_function, division
 
 from sympy.core.expr import Expr
 from sympy.core.singleton import (S, Singleton)
+from sympy.core.symbol import Dummy
 from sympy.core.compatibility import (range, integer_types, with_metaclass\
                                       , is_sequence)
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import ceiling
-from sympy.utilities.misc import filldedent
 from sympy.sets.sets import Interval, Set
+from sympy.utilities.iterables import flatten
 
 
 class SeqBase(Expr):
     """Base class for sequences"""
 
-    is_iterable = False
+    is_iterable = True
 
     is_EmptySequence = False
     is_Periodic = False
@@ -24,78 +25,69 @@ class SeqBase(Expr):
     @property
     def gen(self):
         """Returns the generator for the sequence"""
-        return self._gen
-
-    @property
-    def _gen(self):
         raise NotImplementedError("(%s)._gen" % self)
 
     @property
     def interval(self):
-        """The interval in which the sequence is defined"""
-        return self._interval
-
-    @property
-    def _interval(self):
+        """The interval on which the sequence is defined"""
         raise NotImplementedError("(%s)._interval" % self)
 
     @property
     def start(self):
         """The starting point of the sequence. This point is included"""
-        return self._start
-
-    @property
-    def _start(self):
         raise NotImplementedError("(%s)._start" % self)
 
     @property
     def stop(self):
         """The ending point of the sequence. This point is included"""
-        return self._stop
-
-    @property
-    def _stop(self):
         raise NotImplementedError("(%s)._stop" % self)
 
     @property
     def step(self):
         """Increase points by step"""
-        return self._step
-
-    @property
-    def _step(self):
         raise NotImplementedError("(%s)._step" % self)
 
     @property
     def length(self):
         """Length of the sequence"""
-        return self._length
-
-    @property
-    def _length(self):
         raise NotImplementedError("(%s)._length" % self)
 
     @property
-    def dummy(self):
+    def variables(self):
         """Returns a tuple of variables that are bounded"""
-        return self._dummy
-
-    @property
-    def _dummy(self):
         return ()
 
-    def coeff(self, i):
-        """Returns the coefficient at point i"""
-        if i < self.start or i > self.stop:
-            raise IndexError("Index %s out of bounds %s" %(i, self.interval))
-        return self._eval_coeff(i)
+    @property
+    def free_symbols(self):
+        """
+        This method returns the symbols in the object, excluding those
+        that take on a specific value (i.e. the dummy symbols).
 
-    def _eval_coeff(self, i):
-        raise NotImplementedError(filldedent(""" The _eval_coeff method should\
-                                             be added to %s to return\
-                                             coefficient so it is available\
-                                             when coeff calls it."""\
-                                             % self.func))
+        Examples
+        ========
+
+        >>> from sympy import SeqFormula
+        >>> from sympy.abc import n, m
+        >>> SeqFormula((m*n**2, n), (0, 5)).free_symbols
+        set([m])
+        """
+        fsyms = set().union(*[a.free_symbols for a in self.args])
+        for d in self.variables:
+            if d in fsyms:
+                fsyms.remove(d)
+        return fsyms
+
+    def coeff(self, pt):
+        """Returns the coefficient at point pt"""
+        if pt < self.start or pt > self.stop:
+            raise IndexError("Index %s out of bounds %s" %(i, self.interval))
+        return self._eval_coeff(pt)
+
+    def _eval_coeff(self, pt):
+        raise NotImplementedError("The _eval_coeff method should be added to"
+                                  " %s to return coefficient so it is available"
+                                  " when coeff calls it."
+                                  % self.func)
 
     def _ith_point(self, i, step=None):
         """
@@ -145,6 +137,13 @@ class SeqBase(Expr):
 
         return initial + i*step
 
+    def __iter__(self):
+        i = 0
+        while(i < self.length):
+            pt = self._ith_point(i)
+            yield self.coeff(pt)
+            i += 1
+
     def __getitem__(self, index):
         if isinstance(index, integer_types):
             index = self._ith_point(index)
@@ -176,11 +175,11 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     is_EmptySequence = True
 
     @property
-    def _interval(self):
+    def interval(self):
         return S.EmptySet
 
     @property
-    def _length(self):
+    def length(self):
         return S.Zero
 
     def __iter__(self):
@@ -235,8 +234,8 @@ def _parse_interval(interval):
         raise ValueError('Invalid limits given: %s' % str(interval))
 
     if start is S.NegativeInfinity and stop is S.Infinity:
-            raise ValueError(filldedent("""Both the start and end value\
-                                        cannot be unbounded"""))
+            raise ValueError("Both the start and end value"
+                             " cannot be unbounded")
 
     if step in [S.NegativeInfinity, S.Infinity]:
         raise ValueError("step cannot be unbounded")
@@ -266,72 +265,56 @@ class SeqExpr(SeqBase):
     >>> SeqExpr((1, 2, 3), (0, 10, 2)).length
     6
 
-    """
+    See Also
+    ========
 
-    is_iterable = True
+    sympy.series.sequences.SeqPer
+    sympy.series.sequences.SeqFormula
+    sympy.series.sequences.SeqFunc
+    """
 
     def __new__(cls, gen, interval=(0, S.Infinity, 1)):
         bounds, step = _parse_interval(interval)
         if bounds is S.EmptySet:
             return S.EmptySequence
-        gen = sympify(gen)
+        gen = cls._validate(gen)
         interval = Tuple(bounds, step)
         return Expr.__new__(cls, gen, interval)
 
-    def __iter__(self):
-        i = 0
-        while(i < self.length):
-            pt = self._ith_point(i)
-            yield self.coeff(pt)
-            i += 1
+    @classmethod
+    def _validate(cls, gen):
+        """Validates the generator
+        Should return unnchanged if no change required
+        """
+        return sympify(gen)
 
     @property
-    def free_symbols(self):
-        """
-        This method returns the symbols in the object, excluding those
-        that take on a specific value (i.e. the dummy symbols).
-
-        Examples
-        ========
-
-        >>> from sympy import SeqFormula
-        >>> from sympy.abc import n, m
-        >>> SeqFormula((m*n**2, n), (0, 5)).free_symbols
-        set([m])
-        """
-        fsyms = set().union(*[a.free_symbols for a in self.args])
-        for d in self.dummy:
-            if d in fsyms:
-                fsyms.remove(d)
-        return fsyms
-
-    @property
-    def _gen(self):
+    def gen(self):
         return self.args[0]
 
     @property
-    def _interval(self):
+    def interval(self):
         return self.args[1][0]
 
     @property
-    def _start(self):
+    def start(self):
         return self.interval.inf
 
     @property
-    def _stop(self):
+    def stop(self):
         return self.interval.sup
 
     @property
-    def _step(self):
+    def step(self):
         return self.args[1][1]
 
     @property
-    def _length(self):
+    def length(self):
         return ceiling((self.stop - self.start + 1) / self.step)
 
 
 class SeqPer(SeqExpr):
-    """Represents a periodical sequence
+    """Represents a periodic sequence
 
     The elements are repeated after a given period.
 
@@ -379,6 +362,26 @@ class SeqPer(SeqExpr):
 
     is_Periodic = True
 
+    @classmethod
+    def _validate(cls, periodical):
+        """
+        Examples
+        ========
+
+        >>> from sympy.series.sequences import SeqPer as seq
+        >>> seq._validate((1, 2, 3))
+        (1, 2, 3)
+        >>> seq._validate([1, 2, 3])
+        (1, 2, 3)
+        >>> seq._validate([1, (2, 3)])
+        (1, 2, 3)
+        """
+        if is_sequence(periodical, Tuple):
+            periodical = tuple(flatten(periodical))
+            return sympify(periodical)
+        raise ValueError("invalid period %s should be something like e.g (1, 2)"
+            % periodical)
+
     @property
     def period(self):
         return len(self.gen)
@@ -387,11 +390,11 @@ class SeqPer(SeqExpr):
     def periodical(self):
         return self.gen
 
-    def _eval_coeff(self, i):
+    def _eval_coeff(self, pt):
         if self.start is S.NegativeInfinity:
-            idx = (self.stop - i) % self.period
+            idx = (self.stop - pt) % self.period
         else:
-            idx = (i - self.start) % self.period
+            idx = (pt - self.start) % self.period
         return self.periodical[idx]
 
 
@@ -443,31 +446,54 @@ class SeqFormula(SeqExpr):
 
     is_Formula = True
 
-    def __new__(cls, formula, interval=(0, S.Infinity, 1)):
-        # try to find the dummy symbol
+    @classmethod
+    def _validate(cls, formula):
+        """
+        Examples
+        ========
+
+        >>> from sympy.series.sequences import SeqFormula as seq
+        >>> from sympy.abc import n, m
+        >>> seq._validate((n**2, n))
+        (n**2, n)
+        >>> seq._validate(n**2)
+        (n**2, n)
+        >>> seq._validate((m*n**2, n))
+        (m*n**2, n)
+        >>> seq._validate(1)
+        (1, _k)
+        """
         formula = sympify(formula)
         if not is_sequence(formula, Tuple):
             free = formula.free_symbols
-            if len(free) != 1:
+            if len(free) == 0:
+                k = Dummy('k')
+                formula = (formula, k)
+            elif len(free) == 1:
+                formula = (formula, free.pop())
+            else:
                 raise ValueError(filldedent(
                     " specify dummy variables for %s. If the formula contains"
                     " more than one free symbol, a dummy variable should be"
                     " supplied explicitly e.g., SeqFormula((m*n**2, n), (0, 5))"
                     % formula))
-            formula = (formula, free.pop())
-        return SeqExpr.__new__(cls, formula, interval)
+        return formula
 
     @property
     def formula(self):
         return self.gen[0]
 
     @property
-    def _dummy(self):
+    def variables(self):
+        """Bounded variables
+        In the case of SeqFormula
+        it will be a tuple with only one symbol
+        """
         return (self.gen[1],)
 
-    def _eval_coeff(self, i):
-        d = self.dummy[0]
-        return self.formula.subs(d, i)
+    def _eval_coeff(self, pt):
+        d = self.variables[0]
+        return self.formula.subs(d, pt)
 
 
 class SeqFunc(SeqExpr):
@@ -475,6 +501,7 @@ class SeqFunc(SeqExpr):
 
     Elements are generated by calling a function.
     Only single argument functions are allowed.
+    Only SymPy's Lambda functions are permitted.
 
     Examples
     ========
@@ -515,23 +542,23 @@ class SeqFunc(SeqExpr):
 
     sympy.series.sequences.SeqPer
     sympy.series.sequences.SeqFormula
+    sympy.core.function.Lambda
     """
 
     is_Functional = True
 
-    def __new__(cls, function, interval=(0, S.Infinity, 1)):
-        function = sympify(function)
+    @classmethod
+    def _validate(cls, function):
         if len(function.variables) != 1:
-            raise ValueError(filldedent(
-                "Only single argument functions are allowed"))
-        return SeqExpr.__new__(cls, function, interval)
+            raise ValueError("Only single argument functions are allowed")
+        return sympify(function)
 
     @property
     def function(self):
         return self.gen
 
-    def _eval_coeff(self, i):
-        return self.function(i)
+    def _eval_coeff(self, pt):
+        return self.function(pt)
 
 
 def sequence(**kwargs):
