@@ -1,4 +1,4 @@
-"""Real and complex elements with built-in truncation. """
+"""Real and complex elements. """
 
 from __future__ import print_function, division
 
