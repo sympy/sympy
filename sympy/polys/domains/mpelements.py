@@ -33,20 +33,7 @@ class ComplexElement(_mpc, DomainElement):
     __slots__ = ['__mpc__']
 
     def _set_mpc(self, val):
-        prec, rounding = self.context._prec_rounding
-        tol = self.context.tol
-
-        # norm = mpc_abs(val, prec, rounding)
-        # tol = mpf_max(tol, mpf_mul(norm, tol))
-
-        re, im = val
-
-        if mpf_lt(mpf_abs(re, prec, rounding), tol):
-            re = fzero
-        if mpf_lt(mpf_abs(im, prec, rounding), tol):
-            im = fzero
-
-        self.__mpc__ = (re, im)
+        self.__mpc__ = val
 
     _mpc_ = property(lambda self: self.__mpc__, _set_mpc)
 
