@@ -18,8 +18,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_int_1():
@@ -2115,3 +2116,12 @@ def test_issue_7246_failing():
     #Move this test to test_issue_7246 once
     #the new assumptions module is improved.
     assert ask(Q.positive(acos(x)), Q.zero(x)) is True
+
+
+def test_deprecated_Q_bounded():
+    with raises(SymPyDeprecationWarning):
+        Q.bounded
+
+def test_deprecated_Q_infinity():
+    with raises(SymPyDeprecationWarning):
+        Q.infinity
