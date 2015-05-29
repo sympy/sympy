@@ -16,6 +16,28 @@ import sympy
 from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic
 
+# Used in parse_relationals, maps operator string to sympy class and level of
+# precedence (1 low)
+relational_operators = {
+    '>': ('Gt', 1),
+    '<': ('Lt', 1),
+    '>=': ('Ge', 1),
+    '<=': ('Le', 1),
+    '==': ('Eq', 1), '=': ('Eq', 1),
+    '~=': ('Ne', 1), '<>': ('Ne', 1),
+    '&&': ('And', 2), '&': ('And', 2),
+    '||': ('Or', 3), '|': ('Or', 3)}
+
+# Matches both plain opening parentheses and also parentheses preceded by a
+# function name or negation operator. NB: '(?:)' signifies a non-matching group
+open_paren_str = r'(?:\w+|~)?\s*\('
+open_paren_re = re.compile(open_paren_str)
+
+# Matches all logical operators and open and closing parenthesis, optionally
+# preceded by function names. NB '<(?:=|>)?' matches <, <= and <>
+relational_tokenize_re = re.compile(r'\s*(&|&&|\||\|\||<(?:=|>)?|>=?|==?|~=|\)'
+                                    + '|' + open_paren_str + r')\s*')
+
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
 def _token_splittable(token):
@@ -165,6 +187,124 @@ def _group_parentheses(recursor):
             raise TokenError("Mismatched parentheses")
         return result
     return _inner
+
+
+def parse_relationals(expr_string):
+        """
+        Based on shunting-yard algorithm
+        (see http://en.wikipedia.org/wiki/Shunting-yard_algorithm)
+        with modifications for skipping over non logical/relational operators
+        and associated parentheses.
+        """
+        # Replace any '!'s with the SymPy negation operator '~'
+        expr_string = expr_string.replace('!', '~')
+        # Splits and throws away empty tokens (between parens and operators)
+        # and encloses the whole expression in parens
+        tokens = (['('] + [t for t in relational_tokenize_re.split(
+            expr_string.strip()) if t] + [')'])
+        # Check for unbalenced parentheses
+        if len([1 for t in tokens
+                if t.strip().endswith('(')]) != tokens.count(')'):
+            raise TokenError(
+                "Unbalanced parentheses in expression: {}".format(expr_string))
+        tokens = tokens
+        operators = []  # stack (in SY algorithm terminology)
+        operands = []  # output stream
+        is_relational = []  # whether the current parens should be parsed
+        # Num operands to concat when not parsing relation/bool. Because we are
+        # also splitting on parenthesis, non-logic/relational expressions will
+        # still be split on parenthesis and we need to keep track of how many
+        # pieces they are in.
+        num_args = [0]  # top-level should always end up as 1
+        for tok in tokens:
+            # If opening paren or function name + paren
+            if open_paren_re.match(tok):
+                operators.append(tok)
+                is_relational.append(False)
+                num_args.append(0)
+            # Closing paren.
+            elif tok == ')':
+                # Join together sub-expressions that have been split by parens
+                # not used for relational/boolean expressions (e.g. functions)
+                n = num_args.pop()
+                if n > 1:
+                    operands = operands[:-n] + [''.join(operands[-n:])]
+                # If parens enclosed relat/logic (i.e. '&', '|', '<', '>', etc)
+                if is_relational.pop():
+                    # Get all the operators within the enclosing parens.
+                    # Need to sort by order of precedence
+                    try:
+                        # Get index of last open paren operator from end of str
+                        i = -(next(i for i, o in enumerate(reversed(operators))
+                                   if open_paren_re.match(o)) + 1)
+                        assert i < -1
+                    except StopIteration:
+                        raise TokenError(
+                            "Unbalanced parentheses in expression: {}"
+                            .format(expr_string))
+                    # Get lists of operators and operands at this level
+                    # (i.e. after the last left paren)
+                    level_operators = operators[(i + 1):]
+                    level_operands = operands[i:]
+                    # Pop these operators and operands off the list
+                    # (along with the paren/function-call)
+                    open_paren = operators[i]
+                    operators = operators[:i]
+                    operands = operands[:i]
+                    while level_operators:
+                        # Get the index of the highest precedence operator
+                        prec = [relational_operators[o][1]
+                                for o in level_operators]
+                        i = sorted(range(len(prec)), key=prec.__getitem__)[0]
+                        # Pop the highest precedence operator
+                        op = relational_operators[level_operators.pop(i)][0]
+                        # Create the parsed sub-expression
+                        sub = '{}({}, {})'.format(op, level_operands.pop(i),
+                                                  level_operands.pop(i))
+                        # Insert the parsed sub-expression back into the
+                        # operands in place of the two combined expressions
+                        level_operands.insert(i, str(sub))
+                    new_operand = level_operands[0]
+                    if open_paren != '(':  # Function/logical negation
+                        new_operand = open_paren + new_operand + ')'
+                    operands.append(new_operand)
+                # If parens enclosed something else
+                else:
+                    try:
+                        # Apply the function/parens to the last operand
+                        operands[-1] = operators.pop() + operands[-1] + ')'
+                    except IndexError:
+                        raise TokenError(
+                            "Unbalanced parentheses in expression: {}"
+                            .format(expr_string))
+                num_args[-1] += 1
+            # If the token is one of ('&', '|', '<', '>', '<=', '>=' or '==')
+            # append it to the operators stack
+            elif relational_tokenize_re.match(tok):
+                operators.append(tok)
+                # Parse the current set of parenthesis as a relational/logical
+                # expression
+                is_relational[-1] = True
+                # Check if there are more than one LHS sub-exprs to concatenate
+                n = num_args[-1]
+                if n == 0:
+                    raise TokenError(
+                        "Logical/relational operator directly after a "
+                        "parenthesis or start of expression: {}"
+                        .format(expr_string))
+                elif n > 1:
+                    operands = operands[:-n] + [''.join(operands[-n:])]
+                num_args[-1] = 0
+            # If the token is an atom or a subexpr not containing any
+            # logic/relational operators or parens append it to the operands
+            # stack
+            else:
+                operands.append(tok)
+                num_args[-1] += 1
+        # After it is processed, operands should contain the parsed expression
+        # as a single item since the whole expression was enclosed in parens
+        assert len(operands) == 1 and len(num_args) == 1 and num_args[-1] == 1
+        return operands[0]
 
 
 def _apply_functions(tokens, local_dict, global_dict):
