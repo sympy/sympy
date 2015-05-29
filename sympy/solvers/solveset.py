@@ -4,7 +4,7 @@ This module contains functions to solve a single equation for a single variable.
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
@@ -14,6 +14,7 @@ from sympy.functions import (log, Abs, tan, cot, exp,
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.sets import FiniteSet, EmptySet, imageset, Union
+from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
@@ -872,3 +873,96 @@ def solveset(f, symbol=None):
             return solveset_real(f, symbol)
         else:
             return solveset_complex(f, symbol)
+
+
+###############################################################################
+################################ LINSOLVE #####################################
+###############################################################################
+
+
+def linear_eq_to_matrix(equations, *symbols):
+    """
+    Converts a given System of Equations into Matrix form.
+    Here `equations` must be a linear system of equations in
+    `symbols`. The order of symbols in input `symbols` will
+    determine the order of coefficients in the augmented
+    Matrix.
+
+    The Matrix form corresponds to the augmented matrix form.
+    For example:
+
+      x + 2.y + 3.z  = 1
+    3.x +   y +   z  = -6
+    2.x + 4.y + 9.z  = 2
+
+    This system would return A & b:
+
+          [ 1  2  3 ]         [ 1 ]
+    A  =  [ 3  1  1 ]    b =  [-6 ]
+          [ 2  4  9 ]         [ 2 ]
+
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import linear_eq_to_matrix
+    >>> from sympy import symbols
+    >>> x, y, z = symbols('x, y, z')
+
+    >>> eqns = [x + 2*y + 3*z - 1, 3*x + y + z + 6, 2*x + 4*y + 9*z - 2]
+    >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
+    >>> A
+    Matrix([
+    [1, 2, 3],
+    [3, 1, 1],
+    [2, 4, 9]])
+    >>> b
+    Matrix([
+    [ 1],
+    [-6],
+    [ 2]])
+
+    >>> eqns = [x + z - 1, y + z, x - y]
+    >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
+    >>> A
+    Matrix([
+    [1,  0, 1],
+    [0,  1, 1],
+    [1, -1, 0]])
+    >>> b
+    Matrix([
+    [1],
+    [0],
+    [0]])
+
+    """
+
+    if hasattr(symbols[0], '__iter__'):
+        symbols = symbols[0]
+
+    M = Matrix([symbols])
+    # initialise Matrix with symbols + 1 columns
+    M = M.col_insert(len(symbols), Matrix([1]))
+    row_no = 1
+
+    for equation in equations:
+        f = sympify(equation)
+        if isinstance(f, Equality):
+            f = f.lhs - f.rhs
+
+        # Extract coeff of symbols
+        coeff_list = []
+        for symbol in symbols:
+            coeff_list.append(f.coeff(symbol))
+
+        # append constant term (term free from symbols)
+        coeff_list.append(-f.as_coeff_add(*symbols)[0])
+
+        # insert equations coeff's into rows
+        M = M.row_insert(row_no, Matrix([coeff_list]))
+        row_no += 1
+
+    # delete the initialised (Ist) trivial row
+    M.row_del(0)
+    A, b = M[:, :-1], M[:, -1:]
+    return A, b
