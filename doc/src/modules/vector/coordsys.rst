@@ -32,7 +32,7 @@ This can be achieved programatically as follows -
   (-3, -4, -5)
 
 It is worth noting that :math:`M`'s orientation is the same as that of 
-:math:`N`. This means that the rotation matrix of :math`N` with respect 
+:math:`N`. This means that the rotation matrix of :math: `N` with respect 
 to :math:`M`, and also vice versa, is equal to the identity matrix of
 dimensions 3x3.
 The ``locate_new`` method initializes a ``CoordSysCartesian`` that

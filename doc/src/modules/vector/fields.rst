@@ -10,7 +10,7 @@ Scalar and vector fields
 
 In :mod:`sympy.vector`, every ``CoordSysCartesian`` instance is assigned basis
 vectors corresponding to the :math:`X`, :math:`Y` and
-:math:`Z` directions. These can be accessed using the properties
+:math:`Z` axes. These can be accessed using the properties
 named ``i``, ``j`` and ``k`` respectively. Hence, to define a vector
 :math:`\mathbf{v}` of the form
 :math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with
@@ -26,7 +26,7 @@ documentation.
 
 On the other hand, base scalars (or coordinate variables) are implemented
 in a special class called ``BaseScalar``, and are assigned to every 
-coordinate system, one for each direction from :math:`X`, :math:`Y` and 
+coordinate system, one for each axis from :math:`X`, :math:`Y` and 
 :math:`Z`. These coordinate variables are used to form the expressions of
 vector or scalar fields in 3D space.
 For a system ``R``, the :math:`X`, :math:`Y` and :math:`Z` 
@@ -44,7 +44,7 @@ potential field :math:`2{x}^{2}y`, you would have to do
 
 It is to be noted that ``BaseScalar`` instances can be used just
 like any other SymPy ``Symbol``, except that they store the information
-about the coordinate system and direction/axis they correspond to.
+about the coordinate system and axis they correspond to.
 
 Scalar fields can be treated just as any other SymPy expression,
 for any math/calculus functionality. Hence, to differentiate the above
@@ -121,7 +121,7 @@ vector in 3D space. The direction is determined by the right-hand rule (along th
 axis of rotation), and the magnitude is given by the magnitude of rotation.
 
 In the 3D Cartesian system, the curl of a 3D vector :math:`\mathbf{F}` ,
-denoted by :math:`\nabla \times \mathbf{F}` is given by -
+denoted by :math:`\nabla \times \mathbf{F}` is given by:
 
 :math:`\nabla \times \mathbf{F} = \left(\frac{\partial F_z}{\partial y}  -
 \frac{\partial F_y}{\partial z}\right) \mathbf{\hat{i}} +
@@ -159,7 +159,7 @@ source or sink at a given point, in terms of a signed scalar.
 The divergence operator always returns a scalar after operating on a vector.
 
 In the 3D Cartesian system, the divergence of a 3D vector :math:`\mathbf{F}`,
-denoted by :math:`\nabla\cdot\mathbf{F}` is given by -
+denoted by :math:`\nabla\cdot\mathbf{F}` is given by:
 
 :math:`\nabla\cdot\mathbf{F} =\frac{\partial U}{\partial x}
 +\frac{\partial V}{\partial y}
@@ -193,7 +193,7 @@ Gradient
 Consider a scalar field :math:`f(x, y, z)` in 3D space. The gradient of this field
 is defined as the vector of the 3 partial derivatives of :math:`f` with respect to
 :math:`x`, :math:`y` and :math:`z` in the :math:`X`, :math:`Y` and :math:`Z`
-directions respectively.
+axes respectively.
 
 In the 3D Cartesian system, the divergence of a scalar field :math:`f`,
 denoted by :math:`\nabla f` is given by -
@@ -230,7 +230,7 @@ a ``Vector`` in :mod:`sympy.vector`.
 By definition, the directional derivative of a field :math:`\mathbf{F}`
 along a vector :math:`v` at point :math:`x` represents the instantaneous 
 rate of change of :math:`\mathbf{F}` moving through :math:`x` with the
-velocity :math:`v`. It is represented mathematically as -
+velocity :math:`v`. It is represented mathematically as:
 :math:`(\vec v \cdot \nabla) \, \mathbf{F}(x)`.
 
 Directional derivatives of vector and scalar fields can be computed in

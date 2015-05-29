@@ -29,8 +29,8 @@ For example, consider a displacement of
 :math:`(3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}})` m,
 where , as per standard convention, :math:`\mathbf{\hat{i}}`,
 :math:`\mathbf{\hat{j}}` and :math:`\mathbf{\hat{k}}` represent unit vectors
-in the :math:`\mathbf{X}`, :math:`\mathbf{Y}` and :math:`\mathbf{Z}`
-directions respectively. Therefore, it can be concluded that the distance
+along the :math:`\mathbf{X}`, :math:`\mathbf{Y}` and :math:`\mathbf{Z}`
+axes respectively. Therefore, it can be concluded that the distance
 traveled is
 :math:`\Vert 3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}} \Vert`
 m = :math:`5\sqrt{2}` m. The direction of travel is given by the unit vector
@@ -43,7 +43,7 @@ Coordinate Systems
 A **coordinate system** is an abstract mathematical entity used to define
 the notion of directions and locations in n-dimensional spaces. This
 module deals with 3-dimensional spaces, with the conventional :math:`X`, 
-:math:`Y` and :math:`Z` directions (or axes) defined with respect 
+:math:`Y` and :math:`Z` axes defined with respect 
 to each coordinate system.
 
 Each coordinate system also has a special reference point called the 
@@ -84,7 +84,8 @@ specified everywhere in space as a function of position (Note that in general
 a field may also be dependent on time and other custom variables). Since we 
 only deal with 3D spaces in this module, a field is defined as a function of 
 the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
-to a location in 3D space.
+to a location in the coordinate system. Here, :math:`x`, :math:`y` and 
+:math:`z` act as scalar variables defining the position of a general point.
 
 For example, temperature in 3 dimensional space (a temperature field) can be
 written as :math:`T(x, y, z)` – a scalar function of the position.

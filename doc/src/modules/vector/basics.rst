@@ -16,7 +16,7 @@ The string parameter to the constructor denotes the name assigned to the
 system, and will primarily be used for printing purposes.
 
 Once a coordinate system (in essence, a ``CoordSysCartesian`` instance)
-has been defined, we can access the basis/base vectors (i.e. the 
+has been defined, we can access the orthonormal unit vectors (i.e. the 
 :math:`\mathbf{\hat{i}}`, :math:`\mathbf{\hat{j}}` and 
 :math:`\mathbf{\hat{k}}` vectors) and coordinate variables/base 
 scalars (i.e. the :math:`\mathbf{x}`, :math:`\mathbf{y}` and 
@@ -24,7 +24,7 @@ scalars (i.e. the :math:`\mathbf{x}`, :math:`\mathbf{y}` and
 about coordinate variables in the later sections.
 
 The basis vectors for the :math:`X`, :math:`Y` and :math:`Z` 
-directions can be accessed using the ``i``, ``j`` and ``k``
+axes can be accessed using the ``i``, ``j`` and ``k``
 properties respectively.
 
   >>> N.i
