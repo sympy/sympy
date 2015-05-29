@@ -158,7 +158,8 @@ def public(obj):
     on the pointer to object's global namespace. If you apply other decorators
     first, ``@public`` may end up modifying the wrong namespace.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy.utilities.decorator import public
 

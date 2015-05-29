@@ -4145,6 +4145,8 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
+    from sympy.functions.elementary.piecewise import Piecewise
+
     if len(exprs) == 2:
         f, g = exprs
 
@@ -6256,6 +6258,7 @@ def cancel(f, *gens, **args):
     sqrt(6)/2
     """
     from sympy.core.exprtools import factor_terms
+    from sympy.functions.elementary.piecewise import Piecewise
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -6285,7 +6288,7 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative and not x.has(Piecewise))
+            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
             c, nc = sifted[True], sifted[False]
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
@@ -6799,5 +6802,3 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
-
-from sympy.functions import Piecewise

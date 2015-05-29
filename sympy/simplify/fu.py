@@ -1692,6 +1692,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     -sqrt(3)
 
     Objective function example
+
     >>> fu(sin(x)/cos(x))  # default objective function
     tan(x)
     >>> fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) # maximize op count

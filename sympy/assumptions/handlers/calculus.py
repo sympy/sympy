@@ -79,7 +79,8 @@ class AskBoundedHandler(CommonHandler):
         """
         Handles Symbol.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import Symbol, Q
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler

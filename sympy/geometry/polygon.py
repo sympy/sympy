@@ -727,7 +727,7 @@ class Polygon(GeometryEntity):
         sympy.geometry.point.Point.distance
 
         Examples
-        =======
+        ========
 
         >>> from sympy.geometry import Point, Polygon
         >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))

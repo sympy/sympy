@@ -13,7 +13,7 @@ from sympy.solvers import solve
 from sympy.core.compatibility import range
 
 
-class Sum(AddWithLimits,ExprWithIntLimits):
+class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
 
     ``Sum`` represents a finite or infinite series, with the first argument
@@ -70,19 +70,19 @@ class Sum(AddWithLimits,ExprWithIntLimits):
 
     >>> from sympy.abc import i, k, m, n, x
     >>> from sympy import Sum, factorial, oo, IndexedBase, Function
-    >>> Sum(k,(k,1,m))
+    >>> Sum(k, (k, 1, m))
     Sum(k, (k, 1, m))
-    >>> Sum(k,(k,1,m)).doit()
+    >>> Sum(k, (k, 1, m)).doit()
     m**2/2 + m/2
-    >>> Sum(k**2,(k,1,m))
+    >>> Sum(k**2, (k, 1, m))
     Sum(k**2, (k, 1, m))
-    >>> Sum(k**2,(k,1,m)).doit()
+    >>> Sum(k**2, (k, 1, m)).doit()
     m**3/3 + m**2/2 + m/6
-    >>> Sum(x**k,(k,0,oo))
+    >>> Sum(x**k, (k, 0, oo))
     Sum(x**k, (k, 0, oo))
-    >>> Sum(x**k,(k,0,oo)).doit()
+    >>> Sum(x**k, (k, 0, oo)).doit()
     Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
-    >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
+    >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
     exp(x)
 
     Here are examples to do summation with symbolic indices.  You
@@ -102,7 +102,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
     convention allows us to give a perfectly valid interpretation to
     those sums by interchanging the limits according to the above rules:
 
-    >>> S = Sum(i, (i,1,n)).doit()
+    >>> S = Sum(i, (i, 1, n)).doit()
     >>> S
     n**2/2 + n/2
     >>> S.subs(n, -4)
@@ -166,6 +166,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
             f = self.function.doit(**hints)
         else:
             f = self.function
+
+        if self.function.is_Matrix:
+            return self.expand().doit()
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
@@ -375,18 +378,18 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         >>> S = Sum(x**2, (x, a, b), (x, c, d))
         >>> S
         Sum(x**2, (x, a, b), (x, c, d))
-        >>> S0 = S.reverse_order( 0)
+        >>> S0 = S.reverse_order(0)
         >>> S0
         Sum(-x**2, (x, b + 1, a - 1), (x, c, d))
-        >>> S1 = S0.reverse_order( 1)
+        >>> S1 = S0.reverse_order(1)
         >>> S1
         Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))
 
         Of course we can mix both notations:
 
-        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( x, 1)
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1)
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
-        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( y, x)
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x)
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
         See Also
@@ -413,10 +416,11 @@ class Sum(AddWithLimits,ExprWithIntLimits):
             l = limit
             if i in l_indices:
                 e = -e
-                l = (limit[0], limit[2] + 1 , limit[1] - 1)
+                l = (limit[0], limit[2] + 1, limit[1] - 1)
             limits.append(l)
 
         return Sum(e * self.function, *limits)
+
 
 def summation(f, *symbols, **kwargs):
     r"""
@@ -506,7 +510,7 @@ def telescopic(L, R, limits):
     if sol and k in sol:
         s = sol[k]
         if not (s.is_Integer and L.subs(i, i + s) == -R):
-            #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
+            # sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
     # But there are things that match doesn't do that solve

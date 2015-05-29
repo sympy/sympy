@@ -4,7 +4,7 @@ from collections import defaultdict
 import operator
 
 from .sympify import sympify
-from .basic import Basic, C
+from .basic import Basic
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
@@ -549,7 +549,10 @@ class Mul(Expr, AssocOp):
 
         # 0
         elif coeff is S.Zero:
-            # we know for sure the result will be 0
+            # we know for sure the result will be 0 except the multiplicand
+            # is infinity
+            if any(c.is_finite == False for c in c_part):
+                return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols
 
         # check for straggling Numbers that were produced
@@ -676,7 +679,7 @@ class Mul(Expr, AssocOp):
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import expand_mul
+        from sympy import Abs, expand_mul, im, re
         other = []
         coeffr = []
         coeffi = []
@@ -690,7 +693,7 @@ class Mul(Expr, AssocOp):
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
                     if x == a.conjugate():
-                        coeffr.append(C.Abs(x)**2)
+                        coeffr.append(Abs(x)**2)
                         del other[i]
                         break
                 else:
@@ -704,13 +707,13 @@ class Mul(Expr, AssocOp):
         if hints.get('ignore') == m:
             return
         if len(coeffi) % 2:
-            imco = C.im(coeffi.pop(0))
+            imco = im(coeffi.pop(0))
             # all other pairs make a real factor; they will be
             # put into reco below
         else:
             imco = S.Zero
         reco = self.func(*(coeffr + coeffi))
-        r, i = (reco*C.re(m), reco*C.im(m))
+        r, i = (reco*re(m), reco*im(m))
         if addterms == 1:
             if m == 1:
                 if imco is S.Zero:
@@ -832,7 +835,8 @@ class Mul(Expr, AssocOp):
         return repl_dict or None
 
     def _matches(self, expr, repl_dict={}):
-        # weed out negative one prefixes
+        # weed out negative one prefixes#
+        from sympy import Wild
         sign = 1
         a, b = self.as_two_terms()
         if a is S.NegativeOne:
@@ -871,7 +875,7 @@ class Mul(Expr, AssocOp):
                 pp.remove(p)
 
         # only one symbol left in pattern -> match the remaining expression
-        if len(pp) == 1 and isinstance(pp[0], C.Wild):
+        if len(pp) == 1 and isinstance(pp[0], Wild):
             if len(ee) == 1:
                 d[pp[0]] = sign * ee[0]
             else:
@@ -1021,7 +1025,9 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
-        real = True
+        return self._eval_real_imag(True)
+
+    def _eval_real_imag(self, real):
         zero = one_neither = False
 
         for t in self.args:
@@ -1058,10 +1064,12 @@ class Mul(Expr, AssocOp):
         if z:
             return False
         elif z is False:
-            return (S.ImaginaryUnit*self).is_real
+            return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
-        real = True
+        return self._eval_herm_antiherm(True)
+
+    def _eval_herm_antiherm(self, real):
         one_nc = zero = one_neither = False
 
         for t in self.args:
@@ -1073,10 +1081,14 @@ class Mul(Expr, AssocOp):
             if t.is_antihermitian:
                 real = not real
             elif t.is_hermitian:
-                if zero is False:
-                    zero = fuzzy_not(t.is_nonzero)
-                    if zero:
-                        return True
+                if not zero:
+                    z = t.is_zero
+                    if not z and zero is False:
+                        zero = z
+                    elif z:
+                        if all(a.is_finite for a in self.args):
+                            return True
+                        return
             elif t.is_hermitian is False:
                 if one_neither:
                     return
@@ -1095,7 +1107,7 @@ class Mul(Expr, AssocOp):
         if z:
             return False
         elif z is False:
-            return (S.ImaginaryUnit*self).is_hermitian
+            return self._eval_herm_antiherm(False)
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1123,8 +1135,9 @@ class Mul(Expr, AssocOp):
             pos * neg * nonpositive -> pos or zero -> None is returned
             pos * neg * nonnegative -> neg or zero -> False is returned
         """
+        return self._eval_pos_neg(1)
 
-        sign = 1
+    def _eval_pos_neg(self, sign):
         saw_NON = False
         for t in self.args:
             if t.is_positive:
@@ -1132,7 +1145,9 @@ class Mul(Expr, AssocOp):
             elif t.is_negative:
                 sign = -sign
             elif t.is_zero:
-                return False
+                if all(a.is_finite for a in self.args):
+                    return False
+                return
             elif t.is_nonpositive:
                 sign = -sign
                 saw_NON = True
@@ -1146,7 +1161,9 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_negative(self):
-        return (-self).is_positive
+        if self.args[0] == -1:
+            return (-self).is_positive  # remove -1
+        return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
         is_integer = self.is_integer
@@ -1200,7 +1217,8 @@ class Mul(Expr, AssocOp):
             # if I and -1 are in a Mul, they get both end up with
             # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
-            if a.is_Pow or a.func is C.exp:
+            from sympy import exp
+            if a.is_Pow or a.func is exp:
                 return a.as_base_exp()
             return a, S.One
 
@@ -1444,11 +1462,11 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import powsimp
+        from sympy import Order, powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(C.Order):
-            res += C.Order(x**n, x)
+        if res.has(Order):
+            res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):
@@ -1535,6 +1553,7 @@ def prod(a, start=1):
     True
 
     You can start the product at something other than 1:
+
     >>> prod([1, 2], 3)
     6
 

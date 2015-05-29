@@ -17,12 +17,16 @@ First, make sure that you have done the following things
 - Create a release branch. Usually this branch is the same name as the release
   (e.g., "0.7.3"), although no naming convention is enforced on it.
 
-- Change the version in the release branch in sympy/release.py.  If you want
-  to do a release candidate, change it to something like 0.7.3.rc1.
+- Change the version in the release branch in sympy/release.py. If you want to
+  do a release candidate, change it to a [PEP
+  440](https://www.python.org/dev/peps/pep-0440) compliant version like
+  0.7.3.rc1.
 
-- Change the version in master.  This way, any additional changes made in
-  master will be shown as coming from the right place. The master release
-  should be like "0.7.3-git".
+- Change the version in master. This way, any additional changes made in master
+  will be shown as coming from the right place. The master release should be
+  e.g. `0.7.4.dev`, see [PEP 440](https://www.python.org/dev/peps/pep-0440) for
+  rules about development version numbers. Note that this version number should
+  the next projected version plus the `.dev`.
 
 - Push the release branch up to origin, and make a pull request for it against
   master.
@@ -39,7 +43,7 @@ If you want to test the release process without pushing a branch to the
 official repo, you can push a branch to your fork and use `fab vagrant
 release:fork='username'`, where `username` is your GitHub username.  Note that
 once you do the actual release, you should do it in a branch in the official
-GitHub repo.  **NOTE**: If your fork does not have all the tags of the
+GitHub repo. **NOTE**: If your fork does not have all the tags of the
 official repo, then the code that finds the previous version will not work
 correctly.  Hence, you may see things like more authors in the authors list
 than you should.  To remedy this, be sure to do `git fetch origin --tags` and

@@ -325,7 +325,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         namespaces.append(modules)
     else:
         # consistency check
-        if 'numexpr' in modules and len(modules) > 1:
+        if _module_present('numexpr', modules) and len(modules) > 1:
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
@@ -342,7 +342,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
-    if 'numexpr' in namespaces and printer is None:
+    if _module_present('numexpr',namespaces) and printer is None:
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumExprPrinter as printer
 
@@ -405,6 +405,16 @@ def _issue_7853_dep_check(namespaces, namespace, expr):
                 "The old behavior can be retained in future versions by "
                 "supplying `modules=[{'ImmutableMatrix': numpy.matrix}, "
                 "'numpy']`.", issue=7853).warn()
+
+
+def _module_present(modname, modlist):
+    if modname in modlist:
+        return True
+    for m in modlist:
+        if hasattr(m, '__name__') and m.__name__ == modname:
+            return True
+    return False
+
 
 def _get_namespace(m):
     """
@@ -553,7 +563,8 @@ def _imp_namespace(expr, namespace=None):
        function
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
@@ -622,7 +633,8 @@ def implemented_function(symfunc, implementation):
        function with attached implementation
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function

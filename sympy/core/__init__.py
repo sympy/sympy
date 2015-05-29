@@ -3,7 +3,7 @@
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
-from .basic import Basic, Atom, C, preorder_traversal
+from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var

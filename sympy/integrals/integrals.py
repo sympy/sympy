@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -14,17 +14,12 @@ from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.integrals.rationaltools import ratint
-from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
-from sympy.geometry import Curve
 from sympy.series import limit
 from sympy.series.order import Order
 
@@ -243,7 +238,7 @@ class Integral(AddWithLimits):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-
+        from sympy.solvers.solvers import solve, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -568,6 +563,7 @@ class Integral(AddWithLimits):
         0
 
         The previous must be true since there is no y in the evaluated integral:
+
         >>> i.free_symbols
         set([x])
         >>> i.doit()
@@ -709,6 +705,9 @@ class Integral(AddWithLimits):
              so that this can be deleted.
 
         """
+        from sympy.integrals.deltafunctions import deltaintegrate
+        from sympy.integrals.heurisch import heurisch, heurisch_wrapper
+        from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
 
         if risch:
@@ -1278,6 +1277,7 @@ def line_integrate(field, curve, vars):
 
     integrate, Integral
     """
+    from sympy.geometry import Curve
     F = sympify(field)
     if not F:
         raise ValueError(

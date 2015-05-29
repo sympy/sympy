@@ -435,14 +435,48 @@ def test_Mul_is_even_odd():
     assert (x*x).is_even is None
     assert (x*(x + k)).is_even is True
     assert (x*(x + m)).is_even is None
-    assert (x*y*(y + k)).is_even is True
-    assert (x*y*(y + m)).is_even is None
 
     assert (x*y).is_odd is None
     assert (x*x).is_odd is None
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
+
+
+@XFAIL
+def test_evenness_in_ternary_integer_product_with_odd():
+    # Tests that oddness inference is independent of term ordering.
+    # Term ordering at the point of testing depends on SymPy's symbol order, so
+    # we try to force a different order by modifying symbol names.
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    k = Symbol('k', odd=True)
+    assert (x*y*(y + k)).is_even is True
+    assert (y*x*(x + k)).is_even is True
+
+
+def test_evenness_in_ternary_integer_product_with_even():
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    m = Symbol('m', even=True)
+    assert (x*y*(y + m)).is_even is None
+
+
+@XFAIL
+def test_oddness_in_ternary_integer_product_with_odd():
+    # Tests that oddness inference is independent of term ordering.
+    # Term ordering at the point of testing depends on SymPy's symbol order, so
+    # we try to force a different order by modifying symbol names.
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    k = Symbol('k', odd=True)
     assert (x*y*(y + k)).is_odd is False
+    assert (y*x*(x + k)).is_odd is False
+
+
+def test_oddness_in_ternary_integer_product_with_even():
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    m = Symbol('m', even=True)
     assert (x*y*(y + m)).is_odd is None
 
 
@@ -1622,10 +1656,13 @@ def test_issue_6040():
 
 
 def test_issue_6082():
-    assert Basic.compare(Max(x, 1), Max(x, 2)) == -1
-    assert Basic.compare(Max(x, 2), Max(x, 1)) == 1
+    # Comparison is symmetric
+    assert Basic.compare(Max(x, 1), Max(x, 2)) == \
+      - Basic.compare(Max(x, 2), Max(x, 1))
+    # Equal expressions compare equal
     assert Basic.compare(Max(x, 1), Max(x, 1)) == 0
-    assert Basic.compare(Max(1, x), frozenset((1, x))) == -1
+    # Basic subtypes (such as Max) compare different than standard types
+    assert Basic.compare(Max(1, x), frozenset((1, x))) != 0
 
 
 def test_issue_6077():
@@ -1812,6 +1849,17 @@ def test_mul_zero_detection():
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
+def test_Mul_with_zero_infinite():
+    zer = Dummy(zero=True)
+    inf = Dummy(finite=False)
+
+    e = Mul(zer, inf, evaluate=False)
+    assert e.is_positive is None
+    assert e.is_hermitian is None
+
+    e = Mul(inf, zer, evaluate=False)
+    assert e.is_positive is None
+    assert e.is_hermitian is None
 
 def test_issue_8247_8354():
     from sympy import tan

@@ -1,7 +1,7 @@
 import collections
 
 from sympy import (
-    Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
+    Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, sstr)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
@@ -14,8 +14,9 @@ from sympy.matrices import (
 from sympy.core.compatibility import long, iterable, u, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.solvers import solve
 
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, d, x, y, z
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -229,6 +230,7 @@ def test_tolist():
 def test_as_mutable():
     assert zeros(0, 3).as_mutable() == zeros(0, 3)
     assert zeros(0, 3).as_immutable() == ImmutableMatrix(zeros(0, 3))
+    assert zeros(3, 0).as_immutable() == ImmutableMatrix(zeros(3, 0))
 
 
 def test_determinant():
@@ -744,6 +746,30 @@ def test_nullspace():
     # issue 4797; just see that we can do it when rows > cols
     M = Matrix([[1, 2], [2, 4], [3, 6]])
     assert M.nullspace()
+
+
+def test_columnspace():
+    M = Matrix([[ 1,  2,  0,  2,  5],
+                [-2, -5,  1, -1, -8],
+                [ 0, -3,  3,  4,  1],
+                [ 3,  6,  0, -7,  2]])
+
+    # now check the vectors
+    basis = M.columnspace()
+    assert basis[0] == Matrix([1, -2, 0, 3])
+    assert basis[1] == Matrix([2, -5, -3, 6])
+    assert basis[2] == Matrix([2, -1, 4, -7])
+
+    #check by columnspace definition
+    a, b, c, d, e = symbols('a b c d e')
+    X = Matrix([a, b, c, d, e])
+    for i in range(len(basis)):
+        eq=M*X-basis[i]
+        assert len(solve(eq, X)) != 0
+
+    #check if rank-nullity theorem holds
+    assert M.rank() == len(basis)
+    assert len(M.nullspace()) + len(M.columnspace()) == M.cols
 
 
 def test_wronskian():
@@ -1535,6 +1561,26 @@ def test_jordan_form():
     assert m == J
 
 
+def test_jordan_form_complex_issue_9274():
+    A = Matrix([[ 2,  4,  1,  0],
+                [-4,  2,  0,  1],
+                [ 0,  0,  2,  4],
+                [ 0,  0, -4,  2]])
+    p = 2 - 4*I;
+    q = 2 + 4*I;
+    Jmust1 = Matrix([[p, 1, 0, 0],
+                     [0, p, 0, 0],
+                     [0, 0, q, 1],
+                     [0, 0, 0, q]])
+    Jmust2 = Matrix([[q, 1, 0, 0],
+                     [0, q, 0, 0],
+                     [0, 0, p, 1],
+                     [0, 0, 0, p]])
+    P, J = A.jordan_form()
+    assert J == Jmust1 or J == Jmust2
+    assert simplify(P*J*P.inv()) == A
+
+
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
 
@@ -2299,14 +2345,12 @@ def test_replace_map():
     assert N == K
 
 def test_atoms():
-    from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.atoms() == set([S(1),S(2),S(-1), x])
     assert m.atoms(Symbol) == set([x])
 
 @slow
 def test_pinv():
-    from sympy.abc import a, b, c, d
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
     assert simplify(A1.pinv()) == simplify(A1.inv())
@@ -2418,3 +2462,8 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+
+def test_doit():
+    a = Matrix([[Add(x,x, evaluate=False)]])
+    assert a[0] != 2*x
+    assert a.doit() == Matrix([[2*x]])

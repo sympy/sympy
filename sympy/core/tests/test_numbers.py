@@ -453,6 +453,9 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
+    assert Float(decimal.Decimal('nan')) == S.NaN
+    assert Float(decimal.Decimal('Infinity')) == S.Infinity
+    assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'

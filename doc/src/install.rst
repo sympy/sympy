@@ -119,5 +119,5 @@ an `issue ticket`_.
 .. _downloads site: https://github.com/sympy/sympy/releases
 .. _Gitter: https://gitter.im/sympy/sympy
 .. _issue ticket: https://github.com/sympy/sympy/issues
-.. _mailing list: http://groups.google.com/group/sympy
+.. _mailing list: https://groups.google.com/forum/#!forum/sympy
 .. _mpmath: http://mpmath.org/

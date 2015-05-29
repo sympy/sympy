@@ -6,7 +6,6 @@ import math
 import re as regex
 from collections import defaultdict
 
-from .core import C
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
@@ -337,8 +336,9 @@ class Number(AtomicExpr):
         return self
 
     def _eval_order(self, *symbols):
+        from sympy import Order
         # Order(5, x, y) -> Order(1,x,y)
-        return C.Order(S.One, *symbols)
+        return Order(S.One, *symbols)
 
     def _eval_subs(self, old, new):
         if old == -self:
@@ -719,7 +719,17 @@ class Float(Number):
         elif isinstance(num, str):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
-            _mpf_ = mlib.from_str(str(num), prec, rnd)
+            if num.is_finite():
+                _mpf_ = mlib.from_str(str(num), prec, rnd)
+            elif num.is_nan():
+                _mpf_ = _mpf_nan
+            elif num.is_infinite():
+                if num > 0:
+                    _mpf_ = _mpf_inf
+                else:
+                    _mpf_ = _mpf_ninf
+            else:
+                raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
@@ -1965,9 +1975,9 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
-    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
+    def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
-
+        from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.core.symbol import Symbol
@@ -1978,7 +1988,7 @@ class AlgebraicNumber(Expr):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
-                minpoly = C.Poly(minpoly)
+                minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
             minpoly, root = expr.minpoly, expr.root
         else:
@@ -1987,7 +1997,7 @@ class AlgebraicNumber(Expr):
 
         dom = minpoly.get_domain()
 
-        if coeffs != Tuple():
+        if coeffs is not None:
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
                 scoeffs = Tuple(*coeffs)
@@ -1998,15 +2008,15 @@ class AlgebraicNumber(Expr):
             if rep.degree() >= minpoly.degree():
                 rep = rep.rem(minpoly.rep)
 
-            sargs = (root, scoeffs)
-
         else:
             rep = DMP.from_list([1, 0], 0, dom)
+            scoeffs = Tuple(1, 0)
 
             if root.is_negative:
                 rep = -rep
+                scoeffs = Tuple(-1, 0)
 
-            sargs = (root, coeffs)
+        sargs = (root, scoeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):
@@ -2035,13 +2045,14 @@ class AlgebraicNumber(Expr):
 
     def as_poly(self, x=None):
         """Create a Poly instance from ``self``. """
+        from sympy import Dummy, Poly, PurePoly
         if x is not None:
-            return C.Poly.new(self.rep, x)
+            return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
-                return C.Poly.new(self.rep, self.alias)
+                return Poly.new(self.rep, self.alias)
             else:
-                return C.PurePoly.new(self.rep, C.Dummy('x'))
+                return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
         """Create a Basic expression from ``self``. """
@@ -2057,13 +2068,14 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert ``self`` to an algebraic integer. """
+        from sympy import Poly
         f = self.minpoly
 
         if f.LC() == 1:
             return self
 
         coeff = f.LC()**(f.degree() - 1)
-        poly = f.compose(C.Poly(f.gen/f.LC()))
+        poly = f.compose(Poly(f.gen/f.LC()))
 
         minpoly = poly*coeff
         root = f.LC()*self.root
@@ -3083,15 +3095,18 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
             pass
 
     def _eval_power(self, expt):
-        return C.exp(expt)
+        from sympy import exp
+        return exp(expt)
 
     def _eval_rewrite_as_sin(self):
+        from sympy import sin
         I = S.ImaginaryUnit
-        return C.sin(I + S.Pi/2) - I*C.sin(I)
+        return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self):
+        from sympy import cos
         I = S.ImaginaryUnit
-        return C.cos(I) + I*C.cos(I + S.Pi/2)
+        return cos(I) + I*cos(I + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage

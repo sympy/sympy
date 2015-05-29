@@ -3,9 +3,12 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, C, Rational, AlgebraicNumber,
+    S, Rational, AlgebraicNumber,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
+
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import cos, sin
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
@@ -418,7 +421,7 @@ def _minpoly_sin(ex, x):
                 res = _choose_factor(factors, x, ex)
                 return res
 
-            expr = ((1 - C.cos(2*c*pi))/2)**S.Half
+            expr = ((1 - cos(2*c*pi))/2)**S.Half
             res = _minpoly_compose(expr, x, QQ)
             return res
 
@@ -562,11 +565,11 @@ def _minpoly_compose(ex, x, dom):
             res = _minpoly_mul(x, dom, *ex.args)
     elif ex.is_Pow:
         res = _minpoly_pow(ex.base, ex.exp, x, dom)
-    elif ex.__class__ is C.sin:
+    elif ex.__class__ is sin:
         res = _minpoly_sin(ex, x)
-    elif ex.__class__ is C.cos:
+    elif ex.__class__ is cos:
         res = _minpoly_cos(ex, x)
-    elif ex.__class__ is C.exp:
+    elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
     elif ex.__class__ is RootOf:
         res = _minpoly_rootof(ex, x)

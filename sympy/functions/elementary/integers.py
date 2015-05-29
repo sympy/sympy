@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core.function import Function
 from sympy.core import Add
@@ -20,10 +19,11 @@ class RoundFunction(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import im
         if arg.is_integer:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
-            i = C.im(arg)
+            i = im(arg)
             if not i.has(S.ImaginaryUnit):
                 return cls(i)*S.ImaginaryUnit
             return cls(arg, evaluate=False)
@@ -39,7 +39,7 @@ class RoundFunction(Function):
         terms = Add.make_args(arg)
 
         for t in terms:
-            if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
+            if t.is_integer or (t.is_imaginary and im(t).is_integer):
                 ipart += t
             elif t.has(Symbol):
                 spart += t
@@ -66,7 +66,7 @@ class RoundFunction(Function):
         if not spart:
             return ipart
         elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:
-            return ipart + cls(C.im(spart), evaluate=False)*S.ImaginaryUnit
+            return ipart + cls(im(spart), evaluate=False)*S.ImaginaryUnit
         else:
             return ipart + cls(spart, evaluate=False)
 
@@ -86,25 +86,32 @@ class floor(RoundFunction):
     value not greater than its argument. However this implementation
     generalizes floor to complex numbers.
 
-    More information can be found in "Concrete mathematics" by Graham,
-    pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
+    Examples
+    ========
 
-        >>> from sympy import floor, E, I, Float, Rational
-        >>> floor(17)
-        17
-        >>> floor(Rational(23, 10))
-        2
-        >>> floor(2*E)
-        5
-        >>> floor(-Float(0.567))
-        -1
-        >>> floor(-I/2)
-        -I
+    >>> from sympy import floor, E, I, Float, Rational
+    >>> floor(17)
+    17
+    >>> floor(Rational(23, 10))
+    2
+    >>> floor(2*E)
+    5
+    >>> floor(-Float(0.567))
+    -1
+    >>> floor(-I/2)
+    -I
 
     See Also
     ========
 
-    ceiling
+    sympy.functions.elementary.integers.ceiling
+
+    References
+    ==========
+
+    .. [1] "Concrete mathematics" by Graham, pp. 87
+    .. [2] http://mathworld.wolfram.com/FloorFunction.html
+
     """
     _dir = -1
 
@@ -150,25 +157,32 @@ class ceiling(RoundFunction):
     value not less than its argument. Ceiling function is generalized
     in this implementation to complex numbers.
 
-    More information can be found in "Concrete mathematics" by Graham,
-    pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
+    Examples
+    ========
 
-        >>> from sympy import ceiling, E, I, Float, Rational
-        >>> ceiling(17)
-        17
-        >>> ceiling(Rational(23, 10))
-        3
-        >>> ceiling(2*E)
-        6
-        >>> ceiling(-Float(0.567))
-        0
-        >>> ceiling(I/2)
-        I
+    >>> from sympy import ceiling, E, I, Float, Rational
+    >>> ceiling(17)
+    17
+    >>> ceiling(Rational(23, 10))
+    3
+    >>> ceiling(2*E)
+    6
+    >>> ceiling(-Float(0.567))
+    0
+    >>> ceiling(I/2)
+    I
 
     See Also
     ========
 
-    floor
+    sympy.functions.elementary.integers.floor
+
+    References
+    ==========
+
+    .. [1] "Concrete mathematics" by Graham, pp. 87
+    .. [2] http://mathworld.wolfram.com/CeilingFunction.html
+
     """
     _dir = 1
 

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify
+from sympy.core import S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -108,13 +108,11 @@ def sqrt(arg):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/Principal_value
-
+    .. [1] http://en.wikipedia.org/wiki/Square_root
+    .. [2] http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
     return Pow(arg, S.Half)
-
 
 
 def cbrt(arg):
@@ -292,6 +290,7 @@ def real_root(arg, n=None):
     sympy.core.power.integer_nthroot
     root, sqrt
     """
+    from sympy import im, Piecewise
     if n is not None:
         try:
             n = as_int(n)
@@ -301,8 +300,8 @@ def real_root(arg, n=None):
             else:
                 raise ValueError
         except ValueError:
-            return root(arg, n)*C.Piecewise(
-                (S.One, ~Equality(C.im(arg), 0)),
+            return root(arg, n)*Piecewise(
+                (S.One, ~Equality(im(arg), 0)),
                 (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
                     Equality(n % 2, 1),
                     arg < 0)),
@@ -455,6 +454,7 @@ class MinMaxBase(Expr, LatticeOp):
     def is_real(self):
         return fuzzy_and(arg.is_real for arg in self.args)
 
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
@@ -476,6 +476,10 @@ class Max(MinMaxBase, Application):
 
     Also, only comparable arguments are permitted.
 
+    It is named ``Max`` and not ``max`` to avoid conflicts
+    with the built-in function ``max``.
+
+
     Examples
     ========
 
@@ -486,29 +490,22 @@ class Max(MinMaxBase, Application):
 
     >>> Max(x, -2)                  #doctest: +SKIP
     Max(x, -2)
-
     >>> Max(x, -2).subs(x, 3)
     3
-
     >>> Max(p, -2)
     p
-
     >>> Max(x, y)                   #doctest: +SKIP
     Max(x, y)
-
     >>> Max(x, y) == Max(y, x)
     True
-
     >>> Max(x, Max(y, z))           #doctest: +SKIP
     Max(x, y, z)
-
     >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
     Max(8, p)
-
     >>> Max (1, x, oo)
     oo
 
-    Algorithm
+    * Algorithm
 
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
@@ -547,24 +544,28 @@ class Max(MinMaxBase, Application):
     identity = S.NegativeInfinity
 
     def fdiff( self, argindex ):
+        from sympy import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return C.Heaviside(self.args[argindex] - self.args[1 - argindex])
+                return Heaviside(self.args[argindex] - self.args[1 - argindex])
             newargs = tuple([self.args[i] for i in range(n) if i != argindex])
-            return C.Heaviside(self.args[argindex] - Max(*newargs))
+            return Heaviside(self.args[argindex] - Max(*newargs))
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return Add(*[j*Mul(*[C.Heaviside(j - i) for i in args if i!=j]) \
+        from sympy import Heaviside
+        return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
 
 class Min(MinMaxBase, Application):
     """
     Return, if possible, the minimum value of the list.
+    It is named ``Min`` and not ``min`` to avoid conflicts
+    with the built-in function ``min``.
 
     Examples
     ========
@@ -576,16 +577,12 @@ class Min(MinMaxBase, Application):
 
     >>> Min(x, -2)                  #doctest: +SKIP
     Min(x, -2)
-
     >>> Min(x, -2).subs(x, 3)
     -2
-
     >>> Min(p, -3)
     -3
-
     >>> Min(x, y)                   #doctest: +SKIP
     Min(x, y)
-
     >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
     Min(n, -7)
 
@@ -598,16 +595,18 @@ class Min(MinMaxBase, Application):
     identity = S.Infinity
 
     def fdiff( self, argindex ):
+        from sympy import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return C.Heaviside( self.args[1-argindex] - self.args[argindex] )
+                return Heaviside( self.args[1-argindex] - self.args[argindex] )
             newargs = tuple([ self.args[i] for i in range(n) if i != argindex])
-            return C.Heaviside( Min(*newargs) - self.args[argindex] )
+            return Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        return Add(*[j*Mul(*[C.Heaviside(i-j) for i in args if i!=j]) \
+        from sympy import Heaviside
+        return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
