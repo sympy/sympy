@@ -1,6 +1,6 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer\
                    , SeqFormula, SeqFunc, Lambda, sequence)
-from sympy.series.sequences import SeqExpr
+from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
@@ -92,3 +92,17 @@ def test_sequence():
     assert sequence(periodical=(1, 2, 3), interval=(0, 5)) == per
     assert sequence(func=Lambda(n, n**2), interval=(0, 5)) == func
     assert sequence(formula=(n**2, n)) == inter
+
+
+def test_SeqExprOp():
+    form = SeqFormula((n**2, n), (0, 10))
+    per = SeqPer((1, 2, 3), (5, 10))
+    func = SeqFunc(Lambda(m, m**2), (0, 10))
+
+    s = SeqExprOp(form, per, func)
+    assert s.gen == ((n**2, n), (1, 2, 3), Lambda(m, m**2))
+    assert s.interval == Interval(5, 10)
+    assert s.start == 5
+    assert s.stop == 10
+    assert s.length == 6
+    assert s.variables == (n, m)

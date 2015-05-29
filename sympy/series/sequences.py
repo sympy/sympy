@@ -8,7 +8,7 @@ from sympy.core.compatibility import (range, integer_types, with_metaclass\
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import ceiling
-from sympy.sets.sets import Interval, Set
+from sympy.sets.sets import Interval, Set, Intersection
 from sympy.utilities.iterables import flatten
 
 
@@ -281,8 +281,8 @@ class SeqExpr(SeqBase):
         interval = Tuple(bounds, step)
         return Expr.__new__(cls, gen, interval)
 
-    @classmethod
-    def _validate(cls, gen):
+    @staticmethod
+    def _validate(gen):
         """Validates the generator
         Should return unnchanged if no change required
         """
@@ -362,8 +362,8 @@ class SeqPer(SeqExpr):
 
     is_Periodic = True
 
-    @classmethod
-    def _validate(cls, periodical):
+    @staticmethod
+    def _validate(periodical):
         """
         Examples
         ========
@@ -446,8 +446,8 @@ class SeqFormula(SeqExpr):
 
     is_Formula = True
 
-    @classmethod
-    def _validate(cls, formula):
+    @staticmethod
+    def _validate(formula):
         """
         Examples
         ========
@@ -547,8 +547,8 @@ class SeqFunc(SeqExpr):
 
     is_Functional = True
 
-    @classmethod
-    def _validate(cls, function):
+    @staticmethod
+    def _validate(function):
         if len(function.variables) != 1:
             raise ValueError("Only single argument functions are allowed")
         return sympify(function)
@@ -556,6 +556,13 @@ class SeqFunc(SeqExpr):
     @property
     def function(self):
         return self.gen
+
+    @property
+    def variables(self):
+        """Bounded variables
+        it will be a tuple with only one symbol
+        """
+        return (self.gen.variables,)
 
     def _eval_coeff(self, pt):
         return self.function(pt)
@@ -603,3 +610,58 @@ def sequence(**kwargs):
         return SeqFormula(key, interval)
 
     raise ValueError('Invalid Arguments')
+
+
+class SeqExprOp(SeqBase):
+    """Base class for operations on sequences
+
+    Examples
+    ========
+
+    >>> from sympy.series.sequences import SeqExprOp, sequence
+    >>> from sympy.abc import n
+    >>> s1 = sequence(formula=(n**2, n), interval=(0, 10))
+    >>> s2 = sequence(periodical=(1, 2, 3), interval=(5, 10))
+    >>> s = SeqExprOp(s1, s2)
+    >>> s.gen
+    ((n**2, n), (1, 2, 3))
+    >>> s.interval
+    [5, 10]
+    >>> s.length
+    6
+    """
+    @property
+    def gen(self):
+        """Generator for the sequence
+        returns a tuple of generators of all the argument sequences
+        """
+        return tuple([a.gen for a in self.args])
+
+    @property
+    def interval(self):
+        """Sequence is defined on the intersection
+        of all the intervals of respective sequences
+        """
+        return Intersection(*[a.interval for a in self.args])
+
+    @property
+    def start(self):
+        return self.interval.inf
+
+    @property
+    def stop(self):
+        return self.interval.sup
+
+    @property
+    def variables(self):
+        """Cumulative of all the bound variables"""
+        return tuple(flatten([a.variables for a in self.args]))
+
+    @property
+    def step(self):
+        """By default maximum step size is taken as the step size"""
+        return max(a.step for a in self.args)
+
+    @property
+    def length(self):
+        return ceiling((self.stop - self.start + 1) / self.step)
