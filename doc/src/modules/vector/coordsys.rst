@@ -46,24 +46,36 @@ Similar to 'locating' new systems, :mod:`sympy.vector` also allows for
 initialization of new ``CoordSysCartesian`` instances that are oriented
 in user-defined ways with respect to existing systems.
 
+Suppose you have a coordinate system :math:`A`.
+
+  >>> from sympy.vector import CoordSysCartesian
+  >>> A = CoordSysCartesian('A')
+
+You want to initialize a new coordinate system :math:`B`, that is rotated with 
+respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
+
+  >>> from sympy import Symbol
+  >>> theta = Symbol('theta') 
+
+The orientation is shown in the diagram below:
+
+.. image:: simp_rot.*
+   :height: 250
+   :width: 250
+   :align: center
+
 There are two ways to achieve this.
 
 Using a method of CoordSysCartesian directly
 --------------------------------------------
 
 This is the easiest, cleanest, and hence the recommended way of doing
-it. Suppose you want to orient the new system using Euler Angles 
-:math:`a`, :math:`b`, :math:`c` and the :math:`X`-:math:`Y`-:math:`Z` 
-rotation order.
+it.
 
-You can do this as follows -
+  >>> B = A.orient_new_axis('B', theta, A.k)
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> from sympy.abc import a, b, c
-  >>> N = CoordSysCartesian('N')
-  >>> M = N.orient_new_body('M', a, b, c, 'XYZ')
-
-The rotation order can also be given as ``123`` instead of ``XYZ``.
+This initialzes :math:`B` with the required orientation information with
+respect to :math:`A`.
 
 ``CoordSysCartesian`` provides the following direct orientation methods
 in its API-
@@ -83,20 +95,15 @@ in detail.
 Using Orienter(s) and the orient_new method
 -------------------------------------------
 
-Suppose you want to rotate the new system about the axis
-:math:`\mathbf{\hat{k}}`, by angle :math:`a`.
-
 You would first have to initialize an ``AxisOrienter`` instance for 
 storing the rotation information.
 
-  >>> from sympy.vector import CoordSysCartesian, AxisOrienter
-  >>> from sympy.abc import a
-  >>> N = CoordSysCartesian('N')
-  >>> axis_orienter = AxisOrienter(a, N.k)
+  >>> from sympy.vector import AxisOrienter
+  >>> axis_orienter = AxisOrienter(theta, A.k)
 
-And then apply it using the ``orient_new`` method.
+And then apply it using the ``orient_new`` method, to obtain :math:`B`.
 
-  >>> M = N.orient_new('M', axis_orienter)
+  >>> B = A.orient_new('B', axis_orienter)
 
 ``orient_new`` also lets you orient new systems using multiple
 ``Orienter`` instances, provided in an iterable. The rotations/orientations
@@ -106,7 +113,7 @@ appear in the iterable.
   >>> from sympy.vector import BodyOrienter
   >>> from sympy.abc import a, b, c
   >>> body_orienter = BodyOrienter(a, b, c, 'XYZ')
-  >>> M = N.orient_new('M', (axis_orienter, body_orienter))
+  >>> C = A.orient_new('C', (axis_orienter, body_orienter))
 
 The :mod:`sympy.vector` API provides the following four ``Orienter``
 classes for orientation purposes-
@@ -126,19 +133,19 @@ module to know more.
 In each of the above examples, the origin of the new coordinate system
 coincides with the origin of the 'parent' system.
 
-  >>> M.position_wrt(N)
+  >>> B.position_wrt(A)
   0
 
 To compute the rotation matrix of any coordinate system with respect 
 to another one, use the ``rotation_matrix`` method.
 
-  >>> M = N.orient_new_axis('M', a, N.k)
-  >>> M.rotation_matrix(N)
+  >>> B = A.orient_new_axis('B', a, A.k)
+  >>> B.rotation_matrix(A)
   Matrix([
   [ cos(a), sin(a), 0],
   [-sin(a), cos(a), 0],
   [      0,      0, 1]])
-  >>> M.rotation_matrix(M)
+  >>> B.rotation_matrix(B)
   Matrix([
   [1, 0, 0],
   [0, 1, 0],
@@ -162,12 +169,12 @@ position vector with respect to the parent coordinate system.
 Thus, the orientation methods also act as methods to support orientation+
 location of the new systems.
 
-  >>> M = N.orient_new_axis('M', a, N.k, location=2*N.j)
-  >>> M.position_wrt(N)
-  2*N.j
+  >>> C = A.orient_new_axis('C', a, A.k, location=2*A.j)
+  >>> C.position_wrt(A)
+  2*A.j
   >>> from sympy.vector import express
-  >>> express(N.position_wrt(M), M)
-  (-2*sin(a))*M.i + (-2*cos(a))*M.j
+  >>> express(C.position_wrt(A), A)
+  (-2*sin(a))*A.i + (-2*cos(a))*A.j
 
 More on the ``express`` function in a bit.
 

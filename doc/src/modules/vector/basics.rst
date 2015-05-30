@@ -113,6 +113,9 @@ The ``&`` and ``^`` operators have been overloaded for the
   >>> v1 ^ v2
   (-1)*N.i + (-3)*N.j + (-11)*N.k
 
+However, this is not the recommended way of performing these operations.
+Using the original methods makes the code clearer and easier to follow.
+
 In addition to these operations, it is also possible to compute the
 outer products of ``Vector`` instances in :mod:`sympy.vector`. More
 on that in a little bit.

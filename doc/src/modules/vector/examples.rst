@@ -109,11 +109,11 @@ Define the vector field as ``vfield`` and the scalar field as ``sfield``.
 
 Construct the expression for the LHS of the equation using ``C.delop``.
 
-  >>> lhs = (C.delop & (ffield * vfield)).doit()
+  >>> lhs = (C.delop.dot(ffield * vfield)).doit()
 
 Similarly, the RHS would be defined.
 
-  >>> rhs = ((vfield & C.delop(ffield)) + (ffield * (C.delop & vfield))).doit()
+  >>> rhs = ((vfield.dot(C.delop(ffield))) + (ffield * (C.delop.dot(vfield)))).doit()
 
 Now, to prove the product rule, we would just need to equate the expanded and 
 simplified versions of the lhs and the rhs, so that the SymPy expressions match.
