@@ -1,6 +1,6 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
-    LambertW, Piecewise, Poly, Rational, S, Symbol,
+    LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
     tan, tanh, atan2, arg,
@@ -21,7 +21,7 @@ from sympy.physics.units import cm
 
 
 from sympy.solvers.solveset import (
-    solveset_real, domain_check, solveset_complex,
+    solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     _is_function_class_equation, invert_real, invert_complex, solveset)
 
 a = Symbol('a', real=True)
@@ -814,3 +814,17 @@ def test_issue_9522():
 
     assert solveset(expr1, x) == EmptySet()
     assert solveset(expr2, x) == EmptySet()
+
+
+def test_linear_eq_to_matrix():
+    x, y, z = symbols('x, y, z')
+    eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
+    eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
+
+    A, b = linear_eq_to_matrix(eqns1, x, y, z)
+    assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
+    assert b == Matrix([[3], [0], [12]])
+
+    A, b = linear_eq_to_matrix(eqns2, x, y, z)
+    assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
+    assert b == Matrix([[1], [-2], [0]])
