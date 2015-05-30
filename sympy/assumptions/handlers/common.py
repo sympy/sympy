@@ -30,6 +30,8 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def Symbol(expr, assumptions):
         """Objects are expected to be commutative unless otherwise stated"""
+        if expr.is_commutative is not None:
+            return expr.is_commutative
         assumps = conjuncts(assumptions)
         if Q.commutative(expr) in assumps:
             return True

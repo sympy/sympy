@@ -17,6 +17,10 @@ class AskInfinitesimalHandler(CommonHandler):
     """
 
     @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_infinitesimal
+
+    @staticmethod
     def _number(expr, assumptions):
         # helper method
         return expr.evalf() == 0
@@ -92,6 +96,8 @@ class AskBoundedHandler(CommonHandler):
         True
 
         """
+        if expr.is_bounded is not None:
+            return expr.is_bounded
         if Q.bounded(expr) in conjuncts(assumptions):
             return True
         return None
