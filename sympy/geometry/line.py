@@ -557,6 +557,17 @@ class LinearEntity(GeometryEntity):
 
         """
         return (self.p1, self.p2)
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
+        verts = self.points
+        xs = [p.x for p in verts]
+        ys = [p.y for p in verts]
+        return (min(xs), min(ys), max(xs), max(ys))
 
     def projection(self, o):
         """Project a point, line, ray, or segment onto this linear entity.
@@ -1173,6 +1184,30 @@ class Line(LinearEntity):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
 
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the LinearEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = (N(self.p1), N(self.p2))
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" '
+            'marker-start="url(#markerReverseArrow)" marker-end="url(#markerArrow)"/>'
+            ).format(2. * scale_factor, path, fill_color)
+
 class Ray(LinearEntity):
     """
     A Ray is a semi-line in the space with a source point and a direction.
@@ -1491,9 +1526,33 @@ class Ray(LinearEntity):
         # No other known entity can be contained in a Ray
         return False
 
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the LinearEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = (N(self.p1), N(self.p2))
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" '
+            'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
+            ).format(2. * scale_factor, path, fill_color)
+
 
 class Segment(LinearEntity):
-    """A undirected line segment in space.
+    """An undirected line segment in space.
 
     Parameters
     ==========
@@ -1734,3 +1793,25 @@ class Segment(LinearEntity):
 
         # No other known entity can be contained in a Ray
         return False
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the LinearEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = (N(self.p1), N(self.p2))
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" />'
+            ).format(2. * scale_factor, path, fill_color)

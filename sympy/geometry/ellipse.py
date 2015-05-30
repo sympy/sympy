@@ -508,6 +508,16 @@ class Ellipse(GeometryEntity):
             # foci on the x-axis
             return (c + Point(-fd, 0), c + Point(fd, 0))
 
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
+        h, v = self.hradius, self.vradius
+        return (self.center.x - h, self.center.y - v, self.center.x + h, self.center.y + v)
+
     def rotate(self, angle=0, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
@@ -1237,6 +1247,27 @@ class Ellipse(GeometryEntity):
         elif isinstance(o, Ellipse):
             return self == o
         return False
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG ellipse element for the Ellipse.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        c = N(self.center)
+        h, v = N(self.hradius), N(self.vradius)
+        return (
+            '<ellipse fill="{1}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" cx="{2}" cy="{3}" rx="{4}" ry="{5}"/>'
+            ).format(2. * scale_factor, fill_color, c.x, c.y, h, v)
 
 
 class Circle(Ellipse):

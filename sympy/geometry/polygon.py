@@ -427,6 +427,18 @@ class Polygon(GeometryEntity):
             res.append(Segment(args[i], args[i + 1]))
         return res
 
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
+        verts = self.vertices
+        xs = [p.x for p in verts]
+        ys = [p.y for p in verts]
+        return (min(xs), min(ys), max(xs), max(ys))
+
     def is_convex(self):
         """Is the polygon convex?
 
@@ -906,6 +918,28 @@ class Polygon(GeometryEntity):
             if e1_current == e1_ymax and e2_current == e2_ymin:
                 break
         return min_dist
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the Polygon.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = map(N, self.vertices)
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" />'
+            ).format(2. * scale_factor, path, fill_color)
 
     def __eq__(self, o):
         if not isinstance(o, Polygon) or len(self.args) != len(o.args):
