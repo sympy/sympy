@@ -113,7 +113,8 @@ def test_union():
     assert X.is_iterable is False
 
     # issue 7843
-    assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == FiniteSet(-sqrt(-I), sqrt(-I))
+    assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == \
+        FiniteSet(-sqrt(-I), sqrt(-I))
 
 
 def test_difference():

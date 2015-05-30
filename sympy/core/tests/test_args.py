@@ -3042,6 +3042,13 @@ def test_sympy__series__sequences__SeqExprOp():
     assert _test_args(SeqExprOp(s1, s2))
 
 
+def test_sympy__series__sequences__SeqAdd():
+    from sympy.series.sequences import SeqAdd, sequence
+    s1 = sequence(periodical=(1, 2, 3))
+    s2 = sequence(func=Lambda(x, x**2))
+    assert _test_args(SeqAdd(s1, s2))
+
+
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))

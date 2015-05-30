@@ -1,5 +1,5 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer\
-                   , SeqFormula, SeqFunc, Lambda, sequence)
+                   , SeqFormula, SeqFunc, Lambda, sequence, SeqAdd)
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 
@@ -106,3 +106,43 @@ def test_SeqExprOp():
     assert s.stop == 10
     assert s.length == 6
     assert s.variables == (n, m)
+
+
+def test_SeqAdd():
+    per = SeqPer((1, 2, 3))
+    form = SeqFormula(n**2)
+    func = SeqFunc(Lambda(n, n**2))
+
+    per_bou = SeqPer((1, 2), (1, 5))
+    form_bou = SeqFormula(n**2, (6, 10))
+    func_bou = SeqFunc(Lambda(n, n**2), (0, 5))
+
+    assert SeqAdd() == S.EmptySequence
+    assert SeqAdd(S.EmptySequence) == S.EmptySequence
+    assert SeqAdd(per) == per
+    assert SeqAdd(per, S.EmptySequence) == per
+    assert SeqAdd(per_bou, form_bou) == S.EmptySequence
+
+    s = SeqAdd(per_bou, func_bou, evaluate=False)
+    assert s.args == (func_bou, per_bou)
+    assert s[:] == [2, 6, 10, 18, 26]
+    assert list(s) == [2, 6, 10, 18, 26]
+
+    assert isinstance(SeqAdd(per, per_bou, evaluate=False), SeqAdd)
+
+    s1 =  SeqAdd(per, per_bou)
+    assert isinstance(s1, SeqPer)
+    assert s1 == SeqPer((2, 4, 4, 3, 3, 5), (1, 5))
+    s2 = SeqAdd(func, func_bou)
+    assert isinstance(s2, SeqFunc)
+    assert s2 == SeqFunc(Lambda(n, 2*n**2), (0, 5))
+    s3 = SeqAdd(form, form_bou)
+    assert isinstance(s3, SeqFormula)
+    assert s3 == SeqFormula(2*n**2, (6, 10))
+
+    assert SeqAdd(form, form_bou, per) == \
+        SeqAdd(per, SeqFormula(2*n**2, (6, 10)))
+    assert SeqAdd(form, SeqAdd(form_bou, per)) == \
+        SeqAdd(per, SeqFormula(2*n**2, (6, 10)))
+    assert SeqAdd(per, SeqAdd(form, func), evaluate=False) == \
+        SeqAdd(per, form, func)

@@ -3,11 +3,16 @@ from __future__ import print_function, division
 from sympy.core.expr import Expr
 from sympy.core.singleton import (S, Singleton)
 from sympy.core.symbol import Dummy
+from sympy.core.function import Lambda
+from sympy.core.add import Add
 from sympy.core.compatibility import (range, integer_types, with_metaclass\
-                                      , is_sequence)
+                                      , is_sequence, iterable, ordered)
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
+from sympy.core.evaluate import global_evaluate
 from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.polys import lcm
 from sympy.sets.sets import Interval, Set, Intersection
 from sympy.utilities.iterables import flatten
 
@@ -18,9 +23,23 @@ class SeqBase(Expr):
     is_iterable = True
 
     is_EmptySequence = False
-    is_Periodic = False
-    is_Functional = False
-    is_Formula = False
+    is_SeqPer = False
+    is_SeqFunc = False
+    is_SeqFormula = False
+    is_SeqAdd = False
+
+    @staticmethod
+    def _start_key(expr):
+        """
+        Return start (if possible) else S.Infinity.
+        adapted from Set._infimum_key
+        """
+        try:
+            start = expr.start
+        except (NotImplementedError,
+                AttributeError, ValueError):
+            start = S.Infinity
+        return start
 
     @property
     def gen(self):
@@ -137,6 +156,41 @@ class SeqBase(Expr):
 
         return initial + i*step
 
+    def add(self, other):
+        """
+        Returns the term-wise addition of 'self' and 'other'.
+
+        Examples
+        ========
+
+        As a shortcut it is possible to use the '+' operator:
+
+        >>> from sympy import S, oo, SeqAdd, SeqFormula
+        >>> from sympy.abc import n
+        >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2), evaluate=False)
+        SeqFormula((n**2, n), ([0, oo), 1)) + SeqFormula((n**3, n), ([0, oo), 1))
+
+        Similarly it is possible to use
+        the '-' operator for term-wise subtraction:
+
+        TODO (__neg__ needs to be implemented, will use SeqMul maybe)
+        """
+        return SeqAdd(self, other)
+
+    def _add(self, other):
+        """
+        Should only be used internally
+
+        self._add(other) returns a new, term-wise added sequence if self
+        knows how to add with other, otherwise it returns ``None``.
+
+        Used within :class:`SeqAdd` class
+        """
+        return None
+
+    def __add__(self, other):
+        return self.add(other)
+
     def __iter__(self):
         i = 0
         while(i < self.length):
@@ -166,12 +220,14 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     Examples
     ========
 
-    >>> from sympy import S
+    >>> from sympy import S, SeqPer, oo
     >>> S.EmptySequence
     EmptySequence()
+
+    >>> SeqPer((1, 2)).add(S.EmptySequence)
+    SeqPer((1, 2), ([0, oo), 1))
     """
 
-    is_iterable = True
     is_EmptySequence = True
 
     @property
@@ -360,7 +416,7 @@ class SeqPer(SeqExpr):
     sympy.series.sequences.SeqFunc
     """
 
-    is_Periodic = True
+    is_SeqPer = True
 
     @staticmethod
     def _validate(periodical):
@@ -397,6 +453,26 @@ class SeqPer(SeqExpr):
             idx = (pt - self.start) % self.period
         return self.periodical[idx]
 
+    def _add(self, other):
+        """See docstring of SeqBase._add"""
+        if other.is_SeqPer:
+            start = Max(self.start, other.start)
+            stop = Min(self.stop, other.stop)
+            step = Max(self.step, other.step)
+
+            per1, lper1 = self.periodical, self.period
+            per2, lper2 = other.periodical, other.period
+
+            per_length = lcm(lper1, lper2)
+
+            new_per = []
+            for x in range(per_length):
+                ele1 = per1[x % lper1]
+                ele2 = per2[x % lper2]
+                new_per.append(ele1 + ele2)
+
+            return SeqPer(new_per, (start, stop, step))
+
 
 class SeqFormula(SeqExpr):
     """Represents sequence based on a formula
@@ -429,12 +505,12 @@ class SeqFormula(SeqExpr):
 
     changing step size
 
-    >>> SeqFormula((n**2, n), (0, 5, 2))[:]
+    >>> SeqFormula(n**2, (0, 5, 2))[:]
     [0, 4, 16]
 
     sequence starts from negative infinity
 
-    >>> SeqFormula((n**2, n), (-oo, 0))[0:6]
+    >>> SeqFormula(n**2, (-oo, 0))[0:6]
     [0, 1, 4, 9, 16, 25]
 
     See Also
@@ -444,7 +520,7 @@ class SeqFormula(SeqExpr):
     sympy.series.sequences.SeqFunc
     """
 
-    is_Formula = True
+    is_SeqFormula = True
 
     @staticmethod
     def _validate(formula):
@@ -468,15 +544,15 @@ class SeqFormula(SeqExpr):
             free = formula.free_symbols
             if len(free) == 0:
                 k = Dummy('k')
-                formula = (formula, k)
+                formula = Tuple(formula, k)
             elif len(free) == 1:
-                formula = (formula, free.pop())
+                formula = Tuple(formula, free.pop())
             else:
-                raise ValueError(filldedent(
+                raise ValueError(
                     " specify dummy variables for %s. If the formula contains"
                     " more than one free symbol, a dummy variable should be"
                     " supplied explicitly e.g., SeqFormula((m*n**2, n), (0, 5))"
-                    % formula))
+                    % formula)
         return formula
 
     @property
@@ -495,13 +571,26 @@ class SeqFormula(SeqExpr):
         d = self.variables[0]
         return self.formula.subs(d, pt)
 
+    def _add(self, other):
+        """See docstring of SeqBase._add"""
+        if other.is_SeqFormula:
+            start = Max(self.start, other.start)
+            stop = Min(self.stop, other.stop)
+            step = Max(self.step, other.step)
+
+            form1, v1 = self.formula, self.variables[0]
+            form2, v2 = other.formula, other.variables[0]
+            formula = (form1 + form2.subs(v2, v1), v1)
+
+            return SeqFormula(formula, (start, stop, step))
+
 
 class SeqFunc(SeqExpr):
     """Represents sequence based on a function
 
     Elements are generated by calling a function.
     Only single argument functions are allowed.
-    Only SymPy's Lambda functions are permitted.
+    Only SymPy's :class:`Lambda` functions are permitted.
 
     Examples
     ========
@@ -545,7 +634,7 @@ class SeqFunc(SeqExpr):
     sympy.core.function.Lambda
     """
 
-    is_Functional = True
+    is_SeqFunc = True
 
     @staticmethod
     def _validate(function):
@@ -559,13 +648,23 @@ class SeqFunc(SeqExpr):
 
     @property
     def variables(self):
-        """Bounded variables
-        it will be a tuple with only one symbol
-        """
-        return (self.gen.variables,)
+        return self.gen.variables
 
     def _eval_coeff(self, pt):
         return self.function(pt)
+
+    def _add(self, other):
+        """See docstring of SeqBase._add"""
+        if other.is_SeqFunc:
+            start = Max(self.start, other.start)
+            stop = Min(self.stop, other.stop)
+            step = Max(self.step, other.step)
+
+            func1, v1 = self.function, self.variables[0]
+            func2, v2 = other.function, other.variables[0]
+            function = Lambda(v1, func1.expr + func2.expr.subs(v2, v1))
+
+            return SeqFunc(function, (start, stop, step))
 
 
 def sequence(**kwargs):
@@ -629,6 +728,11 @@ class SeqExprOp(SeqBase):
     [5, 10]
     >>> s.length
     6
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqAdd
     """
     @property
     def gen(self):
@@ -665,3 +769,108 @@ class SeqExprOp(SeqBase):
     @property
     def length(self):
         return ceiling((self.stop - self.start + 1) / self.step)
+
+
+class SeqAdd(Add, SeqExprOp):
+    """
+    Represents addition of sequences
+
+    Rules:
+        * The interval on which sequence is defined is the intersection
+        of respective intervals of sequences.
+        * Anything + EmptySequence, remains unchanged
+        * Other rules are defined in _add methods of sequence classes
+
+    Examples
+    ========
+
+    >>> from sympy import S, oo, SeqAdd, SeqPer, SeqFormula
+    >>> from sympy.abc import n
+    >>> SeqAdd(SeqPer((1, 2)), S.EmptySequence)
+    SeqPer((1, 2), ([0, oo), 1))
+    >>> SeqAdd(SeqPer((1, 2), (0, 5)), SeqPer((1, 2), (6, 10)))
+    EmptySequence()
+    >>> SeqAdd(SeqPer((1, 2)), SeqFormula(n**2))
+    SeqFormula((n**2, n), ([0, oo), 1)) + SeqPer((1, 2), ([0, oo), 1))
+    """
+
+    is_SeqAdd = True
+
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
+
+        # flatten inputs
+        args = list(args)
+
+        # adapted from sympy.sets.sets.Union
+        def _flatten(arg):
+            if isinstance(arg, SeqBase):
+                if arg.is_SeqAdd:
+                    return sum(map(_flatten, arg.args), [])
+                else:
+                    return [arg]
+            if iterable(arg):
+                return sum(map(_flatten, arg), [])
+            raise TypeError("Input must be Sequences or "
+                            " iterables of Sequences")
+        args = _flatten(args)
+
+        args = [a for a in args if not a is S.EmptySequence]
+
+        # Addition of no sequences is EmptySequence
+        if len(args) == 0:
+            return S.EmptySequence
+
+        if Intersection(*[a.interval for a in args]) is S.EmptySet:
+            return S.EmptySequence
+
+        # reduce using known rules
+        if evaluate:
+            return SeqAdd.reduce(args)
+
+        args = list(ordered(args, SeqBase._start_key))
+
+        return Expr.__new__(cls, *args)
+
+    @staticmethod
+    def reduce(args):
+        """
+        Simplify a :class:`SeqAdd` using known rules
+
+        Then we iterate through all pairs and ask the constituent sets if they
+        can simplify themselves with any other constituent
+
+        Notes
+        =====
+        adapted from ``Union.reduce``
+
+        """
+        new_args = True
+        while(new_args):
+            for s in args:
+                new_args = False
+                for t in args:
+                    if t == s:
+                        continue
+                    new_seq = s._add(t)
+                    # This returns None if s does not know how to add
+                    # with t. Returns the newly added sequence otherwise
+                    if new_seq is not None:
+                        new_args = [a for a in args if not a in (s, t)]
+                        new_args.append(new_seq)
+                        break
+                if new_args:
+                    args = new_args
+                    break
+
+        if len(args) == 1:
+            return args.pop()
+        else:
+            return SeqAdd(args, evaluate=False)
+
+    def _eval_coeff(self, pt):
+        """adds up the coefficients of all the sequences at point pt"""
+        val = 0
+        for a in self.args:
+            val += a.coeff(pt)
+        return val
