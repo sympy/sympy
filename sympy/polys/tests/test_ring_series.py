@@ -3,7 +3,8 @@ from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_series_inversion,
   rs_series_from_list, rs_exp, rs_log, rs_newton, rs_hadamard_exp,
-  rs_compose_add, rs_atan, rs_tan, rs_sin, _tan1, fun)
+  rs_compose_add, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos, rs_cos_sin,
+  rs_sinh, rs_cosh, rs_tanh, _tan1, fun)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 
@@ -217,22 +218,47 @@ def test_cos_sin():
     R, x, y = ring('x, y', QQ)
     cos, sin = rs_cos_sin(x, x, 9)
     assert cos == rs_cos(x, x, 9)
-    assert sin = rs_sin(x, x, 9)
+    assert sin == rs_sin(x, x, 9)
     cos, sin = rs_cos_sin(x + x*y, x, 5)
     assert cos == rs_cos(x + x*y, x, 5)
     assert sin == rs_sin(x + x*y, x, 5)
 
-def test_cot():
-    R, x, y = ring('x, y', QQ)
-    assert rs_cot(x, x, 9) == -1/4725*x**7 - 2/945*x**5 - 1/45*x**3 - \
-        1/3*x + x**-1
+#def test_cot():
+#    R, x, y = ring('x, y', QQ)
+#    assert rs_cot(x, x, 9) == -1/4725*x**7 - 2/945*x**5 - 1/45*x**3 - \
+#        1/3*x + x**-1
    #TODO
    # Add test  for multivariate expansion
+   # Output is a laurent series. Make appropriate changes
 
 def test_atanh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_atanh(x, x, 9) == 1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
+    assert rs_atanh(x*y + x**2*y**3, x, 9) == 2*x**8*y**11 + x**8*y**9 + \
+        2*x**7*y**9 + 1/7*x**7*y**7 + 1/3*x**6*y**9 + x**6*y**7 + x**5*y**7 + \
+        1/5*x**5*y**5 + x**4*y**5 + 1/3*x**3*y**3 + x**2*y**3 + x*y
 
 def test_sinh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_sinh(x, x, 9) == 1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
+    assert rs_sinh(x*y + x**2*y**3, x, 9) == 1/12*x**8*y**11 + \
+        1/720*x**8*y**9 + 1/12*x**7*y**9 + 1/5040*x**7*y**7 + 1/6*x**6*y**9 + \
+        1/24*x**6*y**7 + 1/2*x**5*y**7 + 1/120*x**5*y**5 + 1/2*x**4*y**5 + \
+        1/6*x**3*y**3 + x**2*y**3 + x*y
 
 def test_cosh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_cosh(x, x, 9) == 1/40320*x**8 + 1/720*x**6 + 1/24*x**4 + \
+        1/2*x**2 + 1
+    assert rs_cosh(x*y + x**2*y**3, x, 9) == 1/24*x**8*y**12 + \
+        1/48*x**8*y**10 + 1/40320*x**8*y**8 + 1/6*x**7*y**10 + \
+        1/120*x**7*y**8 + 1/4*x**6*y**8 + 1/720*x**6*y**6 + 1/6*x**5*y**6 + \
+        1/2*x**4*y**6 + 1/24*x**4*y**4 + x**3*y**4 + 1/2*x**2*y**2 + 1
 
 def test_tanh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_tanh(x, x, 9) == -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
+    assert rs_tanh(x*y + x**2*y**3 , x, 9) == 4/3*x**8*y**11 - \
+        17/45*x**8*y**9 + 4/3*x**7*y**9 - 17/315*x**7*y**7 - 1/3*x**6*y**9 + \
+        2/3*x**6*y**7 - x**5*y**7 + 2/15*x**5*y**5 - x**4*y**5 - \
+        1/3*x**3*y**3 + x**2*y**3 + x*y

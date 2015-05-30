@@ -1,6 +1,6 @@
 from sympy.polys.domains import QQ
 from sympy.polys.rings import PolyElement, ring
-from sympy.polys.monomials import monomial_min, monomial_mul
+from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
@@ -50,7 +50,7 @@ def _giant_steps(target):
 
 def rs_trunc(p1, x, prec):
     """
-    truncate the series in the ``x`` variable with precision ``prec``,
+    Truncate the series in the ``x`` variable with precision ``prec``,
     that is modulo ``O(x**prec)``
 
     Examples
@@ -78,7 +78,7 @@ def rs_trunc(p1, x, prec):
 
 def rs_mul(p1, p2, x, prec):
     """
-    product of series modulo ``O(x**prec)``
+    Product of the given two series, modulo ``O(x**prec)``
 
     ``x`` is the series variable or its position in the generators.
 
@@ -170,7 +170,7 @@ def rs_square(p1, x, prec):
 
 def rs_pow(p1, n, x, prec):
     """
-    return ``p1**n`` modulo ``O(x**prec)``
+    Return ``p1**n`` modulo ``O(x**prec)``
 
     Examples
     ========
@@ -388,6 +388,34 @@ def rs_series_from_list(p, c, x, prec, concur=1):
         s1 = rs_mul(s1, b, x, prec)
         s += s1
     return s
+
+def rs_diff(p, x):
+    """
+    Computes partial derivative of p with respect to n
+
+      `n`: variable with respect to which p is differentiated,
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x, y = lgens('x, y', QQ)
+    >>> p = x + x**2*y**3
+    >>> p.diff(x)
+    2*x*y**3 + 1
+    """
+    ring = p.ring
+    n = ring.gens.index(x)
+    p1 = ring.zero
+    mn = [0]*ring.ngens
+    mn[n] = 1
+    mn = tuple(mn)
+    for expv in p:
+        if expv[n]:
+            e = monomial_div(expv, mn)
+            p1[e] = p[expv]*expv[n]
+    return p1
 
 def rs_integrate(self, x):
     """
@@ -612,7 +640,8 @@ def rs_LambertW(p, iv, prec):
     ring = p.ring
     p1 = ring(0)
     if _has_constant_term(p, iv):
-        raise NotImplementedError('polynomial must not have constant term in the series variables')
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
     if iv in ring.gens:
         for precx in _giant_steps(prec):
             e = rs_exp(p1, iv, precx)
@@ -682,7 +711,8 @@ def asin(p, iv, prec):
     5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x
     """
     if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in the series variables')
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
     ring = p.ring
     if iv in ring.gens:
         # get a good value
@@ -728,7 +758,8 @@ def rs_atan(p, x, prec):
     -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x
     """
     if _has_constant_term(p, x):
-        raise NotImplementedError('polynomial must not have constant term in the series variables')
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
     ring = p.ring
     if x in ring.gens:
         dp = p.diff(x)
@@ -768,7 +799,8 @@ def rs_tan(p, x, prec):
     """
     ring = p.ring
     if _has_constant_term(p, x):
-        raise NotImplementedError('p must not have constant part in series variables')
+        raise NotImplementedError('Polynomial must not have constant term in \
+              series variables')
     if ring.ngens == 1:
         return _tan1(p, x, prec)
     return fun(p, rs_tan, x, prec)
@@ -904,7 +936,7 @@ def _atanh(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def atanh(p, iv, prec):
+def rs_atanh(p, iv, prec):
     """
     Hyperbolic arctangent of a series
 
@@ -918,7 +950,8 @@ def atanh(p, iv, prec):
     1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
     """
     if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in the series variables')
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
     ring = p.ring
     if iv in ring.gens:
         dp = rs_diff(p, iv)
@@ -970,12 +1003,12 @@ def _tanh(p, iv, prec):
     ring = p.ring
     p1 = ring(0)
     for precx in _giant_steps(prec):
-        tmp = p - atanh(p1, iv, precx)
+        tmp = p - rs_atanh(p1, iv, precx)
         tmp = rs_mul(tmp, 1 - p1.square(), iv, precx)
         p1 += tmp
     return p1
 
-def tanh(p, iv, prec):
+def rs_tanh(p, iv, prec):
     """
     Hyperbolic tangent of a series
 
@@ -990,10 +1023,11 @@ def tanh(p, iv, prec):
     """
     ring = p.ring
     if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in the series variables')
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
     if ring.ngens == 1:
         return _tanh(p, iv, prec)
-    return fun(p, '_tanh', iv, prec)
+    return fun(p, _tanh, iv, prec)
 
 def rs_newton(p, x, prec):
     """
