@@ -12,7 +12,7 @@ from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety, has_dups, uniq
 
-from .entity import GeometryEntity
+from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment
@@ -21,7 +21,7 @@ from .util import _symbol
 import warnings
 
 
-class Polygon(GeometryEntity):
+class Polygon(GeometrySet):
     """A two-dimensional polygon.
 
     A simple polygon in space. Can be constructed from a sequence of points

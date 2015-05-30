@@ -22,7 +22,7 @@ from sympy.polys.polyutils import _nsort, _not_a_coeff
 from sympy.solvers import solve
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
-from .entity import GeometryEntity
+from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
@@ -33,7 +33,7 @@ import random
 from sympy.utilities.decorator import doctest_depends_on
 
 
-class Ellipse(GeometryEntity):
+class Ellipse(GeometrySet):
     """An elliptical GeometryEntity.
 
     Parameters
@@ -127,6 +127,9 @@ class Ellipse(GeometryEntity):
             center = Point(0, 0)
         else:
             center = Point(center)
+
+        if len(center) != 2:
+            raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '

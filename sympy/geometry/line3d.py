@@ -16,7 +16,7 @@ from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
-from .point3d import Point3D
+from .point import Point3D
 from .util import _symbol
 from sympy.core.compatibility import is_sequence, range
 

@@ -20,7 +20,7 @@ from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
-from .entity import GeometryEntity
+from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .util import _symbol
 from sympy.core.compatibility import is_sequence
@@ -32,7 +32,7 @@ class Undecidable(ValueError):
     pass
 
 
-class LinearEntity(GeometryEntity):
+class LinearEntity(GeometrySet):
     """A base class for all linear entities (line, ray and segment)
     in a 2-dimensional Euclidean space.
 
@@ -61,9 +61,13 @@ class LinearEntity(GeometryEntity):
         p1 = Point(p1)
         p2 = Point(p2)
         if p1 == p2:
-            # if it makes sense to return a Point, handle in subclass
+            # sometimes we return a single point if we are not given two unique
+            # points. This is done in the specific subclass
             raise ValueError(
                 "%s.__new__ requires two unique Points." % cls.__name__)
+        if len(p1) != len(p2):
+            raise ValueError(
+                "%s.__new__ requires two Points of equal dimension." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -83,7 +87,7 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
         >>> l.p1
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         return self.args[0]
@@ -104,7 +108,7 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
         >>> l.p2
-        Point(5, 3)
+        Point2D(5, 3)
 
         """
         return self.args[1]
@@ -460,7 +464,7 @@ class LinearEntity(GeometryEntity):
         >>> p3 in s1
         True
         >>> l1.perpendicular_segment(Point(4, 0))
-        Segment(Point(2, 2), Point(4, 0))
+        Segment(Point2D(2, 2), Point2D(4, 0))
 
         """
         p = Point(p)
@@ -557,6 +561,7 @@ class LinearEntity(GeometryEntity):
 
         """
         return (self.p1, self.p2)
+
     @property
     def bounds(self):
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
@@ -853,9 +858,9 @@ class LinearEntity(GeometryEntity):
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object '
             'and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
-        return Point(x, y)
+        # multiply on the right so the variable gets
+        # combined witht he coordinates of the point
+        return self.p1 + (self.p2 - self.p1)*t
 
     def random_point(self):
         """A random point on a LinearEntity.
@@ -879,7 +884,7 @@ class LinearEntity(GeometryEntity):
         >>> p3 = l1.random_point()
         >>> # random point - don't know its coords in advance
         >>> p3 # doctest: +ELLIPSIS
-        Point(...)
+        Point2D(...)
         >>> # point should belong to the line
         >>> p3 in l1
         True
@@ -1141,7 +1146,7 @@ class Line(LinearEntity):
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
-            return self.__eq__(o)
+            return self.equal(o)
         elif not self.is_similar(o):
             return False
         else:

@@ -3,7 +3,20 @@ all derived geometrical entities.
 
 Contains
 ========
+
 GeometryEntity
+GeometricSet
+
+Notes
+=====
+
+A GeometryEntity is any object that has special geometric properties.
+A GeometrySet is a superclass of any GeometryEntity that can also
+be viewed as a sympy.sets.Set.  In particular, points are the only
+GeometryEntity not considered a Set.
+
+Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
+R3 are currently the only ambient spaces implemented.
 
 """
 
@@ -15,11 +28,13 @@ from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
+from sympy.sets import Set
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
-    "Point",
+    "Point2D",
     "Point3D",
+    "Point",
     "Segment",
     "Ray",
     "Line",
@@ -418,8 +433,7 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def _eval_subs(self, old, new):
-        from sympy.geometry.point import Point
-        from sympy.geometry.point3d import Point3D
+        from sympy.geometry.point import Point, Point3D
         if is_sequence(old) or is_sequence(new):
             if isinstance(self, Point3D):
                 old = Point3D(old)
@@ -428,6 +442,55 @@ class GeometryEntity(Basic):
                 old = Point(old)
                 new = Point(new)
             return  self._subs(old, new)
+
+class GeometrySet(GeometryEntity, Set):
+    """Parent class of all GeometryEntity that are also Sets
+    (compatible with sympy.sets)
+    """
+    def _contains(self, other):
+        """sympy.sets uses the _contains method, so include it for compatibility."""
+
+        if isinstance(other, Set) and other.is_FiniteSet:
+            return all(self.__contains__(i) for i in other)
+
+        return self.__contains__(other)
+
+    def _union(self, o):
+        """ Returns the union of self and o
+        for use with sympy.sets.Set, if possible. """
+
+        from sympy.sets import Union, FiniteSet
+
+        # if its a FiniteSet, merge any points
+        # we contain and return a union with the rest
+        if o.is_FiniteSet:
+            other_points = [p for p in o if not self._contains(p)]
+            if len(other_points) == len(o):
+                return None
+            return Union(self, FiniteSet(*other_points))
+        if self._contains(o):
+            return self
+        return None
+
+    def _intersect(self, o):
+        """ Returns a sympy.sets.Set of intersection objects,
+        if possible. """
+
+        from sympy.sets import Set, FiniteSet, Union
+        from sympy.geometry import Point
+
+        try:
+            inter = self.intersection(o)
+        except NotImplementedError:
+            # sympy.sets.Set.reduce expects None if an object
+            # doesn't know how to simplify
+            return None
+
+        # put the points in a FiniteSet
+        points = FiniteSet(*[p for p in inter if isinstance(p, Point)])
+        non_points = [p for p in inter if not isinstance(p, Point)]
+
+        return Union(*(non_points + [points]))
 
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""

@@ -16,8 +16,7 @@ from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
-from .point3d import Point3D
-from .point import Point
+from .point import Point, Point3D
 from .line3d import LinearEntity3D, Line3D, Segment3D, Ray3D
 from .line import Line, Segment, Ray
 

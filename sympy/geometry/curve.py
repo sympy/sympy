@@ -11,12 +11,12 @@ from __future__ import print_function, division
 from sympy.core import sympify
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.geometry.entity import GeometryEntity
+from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
 from .util import _symbol
 
 
-class Curve(GeometryEntity):
+class Curve(GeometrySet):
     """A curve in space.
 
     A curve is defined by parametric functions for the coordinates, a

@@ -194,6 +194,8 @@ def intersection(*entities):
     if len(entities) <= 1:
         return []
 
+    # entities may be an immutable tuple
+    entities = list(entities)
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
             try:
@@ -273,6 +275,10 @@ def convex_hull(*args):
         else:
             raise NotImplementedError(
                 'Convex hull for %s not implemented.' % type(e))
+
+    # make sure all our points are of the same dimension
+    if any(len(x) != 2 for x in p):
+        raise ValueError('Can only compute the convex hull in two dimensions')
 
     p = list(p)
     if len(p) == 1:
