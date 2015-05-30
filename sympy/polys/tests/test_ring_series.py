@@ -198,3 +198,41 @@ def test_sin():
         1/720*x**8*y**9 + 1/12*x**7*y**9 - 1/5040*x**7*y**7 - 1/6*x**6*y**9 \
         + 1/24*x**6*y**7 - 1/2*x**5*y**7 + 1/120*x**5*y**5 - 1/2*x**4*y**5 \
         - 1/6*x**3*y**3 + x**2*y**3 + x*y
+
+#TODO
+#def test_nth_root()
+#def test_LambertW():
+#def test_asin():
+
+def test_cos():
+    R, x, y = ring('x, y', QQ)
+    assert rs_cos(x, x, 9) == \
+        1/40320*x**8 - 1/720*x**6 + 1/24*x**4 - 1/2*x**2 + 1
+    assert rs_cos(x*y + x**2*y**3, x, 9) == 1/24*x**8*y**12 - \
+        1/48*x**8*y**10 + 1/40320*x**8*y**8 + 1/6*x**7*y**10 - \
+        1/120*x**7*y**8 + 1/4*x**6*y**8 - 1/720*x**6*y**6 + 1/6*x**5*y**6 \
+        - 1/2*x**4*y**6 + 1/24*x**4*y**4 - x**3*y**4 - 1/2*x**2*y**2 + 1
+
+def test_cos_sin():
+    R, x, y = ring('x, y', QQ)
+    cos, sin = rs_cos_sin(x, x, 9)
+    assert cos == rs_cos(x, x, 9)
+    assert sin = rs_sin(x, x, 9)
+    cos, sin = rs_cos_sin(x + x*y, x, 5)
+    assert cos == rs_cos(x + x*y, x, 5)
+    assert sin == rs_sin(x + x*y, x, 5)
+
+def test_cot():
+    R, x, y = ring('x, y', QQ)
+    assert rs_cot(x, x, 9) == -1/4725*x**7 - 2/945*x**5 - 1/45*x**3 - \
+        1/3*x + x**-1
+   #TODO
+   # Add test  for multivariate expansion
+
+def test_atanh():
+
+def test_sinh():
+
+def test_cosh():
+
+def test_tanh():

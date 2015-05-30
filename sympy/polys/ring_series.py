@@ -836,7 +836,7 @@ def rs_cos(p, iv, prec):
         t = rs_tan(p/2, iv, prec)
         t2 = rs_square(t, iv, prec)
         p1 = rs_series_inversion(1+t2, iv, prec)
-        return rs_mul_trunc([p1 ,1 - t2, iv, prec)
+        return rs_mul(p1 ,1 - t2, iv, prec)
     one = ring(1)
     n = 1
     c = []
@@ -878,16 +878,18 @@ def rs_cot(p, iv, prec):
     """
 
     # i, m = p.check_series_var(iv, PoleError, 'cot')
-    # Probably not needed
+    # TODO Raisine error Probably not needed
+    # TODO Error in series_inversion in multivariate case
     i, m = check_series_var(p, iv)
     # see _taylor_term1 comment  sin(x**m) = x**pw*sin(x**m)/x**n0
     # prec1 = prec + pw + n0, with pw = n0 = m
     prec1 = prec + 2*m
     c, s = rs_cos_sin(p, iv, prec1)
     s = mul_xin(s, i, -1)
+    print(s)
     s = rs_series_inversion(s, iv, prec1)
     res = rs_mul(c, s, iv, prec1)
-    res = rs_mul(res, i, -1)
+    res = mul_xin(res, i, -1)
     res = rs_trunc(res, iv, prec)
     return res
 
@@ -989,7 +991,7 @@ def tanh(p, iv, prec):
     ring = p.ring
     if _has_constant_term(p, iv):
         raise NotImplementedError('Polynomial must not have constant term in the series variables')
-    if and ring.ngens == 1:
+    if ring.ngens == 1:
         return _tanh(p, iv, prec)
     return fun(p, '_tanh', iv, prec)
 
