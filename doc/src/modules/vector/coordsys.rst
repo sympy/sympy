@@ -55,7 +55,7 @@ You want to initialize a new coordinate system :math:`B`, that is rotated with
 respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
 
   >>> from sympy import Symbol
-  >>> theta = Symbol('theta') 
+  >>> theta = Symbol('theta')
 
 The orientation is shown in the diagram below:
 
@@ -173,8 +173,8 @@ location of the new systems.
   >>> C.position_wrt(A)
   2*A.j
   >>> from sympy.vector import express
-  >>> express(C.position_wrt(A), A)
-  (-2*sin(a))*A.i + (-2*cos(a))*A.j
+  >>> express(A.position_wrt(C), C)
+  (-2*sin(a))*C.i + (-2*cos(a))*C.j
 
 More on the ``express`` function in a bit.
 
