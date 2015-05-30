@@ -1775,3 +1775,4 @@ def test_issue_2840_8155():
 def test_issue_8260():
     assert solve(x-oo, x) == []
     assert solve(x+oo, x) == []
+    assert solve([x+oo, y+4]) == []
