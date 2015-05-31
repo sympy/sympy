@@ -208,7 +208,6 @@ modifier_dict = {
     'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
     'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
     'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
-    # alternatively: MODIFIER LETTER PRIME or even plain old APOSTROPHE
     'prime': lambda s: s+u('\N{PRIME}'),
     'prm': lambda s: s+u('\N{PRIME}'),
     # # Faces -- these are here for some compatibility with latex printing
