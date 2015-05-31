@@ -881,7 +881,7 @@ def solveset(f, symbol=None):
 
 
 def linear_eq_to_matrix(equations, *symbols):
-    """
+    r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
     `symbols`. The order of symbols in input `symbols` will
@@ -891,16 +891,15 @@ def linear_eq_to_matrix(equations, *symbols):
     The Matrix form corresponds to the augmented matrix form.
     For example:
 
-      x + 2.y + 3.z  = 1
+    4.x + 2.y + 3.z  = 1
     3.x +   y +   z  = -6
     2.x + 4.y + 9.z  = 2
 
-    This system would return A & b:
+    This system would return A & b as given below:
 
-          [ 1  2  3 ]         [ 1 ]
-    A  =  [ 3  1  1 ]    b =  [-6 ]
-          [ 2  4  9 ]         [ 2 ]
-
+    [ 4  2  3 ]     [ 1 ]
+    [ 3  1  1 ]     [-6 ]
+    [ 2  4  9 ]     [ 2 ]
 
     Examples
     ========
