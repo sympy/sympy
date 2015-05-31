@@ -26,4 +26,3 @@ from sympy.geometry.util import are_similar, centroid, convex_hull, idiff, \
     intersection
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.curve import Curve
-from sympy.geometry.entity import R2, R3
