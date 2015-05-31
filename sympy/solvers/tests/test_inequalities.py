@@ -306,6 +306,6 @@ def test_issue_8974():
 def test_issue_8260():
     assert isolve( x < -oo, x) == False
     assert isolve( x > oo, x) == False
-    assert isolve( x >= oo, x) == oo
-    assert isolve( x <= -oo, x) == -oo
+    assert isolve( x >= oo, x) == Eq(x, oo)
+    assert isolve( x <= -oo, x) == Eq(x, -oo)
     assert solve([oo < x, y > 4]) == False
