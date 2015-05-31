@@ -206,7 +206,8 @@ def parse_relationals(expr_string):
         if len([1 for t in tokens
                 if t.strip().endswith('(')]) != tokens.count(')'):
             raise TokenError(
-                "Unbalanced parentheses in expression: {}".format(expr_string))
+                "Unbalanced parentheses in expression: {0}"
+                .format(expr_string))
         tokens = tokens
         operators = []  # stack (in SY algorithm terminology)
         operands = []  # output stream
@@ -240,7 +241,7 @@ def parse_relationals(expr_string):
                         assert i < -1
                     except StopIteration:
                         raise TokenError(
-                            "Unbalanced parentheses in expression: {}"
+                            "Unbalanced parentheses in expression: {0}"
                             .format(expr_string))
                     # Get lists of operators and operands at this level
                     # (i.e. after the last left paren)
@@ -259,8 +260,8 @@ def parse_relationals(expr_string):
                         # Pop the highest precedence operator
                         op = relational_operators[level_operators.pop(i)][0]
                         # Create the parsed sub-expression
-                        sub = '{}({}, {})'.format(op, level_operands.pop(i),
-                                                  level_operands.pop(i))
+                        sub = '{0}({1}, {2})'.format(
+                            op, level_operands.pop(i), level_operands.pop(i))
                         # Insert the parsed sub-expression back into the
                         # operands in place of the two combined expressions
                         level_operands.insert(i, str(sub))
@@ -275,7 +276,7 @@ def parse_relationals(expr_string):
                         operands[-1] = operators.pop() + operands[-1] + ')'
                     except IndexError:
                         raise TokenError(
-                            "Unbalanced parentheses in expression: {}"
+                            "Unbalanced parentheses in expression: {0}"
                             .format(expr_string))
                 num_args[-1] += 1
             # If the token is one of ('&', '|', '<', '>', '<=', '>=' or '==')
@@ -290,7 +291,7 @@ def parse_relationals(expr_string):
                 if n == 0:
                     raise TokenError(
                         "Logical/relational operator directly after a "
-                        "parenthesis or start of expression: {}"
+                        "parenthesis or start of expression: {0}"
                         .format(expr_string))
                 elif n > 1:
                     operands = operands[:-n] + [''.join(operands[-n:])]
