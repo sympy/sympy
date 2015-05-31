@@ -311,7 +311,7 @@ class GeometryEntity(Basic):
 
         try:
             bounds = self.bounds
-        except NotImplementedError:
+        except (NotImplementedError, TypeError):
             # if we have no SVG representation, return None so IPython
             # will fall back to the next representation
             return None
@@ -357,7 +357,7 @@ class GeometryEntity(Basic):
         scale_factor = 1. if max(width, height) == 0 else max(dx, dy) / max(width, height)
         try:
             svg = self._svg(scale_factor)
-        except NotImplementedError:
+        except (NotImplementedError, TypeError):
             # if we have no SVG representation, return None so IPython
             # will fall back to the next representation
             return None
