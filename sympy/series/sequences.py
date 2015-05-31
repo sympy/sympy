@@ -5,6 +5,7 @@ from sympy.core.singleton import (S, Singleton)
 from sympy.core.symbol import Dummy
 from sympy.core.function import Lambda
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.compatibility import (range, integer_types, with_metaclass\
                                       , is_sequence, iterable, ordered)
 from sympy.core.sympify import sympify
@@ -17,6 +18,11 @@ from sympy.sets.sets import Interval, Set, Intersection
 from sympy.utilities.iterables import flatten
 
 
+################################################################################
+#                            SEQUENCES                                         #
+################################################################################
+
+
 class SeqBase(Expr):
     """Base class for sequences"""
 
@@ -27,6 +33,7 @@ class SeqBase(Expr):
     is_SeqFunc = False
     is_SeqFormula = False
     is_SeqAdd = False
+    is_SeqMul = False
 
     @staticmethod
     def _start_key(expr):
@@ -40,6 +47,15 @@ class SeqBase(Expr):
                 AttributeError, ValueError):
             start = S.Infinity
         return start
+
+    def _intersect_interval(self, other):
+        """
+        returns the start, stop and step
+        takes intersection over the two intervals
+        """
+        interval = Intersection(self.interval, other.interval)
+        step = Max(self.step, other.step)
+        return (interval, step)
 
     @property
     def gen(self):
@@ -99,7 +115,7 @@ class SeqBase(Expr):
     def coeff(self, pt):
         """Returns the coefficient at point pt"""
         if pt < self.start or pt > self.stop:
-            raise IndexError("Index %s out of bounds %s" %(i, self.interval))
+            raise IndexError("Index %s out of bounds %s" %(pt, self.interval))
         return self._eval_coeff(pt)
 
     def _eval_coeff(self, pt):
@@ -159,23 +175,78 @@ class SeqBase(Expr):
     def add(self, other):
         """
         Returns the term-wise addition of 'self' and 'other'.
+        ``other`` should be a sequence.
 
         Examples
         ========
 
         As a shortcut it is possible to use the '+' operator:
 
-        >>> from sympy import S, oo, SeqAdd, SeqFormula
+        >>> from sympy import S, oo, SeqFormula
         >>> from sympy.abc import n
-        >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2), evaluate=False)
-        SeqFormula((n**2, n), ([0, oo), 1)) + SeqFormula((n**3, n), ([0, oo), 1))
-
-        Similarly it is possible to use
-        the '-' operator for term-wise subtraction:
-
-        TODO (__neg__ needs to be implemented, will use SeqMul maybe)
+        >>> SeqFormula(n**2).add(SeqFormula(n**3))
+        SeqFormula((n**3 + n**2, n), ([0, oo), 1))
         """
         return SeqAdd(self, other)
+
+    def sub(self, other):
+        """
+        Returns the term-wise subtraction of 'self' and 'other'.
+        ``other`` should be a sequence.
+
+        Examples
+        ========
+
+        As a shortcut it is possible to use the '-' operator:
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+        >>> SeqFormula(n**2).sub(SeqFormula(n))
+        SeqFormula((n**2 - n, n), ([0, oo), 1))
+        """
+        return self.add(-other)
+
+    def mul(self, other):
+        """
+        Returns the term-wise multiplication of 'self' and 'other'.
+        ``other`` should be a sequence. For ``other`` not being a
+        sequence see ``coeff_mul`` method.
+
+        Examples
+        ========
+
+        As a shortcut it is possible to use the '*' operator:
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+
+        >>> SeqFormula(n**2).mul(SeqFormula(n))
+        SeqFormula((n**3, n), ([0, oo), 1))
+        """
+        if isinstance(other, SeqBase):
+            return SeqMul(self, other)
+
+    def coeff_mul(self, other):
+        """
+        Should be used when ``other`` is not a sequence. Should be
+        defined to define custom behaviour.
+
+        Examples
+        ========
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+
+        >>> SeqFormula(n**2).coeff_mul(2)
+        SeqFormula((2*n**2, n), ([0, oo), 1))
+
+        Notes
+        =====
+
+        '*' defines multiplication of sequences with sequences only.
+        For multiplying sequences use ``mul`` method.
+        """
+        return Mul(self, coeff)
 
     def _add(self, other):
         """
@@ -184,12 +255,36 @@ class SeqBase(Expr):
         self._add(other) returns a new, term-wise added sequence if self
         knows how to add with other, otherwise it returns ``None``.
 
+        ``other`` should only be a sequence object.
+
         Used within :class:`SeqAdd` class
+        """
+        return None
+
+    def _mul(self, other):
+        """
+        Should only be used internally
+
+        self._mul(other) returns a new, term-wise multiplied sequence if self
+        knows how to multiply with other, otherwise it returns ``None``.
+
+        ``other`` should only be a sequence object.
+
+        Used within :class:`SeqMul` class
         """
         return None
 
     def __add__(self, other):
         return self.add(other)
+
+    def __neg__(self):
+        return self.coeff_mul(-1)
+
+    def __sub__(self, other):
+        return self.sub(other)
+
+    def __mul__(self, other):
+        return self.mul(other)
 
     def __iter__(self):
         i = 0
@@ -226,6 +321,10 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
 
     >>> SeqPer((1, 2)).add(S.EmptySequence)
     SeqPer((1, 2), ([0, oo), 1))
+    >>> SeqPer((1, 2)).mul(S.EmptySequence)
+    EmptySequence()
+    >>> S.EmptySequence.coeff_mul(-1)
+    EmptySequence()
     """
 
     is_EmptySequence = True
@@ -237,6 +336,10 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     @property
     def length(self):
         return S.Zero
+
+    def coeff_mul(self, coeff):
+        """See docstring of SeqBase.coeff_mul"""
+        return self
 
     def __iter__(self):
         return iter([])
@@ -435,8 +538,8 @@ class SeqPer(SeqExpr):
         if is_sequence(periodical, Tuple):
             periodical = tuple(flatten(periodical))
             return sympify(periodical)
-        raise ValueError("invalid period %s should be something like e.g (1, 2)"
-            % periodical)
+        raise ValueError("invalid period %s should be something "
+                         "like e.g (1, 2) " % periodical)
 
     @property
     def period(self):
@@ -456,10 +559,6 @@ class SeqPer(SeqExpr):
     def _add(self, other):
         """See docstring of SeqBase._add"""
         if other.is_SeqPer:
-            start = Max(self.start, other.start)
-            stop = Min(self.stop, other.stop)
-            step = Max(self.step, other.step)
-
             per1, lper1 = self.periodical, self.period
             per2, lper2 = other.periodical, other.period
 
@@ -470,8 +569,29 @@ class SeqPer(SeqExpr):
                 ele1 = per1[x % lper1]
                 ele2 = per2[x % lper2]
                 new_per.append(ele1 + ele2)
+            return SeqPer(new_per, self._intersect_interval(other))
 
-            return SeqPer(new_per, (start, stop, step))
+    def _mul(self, other):
+        """See docstring of SeqBase._mul"""
+        if other.is_SeqPer:
+            per1, lper1 = self.periodical, self.period
+            per2, lper2 = other.periodical, other.period
+
+            per_length = lcm(lper1, lper2)
+
+            new_per = []
+            for x in range(per_length):
+                ele1 = per1[x % lper1]
+                ele2 = per2[x % lper2]
+                new_per.append(ele1 * ele2)
+
+            return SeqPer(new_per, self._intersect_interval(other))
+
+    def coeff_mul(self, coeff):
+        """See docstring of SeqBase.coeff_mul"""
+        coeff = sympify(coeff)
+        per = [x * coeff for x in self.periodical]
+        return SeqPer(per, (self.interval, self.step))
 
 
 class SeqFormula(SeqExpr):
@@ -574,15 +694,26 @@ class SeqFormula(SeqExpr):
     def _add(self, other):
         """See docstring of SeqBase._add"""
         if other.is_SeqFormula:
-            start = Max(self.start, other.start)
-            stop = Min(self.stop, other.stop)
-            step = Max(self.step, other.step)
-
             form1, v1 = self.formula, self.variables[0]
             form2, v2 = other.formula, other.variables[0]
             formula = (form1 + form2.subs(v2, v1), v1)
+            return SeqFormula(formula, self._intersect_interval(other))
 
-            return SeqFormula(formula, (start, stop, step))
+
+    def _mul(self, other):
+        """See docstring of SeqBase._mul"""
+        if other.is_SeqFormula:
+            form1, v1 = self.formula, self.variables[0]
+            form2, v2 = other.formula, other.variables[0]
+            formula = (form1 * form2.subs(v2, v1), v1)
+            return SeqFormula(formula, self._intersect_interval(other))
+
+    def coeff_mul(self, coeff):
+        """See docstring of SeqBase.coeff_mul"""
+        coeff = sympify(coeff)
+        formula = self.formula * coeff
+        return SeqFormula((formula, self.variables[0]), \
+                          (self.interval, self.step))
 
 
 class SeqFunc(SeqExpr):
@@ -656,15 +787,25 @@ class SeqFunc(SeqExpr):
     def _add(self, other):
         """See docstring of SeqBase._add"""
         if other.is_SeqFunc:
-            start = Max(self.start, other.start)
-            stop = Min(self.stop, other.stop)
-            step = Max(self.step, other.step)
-
             func1, v1 = self.function, self.variables[0]
             func2, v2 = other.function, other.variables[0]
             function = Lambda(v1, func1.expr + func2.expr.subs(v2, v1))
+            return SeqFunc(function, self._intersect_interval(other))
 
-            return SeqFunc(function, (start, stop, step))
+    def _mul(self, other):
+        """See docstring of SeqBase._mul"""
+        if other.is_SeqFunc:
+            func1, v1 = self.function, self.variables[0]
+            func2, v2 = other.function, other.variables[0]
+            function = Lambda(v1, func1.expr * func2.expr.subs(v2, v1))
+            return SeqFunc(function, self._intersect_interval(other))
+
+    def coeff_mul(self, coeff):
+        """See docstring of SeqBase.coeff_mul"""
+        coeff = sympify(coeff)
+        expr = self.function.expr * coeff
+        return SeqFunc(Lambda(self.variables[0], expr), \
+                          (self.interval, self.step))
 
 
 def sequence(**kwargs):
@@ -711,6 +852,11 @@ def sequence(**kwargs):
     raise ValueError('Invalid Arguments')
 
 
+################################################################################
+#                            OPERATIONS                                        #
+################################################################################
+
+
 class SeqExprOp(SeqBase):
     """Base class for operations on sequences
 
@@ -733,6 +879,7 @@ class SeqExprOp(SeqBase):
     ========
 
     sympy.series.sequences.SeqAdd
+    sympy.series.sequences.SeqMul
     """
     @property
     def gen(self):
@@ -773,7 +920,7 @@ class SeqExprOp(SeqBase):
 
 class SeqAdd(Add, SeqExprOp):
     """
-    Represents addition of sequences
+    Represents term-wise addition of sequences
 
     Rules:
         * The interval on which sequence is defined is the intersection
@@ -792,6 +939,13 @@ class SeqAdd(Add, SeqExprOp):
     EmptySequence()
     >>> SeqAdd(SeqPer((1, 2)), SeqFormula(n**2))
     SeqFormula((n**2, n), ([0, oo), 1)) + SeqPer((1, 2), ([0, oo), 1))
+    >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2))
+    SeqFormula((n**3 + n**2, n), ([0, oo), 1))
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqMul
     """
 
     is_SeqAdd = True
@@ -837,8 +991,8 @@ class SeqAdd(Add, SeqExprOp):
         """
         Simplify a :class:`SeqAdd` using known rules
 
-        Then we iterate through all pairs and ask the constituent sets if they
-        can simplify themselves with any other constituent
+        Then we iterate through all pairs and ask the constituent
+        sequences if they can simplify themselves with any other constituent
 
         Notes
         =====
@@ -847,10 +1001,10 @@ class SeqAdd(Add, SeqExprOp):
         """
         new_args = True
         while(new_args):
-            for s in args:
+            for id1, s in enumerate(args):
                 new_args = False
-                for t in args:
-                    if t == s:
+                for id2, t in enumerate(args):
+                    if id1 == id2:
                         continue
                     new_seq = s._add(t)
                     # This returns None if s does not know how to add
@@ -873,4 +1027,116 @@ class SeqAdd(Add, SeqExprOp):
         val = 0
         for a in self.args:
             val += a.coeff(pt)
+        return val
+
+
+class SeqMul(Mul, SeqExprOp):
+    """
+    Represents term-wise multiplication of sequences.
+    Handles multiplication of sequences only. For multiplication
+    with other objects see ``SeqBase.coeff_mul``.
+
+    Rules:
+        * The interval on which sequence is defined is the intersection
+        of respective intervals of sequences.
+        * Anything * EmptySequence returns EmptySequence
+        * Other rules are defined in _mul methods of sequence classes
+
+    Examples
+    ========
+
+    >>> from sympy import S, oo, SeqMul, SeqPer, SeqFormula
+    >>> from sympy.abc import n
+    >>> SeqMul(SeqPer((1, 2)), S.EmptySequence)
+    EmptySequence()
+    >>> SeqMul(SeqPer((1, 2), (0, 5)), SeqPer((1, 2), (6, 10)))
+    EmptySequence()
+    >>> SeqMul(SeqPer((1, 2)), SeqFormula(n**2))
+    SeqPer((1, 2), ([0, oo), 1))*SeqFormula((n**2, n), ([0, oo), 1))
+    >>> SeqMul(SeqFormula(n**3), SeqFormula(n**2))
+    SeqFormula((n**5, n), ([0, oo), 1))
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqAdd
+    """
+
+    is_SeqMul = True
+
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
+
+        # flatten inputs
+        args = list(args)
+
+        # adapted from sympy.sets.sets.Union
+        def _flatten(arg):
+            if isinstance(arg, SeqBase):
+                if arg.is_SeqMul:
+                    return sum(map(_flatten, arg.args), [])
+                else:
+                    return [arg]
+            elif iterable(arg):
+                return sum(map(_flatten, arg), [])
+            raise TypeError("Input must be Sequences or "
+                            " iterables of Sequences")
+        args = _flatten(args)
+
+        # Multiplication of no sequences is EmptySequence
+        if len(args) == 0:
+            return S.EmptySequence
+
+        if Intersection(*[a.interval for a in args]) is S.EmptySet:
+            return S.EmptySequence
+
+        # reduce using known rules
+        if evaluate:
+            return SeqMul.reduce(args)
+
+        args = list(ordered(args, SeqBase._start_key))
+
+        return Expr.__new__(cls, *args)
+
+    @staticmethod
+    def reduce(args):
+        """
+        Simplify a :class:`SeqMul` using known rules
+
+        Then we iterate through all pairs and ask the constituent
+        sequences if they can simplify themselves with any other constituent
+
+        Notes
+        =====
+        adapted from ``Union.reduce``
+
+        """
+        new_args = True
+        while(new_args):
+            for id1, s in enumerate(args):
+                new_args = False
+                for id2, t in enumerate(args):
+                    if id1 == id2:
+                        continue
+                    new_seq = s._mul(t)
+                    # This returns None if s does not know how to multiply
+                    # with t. Returns the newly multiplied sequence otherwise
+                    if new_seq is not None:
+                        new_args = [a for a in args if not a in (s, t)]
+                        new_args.append(new_seq)
+                        break
+                if new_args:
+                    args = new_args
+                    break
+
+        if len(args) == 1:
+            return args.pop()
+        else:
+            return SeqMul(args, evaluate=False)
+
+    def _eval_coeff(self, pt):
+        """multiplies the coefficients of all the sequences at point pt"""
+        val = 1
+        for a in self.args:
+            val *= a.coeff(pt)
         return val
