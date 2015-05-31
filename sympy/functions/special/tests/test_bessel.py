@@ -9,6 +9,7 @@ from sympy.utilities.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
+from sympy.utilities.pytest import raises
 
 from sympy.abc import z, n, k, x
 
@@ -18,6 +19,12 @@ randint = _randint()
 def test_bessel_rand():
     for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
         assert td(f(randcplx(), z), z)
+
+
+def test_bessel_twoinputs():
+    for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
+        raises(TypeError, lambda: f(1))
+        raises(TypeError, lambda: f(1, 2, 3))
 
 
 def test_diff():
