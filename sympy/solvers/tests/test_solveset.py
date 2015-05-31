@@ -22,7 +22,8 @@ from sympy.physics.units import cm
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
-    _is_function_class_equation, invert_real, invert_complex, solveset)
+    linsolve, _is_function_class_equation, invert_real, invert_complex,
+    solveset)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -828,3 +829,87 @@ def test_linear_eq_to_matrix():
     A, b = linear_eq_to_matrix(eqns2, x, y, z)
     assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
     assert b == Matrix([[1], [-2], [0]])
+
+
+def test_linsolve():
+    x, y, z, u, v, w = symbols("x, y, z, u, v, w")
+
+    # Test for different input forms
+    x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
+
+    M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
+    system = A, b = M[:, :-1], M[:, -1]
+    Eqns = [x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
+            2*x1 + 4*x2 + 6*x4 - 4]
+
+    assert linsolve(M, (x1, x2, x3, x4)) == \
+        FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+    assert linsolve(Eqns, (x1, x2, x3, x4)) == \
+        FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+    assert linsolve(system, (x1, x2, x3, x4)) == \
+        FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+
+    # Square, full rank, unique solution
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    b = Matrix([3, 6, 9])
+    assert linsolve((A, b), [x, y, z]) == FiniteSet((-1, 2, 0))
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    b = Matrix([3, 6, 9])
+    assert linsolve((A, b), [x, y, z]) == FiniteSet((z - 1, -2*z + 2, z))
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 0])
+    assert linsolve((A, b), [x, y, z]) == FiniteSet((-2*y - 3*z, y, z))
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    b = Matrix([0, 0, 0])
+    assert linsolve((A, b), [x, y, z]) == FiniteSet((x, y, z))
+
+    # Square, reduced rank, no solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 1])
+    raises(ValueError, lambda: linsolve((A, b), [x, y, z]))
+
+    # Rectangular, tall, full rank, unique solution
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 1, 0])
+    assert linsolve((A, b), [x, y, z]) == FiniteSet((-S(1)/2, 0, S(1)/6))
+
+    # Rectangular, tall, full rank, no solution
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 0, 1])
+    raises(ValueError, lambda: linsolve((A, b), [x, y, z]))
+
+    # Rectangular, tall, reduced rank, parametrized solution
+    A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 0, 1])
+    assert linsolve((A, b), [x, y, z]) == FiniteSet((-3*z + 5, -1, z))
+
+    # Rectangular, tall, reduced rank, no solution
+    A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 1, 1])
+    raises(ValueError, lambda: linsolve((A, b), [x, y, z]))
+
+    # Rectangular, wide, full rank, parametrized solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 1, 12]])
+    b = Matrix([1, 1, 1])
+    system = (A, b)
+    assert linsolve(system, [x, u, v, w]) == \
+        FiniteSet((2*w - 1, -3*w + 1, 0, w))
+
+    # Rectangular, wide, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
+    b = Matrix([0, 1, 0])
+    system = (A, b)
+    assert linsolve(system, [x, u, v, w]) == \
+        FiniteSet((v + 2*w + 1/S(2), -2*v - 3*w - 1/S(4), v, w))
+
+    # Rectangular, wide, reduced rank, no solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
+    b = Matrix([1, 1, 1])
+    system = (A, b)
+    raises(ValueError, lambda: linsolve(system, [x, u, v, w]))

@@ -14,7 +14,7 @@ from sympy.functions import (log, Abs, tan, cot, exp,
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.sets import FiniteSet, EmptySet, imageset, Union
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
