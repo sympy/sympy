@@ -934,7 +934,25 @@ def linear_eq_to_matrix(equations, *symbols):
     [0],
     [0]])
 
+    * Symbolic coefficients are also supported
+
+    >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    >>> eqns = [a*x + b*y - c, d*x + e*y - f]
+    >>> A, B = linear_eq_to_matrix(eqns, x, y)
+    >>> A
+    Matrix([
+    [a, b],
+    [d, e]])
+    >>> B
+    Matrix([
+    [c],
+    [f]])
+
     """
+
+    if not symbols:
+        raise ValueError('Symbols must be given, for which coefficients \
+                         are to be found.')
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
@@ -969,12 +987,13 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    Solve system of N linear equations with M variables, which means
-    both under - and overdetermined systems are supported. The possible
-    number of solutions is zero, one or infinite.
+    Solve system of N linear equations with M variables, which
+    means both under - and overdetermined systems are supported.
+    The possible number of solutions is zero, one or infinite.
 
     All Standard input formats are supported:
-    For the given set of Equations, the respective input types are given below:
+    For the given set of Equations, the respective input types
+    are given below:
 
     3*x + 2*y -   z = 1
     2*x - 2*y + 4*z = -2
@@ -998,6 +1017,14 @@ def linsolve(system, *symbols):
 
     system = (A, b)
 
+    Symbols to solve for should be given as input in all the
+    cases either in an iterable or as comma separated arguments.
+    This is done to maintain consistency in returning solutions
+    in the form of variable input by the user.
+
+    The algorithm used here is Gauss-Jordan elimination, which
+    results, after elimination, in an row echelon form matrix.
+
     Returns
     =======
 
@@ -1010,12 +1037,13 @@ def linsolve(system, *symbols):
     ValueError
         The input is not valid.
         The linear system has no solution.
+        The symbols are not given.
 
     Examples
     ========
 
     >>> from sympy.solvers.solveset import linsolve
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, S
     >>> from sympy import symbols
     >>> x, y, z = symbols("x, y, z")
 
@@ -1046,7 +1074,35 @@ def linsolve(system, *symbols):
     >>> linsolve((A, b), [x, y, z])
     {(z - 1, -2*z + 2, z)}
 
+    * List of Equations as input
+
+    >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + S(1)/2*y - z]
+    >>> linsolve(Eqns, x, y, z)
+    {(1, -2, -2)}
+
+    * Augmented Matrix as input
+
+    >>> aug = Matrix([[2, 1, 3, 1], [2, 6, 8, 3], [6, 8, 18, 5]])
+    >>> aug
+    Matrix([
+    [2, 1,  3, 1],
+    [2, 6,  8, 3],
+    [6, 8, 18, 5]])
+    >>> linsolve(aug, x, y, z)
+    {(3/10, 2/5, 0)}
+
+    * Solve for symbolic coefficients
+
+    >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    >>> eqns = [a*x + b*y - c, d*x + e*y - f]
+    >>> linsolve(eqns, x, y)
+    {(-b*(f - c*d/a)/(a*(e - b*d/a)) + c/a, (f - c*d/a)/(e - b*d/a))}
+
     """
+
+    if not symbols:
+        raise ValueError('Symbols must be given, for which solution of the \
+                         system are to be found.')
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]

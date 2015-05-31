@@ -830,24 +830,44 @@ def test_linear_eq_to_matrix():
     assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
     assert b == Matrix([[1], [-2], [0]])
 
+    # Pure symbolic coefficients
+    from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
+    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    A, B = linear_eq_to_matrix(eqns3, x, y, z)
+    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
+    assert B == Matrix([[d], [h], [l]])
+
+    # raise ValueError if no symbols are given
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+
 
 def test_linsolve():
     x, y, z, u, v, w = symbols("x, y, z, u, v, w")
+    x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
 
     # Test for different input forms
-    x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
 
     M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
     system = A, b = M[:, :-1], M[:, -1]
     Eqns = [x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
             2*x1 + 4*x2 + 6*x4 - 4]
 
-    assert linsolve(M, (x1, x2, x3, x4)) == \
-        FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
-    assert linsolve(Eqns, (x1, x2, x3, x4)) == \
-        FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
-    assert linsolve(system, (x1, x2, x3, x4)) == \
-        FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+    sol = FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+    assert linsolve(M, (x1, x2, x3, x4)) == sol
+    assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
+    assert linsolve(system, (x1, x2, x3, x4)) == sol
+
+    # raise ValueError if no symbols are given
+    raises(ValueError, lambda: linsolve(system))
+
+    # Fully symbolic test
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    A = Matrix([[a, b], [c, d]])
+    B = Matrix([[e], [f]])
+    system = (A, B)
+    sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
+                    (f - c*e/a)/(d - b*c/a)))
+    assert linsolve(system, [x, y]) == sol
 
     # Square, full rank, unique solution
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
