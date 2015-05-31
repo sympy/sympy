@@ -399,10 +399,11 @@ def rs_diff(p, x):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x, y = lgens('x, y', QQ)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_diff
+    >>> R, x, y = ring('x, y', QQ)
     >>> p = x + x**2*y**3
-    >>> p.diff(x)
+    >>> rs_diff(p, x)
     2*x*y**3 + 1
     """
     ring = p.ring
@@ -513,8 +514,10 @@ def mul_xin(p, i, n):
         q[tuple(k1)] = v
     return q
 
+#TODO Needs to be fixed
+"""
 def nth_root(p, n, iv, prec):
-    """
+    
     Multivariate series of nth root of p
     Computes p**(1/n)
 
@@ -538,7 +541,7 @@ def nth_root(p, n, iv, prec):
     >>> lp, x, y = lgens('x, y', QQ)
     >>> (1 + x + x*y).nth_root(-3, x, 3)
     2/9*x**2*y**2 + 4/9*x**2*y + 2/9*x**2 - 1/3*x*y - 1/3*x + 1
-    """
+   
     if n == 0:
         if p == 0:
             raise ValueError('0**0 expression')
@@ -594,6 +597,7 @@ def nth_root(p, n, iv, prec):
         res = res.mul_xin(ii, mq)
     return res
 #######
+"""
 
 def rs_log(p, x, prec):
     """
@@ -632,9 +636,10 @@ def rs_LambertW(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.lambert(x, 8)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_LambertW
+    >>> R, x = ring('x', QQ)
+    >>> rs_LambertW(x, x, 8)
     16807/720*x**7 - 54/5*x**6 + 125/24*x**5 - 8/3*x**4 + 3/2*x**3 - x**2 + x
     """
     ring = p.ring
@@ -697,19 +702,23 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
+#TODO
+#Ucomment after fixing nth_root
+"""
 def asin(p, iv, prec):
-    """
+    
     arcsine of a series
 
     Examples
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.asin(x, 8)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_asin
+    >>> R, x = ring('x', QQ)
+    >>> rs_asin(x, x, 8)
     5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x
-    """
+    
     if _has_constant_term(p, iv):
         raise NotImplementedError('Polynomial must not have constant term in \
               the series variables')
@@ -732,6 +741,7 @@ def asin(p, iv, prec):
     else:
         raise NotImplementedError
 
+"""
 def _atan_series(p, iv, prec):
     ring = p.ring
     mo = ring(-1)
@@ -847,9 +857,10 @@ def rs_cos(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.cos(x, 6)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cos
+    >>> R, x = ring('x', QQ)
+    >>> rs_cos(x, x, 6)
     1/24*x**4 - 1/2*x**2 + 1
     """
     ring = p.ring
@@ -903,14 +914,15 @@ def rs_cot(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.cot(x, 6)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cot
+    >>> R, x = ring('x', QQ)
+    >>> rs_cot(x, x, 6)
     -2/945*x**5 - 1/45*x**3 - 1/3*x + x**-1
     """
 
     # i, m = p.check_series_var(iv, PoleError, 'cot')
-    # TODO Raisine error Probably not needed
+    # TODO Raising error Probably not needed
     # TODO Error in series_inversion in multivariate case
     i, m = check_series_var(p, iv)
     # see _taylor_term1 comment  sin(x**m) = x**pw*sin(x**m)/x**n0
@@ -918,7 +930,6 @@ def rs_cot(p, iv, prec):
     prec1 = prec + 2*m
     c, s = rs_cos_sin(p, iv, prec1)
     s = mul_xin(s, i, -1)
-    print(s)
     s = rs_series_inversion(s, iv, prec1)
     res = rs_mul(c, s, iv, prec1)
     res = mul_xin(res, i, -1)
@@ -944,9 +955,10 @@ def rs_atanh(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.atanh(x, 8)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_atanh
+    >>> R, x = ring('x', QQ)
+    >>> rs_atanh(x, x, 8)
     1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
     """
     if _has_constant_term(p, iv):
@@ -970,10 +982,10 @@ def rs_sinh(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> p = x.sinh(x, 8)
-    >>> p
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_sinh
+    >>> R, x = ring('x', QQ)
+    >>> rs_sinh(x, x, 8)
     1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
     """
     #self.check_series_var(iv, NotImplementedError, 'sinh')
@@ -989,9 +1001,10 @@ def rs_cosh(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.cosh(x, 8)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cosh
+    >>> R, x = ring('x', QQ)
+    >>> rs_cosh(x, x, 8)
     1/720*x**6 + 1/24*x**4 + 1/2*x**2 + 1
     """
     #p.check_series_var(iv, NotImplementedError, 'cosh')
@@ -1016,9 +1029,10 @@ def rs_tanh(p, iv, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x = lgens('x', QQ)
-    >>> x.tanh(x, 8)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_tanh
+    >>> R, x = ring('x', QQ)
+    >>> rs_tanh(x, x, 8)
     -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
     """
     ring = p.ring
