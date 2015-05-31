@@ -966,3 +966,157 @@ def linear_eq_to_matrix(equations, *symbols):
     M.row_del(0)
     A, b = M[:, :-1], M[:, -1:]
     return A, b
+
+
+def linsolve(system, *symbols):
+    r"""
+    Solve system of N linear equations with M variables, which means
+    both under - and overdetermined systems are supported. The possible
+    number of solutions is zero, one or infinite.
+
+    All Standard input formats are supported:
+    For the given set of Equations, the respective input types are given below:
+
+    3*x + 2*y -   z = 1
+    2*x - 2*y + 4*z = -2
+    2*x -   y + 2*z = 0
+
+    * Augmented Matrix Form
+
+                 [3   2  -1  1]
+    system   =   [2  -2   4 -2]  (Matrix)
+                 [2  -1   2  0]
+
+    * List Of Equations Form
+
+    system  =  [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, 2*x - y + 2*z]
+
+    * Input A & b Matrix Form (from Ax = b)
+
+            [3   2  -1 ]          [  1 ]
+    A   =   [2  -2   4 ]    b  =  [ -2 ]
+            [2  -1   2 ]          [  0 ]
+
+    system = (A, b)
+
+    Returns
+    =======
+
+    A FiniteSet of ordered tuple of values of `symbols` for which
+    the `system` has solution.
+
+    Raises
+    ======
+
+    ValueError
+        The input is not valid.
+        The linear system has no solution.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import linsolve
+    >>> from sympy import Matrix
+    >>> from sympy import symbols
+    >>> x, y, z = symbols("x, y, z")
+
+    >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    >>> b = Matrix([3, 6, 9])
+    >>> A
+    Matrix([
+    [1, 2,  3],
+    [4, 5,  6],
+    [7, 8, 10]])
+    >>> b
+    Matrix([
+    [3],
+    [6],
+    [9]])
+
+    >>> linsolve((A, b), [x, y, z])
+    {(-1, 2, 0)}
+
+    * Parametric Solution: In case the system is under determined, the function
+      will return parametric solution in terms of the given symbols.
+      Free symbols in the system are returned as it is. For e.g. in the system
+      below, `z` is returned as the solution for variable z, which means z is a
+      free symbol, i.e. it can take arbitrary values.
+
+    >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> b = Matrix([3, 6, 9])
+    >>> linsolve((A, b), [x, y, z])
+    {(z - 1, -2*z + 2, z)}
+
+    """
+
+    if hasattr(symbols[0], '__iter__'):
+        symbols = symbols[0]
+
+    # 1). Augmented Matrix input Form
+    if isinstance(system, Matrix):
+        aug = system
+
+    elif hasattr(system, '__iter__'):
+
+        # 2). A & b as input Form
+        if len(system) == 2 and system[0].is_Matrix:
+            aug = system[0].hstack(system[0].copy(), system[1].copy())
+
+        # 3). List of equations Form
+        if not system[0].is_Matrix:
+            A, b = linear_eq_to_matrix(system, symbols)
+            aug = A.hstack(A.copy(), b.copy())
+
+    else:
+        raise ValueError("Invalid arguments")
+
+    rows, columns = aug[:, :-1].shape
+
+    # solve by reduced row echleon form
+    A, pivots = aug.rref()
+    A, v = A[:, :-1], A[:, -1]
+    pivots = list(filter(lambda p: p < columns, pivots))
+    rank = len(pivots)
+
+    # Bring to block form
+    permutation = Matrix(range(columns)).T
+    A = A.vstack(A, permutation)
+
+    for i, c in enumerate(pivots):
+        A.col_swap(i, c)
+
+    A, permutation = A[:-1, :], A[-1, :]
+
+    # check for existence of solutions
+    # rank of aug Matrix should be equal to rank of coefficient matrix
+    if not v[rank:, 0].is_zero:
+        raise ValueError("Linear system has no solution")
+
+    # get free symbols (free parameter)
+    free_syms = []
+    for r in range(len(symbols)):
+        if r not in pivots:
+            free_syms.append(symbols[r])  # non-pivots columns are free symbols
+
+    free_syms = Matrix(free_syms)
+    if not free_syms:
+        free_syms = Matrix(
+            [S.Zero for k in range(columns - rank)]).reshape(columns - rank, 1)
+
+    # solution in free symbols
+    V = A[:rank, rank:]
+    vt = v[:rank, 0]
+    free_sol = free_syms.vstack(vt - V*free_syms, free_syms)
+
+    # Undo permutation
+    sol = zeros(columns, 1)
+    for k, v in enumerate(free_sol):
+        sol[permutation[k], 0] = v
+
+    # Return Solution
+    solution = []
+    for s in sol:
+        solution.append(s)
+
+    solution = FiniteSet(tuple(solution))
+    return solution
