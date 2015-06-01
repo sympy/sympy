@@ -147,6 +147,10 @@ class Ellipse(GeometrySet):
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
     @property
+    def ambient_dimension(self):
+        return 2
+
+    @property
     def center(self):
         """The center of the ellipse.
 
@@ -167,7 +171,7 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.center
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         return self.args[0]
@@ -920,7 +924,7 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.arbitrary_point()
-        Point(3*cos(t), 2*sin(t))
+        Point2D(3*cos(t), 2*sin(t))
 
         """
         t = _symbol(parameter)
@@ -986,9 +990,9 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse, Segment
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
-        Point(...)
+        Point2D(...)
         >>> p1 = e1.random_point(seed=0); p1.n(2)
-        Point(2.1, 1.4)
+        Point2D(2.1, 1.4)
 
         The random_point method assures that the point will test as being
         in the ellipse:
@@ -1006,7 +1010,7 @@ class Ellipse(GeometrySet):
 
         >>> from sympy.abc import t
         >>> e1.arbitrary_point(t)
-        Point(3*cos(t), 2*sin(t))
+        Point2D(3*cos(t), 2*sin(t))
         >>> p2 = _.subs(t, 0.1)
         >>> p2 in e1
         False

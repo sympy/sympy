@@ -72,6 +72,10 @@ class LinearEntity(GeometrySet):
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
     @property
+    def ambient_dimension(self):
+        return len(self.p1)
+
+    @property
     def p1(self):
         """The first defining point of a linear entity.
 
@@ -851,7 +855,7 @@ class LinearEntity(GeometrySet):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.arbitrary_point()
-        Point(4*t + 1, 3*t)
+        Point2D(4*t + 1, 3*t)
 
         """
         t = _symbol(parameter)
@@ -996,9 +1000,9 @@ class Line(LinearEntity):
     >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
-    Line(Point(2, 3), Point(3, 5))
+    Line(Point2D(2, 3), Point2D(3, 5))
     >>> L.points
-    (Point(2, 3), Point(3, 5))
+    (Point2D(2, 3), Point2D(3, 5))
     >>> L.equation()
     -2*x + y + 1
     >>> L.coefficients
@@ -1007,7 +1011,7 @@ class Line(LinearEntity):
     Instantiate with keyword ``slope``:
 
     >>> Line(Point(0, 0), slope=0)
-    Line(Point(0, 0), Point(1, 0))
+    Line(Point2D(0, 0), Point2D(1, 0))
 
     Instantiate with another linear object
 
@@ -1255,11 +1259,11 @@ class Ray(LinearEntity):
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
-    Ray(Point(2, 3), Point(3, 5))
+    Ray(Point2D(2, 3), Point2D(3, 5))
     >>> r.points
-    (Point(2, 3), Point(3, 5))
+    (Point2D(2, 3), Point2D(3, 5))
     >>> r.source
-    Point(2, 3)
+    Point2D(2, 3)
     >>> r.xdirection
     oo
     >>> r.ydirection
@@ -1331,7 +1335,7 @@ class Ray(LinearEntity):
         >>> p1, p2 = Point(0, 0), Point(4, 1)
         >>> r1 = Ray(p1, p2)
         >>> r1.source
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         return self.p1
@@ -1590,18 +1594,18 @@ class Segment(LinearEntity):
     >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
-    Segment(Point(1, 0), Point(1, 1))
+    Segment(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1))
     >>> s
-    Segment(Point(1, 1), Point(4, 3))
+    Segment(Point2D(1, 1), Point2D(4, 3))
     >>> s.points
-    (Point(1, 1), Point(4, 3))
+    (Point2D(1, 1), Point2D(4, 3))
     >>> s.slope
     2/3
     >>> s.length
     sqrt(13)
     >>> s.midpoint
-    Point(5/2, 2)
+    Point2D(5/2, 2)
 
     """
 
@@ -1678,10 +1682,10 @@ class Segment(LinearEntity):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 6), Point(5, 1)
         >>> s1 = Segment(p1, p2)
         >>> s1.perpendicular_bisector()
-        Line(Point(3, 3), Point(9, -3))
+        Line(Point2D(3, 3), Point2D(9, -3))
 
         >>> s1.perpendicular_bisector(p3)
-        Segment(Point(3, 3), Point(5, 1))
+        Segment(Point2D(3, 3), Point2D(5, 1))
 
         """
         l = LinearEntity.perpendicular_line(self, self.midpoint)
@@ -1727,7 +1731,7 @@ class Segment(LinearEntity):
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
         >>> s1.midpoint
-        Point(2, 3/2)
+        Point2D(2, 3/2)
 
         """
         return Point.midpoint(self.p1, self.p2)

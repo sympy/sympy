@@ -75,7 +75,7 @@ class Plane(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========

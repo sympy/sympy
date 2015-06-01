@@ -56,7 +56,7 @@ class LinearEntity3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -77,7 +77,7 @@ class LinearEntity3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -163,7 +163,7 @@ class LinearEntity3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -542,7 +542,7 @@ class LinearEntity3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D, perpendicular_line
+        sympy.geometry.point.Point3D, perpendicular_line
 
         Examples
         ========
@@ -604,7 +604,7 @@ class LinearEntity3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -741,7 +741,7 @@ class LinearEntity3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -817,7 +817,7 @@ class Line3D(LinearEntity3D):
     See Also
     ========
 
-    sympy.geometry.point3d.Point3D
+    sympy.geometry.point.Point3D
 
     Examples
     ========
@@ -1013,7 +1013,7 @@ class Ray3D(LinearEntity3D):
     See Also
     ========
 
-    sympy.geometry.point3d.Point3D, Line3D
+    sympy.geometry.point.Point3D, Line3D
 
 
     Examples
@@ -1067,7 +1067,7 @@ class Ray3D(LinearEntity3D):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -1376,7 +1376,7 @@ class Segment3D(LinearEntity3D):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D.distance
+        sympy.geometry.point.Point3D.distance
 
         Examples
         ========
@@ -1397,7 +1397,7 @@ class Segment3D(LinearEntity3D):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D.midpoint
+        sympy.geometry.point.Point3D.midpoint
 
         Examples
         ========

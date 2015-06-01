@@ -176,16 +176,16 @@ def intersection(*entities):
     >>> l1, l2 = Line(p1, p2), Line(p3, p2)
     >>> c = Circle(p2, 1)
     >>> intersection(l1, p2)
-    [Point(1, 1)]
+    [Point2D(1, 1)]
     >>> intersection(l1, l2)
-    [Point(1, 1)]
+    [Point2D(1, 1)]
     >>> intersection(c, p2)
     []
     >>> intersection(c, Point(1, 0))
-    [Point(1, 0)]
+    [Point2D(1, 0)]
     >>> intersection(c, l2)
-    [Point(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
-     Point(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
+    [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
+     Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
 
     """
     from .entity import GeometryEntity
@@ -251,7 +251,7 @@ def convex_hull(*args):
     >>> from sympy.geometry import Point, convex_hull
     >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
     >>> convex_hull(*points)
-    Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
+    Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
 
     """
     from .entity import GeometryEntity
@@ -336,7 +336,7 @@ def are_coplanar(*e):
 
     """
     from sympy.geometry.line3d import LinearEntity3D
-    from sympy.geometry.point3d import Point3D
+    from sympy.geometry.point import Point3D
     from sympy.geometry.plane import Plane
     # XXX update tests for coverage
 
@@ -465,14 +465,14 @@ def centroid(*args):
     >>> p = Polygon((0, 0), (10, 0), (10, 10))
     >>> q = p.translate(0, 20)
     >>> p.centroid, q.centroid
-    (Point(20/3, 10/3), Point(20/3, 70/3))
+    (Point2D(20/3, 10/3), Point2D(20/3, 70/3))
     >>> centroid(p, q)
-    Point(20/3, 40/3)
+    Point2D(20/3, 40/3)
     >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
     >>> centroid(p, q)
-    Point(1, -sqrt(2) + 2)
+    Point2D(1, -sqrt(2) + 2)
     >>> centroid(Point(0, 0), Point(2, 0))
-    Point(1, 0)
+    Point2D(1, 0)
 
     Stacking 3 polygons on top of each other effectively triples the
     weight of that polygon:

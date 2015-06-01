@@ -106,9 +106,9 @@ class GeometryEntity(Basic):
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t # vertex on x axis
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.rotate(pi/2) # vertex on y axis now
-        Triangle(Point(0, 1), Point(-sqrt(3)/2, -1/2), Point(sqrt(3)/2, -1/2))
+        Triangle(Point2D(0, 1), Point2D(-sqrt(3)/2, -1/2), Point2D(sqrt(3)/2, -1/2))
 
         """
         newargs = []
@@ -136,11 +136,11 @@ class GeometryEntity(Basic):
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.scale(2)
-        Triangle(Point(2, 0), Point(-1, sqrt(3)/2), Point(-1, -sqrt(3)/2))
+        Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)/2), Point2D(-1, -sqrt(3)/2))
         >>> t.scale(2,2)
-        Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))
+        Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
         """
         from sympy.geometry.point import Point
@@ -163,12 +163,12 @@ class GeometryEntity(Basic):
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.translate(2)
-        Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))
+        Triangle(Point2D(3, 0), Point2D(3/2, sqrt(3)/2), Point2D(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
-        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2),
-            Point(3/2, -sqrt(3)/2 + 2))
+        Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2),
+            Point2D(3/2, -sqrt(3)/2 + 2))
 
         """
         newargs = []
@@ -235,7 +235,9 @@ class GeometryEntity(Basic):
         True
         >>> t.encloses(t2)
         False
+
         """
+
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
         from sympy.geometry.ellipse import Ellipse
@@ -254,6 +256,10 @@ class GeometryEntity(Basic):
                 if not self.encloses_point(o.center):
                     return False
             return all(self.encloses_point(v) for v in o.vertices)
+        raise NotImplementedError()
+    @property
+    def ambient_dimension(self):
+        """What is the dimension of the space that the object is contained in?"""
         raise NotImplementedError()
 
     @property
@@ -527,9 +533,9 @@ def rotate(th):
     >>> from sympy import Point, pi
     >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
     >>> Point(1, 1).transform(rot_about_11)
-    Point(1, 1)
+    Point2D(1, 1)
     >>> Point(0, 0).transform(rot_about_11)
-    Point(2, 0)
+    Point2D(2, 0)
     """
     s = sin(th)
     rv = eye(3)*cos(th)

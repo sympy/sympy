@@ -37,6 +37,8 @@ class Point(GeometryEntity):
     ==========
 
     length
+    origin: A `Point` representing the origin of the
+        appropriately-dimensioned space.
 
     Raises
     ======
@@ -177,27 +179,28 @@ class Point(GeometryEntity):
         if len(args) <= 2:
             return True
 
-        # check if two points are scalar multiples
-        # of each other
-        def is_scalar_multiple(p1, p2):
-            # check to see if p1 and p2 are scalar
-            # multiples of each other by taking a
-            # bunch of 2x2 determinants.  The
-            # points are multiples of each other
-            # iff they all = 0
-            for i in range(len(p1)-1):
-                a = p1.args[i]
-                b = p1.args[i+1]
-                c = p2.args[i]
-                d = p2.args[i+1]
-                if simplify(a*d-b*c) != S.Zero:
-                    return False
-            return True
-
         # translate our points
         points = [p - args[0] for p in args[1:]]
         for p in points[1:]:
-            if not is_scalar_multiple(points[0], p):
+            if not Point.is_scalar_multiple(points[0], p):
+                return False
+        return True
+
+    def is_scalar_multiple(p1, p2):
+        """Returns whether `p1` and `p2` are scalar multiples
+        of eachother.
+        """
+        # check to see if p1 and p2 are scalar
+        # multiples of each other by taking a
+        # bunch of 2x2 determinants.  The
+        # points are multiples of each other
+        # iff they all = 0
+        for i in range(len(p1)-1):
+            a = p1.args[i]
+            b = p1.args[i+1]
+            c = p2.args[i]
+            d = p2.args[i+1]
+            if simplify(a*d-b*c) != S.Zero:
                 return False
         return True
 
@@ -216,6 +219,23 @@ class Point(GeometryEntity):
         """
         return S.Zero
 
+    @property
+    def origin(self):
+        """A point of all zeros of the same ambient dimension
+        as the current point"""
+        return Point([0]*len(self))
+
+    @property
+    def is_zero(self):
+        """Is every one of the points coordinates zero?"""
+        return all(x == S.Zero for x in self.args)
+
+    @property
+    def ambient_dimension(self):
+        """The dimension of the ambient space the point is in.
+        I.e., if the point is in R^n, the ambient dimension
+        will be n"""
+        return len(left)
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
