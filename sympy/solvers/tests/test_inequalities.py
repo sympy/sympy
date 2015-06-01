@@ -302,3 +302,10 @@ def test_issue_8545():
 def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
+
+def test_issue_8260():
+    assert isolve( x < -oo, x) == False
+    assert isolve( x > oo, x) == False
+    assert isolve( x >= oo, x) == Eq(x, oo)
+    assert isolve( x <= -oo, x) == Eq(x, -oo)
+    assert solve([oo < x, y > 4]) == False
