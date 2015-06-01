@@ -1497,6 +1497,27 @@ class LatexPrinter(Printer):
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
 
+    def _print_SeqFormula(self, s):
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = ('\ldots', s.coeff(stop - 3), s.coeff(stop - 2), \
+                s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            it = iter(s)
+            printset = s[:4]
+            printset.append('\ldots')
+        else:
+            printset = tuple(s)
+
+        return (r"\left\["
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\]")
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqFunc = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left\{%s\right\}" % self._print(i.start)

@@ -14,7 +14,8 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SymmetricDifference)
+    Contains, divisor_sigma, SymmetricDifference, Lambda, SeqPer, SeqFormula,
+    SeqFunc, SeqAdd, SeqMul)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -481,6 +482,70 @@ def test_latex_Range():
     assert latex(Range(1, 51)) == \
         r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
+
+
+def test_latex_sequences():
+    s1 = SeqFormula(a**2, (0, oo))
+    s2 = SeqFunc(Lambda(a, a**2), (0, oo))
+    s3 = SeqPer((1, 2))
+
+    latex_str = r'\left\[0, 1, 4, 9, \ldots\right\]'
+    assert latex(s1) == latex_str
+    assert latex(s2) == latex_str
+
+    latex_str = r'\left\[1, 2, 1, 2, \ldots\right\]'
+    assert latex(s3) == latex_str
+
+    s4 = SeqFormula(a**2, (0, 2))
+    s5 = SeqFunc(Lambda(a, a**2), (0, 2))
+    s6 = SeqPer((1, 2), (0, 2))
+
+    latex_str = r'\left\[0, 1, 4\right\]'
+    assert latex(s4) == latex_str
+    assert latex(s5) == latex_str
+
+    latex_str = r'\left\[1, 2, 1\right\]'
+    assert latex(s6) == latex_str
+
+    s7 = SeqFormula(a**2, (-oo, 0))
+    s8 = SeqFunc(Lambda(a, a**2), (-oo, 0))
+    s9 = SeqPer((1, 2), (-oo, 0))
+
+    latex_str = r'\left\[\ldots, 9, 4, 1, 0\right\]'
+    assert latex(s7) == latex_str
+    assert latex(s8) == latex_str
+
+    latex_str = r'\left\[\ldots, 2, 1, 2, 1\right\]'
+    assert latex(s9) == latex_str
+
+    s10 = SeqFormula(a**2, (0, oo, 2))
+    s11 = SeqFunc(Lambda(a, a**2), (0, oo, 2))
+    s12 = SeqPer((1, 2), (0, oo, 2))
+
+    latex_str = r'\left\[0, 4, 16, 36, \ldots\right\]'
+    assert latex(s10) == latex_str
+    assert latex(s11) == latex_str
+
+    latex_str = r'\left\[1, 1, 1, 1, \ldots\right\]'
+    assert latex(s12) == latex_str
+
+    latex_str = r'\left\[1, 4, 9, 20, \ldots\right\]'
+    assert latex(SeqAdd(s1, s2, s3)) == latex_str
+
+    latex_str = r'\left\[1, 4, 9\right\]'
+    assert latex(SeqAdd(s4, s5, s6)) == latex_str
+
+    latex_str = r'\left\[\ldots, 20, 9, 4, 1\right\]'
+    assert latex(SeqAdd(s7, s8, s9)) == latex_str
+
+    latex_str = r'\left\[0, 2, 16, 162, \ldots\right\]'
+    assert latex(SeqMul(s1, s2, s3)) == latex_str
+
+    latex_str = r'\left\[0, 2, 16\right\]'
+    assert latex(SeqMul(s4, s5, s6)) == latex_str
+
+    latex_str = r'\left\[\ldots, 162, 16, 2, 0\right\]'
+    assert latex(SeqMul(s7, s8, s9)) == latex_str
 
 
 def test_latex_intervals():

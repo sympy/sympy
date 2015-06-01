@@ -6,7 +6,8 @@ from sympy import (
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
-    groebner, oo, pi, symbols, ilex, grlex, Range, Contains)
+    groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
+    Lambda, SeqPer, SeqFunc, SeqFormula, SeqAdd, SeqMul)
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -3097,6 +3098,112 @@ def test_pretty_sets():
     ucode_str = u('{-∞, …, -3, -2}')
     assert pretty(Range(-2, -oo, -1)) == ascii_str
     assert upretty(Range(-2, -oo, -1)) == ucode_str
+
+
+def test_pretty_sequences():
+    s1 = SeqFormula(a**2, (0, oo))
+    s2 = SeqFunc(Lambda(a, a**2), (0, oo))
+    s3 = SeqPer((1, 2))
+
+    ascii_str = '[0, 1, 4, 9, ...]'
+    ucode_str = u('[0, 1, 4, 9, …]')
+
+    assert pretty(s1) == ascii_str
+    assert upretty(s1) == ucode_str
+    assert pretty(s2) == ascii_str
+    assert upretty(s2) == ucode_str
+
+    ascii_str = '[1, 2, 1, 2, ...]'
+    ucode_str = u('[1, 2, 1, 2, …]')
+    assert pretty(s3) == ascii_str
+    assert upretty(s3) == ucode_str
+
+    s4 = SeqFormula(a**2, (0, 2))
+    s5 = SeqFunc(Lambda(a, a**2), (0, 2))
+    s6 = SeqPer((1, 2), (0, 2))
+
+    ascii_str = '[0, 1, 4]'
+    ucode_str = u('[0, 1, 4]')
+
+    assert pretty(s4) == ascii_str
+    assert upretty(s4) == ucode_str
+    assert pretty(s5) == ascii_str
+    assert upretty(s5) == ucode_str
+
+    ascii_str = '[1, 2, 1]'
+    ucode_str = u('[1, 2, 1]')
+    assert pretty(s6) == ascii_str
+    assert upretty(s6) == ucode_str
+
+    ascii_str = '[..., 9, 4, 1, 0]'
+    ucode_str = u('[…, 9, 4, 1, 0]')
+
+    s7 = SeqFormula(a**2, (-oo, 0))
+    s8 = SeqFunc(Lambda(a, a**2), (-oo, 0))
+    s9 = SeqPer((1, 2), (-oo, 0))
+
+    assert pretty(s7) == ascii_str
+    assert upretty(s7) == ucode_str
+    assert pretty(s8) == ascii_str
+    assert upretty(s8) == ucode_str
+
+    ascii_str = '[..., 2, 1, 2, 1]'
+    ucode_str = u('[…, 2, 1, 2, 1]')
+    assert pretty(s9) == ascii_str
+    assert upretty(s9) == ucode_str
+
+    s10 = SeqFormula(a**2, (0, oo, 2))
+    s11 = SeqFunc(Lambda(a, a**2), (0, oo, 2))
+    s12 = SeqPer((1, 2), (0, oo, 2))
+
+    ascii_str = '[0, 4, 16, 36, ...]'
+    ucode_str = u('[0, 4, 16, 36, …]')
+
+    assert pretty(s10) == ascii_str
+    assert upretty(s10) == ucode_str
+    assert pretty(s11) == ascii_str
+    assert upretty(s11) == ucode_str
+
+    ascii_str = '[1, 1, 1, 1, ...]'
+    ucode_str = u('[1, 1, 1, 1, …]')
+    assert pretty(s12) == ascii_str
+    assert upretty(s12) == ucode_str
+
+    ascii_str = '[1, 4, 9, 20, ...]'
+    ucode_str = u('[1, 4, 9, 20, …]')
+
+    assert pretty(SeqAdd(s1, s2, s3)) == ascii_str
+    assert upretty(SeqAdd(s1, s2, s3)) == ucode_str
+
+    ascii_str = '[1, 4, 9]'
+    ucode_str = u('[1, 4, 9]')
+
+    assert pretty(SeqAdd(s4, s5, s6)) == ascii_str
+    assert upretty(SeqAdd(s4, s5, s6)) == ucode_str
+
+    ascii_str = '[..., 20, 9, 4, 1]'
+    ucode_str = u('[…, 20, 9, 4, 1]')
+
+    assert pretty(SeqAdd(s7, s8, s9)) == ascii_str
+    assert upretty(SeqAdd(s7, s8, s9)) == ucode_str
+
+    ascii_str = '[0, 2, 16, 162, ...]'
+    ucode_str = u('[0, 2, 16, 162, …]')
+
+    assert pretty(SeqMul(s1, s2, s3)) == ascii_str
+    assert upretty(SeqMul(s1, s2, s3)) == ucode_str
+
+    ascii_str = '[0, 2, 16]'
+    ucode_str = u('[0, 2, 16]')
+
+    assert pretty(SeqMul(s4, s5, s6)) == ascii_str
+    assert upretty(SeqMul(s4, s5, s6)) == ucode_str
+
+    ascii_str = '[..., 162, 16, 2, 0]'
+    ucode_str = u('[…, 162, 16, 2, 0]')
+
+    assert pretty(SeqMul(s7, s8, s9)) == ascii_str
+    assert upretty(SeqMul(s7, s8, s9)) == ucode_str
 
 
 def test_pretty_limits():
