@@ -66,4 +66,3 @@ def test_booleans():
     assert Union(poly1, FiniteSet(Point(0,0), Point(3,5))) == Union(poly1, FiniteSet(Point(3,5)))
     # intersect two polygons that share an edge
     assert Intersection(poly1, poly3) == Union(FiniteSet(Point(3/2, 1), Point(2, 1)), Segment(Point(0, 0), Point(1, 0)))
-

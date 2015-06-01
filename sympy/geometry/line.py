@@ -561,7 +561,7 @@ class LinearEntity(GeometrySet):
         >>> p1, p2 = Point(0, 0), Point(5, 11)
         >>> l1 = Line(p1, p2)
         >>> l1.points
-        (Point(0, 0), Point(5, 11))
+        (Point2D(0, 0), Point2D(5, 11))
 
         """
         return (self.p1, self.p2)
@@ -621,12 +621,12 @@ class LinearEntity(GeometrySet):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(Rational(1, 2), 0)
         >>> l1 = Line(p1, p2)
         >>> l1.projection(p3)
-        Point(1/4, 1/4)
+        Point2D(1/4, 1/4)
 
         >>> p4, p5 = Point(10, 0), Point(12, 1)
         >>> s1 = Segment(p4, p5)
         >>> l1.projection(s1)
-        Segment(Point(5, 5), Point(13/2, 13/2))
+        Segment(Point2D(5, 5), Point2D(13/2, 13/2))
 
         """
         tline = Line(self.p1, self.p2)
@@ -683,12 +683,12 @@ class LinearEntity(GeometrySet):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(7, 7)
         >>> l1 = Line(p1, p2)
         >>> l1.intersection(p3)
-        [Point(7, 7)]
+        [Point2D(7, 7)]
 
         >>> p4, p5 = Point(5, 0), Point(0, 3)
         >>> l2 = Line(p4, p5)
         >>> l1.intersection(l2)
-        [Point(15/8, 15/8)]
+        [Point2D(15/8, 15/8)]
 
         >>> p6, p7 = Point(0, 5), Point(2, 6)
         >>> s1 = Segment(p6, p7)
@@ -1339,6 +1339,27 @@ class Ray(LinearEntity):
 
         """
         return self.p1
+
+    @property
+    def direction(self):
+        """The direction in which the ray emanates.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ray
+        >>> p1, p2 = Point(0, 0), Point(4, 1)
+        >>> r1 = Ray(p1, p2)
+        >>> r1.direction
+        Point2D(4, 1)
+
+        """
+        return self.p2 - self.p1
 
     @property
     def xdirection(self):

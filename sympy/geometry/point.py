@@ -235,7 +235,7 @@ class Point(GeometryEntity):
         """The dimension of the ambient space the point is in.
         I.e., if the point is in R^n, the ambient dimension
         will be n"""
-        return len(left)
+        return len(self)
 
     def distance(self, p):
         """The Euclidean distance from self to point p.

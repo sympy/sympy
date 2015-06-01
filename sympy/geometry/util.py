@@ -480,15 +480,15 @@ def centroid(*args):
         >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
         >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
         >>> centroid(p, q)
-        Point(3/2, 1/2)
+        Point2D(3/2, 1/2)
         >>> centroid(p, p, p, q) # centroid x-coord shifts left
-        Point(11/10, 1/2)
+        Point2D(11/10, 1/2)
 
     Stacking the squares vertically above and below p has the same
     effect:
 
         >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
-        Point(11/10, 1/2)
+        Point2D(11/10, 1/2)
 
     """
 

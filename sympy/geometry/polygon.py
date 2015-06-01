@@ -101,7 +101,7 @@ class Polygon(GeometrySet):
 
     >>> p = Polygon((0,0), 1, n=3)
     >>> p
-    RegularPolygon(Point(0, 0), 1, 3, 0)
+    RegularPolygon(Point2D(0, 0), 1, 3, 0)
     >>> p.vertices[0]
     Point2D(1, 0)
     >>> p.args[0]
@@ -604,7 +604,7 @@ class Polygon(GeometrySet):
         >>> perimeter = tri.perimeter
         >>> s1, s2 = [s.length for s in tri.sides[:2]]
         >>> p.subs(t, (s1 + s2/2)/perimeter)
-        Point(1, 1/2)
+        Point2D(1, 1/2)
 
         """
         t = _symbol(parameter)
@@ -1069,7 +1069,7 @@ class RegularPolygon(Polygon):
     ========
 
     >>> from sympy.geometry import RegularPolygon, Point
-    >>> r = RegularPolygon(Point(0, 0), 5, 3)
+    >>> r = RegularPolygon(Point2D(0, 0), 5, 3)
     >>> r
     RegularPolygon(Point2D(0, 0), 5, 3, 0)
     >>> r.vertices[0]
@@ -1382,7 +1382,7 @@ class RegularPolygon(Polygon):
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.circumcircle
-        Circle(Point(0, 0), 4)
+        Circle(Point2D(0, 0), 4)
 
         """
         return Circle(self.center, self.radius)
@@ -1546,12 +1546,12 @@ class RegularPolygon(Polygon):
         Symmetric scaling returns a RegularPolygon:
 
         >>> RegularPolygon((0, 0), 1, 4).scale(2, 2)
-        RegularPolygon(Point(0, 0), 2, 4, 0)
+        RegularPolygon(Point2D(0, 0), 2, 4, 0)
 
         Asymmetric scaling returns a kite as a Polygon:
 
         >>> RegularPolygon((0, 0), 1, 4).scale(2, 1)
-        Polygon(Point(2, 0), Point(0, 1), Point(-2, 0), Point(0, -1))
+        Polygon(Point2D(2, 0), Point2D(0, 1), Point2D(-2, 0), Point2D(0, -1))
 
         """
         if pt:
@@ -1999,7 +1999,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcenter
-        Point(1/2, 1/2)
+        Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
         return a.intersection(b)[0]
