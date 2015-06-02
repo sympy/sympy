@@ -72,8 +72,13 @@ def test_ImageSet():
 
     assert harmonics.is_iterable
 
-def test_image_is_ImageSet():
-    assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
+
+def test_ImageSet_intersection():
+    n_pi = imageset(x, x*pi, S.Integers)
+
+    assert n_pi.intersect(Range(10)) == FiniteSet(0)
+    assert n_pi.intersect(Interval(0, 10)) == \
+        FiniteSet(0, pi, 2*pi, 3*pi)
 
 
 @XFAIL
