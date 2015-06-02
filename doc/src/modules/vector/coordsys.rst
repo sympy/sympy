@@ -59,7 +59,7 @@ respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
 
 The orientation is shown in the diagram below:
 
-.. image:: simp_rot.*
+.. image:: coordsys_rot.svg
    :height: 250
    :width: 250
    :align: center
