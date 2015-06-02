@@ -1069,7 +1069,7 @@ class RegularPolygon(Polygon):
     ========
 
     >>> from sympy.geometry import RegularPolygon, Point
-    >>> r = RegularPolygon(Point2D(0, 0), 5, 3)
+    >>> r = RegularPolygon(Point(0, 0), 5, 3)
     >>> r
     RegularPolygon(Point2D(0, 0), 5, 3, 0)
     >>> r.vertices[0]

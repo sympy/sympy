@@ -67,7 +67,7 @@ geometry module.
     >>> c.is_tangent(l) # is l tangent to c?
     False
     >>> intersection(c, l)
-    [Point(-5*sqrt(2)/2, -5*sqrt(2)/2), Point(5*sqrt(2)/2, 5*sqrt(2)/2)]
+    [Point2D(-5*sqrt(2)/2, -5*sqrt(2)/2), Point2D(5*sqrt(2)/2, 5*sqrt(2)/2)]
 
 Intersection of medians
 -----------------------
@@ -87,10 +87,10 @@ Intersection of medians
     a*b/2
 
     >>> t.medians[x]
-    Segment(Point(0, 0), Point(3*a/2, b/2))
+    Segment(Point2D(0, 0), Point2D(3*a/2, b/2))
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
-    [Point(a, b/3)]
+    [Point2D(a, b/3)]
 
 An in-depth example: Pappus' Hexagon Theorem
 --------------------------------------------
@@ -208,7 +208,6 @@ Submodules
     entities.rst
     utils.rst
     points.rst
-    point3d.rst
     lines.rst
     line3d.rst
     curves.rst
