@@ -885,7 +885,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         elif i < -self.rows:
             self._mat = self._mat[self.cols:]
         elif i >= self.rows:
-            self._mat = self._mat[:self.rows*(self.cols-1)]
+            self._mat = self._mat[:self.rows*(self.cols - 1)]
         self.rows -= 1
 
     def col_del(self, i):
