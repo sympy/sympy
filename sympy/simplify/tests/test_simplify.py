@@ -119,12 +119,22 @@ def test_rootofsimp():
     f, g = u**3, -u
     assert f != g and rootofsimp(f) == g
 
-
     f, g = v**2, 2
     assert f != g and rootofsimp(f) == g
 
     f, g = u**2*v**2, -2
     assert f != g and rootofsimp(f) == g
+
+    # test no-op when expression is not polynomial the RootOf
+    f, g = sin(u**2 + 1), 0
+    assert f != g and rootofsimp(f) != g
+
+
+@XFAIL
+def test_rootofsimp_notinvertible():
+    r = RootOf(x**2 + 1, 0, radicals=False)
+    expr = 1/(r**2 + 1)
+    rootofsimp(expr)
 
 
 def test_trigsimp1():

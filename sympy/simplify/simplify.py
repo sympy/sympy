@@ -33,7 +33,7 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.ntheory.factor_ import multiplicity
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, lcm, gcd)
+    ComputationFailed, lcm, gcd, NotInvertible)
 
 import sympy.mpmath as mpmath
 
@@ -973,16 +973,30 @@ def rootofsimp(expr):
     transform = dict(zip(rootofs,dummies))
     expr = expr.xreplace(transform)
 
+    # prepare the inverse dummy-variable-to-RootOfs transformation for the
+    # simpified expression. we create the inverse transform here so it can be
+    # applied to the expression if a 'NotInvertible' error occurs
+    transform = dict(zip(dummies,rootofs))
+
     # simplify the expression in each root
     for root,dummy in zip(rootofs,dummies):
-        modulus = root.poly.xreplace({root.poly.gen:dummy})
-        numer,denom = cancel(expr).as_numer_denom()
-        denom = denom.as_poly(dummy).invert(modulus)
-        expr = numer.as_poly(dummy)*denom % modulus
+        try:
+            modulus = root.poly.xreplace({root.poly.gen:dummy})
+            numer,denom = cancel(expr).as_numer_denom()
+            denom = denom.as_poly(dummy).invert(modulus)
+            expr = numer.as_poly(dummy)*denom % modulus
+        except NotInvertible:
+            denom = denom.xreplace(transform).as_expr()
+            modulus = modulus.xreplace(transform).as_expr()
+            raise NotInvertible('The denominator, %s, is not invertible '
+                                'modulo %s'%(denom, modulus))
+        except:
+            # if something else went wrong, leave the expression unsimplified
+            # with respect to the current RootOf. (for example, when expr is
+            # not a polynomial in the RootOf)
+            pass
 
-    # apply the inverse dummy-variable-to-RootOfs transformation to the
-    # simpified expression
-    transform = dict(zip(dummies,rootofs))
+    # apply the inverse dummy-to-RootOfs transform to the expression
     expr = expr.xreplace(transform)
     return expr.as_expr()
 
