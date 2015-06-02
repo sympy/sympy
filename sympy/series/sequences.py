@@ -6,8 +6,9 @@ from sympy.core.symbol import Dummy
 from sympy.core.function import Lambda
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.compatibility import (range, integer_types, with_metaclass\
-                                      , is_sequence, iterable, ordered)
+from sympy.core.compatibility import (range, integer_types, with_metaclass,\
+                                      is_sequence, iterable, ordered)
+from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
@@ -112,6 +113,7 @@ class SeqBase(Expr):
                 fsyms.remove(d)
         return fsyms
 
+    @cacheit
     def coeff(self, pt):
         """Returns the coefficient at point pt"""
         if pt < self.start or pt > self.stop:
