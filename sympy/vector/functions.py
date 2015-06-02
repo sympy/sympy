@@ -123,6 +123,14 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
 
+def dot(expr1, expr2):
+    return expr1.dot(expr2)
+
+
+def cross(expr1, expr2):
+    return expr1.cross(expr2)
+
+
 def curl(vect, coord_sys):
     """
     Returns the curl of a vector field computed wrt the base scalars

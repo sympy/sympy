@@ -170,6 +170,45 @@ class Dyadic(BasisDependent):
         return Matrix([i.dot(self).dot(j) for i in system for j in
                       second_system]).reshape(3, 3)
 
+    def express(self, system, system2=None, variables=False):
+        """
+        Re-expresses the Dyadic instance with respect to the given
+        coordinate system(s).
+
+        If 'variables' is True, then any coordinate variables (base
+        scalars) of other systems present in this Dyadic are also
+        substituted in terms of the base scalars of 'system'.
+
+        Parameters
+        ==========
+
+        system: CoordSysCartesian
+            The coordinate system this Dyadic is to be expressed in
+
+        system2: CoordSysCartesian
+            The other coordinate system for re-expression
+            (optional)
+
+        variables : boolean
+            Specifies whether to substitute the coordinate variables present
+            in this Dyadic, in terms of those of 'system'
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.abc import a
+        >>> C = CoordSysCartesian('C')
+        >>> B = C.orient_new_axis('B', a, C.j)
+        >>> d = C.i.outer(C.i)
+        >>> d.express(B, C)
+        (cos(a))*(B.i|C.i) + (sin(a))*(B.k|C.i)
+
+        """
+
+        from sympy.vector.functions import express
+        return express(self, system, system2, variables)
+
 
 class BaseDyadic(Dyadic, AtomicExpr):
     """

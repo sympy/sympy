@@ -12,13 +12,14 @@ C = B.orient_new_axis('C', q3, B.j)
 
 def test_express():
     assert express(Vector.zero, N) == Vector.zero
+    assert Vector.zero.express(N) == Vector.zero
     assert express(S(0), N) == S(0)
     assert express(A.i, C) == cos(q3)*C.i + sin(q3)*C.k
     assert express(A.j, C) == sin(q2)*sin(q3)*C.i + cos(q2)*C.j - \
         sin(q2)*cos(q3)*C.k
     assert express(A.k, C) == -sin(q3)*cos(q2)*C.i + sin(q2)*C.j + \
         cos(q2)*cos(q3)*C.k
-    assert express(A.i, N) == cos(q1)*N.i + sin(q1)*N.j
+    assert express(A.i, N) == A.i.express(N) == cos(q1)*N.i + sin(q1)*N.j
     assert express(A.j, N) == -sin(q1)*N.i + cos(q1)*N.j
     assert express(A.k, N) == N.k
     assert express(A.i, A) == A.i
@@ -32,8 +33,9 @@ def test_express():
         sin(q2)*cos(q3)*C.k
     assert express(A.k, C) == -sin(q3)*cos(q2)*C.i + sin(q2)*C.j + \
         cos(q2)*cos(q3)*C.k
+    assert A.k.express(C) == express(A.k, C)
     # Check to make sure UnitVectors get converted properly
-    assert express(N.i, N) == N.i
+    assert express(N.i, N) == N.i.express(N) == N.i
     assert express(N.j, N) == N.j
     assert express(N.k, N) == N.k
     assert express(N.i, A) == (cos(q1)*A.i - sin(q1)*A.j)

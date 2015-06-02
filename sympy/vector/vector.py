@@ -309,6 +309,42 @@ class Vector(BasisDependent):
                                   vect*measure)
         return parts
 
+    def express(self, system, variables=False):
+        """
+        Re-expresses the Vector in the given coordinate system.
+
+        If 'variables' is True, then any coordinate variables (base
+        scalars) of other coordinate systems present in the Vector are
+        also substituted in terms of the base scalars of 'system'.
+
+        Parameters
+        ==========
+
+        system: CoordSysCartesian
+            The coordinate system this Vector is to be expressed in
+
+        variables : boolean
+            Specifies whether to substitute the coordinate variables
+            present in this Vector, in terms of those of 'system'
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.abc import a
+        >>> C = CoordSysCartesian('C')
+        >>> B = C.orient_new_axis('B', a, C.j)
+        >>> v = C.i + C.y*C.j
+        >>> v.express(B)
+        (cos(a))*B.i + C.y*B.j + (sin(a))*B.k
+        >>> v.express(B, variables=True)
+        (cos(a))*B.i + B.y*B.j + (sin(a))*B.k
+
+        """
+
+        from sympy.vector.functions import express
+        return express(self, system, variables=variables)
+
 
 class BaseVector(Vector, AtomicExpr):
     """
