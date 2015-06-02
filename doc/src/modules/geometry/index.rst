@@ -53,12 +53,12 @@ geometry module.
     >>> t.area
     1/2
     >>> t.medians[x]
-    Segment(Point(0, 0), Point(1, 1/2))
+    Segment(Point2D(0, 0), Point2D(1, 1/2))
     >>> Segment(Point(1, S(1)/2), Point(0, 0))
-    Segment(Point(0, 0), Point(1, 1/2))
+    Segment(Point2D(0, 0), Point2D(1, 1/2))
     >>> m = t.medians
     >>> intersection(m[x], m[y], m[zp])
-    [Point(2/3, 1/3)]
+    [Point2D(2/3, 1/3)]
     >>> c = Circle(x, 5)
     >>> l = Line(Point(5, -5), Point(5, 5))
     >>> c.is_tangent(l) # is l tangent to c?
