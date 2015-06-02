@@ -90,31 +90,41 @@ def test_rootofsimp():
     s = RootOf(x**4 - x**2 + 1, 0)
 
     f, g = r**5, 5*r - 12
-
     assert f != g and rootofsimp(f) == g
 
     f, g = r**10, 25*r**2 - 120*r + 144
-
     assert f != g and rootofsimp(f) == g
 
     f, g = r**4*(1 + r), r**4 + 5*r - 12
-
     assert f != g and rootofsimp(f) == g
 
     # test modular inversion
     f, g = 1/r, -r**4/12 + 5/12
-
     assert f != g and rootofsimp(f) == g
 
     f, g = -r**4/12 + 5/12, r
-
     assert f*g != 1 and rootofsimp(f*g) == 1
 
     # test multiple roots in expression
-
     f, g = r**5 * s**4, expand((5*r - 12)*(s**2 - 1))
-
     assert f != g and rootofsimp(f).expand() == g
+
+    # test RootOfs with forced radicals=False
+    u = RootOf(x**2 + 1, 0, radicals=False)
+    v = RootOf(x**2 - 2, 0, radicals=False)
+
+    f, g = u**2, -1
+    assert f != g and rootofsimp(f) == g
+
+    f, g = u**3, -u
+    assert f != g and rootofsimp(f) == g
+
+
+    f, g = v**2, 2
+    assert f != g and rootofsimp(f) == g
+
+    f, g = u**2*v**2, -2
+    assert f != g and rootofsimp(f) == g
 
 
 def test_trigsimp1():

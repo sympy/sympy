@@ -936,17 +936,16 @@ def rootofsimp(expr):
     Reduce expressions containing ``RootOf`` types modulo their defining
     polynomials.
 
-    A root `r` of a polynomial `p(x) = a_n x^n + ... + a_0` satisfies
-    `p(r) = 0` by definition. Therefore, any power of `r` greater than
-    `n` can be rewritten in terms of smaller powers. In general, any
-    polynomial or rational expression of `r` can be reduced modulo its
-    defining polynomial `p`.
+    A root `r` of a polynomial `p(x) = a_n x^n + ... + a_0` satisfies `p(r) =
+    0` by definition. Therefore, any power of `r` greater than `n` can be
+    rewritten in terms of smaller powers. In general, any polynomial or
+    rational expression of `r` can be reduced modulo its defining polynomial
+    `p`.
 
-    ``rootofsimp`` rewrites the expression as a numerator-denominator
-    pair, computes the modular inverse of the denominator, and returns
-    the product of this inverse with the numerator modulo the defining
-    polynomial of the root. This is done for each ``RootOf`` appearing
-    in the expression.
+    ``rootofsimp`` rewrites the expression as a numerator-denominator pair,
+    computes the modular inverse of the denominator, and returns the product of
+    this inverse with the numerator modulo the defining polynomial of the
+    root. This is done for each ``RootOf`` appearing in the expression.
 
     Examples
     ========
@@ -963,16 +962,28 @@ def rootofsimp(expr):
 
     """
     from sympy.polys.rootoftools import RootOf
-    if not expr.has(RootOf):
-        return expr
+    expr = sympify(expr)
 
-    for root in expr.find(RootOf):
-        # rewrite the defining polynomial in terms of the root, itself
-        modulus = root.poly.xreplace({root.poly.gen:root})
+    # temporarily replace each RootOf with a dummy variable. this is necessary
+    # to preserve options such as "radicals=False" as well as for avoiding
+    # conflicts when the defining polynomial of multiple RootOfs use the same
+    # variable
+    rootofs = expr.find(RootOf)
+    dummies = [Dummy() for _ in rootofs]
+    transform = dict(zip(rootofs,dummies))
+    expr = expr.xreplace(transform)
 
+    # simplify the expression in each root
+    for root,dummy in zip(rootofs,dummies):
+        modulus = root.poly.xreplace({root.poly.gen:dummy})
         numer,denom = cancel(expr).as_numer_denom()
-        denom = denom.as_poly(root).invert(modulus)
-        expr = numer.as_poly(root) * denom % modulus
+        denom = denom.as_poly(dummy).invert(modulus)
+        expr = numer.as_poly(dummy)*denom % modulus
+
+    # apply the inverse dummy-variable-to-RootOfs transformation to the
+    # simpified expression
+    transform = dict(zip(dummies,rootofs))
+    expr = expr.xreplace(transform)
     return expr.as_expr()
 
 
