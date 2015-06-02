@@ -373,6 +373,13 @@ class Point(GeometryEntity):
         p2 = Point(p2)
         return Add(*[a*b for a,b in zip(self, p2)])
 
+    def equals(self, other):
+        """Returns whether the coordinates of self and other agree."""
+        # a point is equal to another point if all its components are equal
+        if not isinstance(other, Point) or len(self.args) != len(other.args):
+            return False
+        return all(a.equals(b) for a,b in zip(self.args, other.args))
+
     def __len__(self):
         return len(self.args)
 
