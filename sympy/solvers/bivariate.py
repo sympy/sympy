@@ -1,15 +1,14 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import ordered
-from sympy.core.function import Function, expand_log, expand_mul
-from sympy.core.mul import Mul
+from sympy.core.compatibility import ordered, range
+from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
-from sympy.polys.polytools import (Poly, primitive, factor)
+from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
 from sympy.simplify.simplify import (collect, separatevars)
 from sympy.solvers.solvers import solve, _invert
@@ -143,16 +142,21 @@ def _lambert(eq, x):
         return []  # violated assumptions
 
     u = Dummy('rhs')
-    rhs = -c/b + (a/d)*LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a))
+    sol = []
+    # check only real solutions:
+    for k in [-1, 0]:
+        l = LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
+        # if W's arg is between -1/e and 0 there is
+        # a -1 branch real solution, too.
+        if k and not l.is_real:
+            continue
+        rhs = -c/b + (a/d)*l
 
-    # if W's arg is between -1/e and 0 there is a -1 branch solution, too.
-
-    # Check here to see if exp(W(s)) appears and return s/W(s) instead?
-
-    solns = solve(X1 - u, x)
-    for i, tmp in enumerate(solns):
-        solns[i] = tmp.subs(u, rhs)
-    return solns
+        solns = solve(X1 - u, x)
+        for i, tmp in enumerate(solns):
+            solns[i] = tmp.subs(u, rhs)
+            sol.append(solns[i])
+    return sol
 
 
 def _solve_lambert(f, symbol, gens):
@@ -264,7 +268,7 @@ def _solve_lambert(f, symbol, gens):
                 # move all but mainexp-containing term to rhs
                 other = lhs.subs(mainexp, 0)
                 mainterm = lhs - other
-                rhs=rhs - other
+                rhs = rhs - other
                 if (mainterm.could_extract_minus_sign() and
                     rhs.could_extract_minus_sign()):
                     mainterm *= -1

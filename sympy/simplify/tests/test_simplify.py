@@ -1,11 +1,11 @@
 from sympy import (
     Abs, acos, Add, atan, Basic, besselsimp, binomial, collect,
-    collect_const, combsimp, cos, cosh, cot, coth, count_ops, denom,
+    collect_const, combsimp, cos, cosh, cot, coth, count_ops,
     Derivative, diff, Dummy, E, Eq, erf, exp, exp_polar, expand,
     expand_multinomial, exptrigsimp, factor, factorial, FallingFactorial,
-    Float, fraction, Function, gamma, GoldenRatio, hyper, hyper,
-    hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
-    Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
+    Float, fraction, Function, gamma, GoldenRatio, hyper,
+    hypersimp, I, Integral, integrate, log, logcombine, Matrix, MatrixSymbol,
+    Mul, nsimplify, O, oo, pi, Piecewise,
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, rootofsimp, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
@@ -15,6 +15,7 @@ from sympy.polys.rootoftools import RootOf
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
 from sympy.utilities.pytest import XFAIL, slow
+from sympy.core.compatibility import range
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -735,6 +736,8 @@ def test_powsimp():
 
     assert all(powsimp(e) == e for e in (sqrt(x**a), sqrt(x**2)))
 
+    # issue 8836
+    assert str( powsimp(exp(I*pi/3)*root(-1,3)) ) == '(-1)**(2/3)'
 
 def test_issue_6367():
     z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
@@ -813,6 +816,7 @@ def test_powsimp_nc():
     assert powsimp(B**x*A**x*C**x, combine='base') == (B*A*C)**x
     assert powsimp(B**x*A**x*C**x, combine='exp') == B**x*A**x*C**x
 
+
 def test_nthroot():
     assert nthroot(90 + 34*sqrt(7), 3) == sqrt(7) + 3
     q = 1 + sqrt(2) - 2*sqrt(3) + sqrt(6) + sqrt(7)
@@ -829,6 +833,7 @@ def test_nthroot():
     assert nthroot(expand_multinomial(q**3), 3) == q
     assert nthroot(expand_multinomial(q**6), 6) == q
 
+
 @slow
 def test_nthroot1():
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**20
@@ -836,7 +841,8 @@ def test_nthroot1():
     assert nthroot(p, 5) == q
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**30
     p = expand_multinomial(q**5)
-    assert nthroot(p, 5) == p**Rational(1, 5)
+    assert nthroot(p, 5) == q
+
 
 def test_collect_1():
     """Collect with respect to a Symbol"""
@@ -1741,7 +1747,7 @@ def test_polarify():
 
 
 def test_unpolarify():
-    from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
+    from sympy import (exp_polar, polar_lift, exp, unpolarify,
                        principal_branch)
     from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
     from sympy.abc import x
@@ -1797,7 +1803,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
+    from sympy import besselj, besseli, exp_polar, cosh, cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -1960,3 +1966,16 @@ def test_inequality_no_auto_simplify():
     e = Lt(lhs, rhs)
     assert e == Lt(lhs, rhs, evaluate=False)
     assert simplify(e)
+
+
+def test_issue_9324_simplify():
+    M = MatrixSymbol('M', 10, 10)
+    e = M[0, 0] + M[5, 4] + 1304
+    assert simplify(e) == e
+
+
+def test_issue_9324_powsimp_on_matrix_symbol():
+    M = MatrixSymbol('M', 10, 10)
+    expr = powsimp(M, deep=True)
+    assert expr == M
+    assert expr.args[0] == 'M'

@@ -80,6 +80,10 @@ class elliptic_k(Function):
     def _eval_rewrite_as_meijerg(self, z):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_kc(self.args[0]._sage_())
+
 
 class elliptic_f(Function):
     r"""

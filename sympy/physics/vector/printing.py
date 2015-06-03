@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Derivative
-from sympy.core import C
 from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
+from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
@@ -183,10 +183,10 @@ class VectorPrettyPrinter(PrettyPrinter):
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         dots = {0 : u(""),
-                1 : u("\u0307"),
-                2 : u("\u0308"),
-                3 : u("\u20db"),
-                4 : u("\u20dc")}
+                1 : u("\N{COMBINING DOT ABOVE}"),
+                2 : u("\N{COMBINING DIAERESIS}"),
+                3 : u("\N{COMBINING THREE DOTS ABOVE}"),
+                4 : u("\N{COMBINING FOUR DOTS ABOVE}")}
 
         d = pform.__dict__
         pic = d['picture'][0]
@@ -208,7 +208,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         func = e.func
         args = e.args
         func_name = func.__name__
-        pform = self._print_Symbol(C.Symbol(func_name))
+        pform = self._print_Symbol(Symbol(func_name))
         # If this function is an Undefined function of t, it is probably a
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code

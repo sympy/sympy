@@ -1,6 +1,7 @@
 import random
 
 from sympy import Integer, Matrix, Rational, sqrt, symbols
+from sympy.core.compatibility import range
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,

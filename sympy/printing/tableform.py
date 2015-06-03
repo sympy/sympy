@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import range
 
 from types import FunctionType
 
@@ -9,7 +10,8 @@ class TableForm(object):
     """
     Create a nice table representation of data.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy import TableForm
     >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
@@ -243,7 +245,8 @@ class TableForm(object):
         """
         Returns the string representation of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import TableForm
         >>> t = TableForm([[5, 7], [4, 2], [10, 3]])

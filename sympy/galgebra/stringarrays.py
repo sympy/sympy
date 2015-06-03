@@ -8,10 +8,11 @@ symbols.
 
 import operator
 
-from functools import reduce
+from sympy.core.compatibility import reduce
 from itertools import combinations
 
 from sympy import S, Symbol, Function
+from sympy.core.compatibility import range
 
 
 def str_array(base, n=None):
@@ -102,6 +103,7 @@ def str_combinations(base, lst, rank=1, mode='_'):
     forming the 'indexes' by concatenating combinations of elements from
     'lst' taken 'rank' at a time.
     """
-    str_lst = list(map(lambda x: base + mode + x, map(lambda x: reduce(operator.add, x),
-                        combinations(map(lambda x: str(x), lst), rank))))
+    a1 = combinations([str(x) for x in lst], rank)
+    a2 = [reduce(operator.add, x) for x in a1]
+    str_lst = [base + mode + x for x in a2]
     return str_lst

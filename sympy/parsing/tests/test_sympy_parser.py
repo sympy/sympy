@@ -111,3 +111,8 @@ def test_split_symbols_function():
     assert parse_expr("ay(x+1)", transformations=transformations) == a*y*(x+1)
     assert parse_expr("af(x+1)", transformations=transformations,
                       local_dict={'f':f}) == a*f(x+1)
+
+def test_match_parentheses_implicit_multiplication():
+    transformations = standard_transformations + \
+                      (implicit_multiplication,)
+    raises(TokenError, lambda: parse_expr('(1,2),(3,4]',transformations=transformations))

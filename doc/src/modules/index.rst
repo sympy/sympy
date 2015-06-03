@@ -29,7 +29,6 @@ access any SymPy module, or use this contens:
    integrals/integrals.rst
    logic.rst
    matrices/index.rst
-   Mpmath <mpmath/index.rst>
    polys/index.rst
    printing.rst
    plotting.rst
@@ -45,6 +44,7 @@ access any SymPy module, or use this contens:
    solvers/solvers.rst
    solvers/diophantine.rst
    solvers/inequalities.rst
+   solvers/solveset.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst

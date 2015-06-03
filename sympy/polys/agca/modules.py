@@ -26,7 +26,7 @@ from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.domains.field import Field
 from sympy.polys.agca.ideals import Ideal
 
-from sympy.core.compatibility import iterable, reduce
+from sympy.core.compatibility import iterable, reduce, range
 
 # TODO
 # - module saturation
@@ -1245,7 +1245,6 @@ class QuotientModuleElement(ModuleElement):
         return self.module.killed_module.contains(d1 - d2)
 
     def __repr__(self):
-        from sympy import sstr
         return repr(self.data) + " + " + repr(self.module.killed_module)
 
 

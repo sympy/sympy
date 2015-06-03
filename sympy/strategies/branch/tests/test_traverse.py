@@ -1,4 +1,4 @@
-from sympy import Basic, symbols, Symbol, S
+from sympy import Basic
 from sympy.strategies.branch.traverse import top_down, sall
 from sympy.strategies.branch.core import do_one, identity
 

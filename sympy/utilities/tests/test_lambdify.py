@@ -1,9 +1,9 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, atan, acos, acosh, Rational,
+    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy import mpmath
+import mpmath
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -179,6 +179,17 @@ def test_numexpr_printer():
         args = arg_tuple[:nargs]
         f = lambdify(args, ssym(*args), modules='numexpr')
         assert f(*(1, )*nargs) is not None
+
+def test_issue_9334():
+    if not numexpr:
+        skip("numexpr not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+    expr = sympy.S('b*a - sqrt(a**2)')
+    a, b = sorted(expr.free_symbols, key=lambda s: s.name)
+    func_numexpr = lambdify((a,b), expr, modules=[numexpr], dummify=False)
+    foo, bar = numpy.random.random((2, 4))
+    func_numexpr(foo, bar)
 
 #================== Test some functions ============================
 

@@ -1,11 +1,10 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
+    Interval, comp
 )
-from sympy.utilities.pytest import XFAIL
-
-from sympy.utilities.randtest import comp
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -73,6 +72,13 @@ def test_re():
     assert re(x).rewrite(im) == x - im(x)
     assert (x + re(y)).rewrite(re, im) == x + y - im(y)
 
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    x = Symbol('x')
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -134,6 +140,13 @@ def test_im():
 
     assert im(x).rewrite(re) == x - re(x)
     assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    x = Symbol('x')
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
 
 
 def test_sign():
@@ -294,6 +307,8 @@ def test_sign_issue_3068():
 
 
 def test_Abs():
+    raises(TypeError, lambda: Abs(Interval(2, 3)))  # issue 8717
+
     x, y = symbols('x,y')
     assert sign(sign(x)) == sign(x)
     assert sign(x*y).func is sign
@@ -350,6 +365,18 @@ def test_Abs():
     assert Abs(3**(2 + I)) == 9
     assert Abs((-3)**(1 - I)) == 3*exp(pi)
 
+    assert Abs(oo) is oo
+    assert Abs(-oo) is oo
+    assert Abs(oo + I) is oo
+    assert Abs(oo + I*oo) is oo
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    x = Symbol('x')
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -387,18 +414,44 @@ def test_Abs_real():
 def test_Abs_properties():
     x = Symbol('x')
     assert Abs(x).is_real is True
+    assert Abs(x).is_rational is None
     assert Abs(x).is_positive is None
     assert Abs(x).is_nonnegative is True
 
-    w = Symbol('w', complex=True, zero=False)
-    assert Abs(w).is_real is True
-    assert Abs(w).is_positive is True
-    assert Abs(w).is_zero is False
+    z = Symbol('z', complex=True, zero=False)
+    assert Abs(z).is_real is True
+    assert Abs(z).is_rational is None
+    assert Abs(z).is_positive is True
+    assert Abs(z).is_zero is False
 
-    q = Symbol('q', positive=True)
-    assert Abs(q).is_real is True
-    assert Abs(q).is_positive is True
-    assert Abs(q).is_zero is False
+    p = Symbol('p', positive=True)
+    assert Abs(p).is_real is True
+    assert Abs(p).is_rational is None
+    assert Abs(p).is_positive is True
+    assert Abs(p).is_zero is False
+
+    q = Symbol('q', rational=True)
+    assert Abs(q).is_rational is True
+    assert Abs(q).is_integer is None
+    assert Abs(q).is_positive is None
+    assert Abs(q).is_nonnegative is True
+
+    i = Symbol('i', integer=True)
+    assert Abs(i).is_integer is True
+    assert Abs(i).is_positive is None
+    assert Abs(i).is_nonnegative is True
+
+    e = Symbol('n', even=True)
+    ne = Symbol('ne', real=True, even=False)
+    assert Abs(e).is_even
+    assert Abs(ne).is_even is False
+    assert Abs(i).is_even is None
+
+    o = Symbol('n', odd=True)
+    no = Symbol('no', real=True, odd=False)
+    assert Abs(o).is_odd
+    assert Abs(no).is_odd is False
+    assert Abs(i).is_odd is None
 
 
 def test_abs():
@@ -498,6 +551,12 @@ def test_conjugate():
     assert conjugate(x * y) == conjugate(x) * conjugate(y)
     assert conjugate(x / y) == conjugate(x) / conjugate(y)
     assert conjugate(-x) == -conjugate(x)
+
+    a = Symbol('a', algebraic=True)
+    t = Symbol('t', transcendental=True)
+    assert re(a).is_algebraic
+    assert re(x).is_algebraic is None
+    assert re(t).is_algebraic is False
 
 
 def test_conjugate_transpose():

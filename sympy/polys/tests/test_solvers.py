@@ -5,7 +5,6 @@ from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.solvers import solve_lin_sys
 
-from sympy.utilities.pytest import slow
 
 def test_solve_lin_sys_2x2_one():
     domain, x1,x2 = ring("x1,x2", QQ)

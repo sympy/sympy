@@ -3,16 +3,18 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-    BooleanFunction, true, false, BooleanAtom)
+    BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
+from sympy.core.decorators import deprecated
+from sympy.utilities.decorator import classproperty, ClassPropertyDescriptor
 
 
-class Q:
+class Q(object):
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
-    bounded = Predicate('bounded')
+    finite = Predicate('finite')
     commutative = Predicate('commutative')
     complex = Predicate('complex')
     composite = Predicate('composite')
@@ -21,7 +23,7 @@ class Q:
     hermitian = Predicate('hermitian')
     imaginary = Predicate('imaginary')
     infinitesimal = Predicate('infinitesimal')
-    infinity = Predicate('infinity')
+    infinite = Predicate('infinite')
     integer = Predicate('integer')
     irrational = Predicate('irrational')
     rational = Predicate('rational')
@@ -55,6 +57,16 @@ class Q:
     real_elements = Predicate('real_elements')
     complex_elements = Predicate('complex_elements')
     integer_elements = Predicate('integer_elements')
+
+    @classproperty
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    def bounded(self):
+        return Predicate('finite')
+
+    @classproperty
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    def infinity(self):
+        return Predicate('infinite')
 
 
 def _extract_facts(expr, symbol):
@@ -283,7 +295,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("bounded",           "calculus.AskBoundedHandler"),
+    ("finite",           "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),
@@ -325,12 +337,14 @@ for name, value in _handlers:
     register_handler(name, _val_template % value)
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
-                    if not attr.startswith('__')]
+                    if not (attr.startswith('__') or isinstance(Q.__dict__[attr], ClassPropertyDescriptor))]
+
 known_facts = And(
+    Implies(Q.infinite, ~Q.finite),
     Implies(Q.real, Q.complex),
     Implies(Q.real, Q.hermitian),
     Equivalent(Q.even, Q.integer & ~Q.odd),
-    Equivalent(Q.extended_real, Q.real | Q.infinity),
+    Equivalent(Q.extended_real, Q.real | Q.infinite),
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
     Implies(Q.integer, Q.rational),

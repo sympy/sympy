@@ -6,6 +6,7 @@ Read the vectorize docstring for more details.
 from __future__ import print_function, division
 
 from sympy.core.decorators import wraps
+from sympy.core.compatibility import range
 
 
 def apply_on_element(f, args, kwargs, n):

@@ -14,7 +14,7 @@ source code files that are compilable without further modifications.
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
@@ -272,10 +272,11 @@ def ccode(expr, assign_to=None, **settings):
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
+        A dictionary where the keys are string representations of either
+        ``FunctionClass`` or ``UndefinedFunction`` instances and the values
+        are their desired C string representations. Alternatively, the
+        dictionary value can be a list of tuples i.e. [(argument_test,
+        cfunction_string)].  See below for examples.
     dereference : iterable, optional
         An iterable of symbols that should be dereferenced in the printed code
         expression. These would be values passed by address to the function.
@@ -296,25 +297,27 @@ def ccode(expr, assign_to=None, **settings):
     Examples
     ========
 
-    >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
+    >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs, Function
     >>> x, tau = symbols("x, tau")
     >>> ccode((2*tau)**Rational(7, 2))
     '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
     >>> ccode(sin(x), assign_to="s")
     's = sin(x);'
 
-    Custom printing can be defined for certain types by passing a dictionary of
-    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
-    dictionary value can be a list of tuples i.e. [(argument_test,
-    cfunction_string)].
+    Simple custom printing can be defined for certain types by passing a
+    dictionary of {"type" : "function"} to the ``user_functions`` kwarg.
+    Alternatively, the dictionary value can be a list of tuples i.e.
+    [(argument_test, cfunction_string)].
 
     >>> custom_functions = {
     ...   "ceiling": "CEIL",
     ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
-    ...           (lambda x: x.is_integer, "ABS")]
+    ...           (lambda x: x.is_integer, "ABS")],
+    ...   "func": "f"
     ... }
-    >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
-    'fabs(x) + CEIL(x)'
+    >>> func = Function('func')
+    >>> ccode(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
+    'f(fabs(x) + CEIL(x))'
 
     ``Piecewise`` expressions are converted into conditionals. If an
     ``assign_to`` variable is provided an if statement is created, otherwise

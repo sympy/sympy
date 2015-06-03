@@ -7,22 +7,19 @@ Plane
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols, Symbol, Rational
-from sympy.core.function import expand_mul
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
-from sympy.core.logic import fuzzy_and
-from sympy.core.exprtools import factor_terms
-from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
+from sympy.core import S, Dummy, Symbol, Rational
+from sympy.core.compatibility import is_sequence
+from sympy.functions.elementary.trigonometric import acos, asin, sqrt
+from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.geometry.exceptions import GeometryError
+from sympy.solvers import solve
+from sympy.utilities.misc import filldedent
+
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .point import Point
 from .line3d import LinearEntity3D, Line3D, Segment3D, Ray3D
 from .line import Line, Segment, Ray
-from sympy.matrices import Matrix
 
 class Plane(GeometryEntity):
     """
@@ -53,23 +50,22 @@ class Plane(GeometryEntity):
     """
     def __new__(cls, p1, a=None, b=None, **kwargs):
         p1 = Point3D(p1)
-        if not a and not b and kwargs.get('normal_vector', None):
-            a = kwargs.pop('normal_vector')
-
-        if not b and not isinstance(a, Point3D) and \
-                len(a) == 3:
-            normal_vector = a
-        elif a and b:
+        if a and b:
             p2 = Point3D(a)
             p3 = Point3D(b)
             if Point3D.are_collinear(p1, p2, p3):
-                raise NotImplementedError('Enter three non-collinear points')
+                raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
             b = p1.direction_ratio(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
-            raise ValueError('Either provide 3 3D points or a point with a '
-            'normal vector')
+            a = kwargs.pop('normal_vector', a)
+            if is_sequence(a) and len(a) == 3:
+                normal_vector = Point3D(a).args
+            else:
+                raise ValueError(filldedent('''
+                    Either provide 3 3D points or a point with a
+                    normal vector expressed as a sequence of length 3'''))
         return GeometryEntity.__new__(cls, p1, normal_vector, **kwargs)
 
     @property
@@ -405,14 +401,14 @@ class Plane(GeometryEntity):
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
             e = sqrt(sum([i**2 for i in o.direction_ratio]))
-            return C.asin(c/(d*e))
+            return asin(c/(d*e))
         if isinstance(o, Plane):
             a = Matrix(self.normal_vector)
             b = Matrix(o.normal_vector)
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
             e = sqrt(sum([i**2 for i in o.normal_vector]))
-            return C.acos(c/(d*e))
+            return acos(c/(d*e))
 
 
     @staticmethod

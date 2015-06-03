@@ -12,7 +12,8 @@ from sympy.physics.secondquant import (
 from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
                    Symbol, symbols)
 
-from sympy.utilities.pytest import XFAIL
+from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, slow
 
 
 def test_PermutationOperator():
@@ -201,6 +202,7 @@ def test_matrix_elements():
         assert m[i + 1, i] == sqrt(i + 1)
 
 
+@slow
 def test_sho():
     n, m = symbols('n,m')
     h_n = Bd(n)*B(n)*(n + Rational(1, 2))

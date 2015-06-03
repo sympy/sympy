@@ -1,16 +1,15 @@
 from __future__ import print_function, division
 
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
+from sympy import (Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime, nextprime, integer_nthroot, Expr, Pow)
+    isprime, nextprime, integer_nthroot)
 
 from sympy.core.function import _mexpand
 from sympy.simplify.simplify import rad_rationalize
-from sympy.ntheory.modular import solve_congruence
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import check_assumptions
 
@@ -654,7 +653,7 @@ def _diop_quadratic(var, coeff, t):
                 solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
                     + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-                for z0 in xrange(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
                     if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
                         l.add((solve_x(z0), solve_y(z0)))
 
@@ -716,6 +715,11 @@ def _diop_quadratic(var, coeff, t):
             # In this case equation can be transformed into a Pell equation
             #n = symbols("n", integer=True)
 
+            fund_solns = solns_pell
+            solns_pell = set(fund_solns)
+            for X, Y in fund_solns:
+                solns_pell.add((-X, -Y))
+
             a = diop_DN(D, 1)
             T = a[0][0]
             U = a[0][1]
@@ -737,50 +741,33 @@ def _diop_quadratic(var, coeff, t):
                     l.add((x_n, y_n))
 
             else:
-                L = ilcm(S(P[0]).q, ilcm(S(P[1]).q, ilcm(S(P[2]).q, ilcm(S(P[3]).q, ilcm(S(Q[0]).q, S(Q[1]).q)))))
+                L = ilcm(S(P[0]).q, ilcm(S(P[1]).q, ilcm(S(P[2]).q,
+                         ilcm(S(P[3]).q, ilcm(S(Q[0]).q, S(Q[1]).q)))))
 
-                k = 0
-                done = False
+                k = 1
 
                 T_k = T
                 U_k = U
 
-                while not done:
-                    k = k + 1
-
-                    if (T_k - 1) % L == 0 and U_k % L == 0:
-                        done = True
+                while (T_k - 1) % L != 0 or U_k % L != 0:
                     T_k, U_k = T_k*T + D*U_k*U, T_k*U + U_k*T
+                    k += 1
 
-                for soln in solns_pell:
+                for X, Y in solns_pell:
 
-                    X = soln[0]
-                    Y = soln[1]
+                    for i in range(k):
+                        Z = P*Matrix([X, Y]) + Q
+                        x, y = Z[0], Z[1]
 
-                    done = False
+                        if isinstance(x, Integer) and isinstance(y, Integer):
+                            Xt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t +
+                                  (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ 2
+                            Yt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t -
+                                  (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ (2*sqrt(D))
+                            Zt = P*Matrix([Xt, Yt]) + Q
+                            l.add((Zt[0], Zt[1]))
 
-                    for i in xrange(k):
-
-                        X_1 = X*T + D*U*Y
-                        Y_1 = X*U + Y*T
-
-                        x = (P*Matrix([X_1, Y_1]) + Q)[0]
-                        y = (P*Matrix([X_1, Y_1]) + Q)[1]
-
-                        if is_solution_quad(var, coeff, x, y):
-                            done = True
-
-
-                            x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ 2
-                            y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ (2*sqrt(D))
-
-                            x_n = _mexpand(x_n)
-                            y_n = _mexpand(y_n)
-                            x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
-                            l.add((x_n, y_n))
-
-                        if done:
-                            break
+                        X, Y = X*T + D*U*Y, X*U + Y*T
 
 
     return l
@@ -886,7 +873,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
             else:
                 sol = []
 
-                for y in xrange(floor(sign(N)*(N - 1)/(2*r)) + 1):
+                for y in range(floor(sign(N)*(N - 1)/(2*r)) + 1):
                     if isinstance(sqrt(D*y**2 + N), Integer):
                         sol.append((sqrt(D*y**2 + N), y))
 
@@ -1181,7 +1168,7 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
                 return [(S.Zero, S.Zero)]
 
 
-    for y in xrange(L1, L2):
+    for y in range(L1, L2):
         if isinstance(sqrt(N + D*y**2), Integer):
             x = sqrt(N + D*y**2)
             sol.append((x, y))
@@ -1509,7 +1496,7 @@ def check_param(x, y, a, t):
     q = Wild("q", exclude=[k])
     ok = False
 
-    for i in xrange(a):
+    for i in range(a):
 
         z_x = _mexpand(Subs(x, t, a*k + i).doit()).match(p*k + q)
         z_y = _mexpand(Subs(y, t, a*k + i).doit()).match(p*k + q)
@@ -2342,7 +2329,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
     l.append(ith - 2*m[n - 2]**2)
 
-    for i in xrange(n - 2):
+    for i in range(n - 2):
         l.append(2*m[i]*m[n-2])
 
     sol = l[:index] + [ith] + l[index:]
@@ -2421,7 +2408,7 @@ def _diop_general_sum_of_squares(var, coeff, limit=1):
         m = n // 4
         f = partition(k, m, True)
 
-        for j in xrange(limit):
+        for j in range(limit):
 
             soln = []
             try:
@@ -2488,7 +2475,7 @@ def partition(n, k=None, zeros=False):
     =========
 
     .. [1] Generating Integer Partitions, [online],
-        Available: http://homepages.ed.ac.uk/jkellehe/partitions.php
+        Available: http://jeromekelleher.net/partitions.php
     """
     if n < 1:
         yield tuple()
@@ -2499,14 +2486,14 @@ def partition(n, k=None, zeros=False):
 
         elif k > n:
             if zeros:
-                for i in xrange(1, n):
+                for i in range(1, n):
                     for t in partition(n, i):
                         yield (t,) + (0,) * (k - i)
             else:
                 yield tuple()
 
         else:
-            a = [1 for i in xrange(k)]
+            a = [1 for i in range(k)]
             a[0] = n - k + 1
 
             yield tuple(a)
@@ -2526,12 +2513,12 @@ def partition(n, k=None, zeros=False):
                 i = i + 1
 
             if zeros:
-                for m in xrange(1, k):
+                for m in range(1, k):
                     for a in partition(n, m):
                         yield tuple(a) + (0,) * (k - m)
 
     else:
-        a = [0 for i in xrange(n + 1)]
+        a = [0 for i in range(n + 1)]
         l = 1
         y = n - 1
 
@@ -2649,7 +2636,7 @@ def sum_of_three_squares(n):
     if n % 8 == 3:
         l = l if l % 2 else l - 1
 
-        for i in xrange(l, -1, -2):
+        for i in range(l, -1, -2):
             if isprime((n - i**2) // 2):
                 x = i
                 break
@@ -2662,7 +2649,7 @@ def sum_of_three_squares(n):
     else:
         l = l - 1 if l % 2 else l
 
-    for i in xrange(l, -1, -2):
+    for i in range(l, -1, -2):
         if isprime(n - i**2):
             x = i
             break
@@ -2766,7 +2753,7 @@ def power_representation(n, p, k, zeros=False):
                 yield t
 
         if zeros:
-            for i in xrange(2, k):
+            for i in range(2, k):
                 for t in pow_rep_recursive(a, i, n, [], p):
                     yield t + (0,) * (k - i)
 

@@ -7,16 +7,16 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass, ordered
+from sympy.core.compatibility import iterable, with_metaclass, ordered, range
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.sets.contains import Contains
 
-from sympy.mpmath import mpi, mpf
+from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
-from sympy.utilities import default_sort_key, subsets
+from sympy.utilities import subsets
 
 
 class Set(Basic):
@@ -91,6 +91,12 @@ class Set(Basic):
 
         >>> Interval(1, 3).intersect(Interval(1, 2))
         [1, 2]
+
+        >>> from sympy import imageset, Lambda, symbols, S
+        >>> n, m = symbols('n m')
+        >>> a = imageset(Lambda(n, 2*n), S.Integers)
+        >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
+        EmptySet()
 
         """
         return Intersection(self, other)
@@ -205,6 +211,12 @@ class Set(Basic):
 
         elif isinstance(other, FiniteSet):
             return FiniteSet(*[el for el in other if self.contains(el) != True])
+
+    def symmetric_difference(self, other):
+        return SymmetricDifference(self, other)
+
+    def _symmetric_difference(self, other):
+        return Union(Complement(self, other), Complement(other, self))
 
     @property
     def inf(self):
@@ -487,6 +499,9 @@ class Set(Basic):
     def __mul__(self, other):
         return ProductSet(self, other)
 
+    def __xor__(self, other):
+        return SymmetricDifference(self, other)
+
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
@@ -575,7 +590,7 @@ class ProductSet(Set):
         if len(self.args) != len(other.args):
             return false
 
-        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
 
     def _contains(self, element):
         """
@@ -683,6 +698,12 @@ class Interval(Set, EvalfMixin):
     [0, 1]
     >>> Interval(0, 1, False, True)
     [0, 1)
+    >>> Interval.Ropen(0, 1)
+    [0, 1)
+    >>> Interval.Lopen(0, 1)
+    (0, 1]
+    >>> Interval.open(0, 1)
+    (0, 1)
 
     >>> a = Symbol('a', real=True)
     >>> Interval(0, a)
@@ -763,6 +784,21 @@ class Interval(Set, EvalfMixin):
 
     _inf = left = start
 
+    @classmethod
+    def open(cls, a, b):
+        """Return an interval including neither boundary."""
+        return cls(a, b, True, True)
+
+    @classmethod
+    def Lopen(cls, a, b):
+        """Return an interval not including the left boundary."""
+        return cls(a, b, True, False)
+
+    @classmethod
+    def Ropen(cls, a, b):
+        """Return an interval not including the right boundary."""
+        return cls(a, b, False, True)
+
     @property
     def end(self):
         """
@@ -825,6 +861,14 @@ class Interval(Set, EvalfMixin):
         # We only know how to intersect with other intervals
         if not other.is_Interval:
             return None
+
+        # handle (-oo, oo)
+        infty = S.NegativeInfinity, S.Infinity
+        if self == Interval(*infty):
+            l, r = self.left, self.right
+            if l.is_real or l in infty or r.is_real or r in infty:
+                return other
+
         # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
         if not self._is_comparable(other):
             return None
@@ -917,6 +961,10 @@ class Interval(Set, EvalfMixin):
     def _contains(self, other):
         if other.is_real is False:
             return false
+
+        if self.start is S.NegativeInfinity and self.end is S.Infinity:
+            if not other.is_real is None:
+                return other.is_real
 
         if self.left_open:
             expr = other > self.start
@@ -1154,7 +1202,7 @@ class Union(Set, EvalfMixin):
         else:
             return Union(args, evaluate=False)
 
-    def complement(self, universe):
+    def _complement(self, universe):
         # DeMorgan's Law
         return Intersection(s.complement(universe) for s in self.args)
 
@@ -1448,11 +1496,13 @@ class Complement(Set, EvalfMixin):
 
     See Also
     =========
+
     Intersection, Union
 
     References
     ==========
-    http://mathworld.wolfram.com/SetComplement.html
+
+    .. [1] http://mathworld.wolfram.com/ComplementSet.html
     """
 
     is_Complement = True
@@ -1547,6 +1597,12 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _boundary(self):
         return self
 
+    def _complement(self, other):
+        return other
+
+    def _symmetric_difference(self, other):
+        return other
+
 
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
@@ -1579,8 +1635,11 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     def _intersect(self, other):
         return other
 
-    def complement(self, universal_set):
+    def _complement(self, other):
         return S.EmptySet
+
+    def _symmetric_difference(self, other):
+        return other
 
     @property
     def _measure(self):
@@ -1647,7 +1706,7 @@ class FiniteSet(Set, EvalfMixin):
         if len(self) != len(other):
             return false
 
-        return And(*map(lambda x, y: Eq(x, y), self.args, other.args))
+        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
 
     def __iter__(self):
         return iter(self.args)
@@ -1700,6 +1759,7 @@ class FiniteSet(Set, EvalfMixin):
                 other))
 
         return None
+
 
     def _contains(self, other):
         """
@@ -1774,7 +1834,6 @@ class FiniteSet(Set, EvalfMixin):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
         return tuple(ordered(self.args, Set._infimum_key))
 
     def _eval_powerset(self):
@@ -1791,6 +1850,45 @@ class FiniteSet(Set, EvalfMixin):
 
     def __lt__(self, other):
         return self.is_proper_subset(other)
+
+
+class SymmetricDifference(Set):
+    """Represents the set of elements which are in either of the
+    sets and not in their intersection.
+
+    Examples
+    ========
+
+    >>> from sympy import SymmetricDifference, FiniteSet
+    >>> SymmetricDifference(FiniteSet(1, 2, 3), FiniteSet(3, 4, 5))
+    {1, 2, 4, 5}
+
+    See Also
+    ========
+
+    Complement, Union
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Symmetric_difference
+    """
+
+    is_SymmetricDifference = True
+
+    def __new__(cls, a, b, evaluate=True):
+        if evaluate:
+            return SymmetricDifference.reduce(a, b)
+
+        return Basic.__new__(cls, a, b)
+
+    @staticmethod
+    def reduce(A, B):
+        result = B._symmetric_difference(A)
+        if result is not None:
+            return result
+        else:
+            return SymmetricDifference(A, B, evaluate=False)
 
 
 def imageset(*args):

@@ -199,9 +199,7 @@ def test_files():
         "setupegg.py",
     ]]
     # Files to exclude from all tests
-    exclude = set([
-        "%(sep)smpmath%(sep)s" % sepd,
-    ])
+    exclude = set()
     # Files to exclude from the implicit import test
     import_exclude = set([
         # glob imports are allowed in top-level __init__.py:

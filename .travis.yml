@@ -98,7 +98,7 @@ before_install:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
       sudo apt-get update;
       sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick docbook2x;
-      pip install "sphinx==1.1.3";
+      pip install "sphinx==1.3.1";
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
       pip install "numpy==1.7.1";
@@ -117,7 +117,14 @@ before_install:
       sudo apt-get install sagemath-upstream-binary;
     fi
 install:
-  - if [[ "${TEST_SAGE}" != "true" ]]; then
+#The install cycle below is to test installation on systems without setuptools.
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y setuptools;
+      python setup.py install;
+      pip uninstall -y sympy;
+      pip install setuptools;
+      python setup.py install;
+    elif [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
 script:

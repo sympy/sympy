@@ -25,11 +25,11 @@ from sympy.polys.polytools import (
     nth_power_roots_poly,
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
-    _torational_factor_list)
+    _torational_factor_list,
+    to_rational_coeffs)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
-    OperationNotSupported,
     ExactQuotientFailed,
     PolificationFailed,
     ComputationFailed,
@@ -39,7 +39,6 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
     PolynomialError,
     CoercionFailed,
-    NotAlgebraic,
     DomainError,
     OptionError,
     FlagError)
@@ -51,7 +50,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.basic import _aresame
@@ -59,8 +58,8 @@ from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.abc import a, b, c, d, e, p, q, r, s, t, u, v, w, x, y, z
-
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
+from sympy import MatrixSymbol
 
 def _epsilon_eq(a, b):
     for x, y in zip(a, b):
@@ -1281,6 +1280,8 @@ def test_Poly_nth():
 
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
+
+    raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
 
 
 def test_Poly_LM():
@@ -2868,6 +2869,12 @@ def test_cancel():
     assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
     assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
 
+    # issue 9363
+    M = MatrixSymbol('M', 5, 5)
+    assert cancel(M[0,0] + 7) == M[0,0] + 7
+    expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
+    assert cancel(expr) == expr
+
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -3137,3 +3144,8 @@ def test_noncommutative():
     assert cancel(foo(e)) == foo(c)
     assert cancel(e + foo(e)) == c + foo(c)
     assert cancel(e*foo(c)) == c*foo(c)
+
+
+def test_to_rational_coeffs():
+    assert to_rational_coeffs(
+        Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None

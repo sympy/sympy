@@ -81,7 +81,7 @@ def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to
     the value it had before the function was run."""
     import functools
-    from sympy import mpmath
+    import mpmath
 
     def func_wrapper():
         dps = mpmath.mp.dps
@@ -150,15 +150,16 @@ def public(obj):
 
     By using this decorator on functions or classes you achieve the same goal
     as by filling ``__all__`` variables manually, you just don't have to repeat
-    your self (object's name). You also know if object is public at definition
+    yourself (object's name). You also know if object is public at definition
     site, not at some random location (where ``__all__`` was set).
 
-    Note that in multiple decorator setup, in almost all cases, ``@public``
+    Note that in multiple decorator setup (in almost all cases) ``@public``
     decorator must be applied before any other decorators, because it relies
     on the pointer to object's global namespace. If you apply other decorators
-    first, ``@public`` may end up modifying wrong namespace.
+    first, ``@public`` may end up modifying the wrong namespace.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy.utilities.decorator import public
 
@@ -190,3 +191,39 @@ def public(obj):
         ns["__all__"].append(name)
 
     return obj
+
+
+class ClassPropertyDescriptor(object):
+    """
+    Helper class for ``classproperty`` decorator.
+    """
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, obj, klass=None):
+        if klass is None:
+            klass = type(obj)
+
+        return self.fget.__get__(obj, klass)()
+
+
+def classproperty(func):
+    """
+    This decorator can be used to define a property of a class
+    which is intended to be accessed using class and objects both.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.decorator import classproperty
+    >>> class Q(object):
+    ...     @classproperty
+    ...     def a_property(self):
+    ...         return 2
+    >>> Q.a_property
+    2
+    """
+    if not isinstance(func, (classmethod, staticmethod)):
+        func = classmethod(func)
+
+    return ClassPropertyDescriptor(func)

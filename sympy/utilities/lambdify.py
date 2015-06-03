@@ -7,10 +7,9 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
-import warnings
 
 from sympy.external import import_module
-from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
+from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -93,7 +92,7 @@ NUMEXPR_TRANSLATIONS = {}
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
-    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -326,7 +325,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         namespaces.append(modules)
     else:
         # consistency check
-        if 'numexpr' in modules and len(modules) > 1:
+        if _module_present('numexpr', modules) and len(modules) > 1:
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
@@ -343,7 +342,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
-    if 'numexpr' in namespaces and printer is None:
+    if _module_present('numexpr',namespaces) and printer is None:
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumExprPrinter as printer
 
@@ -371,7 +370,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     flat = '__flatten_args__'
 
     if flat in lstr:
-        import itertools
         namespace.update({flat: flatten})
     func = eval(lstr, namespace)
     # Apply the docstring
@@ -407,6 +405,16 @@ def _issue_7853_dep_check(namespaces, namespace, expr):
                 "The old behavior can be retained in future versions by "
                 "supplying `modules=[{'ImmutableMatrix': numpy.matrix}, "
                 "'numpy']`.", issue=7853).warn()
+
+
+def _module_present(modname, modlist):
+    if modname in modlist:
+        return True
+    for m in modlist:
+        if hasattr(m, '__name__') and m.__name__ == modname:
+            return True
+    return False
+
 
 def _get_namespace(m):
     """
@@ -555,7 +563,8 @@ def _imp_namespace(expr, namespace=None):
        function
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
@@ -624,7 +633,8 @@ def implemented_function(symfunc, implementation):
        function with attached implementation
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
