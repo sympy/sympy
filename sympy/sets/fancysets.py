@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy.logic.boolalg import And
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.sets.sets import Set, Interval, Intersection, EmptySet
@@ -443,3 +444,117 @@ class Range(Set):
     @property
     def _boundary(self):
         return self
+
+
+class ComplexPlane(Set):
+    r"""
+    Represents the Set of all Complex Numbers. It can represent a
+    region of Complex Plane in both the standard forms Polar and
+    Rectangular coordinates.
+
+    * Polar Form
+      Input is in the form of the intervals of r and theta, & use
+      the flag polar=True.
+
+    Z = {z in C | z = r*[cos(theta) + I*sin(theta)], r in [r], theta in [theta]}
+
+    * Rectangular Form
+      Input is in the form of the interval of x and iota times the
+      interval of y coordinates of the Complex numbers. Default input
+      type is in rectangular form.
+
+                 z = x + I*y
+
+    Z = {z in C | z = x + I*y, x in [Re(z)], y in [Im(z)]}
+
+    Examples
+    ========
+
+    >>> from sympy.sets.fancysets import ComplexPlane
+    >>> from sympy.sets import Interval
+    >>> from sympy import S, I
+    >>> a = Interval(2, 3)
+    >>> b = Interval(4, 6)
+    >>> c1 = ComplexPlane(a, b)  # Rectangular Form
+    >>> c1
+    ComplexPlane(Lambda((x, y), x + I*y), [2, 3] x [4, 6])
+
+    * c1 represents the rectangular region in complex plane
+      surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
+      (2, 6), of the four vertices.
+
+    >>> 2.5 + 4.5*I in c1
+    True
+    >>> 2.5 + 6.5*I in c1
+    False
+
+    >>> r = Interval(0, 1)
+    >>> theta = Interval(0, 2*S.Pi)
+    >>> c2 = ComplexPlane(r, theta, polar=True)  # Polar Form
+    >>> c2  # unit Disk
+    ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))),
+                 [0, 1] x [0, 2*pi])
+
+    * c2 represents the region in complex plane inside the
+      Unit Disk centered at the origin.
+
+    >>> 0.5 + 0.5*I in c2
+    True
+    >>> 1 + 2*I in c2
+    False
+
+    >>> unit_disk = ComplexPlane(Interval(0, 1), Interval(0, 2*S.Pi), polar=True)
+    >>> upper_half_unit_disk = ComplexPlane(Interval(0, 1), Interval(0, S.Pi), polar=True)
+    >>> intersection = unit_disk.intersect(upper_half_unit_disk)
+    >>> intersection
+    ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))), [0, 1] x [0, pi])
+    >>> intersection == upper_half_unit_disk
+    True
+
+    See Also
+    ========
+
+    Reals
+
+    """
+    is_ComplexPlane = True
+
+    def __new__(cls, a_interval, b_interval, polar=False):
+        from sympy import symbols
+
+        x, y, r, theta = symbols('x, y, r, theta')
+        I = S.ImaginaryUnit
+
+        # Rectangular Form
+        if polar is False:
+            obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y),
+                                   a_interval*b_interval)
+
+        # Polar Form
+        elif polar is True:
+            from sympy import cos, sin
+            obj = ImageSet.__new__(cls, Lambda((r, theta),
+                                   r*(cos(theta) + I*sin(theta))),
+                                   a_interval*b_interval)
+
+        obj.a_interval = a_interval
+        obj.b_interval = b_interval
+        obj.polar = polar
+        return obj
+
+    def _contains(self, other):
+        from sympy.functions import arg, Abs
+        a, b = self.a_interval, self.b_interval
+
+        # self in rectangular form
+        if self.polar is False:
+            r, i = other.as_real_imag()
+            return And(a._contains(r), b._contains(i))
+
+        # self in polar form
+        elif self.polar:
+            if S(other).is_zero:
+                r, theta = S(0), S(0)
+            else:
+                r, theta = Abs(other), arg(other)
+            return And(a._contains(r), b._contains(theta))

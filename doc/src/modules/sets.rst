@@ -86,3 +86,8 @@ Range
 ^^^^^
 .. autoclass:: Range
    :members:
+
+ComplexPlane
+^^^^^^^^^^^^
+.. autoclass:: ComplexPlane
+   :members:

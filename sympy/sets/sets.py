@@ -42,6 +42,7 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
+    is_ComplexPlane = False
 
     @staticmethod
     def _infimum_key(expr):

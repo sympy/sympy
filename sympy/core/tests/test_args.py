@@ -535,6 +535,17 @@ def test_sympy__sets__fancysets__Reals():
     assert _test_args(Reals())
 
 
+def test_sympy__sets__fancysets__ComplexPlane():
+    from sympy.sets.fancysets import ComplexPlane
+    from sympy import S
+    from sympy.sets import Interval
+    a = Interval(0, 1)
+    b = Interval(2, 3)
+    theta = Interval(0, 2*S.Pi)
+    assert _test_args(ComplexPlane(a, b))
+    assert _test_args(ComplexPlane(a, theta, polar=True))
+
+
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet
     from sympy import S, Symbol
