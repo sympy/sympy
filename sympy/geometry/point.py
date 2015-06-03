@@ -190,19 +190,10 @@ class Point(GeometryEntity):
         """Returns whether `p1` and `p2` are scalar multiples
         of eachother.
         """
-        # check to see if p1 and p2 are scalar
-        # multiples of each other by taking a
-        # bunch of 2x2 determinants.  The
-        # points are multiples of each other
-        # iff they all = 0
-        for i in range(len(p1)-1):
-            a = p1.args[i]
-            b = p1.args[i+1]
-            c = p2.args[i]
-            d = p2.args[i+1]
-            if simplify(a*d-b*c) != S.Zero:
-                return False
-        return True
+        # if the vectors p1 and p2 are linearly dependent, then they must
+        # be scalar multiples of eachother
+        m = Matrix([p1.args, p2.args])
+        return m.rank() < 2
 
     @property
     def length(self):
