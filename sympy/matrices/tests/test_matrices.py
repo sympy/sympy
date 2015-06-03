@@ -2469,6 +2469,7 @@ def test_doit():
     assert a.doit() == Matrix([[2*x]])
 
 def test_issue_9457():
+    # for row_del(index)
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     M.row_del(10)
     assert M == Matrix([[1, 2, 3], [2, 3, 4]])
@@ -2481,3 +2482,17 @@ def test_issue_9457():
     Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     Q.row_del(-10)
     assert Q == Matrix([[2, 3, 4], [3, 4, 5]])
+
+    # for col_del(index)
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_del(10)
+    assert M == Matrix([[1, 2], [2, 3], [3, 4]])
+    N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    N.col_del(1)
+    assert N == Matrix([[1, 3], [2, 4], [3, 5]])
+    P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    P.col_del(-2)
+    assert P == Matrix([[1, 3], [2, 4], [3, 5]])
+    Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    Q.col_del(-10)
+    assert Q == Matrix([[2, 3], [3, 4], [4, 5]])
