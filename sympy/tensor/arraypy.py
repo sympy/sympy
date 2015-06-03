@@ -3,8 +3,7 @@
 from sympy import Symbol
 from sympy.matrices import Matrix, MatrixSymbol
 from copy import copy
-from itertools import permutations
-from sympy.core.basic import Basic
+from sympy import sympify
 
 """
 Module "arraypy" describes tensor and it's bases - Multidimentional arrays.
@@ -13,7 +12,7 @@ list2arraypy, matrix2arraypy, list2tensor, matrix2tensor.
 """
 
 
-class Arraypy(Basic):
+class Arraypy(object):
 
     """
     N-dimentional array.
@@ -409,6 +408,8 @@ class Arraypy(Basic):
             if index[i] >= self._end_index[
                     i] or index[i] < self._start_index[i]:
                 raise ValueError('Value ' + str(i) + ' out of border')
+            
+        value = sympify(value)
 
         # setting element. If array is sparse, index in dictionary and value is
         # 0 then poping it from dictionary
