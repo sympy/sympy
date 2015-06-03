@@ -22,9 +22,9 @@ def symmetric(in_arr):
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = symmetric(a)
     >>> print (b)
-    0  2.00000000000000  4.00000000000000
-    2.00000000000000  4.00000000000000  6.00000000000000
-    4.00000000000000  6.00000000000000  8.00000000000000
+    0  2  4  
+    2  4  6  
+    4  6  8  
     """
     if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or TensorArray type')
@@ -52,8 +52,8 @@ def symmetric(in_arr):
         perm = list(permutations(index))
         for temp_index in perm:
             res_arr[tuple(index)] += in_arr[tuple(temp_index)]
-        if isinstance(res_arr[tuple(index)], int):
-            res_arr[tuple(index)] = float(res_arr[tuple(index)])
+        #if isinstance(res_arr[tuple(index)], int):
+        #    res_arr[tuple(index)] = float(res_arr[tuple(index)])
         res_arr[tuple(index)] /= factorial(in_arr.rank)
 
         index = in_arr.next_index(index)
@@ -75,9 +75,9 @@ def asymmetric(in_arr):
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = asymmetric(a)
     >>> print (b)
-    0  -1.00000000000000  -2.00000000000000
-    1.00000000000000  0  -1.00000000000000
-    2.00000000000000  1.00000000000000  0
+    0  -1  -2  
+    1  0  -1  
+    2  1  0 
     """
     if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or TensorArray type')
@@ -114,8 +114,8 @@ def asymmetric(in_arr):
             res_arr[tuple(index)] += signs[perm_number] * \
                 in_arr[tuple(temp_index)]
             perm_number += 1
-        if isinstance(res_arr[tuple(index)], int):
-            res_arr[tuple(index)] = float(res_arr[tuple(index)])
+        #if isinstance(res_arr[tuple(index)], int):
+        #    res_arr[tuple(index)] = float(res_arr[tuple(index)])
         res_arr[tuple(index)] /= factorial(in_arr.rank)
 
         index = in_arr.next_index(index)
