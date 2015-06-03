@@ -514,91 +514,6 @@ def mul_xin(p, i, n):
         q[tuple(k1)] = v
     return q
 
-#TODO Needs to be fixed
-"""
-def nth_root(p, n, iv, prec):
-    
-    Multivariate series of nth root of p
-    Computes p**(1/n)
-
-    n: Integer
-    iv: List of variable names or variable indices
-    prec: List of truncations for these variables
-
-    In the case of one variable it can also be used as:
-
-    iv: Variable name or variable index (0)
-    prec: Truncation value for the variable
-
-    p is a series with O(x_1**n_1*..x_m**n_m) in
-    variables x_k with index or name iv[k - 1]
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x, y = lgens('x, y', QQ)
-    >>> (1 + x + x*y).nth_root(-3, x, 3)
-    2/9*x**2*y**2 + 4/9*x**2*y + 2/9*x**2 - 1/3*x*y - 1/3*x + 1
-   
-    if n == 0:
-        if p == 0:
-            raise ValueError('0**0 expression')
-        else:
-            return p.ring(1)
-    if n == 1:
-        return rs_trunc(p, iv, prec)
-    ring = p.ring
-    ii = ring.gens.index(iv)
-    m = min(p, key=lambda k: k[ii])[ii]
-    try:
-        mq, mr = divmod(m, n)
-    except TypeError:
-        if not gmpy_mode:
-            raise ValueError
-    if mr:
-        raise TaylorEvalError('Not analytic in the series variable')
-    p = mul_xin(p, ii, -m)
-    prec -= mq
-    if _has_constant_term(p-1, iv):
-        if ring.zero_monom in p:
-            c = p[ring.zero_monom]
-    #####
-            if isinstance(c, PythonRationalType):
-                c1 = Rational(c.p, c.q)
-                cn = Pow(c1, S.One/n)
-            else:
-                cn = Pow(c, S.One/n)
-            if cn.is_Rational:
-                if not lp.SR:
-                    cn = lp.ring(cn.p, cn.q)
-                res = cn*(p/c).nth_root(n, iv, prec)
-                if mq:
-                    res = res.mul_xin(iv, mq)
-                return res
-        if not lp.SR:
-            raise TaylorEvalError('p - 1 must not have a constant term in the series variables')
-        else:
-            if lp.zero_mon in p:
-                c = p[lp.zero_mon]
-                if c.is_positive:
-                    res = (p/c).nth_root(n, iv, prec)*c**Rational(1, n)
-                    if mq:
-                        res = res.mul_xin(iv, mq)
-                    return res
-                else:
-                    raise NotImplementedError
-    if lp.commuting and lp.ngens == 1:
-        res = p._nth_root1(n, iv, prec)
-    else:
-        res = p.fun('_nth_root1', n, iv, prec)
-    if mq:
-        res = res.mul_xin(ii, mq)
-    return res
-#######
-"""
-
 def rs_log(p, x, prec):
     """
     logarithm of ``p`` modulo ``O(x**prec)``
@@ -629,8 +544,8 @@ def rs_log(p, x, prec):
 
 def rs_LambertW(p, iv, prec):
     """
-    Calculates the series expansion of principal branch of the Lambert W function. For further
-    imformation, refer to the doc of LambertW function.
+    Calculates the series expansion of principal branch of the Lambert W
+    function. For further imformation, refer to the doc of LambertW function.
 
     Examples
     ========
@@ -702,46 +617,6 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
-#TODO
-#Ucomment after fixing nth_root
-"""
-def asin(p, iv, prec):
-    
-    arcsine of a series
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_asin
-    >>> R, x = ring('x', QQ)
-    >>> rs_asin(x, x, 8)
-    5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x
-    
-    if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
-    ring = p.ring
-    if iv in ring.gens:
-        # get a good value
-        if len(p) > 20:
-            dp = p.diff(iv)
-            p1 = 1 - rs_square(p, iv, prec - 1)
-           ##### p1 = p1.nth_root(-2, iv, prec - 1)
-            p1 = rs_mul(dp, p1, iv, prec - 1)
-            return rs_integrate(p1, iv)
-        one = ring(1)
-        c = [0, one, 0]
-        for k in range(3, prec, 2):
-            c.append((k - 2)**2*c[-2]/(k*(k - 1)))
-            c.append(0)
-        return rs_series_from_list(p, c, iv, prec)
-
-    else:
-        raise NotImplementedError
-
-"""
 def _atan_series(p, iv, prec):
     ring = p.ring
     mo = ring(-1)
@@ -900,41 +775,11 @@ def rs_cos_sin(p, iv, prec):
     return (rs_mul(p1, 1 - t2, iv, prec), rs_mul(p1, 2*t, iv, prec))
 
 def check_series_var(p, iv):
-    # TODO 
+    # TODO
     #Double check whether an error needs to be raised
     ii = p.ring.gens.index(iv)
     m = min(p, key=lambda k: k[ii])[ii]
     return ii, m
-
-def rs_cot(p, iv, prec):
-    """
-    cotangent of a series
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_cot
-    >>> R, x = ring('x', QQ)
-    >>> rs_cot(x, x, 6)
-    -2/945*x**5 - 1/45*x**3 - 1/3*x + x**-1
-    """
-
-    # i, m = p.check_series_var(iv, PoleError, 'cot')
-    # TODO Raising error Probably not needed
-    # TODO Error in series_inversion in multivariate case
-    i, m = check_series_var(p, iv)
-    # see _taylor_term1 comment  sin(x**m) = x**pw*sin(x**m)/x**n0
-    # prec1 = prec + pw + n0, with pw = n0 = m
-    prec1 = prec + 2*m
-    c, s = rs_cos_sin(p, iv, prec1)
-    s = mul_xin(s, i, -1)
-    s = rs_series_inversion(s, iv, prec1)
-    res = rs_mul(c, s, iv, prec1)
-    res = mul_xin(res, i, -1)
-    res = rs_trunc(res, iv, prec)
-    return res
 
 def _atanh(p, iv, prec):
     ring = p.ring

@@ -156,7 +156,6 @@ def test_exp():
     p1 = rs_exp(p, x, prec)
     assert p1 == x + 1
 
-
 def test_newton():
     R, x = ring('x', QQ)
     p = x**2 - 2
@@ -200,11 +199,6 @@ def test_sin():
         + 1/24*x**6*y**7 - 1/2*x**5*y**7 + 1/120*x**5*y**5 - 1/2*x**4*y**5 \
         - 1/6*x**3*y**3 + x**2*y**3 + x*y
 
-#TODO
-#def test_nth_root()
-#def test_LambertW():
-#def test_asin():
-
 def test_cos():
     R, x, y = ring('x, y', QQ)
     assert rs_cos(x, x, 9) == \
@@ -222,14 +216,6 @@ def test_cos_sin():
     cos, sin = rs_cos_sin(x + x*y, x, 5)
     assert cos == rs_cos(x + x*y, x, 5)
     assert sin == rs_sin(x + x*y, x, 5)
-
-#def test_cot():
-#    R, x, y = ring('x, y', QQ)
-#    assert rs_cot(x, x, 9) == -1/4725*x**7 - 2/945*x**5 - 1/45*x**3 - \
-#        1/3*x + x**-1
-   #TODO
-   # Add test  for multivariate expansion
-   # Output is a laurent series. Make appropriate changes
 
 def test_atanh():
     R, x, y = ring('x, y', QQ)
