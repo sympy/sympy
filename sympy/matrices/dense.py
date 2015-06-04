@@ -880,7 +880,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row
         col_del
         """
-        self._mat = self._mat[:i*self.cols] + self._mat[(i + 1)*self.cols:]
+        if i >= -self.rows and i < self.rows:
+            del self._mat[i*self.cols:(i+1)*self.cols]
+        else:
+            raise ValueError("Row value out of range")
         self.rows -= 1
 
     def col_del(self, i):
@@ -904,8 +907,11 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col
         row_del
         """
-        for j in range(self.rows - 1, -1, -1):
-            del self._mat[i + j*self.cols]
+        if i >= -self.cols and i < self.cols:
+            for j in range(self.rows - 1, -1, -1):
+                del self._mat[i + j*self.cols]
+        else:
+            raise ValueError("Column value out of range")
         self.cols -= 1
 
     # Utility functions
