@@ -4,12 +4,13 @@ from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
+from sympy.core import S
 from mpmath.libmp.libintmath import giant_steps
 import math
 
 def _invert_monoms(p1):
     """
-    Compute ``x**n * p1(1/x)`` for ``p1`` univariate polynomial.
+    Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in x.
 
     Examples
     ========
@@ -24,6 +25,7 @@ def _invert_monoms(p1):
 
     See Also
     ========
+
     sympy.polys.densebasic.dup_reverse
 
     """
@@ -40,7 +42,7 @@ def _invert_monoms(p1):
 
 def _giant_steps(target):
     """
-    list of precision steps for the Newton's method
+    Return a list of precision steps for the Newton's method
 
     """
     res = giant_steps(2, target)
@@ -51,7 +53,7 @@ def _giant_steps(target):
 def rs_trunc(p1, x, prec):
     """
     Truncate the series in the ``x`` variable with precision ``prec``,
-    that is modulo ``O(x**prec)``
+    that is, modulo ``O(x**prec)``
 
     Examples
     ========
@@ -66,7 +68,6 @@ def rs_trunc(p1, x, prec):
     >>> rs_trunc(p, x, 10)
     x**5 + x + 1
     """
-
     ring = p1.ring
     p = ring.zero
     i = ring.gens.index(x)
@@ -78,7 +79,7 @@ def rs_trunc(p1, x, prec):
 
 def rs_mul(p1, p2, x, prec):
     """
-    Product of the given two series, modulo ``O(x**prec)``
+    Return the product of the given two series, modulo ``O(x**prec)``
 
     ``x`` is the series variable or its position in the generators.
 
@@ -94,7 +95,6 @@ def rs_mul(p1, p2, x, prec):
     >>> rs_mul(p1, p2, x, 3)
     3*x**2 + 3*x + 1
     """
-
     ring = p1.ring
     p = ring.zero
     if ring.__class__ != p2.ring.__class__ or ring != p2.ring:
@@ -130,7 +130,7 @@ def rs_mul(p1, p2, x, prec):
 
 def rs_square(p1, x, prec):
     """
-    square modulo ``O(x**prec)``
+    Square the series modulo ``O(x**prec)``
 
     Examples
     ========
@@ -243,7 +243,7 @@ def _has_constant_term(p, x):
 
 def _series_inversion1(p, x, prec):
     """
-    univariate series inversion ``1/p`` modulo ``O(x**prec)``
+    Univariate series inversion ``1/p`` modulo ``O(x**prec)``
 
     The Newton method is used.
 
@@ -278,7 +278,7 @@ def _series_inversion1(p, x, prec):
 
 def rs_series_inversion(p, x, prec):
     """
-    multivariate series inversion ``1/p`` modulo ``O(x**prec)``
+    Multivariate series inversion ``1/p`` modulo ``O(x**prec)``
 
     Examples
     ========
@@ -306,11 +306,11 @@ def rs_series_inversion(p, x, prec):
 
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
-    series ``sum c[n]*p**n`` modulo ``O(x**prec)``
+    Return a series ``sum c[n]*p**n`` modulo ``O(x**prec)``
 
-    reduce the number of multiplication summing concurrently
+    It reduces the number of multiplications by summing concurrently
     ``ax = [1, p, p**2, .., p**(J - 1)]``
-    ``s = sum(c[i]*ax[i] for i in range(r, (r + 1)*J))*p**((K - 1)*J)``
+    ``s = sum(c[i]*ax[i] for i in range(r, (r + 1)*J)) * p**((K - 1)*J)``
     with ``K >= (n + 1)/J``
 
     Examples
@@ -332,10 +332,10 @@ def rs_series_from_list(p, c, x, prec, concur=1):
 
     See Also
     ========
+
     sympy.polys.ring.compose
 
     """
-
     ring = p.ring
     n = len(c)
     if not concur:
@@ -391,9 +391,9 @@ def rs_series_from_list(p, c, x, prec, concur=1):
 
 def rs_diff(p, x):
     """
-    Computes partial derivative of p with respect to n
+    Computes partial derivative of p with respect to x
 
-      `n`: variable with respect to which p is differentiated,
+      `x`: variable with respect to which p is differentiated,
 
     Examples
     ========
@@ -418,9 +418,9 @@ def rs_diff(p, x):
             p1[e] = p[expv]*expv[n]
     return p1
 
-def rs_integrate(self, x):
+def rs_integrate(p, x):
     """
-    integrate ``p`` with respect to ``x``
+    Integrate ``p`` with respect to ``x``
 
     Examples
     ========
@@ -433,16 +433,16 @@ def rs_integrate(self, x):
     >>> rs_integrate(p, x)
     1/3*x**3*y**3 + 1/2*x**2
     """
-    ring = self.ring
+    ring = p.ring
     p1 = ring.zero
     n = ring.gens.index(x)
     mn = [0]*ring.ngens
     mn[n] = 1
     mn = tuple(mn)
 
-    for expv in self:
+    for expv in p:
         e = monomial_mul(expv, mn)
-        p1[e] = self[expv]/(expv[n] + 1)
+        p1[e] = p[expv]/(expv[n] + 1)
     return p1
 
 def fun(p, f, *args):
@@ -458,7 +458,7 @@ def fun(p, f, *args):
     The case with f method name is used to compute tan and nth_root
     of a multivariate series:
 
-      fun(p, tan, iv, prec):
+      fun(p, tan, iv, prec)
       tan series is first computed for a dummy variable _x, ie, tan(_x, iv, prec)
       Then we substitute _x with p to get the desired series
 
@@ -472,6 +472,7 @@ def fun(p, f, *args):
     >>> p = x + x*y + x**2*y + x**3*y**2
     >>> fun(p, _tan1, x, 4)
     1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
+
     """
     _ring = p.ring
     ring1, _x = ring('_x', _ring)
@@ -502,9 +503,8 @@ def mul_xin(p, i, n):
     """
     Computes p*x_i**n
 
-    x_i is the ith variable
+    x_i is the ith variable in p
     """
-
     n = as_int(n)
     ring = p.ring
     q = ring(0)
@@ -516,7 +516,7 @@ def mul_xin(p, i, n):
 
 def rs_log(p, x, prec):
     """
-    logarithm of ``p`` modulo ``O(x**prec)``
+    The Logarithm of ``p`` modulo ``O(x**prec)``
 
     Notes
     =====
@@ -544,8 +544,8 @@ def rs_log(p, x, prec):
 
 def rs_LambertW(p, iv, prec):
     """
-    Calculates the series expansion of principal branch of the Lambert W
-    function. For further imformation, refer to the doc of LambertW function.
+    Calculates the series expansion of the principal branch of the Lambert W
+    function.
 
     Examples
     ========
@@ -556,6 +556,11 @@ def rs_LambertW(p, iv, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_LambertW(x, x, 8)
     16807/720*x**7 - 54/5*x**6 + 125/24*x**5 - 8/3*x**4 + 3/2*x**3 - x**2 + x
+
+    See Also
+    ========
+
+    LambertW
     """
     ring = p.ring
     p1 = ring(0)
@@ -576,7 +581,7 @@ def rs_LambertW(p, iv, prec):
 
 def _exp1(p, x, prec):
     """
-    helper function for ``rs_exp``
+    Helper function for ``rs_exp``
     """
     ring = p.ring
     p1 = ring(1)
@@ -588,7 +593,7 @@ def _exp1(p, x, prec):
 
 def rs_exp(p, x, prec):
     """
-    exponentiation of a series modulo ``O(x**prec)``
+    Exponentiation of a series modulo ``O(x**prec)``
 
     Examples
     ========
@@ -630,7 +635,9 @@ def _atan_series(p, iv, prec):
 
 def rs_atan(p, x, prec):
     """
-    arctangent of a series
+    The arctangent of a series
+
+    Returns the series expansion of the atan of p, about 0.
 
     Examples
     ========
@@ -641,11 +648,20 @@ def rs_atan(p, x, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_atan(x, x, 8)
     -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x
+
+    See Also
+    ========
+
+    atan
     """
     if _has_constant_term(p, x):
         raise NotImplementedError('Polynomial must not have constant term in \
               the series variables')
     ring = p.ring
+
+    # Instead of using a closed form formula, we differentiate atan(p) to get
+    # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
+    # Finally we integrate to get back atan
     if x in ring.gens:
         dp = p.diff(x)
         p1 = rs_square(p, x, prec) + ring(1)
@@ -659,7 +675,6 @@ def _tan1(p, x, prec):
     """
     Helper function of ``rs_tan``
     """
-
     ring = p.ring
     p1 = ring(0)
     for precx in _giant_steps(prec):
@@ -672,6 +687,8 @@ def rs_tan(p, x, prec):
     """
     Tangent of a series
 
+    Returns the series expansion of the tan of p, about 0.
+
     Examples
     ========
 
@@ -681,7 +698,12 @@ def rs_tan(p, x, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_tan(x, x, 8)
     17/315*x**7 + 2/15*x**5 + 1/3*x**3 + x
-    """
+
+   See Also
+   ========
+
+   tan
+   """
     ring = p.ring
     if _has_constant_term(p, x):
         raise NotImplementedError('Polynomial must not have constant term in \
@@ -692,7 +714,9 @@ def rs_tan(p, x, prec):
 
 def rs_sin(p, x, prec):
     """
-    sine of a series
+    Sine of a series
+
+    Returns the series expansion of the sin of p, about 0.
 
     Examples
     ========
@@ -703,13 +727,19 @@ def rs_sin(p, x, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_sin(x, x, 6)
     1/120*x**5 - 1/6*x**3 + x
+
+    See Also
+    ========
+
+    sin
     """
     ring = x.ring
     if not p:
         return ring(0)
+    # Support for constant term can be extended on the lines of rs_cos
     if _has_constant_term(p, x):
         raise NotImplementedError
-    # get a good value
+    # Series is calcualed in terms of tan as its evaluation is fast.
     if len(p) > 20 and p.ngens == 1:
         t = rs_tan(p/2, x, prec)
         t2 = rs_square(t, x, prec)
@@ -726,7 +756,9 @@ def rs_sin(p, x, prec):
 
 def rs_cos(p, iv, prec):
     """
-    cosine of a series
+    Cosine of a series
+
+    Returns the series expansion of the cos of p, about 0.
 
     Examples
     ========
@@ -737,19 +769,26 @@ def rs_cos(p, iv, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_cos(x, x, 6)
     1/24*x**4 - 1/2*x**2 + 1
+
+    See Also
+    ========
+
+    cos
     """
     ring = p.ring
     if _has_constant_term(p, iv):
         zm = ring.zero_monom
-        #if not lp.SR:    Needs to be checked
-        #    raise TaylorEvalError
-        c = p[zm]
+        c = S(p[zm])
         if not c.is_real:
             raise NotImplementedError
         p1 = p - c
-        return sympy.functions.cos(c)*p1.cos(iv, prec) - \
-                sympy.functions.sin(c)*p1.sin(iv, prec)
-    # get a good value
+
+    # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
+    # of the constant term. Should it be left unevaluated?
+        from sympy.functions import cos, sin
+        return cos(c)*rs_cos(p1, iv, prec) -  sin(c)*rs_sin(p1, iv, prec)
+
+    # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and ring.ngens == 1:
         t = rs_tan(p/2, iv, prec)
         t2 = rs_square(t, iv, prec)
@@ -775,8 +814,6 @@ def rs_cos_sin(p, iv, prec):
     return (rs_mul(p1, 1 - t2, iv, prec), rs_mul(p1, 2*t, iv, prec))
 
 def check_series_var(p, iv):
-    # TODO
-    #Double check whether an error needs to be raised
     ii = p.ring.gens.index(iv)
     m = min(p, key=lambda k: k[ii])[ii]
     return ii, m
@@ -796,6 +833,8 @@ def rs_atanh(p, iv, prec):
     """
     Hyperbolic arctangent of a series
 
+    Returns the series expansion of the atanh of p, about 0.
+
     Examples
     ========
 
@@ -805,11 +844,20 @@ def rs_atanh(p, iv, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_atanh(x, x, 8)
     1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
+
+    See Also
+    ========
+
+    atanh
     """
     if _has_constant_term(p, iv):
         raise NotImplementedError('Polynomial must not have constant term in \
               the series variables')
     ring = p.ring
+
+    # Instead of using a closed form formula, we differentiate atanh(p) to get
+    # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
+    # Finally we integrate to get back atanh
     if iv in ring.gens:
         dp = rs_diff(p, iv)
         p1 = - rs_square(p, iv, prec) + 1
@@ -823,6 +871,8 @@ def rs_sinh(p, iv, prec):
     """
     Hyperbolic sine of a series
 
+    Returns the series expansion of the sinh of p, about 0.
+
     Examples
     ========
 
@@ -832,8 +882,13 @@ def rs_sinh(p, iv, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_sinh(x, x, 8)
     1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
+
+    See Also
+    ========
+
+    sinh
     """
-    #self.check_series_var(iv, NotImplementedError, 'sinh')
+    # Check for negative exponent
     t = rs_exp(p, iv, prec)
     t1 = rs_series_inversion(t, iv, prec)
     return (t - t1)/2
@@ -841,6 +896,8 @@ def rs_sinh(p, iv, prec):
 def rs_cosh(p, iv, prec):
     """
     Hyperbolic cosine of a series
+
+    Returns the series expansion of the cosh of p, about 0.
 
     Examples
     ========
@@ -851,8 +908,13 @@ def rs_cosh(p, iv, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_cosh(x, x, 8)
     1/720*x**6 + 1/24*x**4 + 1/2*x**2 + 1
+
+    See Also
+    ========
+
+    cosh
     """
-    #p.check_series_var(iv, NotImplementedError, 'cosh')
+    # Check for negative exponent
     t = rs_exp(p, iv, prec)
     t1 = rs_series_inversion(t, iv, prec)
     return (t + t1)/2
@@ -870,6 +932,8 @@ def rs_tanh(p, iv, prec):
     """
     Hyperbolic tangent of a series
 
+    Returns the series expansion of the tanh of p, about 0.
+
     Examples
     ========
 
@@ -879,6 +943,11 @@ def rs_tanh(p, iv, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_tanh(x, x, 8)
     -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
+
+    See Also
+    ========
+
+    tanh
     """
     ring = p.ring
     if _has_constant_term(p, iv):
@@ -912,7 +981,7 @@ def rs_newton(p, x, prec):
 
 def rs_hadamard_exp(p1, inverse=False):
     """
-    return ``sum f_i/i!*x**i`` from ``sum f_i*x**i``,
+    Return ``sum f_i/i!*x**i`` from ``sum f_i*x**i``,
     where ``x`` is the first variable.
 
     If ``invers=True`` return ``sum f_i*i!*x**i``
