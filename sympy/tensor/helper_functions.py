@@ -6,6 +6,10 @@ from sympy.matrices import Matrix
 
 
 def check_vector_of_arguments(args):
+    """The function contains checks for a one-dimensional list of arguments
+
+    """
+
     if not isinstance(args, (list, TensorArray, Arraypy)):
         raise TypeError(
             "The type of vector of arguments must be list, TensorArray or \
@@ -20,6 +24,8 @@ def check_vector_of_arguments(args):
 
 
 def check_metric_tensor(g):
+    """The function contains checks for a metric tensor."""
+
     if not isinstance(g, (TensorArray, Matrix, Arraypy)):
         raise ValueError(
             "Type of metric tensor must be Matrix, TensorArray or Arraypy")
@@ -35,6 +41,8 @@ def check_metric_tensor(g):
 
 
 def check_the_vector_field(X):
+    """The function contains checks for a vector field."""
+
     if not isinstance(X, (list, TensorArray, Arraypy)):
         raise ValueError(
             "The type of vector field must be list, TensorArray or Arraypy")
