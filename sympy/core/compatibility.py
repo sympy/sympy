@@ -73,8 +73,10 @@ if PY3:
     # String / unicode compatibility
     unicode = str
     unichr = chr
+
     def u(x):
         return x
+
     def u_decode(x):
         return x
 
@@ -137,6 +139,7 @@ else:
         exec("exec _code_ in _globs_, _locs_")
     range=xrange
 
+
 def with_metaclass(meta, *bases):
     """
     Create a base class with a metaclass.
@@ -194,6 +197,7 @@ class NotIterable:
     when calling e.g. list() on the instance
     """
     pass
+
 
 def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
@@ -690,6 +694,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 # Minimum version of gmpy changed to 1.13 to allow a single code base to also
 # work with gmpy2.
 
+
 def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
@@ -742,6 +747,7 @@ try:
         from subprocess import check_output
     except ImportError: # <= Python 2.6
         from subprocess import CalledProcessError, check_call
+
         def check_output(*args, **kwargs):
             with open(os.devnull, 'w') as fh:
                 kwargs['stdout'] = fh
@@ -764,6 +770,7 @@ from threading import RLock
 
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 
+
 class _HashedSeq(list):
     __slots__ = 'hashvalue'
 
@@ -773,6 +780,7 @@ class _HashedSeq(list):
 
     def __hash__(self):
         return self.hashvalue
+
 
 def _make_key(args, kwds, typed,
              kwd_mark = (object(),),
@@ -792,6 +800,7 @@ def _make_key(args, kwds, typed,
     elif len(key) == 1 and type(key[0]) in fasttypes:
         return key[0]
     return _HashedSeq(key)
+
 
 def lru_cache(maxsize=100, typed=False):
     """Least-recently-used cache decorator.
@@ -926,7 +935,7 @@ def lru_cache(maxsize=100, typed=False):
         return update_wrapper(wrapper, user_function)
 
     return decorating_function
-### End of backported lru_cache
+# End of backported lru_cache
 
 if sys.version_info[:2] >= (3, 3):
     # 3.2 has an lru_cache with an incompatible API
