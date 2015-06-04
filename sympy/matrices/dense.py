@@ -881,7 +881,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col_del
         """
         if i >= -self.rows and i < self.rows:
-            del self._mat[i*self.cols:(i+1)*self.cols]
+            del self._mat[i*self.cols:(i + 1)*self.cols]
         else:
             raise ValueError("Row value out of range")
         self.rows -= 1
