@@ -218,7 +218,7 @@ class Point(GeometryEntity):
 
     @property
     def is_zero(self):
-        """Is every one of the points coordinates zero?"""
+        """True if every coordinate is zero, otherwise False."""
         return all(x == S.Zero for x in self.args)
 
     @property
