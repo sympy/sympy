@@ -13,7 +13,8 @@ from .helper_functions import check_vector_of_arguments, check_metric_tensor, \
     check_the_vector_field, sign_permutations, delete_index_from_list, \
     replace_index_to_k
 from .riemannian_geometry import scal_prod, christoffel_1, christoffel_2,\
-    covar_der, covar_der_XY, riemann, ricci, scal_curv, k_sigma
+    covar_der, covar_der_xy, riemann, ricci, scal_curv, k_sigma, nabla,\
+    nabla_x, delta, riemann_li, k_sigma_li
 from .tensor_methods import symmetric, asymmetric, tensor_product, wedge,\
     perm_parity, change_basis, lower_index, raise_index, is_symmetric,\
     is_asymmetric
