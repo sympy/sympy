@@ -3,7 +3,7 @@
 from sympy.matrices import Matrix
 from sympy.tensor.arraypy import Arraypy, TensorArray, list2arraypy, list2tensor
 from sympy.tensor.tensor_fields import df, grad, curl, diverg, lie_xy, dw, \
-    lie_w
+    lie_w, inner_product, g_tensor, g_wedge
 from sympy import symbols, cos, sin
 
 
@@ -464,6 +464,24 @@ def test_lie_w():
     assert lie_w(omega, X, [x1, x2, x3]).type_pq == (0, 2)
 
 
+def test_g_tensor():
+    x, y, z, w = symbols('x, y, z, w')
+    omega=Arraypy([2,3,0]).to_tensor((-1,1))
+    omega[0,0]=w
+    omega[0,1]=x
+    omega[1,0]=y
+    omega[1,1]=z
+    omega[2,1]=y*y
+    omega[2,2]=x*y*w
+    g = Matrix([[2,1,0],[1,3,0],[0,0,1]]) 
+    s=w**2*x**2*y**2 + 3*y**4 +\
+                            (-w/5 + 2*y/5)*(2*y + z) +\
+                            (3*w/5 - y/5)*(2*w + x) + (w + 3*x)*\
+                            (3*x/5 - z/5) + (-x/5 + 2*z/5)*\
+                            (y + 3*z)    
+  
+    assert g_tensor(omega,omega,g)==s
+    
 def test_dw():
     x1, x2, x3 = symbols('x1 x2 x3')
 
@@ -486,4 +504,49 @@ def test_dw():
 
     assert dw(y, [x1, x2, x3]) == y1
     assert isinstance(dw(y, [x1, x2, x3]), TensorArray)
-    assert dw(y, [x1, x2, x3]).type_pq == (0, 3)
+    assert dw(y, [x1, x2, x3]).type_pq == (0, 3)  
+    
+def test_g_wedge():
+    l, m, n = symbols('l, m, n')
+    X_w=Arraypy([1,3,1]).to_tensor((-1))
+    X_w[1]=l
+    X_w[2]=m
+    X_w[3]=n
+
+    b1=Arraypy([2,3,1]).to_tensor((-1,-1))
+    b1[1,1]=2
+    b1[1,2]=1
+    b1[1,3]=0
+    b1[2,1]=1
+    b1[2,2]=3
+    b1[2,3]=0
+    b1[3,1]=0
+    b1[3,2]=0
+    b1[3,3]=1   
+  
+    assert g_wedge(X_w,X_w,b1)==l*(3*l/5 - m/5) + m*(-l/5 + 2*m/5) + n**2
+
+def test_inner_product():
+    x1, x2, x3, l, m, n = symbols('x1 x2 x3 l m n')
+    
+    omega2=Arraypy([2,3,1]).to_tensor((-1,-1))
+    omega2[1,2]=x3
+    omega2[1,3]=-x2
+    omega2[2,1]=-x3
+    omega2[2,3]=x1
+    omega2[3,1]=x2
+    omega2[3,2]=-x1 
+    
+    X_t=Arraypy([1,3,1]).to_tensor((1))
+    X_t[1]=l
+    X_t[2]=m
+    X_t[3]=n
+    
+    res_ar1 = Arraypy([1, 3, 1])
+    res_ar1[1] = -m*x3 + n*x2
+    res_ar1[2] = l*x3 - n*x1
+    res_ar1[3] = -l*x2 + m*x1
+    res_ten1 = res_ar1.to_tensor(-1)
+
+    assert inner_product(omega2, X_t)==res_ten1
+

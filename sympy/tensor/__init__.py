@@ -7,7 +7,7 @@ from .index_methods import get_contraction_structure, get_indices
 from .arraypy import Arraypy, TensorArray, matrix2arraypy, matrix2tensor,\
     list2arraypy, list2tensor
 from .tensor_fields import Wedge_array, df, grad, curl, diverg, lie_xy, dw, \
-    lie_w, tensor2wedgearray, wedgearray2tensor, int_product, g_tensor, \
+    lie_w, tensor2wedgearray, wedgearray2tensor, inner_product, g_tensor, \
     g_wedge, hodge_star, codiff
 from .helper_functions import check_vector_of_arguments, check_metric_tensor, \
     check_the_vector_field, sign_permutations, delete_index_from_list, \

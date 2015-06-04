@@ -14,30 +14,35 @@ from sympy.tensor.helper_functions import check_vector_of_arguments, \
     check_metric_tensor, check_the_vector_field, sign_permutations, \
     delete_index_from_list, replace_index_to_k
 
-"""Module tensor_fields contains functions for working with the tensor fields:
+"""Module tensor_fields contains functions for work with the tensor fields:
 -the calculation of the differential and the gradient of the function;
 -curl and divergence of a vector field;
 -the calculation of the derivative of Li;
 -the calculation the Lie brackets of two vector fields;
 -the calculation the external differentiation of differential forms;
--
+-the calculation of the scalar product in the space of tensors and \
+of differential forms;
+-the calculation of the inner product of the form and the vector field;
+-the calculation actions on the forms of the Hodge operator's;
+-the calculation of codifferential form;
+-finding a basis in the space of skew-symmetric forms
 
 
 All functions can be operated with input arguments specified as a tensor.
 Some of the input arguments of functions can be a list, matrix or array of
-arraypy. The starting index of tensor may not be equal to 0. In such instance,
+Arraypy. The starting index of tensor may not be equal to 0. In such instance,
 the object, which returns the function will have the starting index
 corresponding to the conditions of the call.
-Also lie_w function and dw involves working with multidimensional arrays.
+Also some function involves working with multidimensional arrays.
 
-Functions work with the multidimensional arrays arraypy and tensors,
+Functions work with the multidimensional arrays Arraypy and tensors,
 classes and methods which are contained in the module arraypy.
 
 """
 
 
 def df(f, args, output_type='l'):
-    """Return an the 1-form df, differential of function f(x).
+    """Return an the 1-form df, differential of function f.
 
     Examples:
     =========
@@ -343,6 +348,7 @@ def diverg(X, args, g=None):
     x2**3 + 3*x3**2 + 1
 
     """
+
     # Handling of a vector of arguments
     check_vector_of_arguments(args)
     if isinstance(args, list):
@@ -385,6 +391,7 @@ def lie_xy(X, Y, args, output_type=None):
 
     Examples:
     =========
+
     >>> from sympy.tensor.tensor_fields import lie_xy
     >>> from sympy import symbols, cos, sin
     >>> x1, x2, x3 = symbols('x1 x2 x3')
@@ -408,6 +415,7 @@ def lie_xy(X, Y, args, output_type=None):
     3*x3**2*(-x1**2 + x3**3)
 
     """
+
     # Handling of a vector of arguments
     check_vector_of_arguments(args)
     # The definition of the start index args
@@ -633,11 +641,18 @@ def lie_w(omega, X, args):
     Lie derivative of a differential form:
 
     >>> li = lie_w(omega,X,arg)
-    >>> print(li)
-    0 x2**3*x3 + x3**3 + x3 -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
-    -x2**3*x3 - x3**3 - x3 0 -2*x1*x2**3 + 3*x1*x3**2 + x1
-    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3) 2*x1*x2**3 - \
-    3*x1*x3**2 - x1 0
+    >>> for i in li.index_list:
+    ...     print(str(i), str(li[i]))
+    (0, 0) 0
+    (0, 1) x2**3*x3 + x3**3 + x3
+    (0, 2) -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
+    (1, 0) -x2**3*x3 - x3**3 - x3
+    (1, 1) 0
+    (1, 2) -2*x1*x2**3 + 3*x1*x3**2 + x1
+    (2, 0) x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3)
+    (2, 1) 2*x1*x2**3 - 3*x1*x3**2 - x1
+    (2, 2) 0
+
     >>> li.type_pq
     (0, 2)
 
@@ -733,13 +748,13 @@ class Wedge_array():
 
 
 def tensor2wedgearray(A):
-    """
-    Function takes a skew-symmetric array and will give array in
+    """Function takes a skew-symmetric array and will give array in
     which the indices are in ascending order. Return array of type
     Wedge_array.
 
     Examples:
     =========
+
     >>> from sympy import symbols
     >>> from sympy.tensor.arraypy import Arraypy, TensorArray
     >>> from sympy.tensor.tensor_fields import tensor2wedgearray
@@ -760,6 +775,7 @@ def tensor2wedgearray(A):
     (1, 2)=>x1
 
     """
+
     # Handling of a tensor
     if not isinstance(A, (Arraypy, TensorArray)):
         raise ValueError("The type of form must be Arraypy")
@@ -797,6 +813,7 @@ def wedgearray2tensor(B):
 
     Examples:
     =========
+
     >>> from sympy import symbols
     >>> from sympy.tensor.arraypy import Arraypy, TensorArray
     >>> from sympy.tensor.tensor_fields import tensor2wedgearray, \
@@ -818,6 +835,7 @@ def wedgearray2tensor(B):
     x2  -x1  0
 
     """
+
     if isinstance(B, Wedge_array):
         B = B._output
     else:
@@ -845,15 +863,15 @@ def wedgearray2tensor(B):
     return tensor
 
 
-def int_product(w, X):
+def inner_product(w, X):
     """Calculation of the inner product of the form and the vector field.
-    Return.
 
     Examples:
     =========
+
     >>> from sympy import symbols
     >>> from sympy.tensor.arraypy import Arraypy
-    >>> from sympy.tensor.tensor_fields import int_product
+    >>> from sympy.tensor.tensor_fields import inner_product
 
     >>> x1, x2, x3, l, m, n = symbols('x1 x2 x3 l m n')
     >>> omega2=Arraypy([2,3,1]).to_tensor((-1,-1))
@@ -869,7 +887,7 @@ def int_product(w, X):
     >>> X_t[2]=m
     >>> X_t[3]=n
 
-    >>> print(int_product(omega2, X_t))
+    >>> print(inner_product(omega2, X_t))
     -m*x3 + n*x2  l*x3 - n*x1  -l*x2 + m*x1
 
     """
@@ -925,8 +943,7 @@ def int_product(w, X):
 
 
 def g_tensor(T, S, g):
-    """
-    The scalar product in the space of tensors.
+    """The scalar product in the space of tensors.
     The result is a skew-symmetric form of (0, p-1).
 
     Examples:
@@ -946,7 +963,8 @@ def g_tensor(T, S, g):
     >>> omega[2,2]=x*y*w
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(g_tensor(omega,omega,g))
-    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*(2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
+    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*\
+    (2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
 
     """
     # Handling of a input tensors
@@ -1004,8 +1022,7 @@ def g_tensor(T, S, g):
 
 
 def g_wedge(T, S, g):
-    """
-    The scalar product in the space of differential forms.
+    """The scalar product in the space of differential forms.
     The result is a skew-symmetric form of (0, p-1).
 
 
@@ -1036,6 +1053,7 @@ def g_wedge(T, S, g):
     l*(3*l/5 - m/5) + m*(-l/5 + 2*m/5) + n**2
 
     """
+
     # Handling of the input tensor
     if isinstance(S, (Wedge_array)):
         S = wedgearray2tensor(S)
@@ -1063,17 +1081,18 @@ def hodge_star(T, g):
     >>> from sympy.tensor.arraypy import Arraypy, TensorArray
     >>> from sympy.tensor.tensor_fields import hodge_star
 
-    >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> y3 = TensorArray(Arraypy((3, 3, 3)), (-1, -1, -1))
-    >>> y3[0, 1, 2] = 3
-    >>> y3[0, 2, 1] = -3
-    >>> y3[1, 0, 2] = -3
-    >>> y3[1, 2, 0] = 3
-    >>> y3[2, 0, 1] = 3
-    >>> y3[2, 1, 0] = -3
-    >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
-    >>> print(hodge_star(y3,g))
-    96*sqrt(5)/5
+    >>> x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
+
+    >>> y2 = TensorArray(Arraypy((3, 3)), (-1, -1))
+    >>> y2[0, 1] = x3*x4
+    >>> y2[0, 2] = -x2**3
+    >>> y2[1, 0] = -x3*x4
+    >>> y2[1, 2] = x1*x2
+    >>> y2[2, 0] = x2**3
+    >>> y2[2, 1] = -x1*x2
+    >>> g = Matrix([[1,3,0],[-3,1,0],[0,0,1]])
+    >>> print(hodge_star(y2,g))
+    sqrt(10)*x1*x2/5 - 3*sqrt(10)*x2**3/5  3*sqrt(10)*x1*x2/5 + sqrt(10)*x2**3/5  sqrt(10)*x3*x4/5
 
     """
 
@@ -1128,9 +1147,10 @@ def hodge_star(T, g):
         uT = raise_index(uT, g, position)
 
     # Convolution
+    kn = n + 1
     for i in range(k):
-        uT = uT.contract(1, k + 1)
-        k = k - 1
+        uT = uT.contract(1, kn)
+        kn = kn - 1
 
     return uT
 
@@ -1140,29 +1160,33 @@ def codiff(w, g, args, eta=0):
 
     Examples:
     =========
+
     >>> from sympy import symbols, Matrix
     >>> from sympy.tensor.arraypy import Arraypy
     >>> from sympy.tensor.tensor_fields import codiff
 
-    >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> omega2=Arraypy([2,3,0]).to_tensor((-1,-1))
-    >>> omega2[0,1]=x3*x2
-    >>> omega2[0,2]=-x2
-    >>> omega2[1,0]=-x3*x2
-    >>> omega2[1,2]=x1
-    >>> omega2[2,0]=x2
-    >>> omega2[2,1]=-x1
-    >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
-    >>> print(codiff(omega2, g, [x1, x2, x3]))
-    0 0 0
+    >>> x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
+
+    >>> y2 = TensorArray(Arraypy((3, 3)), (-1, -1))
+    >>> y2[0, 1] = x3*x4
+    >>> y2[0, 2] = -x2**3
+    >>> y2[1, 0] = -x3*x4
+    >>> y2[1, 2] = x1*x2
+    >>> y2[2, 0] = x2**3
+    >>> y2[2, 1] = -x1*x2
+    >>> g = Matrix([[1,3,0],[-3,1,0],[0,0,1]])
+    >>> print(codiff(y2, g, [x1, x2, x3, x4]))
+    0  0  22*x1/5 - 198*x2**2/5 - 66*x2/5
 
     """
     n = w.shape[0]  # the dimension of the input array
     k = w.rank
+
     # hodge star
     hodge_star1 = hodge_star(w, g)
+    # dw
     hodge_dw = dw(hodge_star1, args)
-
+    # hodge star
     hodge_dw_hodge = hodge_star(hodge_dw, g)
     sign = (-1) ^ (n * (k + 1) + 1 + eta)
     for i in hodge_dw_hodge.index_list:
