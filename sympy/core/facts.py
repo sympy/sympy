@@ -79,7 +79,7 @@ def transitive_closure(implications):
     Computes the transitive closure of a list of implications
 
     Uses Warshall's algorithm, as described at
-    http://chuck.ferzle.com/Notes/Notes/DiscreteMath/Warshall.pdf.
+    http://www.cs.hope.edu/~cusack/Notes/Notes/DiscreteMath/Warshall.pdf.
     """
     full_implications = set(implications)
     literals = set().union(*map(set, full_implications))

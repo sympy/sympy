@@ -770,6 +770,7 @@ def test_polysys():
                  y - 3, x - y - 4], (y, x))
 
 
+@slow
 def test_unrad1():
     raises(NotImplementedError, lambda:
         unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
