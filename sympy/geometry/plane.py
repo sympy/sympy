@@ -574,7 +574,6 @@ class Plane(GeometryEntity):
                 p3 *= 2  # case 3
         else:
             p3 = p1 + Point3D(*self.normal_vector)  # case 4
-        print(p1,p2,p3)
         return Plane(p1, p2, p3)
 
     def random_point(self, seed=None):
