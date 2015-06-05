@@ -418,10 +418,14 @@ class Arraypy(object):
         # If array is sparse, index NOT in dictionary and value is 0 then do
         # nothing
         try:
-            if self._sparse and value == 0 and index in self._output:
-                self._output.pop(index)
-            elif value == 0 and index not in self._output:
-                exit
+            # temporary fix. To allow Arraypy to be an element of Arraypy
+            if not isinstance(value, Arraypy):
+                if self._sparse and value == 0 and index in self._output:
+                    self._output.pop(index)
+                elif value == 0 and index not in self._output:
+                    exit
+                else:
+                    self._output[index] = value
             else:
                 self._output[index] = value
         except NameError:
