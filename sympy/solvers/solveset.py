@@ -990,6 +990,10 @@ def linsolve(system, *symbols):
     Solve system of N linear equations with M variables, which
     means both under - and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
+    Zero solutions throws a ValueError, where as infinite
+    solutions are represented parametrically in terms of given
+    symbols. For unique solution a FiniteSet of ordered tuple
+    is returned.
 
     All Standard input formats are supported:
     For the given set of Equations, the respective input types
@@ -1030,6 +1034,12 @@ def linsolve(system, *symbols):
 
     A FiniteSet of ordered tuple of values of `symbols` for which
     the `system` has solution.
+
+    Please note that general FiniteSet is unordered, the solution
+    returned here is not simply a FiniteSet of solutions, rather
+    it is a FiniteSet of ordered tuple, i.e. the first & only
+    argument to FiniteSet is a tuple of solutions, which is ordered,
+    & hence the FiniteSet of ordered tuple, is ordered.
 
     Raises
     ======
@@ -1124,8 +1134,10 @@ def linsolve(system, *symbols):
     else:
         raise ValueError("Invalid arguments")
 
-    sol, params, free_syms = A.gauss_jordan_solve(b, parameters=True)
+    # Solve using Gauss-Jordan elimination
+    sol, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
 
+    # Replace free parameters with free symbols
     solution = []
     if params:
         for s in sol:
@@ -1137,5 +1149,6 @@ def linsolve(system, *symbols):
         for s in sol:
             solution.append(s)
 
+    # Return solutions
     solution = FiniteSet(tuple(solution))
     return solution

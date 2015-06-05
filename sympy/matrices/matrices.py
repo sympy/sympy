@@ -842,7 +842,8 @@ class MatrixBase(object):
             L = (self.T*self)._cholesky()
             rhs = self.T*rhs
         else:
-            raise NotImplementedError("Under-determined System.")
+            raise NotImplementedError('Under-determined System. \
+                                      Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         return (L.T)._upper_triangular_solve(Y)
 
@@ -912,7 +913,8 @@ class MatrixBase(object):
             L, D = (self.T*self).LDLdecomposition()
             rhs = self.T*rhs
         else:
-            raise NotImplementedError("Under-determined System.")
+            raise NotImplementedError('Under-determined System. \
+                                      Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
@@ -983,7 +985,8 @@ class MatrixBase(object):
         """
         if not self.is_square:
             if self.rows < self.cols:
-                raise ValueError('Under-determined system.')
+                raise ValueError('Under-determined system. \
+                                 Try M.gauss_jordan_solve(rhs)')
             elif self.rows > self.cols:
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
@@ -4177,9 +4180,41 @@ class MatrixBase(object):
             arbitrary_matrix = self.__class__(cols, rows, w).T
         return A_pinv * B + (eye(A.cols) - A_pinv*A) * arbitrary_matrix
 
-    def gauss_jordan_solve(self, b, parameters=False):
+    def gauss_jordan_solve(self, b, freevar=False):
         """
         Solves Ax = b using Gauss Jordan elimination.
+
+        There may be zero, one, or infinite solutions.  If one solution
+        exists, it will be returned. If infinite solutions exist, it will
+        be returned parametrically. If no solutions exist, It will throw
+        ValueError.
+
+        Parameters
+        ==========
+
+        b : Matrix
+            The right hand side of the equation to be solved for.  Must have
+            the same number of rows as matrix A.
+
+        freevar : List
+            If the system is underdetermined (e.g. A has more columns than
+            rows), infinite solutions are possible, in terms of an arbitrary
+            values of free variables. Then the index of the free variables
+            in the solutions (column Matrix) will be returned by freevar, if
+            the flag `freevar` is set to `True`.
+
+        Returns
+        =======
+
+        x : Matrix
+            The matrix that will satisfy Ax = B.  Will have as many rows as
+            matrix A has columns, and as many columns as matrix B.
+
+        params : Matrix
+            If the system is underdetermined (e.g. A has more columns than
+            rows), infinite solutions are possible, in terms of an arbitrary
+            parameters. These arbitrary parameters are returned as params
+            Matrix.
 
         Examples
         ========
@@ -4187,20 +4222,27 @@ class MatrixBase(object):
         >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
         >>> b = Matrix([7, 12, 4])
-        >>> A.gauss_jordan_solve(b)
+        >>> sol, params = A.gauss_jordan_solve(b)
+        >>> sol
         Matrix([
         [-2*_tau0 - 3*_tau1 + 2],
         [                 _tau0],
         [           2*_tau1 + 5],
         [                 _tau1]])
-
+        >>> params
+        Matrix([
+        [_tau0],
+        [_tau1]])
         >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
         >>> b = Matrix([3, 6, 9])
-        >>> A.gauss_jordan_solve(b)
+        >>> sol, params = A.gauss_jordan_solve(b)
+        >>> sol
         Matrix([
         [-1],
         [ 2],
         [ 0]])
+        >>> params
+        Matrix(0, 1, [])
 
         See Also
         ========
@@ -4265,10 +4307,10 @@ class MatrixBase(object):
         for k, v in enumerate(free_sol):
             sol[permutation[k], 0] = v
 
-        if parameters:
+        if freevar:
             return sol, tau, free_var_index
         else:
-            return sol
+            return sol, tau
 
 
 def classof(A, B):
