@@ -47,6 +47,7 @@ from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
@@ -346,7 +347,7 @@ def test_Poly__new__():
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
 
-    assert Poly(x**2 + x + 1.0).get_domain() == RR
+    assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
 
 
 def test_Poly__args():
@@ -560,7 +561,7 @@ def test_Poly_get_domain():
     raises(CoercionFailed, lambda: Poly(x/2, domain='ZZ'))
     assert Poly(x/2, domain='QQ').get_domain() == QQ
 
-    assert Poly(0.2*x).get_domain() == RR
+    assert isinstance(Poly(0.2*x).get_domain(), RealField)
 
 
 def test_Poly_set_domain():
