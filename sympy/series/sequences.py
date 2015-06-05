@@ -165,82 +165,6 @@ class SeqBase(Expr):
 
         return initial + i*step
 
-    def add(self, other):
-        """
-        Returns the term-wise addition of 'self' and 'other'.
-        ``other`` should be a sequence.
-
-        Examples
-        ========
-
-        As a shortcut it is possible to use the '+' operator:
-
-        >>> from sympy import S, oo, SeqFormula
-        >>> from sympy.abc import n
-        >>> SeqFormula(n**2).add(SeqFormula(n**3))
-        SeqFormula((n**3 + n**2, n), ([0, oo), 1))
-        """
-        return SeqAdd(self, other)
-
-    def sub(self, other):
-        """
-        Returns the term-wise subtraction of 'self' and 'other'.
-        ``other`` should be a sequence.
-
-        Examples
-        ========
-
-        As a shortcut it is possible to use the '-' operator:
-
-        >>> from sympy import S, oo, SeqFormula
-        >>> from sympy.abc import n
-        >>> SeqFormula(n**2).sub(SeqFormula(n))
-        SeqFormula((n**2 - n, n), ([0, oo), 1))
-        """
-        return self.add(-other)
-
-    def mul(self, other):
-        """
-        Returns the term-wise multiplication of 'self' and 'other'.
-        ``other`` should be a sequence. For ``other`` not being a
-        sequence see ``coeff_mul`` method.
-
-        Examples
-        ========
-
-        As a shortcut it is possible to use the '*' operator:
-
-        >>> from sympy import S, oo, SeqFormula
-        >>> from sympy.abc import n
-
-        >>> SeqFormula(n**2).mul(SeqFormula(n))
-        SeqFormula((n**3, n), ([0, oo), 1))
-        """
-        if isinstance(other, SeqBase):
-            return SeqMul(self, other)
-
-    def coeff_mul(self, other):
-        """
-        Should be used when ``other`` is not a sequence. Should be
-        defined to define custom behaviour.
-
-        Examples
-        ========
-
-        >>> from sympy import S, oo, SeqFormula
-        >>> from sympy.abc import n
-
-        >>> SeqFormula(n**2).coeff_mul(2)
-        SeqFormula((2*n**2, n), ([0, oo), 1))
-
-        Notes
-        =====
-
-        '*' defines multiplication of sequences with sequences only.
-        For multiplying sequences use ``mul`` method.
-        """
-        return Mul(self, coeff)
-
     def _add(self, other):
         """
         Should only be used internally
@@ -267,17 +191,91 @@ class SeqBase(Expr):
         """
         return None
 
-    def __add__(self, other):
-        return self.add(other)
+    def coeff_mul(self, other):
+        """
+        Should be used when ``other`` is not a sequence. Should be
+        defined to define custom behaviour.
 
-    def __neg__(self):
-        return self.coeff_mul(-1)
+        Examples
+        ========
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+
+        >>> SeqFormula(n**2).coeff_mul(2)
+        SeqFormula((2*n**2, n), ([0, oo), 1))
+
+        Notes
+        =====
+
+        '*' defines multiplication of sequences with sequences only.
+        For multiplying sequences use ``mul`` method.
+        """
+        return Mul(self, coeff)
+
+    def __add__(self, other):
+        """
+        Returns the term-wise addition of 'self' and 'other'.
+        ``other`` should be a sequence.
+
+        Examples
+        ========
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+        >>> SeqFormula(n**2) + (SeqFormula(n**3))
+        SeqFormula((n**3 + n**2, n), ([0, oo), 1))
+        """
+        return SeqAdd(self, other)
 
     def __sub__(self, other):
-        return self.sub(other)
+        """
+        Returns the term-wise subtraction of 'self' and 'other'.
+        ``other`` should be a sequence.
+
+        Examples
+        ========
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+        >>> SeqFormula(n**2) - (SeqFormula(n))
+        SeqFormula((n**2 - n, n), ([0, oo), 1))
+        """
+        return SeqAdd(self, -other)
+
+    def __neg__(self):
+        """
+        Negates the sequence
+
+        Examples
+        ========
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+        >>> -SeqFormula(n**2)
+        SeqFormula((-n**2, n), ([0, oo), 1))
+        """
+        return self.coeff_mul(-1)
 
     def __mul__(self, other):
-        return self.mul(other)
+        """
+        Returns the term-wise multiplication of 'self' and 'other'.
+        ``other`` should be a sequence. For ``other`` not being a
+        sequence see ``coeff_mul`` method.
+
+        Examples
+        ========
+
+        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy.abc import n
+
+        >>> SeqFormula(n**2) * (SeqFormula(n))
+        SeqFormula((n**3, n), ([0, oo), 1))
+        """
+        if isinstance(other, SeqBase):
+            return SeqMul(self, other)
+        else:
+            return Mul(self, other)
 
     def __iter__(self):
         for i in range(self.length):
@@ -310,9 +308,9 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     >>> S.EmptySequence
     EmptySequence()
 
-    >>> SeqPer((1, 2)).add(S.EmptySequence)
+    >>> SeqPer((1, 2)) + (S.EmptySequence)
     SeqPer((1, 2), ([0, oo), 1))
-    >>> SeqPer((1, 2)).mul(S.EmptySequence)
+    >>> SeqPer((1, 2)) * (S.EmptySequence)
     EmptySequence()
     >>> S.EmptySequence.coeff_mul(-1)
     EmptySequence()
