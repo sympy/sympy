@@ -221,6 +221,8 @@ class Arraypy(object):
 
         """
 
+        if other == 0:
+            return self
         if not isinstance(other, Arraypy):
             raise TypeError('Both operands must be Arraypy type')
         if self._dims != other._dims:
@@ -261,6 +263,8 @@ class Arraypy(object):
         -3 -3
         -3 -3
         """
+        if other == 0:
+            return self
         if not isinstance(other, Arraypy):
             raise TypeError('Both operands must be Arraypy type')
         if self._dims != other._dims:
@@ -306,6 +310,43 @@ class Arraypy(object):
 
         return res
 
+    def __truediv__(self, other):
+        """
+        Overloads /.
+        n-dimensional arrays can be divided on atom types (int, float, Symbol)
+
+        Examples
+        ========
+
+        """
+        # forming list of tuples for Arraypy constructor of type
+        # a = Arraypy( [(a, b), (c, d), ... , (y, z)] )
+        arg = [(self.start_index[i], self.end_index[i])
+               for i in range(self._rank)]
+        res = Arraypy(arg)
+
+        idx = self.start_index
+        for i in range(len(self)):
+            res[idx] = self[idx] / other
+            idx = self.next_index(idx)
+
+        return res
+
+    # imethods. += -= *= /=
+    def __iadd__(self, other):
+            return self + other
+    def __isub__(self, other):
+            return self - other
+    def __imul__(self, other):
+            return self * other
+    def __itruediv__(self, other):
+        return self / other
+
+    __radd__ = __add__
+    __rmul__ = __mul__
+    __rsub__ = __sub__
+    __rtruediv__ = __truediv__
+
     def __eq__(self, other):
         """
         Overloads '=='.
@@ -329,7 +370,8 @@ class Arraypy(object):
         False
         """
         if not isinstance(other, Arraypy):
-            raise TypeError('Compared instances must be Arraypy type')
+            return False
+            #raise TypeError('Compared instances must be Arraypy type')
         if (self.shape != other.shape or self.start_index !=
                 other.start_index or self.end_index != other.end_index):
             return False
