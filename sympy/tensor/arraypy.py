@@ -408,7 +408,7 @@ class Arraypy(object):
             if index[i] >= self._end_index[
                     i] or index[i] < self._start_index[i]:
                 raise ValueError('Value ' + str(i) + ' out of border')
-            
+
         value = sympify(value)
 
         # setting element. If array is sparse, index in dictionary and value is
@@ -964,7 +964,8 @@ class TensorArray(Arraypy):
         """
         if not isinstance(other, TensorArray):
             raise TypeError('Compared instances must be TensorArray type')
-        if (not(self._ind_char == other._ind_char) or not(self.base == other.base)):
+        if (not(self._ind_char == other._ind_char)
+                or not(self.base == other.base)):
             return False
 
         return True
@@ -1079,206 +1080,36 @@ class TensorArray(Arraypy):
             idx1 = idx2
             idx2 = temp
 
-        # old_index keeps index of current tensor
-        old_index = [i for i in self._start_index]
-
-        # new_index keeps index of result tensor
-        new_index = []
-        for i in range(self._rank):
-            if i != idx1 and i != idx2:
-                new_index.append(self._start_index[i])
-        if new_index == []:
-            new_index.append(0)
-
-        # new_dims will be a shape of result tensor
-        new_dims = copy(list(self._dims))
-        new_dims.pop(idx1)
-        if len(new_dims) == 1:
-            new_dims = (1,)
-        else:
-            new_dims.pop(idx2)
-
-        # number of elements of new tensor
-        new_loop_size = int(
-            self._loop_size / self._dims[idx1] / self._dims[idx2])
-
-        # elements of contracted tensor will be assigned to this dictionary
-        new_output = {}
-
-        for i in range(new_loop_size):
-
-            new_output[tuple(new_index)] = 0
-            old_index[idx1] = self._start_index[idx1]
-            old_index[idx2] = self._start_index[idx2]
-
-            # setting elements to new dictionary
-            for k in range(0, self._dims[idx1]):
-                new_output[tuple(new_index)] += self._output[tuple(old_index)]
-                old_index[idx1] += 1
-                old_index[idx2] += 1
-
-            # Finding next index of the current tensor. the code below is
-            # similar to method .next_index with few additions.
-            k = 1
-            j = self._rank - 1
-            # input index numbers will be passed (they are changing in code
-            # block above)
-            while j == idx1 or j == idx2:
-                j = self._rank - 1 - k
-                k += 1
-            if j > -1:
-                old_index[j] += 1
-                if (old_index[j] == self._dims[j]) and (j != 0):
-                    while (old_index[j] == self._dims[j]) and j > 0:
-                        old_index[j] = 0
-                        j -= 1
-                        while j == idx1 or j == idx2:
-                            j -= 1
-                        if j > 0:
-                            old_index[j] += 1
-
-            # Finding next index of the result tensor. the code below is
-            # similar to method .next_index with few additions.
-            j = len(new_dims) - 1
-            if not new_index == []:
-                new_index[j] += 1
-                if (new_index[j] == new_dims[j]) and (j != 0):
-                    while (new_index[j] == self._dims[j]) and j > 0:
-                        new_index[j] = 0
-                        j -= 1
-                        new_index[j] += 1
-
-        # creating new Arraypy base
-        if (self._sparse):
-            res_array = Arraypy('sparse')
-        else:
-            res_array = Arraypy()
-
-        res_array._sparse = self._sparse
-        res_array._output = new_output
-        res_array._name = self._name
-        res_array._loop_size = new_loop_size
-
-        res_array._dims = tuple(new_dims)
-
-        # creating start_index
-        new_start_index = copy(list(self._start_index))
-        new_start_index .pop(idx1)
-        if len(new_start_index) == 1:
-            new_start_index = (0,)
-        else:
-            new_start_index.pop(idx2)
-        res_array._start_index = tuple(new_start_index)
-
-        # creating end index
-        new_end_index = copy(list(self._end_index))
-        new_end_index .pop(idx1)
-        if len(new_end_index) == 1:
-            new_end_index = (1,)
-        else:
-            new_end_index.pop(idx2)
-        res_array._end_index = tuple(new_end_index)
-
-        # new array rank
-        res_array._rank = len(new_dims)
-
-        # valency of new tensor
-        new_valency = copy(list(self._ind_char))
-        new_valency.pop(idx1)
-        if len(new_valency) == 1:
-            new_valency = (1,)
-        else:
-            new_valency.pop(idx2)
-
-        # creating tensor
-        res_tensor = TensorArray(res_array, tuple(new_valency))
-
-        return res_tensor
-    '''
-    def contract2(self, idx1, idx2):
-        if idx1 > self._rank or idx2 > self._rank or idx1 == idx2:
-            raise ValueError('Wrong index')
-        if idx1 < 1 or idx2 < 0:
-            raise ValueError('Index starts from 1')
-
-        idx1 -= 1
-        idx2 -= 1
-
-        if self._ind_char[idx1] == self._ind_char[idx2]:
-            raise ValueError('Indexes must have diferent valency (ind_char)')
-        for i in self._dims:
-            if self._dims[0] != i:
-                raise TypeError('Can''t do that in dimension like this')
-
-        # making idx1 greater then idx2
-        if idx1 < idx2:
-            temp = idx1
-            idx1 = idx2
-            idx2 = temp
-
-        # old_index keeps index of current tensor
-        # old_index = [i for i in self._start_index]
-        old_index = list(self.start_index)
-
         # creating result tensor.
         # result tensor valency will be (p-1, q-1)
         arg = [(self.start_index[i], self.end_index[i])
-                   for i in range(self.rank) if i != idx1 and i != idx2]
+               for i in range(self.rank) if i != idx1 and i != idx2]
         if arg == []:
             arg = 1
-            
-        new_ind_char = [self.ind_char[i] 
+
+        new_ind_char = [self.ind_char[i]
                         for i in range(self.rank) if i != idx1 and i != idx2]
         if new_ind_char == []:
             new_ind_char = 1
-            
-        result_tensor = TensorArray(Arraypy(arg), new_ind_char)            
-        new_index = list(result_tensor.start_index)
 
-        for i in range(len(result_tensor)):
-            
-            old_index[idx1] = self.start_index[idx1]
-            old_index[idx2] = self.start_index[idx2]
+        result_tensor = TensorArray(Arraypy(arg), new_ind_char)
 
-            # setting elements to new dictionary
-            for k in range(0, self._dims[idx1]):
-                result_tensor[tuple(new_index)] += self[tuple(old_index)]
-                old_index[idx1] += 1
-                old_index[idx2] += 1
+        for i in result_tensor.index_list:
+            print(result_tensor)
+            temp_index = list(i)
+            if (len(result_tensor) == 1):
+                temp_index = [self.start_index[idx2], self.start_index[idx1]]
+            else:
+                temp_index.insert(idx2, self.start_index[idx2])
+                temp_index.insert(idx1, self.start_index[idx1])
 
-            # Finding next index of the current tensor. the code below is
-            # similar to method .next_index with few additions.
-            k = 1
-            j = self._rank - 1
-            # input index numbers will be passed (they are changing in code
-            # block above)
-            while j == idx1 or j == idx2:
-                j = self._rank - 1 - k
-                k += 1
-            if j > -1:
-                old_index[j] += 1
-                if (old_index[j] == self.end_index[j] + 1) and (j != 0):
-                    while (old_index[j] == self.end_index[j] + 1) and j > 0:
-                        old_index[j] = self.start_index[j]
-                        j -= 1
-                        while j == idx1 or j == idx2:
-                            j -= 1
-                        if j > 0:
-                            old_index[j] += 1
-
-            # Finding next index of the result tensor. the code below is
-            # similar to method .next_index with few additions.
-            j = len(result_tensor.shape) - 1
-            if not new_index == []:
-                new_index[j] += 1
-                if (new_index[j] == result_tensor.shape[j]) and (j != 0):
-                    while (new_index[j] == self._dims[j]) and j > 0:
-                        new_index[j] = 0
-                        j -= 1
-                        new_index[j] += 1
+            for j in range(0, self.shape[idx1]):
+                print(str(temp_index) + ' ' + str(self[tuple(temp_index)]))
+                result_tensor[i] += self[tuple(temp_index)]
+                temp_index[idx1] += 1
+                temp_index[idx2] += 1
 
         return result_tensor
-        '''
 
     def reshape(self, new_shape, ind_char):
         """reshape method are overloaded and now requires 2 arguments.
