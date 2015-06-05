@@ -14,50 +14,178 @@ from sympy.utilities.decorator import classproperty, ClassPropertyDescriptor
 
 class Q(object):
     """Supported ask keys."""
-    antihermitian = Predicate('antihermitian')
-    finite = Predicate('finite')
-    commutative = Predicate('commutative')
-    complex = Predicate('complex')
-    composite = Predicate('composite')
-    even = Predicate('even')
-    extended_real = Predicate('extended_real')
-    hermitian = Predicate('hermitian')
-    imaginary = Predicate('imaginary')
-    infinitesimal = Predicate('infinitesimal')
-    infinite = Predicate('infinite')
-    integer = Predicate('integer')
-    irrational = Predicate('irrational')
-    rational = Predicate('rational')
-    algebraic = Predicate('algebraic')
-    transcendental = Predicate('transcendental')
-    negative = Predicate('negative')
-    nonzero = Predicate('nonzero')
-    positive = Predicate('positive')
-    prime = Predicate('prime')
-    real = Predicate('real')
-    odd = Predicate('odd')
-    is_true = Predicate('is_true')
-    nonpositive = Predicate('nonpositive')
-    nonnegative = Predicate('nonnegative')
-    zero = Predicate('zero')
 
-    symmetric = Predicate('symmetric')
-    invertible = Predicate('invertible')
-    singular = Predicate('singular')
-    orthogonal = Predicate('orthogonal')
-    unitary = Predicate('unitary')
-    normal = Predicate('normal')
-    positive_definite = Predicate('positive_definite')
-    upper_triangular = Predicate('upper_triangular')
-    lower_triangular = Predicate('lower_triangular')
-    diagonal = Predicate('diagonal')
-    triangular = Predicate('triangular')
-    unit_triangular = Predicate('unit_triangular')
-    fullrank = Predicate('fullrank')
-    square = Predicate('square')
-    real_elements = Predicate('real_elements')
-    complex_elements = Predicate('complex_elements')
-    integer_elements = Predicate('integer_elements')
+    @classproperty
+    def antihermitian(self):
+        return Predicate('antihermitian')
+
+    @classproperty
+    def finite(self):
+        return Predicate('finite')
+
+    @classproperty
+    def commutative(self):
+        return Predicate('commutative')
+
+    @classproperty
+    def complex(self):
+        return Predicate('complex')
+
+    @classproperty
+    def composite(self):
+        return Predicate('composite')
+
+    @classproperty
+    def even(self):
+        return Predicate('even')
+
+    @classproperty
+    def extended_real(self):
+        return Predicate('extended_real')
+
+    @classproperty
+    def hermitian(self):
+        return Predicate('hermitian')
+
+    @classproperty
+    def imaginary(self):
+        return Predicate('imaginary')
+
+    @classproperty
+    def infinitesimal(self):
+        return Predicate('infinitesimal')
+
+    @classproperty
+    def infinite(self):
+        return Predicate('infinite')
+
+    @classproperty
+    def integer(self):
+        return Predicate('integer')
+
+    @classproperty
+    def irrational(self):
+        return Predicate('irrational')
+
+    @classproperty
+    def rational(self):
+        return Predicate('rational')
+
+    @classproperty
+    def algebraic(self):
+        return Predicate('algebraic')
+
+    @classproperty
+    def transcendental(self):
+        return Predicate('transcendental')
+
+    @classproperty
+    def negative():
+        return Predicate('negative')
+
+    @classproperty
+    def nonzero(self):
+        return Predicate('nonzero')
+
+    @classproperty
+    def positive(self):
+        return Predicate('positive')
+
+    @classproperty
+    def prime(self):
+        return Predicate('prime')
+
+    @classproperty
+    def real(self):
+        return Predicate('real')
+
+    @classproperty
+    def odd(self):
+        return Predicate('odd')
+
+    @classproperty
+    def is_true(self):
+        return Predicate('is_true')
+
+    @classproperty
+    def nonpositive(self):
+        return Predicate('nonpositive')
+
+    @classproperty
+    def nonnegative(self):
+        return Predicate('nonnegative')
+
+    @classproperty
+    def zero(self):
+        return Predicate('zero')
+
+    @classproperty
+    def symmetric(self):
+        return Predicate('symmetric')
+
+    @classproperty
+    def invertible(self):
+        return Predicate('invertible')
+
+    @classproperty
+    def singular(self):
+        return Predicate('singular')
+
+    @classproperty
+    def orthogonal(self):
+        return Predicate('orthogonal')
+
+    @classproperty
+    def unitary(self):
+        return Predicate('unitary')
+
+    @classproperty
+    def normal(self):
+        return Predicate('normal')
+
+    @classproperty
+    def positive_definite(self):
+        return Predicate('positive_definite')
+
+    @classproperty
+    def upper_triangular(self):
+        return Predicate('upper_triangular')
+
+    @classproperty
+    def lower_triangular(self):
+        return Predicate('lower_triangular')
+
+    @classproperty
+    def diagonal(self):
+        return Predicate('diagonal')
+
+    @classproperty
+    def triangular(self):
+        return Predicate('triangular')
+
+    @classproperty
+    def unit_triangular(self):
+        return Predicate('unit_triangular')
+
+    @classproperty
+    def fullrank(self):
+        return Predicate('fullrank')
+
+    @classproperty
+    def square(self):
+        return Predicate('square')
+
+    @classproperty
+    def real_elements(self):
+        return Predicate('real_elements')
+
+    @classproperty
+    def complex_elements(self):
+        return Predicate('complex_elements')
+
+    @classproperty
+    def integer_elements(self):
+        return Predicate('integer_elements')
 
     @classproperty
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
