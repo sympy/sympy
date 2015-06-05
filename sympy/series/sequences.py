@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.expr import Expr
-from sympy.core.singleton import (S, Singleton)
+from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.function import Lambda
 from sympy.core.add import Add
@@ -26,15 +26,6 @@ from sympy.utilities.iterables import flatten
 
 class SeqBase(Expr):
     """Base class for sequences"""
-
-    is_iterable = True
-
-    is_EmptySequence = False
-    is_SeqPer = False
-    is_SeqFunc = False
-    is_SeqFormula = False
-    is_SeqAdd = False
-    is_SeqMul = False
 
     @staticmethod
     def _start_key(expr):
@@ -61,32 +52,32 @@ class SeqBase(Expr):
     @property
     def gen(self):
         """Returns the generator for the sequence"""
-        raise NotImplementedError("(%s)._gen" % self)
+        raise NotImplementedError("(%s).gen" % self)
 
     @property
     def interval(self):
         """The interval on which the sequence is defined"""
-        raise NotImplementedError("(%s)._interval" % self)
+        raise NotImplementedError("(%s).interval" % self)
 
     @property
     def start(self):
         """The starting point of the sequence. This point is included"""
-        raise NotImplementedError("(%s)._start" % self)
+        raise NotImplementedError("(%s).start" % self)
 
     @property
     def stop(self):
         """The ending point of the sequence. This point is included"""
-        raise NotImplementedError("(%s)._stop" % self)
+        raise NotImplementedError("(%s).stop" % self)
 
     @property
     def step(self):
         """Increase points by step"""
-        raise NotImplementedError("(%s)._step" % self)
+        raise NotImplementedError("(%s).step" % self)
 
     @property
     def length(self):
         """Length of the sequence"""
-        raise NotImplementedError("(%s)._length" % self)
+        raise NotImplementedError("(%s).length" % self)
 
     @property
     def variables(self):
@@ -166,7 +157,7 @@ class SeqBase(Expr):
         else:
             initial = self.start
 
-        if step == None:
+        if step is None:
             if self.start is S.NegativeInfinity:
                 step = -self.step
             else:
@@ -301,9 +292,9 @@ class SeqBase(Expr):
             return self.coeff(index)
         elif isinstance(index, slice):
             start, stop = index.start, index.stop
-            if start == None:
+            if start is None:
                 start = 0
-            if stop == None:
+            if stop is None:
                 stop = self.length
             return [self.coeff(self._ith_point(i, index.step)) for i in\
                                range(start, stop)]
@@ -328,8 +319,6 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     >>> S.EmptySequence.coeff_mul(-1)
     EmptySequence()
     """
-
-    is_EmptySequence = True
 
     @property
     def interval(self):
@@ -521,8 +510,6 @@ class SeqPer(SeqExpr):
     sympy.series.sequences.SeqFunc
     """
 
-    is_SeqPer = True
-
     @staticmethod
     def _validate(periodical):
         """
@@ -560,7 +547,7 @@ class SeqPer(SeqExpr):
 
     def _add(self, other):
         """See docstring of SeqBase._add"""
-        if other.is_SeqPer:
+        if isinstance(other, SeqPer):
             per1, lper1 = self.periodical, self.period
             per2, lper2 = other.periodical, other.period
 
@@ -575,7 +562,7 @@ class SeqPer(SeqExpr):
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
-        if other.is_SeqPer:
+        if isinstance(other, SeqPer):
             per1, lper1 = self.periodical, self.period
             per2, lper2 = other.periodical, other.period
 
@@ -642,8 +629,6 @@ class SeqFormula(SeqExpr):
     sympy.series.sequences.SeqFunc
     """
 
-    is_SeqFormula = True
-
     @staticmethod
     def _validate(formula):
         """
@@ -695,7 +680,7 @@ class SeqFormula(SeqExpr):
 
     def _add(self, other):
         """See docstring of SeqBase._add"""
-        if other.is_SeqFormula:
+        if isinstance(other, SeqFormula):
             form1, v1 = self.formula, self.variables[0]
             form2, v2 = other.formula, other.variables[0]
             formula = (form1 + form2.subs(v2, v1), v1)
@@ -704,7 +689,7 @@ class SeqFormula(SeqExpr):
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
-        if other.is_SeqFormula:
+        if isinstance(other, SeqFormula):
             form1, v1 = self.formula, self.variables[0]
             form2, v2 = other.formula, other.variables[0]
             formula = (form1 * form2.subs(v2, v1), v1)
@@ -767,8 +752,6 @@ class SeqFunc(SeqExpr):
     sympy.core.function.Lambda
     """
 
-    is_SeqFunc = True
-
     @staticmethod
     def _validate(function):
         if len(function.variables) != 1:
@@ -788,7 +771,7 @@ class SeqFunc(SeqExpr):
 
     def _add(self, other):
         """See docstring of SeqBase._add"""
-        if other.is_SeqFunc:
+        if isinstance(other, SeqFunc)
             func1, v1 = self.function, self.variables[0]
             func2, v2 = other.function, other.variables[0]
             function = Lambda(v1, func1.expr + func2.expr.subs(v2, v1))
@@ -796,7 +779,7 @@ class SeqFunc(SeqExpr):
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
-        if other.is_SeqFunc:
+        if isinstance(other, SeqFunc)
             func1, v1 = self.function, self.variables[0]
             func2, v2 = other.function, other.variables[0]
             function = Lambda(v1, func1.expr * func2.expr.subs(v2, v1))
@@ -836,19 +819,19 @@ def sequence(**kwargs):
     sympy.series.sequences.SeqFunc
     """
     interval = kwargs.pop('interval', None)
-    if interval == None:
+    if interval is None:
         interval = (0, S.Infinity, 1)
 
     key = kwargs.pop('periodical', None)
-    if not key == None:
+    if key is not None:
         return SeqPer(key, interval)
 
     key = kwargs.pop('func', None)
-    if not key == None:
+    if key is not None:
         return SeqFunc(key, interval)
 
     key = kwargs.pop('formula', None)
-    if not key == None:
+    if key is not None:
         return SeqFormula(key, interval)
 
     raise ValueError('Invalid Arguments')
@@ -950,8 +933,6 @@ class SeqAdd(Add, SeqExprOp):
     sympy.series.sequences.SeqMul
     """
 
-    is_SeqAdd = True
-
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
@@ -961,7 +942,7 @@ class SeqAdd(Add, SeqExprOp):
         # adapted from sympy.sets.sets.Union
         def _flatten(arg):
             if isinstance(arg, SeqBase):
-                if arg.is_SeqAdd:
+                if isinstance(arg, SeqAdd):
                     return sum(map(_flatten, arg.args), [])
                 else:
                     return [arg]
@@ -1064,8 +1045,6 @@ class SeqMul(Mul, SeqExprOp):
     sympy.series.sequences.SeqAdd
     """
 
-    is_SeqMul = True
-
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
@@ -1075,7 +1054,7 @@ class SeqMul(Mul, SeqExprOp):
         # adapted from sympy.sets.sets.Union
         def _flatten(arg):
             if isinstance(arg, SeqBase):
-                if arg.is_SeqMul:
+                if isinstance(arg, SeqMul):
                     return sum(map(_flatten, arg.args), [])
                 else:
                     return [arg]
