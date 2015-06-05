@@ -622,6 +622,8 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
+# TODO
+# Needs to be benchmarked before use in rs_atan
 def _atan_series(p, iv, prec):
     ring = p.ring
     mo = ring(-1)
@@ -662,18 +664,24 @@ def rs_atan(p, x, prec):
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
     # Finally we integrate to get back atan
-    if x in ring.gens:
-        dp = p.diff(x)
-        p1 = rs_square(p, x, prec) + ring(1)
-        p1 = rs_series_inversion(p1, x, prec - 1)
-        p1 = rs_mul(dp, p1, x, prec - 1)
-        return rs_integrate(p1, x)
-    else:
-        return _atan_series(p, x, prec)
+    dp = p.diff(x)
+    p1 = rs_square(p, x, prec) + ring(1)
+    p1 = rs_series_inversion(p1, x, prec - 1)
+    p1 = rs_mul(dp, p1, x, prec - 1)
+    return rs_integrate(p1, x)
 
 def _tan1(p, x, prec):
     """
     Helper function of ``rs_tan``
+
+    Returns the series expansion of tan of a univariate series using Newton's
+    method. It takes advantage of the fact that series expansion of atan is
+    easier than that of tan.
+
+    Consider `f(x) = y - atan(x)`
+    Let r be a root of f(x) found using Newton's method.
+    Then `f(r) = 0`
+    Or `y  = atan(x)` where `x = tan(y)` as required.
     """
     ring = p.ring
     p1 = ring(0)
@@ -818,6 +826,8 @@ def check_series_var(p, iv):
     m = min(p, key=lambda k: k[ii])[ii]
     return ii, m
 
+# TODO
+# Needs to be benchmarked before use in rs_atanh
 def _atanh(p, iv, prec):
     ring = p.ring
     one = ring(1)
@@ -858,14 +868,11 @@ def rs_atanh(p, iv, prec):
     # Instead of using a closed form formula, we differentiate atanh(p) to get
     # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
     # Finally we integrate to get back atanh
-    if iv in ring.gens:
-        dp = rs_diff(p, iv)
-        p1 = - rs_square(p, iv, prec) + 1
-        p1 = rs_series_inversion(p1, iv, prec - 1)
-        p1 = rs_mul(dp, p1, iv, prec - 1)
-        return rs_integrate(p1, iv)
-    else:
-        return _atanh(iv, prec)
+    dp = rs_diff(p, iv)
+    p1 = - rs_square(p, iv, prec) + 1
+    p1 = rs_series_inversion(p1, iv, prec - 1)
+    p1 = rs_mul(dp, p1, iv, prec - 1)
+    return rs_integrate(p1, iv)
 
 def rs_sinh(p, iv, prec):
     """
@@ -920,6 +927,18 @@ def rs_cosh(p, iv, prec):
     return (t + t1)/2
 
 def _tanh(p, iv, prec):
+    """
+    Helper function of ``rs_tanh``
+
+    Returns the series expansion of tanh of a univariate series using Newton's
+    method. It takes advantage of the fact that series expansion of atanh is
+    easier than that of tanh.
+
+    See Also
+    ========
+
+    _tanh
+    """
     ring = p.ring
     p1 = ring(0)
     for precx in _giant_steps(prec):
