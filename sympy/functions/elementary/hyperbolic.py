@@ -670,10 +670,10 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_real(self):
-        return self._reciprocal_of(args[0]).is_real
+        return self._reciprocal_of(self.args[0]).is_real
 
     def _eval_is_finite(self):
-        return (1/self._reciprocal_of(args[0])).is_finite
+        return (1/self._reciprocal_of(self.args[0])).is_finite
 
 
 class csch(ReciprocalHyperbolicFunction):
@@ -919,18 +919,8 @@ class acosh(Function):
                     return cst_table[arg]*S.ImaginaryUnit
                 return cst_table[arg]
 
-        if arg is S.ComplexInfinity:
+        if arg.is_infinite:
             return S.Infinity
-
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-        if i_coeff is not None:
-            if _coeff_isneg(i_coeff):
-                return S.ImaginaryUnit * acos(i_coeff)
-            return S.ImaginaryUnit * acos(-i_coeff)
-        else:
-            if _coeff_isneg(arg):
-                return -cls(-arg)
 
     @staticmethod
     @cacheit
@@ -1111,3 +1101,112 @@ class acoth(Function):
         Returns the inverse of this function.
         """
         return coth
+
+
+class asech(Function):
+    """
+    The inverse hyperbolic secant function.
+
+    * asech(x) -> Returns the inverse hyperbolic secant of x
+
+    Examples
+    ========
+
+    >>> from sympy import asech, sqrt, S
+    >>> from sympy.abc import x
+    >>> asech(x).diff(x)
+    -1/(x*sqrt(-x**2 + 1))
+    >>> asech(1).diff(x)
+    0
+    >>> asech(1)
+    0
+    >>> asech(S(2))
+    I*pi/3
+    >>> asech(-sqrt(2))
+    3*I*pi/4
+    >>> asech((sqrt(6) - sqrt(2)))
+    I*pi/12
+
+    See Also
+    ========
+
+    asinh, atanh, cosh, acoth
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [2] http://dlmf.nist.gov/4.37
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSech/
+
+    """
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return -1/(z*sqrt(1 - z**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        from sympy import asec
+        arg = sympify(arg)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Pi*S.ImaginaryUnit / 2
+            elif arg is S.NegativeInfinity:
+                return S.Pi*S.ImaginaryUnit / 2
+            elif arg is S.Zero:
+                return S.Infinity
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.NegativeOne:
+                return S.Pi*S.ImaginaryUnit
+
+        if arg.is_number:
+            cst_table = {
+                S.ImaginaryUnit: - (S.Pi*S.ImaginaryUnit / 2) + log(1 + sqrt(2)),
+                -S.ImaginaryUnit: (S.Pi*S.ImaginaryUnit / 2) + log(1 + sqrt(2)),
+                (sqrt(6) - sqrt(2)): S.Pi / 12,
+                (sqrt(2) - sqrt(6)): 11*S.Pi / 12,
+                sqrt(2 - 2/sqrt(5)): S.Pi / 10,
+                -sqrt(2 - 2/sqrt(5)): 9*S.Pi / 10,
+                2 / sqrt(2 + sqrt(2)): S.Pi / 8,
+                -2 / sqrt(2 + sqrt(2)): 7*S.Pi / 8,
+                2 / sqrt(3): S.Pi / 6,
+                -2 / sqrt(3): 5*S.Pi / 6,
+                (sqrt(5) - 1): S.Pi / 5,
+                (1 - sqrt(5)): 4*S.Pi / 5,
+                sqrt(2): S.Pi / 4,
+                -sqrt(2): 3*S.Pi / 4,
+                sqrt(2 + 2/sqrt(5)): 3*S.Pi / 10,
+                -sqrt(2 + 2/sqrt(5)): 7*S.Pi / 10,
+                S(2): S.Pi / 3,
+                -S(2): 2*S.Pi / 3,
+                sqrt(2*(2 + sqrt(2))): 3*S.Pi / 8,
+                -sqrt(2*(2 + sqrt(2))): 5*S.Pi / 8,
+                (1 + sqrt(5)): 2*S.Pi / 5,
+                (-1 - sqrt(5)): 3*S.Pi / 5,
+                (sqrt(6) + sqrt(2)): 5*S.Pi / 12,
+                (-sqrt(6) - sqrt(2)): 7*S.Pi / 12,
+            }
+
+            if arg in cst_table:
+                if arg.is_real:
+                    return cst_table[arg]*S.ImaginaryUnit
+                return cst_table[arg]
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
+    # TODO def taylor_term(n, x, *previous_terms)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sech

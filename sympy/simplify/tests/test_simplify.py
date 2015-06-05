@@ -4,7 +4,7 @@ from sympy import (
     Derivative, diff, Dummy, E, Eq, erf, exp, exp_polar, expand,
     expand_multinomial, exptrigsimp, factor, factorial, FallingFactorial,
     Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Matrix,
+    hypersimp, I, Integral, integrate, log, logcombine, Matrix, MatrixSymbol,
     Mul, nsimplify, O, oo, pi, Piecewise,
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
@@ -229,7 +229,7 @@ def test_issue_3210():
 
 def test_issue_7263():
     assert abs((simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf() - \
-            673.447451402970) < 1e-15
+            673.447451402970) < 1e-12
 
 
 def test_trigsimp_issues():
@@ -1913,3 +1913,44 @@ def test_inequality_no_auto_simplify():
     e = Lt(lhs, rhs)
     assert e == Lt(lhs, rhs, evaluate=False)
     assert simplify(e)
+
+def test_issue_9398():
+    from sympy import Number, cancel
+    assert cancel(1e-14) != 0
+    assert cancel(1e-14*I) != 0
+
+    assert simplify(1e-14) != 0
+    assert simplify(1e-14*I) != 0
+
+    assert (I*Number(1.)*Number(10)**Number(-14)).simplify() != 0
+
+    assert cancel(1e-20) != 0
+    assert cancel(1e-20*I) != 0
+
+    assert simplify(1e-20) != 0
+    assert simplify(1e-20*I) != 0
+
+    assert cancel(1e-100) != 0
+    assert cancel(1e-100*I) != 0
+
+    assert simplify(1e-100) != 0
+    assert simplify(1e-100*I) != 0
+
+    f = Float("1e-1000")
+    assert cancel(f) != 0
+    assert cancel(f*I) != 0
+
+    assert simplify(f) != 0
+    assert simplify(f*I) != 0
+
+def test_issue_9324_simplify():
+    M = MatrixSymbol('M', 10, 10)
+    e = M[0, 0] + M[5, 4] + 1304
+    assert simplify(e) == e
+
+
+def test_issue_9324_powsimp_on_matrix_symbol():
+    M = MatrixSymbol('M', 10, 10)
+    expr = powsimp(M, deep=True)
+    assert expr == M
+    assert expr.args[0] == 'M'

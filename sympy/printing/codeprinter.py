@@ -38,7 +38,7 @@ class Assignment(Relational):
         the dimensions will not align.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
     >>> from sympy.printing.codeprinter import Assignment

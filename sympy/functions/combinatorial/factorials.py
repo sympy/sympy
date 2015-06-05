@@ -197,7 +197,7 @@ class MultiFactorial(CombinatorialFunction):
 
 
 class subfactorial(CombinatorialFunction):
-    """The subfactorial counts the derangements of n items and is
+    r"""The subfactorial counts the derangements of n items and is
     defined for non-negative integers as::
 
               ,
@@ -209,9 +209,14 @@ class subfactorial(CombinatorialFunction):
     It can also be written as int(round(n!/exp(1))) but the recursive
     definition with caching is implemented for this function.
 
-    This function is generalized to noninteger arguments [2]_ as
+    An interesting analytic expression is the following [2]_
 
     .. math:: !x = \Gamma(x + 1, -1)/e
+
+    which is valid for non-negative integers x. The above formula
+    is not very useful incase of non-integers. :math:`\Gamma(x + 1, -1)` is
+    single-valued only for integral arguments x, elsewhere on the positive real
+    axis it has an infinite number of branches none of which are real.
 
     References
     ==========
@@ -251,8 +256,10 @@ class subfactorial(CombinatorialFunction):
         if arg.is_Number:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
+            elif arg is S.NaN:
+                return S.NaN
             elif arg is S.Infinity:
-                return arg
+                return S.Infinity
 
     def _eval_is_even(self):
         if self.args[0].is_odd and self.args[0].is_nonnegative:
@@ -677,15 +684,13 @@ class binomial(CombinatorialFunction):
     def eval(cls, n, k):
         n, k = map(sympify, (n, k))
         d = n - k
-        if d.is_zero:
+        if d.is_zero or k.is_zero:
             return S.One
         elif d.is_zero is False:
             if (k - 1).is_zero:
                 return n
             elif k.is_negative:
                 return S.Zero
-            elif k.is_zero:
-                return S.One
             elif n.is_integer and n.is_nonnegative and d.is_negative:
                 return S.Zero
         if k.is_Integer and k > 0 and n.is_Number:
@@ -728,4 +733,8 @@ class binomial(CombinatorialFunction):
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
     def _eval_is_integer(self):
-        return self.args[0].is_integer and self.args[1].is_integer
+        n, k = self.args
+        if n.is_integer and k.is_integer:
+            return True
+        elif k.is_integer is False:
+            return False

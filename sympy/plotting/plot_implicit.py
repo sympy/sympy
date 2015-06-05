@@ -245,8 +245,8 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     grid. The mesh grid method can be effective when adaptive plotting using
     interval arithmetic, fails to plot with small line width.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Plot expressions:
 

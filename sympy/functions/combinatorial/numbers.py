@@ -19,6 +19,7 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -96,6 +97,9 @@ class fibonacci(Function):
 
     @classmethod
     def eval(cls, n, sym=None):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             n = int(n)
             if n < 0:
@@ -107,6 +111,9 @@ class fibonacci(Function):
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
+
+    def _eval_rewrite_as_sqrt(self, n):
+        return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
 
 class lucas(Function):
@@ -142,9 +149,14 @@ class lucas(Function):
 
     @classmethod
     def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
+    def _eval_rewrite_as_sqrt(self, n):
+        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 #----------------------------------------------------------------------------#
 #                                                                            #

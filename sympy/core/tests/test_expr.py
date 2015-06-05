@@ -417,6 +417,11 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x) is True
     assert (sin(y)/x).is_rational_function(x, y) is False
 
+    assert (S.NaN).is_rational_function() is False
+    assert (S.Infinity).is_rational_function() is False
+    assert (-S.Infinity).is_rational_function() is False
+    assert (S.ComplexInfinity).is_rational_function() is False
+
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
@@ -1037,6 +1042,12 @@ def test_extractions():
            ((-x - y)/(y - x)).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
+
+
+def test_nan_extractions():
+    for r in (1, 0, I, nan):
+        assert nan.extract_additively(r) is None
+        assert nan.extract_multiplicatively(r) is None
 
 
 def test_coeff():

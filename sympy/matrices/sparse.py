@@ -489,6 +489,7 @@ class SparseMatrix(MatrixBase):
 
         Only the non-zero elements are stored, so the resulting dictionary
         that is used to represent the sparse matrix is empty:
+
         >>> _._smat
         {}
 

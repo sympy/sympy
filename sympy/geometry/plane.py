@@ -54,7 +54,7 @@ class Plane(GeometryEntity):
             p2 = Point3D(a)
             p3 = Point3D(b)
             if Point3D.are_collinear(p1, p2, p3):
-                raise NotImplementedError('Enter three non-collinear points')
+                raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
             b = p1.direction_ratio(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))

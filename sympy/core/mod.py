@@ -84,7 +84,7 @@ class Mod(Function):
 
         # extract gcd; any further simplification should be done by the user
         G = gcd(p, q)
-        if G is not S.One:
+        if G != 1:
             p, q = [
                 gcd_terms(i/G, clear=False, fraction=False) for i in (p, q)]
         pwas, qwas = p, q

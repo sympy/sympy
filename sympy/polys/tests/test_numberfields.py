@@ -545,6 +545,8 @@ def test_AlgebraicNumber():
     assert a.is_aliased is True
 
     assert AlgebraicNumber(sqrt(2), []).rep == DMP([], QQ)
+    assert AlgebraicNumber(sqrt(2), ()).rep == DMP([], QQ)
+    assert AlgebraicNumber(sqrt(2), (0, 0)).rep == DMP([], QQ)
 
     assert AlgebraicNumber(sqrt(2), [8]).rep == DMP([QQ(8)], QQ)
     assert AlgebraicNumber(sqrt(2), [S(8)/3]).rep == DMP([QQ(8, 3)], QQ)
@@ -637,9 +639,9 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(sqrt(2))
     b = to_number_field(sqrt(2))
-    assert a.args == b.args == (sqrt(2), Tuple())
+    assert a.args == b.args == (sqrt(2), Tuple(1, 0))
     b = AlgebraicNumber(sqrt(2), alias='alpha')
-    assert b.args == (sqrt(2), Tuple(), Symbol('alpha'))
+    assert b.args == (sqrt(2), Tuple(1, 0), Symbol('alpha'))
 
     a = AlgebraicNumber(sqrt(2), [1, 2, 3])
     assert a.args == (sqrt(2), Tuple(1, 2, 3))

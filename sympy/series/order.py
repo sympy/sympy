@@ -294,6 +294,8 @@ class Order(Expr):
     def _eval_power(b, e):
         if e.is_Number and e.is_nonnegative:
             return b.func(b.expr ** e, *b.args[1:])
+        if e == O(1):
+            return b
         return
 
     def as_expr_variables(self, order_symbols):
@@ -304,7 +306,7 @@ class Order(Expr):
                not all(p == self.point[0] for p in self.point):
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
-            if order_symbols[0][1] != self.point[0]:
+            if order_symbols and order_symbols[0][1] != self.point[0]:
                 raise NotImplementedError(
                         "Multiplying Order at different points is not supported.")
             order_symbols = dict(order_symbols)

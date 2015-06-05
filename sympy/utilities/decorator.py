@@ -158,7 +158,8 @@ def public(obj):
     on the pointer to object's global namespace. If you apply other decorators
     first, ``@public`` may end up modifying the wrong namespace.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy.utilities.decorator import public
 
@@ -190,3 +191,39 @@ def public(obj):
         ns["__all__"].append(name)
 
     return obj
+
+
+class ClassPropertyDescriptor(object):
+    """
+    Helper class for ``classproperty`` decorator.
+    """
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, obj, klass=None):
+        if klass is None:
+            klass = type(obj)
+
+        return self.fget.__get__(obj, klass)()
+
+
+def classproperty(func):
+    """
+    This decorator can be used to define a property of a class
+    which is intended to be accessed using class and objects both.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.decorator import classproperty
+    >>> class Q(object):
+    ...     @classproperty
+    ...     def a_property(self):
+    ...         return 2
+    >>> Q.a_property
+    2
+    """
+    if not isinstance(func, (classmethod, staticmethod)):
+        func = classmethod(func)
+
+    return ClassPropertyDescriptor(func)
