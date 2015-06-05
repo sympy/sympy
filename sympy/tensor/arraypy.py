@@ -964,7 +964,7 @@ class TensorArray(Arraypy):
         """
         if not isinstance(other, TensorArray):
             raise TypeError('Compared instances must be TensorArray type')
-        if (self._ind_char != other._ind_char or self.base != other.base):
+        if (not(self._ind_char == other._ind_char) or not(self.base == other.base)):
             return False
 
         return True
