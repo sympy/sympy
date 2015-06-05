@@ -2468,7 +2468,7 @@ def test_doit():
     assert a[0] != 2*x
     assert a.doit() == Matrix([[2*x]])
 
-def test_issue_9457():
+def test_issue_9457_9467():
     # for row_del(index)
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     M.row_del(1)
