@@ -553,9 +553,9 @@ def rs_LambertW(p, iv, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_LambertW
-    >>> R, x = ring('x', QQ)
-    >>> rs_LambertW(x, x, 8)
-    16807/720*x**7 - 54/5*x**6 + 125/24*x**5 - 8/3*x**4 + 3/2*x**3 - x**2 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_LambertW(x + x*y, x, 3)
+    -x**2*y**2 - 2*x**2*y - x**2 + x*y + x
 
     See Also
     ========
@@ -645,9 +645,9 @@ def rs_atan(p, x, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_atan
-    >>> R, x = ring('x', QQ)
-    >>> rs_atan(x, x, 8)
-    -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_atan(x + x*y, x, 4)
+    -1/3*x**3*y**3 - x**3*y**2 - x**3*y - 1/3*x**3 + x*y + x
 
     See Also
     ========
@@ -695,9 +695,9 @@ def rs_tan(p, x, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_tan
-    >>> R, x = ring('x', QQ)
-    >>> rs_tan(x, x, 8)
-    17/315*x**7 + 2/15*x**5 + 1/3*x**3 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_tan(x + x*y, x, 4)
+    1/3*x**3*y**3 + x**3*y**2 + x**3*y + 1/3*x**3 + x*y + x
 
    See Also
    ========
@@ -724,9 +724,9 @@ def rs_sin(p, x, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_sin
-    >>> R, x = ring('x', QQ)
-    >>> rs_sin(x, x, 6)
-    1/120*x**5 - 1/6*x**3 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_sin(x + x*y, x, 4)
+    -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
 
     See Also
     ========
@@ -766,9 +766,9 @@ def rs_cos(p, iv, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_cos
-    >>> R, x = ring('x', QQ)
-    >>> rs_cos(x, x, 6)
-    1/24*x**4 - 1/2*x**2 + 1
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_cos(x + x*y, x, 4)
+    -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
 
     See Also
     ========
@@ -841,9 +841,9 @@ def rs_atanh(p, iv, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_atanh
-    >>> R, x = ring('x', QQ)
-    >>> rs_atanh(x, x, 8)
-    1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_atanh(x + x*y, x, 4)
+    1/3*x**3*y**3 + x**3*y**2 + x**3*y + 1/3*x**3 + x*y + x
 
     See Also
     ========
@@ -879,9 +879,9 @@ def rs_sinh(p, iv, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_sinh
-    >>> R, x = ring('x', QQ)
-    >>> rs_sinh(x, x, 8)
-    1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_sinh(x + x*y, x, 4)
+    1/6*x**3*y**3 + 1/2*x**3*y**2 + 1/2*x**3*y + 1/6*x**3 + x*y + x
 
     See Also
     ========
@@ -905,9 +905,9 @@ def rs_cosh(p, iv, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_cosh
-    >>> R, x = ring('x', QQ)
-    >>> rs_cosh(x, x, 8)
-    1/720*x**6 + 1/24*x**4 + 1/2*x**2 + 1
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_cosh(x + x*y, x, 4)
+    1/2*x**2*y**2 + x**2*y + 1/2*x**2 + 1
 
     See Also
     ========
@@ -940,9 +940,9 @@ def rs_tanh(p, iv, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_tanh
-    >>> R, x = ring('x', QQ)
-    >>> rs_tanh(x, x, 8)
-    -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_tanh(x + x*y, x, 4)
+    -1/3*x**3*y**3 - x**3*y**2 - x**3*y - 1/3*x**3 + x*y + x
 
     See Also
     ========
