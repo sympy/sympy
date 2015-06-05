@@ -885,7 +885,7 @@ def linear_eq_to_matrix(equations, *symbols):
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
     `symbols`. The order of symbols in input `symbols` will
-    determine the order of coefficients in the augmented
+    determine the order of coefficients in the returned
     Matrix.
 
     The Matrix form corresponds to the augmented matrix form.
@@ -1039,7 +1039,13 @@ def linsolve(system, *symbols):
     returned here is not simply a FiniteSet of solutions, rather
     it is a FiniteSet of ordered tuple, i.e. the first & only
     argument to FiniteSet is a tuple of solutions, which is ordered,
-    & hence the FiniteSet of ordered tuple, is ordered.
+    & hence the returned solution is ordered.
+
+    Also note that solution could also have been returned as an
+    ordered tuple, FiniteSet is just a wrapper `{}` around
+    the tuple. It has no other significance except for
+    the fact it is just used to maintain a consistent output
+    format throughout the solveset.
 
     Raises
     ======
@@ -1107,6 +1113,13 @@ def linsolve(system, *symbols):
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
     {(-b*(f - c*d/a)/(a*(e - b*d/a)) + c/a, (f - c*d/a)/(e - b*d/a))}
+
+    * A degenerate system returns solution as set of given
+      symbols.
+
+    >>> system = Matrix(([0,0,0], [0,0,0], [0,0,0]))
+    >>> linsolve(system, x, y)
+    {(x, y)}
 
     """
 

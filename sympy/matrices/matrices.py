@@ -4222,7 +4222,7 @@ class MatrixBase(object):
         >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
         >>> b = Matrix([7, 12, 4])
-        >>> sol, params = A.gauss_jordan_solve(b)
+        >>> sol, params= A.gauss_jordan_solve(b)
         >>> sol
         Matrix([
         [-2*_tau0 - 3*_tau1 + 2],
@@ -4233,6 +4233,7 @@ class MatrixBase(object):
         Matrix([
         [_tau0],
         [_tau1]])
+
         >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
         >>> b = Matrix([3, 6, 9])
         >>> sol, params = A.gauss_jordan_solve(b)
