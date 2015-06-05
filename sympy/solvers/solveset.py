@@ -1109,69 +1109,33 @@ def linsolve(system, *symbols):
 
     # 1). Augmented Matrix input Form
     if isinstance(system, Matrix):
-        aug = system
+        A, b = system[:, :-1], system[:, -1:]
 
     elif hasattr(system, '__iter__'):
 
         # 2). A & b as input Form
         if len(system) == 2 and system[0].is_Matrix:
-            aug = system[0].hstack(system[0].copy(), system[1].copy())
+            A, b = system[0], system[1]
 
         # 3). List of equations Form
         if not system[0].is_Matrix:
             A, b = linear_eq_to_matrix(system, symbols)
-            aug = A.hstack(A.copy(), b.copy())
 
     else:
         raise ValueError("Invalid arguments")
 
-    rows, columns = aug[:, :-1].shape
+    sol, params, free_syms = A.gauss_jordan_solve(b, parameters=True)
 
-    # solve by reduced row echleon form
-    A, pivots = aug.rref()
-    A, v = A[:, :-1], A[:, -1]
-    pivots = list(filter(lambda p: p < columns, pivots))
-    rank = len(pivots)
-
-    # Bring to block form
-    permutation = Matrix(range(columns)).T
-    A = A.vstack(A, permutation)
-
-    for i, c in enumerate(pivots):
-        A.col_swap(i, c)
-
-    A, permutation = A[:-1, :], A[-1, :]
-
-    # check for existence of solutions
-    # rank of aug Matrix should be equal to rank of coefficient matrix
-    if not v[rank:, 0].is_zero:
-        raise ValueError("Linear system has no solution")
-
-    # get free symbols (free parameter)
-    free_syms = []
-    for r in range(len(symbols)):
-        if r not in pivots:
-            free_syms.append(symbols[r])  # non-pivots columns are free symbols
-
-    free_syms = Matrix(free_syms)
-    if not free_syms:
-        free_syms = Matrix(
-            [S.Zero for k in range(columns - rank)]).reshape(columns - rank, 1)
-
-    # solution in free symbols
-    V = A[:rank, rank:]
-    vt = v[:rank, 0]
-    free_sol = free_syms.vstack(vt - V*free_syms, free_syms)
-
-    # Undo permutation
-    sol = zeros(columns, 1)
-    for k, v in enumerate(free_sol):
-        sol[permutation[k], 0] = v
-
-    # Return Solution
     solution = []
-    for s in sol:
-        solution.append(s)
+    if params:
+        for s in sol:
+            for k, v in enumerate(params):
+                s = s.subs(v, symbols[free_syms[k]])
+            solution.append(s)
+
+    else:
+        for s in sol:
+            solution.append(s)
 
     solution = FiniteSet(tuple(solution))
     return solution
