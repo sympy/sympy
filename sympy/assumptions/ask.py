@@ -38,7 +38,7 @@ class QClass(object):
     @property
     def finite(self):
         r"""
-        Finite number predicate.
+        Finite predicate.
 
         ``ask(Q.finite(x))`` will return ``True`` if ``x`` is neither an infinity
         nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
@@ -101,13 +101,17 @@ class QClass(object):
         Composite number predicate.
 
         ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
-        at least one more positive divisor other and ``1`` and the number itself.
+        at least one positive divisor other than ``1`` and the number itself.
 
 
         Examples
         ========
 
         >>> from sympy import Q, ask
+        >>> ask(Q.composite(0))
+        False
+        >>> ask(Q.composite(1))
+        True
         >>> ask(Q.composite(2))
         False
         >>> ask(Q.composite(20))
@@ -121,18 +125,20 @@ class QClass(object):
         r"""
         Even number predicate.
 
-        ``ask(Q.even(x))`` is true iff x belongs to the set of odd numbers.
+        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even numbers.
 
 
         Examples
         ========
 
-        >>> from sympy import Q, ask
+        >>> from sympy import Q, ask, pi
         >>> ask(Q.even(0))
         True
         >>> ask(Q.even(2))
         True
         >>> ask(Q.even(3))
+        False
+        >>> ask(Q.even(pi))
         False
 
         """
