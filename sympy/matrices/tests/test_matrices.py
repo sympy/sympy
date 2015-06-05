@@ -2492,3 +2492,9 @@ def test_issue_9457_9467():
     raises(IndexError, lambda: P.col_del(10))
     Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: Q.col_del(-10))
+
+def test_issue_9476():
+    M = Matrix([[1, 2, 3], [2, 3,4]])
+    raises(TypeError, lambda: M.row_insert(1.5, Matrix([[1, 1, 1]])))
+    raises(TypeError, lambda: M.row_insert(2.5, Matrix([[1, 1, 1]])))
+    raises(TypeError, lambda: M.row_insert(-2.5, Matrix([[1, 1, 1]])))

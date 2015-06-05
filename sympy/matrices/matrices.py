@@ -3957,6 +3957,8 @@ class MatrixBase(object):
         row
         col_insert
         """
+        if not isinstance(pos, (int, Integer)):
+            raise TypeError("Index value must be 'int' or 'Integer': 'pos = %s'" % (pos))
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -3998,6 +4000,8 @@ class MatrixBase(object):
         col
         row_insert
         """
+        if not isinstance(pos, (int, Integer)):
+            raise TypeError("Index value must be 'int' or 'Integer': 'pos = %s'" % (pos))
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
