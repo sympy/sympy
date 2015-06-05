@@ -3484,11 +3484,11 @@ class MatrixBase(object):
         return type(self)(out)
 
     def _jordan_block_structure(self):
-        # To every eingenvalue may belong `i` blocks with size s(i)
+        # To every eigenvalue may belong `i` blocks with size s(i)
         # and a chain of generalized eigenvectors
         # which will be determined by the following computations:
         # for every eigenvalue we will add a dictionary
-        # containing, for all blocks, the blockssizes and the attached chain vectors
+        # containing, for all blocks, the blocksizes and the attached chain vectors
         # that will eventually be used to form the transformation P
         jordan_block_structures = {}
         _eigenvects = self.eigenvects()
@@ -3555,7 +3555,7 @@ class MatrixBase(object):
                 # and also their dimensions `a_s`
                 # this is mainly done for debugging since the number of blocks of a given size
                 # can be computed from the a_s, in order to check our result which is obtained simpler
-                # by counting the number of jordanchains for `a` given `s`
+                # by counting the number of Jordan chains for `a` given `s`
                 # `a_0` is `dim(Kernel(Ms[0]) = dim (Kernel(I)) = 0` since `I` is regular
 
                 l_jordan_chains={}
@@ -3578,16 +3578,16 @@ class MatrixBase(object):
                     Ns.append(Ns_new)
                     smax += 1
 
-                # We now have `Ms[-1]=((self-l*I)**s)=Z=0`
-                # We now know the size of the biggest jordan block
-                # associatet with `l` to be `s`
-                # now let us proceed with the computation of the associate part of the transformation matrix `P`
+                # We now have `Ms[-1]=((self-l*I)**s)=Z=0`.
+                # We also know the size of the biggest Jordan block
+                # associated with `l` to be `s`.
+                # Now let us proceed with the computation of the associate part of the transformation matrix `P`.
                 # We already know the kernel (=nullspace)  `K_l` of (self-lI) which consists of the
-                # eigenvectors belonging to eigenvalue `l`
+                # eigenvectors belonging to eigenvalue `l`.
                 # The dimension of this space is the geometric multiplicity of eigenvalue `l`.
                 # For every eigenvector ev out of `K_l`, there exists a subspace that is
-                # spanned by the jordan chain of ev. The dimension of this subspace is
-                # represented by the length s of the jordan block.
+                # spanned by the Jordan chain of ev. The dimension of this subspace is
+                # represented by the length `s` of the Jordan block.
                 # The chain itself is given by `{e_0,..,e_s-1}` where:
                 # `e_k+1 =(self-lI)e_k (*)`
                 # and
@@ -3596,7 +3596,7 @@ class MatrixBase(object):
                 # reaches `e_0`. Unfortunately this can not be done by simply solving system (*) since its matrix
                 # is singular (by definition of the eigenspaces).
                 # This approach would force us a choose in every step the degree of freedom undetermined
-                # by (*). This is difficult to implement with computer algebra systems and also quite unefficient.
+                # by (*). This is difficult to implement with computer algebra systems and also quite inefficient.
                 # We therefore reformulate the problem in terms of nullspaces.
                 # To do so we start from the other end and choose `e0`'s out of
                 # `E=Kernel(self-lI)^s / Kernel(self-lI)^(s-1)`
@@ -3605,26 +3605,26 @@ class MatrixBase(object):
                 # and the only remaining condition is to choose vectors in `Kernel(self-lI)^(s-1)`.
                 # Subsequently we compute `e_1=(self-lI)e_0`, `e_2=(self-lI)*e_1` and so on.
                 # The subspace `E` can have a dimension larger than one.
-                # That means that we have more than one Jordanblocks of size `s` for the eigenvalue `l`
-                # and as many jordanchains (This is the case in the second example).
-                # In this case we start as many jordan chains and have as many blocks of size s in the jcf.
-                # We now have all the jordanblocks of size `s` but there might be others attached to the same
+                # That means that we have more than one Jordan block of size `s` for the eigenvalue `l`
+                # and as many Jordan chains (this is the case in the second example).
+                # In this case we start as many Jordan chains and have as many blocks of size `s` in the jcf.
+                # We now have all the Jordan blocks of size `s` but there might be others attached to the same
                 # eigenvalue that are smaller.
-                # So we will do the same procedure also for `s-1` and so on until 1 the lowest possible order
-                # where the jordanchain is of lenght 1 and just represented by the eigenvector.
+                # So we will do the same procedure also for `s-1` and so on until 1 (the lowest possible order
+                # where the Jordan chain is of length 1 and just represented by the eigenvector).
 
                 for s in reversed(range(1, smax+1)):
                     S = Ms[s]
                     # We want the vectors in `Kernel((self-lI)^s)` (**),
                     # but without those in `Kernel(self-lI)^s-1` so we will add these as additional equations
-                    # to the sytem formed by `S` (`S` will no longer be quadratic but this does not harm
-                    # since S is rank deficiant).
+                    # to the system formed by `S` (`S` will no longer be quadratic but this does no harm
+                    # since `S` is rank deficient).
                     exclude_vectors = Ns[s-1]
                     for k in range(0, a[s-1]):
-                        S = S.col_join((exclude_vectors[k]).transpose())
-                    # We also want to exclude the vectors in the chains for the bigger blogs
+                        S = S.col_join((exclude_vectors[k]).adjoint())
+                    # We also want to exclude the vectors in the chains for the bigger blocks
                     # that we have already computed (if there are any).
-                    # (That is why we start wiht the biggest s).
+                    # (That is why we start with the biggest s).
 
                     ########   Implementation remark:   ########
 
@@ -3634,22 +3634,19 @@ class MatrixBase(object):
                     # This happens if there are more than one blocks attached to the same eigenvalue *AND*
                     # the current blocksize is smaller than the block whose chain vectors we exclude.
                     # If the current block has size `s_i` and the next bigger block has size `s_i-1` then
-                    # the first `s_i-s_i-1` chainvectors of the bigger block are allready excluded by (**).
+                    # the first `s_i-s_i-1` chainvectors of the bigger block are already excluded by (**).
                     # The unnecassary adding of these equations could be avoided if the algorithm would
                     # take into account the lengths of the already computed chains which are already stored
                     # and add only the last `s` items.
                     # However the following loop would be a good deal more nested to do so.
                     # Since adding a linear dependent equation does not change the result,
                     # it can harm only in terms of efficiency.
-                    # So to be sure i let it there for the moment
+                    # So to be sure I left it there for the moment.
 
-                    # A more elegant alternative approach might be to drop condition (**) altogether
-                    # because it is added implicitly by excluding the chainvectors but the original author
-                    # of this code was not sure if this is correct in all cases.
                     l = len(chain_vectors)
                     if l > 0:
                         for k in range(0, l):
-                            old = chain_vectors[k].transpose()
+                            old = chain_vectors[k].adjoint()
                             S = S.col_join(old)
                     e0s = S.nullspace()
                     # Determine the number of chain leaders which equals the number of blocks with that size.

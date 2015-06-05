@@ -1,7 +1,8 @@
 """Integration functions that integrates a sympy expression.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import integrate, sin
     >>> from sympy.abc import x
     >>> integrate(1/x,x)

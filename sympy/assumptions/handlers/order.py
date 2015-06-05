@@ -14,7 +14,8 @@ class AskNegativeHandler(CommonHandler):
 
     Test that an expression is less (strict) than zero.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import ask, Q, pi
     >>> ask(Q.negative(pi+1)) # this calls AskNegativeHandler.Add

@@ -14,6 +14,7 @@ from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.geometry.util import idiff, are_coplanar
 from sympy.integrals.integrals import Integral
+from sympy.matrices import Matrix
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import verify_numerically
@@ -230,6 +231,58 @@ def test_point3D():
     assert p.translate(1) == Point3D(2, 1, 1)
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
+
+    # Test __new__
+    assert Point3D(Point3D(1, 2, 3), 4, 5, evaluate=False) ==  Point3D(1, 2, 3)
+
+
+    # Test length property returns correctly
+    assert p.length == 0
+    assert p1_1.length == 0
+    assert p1_2.length == 0
+
+    # Test are_colinear type error
+    raises(TypeError, lambda: Point3D.are_collinear(p, x))
+
+    # Test are_coplanar
+    planar2 = Point3D(1, -1, 1)
+    planar3 = Point3D(-1, 1, 1)
+    assert Point3D.are_coplanar(p, planar2, planar3) == True
+    assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
+    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2))
+    planar2 = Point3D(1, 1, 2)
+    planar3 = Point3D(1, 1, 3)
+    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2, planar3))
+
+    # Test Intersection
+    assert planar2.intersection(Line3D(p, planar3)) == [Point3D(1, 1, 2)]
+
+    # Test Scale
+    assert planar2.scale(1, 1, 1) == planar2
+    assert planar2.scale(2, 2, 2, planar3) == Point3D(1, 1, 1)
+    assert planar2.scale(1, 1, 1, p3) == planar2
+
+    # Test Transform
+    identity = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    assert p.transform(identity) == p
+    trans = Matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]])
+    assert p.transform(trans) == Point3D(2, 2, 2)
+
+    # Test Equals
+    assert p.equals(x1) == False
+
+    # Test __sub__
+    p_2d = Point(0, 0)
+    raises(ValueError, lambda: (p - p_2d))
+
+
+def test_issue_9214():
+    p1 = Point3D(4, -2, 6)
+    p2 = Point3D(1, 2, 3)
+    p3 = Point3D(7, 2, 3)
+
+    assert Point3D.are_collinear(p1, p2, p3) is False
+
 
 def test_line_geom():
     p1 = Point(0, 0)
@@ -734,6 +787,7 @@ def test_line3d():
     assert Line3D((0, 0, 0), (x, y, z)).contains((2*x, 2*y, 2*z))
 
 
+@slow
 def test_plane():
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
@@ -741,8 +795,6 @@ def test_plane():
     p4 = Point3D(x, x, x)
     p5 = Point3D(y, y, y)
 
-    raises(NotImplementedError, lambda: Plane(p1, p2, p4))
-    raises(NotImplementedError, lambda: Plane(p1, p2, p5))
     raises(ValueError, lambda: Plane(p1, p2))
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
@@ -902,6 +954,7 @@ def test_plane():
            '[Point3D(4.0, -0.89, 2.3)]'
 
 
+@slow
 def test_ellipse_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
@@ -1690,7 +1743,6 @@ def test_issue_2941():
     _check()
 
 
-@slow
 def test_symbolic_intersect():
     # Issue 7814.
     circle = Circle(Point(x, 0), y)

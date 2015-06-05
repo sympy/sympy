@@ -52,8 +52,8 @@ class Patch(Basic):
     This object serves as a container/parent for all coordinate system charts
     that can be defined on the patch it represents.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Define a Manifold and a Patch on that Manifold:
 

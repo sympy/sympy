@@ -31,6 +31,8 @@ known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
     "conjugate": "conj",
+    "DiracDelta": "dirac",
+    "Heaviside": "heaviside",
 }
 
 
@@ -561,6 +563,7 @@ def octave_code(expr, assign_to=None, **settings):
     ``contract=True`` these expressions will be turned into loops, whereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
+
     >>> from sympy import Eq, IndexedBase, Idx, ccode
     >>> len_y = 5
     >>> y = IndexedBase('y', shape=(len_y,))

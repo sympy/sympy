@@ -66,7 +66,9 @@ def _peeloff_pi(arg):
     This assumes ARG to be an Add.
     The multiple of pi returned in the second position is always a Rational.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
     >>> from sympy import pi
     >>> from sympy.abc import x, y
@@ -715,6 +717,7 @@ class cos(TrigonometricFunction):
             # if n can be factored in terms of Fermat primes with
             # multiplicity of each being 1, return those primes, else
             # False
+            from sympy import chebyshevt
             primes = []
             for p_i in cst_table_some:
                 n, r = divmod(n, p_i)
@@ -1463,7 +1466,7 @@ class sec(ReciprocalTrigonometricFunction):
 
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sec
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sec
     """
 
     _reciprocal_of = cos
@@ -1566,6 +1569,89 @@ class csc(ReciprocalTrigonometricFunction):
             k = n//2 + 1
             return ((-1)**(k - 1)*2*(2**(2*k - 1) - 1)*
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
+
+
+class sinc(TrigonometricFunction):
+    r"""Represents unnormalized sinc function
+
+    Examples
+    ========
+
+    >>> from sympy import sinc, oo, jn, Product, Symbol
+    >>> from sympy.abc import x
+    >>> sinc(x)
+    sinc(x)
+
+    * Automated Evaluation
+
+    >>> sinc(0)
+    1
+    >>> sinc(oo)
+    0
+
+    * Differentiation
+
+    >>> sinc(x).diff()
+    (x*cos(x) - sin(x))/x**2
+
+    * Series Expansion
+
+    >>> sinc(x).series()
+    1 - x**2/6 + x**4/120 + O(x**6)
+
+    * As zero'th order spherical Bessel Function
+
+    >>> sinc(x).rewrite(jn)
+    jn(0, x)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Sinc_function
+
+    """
+
+    def fdiff(self, argindex=1):
+        x = self.args[0]
+        if argindex == 1:
+            return (x*cos(x) - sin(x)) / x**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_zero:
+            return S.One
+        if arg.is_Number:
+            if arg in [S.Infinity, -S.Infinity]:
+                return S.Zero
+            elif arg is S.NaN:
+                return S.NaN
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
+        if arg.could_extract_minus_sign():
+            return cls(-arg)
+
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                if arg.is_nonzero:
+                    return S.Zero
+            elif (2*pi_coeff).is_integer:
+                return S.NegativeOne**(pi_coeff - S.Half) / arg
+
+    def _eval_nseries(self, x, n, logx):
+        x = self.args[0]
+        return (sin(x)/x)._eval_nseries(x, n, logx)
+
+    def _eval_rewrite_as_jn(self, arg):
+        from sympy.functions.special.bessel import jn
+        return jn(0, arg)
+
+    def _eval_rewrite_as_sin(self, arg):
+        return sin(arg) / arg
 
 
 ###############################################################################
@@ -1746,8 +1832,11 @@ class acos(InverseTrigonometricFunction):
     Notes
     =====
 
-    acos(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    ``acos(x)`` will evaluate automatically in the cases
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+
+    ``acos(zoo)`` evaluates to ``zoo``
+    (see note in :py:class`sympy.functions.elementary.trigonometric.asec`)
 
     Examples
     ========
@@ -1807,6 +1896,9 @@ class acos(InverseTrigonometricFunction):
                 return S.Zero
             elif arg is S.NegativeOne:
                 return S.Pi
+
+        if arg is S.ComplexInfinity:
+            return S.ComplexInfinity
 
         if arg.is_number:
             cst_table = {
@@ -2193,8 +2285,26 @@ class asec(InverseTrigonometricFunction):
     Notes
     =====
 
-    asec(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    ``asec(x)`` will evaluate automatically in the cases
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+
+    ``asec(x)`` has branch cut in the interval [-1, 1]. For complex arguments,
+    it can be defined [4]_ as
+
+    .. math::
+        sec^{-1}(z) = -i*(log(\sqrt{1 - z^2} + 1) / z)
+
+    At ``x = 0``, for positive branch cut, the limit evaluates to ``zoo``. For
+    negative branch cut, the limit
+
+    .. math::
+        \lim_{z \to 0}-i*(log(-\sqrt{1 - z^2} + 1) / z)
+
+    simplifies to :math:`-i*log(z/2 + O(z^3))` which ultimately evaluates to
+    ``zoo``.
+
+    As ``asex(x)`` = ``asec(1/x)``, a similar argument can be given for
+    ``acos(x)``.
 
     Examples
     ========
@@ -2217,10 +2327,13 @@ class asec(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
+    .. [4] http://refrence.wolfram.com/language/ref/ArcSec.html
     """
 
     @classmethod
     def eval(cls, arg):
+        if arg.is_zero:
+            return S.ComplexInfinity
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2250,6 +2363,12 @@ class asec(InverseTrigonometricFunction):
             return log(arg)
         else:
             return self.func(arg)
+
+    def _eval_is_real(self):
+        x = self.args[0]
+        if x.is_real is False:
+            return False
+        return (x - 1).is_nonnegative or (-x - 1).is_nonnegative
 
     def _eval_rewrite_as_log(self, arg):
         return S.Pi/2 + S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))

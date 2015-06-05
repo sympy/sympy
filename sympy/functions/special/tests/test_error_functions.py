@@ -1,8 +1,8 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
     re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, S,
-    sqrt, sin, cos, sinh, cosh, exp, log, pi, EulerGamma,
+    Symbol, I, integrate, Integral, S,
+    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
     gamma, uppergamma,
     Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
@@ -515,6 +515,9 @@ def test_si():
     assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
+
+    t = Symbol('t', Dummy=True)
+    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
 
 def test_ci():

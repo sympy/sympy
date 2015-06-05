@@ -49,6 +49,10 @@ class BesselBase(Function):
         """ The argument of the bessel-type function. """
         return self.args[1]
 
+    @classmethod
+    def eval(cls, nu, z):
+        return
+
     def fdiff(self, argindex=2):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
@@ -699,7 +703,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     * method = "sympy": uses :func:`mpmath.besseljzero`
     * method = "scipy": uses the
-      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn.html>`_
+      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
       and
       `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
       to find all

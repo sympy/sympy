@@ -479,7 +479,7 @@ def test_issue_6540_6552():
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
-def test_issue_5596():
+def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'

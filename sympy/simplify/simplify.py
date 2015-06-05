@@ -2512,12 +2512,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     >>> x, y = symbols('x y')
 
     Two radicals are automatically joined through Mul:
+
     >>> a=sqrt(x*sqrt(y))
     >>> a*a**3 == a**4
     True
 
     But if an integer power of that radical has been
     autoexpanded then Mul does not join the resulting factors:
+
     >>> a**4 # auto expands to a Mul, no longer a Pow
     x**2*y
     >>> _*a # so Mul doesn't combine them
@@ -2528,6 +2530,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
 
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
@@ -2538,8 +2541,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     expr = sympify(expr)
 
-    if not isinstance(expr, Basic) or expr.is_Atom or expr in (
-            exp_polar(0), exp_polar(1)):
+    if (not isinstance(expr, Basic) or isinstance(expr, MatrixSymbol) or (
+            expr.is_Atom or expr in (exp_polar(0), exp_polar(1)))):
         return expr
 
     if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:

@@ -422,7 +422,7 @@ class PicklableWithSlots(object):
     Mixin class that allows to pickle objects with ``__slots__``.
 
     Examples
-    --------
+    ========
 
     First define a class that mixes :class:`PicklableWithSlots` in::
 
