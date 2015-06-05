@@ -9,7 +9,6 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core.decorators import deprecated
-from sympy.utilities.decorator import classproperty, ClassPropertyDescriptor
 
 
 # Deprecated predicates should be added to this list
@@ -19,12 +18,12 @@ deprecated_predicates = [
 ]
 
 
-class Q(object):
+class QClass(object):
     """
     This class contains all the supported keys by ``ask``.
     """
 
-    @classproperty
+    @property
     def antihermitian(self):
         r"""
         Antihermitian predicate.
@@ -36,7 +35,7 @@ class Q(object):
         """
         return Predicate('antihermitian')
 
-    @classproperty
+    @property
     def finite(self):
         r"""
         Finite number predicate.
@@ -60,7 +59,7 @@ class Q(object):
         """
         return Predicate('finite')
 
-    @classproperty
+    @property
     def commutative(self):
         r"""
         Commutative predicate.
@@ -72,7 +71,7 @@ class Q(object):
         """
         return Predicate('commutative')
 
-    @classproperty
+    @property
     def complex(self):
         r"""
         Complex number predicate.
@@ -96,7 +95,7 @@ class Q(object):
         """
         return Predicate('complex')
 
-    @classproperty
+    @property
     def composite(self):
         r"""
         Composite number predicate.
@@ -117,7 +116,7 @@ class Q(object):
         """
         return Predicate('composite')
 
-    @classproperty
+    @property
     def even(self):
         r"""
         Even number predicate.
@@ -139,15 +138,15 @@ class Q(object):
         """
         return Predicate('even')
 
-    @classproperty
+    @property
     def extended_real(self):
         return Predicate('extended_real')
 
-    @classproperty
+    @property
     def hermitian(self):
         return Predicate('hermitian')
 
-    @classproperty
+    @property
     def imaginary(self):
         r"""
         Imaginary number predicate.
@@ -171,15 +170,15 @@ class Q(object):
         """
         return Predicate('imaginary')
 
-    @classproperty
+    @property
     def infinitesimal(self):
         return Predicate('infinitesimal')
 
-    @classproperty
+    @property
     def infinite(self):
         return Predicate('infinite')
 
-    @classproperty
+    @property
     def integer(self):
         r"""
         Integer predicate.
@@ -199,23 +198,23 @@ class Q(object):
         """
         return Predicate('integer')
 
-    @classproperty
+    @property
     def irrational(self):
         return Predicate('irrational')
 
-    @classproperty
+    @property
     def rational(self):
         return Predicate('rational')
 
-    @classproperty
+    @property
     def algebraic(self):
         return Predicate('algebraic')
 
-    @classproperty
+    @property
     def transcendental(self):
         return Predicate('transcendental')
 
-    @classproperty
+    @property
     def negative(self):
         r"""
         Negative number predicate.
@@ -253,7 +252,7 @@ class Q(object):
         """
         return Predicate('negative')
 
-    @classproperty
+    @property
     def nonzero(self):
         r"""
         Nonzero real number predicate.
@@ -291,7 +290,7 @@ class Q(object):
         """
         return Predicate('nonzero')
 
-    @classproperty
+    @property
     def positive(self):
         r"""
         Positive real number predicate.
@@ -329,11 +328,11 @@ class Q(object):
         """
         return Predicate('positive')
 
-    @classproperty
+    @property
     def prime(self):
         return Predicate('prime')
 
-    @classproperty
+    @property
     def real(self):
         r"""
         Real number predicate.
@@ -383,11 +382,11 @@ class Q(object):
         """
         return Predicate('real')
 
-    @classproperty
+    @property
     def odd(self):
         return Predicate('odd')
 
-    @classproperty
+    @property
     def is_true(self):
         r"""
         Generic predicate.
@@ -406,95 +405,98 @@ class Q(object):
         """
         return Predicate('is_true')
 
-    @classproperty
+    @property
     def nonpositive(self):
         return Predicate('nonpositive')
 
-    @classproperty
+    @property
     def nonnegative(self):
         return Predicate('nonnegative')
 
-    @classproperty
+    @property
     def zero(self):
         return Predicate('zero')
 
-    @classproperty
+    @property
     def symmetric(self):
         return Predicate('symmetric')
 
-    @classproperty
+    @property
     def invertible(self):
         return Predicate('invertible')
 
-    @classproperty
+    @property
     def singular(self):
         return Predicate('singular')
 
-    @classproperty
+    @property
     def orthogonal(self):
         return Predicate('orthogonal')
 
-    @classproperty
+    @property
     def unitary(self):
         return Predicate('unitary')
 
-    @classproperty
+    @property
     def normal(self):
         return Predicate('normal')
 
-    @classproperty
+    @property
     def positive_definite(self):
         return Predicate('positive_definite')
 
-    @classproperty
+    @property
     def upper_triangular(self):
         return Predicate('upper_triangular')
 
-    @classproperty
+    @property
     def lower_triangular(self):
         return Predicate('lower_triangular')
 
-    @classproperty
+    @property
     def diagonal(self):
         return Predicate('diagonal')
 
-    @classproperty
+    @property
     def triangular(self):
         return Predicate('triangular')
 
-    @classproperty
+    @property
     def unit_triangular(self):
         return Predicate('unit_triangular')
 
-    @classproperty
+    @property
     def fullrank(self):
         return Predicate('fullrank')
 
-    @classproperty
+    @property
     def square(self):
         return Predicate('square')
 
-    @classproperty
+    @property
     def real_elements(self):
         return Predicate('real_elements')
 
-    @classproperty
+    @property
     def complex_elements(self):
         return Predicate('complex_elements')
 
-    @classproperty
+    @property
     def integer_elements(self):
         return Predicate('integer_elements')
 
-    @classproperty
+    @property
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
     def bounded(self):
         return Predicate('finite')
 
-    @classproperty
+    @property
     @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
     def infinity(self):
         return Predicate('infinite')
+
+
+Q = QClass()
 
 
 def _extract_facts(expr, symbol):
