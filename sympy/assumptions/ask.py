@@ -12,31 +12,131 @@ from sympy.core.decorators import deprecated
 from sympy.utilities.decorator import classproperty, ClassPropertyDescriptor
 
 
+# Deprecated predicates should be added to this list
+deprecated_predicates = [
+    'bounded',
+    'infinity'
+]
+
+
 class Q(object):
-    """Supported ask keys."""
+    """
+    This class contains all the supported keys by ``ask``.
+    """
 
     @classproperty
     def antihermitian(self):
+        r"""
+        Antihermitian predicate.
+
+        ``ask(Q.antihermitian(x))`` is true iff x belongs to the field of
+        antihermitian operators.
+
+        TODO: Add examples
+        """
         return Predicate('antihermitian')
 
     @classproperty
     def finite(self):
+        r"""
+        Finite number predicate.
+
+        ``ask(Q.finite(x))`` will return ``True`` if ``x`` is neither an infinity
+        nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
+        having a bounded absolute value.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, Symbol, S, oo
+        >>> x = Symbol('x')
+        >>> ask(Q.finite(S.NaN))
+        False
+        >>> ask(Q.finite(oo))
+        False
+        >>> ask(Q.finite(1))
+        True
+
+        """
         return Predicate('finite')
 
     @classproperty
     def commutative(self):
+        r"""
+        Commutative predicate.
+
+        ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
+        object with respect to multiplication operation.
+
+        TODO: Add examples
+        """
         return Predicate('commutative')
 
     @classproperty
     def complex(self):
+        r"""
+        Complex number predicate.
+
+        ``ask(Q.complex(x))`` is true iff ``x`` belongs to the set of complex
+        numbers.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, Symbol, ask, I, oo
+        >>> x = Symbol('x')
+        >>> ask(Q.complex(0))
+        True
+        >>> ask(Q.complex(2 + 3*I))
+        True
+        >>> ask(Q.complex(oo))
+        False
+
+        """
         return Predicate('complex')
 
     @classproperty
     def composite(self):
+        r"""
+        Composite number predicate.
+
+        ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
+        at least one more positive divisor other and ``1`` and the number itself.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask
+        >>> ask(Q.composite(2))
+        False
+        >>> ask(Q.composite(20))
+        True
+
+        """
         return Predicate('composite')
 
     @classproperty
     def even(self):
+        r"""
+        Even number predicate.
+
+        ``ask(Q.even(x))`` is true iff x belongs to the set of odd numbers.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask
+        >>> ask(Q.even(0))
+        True
+        >>> ask(Q.even(2))
+        True
+        >>> ask(Q.even(3))
+        False
+
+        """
         return Predicate('even')
 
     @classproperty
@@ -49,6 +149,26 @@ class Q(object):
 
     @classproperty
     def imaginary(self):
+        r"""
+        Imaginary number predicate.
+
+        ``ask(Q.imaginary(x))`` is true iff ``x`` can be written as a real
+        number multiplied by the imaginary unit ``I``. Please note that ``0``
+        is not considered to be an imaginary number.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, I
+        >>> ask(Q.imaginary(3*I))
+        True
+        >>> ask(Q.imaginary(2 + 3*I))
+        False
+        >>> ask(Q.imaginary(0))
+        False
+
+        """
         return Predicate('imaginary')
 
     @classproperty
@@ -61,6 +181,22 @@ class Q(object):
 
     @classproperty
     def integer(self):
+        r"""
+        Integer predicate.
+
+        ``ask(Q.integer(x))`` is true iff ``x`` belongs to the set of integer numbers.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, S
+        >>> ask(Q.integer(5))
+        True
+        >>> ask(Q.integer(S(1)/2))
+        False
+
+        """
         return Predicate('integer')
 
     @classproperty
@@ -80,15 +216,117 @@ class Q(object):
         return Predicate('transcendental')
 
     @classproperty
-    def negative():
+    def negative(self):
+        r"""
+        Negative number predicate.
+
+        ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
+        it is in the interval `(-oo, 0)`.  Note in particular that negative
+        infinity is not negative.
+
+        A few important facts about negative numbers:
+
+        - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
+          thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
+          whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+          negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
+          ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
+          true, whereas ``Q.nonnegative(I)`` is false.
+
+        - See the docstring of ``Q.real`` for more information about related facts.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I
+        >>> x = symbols('x')
+        >>> ask(Q.negative(x), Q.real(x) & ~Q.positive(x) & ~Q.zero(x))
+        True
+        >>> ask(Q.negative(-1))
+        True
+        >>> ask(Q.nonnegative(I))
+        False
+        >>> ask(~Q.negative(I))
+        True
+
+        """
         return Predicate('negative')
 
     @classproperty
     def nonzero(self):
+        r"""
+        Nonzero real number predicate.
+
+        ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
+        particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
+        ``~Q.zero(x)`` if you want the negation of being zero without any real
+        assumptions.
+
+        A few important facts about nonzero numbers:
+
+        - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
+
+        - See the docstring of ``Q.real`` for more information about related facts.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I
+        >>> x = symbols('x')
+        >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+        None
+        >>> ask(Q.nonzero(x), Q.positive(x))
+        True
+        >>> ask(Q.nonzero(x), Q.zero(x))
+        False
+        >>> ask(Q.nonzero(0))
+        False
+        >>> ask(Q.nonzero(I))
+        False
+        >>> ask(~Q.zero(I))
+        True
+
+        """
         return Predicate('nonzero')
 
     @classproperty
     def positive(self):
+        r"""
+        Positive real number predicate.
+
+        ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
+        is in the interval `(0, \infty)`.  In particular, infinity is not
+        positive.
+
+        A few important facts about positive numbers:
+
+        - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
+          thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
+          whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
+          positive, i.e., ``Q.positive(x)`` is logically equivalent to
+          `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
+          true, whereas ``Q.nonpositive(I)`` is false.
+
+        - See the docstring of ``Q.real`` for more information about related facts.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I
+        >>> x = symbols('x')
+        >>> ask(Q.positive(x), Q.real(x) & ~Q.negative(x) & ~Q.zero(x))
+        True
+        >>> ask(Q.positive(1))
+        True
+        >>> ask(Q.nonpositive(I))
+        False
+        >>> ask(~Q.positive(I))
+        True
+
+        """
         return Predicate('positive')
 
     @classproperty
@@ -97,6 +335,52 @@ class Q(object):
 
     @classproperty
     def real(self):
+        r"""
+        Real number predicate.
+
+        ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
+        interval `(-\infty, \infty)`.  Note that, in particular the infinities are
+        not real. Use ``Q.extended_real`` if you want to consider those as well.
+
+        A few important facts about reals:
+
+        - Every real number is positive, negative, or zero.  Furthermore, because
+          these sets are pairwise disjoint, each real number is exactly one of
+          those three.
+
+        - Every real number is also complex.
+
+        - Every real number is either rational or irrational.
+
+        - Every real number is either algebraic or transcendental.
+
+        - The facts ``Q.negative``, ``Q.zero``, ``Q.positive``, ``Q.nonnegative``,
+          ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``, ``Q.rational``, and
+          ``Q.irrational`` all imply ``Q.real``, as do all facts that imply those
+          facts.
+
+        - The facts ``Q.algebraic``, and ``Q.transcendental`` do not imply
+          ``Q.real``; they imply ``Q.complex``. An algebraic or transcendental
+          number may or may not be real.
+
+        - The "non" facts (i.e., ``Q.nonnegative``, ``Q.nonzero``, and
+          ``Q.nonpositive``) are not equivalent to not the fact, but rather, not
+          the fact *and* ``Q.real``.  For example, ``Q.nonnegative`` means
+          ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
+          nonzero, or nonpositive.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols
+        >>> x = symbols('x')
+        >>> ask(Q.real(x), Q.positive(x))
+        True
+        >>> ask(Q.real(0))
+        True
+
+        """
         return Predicate('real')
 
     @classproperty
@@ -105,6 +389,21 @@ class Q(object):
 
     @classproperty
     def is_true(self):
+        r"""
+        Generic predicate.
+
+        ``Q.is_true(x)`` is true iff ``x`` is true. This only makes sense if ``x`` is a
+        predicate.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, symbols
+        >>> x = symbols('x')
+        >>> ask(Q.is_true(True))
+        True
+
+        """
         return Predicate('is_true')
 
     @classproperty
@@ -472,7 +771,7 @@ for name, value in _handlers:
     register_handler(name, _val_template % value)
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
-                    if not (attr.startswith('__') or isinstance(Q.__dict__[attr], ClassPropertyDescriptor))]
+                    if not (attr.startswith('__') or attr in deprecated_predicates)]
 
 known_facts = And(
     Implies(Q.infinite, ~Q.finite),
