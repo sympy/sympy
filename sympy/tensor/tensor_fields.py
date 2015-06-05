@@ -641,17 +641,10 @@ def lie_w(omega, X, args):
     Lie derivative of a differential form:
 
     >>> li = lie_w(omega,X,arg)
-    >>> for i in li.index_list:
-    ...     print(str(i), str(li[i]))
-    (0, 0) 0
-    (0, 1) x2**3*x3 + x3**3 + x3
-    (0, 2) -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
-    (1, 0) -x2**3*x3 - x3**3 - x3
-    (1, 1) 0
-    (1, 2) -2*x1*x2**3 + 3*x1*x3**2 + x1
-    (2, 0) x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3)
-    (2, 1) 2*x1*x2**3 - 3*x1*x3**2 - x1
-    (2, 2) 0
+    >>> print(li)
+    0  x2**4 + 2*x2 - cos(x3)  -2*x1*x2**3 - 3*x1*x3**2 + x2*sin(x3)
+           -x2**4 - 2*x2 + cos(x3)  0  -3*x1**2*x2**2
+     2*x1*x2**3 + 3*x1*x3**2 - x2*sin(x3)  3*x1**2*x2**2  0
 
     >>> li.type_pq
     (0, 2)
@@ -963,8 +956,7 @@ def g_tensor(T, S, g):
     >>> omega[2,2]=x*y*w
     >>> g = Matrix([[2,1,0],[1,3,0],[0,0,1]])
     >>> print(g_tensor(omega,omega,g))
-    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*\
-    (2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
+    w**2*x**2*y**2 + 3*y**4 + (-w/5 + 2*y/5)*(2*y + z) + (3*w/5 - y/5)*(2*w + x) + (w + 3*x)*(3*x/5 - z/5) + (-x/5 + 2*z/5)*(y + 3*z)
 
     """
     # Handling of a input tensors
@@ -1162,7 +1154,7 @@ def codiff(w, g, args, eta=0):
     =========
 
     >>> from sympy import symbols, Matrix
-    >>> from sympy.tensor.arraypy import Arraypy
+    >>> from sympy.tensor.arraypy import Arraypy, TensorArray
     >>> from sympy.tensor.tensor_fields import codiff
 
     >>> x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
