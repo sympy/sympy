@@ -1525,7 +1525,7 @@ class PrettyPrinter(Printer):
 
         if s.start is S.NegativeInfinity:
             stop = s.stop
-            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2), \
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
                 s.coeff(stop - 1), s.coeff(stop))
         elif s.stop is S.Infinity or s.length > 4:
             it = iter(s)

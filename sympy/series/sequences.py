@@ -6,7 +6,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.function import Lambda
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.compatibility import (range, integer_types, with_metaclass,\
+from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
@@ -280,11 +280,9 @@ class SeqBase(Expr):
         return self.mul(other)
 
     def __iter__(self):
-        i = 0
-        while(i < self.length):
+        for i in range(self.length):
             pt = self._ith_point(i)
             yield self.coeff(pt)
-            i += 1
 
     def __getitem__(self, index):
         if isinstance(index, integer_types):
@@ -296,7 +294,7 @@ class SeqBase(Expr):
                 start = 0
             if stop is None:
                 stop = self.length
-            return [self.coeff(self._ith_point(i, index.step)) for i in\
+            return [self.coeff(self._ith_point(i, index.step)) for i in
                                range(start, stop)]
 
 
@@ -377,10 +375,10 @@ def _parse_interval(interval):
         elif len(interval) == 3:
             start, stop, step = interval
 
-    if step == None:
+    if step is None:
         step = 1 # default
 
-    if start == None or stop == None:
+    if start is None or stop is None:
         raise ValueError('Invalid limits given: %s' % str(interval))
 
     if start is S.NegativeInfinity and stop is S.Infinity:
@@ -686,7 +684,6 @@ class SeqFormula(SeqExpr):
             formula = (form1 + form2.subs(v2, v1), v1)
             return SeqFormula(formula, self._intersect_interval(other))
 
-
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
         if isinstance(other, SeqFormula):
@@ -699,7 +696,7 @@ class SeqFormula(SeqExpr):
         """See docstring of SeqBase.coeff_mul"""
         coeff = sympify(coeff)
         formula = self.formula * coeff
-        return SeqFormula((formula, self.variables[0]), \
+        return SeqFormula((formula, self.variables[0]),
                           (self.interval, self.step))
 
 
@@ -771,7 +768,7 @@ class SeqFunc(SeqExpr):
 
     def _add(self, other):
         """See docstring of SeqBase._add"""
-        if isinstance(other, SeqFunc)
+        if isinstance(other, SeqFunc):
             func1, v1 = self.function, self.variables[0]
             func2, v2 = other.function, other.variables[0]
             function = Lambda(v1, func1.expr + func2.expr.subs(v2, v1))
@@ -779,7 +776,7 @@ class SeqFunc(SeqExpr):
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
-        if isinstance(other, SeqFunc)
+        if isinstance(other, SeqFunc):
             func1, v1 = self.function, self.variables[0]
             func2, v2 = other.function, other.variables[0]
             function = Lambda(v1, func1.expr * func2.expr.subs(v2, v1))
@@ -789,7 +786,7 @@ class SeqFunc(SeqExpr):
         """See docstring of SeqBase.coeff_mul"""
         coeff = sympify(coeff)
         expr = self.function.expr * coeff
-        return SeqFunc(Lambda(self.variables[0], expr), \
+        return SeqFunc(Lambda(self.variables[0], expr),
                           (self.interval, self.step))
 
 
@@ -871,14 +868,14 @@ class SeqExprOp(SeqBase):
         """Generator for the sequence
         returns a tuple of generators of all the argument sequences
         """
-        return tuple([a.gen for a in self.args])
+        return tuple(a.gen for a in self.args)
 
     @property
     def interval(self):
         """Sequence is defined on the intersection
         of all the intervals of respective sequences
         """
-        return Intersection(*[a.interval for a in self.args])
+        return Intersection(a.interval for a in self.args)
 
     @property
     def start(self):
@@ -952,13 +949,13 @@ class SeqAdd(Add, SeqExprOp):
                             " iterables of Sequences")
         args = _flatten(args)
 
-        args = [a for a in args if not a is S.EmptySequence]
+        args = [a for a in args if a is not S.EmptySequence]
 
         # Addition of no sequences is EmptySequence
         if len(args) == 0:
             return S.EmptySequence
 
-        if Intersection(*[a.interval for a in args]) is S.EmptySet:
+        if Intersection(a.interval for a in args) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -993,7 +990,7 @@ class SeqAdd(Add, SeqExprOp):
                     # This returns None if s does not know how to add
                     # with t. Returns the newly added sequence otherwise
                     if new_seq is not None:
-                        new_args = [a for a in args if not a in (s, t)]
+                        new_args = [a for a in args if a not in (s, t)]
                         new_args.append(new_seq)
                         break
                 if new_args:
@@ -1007,10 +1004,7 @@ class SeqAdd(Add, SeqExprOp):
 
     def _eval_coeff(self, pt):
         """adds up the coefficients of all the sequences at point pt"""
-        val = 0
-        for a in self.args:
-            val += a.coeff(pt)
-        return val
+        return sum(a.coeff(pt) for a in self.args)
 
 
 class SeqMul(Mul, SeqExprOp):
@@ -1068,7 +1062,7 @@ class SeqMul(Mul, SeqExprOp):
         if len(args) == 0:
             return S.EmptySequence
 
-        if Intersection(*[a.interval for a in args]) is S.EmptySet:
+        if Intersection(a.interval for a in args) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -1103,7 +1097,7 @@ class SeqMul(Mul, SeqExprOp):
                     # This returns None if s does not know how to multiply
                     # with t. Returns the newly multiplied sequence otherwise
                     if new_seq is not None:
-                        new_args = [a for a in args if not a in (s, t)]
+                        new_args = [a for a in args if a not in (s, t)]
                         new_args.append(new_seq)
                         break
                 if new_args:
