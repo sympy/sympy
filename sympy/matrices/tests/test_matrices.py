@@ -2494,7 +2494,49 @@ def test_issue_9457_9467():
     raises(IndexError, lambda: Q.col_del(-10))
 
 def test_issue_9476():
-    M = Matrix([[1, 2, 3], [2, 3,4]])
-    raises(TypeError, lambda: M.row_insert(1.5, Matrix([[1, 1, 1]])))
-    raises(TypeError, lambda: M.row_insert(2.5, Matrix([[1, 1, 1]])))
-    raises(TypeError, lambda: M.row_insert(-2.5, Matrix([[1, 1, 1]])))
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    V = Matrix([[10, 10, 10]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(1, V)
+    assert M == Matrix([[1, 2, 3], [10, 10, 10], [2, 3, 4], [3, 4, 5]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(2, V)
+    assert M == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(3, V)
+    assert M == Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5], [10, 10, 10]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: M.row_insert(4, V))
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: M.row_insert(5.5, V))
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: M.row_insert(4, V))
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(-1, V)
+    assert M == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
+
+    V = Matrix([10, 10, 10])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(1, V)
+    assert M == Matrix([[1, 10, 2, 3], [2, 10, 3, 4], [3, 10, 4, 5]])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(2, V)
+    assert M == Matrix([[1, 2, 10, 3], [2, 3, 10, 4], [3, 4, 10, 5]])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(3, V)
+    assert M == Matrix([[1, 2, 3, 10], [2, 3, 4, 10], [3, 4, 5, 10]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(-1, V)
+    assert M == Matrix([[1, 2, 10, 3], [2, 3, 10, 4], [3, 4, 10, 5]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(0, V)
+    assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])

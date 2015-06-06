@@ -3957,27 +3957,18 @@ class MatrixBase(object):
         row
         col_insert
         """
-        if not isinstance(pos, (int, Integer)):
-            raise TypeError("Index value must be 'int' or 'Integer': 'pos = %s'" % (pos))
-        if pos == 0:
-            return mti.col_join(self)
-        elif pos < 0:
-            pos = self.rows + pos
+        i = pos
         if pos < 0:
-            pos = 0
-        elif pos > self.rows:
-            pos = self.rows
-
-        if self.cols != mti.cols:
+            pos = self.rows + pos
+        if pos < 0 or pos > self.rows:
+            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" 
+                % (i, self.rows, self.rows))
+        elif self.cols != mti.cols:
             raise ShapeError(
-                "`self` and `mti` must have the same number of columns.")
-
-        newmat = self.zeros(self.rows + mti.rows, self.cols)
-        i, j = pos, pos + mti.rows
-        newmat[:i, :] = self[:i, :]
-        newmat[i: j, :] = mti
-        newmat[j:, :] = self[i:, :]
-        return newmat
+                    "`self` and `mti` must have the same number of columns.")
+        else:
+            self._mat[pos*self.rows:pos*self.rows] = mti._mat
+        self.rows += mti.rows
 
     def col_insert(self, pos, mti):
         """Insert one or more columns at the given column position.
@@ -4000,27 +3991,19 @@ class MatrixBase(object):
         col
         row_insert
         """
-        if not isinstance(pos, (int, Integer)):
-            raise TypeError("Index value must be 'int' or 'Integer': 'pos = %s'" % (pos))
-        if pos == 0:
-            return mti.row_join(self)
-        elif pos < 0:
-            pos = self.cols + pos
+        i = pos
         if pos < 0:
-            pos = 0
-        elif pos > self.cols:
-            pos = self.cols
-
-        if self.rows != mti.rows:
-            raise ShapeError("self and mti must have the same number of rows.")
-
-        from sympy.matrices import MutableMatrix
-        newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
-        i, j = pos, pos + mti.cols
-        newmat[:, :i] = self[:, :i]
-        newmat[:, i:j] = mti
-        newmat[:, j:] = self[:, i:]
-        return type(self)(newmat)
+            pos = self.cols + pos
+        if pos < 0 or pos > self.cols:
+            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" 
+                % (i, self.cols, self.cols))
+        elif self.rows != mti.rows:
+            raise ShapeError(
+                    "`self` and `mti` must have the same number of rows.")
+        else:
+            for j in range(self.rows - 1, -1, -1):
+                self._mat[pos + j*self.cols:pos + j*self.cols] = mti._mat[j*mti.cols:(j + 1)*mti.cols]
+        self.cols += mti.cols
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.
