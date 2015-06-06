@@ -5,6 +5,7 @@ from sympy.tensor.arraypy import Arraypy, TensorArray, copy
 from random import randint
 from sympy.functions.combinatorial.factorials import factorial
 from sympy import expand
+from sympy import simplify
 from copy import copy
 
 
@@ -52,9 +53,9 @@ def symmetric(in_arr):
         perm = list(permutations(index))
         for temp_index in perm:
             res_arr[tuple(index)] += in_arr[tuple(temp_index)]
-        #if isinstance(res_arr[tuple(index)], int):
-        #    res_arr[tuple(index)] = float(res_arr[tuple(index)])
+
         res_arr[tuple(index)] /= factorial(in_arr.rank)
+        res_arr[tuple(index)] = simplify(res_arr[tuple(index)])
 
         index = in_arr.next_index(index)
 
@@ -114,9 +115,9 @@ def asymmetric(in_arr):
             res_arr[tuple(index)] += signs[perm_number] * \
                 in_arr[tuple(temp_index)]
             perm_number += 1
-        #if isinstance(res_arr[tuple(index)], int):
-        #    res_arr[tuple(index)] = float(res_arr[tuple(index)])
+
         res_arr[tuple(index)] /= factorial(in_arr.rank)
+        res_arr[tuple(index)] = simplify(res_arr[tuple(index)])
 
         index = in_arr.next_index(index)
 
@@ -479,9 +480,13 @@ def perm_parity(lst):
 
 def is_symmetric(array):
     """Check if array or tensor is already symmetric."""
+    for i in array.index_list:
+            array[i] = simplify(array[i])
     return array == symmetric(array)
 
 
 def is_asymmetric(array):
     """Check if array or tensor is already asymmetric."""
+    for i in array.index_list:
+        array[i] = simplify(array[i])
     return array == asymmetric(array)

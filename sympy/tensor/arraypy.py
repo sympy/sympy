@@ -54,7 +54,7 @@ class Arraypy(object):
 
         # main variables declaration
         self._name = '0'
-        self._sparse = False
+        self._sparse = True
         self._dims = [1]
         self._start_index = [0]
         self._end_index = [1]
@@ -1143,7 +1143,6 @@ class TensorArray(Arraypy):
         result_tensor = TensorArray(Arraypy(arg), new_ind_char)
 
         for i in result_tensor.index_list:
-            print(result_tensor)
             temp_index = list(i)
             if (len(result_tensor) == 1):
                 temp_index = [self.start_index[idx2], self.start_index[idx1]]
@@ -1152,7 +1151,6 @@ class TensorArray(Arraypy):
                 temp_index.insert(idx1, self.start_index[idx1])
 
             for j in range(0, self.shape[idx1]):
-                print(str(temp_index) + ' ' + str(self[tuple(temp_index)]))
                 result_tensor[i] += self[tuple(temp_index)]
                 temp_index[idx1] += 1
                 temp_index[idx2] += 1
