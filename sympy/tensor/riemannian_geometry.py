@@ -7,7 +7,8 @@ from sympy.tensor.arraypy import Arraypy, TensorArray, matrix2arraypy, \
     matrix2tensor, list2arraypy, list2tensor
 from sympy.tensor.tensor_methods import is_symmetric
 from sympy.tensor.helper_functions import check_vector_of_arguments, \
-    check_metric_tensor, check_the_vector_field, replace_index_to_k
+    check_metric_tensor, check_the_vector_field, replace_index_to_k, \
+    check_the_christoffel_symbols_2
 
 """Module riemannian_geometry contains functions for work with tensor fields:
 - the calculation of the scalar product;
@@ -18,8 +19,9 @@ from sympy.tensor.helper_functions import check_vector_of_arguments, \
 - the covariant derivative the tensor field;
 - the covariant divergence of a tensor field;
 - the Riemann curvature tensor and sectional curvature for left-invariant metric;
-- the product of Kulkarni-Nomizu.
-
+- the product of Kulkarni-Nomizu;
+- the Gaussian curvature;
+- the second quadratic form.
 
 
 To implement the functions used modules: matrices and tensor
@@ -380,11 +382,11 @@ def covar_der(X, g, var, type_output='t'):
         if not (g.start_index[0] == g.start_index[1]):
             raise ValueError(
                 'The starting indices of metric tensor must be identical')
-        idx_start = g.start_index[0]
+        idx_g = g.start_index[0]
     elif isinstance(g, Matrix):
         if not g.is_symmetric():
             raise ValueError('The metric tensor must be symmetric.')
-        idx_start = 0
+        idx_g = 0
 
     # Handling of a input argument - vector field X
     check_the_vector_field(X)
@@ -491,11 +493,11 @@ def covar_der_xy(X, Y, g, var, type_output='t'):
         if not (g.start_index[0] == g.start_index[1]):
             raise ValueError(
                 'The starting indices of metric tensor must be identical')
-        idx_start = g.start_index[0]
+        idx_g = g.start_index[0]
     elif isinstance(g, Matrix):
         if not g.is_symmetric():
             raise ValueError('The metric tensor must be symmetric.')
-        idx_start = 0
+        idx_g = 0
 
     # Handling of a input argument - vector field X
     check_the_vector_field(X)
@@ -999,7 +1001,7 @@ def nabla(T, ch_2, var):
 
     >>> from sympy.tensor.riemannian_geometry import nabla
     >>> from sympy.tensor.arraypy import Arraypy
-    >>> from sympy import symbols, cos
+    >>> from sympy import symbols, cos, sin
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
@@ -1009,7 +1011,7 @@ def nabla(T, ch_2, var):
 
     T it's a tensor field must be tensor:
 
-    >>> T = Arraypy((2, 2, 0)).to_tensor((1, -1))
+    >>> T = Arraypy([2, 2, 0]).to_tensor((1, -1))
     >>> T[0,0] = x2
     >>> T[0,1] = -x2
     >>> T[1,0] = -x1
@@ -1121,7 +1123,7 @@ def nabla_x(T, ch_2, X, var):
 
     >>> from sympy.tensor.riemannian_geometry import nabla_x
     >>> from sympy.tensor.arraypy import Arraypy
-    >>> from sympy import symbols, cos
+    >>> from sympy import symbols, cos, sin
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
@@ -1231,7 +1233,7 @@ def delta(T, g, ch_2, var):
 
     >>> from sympy.tensor.riemannian_geometry import delta
     >>> from sympy.tensor.arraypy import Arraypy
-    >>> from sympy import symbols, cos
+    >>> from sympy import symbols, cos, sin
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
@@ -1345,7 +1347,7 @@ def riemann_li(C, g, var, type_output='t'):
 
     >>> from sympy.tensor.riemannian_geometry import riemann_li
     >>> from sympy.tensor.arraypy import Arraypy
-    >>> from sympy import symbols, cos
+    >>> from sympy import symbols, cos, sin
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
@@ -1408,12 +1410,12 @@ def riemann_li(C, g, var, type_output='t'):
         if not (g.start_index[0] == g.start_index[1]):
             raise ValueError(
                 'The starting indices of metric tensor must be identical')
-        idx_start = g.start_index[0]
+        idx_g = g.start_index[0]
         g_inv = (g.to_matrix()).inv()
     elif isinstance(g, Matrix):
         if not g.is_symmetric():
             raise ValueError('The metric tensor must be symmetric.')
-        idx_start = 0
+        idx_g = 0
         g_inv = g.inv()
 
     # Handling of a input argument - structure constant
@@ -1502,12 +1504,22 @@ def k_sigma_li(R, g, var):
     R it's a Riemann curvature tensor must be symmetric matrix, arraypy or tensor
     with valences indices (1, -1, -1, -1):
 
-    >>> R = riemann_li(g, var)
+    C = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
+    C[0,0,0] = 0
+    C[0,0,1] = sin(x2)
+    C[0,1,1] = cos(x2)
+    C[1,1,1] = cos(x2)
+    C[1,0,1] = cos(x2)
+    C[1,1,0] = 0
+    C[1,0,0] = -sin(x2)
+    C[0,1,0] = -sin(x2)
+
+    >>> R = riemann_li(C, g, var, 't')
 
     The sectional curvature:
     >>> k_sig_li = k_sigma_li(R, g, var)
     >>> print(k_sig_li)
-
+    Division by zero!
     """
     # Handling of input vector arguments var
     check_vector_of_arguments(var)
@@ -1675,5 +1687,158 @@ def kulkarni_nomizu(h, k, var, type_output='t'):
     else:
         raise ValueError(
             "The parameter of type output result must 'a' - Arraypy or 't' and None - TensorArray.")
+    # Output
+    return K
+
+
+def two_surf(surf, var, type_output='t'):
+    """Return the second quadratic form.
+
+    Examples:
+    =========
+
+    >>> from sympy import symbols
+    >>> x1, x2 = symbols('x1, x2')
+
+    var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
+    or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    surf it's list of functions, must be consist of one or three functions.
+
+    type_output it's optional parameter function, indicating the type of calculation
+    result and receiving the character or string value:
+    - symbol 't' means that the type of the result will match TensorArray;
+    - symbol 'a' means that the type of the result will be Arraypy;
+    - default function takes a parameter 't', so that the result will be a TensorArray.
+
+    The the second quadratic form.
+    >>> surf3 = [x1+x2, 2*x1**2-3*x2, (1+x2)*x1+x2-4]
+    >>> print(two_surf(surf3, var, 't'))
+    (-x1 + x2)/(3*x1)  -(4*x1 + 3)/((x1 + 1)*(x2 + 1))
+    -(4*x1 + 3)/((x1 + 1)*(x2 + 1))  0
+    >>> surf1 = [x1 + 4*x2**2]
+    >>> print(two_surf(surf1, var, 't'))
+    0  0
+    0  8
+    """
+    # The definition symbols i, j, k
+    i = Symbol('i')
+    j = Symbol('j')
+    k = Symbol('k')
+
+    b = Arraypy((2, 2))
+
+    # Calculation
+    if (len(surf) == 1):
+        b[0, 0] = diff(diff(surf[0], var[0]), var[0])
+        b[0, 1] = b[1, 0] = diff((diff(surf[0], var[0])), var[1])
+        b[1, 1] = diff((diff(surf[0], var[1])), var[1])
+    elif (len(surf) == 3):
+        # The first partial derivatives
+        r_u = diff(surf[0], var[0]) * i + diff(surf[1], var[0]) * j +\
+            diff(surf[2], var[0]) * k
+        r_v = diff(surf[0], var[1]) * i + diff(surf[1], var[1]) * j +\
+            diff(surf[2], var[1]) * k
+
+        # The vector product
+        vect_prod = (r_u.coeff(j) * r_v.coeff(k) - r_v.coeff(j) * r_u.coeff(k)) * i - \
+            (r_u.coeff(k) * r_v.coeff(i) - r_v.coeff(k) * r_u.coeff(i)) * j + \
+            (r_u.coeff(i) * r_v.coeff(j) - r_v.coeff(i) * r_u.coeff(j)) * k
+
+        # The length of vector product
+        len_r_uv = r_u.coeff(i) * r_v.coeff(i) * i + r_u.coeff(j) * r_v.coeff(j) * j + \
+            r_u.coeff(k) * r_v.coeff(k) * k
+
+        if (len_r_uv == 0):
+            raise ValueError('The two-dimensional area is a degenerate!')
+
+        # The components of the normal vector
+        n = (simplify(vect_prod.coeff(i) / len_r_uv.coeff(i)) * i +
+             simplify(vect_prod.coeff(j) / len_r_uv.coeff(j)) * j +
+             simplify(vect_prod.coeff(k) / len_r_uv.coeff(k)) * k)
+
+        # The second partial derivatives
+        r_uu = diff(r_u.coeff(i), var[0]) * i + diff(r_u.coeff(j), var[0]) * j + \
+            diff(r_u.coeff(k), var[0]) * k
+        r_uv = diff(r_u.coeff(i), var[1]) * i + diff(r_u.coeff(j), var[1]) * j + \
+            diff(r_u.coeff(k), var[1]) * k
+        r_vv = diff(r_v.coeff(i), var[1]) * i + diff(r_v.coeff(j), var[1]) * j + \
+            diff(r_v.coeff(k), var[1]) * k
+
+        b[0, 0] = r_uu.coeff(i) * n.coeff(i) + r_uu.coeff(j) * n.coeff(j) + \
+            r_uu.coeff(k) * n.coeff(k)
+        b[0, 1] = b[1, 0] = r_uv.coeff(i) * n.coeff(i) + r_uv.coeff(j) * n.coeff(j) + \
+            r_uv.coeff(k) * n.coeff(k)
+        b[1, 1] = r_vv.coeff(i) * n.coeff(i) + r_vv.coeff(j) * n.coeff(j) + \
+            r_vv.coeff(k) * n.coeff(k)
+    else:
+        raise ValueError(
+            "The argument surf must be consist one function or three functions")
+
+    # Handling of an output array
+    if type_output == str('t') or type_output == Symbol('t'):
+        b = b.to_tensor((-1, -1))
+    elif type_output == str('a') or type_output == Symbol('a'):
+        b = b
+    elif type_output == str('m') or type_output == Symbol('m'):
+        b = b.to_matrix()
+    else:
+        raise ValueError(
+            "The parameter of type output result must 'a' - Arraypy or 'm' - Matrix\
+            't' and None - TensorArray.")
+
+    # Output
+    return b
+
+
+def k_surf(surf, arg):
+    """Return the Gaussian curvature.
+
+    Examples:
+    =========
+
+    >>> from sympy import symbols
+    >>> x1, x2 = symbols('x1, x2')
+
+    var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
+    or one-dimensional tensor with valence of indices (+1):
+
+    >>> var = [x1, x2]
+
+    surf it's list of functions, must be consist of one or three functions.
+
+    The Gaussian curvature:
+    >>> surf3 = [x1+x2, 2*x1**2-3*x2, (1+x2)*x1+x2-4]
+    >>> print(k_surf(surf3, var))
+    -(4*x1 + 3)**2/((x1 + 1)**2*(x2 + 1)**2*(((x1 + 1)**2 + 10)* \
+    (16*x1**2 + (x2 + 1)**2 + 1) - (-12*x1 + (x1 + 1)*(x2 + 1) + 1)**2))
+    >>> surf1 = [x1 + 4*x2**2]
+    >>> print(k_surf(surf1, var))
+    0
+    """
+    # Calculation
+    if (len(surf) == 1):
+        K = diff(diff(surf[0], var[0]), var[0]) * diff(diff(surf[0], var[1]), var[1]) -\
+            (diff(diff(surf[0], var[0]), var[1]))**2 / \
+            (1 + diff(surf[0], var[0])**2 + diff(surf[0], var[1])**2)**2
+    elif (len(surf) == 3):
+        g = Arraypy((2, 2))
+        g[0, 0] = diff(surf[0], var[0])**2 + \
+            diff(surf[1], var[0])**2 + diff(surf[2], var[0])**2
+        g[0, 1] = g[1, 0] = diff(surf[0], var[0]) * diff(surf[0], var[1]) + diff(
+            surf[1], var[0]) * diff(surf[1], var[1]) + diff(surf[2], var[0]) * diff(surf[2], var[1])
+        g[1, 1] = diff(surf[0], var[1])**2 + \
+            diff(surf[1], var[1])**2 + diff(surf[2], var[1])**2
+
+        b = two_surf(surf3, var, 't')
+
+        K = simplify(
+            (b[0, 0] * b[1, 1] - b[0, 1]**2) / (g[0, 0] * g[1, 1] - g[0, 1]**2))
+
+    else:
+        raise ValueError(
+            "The argument surf must be consist one function or three functions")
     # Output
     return K
