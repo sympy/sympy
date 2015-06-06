@@ -662,16 +662,16 @@ def register_handler(key, handler):
     if type(key) is Predicate:
         key = key.name
     try:
-        getattr(Q, key).add_handler(handler)
+        getattr(Q.__class__, key).add_handler(handler)
     except AttributeError:
-        setattr(Q, key, Predicate(key, handlers=[handler]))
+        setattr(Q.__class__, key, Predicate(key, handlers=[handler]))
 
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
     if type(key) is Predicate:
         key = key.name
-    getattr(Q, key).remove_handler(handler)
+    getattr(Q.__class__, key).remove_handler(handler)
 
 
 def single_fact_lookup(known_facts_keys, known_facts_cnf):
@@ -778,7 +778,7 @@ _handlers = [
 for name, value in _handlers:
     register_handler(name, _val_template % value)
 
-known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
+known_facts_keys = [getattr(Q, attr) for attr in Q.__class__.__dict__
                     if not (attr.startswith('__') or attr in deprecated_predicates)]
 
 known_facts = And(
