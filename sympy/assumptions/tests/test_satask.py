@@ -35,9 +35,10 @@ def test_satask():
 
 def test_zero():
     """
-    Everything in this test doesn't work with ask, and most things would be
-    very difficult or impossible to make work under the current handlers
+    Everything in this test doesn't work with the ask handlers, and most
+    things would be very difficult or impossible to make work under that
     model.
+
     """
     assert satask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
     assert satask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
