@@ -1598,6 +1598,13 @@ def test_repr():
     assert repr(Circle((0, 1), 2)) == 'Circle(Point(0, 1), 2)'
 
 
+def test_transform():
+    p = Point(1, 1)
+    assert p.transform(rotate(pi/2)) == Point(-1, 1)
+    assert p.transform(scale(3, 2)) == Point(3, 2)
+    assert p.transform(translate(1, 2)) == Point(2, 3)
+
+
 def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
