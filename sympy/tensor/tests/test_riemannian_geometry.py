@@ -490,15 +490,15 @@ def test_nabla():
     ch_2[1, 0, 0] = -sin(x2) * cos(x2)
     ch_2[0, 1, 0] = -sin(x2) * cos(x2)
 
-    res_ten = Arraypy([2, 2, 0]).to_tensor((1, -1, -1))
+    res_ten = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
     res_ten[0, 0, 0] = -x1 * sin(x2) * cos(x2) + x2 * sin(x2) * cos(x2)
     res_ten[0, 0, 1] = 0
-    res_ten[0, 1, 1] = x2 * sin(x2) / cos(x2) - 1
+    res_ten[0, 1, 1] = x2 * sin(x2) * cos(x2) - 1
     res_ten[1, 1, 1] = 0
-    res_ten[1, 0, 1] = -x1 * sin(x2) / cos(x2) - 1
-    res_ten[1, 1, 0] = -x1 * sin(x2) / cos(x2) + x2 * sin(x2) / cos(x2)
-    res_ten[1, 0, 0] = -x1 * sin(x2) * cos(x2) - x2 * sin(x2) / cos(x2)
-    res_ten[0, 1, 0] = x1 * sin(x2) * cos(x2) + x2 * sin(x2) / cos(x2)
+    res_ten[1, 0, 1] = -x1 * sin(x2) * cos(x2) - 1
+    res_ten[1, 1, 0] = -x1 * sin(x2) * cos(x2) + x2 * sin(x2) * cos(x2)
+    res_ten[1, 0, 0] = -x1 * sin(x2) * cos(x2) - x2 * sin(x2) * cos(x2)
+    res_ten[0, 1, 0] = x1 * sin(x2) * cos(x2) + x2 * sin(x2) * cos(x2)
 
     assert nabla(T, ch_2, var_list) == res_ten
     assert isinstance(nabla(T, ch_2, var_list), TensorArray)
@@ -527,14 +527,12 @@ def test_nabla_x():
     ch_2[0, 1, 0] = -sin(x2) * cos(x2)
 
     res_ten = Arraypy((2, 2)).to_tensor((-1, -1))
-    res_ten[0, 0] = x1 * x2**3 * (x1 * sin(x2) * cos(x2) + x2 *
-                                  sin(x2) * cos(x2)) + 2 * x2 * (x1 - cos(x2)) * sin(x2) / cos(x2)
-    res_ten[0, 1] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) + x2 * sin(
-        x2) / cos(x2)) + (x1 - cos(x2)) * (-x2 * sin(x2) / cos(x2) - 1)
-    res_ten[1, 0] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) + x2 * sin(
-        x2) / cos(x2)) + (x1 - cos(x2)) * (-x1 * sin(x2) / cos(x2) - 1)
-    res_ten[1, 1] = x1 * x2**3 * \
-        (-x1 * sin(x2) / cos(x2) - x2 * sin(x2) / cos(x2))
+    res_ten[0, 0] = x1 * x2**3 * (x1 * sin(x2) * cos(x2) + x2 * 
+                                  sin(x2) * cos(x2)) + 2 * x2 * (x1 - cos(x2)) * sin(x2) * cos(x2)
+    res_ten[0, 1] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) + 
+                                  x2 * sin(x2) * cos(x2)) + (x1 - cos(x2)) * (-x2 * sin(x2) * cos(x2) - 1)
+    res_ten[1, 0] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) + x2 * sin(x2) * cos(x2)) + (x1 - cos(x2)) * (-x1 * sin(x2) * cos(x2) - 1)
+    res_ten[1, 1] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) - x2 * sin(x2) * cos(x2))
 
     assert nabla_x(T, ch_2, X, var_list) == res_ten
     assert isinstance(nabla_x(T, ch_2, X, var_list), TensorArray)

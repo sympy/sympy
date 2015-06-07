@@ -1486,7 +1486,7 @@ def k_sigma_li(R, g, var):
 
     >>> from sympy.tensor.riemannian_geometry import k_sigma_li, riemann_li
     >>> from sympy.tensor.arraypy import Arraypy, TensorArray
-    >>> from sympy import symbols, cos
+    >>> from sympy import symbols, cos, sin
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional
@@ -1581,7 +1581,7 @@ def k_sigma_li(R, g, var):
                     raise ValueError('Division by zero!')
                 else:
                     k_sig_li = sum(
-                        (g[k, i] * R[k, i, j, j]) / (g[i, j] * g[j, j] - g[i, j]**2))
+                        (g[k, i] * R[k, i, j, j]) / (g[i, i] * g[j, j] - g[i, j]**2))
 
     # Output
     return k_sig_li
@@ -1798,7 +1798,7 @@ def second_surf(surf, var, type_output='t'):
     return b
 
 
-def k_surf(surf, arg):
+def k_surf(surf, var):
     """Return the Gaussian curvature.
 
     Examples:
