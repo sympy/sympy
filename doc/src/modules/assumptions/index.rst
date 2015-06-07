@@ -62,11 +62,11 @@ Examples::
 
     >>> from sympy import *
     >>> x = Symbol('x')
-    >>> ask(Q.bounded(exp(x)), ~Q.bounded(x))
+    >>> ask(Q.finite(exp(x)), ~Q.finite(x))
     False
-    >>> ask(Q.bounded(exp(x)) , Q.bounded(x))
+    >>> ask(Q.finite(exp(x)) , Q.finite(x))
     True
-    >>> ask(Q.bounded(sin(x)), ~Q.bounded(x))
+    >>> ask(Q.finite(sin(x)), ~Q.finite(x))
     True
 
 
@@ -167,7 +167,7 @@ Examples::
     >>> x, y = symbols('x,y')
     >>> ask(Q.infinitesimal(2*x), Q.infinitesimal(x))
     True
-    >>> ask(Q.infinitesimal(x*y), Q.infinitesimal(x) & Q.bounded(y))
+    >>> ask(Q.infinitesimal(x*y), Q.infinitesimal(x) & Q.finite(y))
     True
 
 

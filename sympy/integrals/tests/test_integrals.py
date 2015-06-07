@@ -11,7 +11,7 @@ from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow
-
+from sympy.utilities.randtest import verify_numerically
 
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
@@ -1026,12 +1026,9 @@ def test_risch_option():
     # TODO: How to test risch=False?
 
 def test_issue_6828():
-    # TODO: Currently `h' is the result (all three are equivalent). Improve
-    # simplify() to find the form with simplest real coefficients.
     f = 1/(1.08*x**2 - 4.3)
-    g = 300.0/(324.0*x**2 - 1290.0)
-    h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
-    assert integrate(f, x).diff(x).simplify().equals(f) is True
+    g = integrate(f, x).diff(x)
+    assert verify_numerically(f, g, tol=1e-12)
 
 @XFAIL
 def test_integrate_Piecewise_rational_over_reals():

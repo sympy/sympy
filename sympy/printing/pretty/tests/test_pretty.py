@@ -306,8 +306,8 @@ def test_upretty_modifiers():
     assert upretty( Symbol('Fhat') ) == u('F̂')
     assert upretty( Symbol('Fbar') ) == u('F̅')
     assert upretty( Symbol('Fvec') ) == u('F⃗')
-    assert upretty( Symbol('Fprime') ) == u('F ̍')
-    assert upretty( Symbol('Fprm') ) == u('F ̍')
+    assert upretty( Symbol('Fprime') ) == u('F′')
+    assert upretty( Symbol('Fprm') ) == u('F′')
     # No faces are actually implemented, but test to make sure the modifiers are stripped
     assert upretty( Symbol('Fbold') ) == u('Fbold')
     assert upretty( Symbol('Fbm') ) == u('Fbm')
@@ -323,8 +323,8 @@ def test_upretty_modifiers():
     assert upretty( Symbol('xvecdot') ) == u('x⃗̇')
     assert upretty( Symbol('xDotVec') ) == u('ẋ⃗')
     assert upretty( Symbol('xHATNorm') ) == u('‖x̂‖')
-    assert upretty( Symbol('xMathring_yCheckPRM__zbreveAbs') ) == u('x̊_y̌ ̍__|z̆|')
-    assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃ ̍')
+    assert upretty( Symbol('xMathring_yCheckPRM__zbreveAbs') ) == u('x̊_y̌′__|z̆|')
+    assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃′')
     assert upretty( Symbol('x_dot') ) == u('x_dot')
     assert upretty( Symbol('x__dot') ) == u('x__dot')
 
