@@ -24,6 +24,10 @@ class QClass(object):
     """
 
     @property
+    def hermitian(self):
+        return Predicate('Hermitian')
+
+    @property
     def antihermitian(self):
         r"""
         Antihermitian predicate.
@@ -34,309 +38,6 @@ class QClass(object):
         TODO: Add examples
         """
         return Predicate('antihermitian')
-
-    @property
-    def finite(self):
-        r"""
-        Finite predicate.
-
-        ``ask(Q.finite(x))`` will return ``True`` if ``x`` is neither an infinity
-        nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
-        having a bounded absolute value.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, Symbol, S, oo
-        >>> x = Symbol('x')
-        >>> ask(Q.finite(S.NaN))
-        False
-        >>> ask(Q.finite(oo))
-        False
-        >>> ask(Q.finite(1))
-        True
-
-        """
-        return Predicate('finite')
-
-    @property
-    def commutative(self):
-        r"""
-        Commutative predicate.
-
-        ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
-        object with respect to multiplication operation.
-
-        TODO: Add examples
-        """
-        return Predicate('commutative')
-
-    @property
-    def complex(self):
-        r"""
-        Complex number predicate.
-
-        ``ask(Q.complex(x))`` is true iff ``x`` belongs to the set of complex
-        numbers.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, Symbol, ask, I, oo
-        >>> x = Symbol('x')
-        >>> ask(Q.complex(0))
-        True
-        >>> ask(Q.complex(2 + 3*I))
-        True
-        >>> ask(Q.complex(oo))
-        False
-
-        """
-        return Predicate('complex')
-
-    @property
-    def composite(self):
-        r"""
-        Composite number predicate.
-
-        ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
-        at least one positive divisor other than ``1`` and the number itself.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask
-        >>> ask(Q.composite(0))
-        False
-        >>> ask(Q.composite(1))
-        True
-        >>> ask(Q.composite(2))
-        False
-        >>> ask(Q.composite(20))
-        True
-
-        """
-        return Predicate('composite')
-
-    @property
-    def even(self):
-        r"""
-        Even number predicate.
-
-        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even numbers.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, pi
-        >>> ask(Q.even(0))
-        True
-        >>> ask(Q.even(2))
-        True
-        >>> ask(Q.even(3))
-        False
-        >>> ask(Q.even(pi))
-        False
-
-        """
-        return Predicate('even')
-
-    @property
-    def extended_real(self):
-        return Predicate('extended_real')
-
-    @property
-    def hermitian(self):
-        return Predicate('hermitian')
-
-    @property
-    def imaginary(self):
-        r"""
-        Imaginary number predicate.
-
-        ``ask(Q.imaginary(x))`` is true iff ``x`` can be written as a real
-        number multiplied by the imaginary unit ``I``. Please note that ``0``
-        is not considered to be an imaginary number.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, I
-        >>> ask(Q.imaginary(3*I))
-        True
-        >>> ask(Q.imaginary(2 + 3*I))
-        False
-        >>> ask(Q.imaginary(0))
-        False
-
-        """
-        return Predicate('imaginary')
-
-    @property
-    def infinitesimal(self):
-        return Predicate('infinitesimal')
-
-    @property
-    def infinite(self):
-        return Predicate('infinite')
-
-    @property
-    def integer(self):
-        r"""
-        Integer predicate.
-
-        ``ask(Q.integer(x))`` is true iff ``x`` belongs to the set of integer numbers.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, S
-        >>> ask(Q.integer(5))
-        True
-        >>> ask(Q.integer(S(1)/2))
-        False
-
-        """
-        return Predicate('integer')
-
-    @property
-    def irrational(self):
-        return Predicate('irrational')
-
-    @property
-    def rational(self):
-        return Predicate('rational')
-
-    @property
-    def algebraic(self):
-        return Predicate('algebraic')
-
-    @property
-    def transcendental(self):
-        return Predicate('transcendental')
-
-    @property
-    def negative(self):
-        r"""
-        Negative number predicate.
-
-        ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
-        it is in the interval `(-oo, 0)`.  Note in particular that negative
-        infinity is not negative.
-
-        A few important facts about negative numbers:
-
-        - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
-          thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
-          whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
-          negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
-          ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
-          true, whereas ``Q.nonnegative(I)`` is false.
-
-        - See the docstring of ``Q.real`` for more information about related facts.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, symbols, I
-        >>> x = symbols('x')
-        >>> ask(Q.negative(x), Q.real(x) & ~Q.positive(x) & ~Q.zero(x))
-        True
-        >>> ask(Q.negative(-1))
-        True
-        >>> ask(Q.nonnegative(I))
-        False
-        >>> ask(~Q.negative(I))
-        True
-
-        """
-        return Predicate('negative')
-
-    @property
-    def nonzero(self):
-        r"""
-        Nonzero real number predicate.
-
-        ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
-        particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
-        ``~Q.zero(x)`` if you want the negation of being zero without any real
-        assumptions.
-
-        A few important facts about nonzero numbers:
-
-        - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
-
-        - See the docstring of ``Q.real`` for more information about related facts.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, symbols, I
-        >>> x = symbols('x')
-        >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
-        None
-        >>> ask(Q.nonzero(x), Q.positive(x))
-        True
-        >>> ask(Q.nonzero(x), Q.zero(x))
-        False
-        >>> ask(Q.nonzero(0))
-        False
-        >>> ask(Q.nonzero(I))
-        False
-        >>> ask(~Q.zero(I))
-        True
-
-        """
-        return Predicate('nonzero')
-
-    @property
-    def positive(self):
-        r"""
-        Positive real number predicate.
-
-        ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
-        is in the interval `(0, \infty)`.  In particular, infinity is not
-        positive.
-
-        A few important facts about positive numbers:
-
-        - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
-          thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
-          whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
-          positive, i.e., ``Q.positive(x)`` is logically equivalent to
-          `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
-          true, whereas ``Q.nonpositive(I)`` is false.
-
-        - See the docstring of ``Q.real`` for more information about related facts.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, symbols, I
-        >>> x = symbols('x')
-        >>> ask(Q.positive(x), Q.real(x) & ~Q.negative(x) & ~Q.zero(x))
-        True
-        >>> ask(Q.positive(1))
-        True
-        >>> ask(Q.nonpositive(I))
-        False
-        >>> ask(~Q.positive(I))
-        True
-
-        """
-        return Predicate('positive')
-
-    @property
-    def prime(self):
-        return Predicate('prime')
 
     @property
     def real(self):
@@ -389,8 +90,325 @@ class QClass(object):
         return Predicate('real')
 
     @property
+    def extended_real(self):
+        return Predicate('extended_real')
+
+    @property
+    def imaginary(self):
+        r"""
+        Imaginary number predicate.
+
+        ``ask(Q.imaginary(x))`` is true iff ``x`` can be written as a real
+        number multiplied by the imaginary unit ``I``. Please note that ``0``
+        is not considered to be an imaginary number.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, I
+        >>> ask(Q.imaginary(3*I))
+        True
+        >>> ask(Q.imaginary(2 + 3*I))
+        False
+        >>> ask(Q.imaginary(0))
+        False
+
+        """
+        return Predicate('imaginary')
+
+    @property
+    def complex(self):
+        r"""
+        Complex number predicate.
+
+        ``ask(Q.complex(x))`` is true iff ``x`` belongs to the set of complex
+        numbers.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, Symbol, ask, I, oo
+        >>> x = Symbol('x')
+        >>> ask(Q.complex(0))
+        True
+        >>> ask(Q.complex(2 + 3*I))
+        True
+        >>> ask(Q.complex(oo))
+        False
+
+        """
+        return Predicate('complex')
+
+    @property
+    def algebraic(self):
+        return Predicate('algebraic')
+
+    @property
+    def integer(self):
+        r"""
+        Integer predicate.
+
+        ``ask(Q.integer(x))`` is true iff ``x`` belongs to the set of integer numbers.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, S
+        >>> ask(Q.integer(5))
+        True
+        >>> ask(Q.integer(S(1)/2))
+        False
+
+        """
+        return Predicate('integer')
+
+    @property
+    def rational(self):
+        return Predicate('rational')
+
+    @property
+    def irrational(self):
+        return Predicate('irrational')
+
+    @property
+    def finite(self):
+        r"""
+        Finite predicate.
+
+        ``ask(Q.finite(x))`` will return ``True`` if ``x`` is neither an infinity
+        nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
+        having a bounded absolute value.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, Symbol, S, oo
+        >>> x = Symbol('x')
+        >>> ask(Q.finite(S.NaN))
+        False
+        >>> ask(Q.finite(oo))
+        False
+        >>> ask(Q.finite(1))
+        True
+
+        """
+        return Predicate('finite')
+
+    @property
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    def bounded(self):
+        return Predicate('finite')
+
+    @property
+    def infinite(self):
+        return Predicate('infinite')
+
+    @property
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    def infinity(self):
+        return Predicate('infinite')
+
+    @property
+    def infinitesimal(self):
+        return Predicate('infinitesimal')
+
+    @property
+    def positive(self):
+        r"""
+        Positive real number predicate.
+
+        ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
+        is in the interval `(0, \infty)`.  In particular, infinity is not
+        positive.
+
+        A few important facts about positive numbers:
+
+        - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
+          thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
+          whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
+          positive, i.e., ``Q.positive(x)`` is logically equivalent to
+          `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
+          true, whereas ``Q.nonpositive(I)`` is false.
+
+        - See the docstring of ``Q.real`` for more information about related facts.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I
+        >>> x = symbols('x')
+        >>> ask(Q.positive(x), Q.real(x) & ~Q.negative(x) & ~Q.zero(x))
+        True
+        >>> ask(Q.positive(1))
+        True
+        >>> ask(Q.nonpositive(I))
+        False
+        >>> ask(~Q.positive(I))
+        True
+
+        """
+        return Predicate('positive')
+
+    @property
+    def negative(self):
+        r"""
+        Negative number predicate.
+
+        ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
+        it is in the interval `(-oo, 0)`.  Note in particular that negative
+        infinity is not negative.
+
+        A few important facts about negative numbers:
+
+        - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
+          thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
+          whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+          negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
+          ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
+          true, whereas ``Q.nonnegative(I)`` is false.
+
+        - See the docstring of ``Q.real`` for more information about related facts.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I
+        >>> x = symbols('x')
+        >>> ask(Q.negative(x), Q.real(x) & ~Q.positive(x) & ~Q.zero(x))
+        True
+        >>> ask(Q.negative(-1))
+        True
+        >>> ask(Q.nonnegative(I))
+        False
+        >>> ask(~Q.negative(I))
+        True
+
+        """
+        return Predicate('negative')
+
+    @property
+    def zero(self):
+        return Predicate('zero')
+
+    @property
+    def nonzero(self):
+        r"""
+        Nonzero real number predicate.
+
+        ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
+        particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
+        ``~Q.zero(x)`` if you want the negation of being zero without any real
+        assumptions.
+
+        A few important facts about nonzero numbers:
+
+        - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
+
+        - See the docstring of ``Q.real`` for more information about related facts.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I
+        >>> x = symbols('x')
+        >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+        None
+        >>> ask(Q.nonzero(x), Q.positive(x))
+        True
+        >>> ask(Q.nonzero(x), Q.zero(x))
+        False
+        >>> ask(Q.nonzero(0))
+        False
+        >>> ask(Q.nonzero(I))
+        False
+        >>> ask(~Q.zero(I))
+        True
+
+        """
+        return Predicate('nonzero')
+
+    @property
+    def nonpositive(self):
+        return Predicate('nonpositive')
+
+    @property
+    def nonnegative(self):
+        return Predicate('nonnegative')
+
+    @property
+    def even(self):
+        r"""
+        Even number predicate.
+
+        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even numbers.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, pi
+        >>> ask(Q.even(0))
+        True
+        >>> ask(Q.even(2))
+        True
+        >>> ask(Q.even(3))
+        False
+        >>> ask(Q.even(pi))
+        False
+
+        """
+        return Predicate('even')
+
+    @property
     def odd(self):
         return Predicate('odd')
+
+    @property
+    def prime(self):
+        return Predicate('prime')
+
+    @property
+    def composite(self):
+        r"""
+        Composite number predicate.
+
+        ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
+        at least one positive divisor other than ``1`` and the number itself.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask
+        >>> ask(Q.composite(0))
+        False
+        >>> ask(Q.composite(1))
+        True
+        >>> ask(Q.composite(2))
+        False
+        >>> ask(Q.composite(20))
+        True
+
+        """
+        return Predicate('composite')
+
+    @property
+    def commutative(self):
+        r"""
+        Commutative predicate.
+
+        ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
+        object with respect to multiplication operation.
+
+        TODO: Add examples
+        """
+        return Predicate('commutative')
 
     @property
     def is_true(self):
@@ -412,18 +430,6 @@ class QClass(object):
         return Predicate('is_true')
 
     @property
-    def nonpositive(self):
-        return Predicate('nonpositive')
-
-    @property
-    def nonnegative(self):
-        return Predicate('nonnegative')
-
-    @property
-    def zero(self):
-        return Predicate('zero')
-
-    @property
     def symmetric(self):
         return Predicate('symmetric')
 
@@ -432,20 +438,12 @@ class QClass(object):
         return Predicate('invertible')
 
     @property
-    def singular(self):
-        return Predicate('singular')
-
-    @property
     def orthogonal(self):
         return Predicate('orthogonal')
 
     @property
     def unitary(self):
         return Predicate('unitary')
-
-    @property
-    def normal(self):
-        return Predicate('normal')
 
     @property
     def positive_definite(self):
@@ -464,20 +462,16 @@ class QClass(object):
         return Predicate('diagonal')
 
     @property
-    def triangular(self):
-        return Predicate('triangular')
-
-    @property
-    def unit_triangular(self):
-        return Predicate('unit_triangular')
-
-    @property
     def fullrank(self):
         return Predicate('fullrank')
 
     @property
     def square(self):
         return Predicate('square')
+
+    @property
+    def integer_elements(self):
+        return Predicate('integer_elements')
 
     @property
     def real_elements(self):
@@ -488,18 +482,24 @@ class QClass(object):
         return Predicate('complex_elements')
 
     @property
-    def integer_elements(self):
-        return Predicate('integer_elements')
+    def transcendental(self):
+        return Predicate('transcendental')
 
     @property
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
-    def bounded(self):
-        return Predicate('finite')
+    def singular(self):
+        return Predicate('singular')
 
     @property
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
-    def infinity(self):
-        return Predicate('infinite')
+    def normal(self):
+        return Predicate('normal')
+
+    @property
+    def triangular(self):
+        return Predicate('triangular')
+
+    @property
+    def unit_triangular(self):
+        return Predicate('unit_triangular')
 
 
 Q = QClass()
