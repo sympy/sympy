@@ -1161,6 +1161,11 @@ def test_sympy__functions__elementary__integers__floor():
     assert _test_args(floor(x))
 
 
+def test_sympy__functions__elementary__integers__frac():
+    from sympy.functions.elementary.integers import frac
+    assert _test_args(frac(x))
+
+
 def test_sympy__functions__elementary__miscellaneous__IdentityFunction():
     from sympy.functions.elementary.miscellaneous import IdentityFunction
     assert _test_args(IdentityFunction())

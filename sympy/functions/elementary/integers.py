@@ -220,3 +220,90 @@ class ceiling(RoundFunction):
         if self.args[0] == other and other.is_real:
             return S.true
         return Ge(self, other, evaluate=False)
+
+
+class frac(Function):
+    r"""Represents the fractional part of x
+
+    For real numbers it is defined [1]_ as
+
+    .. math::
+        x - \lfloor{x}\rfloor
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, frac, Rational, floor, ceiling, I
+    >>> frac(Rational(4, 3))
+    1/3
+    >>> frac(-Rational(4, 3))
+    2/3
+
+    returns zero for integer arguments
+
+    >>> n = Symbol('n', integer=True)
+    >>> frac(n)
+    0
+
+    rewrite as floor
+
+    >>> x = Symbol('x')
+    >>> frac(x).rewrite(floor)
+    x - floor(x)
+
+    for complex arguments
+
+    >>> r = Symbol('r', real=True)
+    >>> t = Symbol('t', real=True)
+    >>> frac(t + I*r)
+    I*frac(r) + frac(t)
+
+    See Also
+    ========
+
+    sympy.functions.elementary.integers.floor
+    sympy.functions.elementary.integers.ceiling
+
+    References
+    ===========
+
+    .. [1] http://en.wikipedia.org/wiki/Fractional_part
+    .. [2] http://mathworld.wolfram.com/FractionalPart.html
+
+    """
+    @classmethod
+    def eval(cls, arg):
+        from sympy import im
+
+        def _eval(arg):
+            if arg.is_integer:
+                return S.Zero
+            if arg.is_number:
+                if arg is S.NaN:
+                    return S.NaN
+                elif arg in [S.Infinity, -S.Infinity, S.ComplexInfinity]:
+                    return None
+                else:
+                    return arg - floor(arg)
+            return cls(arg, evaluate=False)
+
+        terms = Add.make_args(arg)
+        real, imag = S.Zero, S.Zero
+        for t in terms:
+            # Two checks are needed for complex arguments
+            # see issue-7649 for details
+            if t.is_imaginary or (S.ImaginaryUnit*t).is_real:
+                i = im(t)
+                if not i.has(S.ImaginaryUnit):
+                    imag += i
+                else:
+                    real += t
+            else:
+                real += t
+
+        real = _eval(real)
+        imag = _eval(imag)
+        return real + S.ImaginaryUnit*imag
+
+    def _eval_rewrite_as_floor(self, arg):
+        return arg - floor(arg)

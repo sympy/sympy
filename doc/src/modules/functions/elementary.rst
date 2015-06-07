@@ -264,6 +264,11 @@ RoundFunction
 .. autoclass:: sympy.functions.elementary.integers.RoundFunction
 
 
+frac
+----
+
+.. autoclass:: sympy.functions.elementary.integers.frac
+
 sympy.functions.elementary.exponential
 ======================================
 
