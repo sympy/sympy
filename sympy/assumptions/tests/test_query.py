@@ -39,7 +39,7 @@ def test_int_1():
     assert ask(Q.finite(z)) is True
     assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is True
+    assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
@@ -102,7 +102,7 @@ def test_float_1():
     assert ask(Q.finite(z)) is True
     assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is True
+    assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
