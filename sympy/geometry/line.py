@@ -1821,7 +1821,6 @@ class Segment(LinearEntity):
                     return 0 <= ti <= 1
                 return None
 
-        # No other known entity can be contained in a Ray
         return False
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
