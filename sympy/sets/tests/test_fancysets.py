@@ -1,8 +1,8 @@
 from sympy.core.compatibility import range
-from sympy.sets.fancysets import ImageSet, Range
+from sympy.sets.fancysets import ImageSet, Range, ComplexPlane
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt, tan, log, Abs)
+                   Rational, sqrt, tan, log, Abs, I)
 from sympy.utilities.pytest import XFAIL, raises
 import itertools
 
@@ -258,3 +258,61 @@ def test_ImageSet_simplification():
     assert imageset(Lambda(n, sin(n)),
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
+
+
+def test_ComplexPlane_contains():
+
+    # contains in ComplexPlane
+    a = Interval(2, 3)
+    b = Interval(4, 6)
+    c1 = ComplexPlane(a, b)
+    assert 2.5 + 4.5*I in c1
+    assert 2 + 4*I in c1
+    assert 3 + 4*I in c1
+    assert 2.5 + 6.1*I not in c1
+    assert 4.5 + 3.2*I not in c1
+
+    r = Interval(0, 1)
+    theta = Interval(0, 2*S.Pi)
+    c2 = ComplexPlane(r, theta, polar=True)
+    assert 0.5 + 0.6*I in c2
+    assert I in c2
+    assert 1 in c2
+    assert 0 in c2
+    assert 1 + I not in c2
+    assert 1 - I not in c2
+
+
+def test_ComplexPlane_intersection():
+
+    # Complex Plane intersection: polar form
+    EmptyDisk = ComplexPlane(EmptySet(), EmptySet(), polar=True)
+
+    unit_disk = ComplexPlane(Interval(0, 1), Interval(0, 2*S.Pi), polar=True)
+    upper_half_unit_disk = ComplexPlane(Interval(0, 1), Interval(0, S.Pi), polar=True)
+    lower_half_unit_disk = ComplexPlane(Interval(0, 1), Interval(0, -S.Pi), polar=True)
+    right_half_unit_disk = ComplexPlane(Interval(0, 1), Interval(-S.Pi/2, S.Pi/2), polar=True)
+    first_quart_unit_disk = ComplexPlane(Interval(0, 1), Interval(0, S.Pi/2), polar=True)
+
+    assert unit_disk.intersect(upper_half_unit_disk) == upper_half_unit_disk
+    assert unit_disk.intersect(lower_half_unit_disk) == lower_half_unit_disk
+    assert upper_half_unit_disk.intersect(right_half_unit_disk) == first_quart_unit_disk
+    assert upper_half_unit_disk.intersect(lower_half_unit_disk) == EmptyDisk
+
+    # Complex Plane intersection: Rectangular form
+    EmptyPlane = ComplexPlane(EmptySet(), EmptySet())
+
+    unit_square = ComplexPlane(Interval(-1, 1), Interval(-1, 1))
+    upper_half_unit_square = ComplexPlane(Interval(-1, 1), Interval(0, 1))
+    upper_half_plane = ComplexPlane(Interval(-oo, oo), Interval(0, oo))
+    lower_half_plane = ComplexPlane(Interval(-oo, oo), Interval(0, -oo))
+    right_half_plane = ComplexPlane(Interval(0, oo), Interval(-oo, oo))
+    right_quart_plane = ComplexPlane(Interval(0, oo), Interval(0, oo))
+
+    assert upper_half_plane.intersect(unit_square) == upper_half_unit_square
+    assert right_half_plane.intersect(right_quart_plane) == right_quart_plane
+    assert upper_half_plane.intersect(right_half_plane) == right_quart_plane
+    assert upper_half_plane.intersect(lower_half_plane) == EmptyPlane
+
+    # Intersection Polar and Rectangular
+    raises(ValueError, lambda: unit_disk.intersect(unit_square))
