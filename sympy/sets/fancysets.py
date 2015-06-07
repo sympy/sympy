@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy.logic.boolalg import And
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range
-from sympy.sets.sets import Set, Interval, Intersection, EmptySet
+from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
+                             FiniteSet)
 from sympy.core.singleton import Singleton, S
 from sympy.core.sympify import _sympify
 from sympy.core.decorators import deprecated
@@ -453,17 +454,15 @@ class ComplexPlane(Set):
     Rectangular coordinates.
 
     * Polar Form
-      Input is in the form of the intervals of r and theta, & use
-      the flag polar=True.
+      Input is in the form of the ProductSet or Union of ProductSets
+      of the intervals of r and theta, & use the flag polar=True.
 
     Z = {z in C | z = r*[cos(theta) + I*sin(theta)], r in [r], theta in [theta]}
 
     * Rectangular Form
-      Input is in the form of the interval of x and iota times the
-      interval of y coordinates of the Complex numbers. Default input
-      type is in rectangular form.
-
-                 z = x + I*y
+      Input is in the form of the ProductSet or Union of ProductSets
+      of interval of x and y the of the Complex numbers in a Plane.
+      Default input type is in rectangular form.
 
     Z = {z in C | z = x + I*y, x in [Re(z)], y in [Im(z)]}
 
@@ -472,16 +471,27 @@ class ComplexPlane(Set):
 
     >>> from sympy.sets.fancysets import ComplexPlane
     >>> from sympy.sets import Interval
-    >>> from sympy import S, I
+    >>> from sympy import S, I, Union
     >>> a = Interval(2, 3)
     >>> b = Interval(4, 6)
-    >>> c1 = ComplexPlane(a, b)  # Rectangular Form
+    >>> c = Interval(1, 8)
+    >>> c1 = ComplexPlane(a*b)  # Rectangular Form
     >>> c1
     ComplexPlane(Lambda((x, y), x + I*y), [2, 3] x [4, 6])
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
       (2, 6), of the four vertices.
+
+    >>> c2 = ComplexPlane(Union(a*b, b*c))
+    >>> c2
+    ComplexPlane(Lambda((x, y), x + I*y),
+                 [2, 3] x [4, 6] U [4, 6] x [1, 8])
+
+    * c2 represents the Union of two rectangular regions in complex
+      plane. One of them surrounded by the coordinates of c1 and
+      other surrounded by the coordinates (4, 1), (6, 1), (6, 8) and
+      (4, 8).
 
     >>> 2.5 + 4.5*I in c1
     True
@@ -490,7 +500,7 @@ class ComplexPlane(Set):
 
     >>> r = Interval(0, 1)
     >>> theta = Interval(0, 2*S.Pi)
-    >>> c2 = ComplexPlane(r, theta, polar=True)  # Polar Form
+    >>> c2 = ComplexPlane(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
     ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))),
                  [0, 1] x [0, 2*pi])
@@ -503,8 +513,8 @@ class ComplexPlane(Set):
     >>> 1 + 2*I in c2
     False
 
-    >>> unit_disk = ComplexPlane(Interval(0, 1), Interval(0, 2*S.Pi), polar=True)
-    >>> upper_half_unit_disk = ComplexPlane(Interval(0, 1), Interval(0, S.Pi), polar=True)
+    >>> unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    >>> upper_half_unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
     ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))), [0, 1] x [0, pi])
@@ -519,7 +529,7 @@ class ComplexPlane(Set):
     """
     is_ComplexPlane = True
 
-    def __new__(cls, a_interval, b_interval, polar=False):
+    def __new__(cls, sets, polar=False):
         from sympy import symbols
 
         x, y, r, theta = symbols('x, y, r, theta')
@@ -528,28 +538,155 @@ class ComplexPlane(Set):
         # Rectangular Form
         if polar is False:
             obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y),
-                                   a_interval*b_interval)
+                                   sets)
 
         # Polar Form
         elif polar is True:
             from sympy import cos, sin
             obj = ImageSet.__new__(cls, Lambda((r, theta),
                                    r*(cos(theta) + I*sin(theta))),
-                                   a_interval*b_interval)
-
-        obj.a_interval = a_interval
-        obj.b_interval = b_interval
-        obj.polar = polar
+                                   sets)
         return obj
+
+    @property
+    def sets(self):
+        """
+        Return raw input sets to the self.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexPlane, Union
+        >>> a = Interval(2, 3)
+        >>> b = Interval(4, 5)
+        >>> c = Interval(1, 7)
+        >>> C1 = ComplexPlane(a*b)
+        >>> C1.sets
+        [2, 3] x [4, 5]
+        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2.sets
+        [2, 3] x [4, 5] U [4, 5] x [1, 7]
+
+        """
+        return self.args[1]
+
+    @property
+    def psets(self):
+        """
+        Return a tuple of sets (ProductSets) input of the self.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexPlane, Union
+        >>> a = Interval(2, 3)
+        >>> b = Interval(4, 5)
+        >>> c = Interval(1, 7)
+        >>> C1 = ComplexPlane(a*b)
+        >>> C1.psets
+        ([2, 3] x [4, 5],)
+        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2.psets
+        ([2, 3] x [4, 5], [4, 5] x [1, 7])
+
+        """
+        if self.args[1].is_ProductSet:
+            psets = ()
+            psets = psets + (self.args[1], )
+        else:
+            psets = self.args[1].args
+        return psets
+
+    @property
+    def a_interval(self):
+        """
+        Return the union of intervals of `x` when, self is in
+        rectangular form, or the union of intervals of `r` when
+        self is in polar form.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexPlane, Union
+        >>> a = Interval(2, 3)
+        >>> b = Interval(4, 5)
+        >>> c = Interval(1, 7)
+        >>> C1 = ComplexPlane(a*b)
+        >>> C1.a_interval
+        [2, 3]
+        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2.a_interval
+        [2, 3] U [4, 5]
+
+        """
+        a_interval = []
+        for element in self.psets:
+            a_interval.append(element.args[0])
+
+        a_interval = Union(*a_interval)
+        return a_interval
+
+    @property
+    def b_interval(self):
+        """
+        Return the union of intervals of `y` when, self is in
+        rectangular form, or the union of intervals of `theta`
+        when self is in polar form.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexPlane, Union
+        >>> a = Interval(2, 3)
+        >>> b = Interval(4, 5)
+        >>> c = Interval(1, 7)
+        >>> C1 = ComplexPlane(a*b)
+        >>> C1.b_interval
+        [4, 5]
+        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2.b_interval
+        [1, 7]
+
+        """
+        b_interval = []
+        for element in self.psets:
+            b_interval.append(element.args[1])
+
+        b_interval = Union(*b_interval)
+        return b_interval
+
+    @property
+    def polar(self):
+        """
+        Returns True if self is in polar form.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexPlane, Union, S
+        >>> a = Interval(2, 3)
+        >>> b = Interval(4, 5)
+        >>> theta = Interval(0, 2*S.Pi)
+        >>> C1 = ComplexPlane(a*b)
+        >>> C1.polar
+        False
+        >>> C2 = ComplexPlane(a*theta, polar=True)
+        >>> C2.polar
+        True
+        """
+        return self.args[0].args[1].is_Mul
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-        a, b = self.a_interval, self.b_interval
 
         # self in rectangular form
         if self.polar is False:
-            r, i = other.as_real_imag()
-            return And(a._contains(r), b._contains(i))
+            re, im = other.as_real_imag()
+            for element in self.psets:
+                if And(element.args[0]._contains(re),
+                        element.args[1]._contains(im)):
+                    return True
+            return False
 
         # self in polar form
         elif self.polar:
@@ -557,4 +694,8 @@ class ComplexPlane(Set):
                 r, theta = S(0), S(0)
             else:
                 r, theta = Abs(other), arg(other)
-            return And(a._contains(r), b._contains(theta))
+            for element in self.psets:
+                if And(element.args[0]._contains(r),
+                        element.args[1]._contains(theta)):
+                    return True
+                return False

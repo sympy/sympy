@@ -542,8 +542,8 @@ def test_sympy__sets__fancysets__ComplexPlane():
     a = Interval(0, 1)
     b = Interval(2, 3)
     theta = Interval(0, 2*S.Pi)
-    assert _test_args(ComplexPlane(a, b))
-    assert _test_args(ComplexPlane(a, theta, polar=True))
+    assert _test_args(ComplexPlane(a*b))
+    assert _test_args(ComplexPlane(a*theta, polar=True))
 
 
 def test_sympy__sets__fancysets__ImageSet():
