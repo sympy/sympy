@@ -3400,7 +3400,7 @@ class MatrixBase(object):
                     vec = vects[k]
                     if normalize:
                         vec = vec / vec.norm()
-                    P = P.col_insert(P.cols, vec)
+                    P.col_insert(P.cols, vec)
             D = diag(*diagvals)
             self._diagonalize_clear_subproducts()
             return (P, D)
@@ -3945,6 +3945,7 @@ class MatrixBase(object):
         >>> M = zeros(3)
         >>> V = ones(1, 3)
         >>> M.row_insert(1, V)
+        >>> M
         Matrix([
         [0, 0, 0],
         [1, 1, 1],
@@ -3957,18 +3958,28 @@ class MatrixBase(object):
         row
         col_insert
         """
+        from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
         i = pos
         if pos < 0:
             pos = self.rows + pos
-        if pos < 0 or pos > self.rows:
+        if pos < -1 or pos > self.rows:
             raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" 
-                % (i, self.rows, self.rows))
+                % (i, self.rows + 1, self.rows))
         elif self.cols != mti.cols:
             raise ShapeError(
                     "`self` and `mti` must have the same number of columns.")
         else:
-            self._mat[pos*self.rows:pos*self.rows] = mti._mat
-        self.rows += mti.rows
+            if pos == -1:
+                pos = 0
+            k1 = self.rows
+            self.rows += mti.rows
+            if not isinstance(self, MutableSparseMatrix):
+                self._mat[k1*mti.cols:k1*mti.cols] = [0 for i in range(0, mti.rows*self.cols)]
+            if pos == self.rows:
+                self.rows, self[:, :] == self.rows + mti.rows, self.col_join(mti)[:,:]
+            else:
+                self[pos + mti.rows:self.rows,:] = self[pos:self.rows - mti.rows,:]
+                self[pos:pos + mti.rows,:] = mti[:,:]
 
     def col_insert(self, pos, mti):
         """Insert one or more columns at the given column position.
@@ -3980,6 +3991,7 @@ class MatrixBase(object):
         >>> M = zeros(3)
         >>> V = ones(3, 1)
         >>> M.col_insert(1, V)
+        >>> M
         Matrix([
         [0, 1, 0, 0],
         [0, 1, 0, 0],
@@ -3991,19 +4003,30 @@ class MatrixBase(object):
         col
         row_insert
         """
+        from sympy.matrices.dense import zeros
+        from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
         i = pos
         if pos < 0:
             pos = self.cols + pos
-        if pos < 0 or pos > self.cols:
+        if pos < -1 or pos > self.cols:
             raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" 
-                % (i, self.cols, self.cols))
+                % (i, self.cols + 1, self.cols))
         elif self.rows != mti.rows:
             raise ShapeError(
-                    "`self` and `mti` must have the same number of rows.")
+                    "`self` and `mti` must have the same number of columns.")
         else:
-            for j in range(self.rows - 1, -1, -1):
-                self._mat[pos + j*self.cols:pos + j*self.cols] = mti._mat[j*mti.cols:(j + 1)*mti.cols]
-        self.cols += mti.cols
+            if pos == -1:
+                pos = 0
+            k1 = self.cols
+            if not isinstance(self, MutableSparseMatrix):
+                w = self.row_join(zeros(mti.rows, mti.cols))
+                self._mat = w._mat
+            self.cols += mti.cols
+            if pos == self.cols:
+                self.cols, self[:, :] == self.rows + mti.rows, self.col_join(mti)[:,:]
+            else:
+                self[:,pos + mti.cols:self.cols:] = self[:,pos:self.cols - mti.cols:]
+                self[:,pos:pos + mti.cols:] = mti[:,:]
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.

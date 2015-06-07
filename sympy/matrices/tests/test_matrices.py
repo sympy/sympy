@@ -2514,7 +2514,8 @@ def test_issue_9476():
     assert M == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.row_insert(-4, V))
+    M.row_insert(-4, V)
+    assert M == Matrix([[10, 10, 10], [1, 2, 3], [2, 3, 4], [3, 4, 5]])
 
     # for col_insert(index)
     V = Matrix([10, 10, 10])
@@ -2531,4 +2532,5 @@ def test_issue_9476():
     assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.col_insert(-4, V))
+    M.col_insert(-4, V)
+    assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])

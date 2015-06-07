@@ -535,12 +535,12 @@ class SparseMatrix(MatrixBase):
             for i, r in enumerate(rowsList):
                 i_previous = rowsList.index(r)
                 if i_previous != i:
-                    rv = rv.row_insert(i, rv.row(i_previous))
+                    rv.row_insert(i, rv.row(i_previous))
         if len(colsList) != len(ucol):
             for i, c in enumerate(colsList):
                 i_previous = colsList.index(c)
                 if i_previous != i:
-                    rv = rv.col_insert(i, rv.col(i_previous))
+                    rv.col_insert(i, rv.col(i_previous))
         return rv
     extract.__doc__ = MatrixBase.extract.__doc__
 

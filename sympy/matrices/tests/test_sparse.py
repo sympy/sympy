@@ -564,3 +564,45 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+
+def test_issue_9476():
+    # for row_insert(index)
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    V = Matrix([[10, 10, 10]])
+
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(1, V)
+    assert M == Matrix([[1, 2, 3], [10, 10, 10], [2, 3, 4], [3, 4, 5]])
+
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(3, V)
+    assert M == Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5], [10, 10, 10]])
+
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: M.row_insert(4, V))
+
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(-1, V)
+    assert M == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
+
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_insert(-4, V)
+    assert M == Matrix([[10, 10, 10], [1, 2, 3], [2, 3, 4], [3, 4, 5]])
+
+    # for col_insert(index)
+    V = SparseMatrix([10, 10, 10])
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(1, V)
+    assert M == Matrix([[1, 10, 2, 3], [2, 10, 3, 4], [3, 10, 4, 5]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(-1, V)
+    assert M == Matrix([[1, 2, 10, 3], [2, 3, 10, 4], [3, 4, 10, 5]])
+
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(0, V)
+    assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
+
+    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_insert(-4, V)
+    assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
