@@ -25,17 +25,28 @@ class QClass(object):
 
     @property
     def hermitian(self):
+        """
+        Hermitian predicate.
+
+        ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the field of
+        hermitian operators.
+
+        TODO: Add examples
+
+        """
         return Predicate('Hermitian')
 
     @property
     def antihermitian(self):
-        r"""
+        """
         Antihermitian predicate.
 
-        ``ask(Q.antihermitian(x))`` is true iff x belongs to the field of
-        antihermitian operators.
+        ``Q.antihermitian(x)`` is true iff ``x`` belongs to the field of
+        antihermitian operators, i.e., operators in the form ``x*I``, where
+        ``x`` is Hermitian.
 
         TODO: Add examples
+
         """
         return Predicate('antihermitian')
 
@@ -45,8 +56,8 @@ class QClass(object):
         Real number predicate.
 
         ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
-        interval `(-\infty, \infty)`.  Note that, in particular the infinities are
-        not real. Use ``Q.extended_real`` if you want to consider those as well.
+        interval :math:`(-\infty, \infty)`.  Note that, in particular the infinities
+        are not real. Use ``Q.extended_real`` if you want to consider those as well.
 
         A few important facts about reals:
 
@@ -75,7 +86,6 @@ class QClass(object):
           ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
           nonzero, or nonpositive.
 
-
         Examples
         ========
 
@@ -86,22 +96,46 @@ class QClass(object):
         >>> ask(Q.real(0))
         True
 
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Real_number
+
         """
         return Predicate('real')
 
     @property
     def extended_real(self):
+        r"""
+        Extended real predicate.
+
+        ``Q.extended_real(x)`` is true iff ``x`` is a real number including
+        :math:`{-\infty, \infty}`.
+
+        See documentation of ``Q.real`` for more information about related facts.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo, I
+        >>> ask(Q.extended_real(1))
+        True
+        >>> ask(Q.extended_real(I))
+        False
+        >>> ask(Q.extended_real(oo))
+        True
+
+        """
         return Predicate('extended_real')
 
     @property
     def imaginary(self):
-        r"""
+        """
         Imaginary number predicate.
 
-        ``ask(Q.imaginary(x))`` is true iff ``x`` can be written as a real
+        ``Q.imaginary(x)`` is true iff ``x`` can be written as a real
         number multiplied by the imaginary unit ``I``. Please note that ``0``
         is not considered to be an imaginary number.
-
 
         Examples
         ========
@@ -114,17 +148,21 @@ class QClass(object):
         >>> ask(Q.imaginary(0))
         False
 
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Imaginary_number
+
         """
         return Predicate('imaginary')
 
     @property
     def complex(self):
-        r"""
+        """
         Complex number predicate.
 
-        ``ask(Q.complex(x))`` is true iff ``x`` belongs to the set of complex
+        ``Q.complex(x)`` is true iff ``x`` belongs to the set of complex
         numbers.
-
 
         Examples
         ========
@@ -138,20 +176,60 @@ class QClass(object):
         >>> ask(Q.complex(oo))
         False
 
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Complex_number
+
         """
         return Predicate('complex')
 
     @property
     def algebraic(self):
+        """
+        Algebraic number predicate.
+
+        ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
+        algebraic numbers.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, sqrt, I, pi
+        >>> ask(Q.algebraic(sqrt(2)))
+        True
+        >>> ask(Q.algebraic(I))
+        True
+        >>> ask(Q.algebraic(pi))
+        False
+
+        References
+        ==========
+
+        .. [1] http://en.wikipedia.org/wiki/Algebraic_number
+        """
         return Predicate('algebraic')
 
     @property
+    def transcendental(self):
+        """
+        Transcedental number predicate.
+
+        ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
+        transcendental numbers. A transcendental number is a real
+        or complex number that is not algebraic.
+
+        TODO: Add examples
+
+        """
+        return Predicate('transcendental')
+
+    @property
     def integer(self):
-        r"""
+        """
         Integer predicate.
 
-        ``ask(Q.integer(x))`` is true iff ``x`` belongs to the set of integer numbers.
-
+        ``Q.integer(x)`` is true iff ``x`` belongs to the set of integer numbers.
 
         Examples
         ========
@@ -162,23 +240,74 @@ class QClass(object):
         >>> ask(Q.integer(S(1)/2))
         False
 
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Integer
+
         """
         return Predicate('integer')
 
     @property
     def rational(self):
+        """
+        Rational number predicate.
+
+        ``Q.rational(x)`` is true iff ``x`` belongs to the set of
+        rational numbers.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, pi, S
+        >>> ask(Q.rational(0))
+        True
+        >>> ask(Q.rational(S(1)/2))
+        True
+        >>> ask(Q.rational(pi))
+        False
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Rational_number
+
+        """
         return Predicate('rational')
 
     @property
     def irrational(self):
+        """
+        Irrational number predicate.
+
+        ``Q.irrational(x)`` is true iff ``x``  is any real number that
+        cannot be expressed as a ratio of integers.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, pi, S
+        >>> ask(Q.irrational(0))
+        False
+        >>> ask(Q.irrational(S(1)/2))
+        False
+        >>> ask(Q.irrational(pi))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Irrational_number
+
+        """
         return Predicate('irrational')
 
     @property
     def finite(self):
-        r"""
+        """
         Finite predicate.
 
-        ``ask(Q.finite(x))`` will return ``True`` if ``x`` is neither an infinity
+        ``Q.finite(x)`` is true if ``x`` is neither an infinity
         nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
         having a bounded absolute value.
 
@@ -194,25 +323,46 @@ class QClass(object):
         >>> ask(Q.finite(1))
         True
 
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Finite
+
         """
         return Predicate('finite')
 
     @property
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
     def bounded(self):
+        """
+        See documentation of ``Q.finite``.
+        """
         return Predicate('finite')
 
     @property
     def infinite(self):
+        """
+        Infinite number predicate.
+
+        ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
+        arbitrarily large.
+
+        """
         return Predicate('infinite')
 
     @property
     @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
     def infinity(self):
+        """
+        See documentation of ``Q.infinite``.
+        """
         return Predicate('infinite')
 
     @property
     def infinitesimal(self):
+        """
+        See documentation of ``Q.zero``.
+        """
         return Predicate('infinitesimal')
 
     @property
@@ -233,8 +383,8 @@ class QClass(object):
           `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
           true, whereas ``Q.nonpositive(I)`` is false.
 
-        - See the docstring of ``Q.real`` for more information about related facts.
-
+        - See the documentation of ``Q.real`` for more information about
+          related facts.
 
         Examples
         ========
@@ -258,8 +408,8 @@ class QClass(object):
         r"""
         Negative number predicate.
 
-        ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
-        it is in the interval `(-oo, 0)`.  Note in particular that negative
+        ``Q.negative(x)`` is true iff ``x`` is a real number and :math:`x < 0`, that is,
+        it is in the interval :math:`(-\infty, 0)`.  Note in particular that negative
         infinity is not negative.
 
         A few important facts about negative numbers:
@@ -271,8 +421,8 @@ class QClass(object):
           ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
           true, whereas ``Q.nonnegative(I)`` is false.
 
-        - See the docstring of ``Q.real`` for more information about related facts.
-
+        - See the documentation of ``Q.real`` for more information about
+          related facts.
 
         Examples
         ========
@@ -293,14 +443,33 @@ class QClass(object):
 
     @property
     def zero(self):
+        """
+        Zero number predicate.
+
+        ``ask(Q.zero(x))`` is true iff the value of ``x`` is zero.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo
+        >>> ask(Q.zero(0))
+        True
+        >>> ask(Q.zero(1/oo))
+        True
+        >>> ask(Q.zero(0*oo))
+        False
+        >>> ask(Q.zero(1))
+        False
+
+        """
         return Predicate('zero')
 
     @property
     def nonzero(self):
-        r"""
+        """
         Nonzero real number predicate.
 
-        ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
+        ``ask(Q.nonzero(x))`` is true iff ``x`` is real and ``x`` is not zero.  Note in
         particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
         ``~Q.zero(x)`` if you want the negation of being zero without any real
         assumptions.
@@ -309,15 +478,15 @@ class QClass(object):
 
         - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
 
-        - See the docstring of ``Q.real`` for more information about related facts.
-
+        - See the documentation of ``Q.real`` for more information about
+          related facts.
 
         Examples
         ========
 
         >>> from sympy import Q, ask, symbols, I
         >>> x = symbols('x')
-        >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+        >>> ask(Q.nonzero(x), ~Q.zero(x))
         None
         >>> ask(Q.nonzero(x), Q.positive(x))
         True
@@ -335,19 +504,62 @@ class QClass(object):
 
     @property
     def nonpositive(self):
+        """
+        Nonpositive real number predicate.
+
+        ``ask(Q.nonpositive(x))`` is true iff ``x`` belongs to the set of
+        negative numbers including zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, I
+        >>> ask(Q.nonpositive(-1))
+        True
+        >>> ask(Q.nonpositive(0))
+        True
+        >>> ask(Q.nonpositive(1))
+        False
+        >>> ask(Q.nonpositive(I))
+        False
+        >>> ask(Q.nonpositive(-I))
+        False
+
+        """
         return Predicate('nonpositive')
 
     @property
     def nonnegative(self):
+        """
+        Nonnegative real number predicate.
+
+        ``ask(Q.nonnegative(x))`` is true iff ``x`` belongs to the set of
+        positive numbers including zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, I
+        >>> ask(Q.nonnegative(1))
+        True
+        >>> ask(Q.nonnegative(0))
+        True
+        >>> ask(Q.nonnegative(-1))
+        False
+        >>> ask(Q.nonnegative(I))
+        False
+        >>> ask(Q.nonnegative(-I))
+        False
+
+        """
         return Predicate('nonnegative')
 
     @property
     def even(self):
-        r"""
+        """
         Even number predicate.
 
         ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even numbers.
-
 
         Examples
         ========
@@ -367,20 +579,59 @@ class QClass(object):
 
     @property
     def odd(self):
+        """
+        Odd number predicate.
+
+        ``ask(Q.odd(x))`` is true iff ``x`` belongs to the set of odd numbers.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, pi
+        >>> ask(Q.odd(0))
+        False
+        >>> ask(Q.odd(2))
+        False
+        >>> ask(Q.odd(3))
+        True
+        >>> ask(Q.odd(pi))
+        False
+
+        """
         return Predicate('odd')
 
     @property
     def prime(self):
+        """
+        Prime number predicate.
+
+        ``ask(Q.prime(x))`` is true iff ``x`` is a natural number greater
+        than 1 that has no positive divisors other than ``1`` and the
+        number itself.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask
+        >>> ask(Q.prime(0))
+        False
+        >>> ask(Q.prime(1))
+        False
+        >>> ask(Q.prime(2))
+        True
+        >>> ask(Q.prime(20))
+        False
+
+        """
         return Predicate('prime')
 
     @property
     def composite(self):
-        r"""
+        """
         Composite number predicate.
 
         ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
         at least one positive divisor other than ``1`` and the number itself.
-
 
         Examples
         ========
@@ -389,7 +640,7 @@ class QClass(object):
         >>> ask(Q.composite(0))
         False
         >>> ask(Q.composite(1))
-        True
+        False
         >>> ask(Q.composite(2))
         False
         >>> ask(Q.composite(20))
@@ -400,23 +651,24 @@ class QClass(object):
 
     @property
     def commutative(self):
-        r"""
+        """
         Commutative predicate.
 
         ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
         object with respect to multiplication operation.
 
         TODO: Add examples
+
         """
         return Predicate('commutative')
 
     @property
     def is_true(self):
-        r"""
+        """
         Generic predicate.
 
-        ``Q.is_true(x)`` is true iff ``x`` is true. This only makes sense if ``x`` is a
-        predicate.
+        ``ask(Q.is_true(x))`` is true iff ``x`` is true. This only makes
+        sense if ``x`` is a predicate.
 
         Examples
         ========
@@ -431,62 +683,364 @@ class QClass(object):
 
     @property
     def symmetric(self):
+        """
+        Symmetric matrix predicate.
+
+        ``Q.symmetric(x)`` is true iff the square matrix ``x`` is equal to
+        its transpose. Every square diagonal matrix is a symmetric matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> Y = MatrixSymbol('Y', 2, 3)
+        >>> Z = MatrixSymbol('Z', 2, 2)
+        >>> ask(Q.symmetric(X*Z), Q.symmetric(X) & Q.symmetric(Z))
+        True
+        >>> ask(Q.symmetric(X + Z), Q.symmetric(X) & Q.symmetric(Z))
+        True
+        >>> ask(Q.symmetric(Y))
+        False
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Symmetric_matrix
+
+        """
         return Predicate('symmetric')
 
     @property
     def invertible(self):
+        """
+        Invertible matrix predicate.
+
+        ``Q.invertible(x)`` is true iff ``x`` is an invertible matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> Y = MatrixSymbol('Y', 2, 3)
+        >>> Z = MatrixSymbol('Z', 2, 2)
+        >>> ask(Q.invertible(X*Y), Q.invertible(X))
+        False
+        >>> ask(Q.invertible(X*Z), Q.invertible(X) & Q.invertible(Z))
+        True
+        >>> ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Invertible_matrix
+
+        """
         return Predicate('invertible')
 
     @property
     def orthogonal(self):
+        """
+        Orthogonal matrix predicate.
+
+        ``Q.orthogonal(x)`` is true iff ``x`` is an orthogonal matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol, Identity
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> Y = MatrixSymbol('Y', 2, 3)
+        >>> Z = MatrixSymbol('Z', 2, 2)
+        >>> ask(Q.orthogonal(Y))
+        False
+        >>> ask(Q.orthogonal(X*Z*X), Q.orthogonal(X) & Q.orthogonal(Z))
+        True
+        >>> ask(Q.orthogonal(Identity(3)))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Orthogonal_matrix
+
+        """
         return Predicate('orthogonal')
 
     @property
     def unitary(self):
+        """
+        Unitary matrix predicate.
+
+        Unitary matrix is an analogue to orthogonal matrix. A square
+        matrix ``M`` with complex elements is unitary if ``M'M = MM' = I``
+        where ``M'`` is the conjugate transpose matrix of ``M``.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol, Identity
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> Y = MatrixSymbol('Y', 2, 3)
+        >>> Z = MatrixSymbol('Z', 2, 2)
+        >>> ask(Q.unitary(Y))
+        False
+        >>> ask(Q.unitary(X*Z*X), Q.unitary(X) & Q.unitary(Z))
+        True
+        >>> ask(Q.unitary(Identity(3)))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Unitary_matrix
+
+        """
         return Predicate('unitary')
 
     @property
     def positive_definite(self):
+        """
+        Positive definite matrix predicate.
+
+        If ``M`` is a ``nxn`` symmetric real matrix, it is said
+        to be positive definite if :math:`Z^TMZ` is positive for
+        every non-zero column vector ``Z`` of ``n`` real numbers.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol, Identity
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> Y = MatrixSymbol('Y', 2, 3)
+        >>> Z = MatrixSymbol('Z', 2, 2)
+        >>> ask(Q.positive_definite(Y))
+        False
+        >>> ask(Q.positive_definite(Identity(3)))
+        True
+        >>> ask(Q.positive_definite(X + Z), Q.positive_definite(X) &
+        ...     Q.positive_definite(Z))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Positive-definite_matrix
+
+        """
         return Predicate('positive_definite')
 
     @property
     def upper_triangular(self):
+        """
+        Upper triangular matrix predicate.
+
+        A matrix ``M`` is called upper triangular matrix if :math:`a_{ij}=0`
+        for :math:`i>j`.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, ZeroMatrix, Identity
+        >>> ask(Q.upper_triangular(Identity(3)))
+        True
+        >>> ask(Q.upper_triangular(ZeroMatrix(3, 3)))
+        True
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/UpperTriangularMatrix.html
+
+        """
         return Predicate('upper_triangular')
 
     @property
     def lower_triangular(self):
+        """
+        Lower triangular matrix predicate.
+
+        A matrix ``M`` is called lower triangular matrix if :math:`a_{ij}=0`
+        for :math:`i>j`.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, ZeroMatrix, Identity
+        >>> ask(Q.lower_triangular(Identity(3)))
+        True
+        >>> ask(Q.lower_triangular(ZeroMatrix(3, 3)))
+        True
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/LowerTriangularMatrix.html
+        """
         return Predicate('lower_triangular')
 
     @property
     def diagonal(self):
+        """
+        Diagonal matrix predicate.
+
+        ``Q.diagonal(x)`` is true iff ``x`` is a diagonal matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol, ZeroMatrix
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> ask(Q.diagonal(ZeroMatrix(3, 3)))
+        True
+        >>> ask(Q.diagonal(X), Q.lower_triangular(X) &
+        ...     Q.upper_triangular(X))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Diagonal_matrix
+
+        """
         return Predicate('diagonal')
 
     @property
     def fullrank(self):
+        """
+        Fullrank matrix predicate.
+
+        ``Q.fullrank(x)`` is true iff ``x`` is a full rank matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol, ZeroMatrix, Identity
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> ask(Q.fullrank(X.T), Q.fullrank(X))
+        True
+        >>> ask(Q.fullrank(ZeroMatrix(3, 3)))
+        False
+        >>> ask(Q.fullrank(Identity(3)))
+        True
+
+        """
         return Predicate('fullrank')
 
     @property
     def square(self):
+        """
+        Square matrix predicate.
+
+        ``Q.square(x)`` is true iff ``x`` is a square matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol, ZeroMatrix, Identity
+        >>> X = MatrixSymbol('X', 2, 2)
+        >>> Y = MatrixSymbol('X', 2, 3)
+        >>> ask(Q.square(X))
+        True
+        >>> ask(Q.square(Y))
+        False
+        >>> ask(Q.square(ZeroMatrix(3, 3)))
+        True
+        >>> ask(Q.square(Identity(3)))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Square_matrix
+
+        """
         return Predicate('square')
 
     @property
     def integer_elements(self):
+        """
+        Integer elements matrix predicate.
+
+        ``Q.integer_elements(x)`` is true iff all the elements of ``x``
+        are integers.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.integer(X[1, 2]), Q.integer_elements(X))
+        True
+
+        """
         return Predicate('integer_elements')
 
     @property
     def real_elements(self):
+        """
+        Real elements matrix predicate.
+
+        ``Q.real_elements(x)`` is true iff all the elements of ``x``
+        are real numbers.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.real(X[1, 2]), Q.real_elements(X))
+        True
+
+        """
         return Predicate('real_elements')
 
     @property
     def complex_elements(self):
+        """
+        Complex elements matrix predicate.
+
+        ``Q.complex_elements(x)`` is true iff all the elements of ``x``
+        are complex numbers.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.complex(X[1, 2]), Q.complex_elements(X))
+        True
+        >>> ask(Q.complex_elements(X), Q.integer_elements(X))
+        True
+
+        """
         return Predicate('complex_elements')
 
     @property
-    def transcendental(self):
-        return Predicate('transcendental')
-
-    @property
     def singular(self):
+        """
+        Singular matrix predicate.
+
+        A matrix is singular iff the value of it's determinant is 0.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.singular(X), Q.invertible(X))
+        False
+        >>> ask(Q.singular(X), ~Q.invertible(X))
+        True
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/SingularMatrix.html
+
+        """
         return Predicate('singular')
 
     @property

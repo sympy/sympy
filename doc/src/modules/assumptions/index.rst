@@ -32,7 +32,7 @@ assumptions about objects in expr. Valid values include:
     * Q.integer(x) & Q.positive(x)
     * etc.
 
-Q is a class in sympy.assumptions holding known predicates.
+Q is an instance of QClass in sympy.assumptions.ask holding known predicates.
 
 See documentation for the logic module for a complete list of valid boolean
 expressions.
