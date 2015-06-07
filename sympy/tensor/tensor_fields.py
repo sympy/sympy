@@ -641,9 +641,9 @@ def lie_w(omega, X, args):
 
     >>> li = lie_w(omega,X,arg)
     >>> print(li)
-    0 x2**4 + 2*x2 - cos(x3) -2*x1*x2**3 - 3*x1*x3**2 + x2*sin(x3)
-    -x2**4 - 2*x2 + cos(x3) 0 -3*x1**2*x2**2
-    2*x1*x2**3 + 3*x1*x3**2 - x2*sin(x3) 3*x1**2*x2**2 0
+    0  x2**3*x3 + x3**3 + x3  -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)  
+    -x2**3*x3 - x3**3 - x3  0  -2*x1*x2**3 + 3*x1*x3**2 + x1  
+    x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3)  2*x1*x2**3 - 3*x1*x3**2 - x1  0
 
     >>> li.type_pq
     (0, 2)
