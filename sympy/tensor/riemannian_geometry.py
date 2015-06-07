@@ -1033,10 +1033,10 @@ def nabla(T, ch_2, var):
     The covariant derivative of tensor field:
     >>> nabla_t = nabla(T, ch_2, var)
     >>> print(nabla_t)
-    0  0
-    0  -1
-    0  -1
-    0  0
+    -x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  0  
+    x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  x2*sin(x2)*cos(x2) - 1  
+    -x1*sin(x2)*cos(x2) - x2*sin(x2)*cos(x2)  -x1*sin(x2)*cos(x2) - 1  
+    -x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  0
     """
     # Handling of a input argument - var
     check_vector_of_arguments(var)
@@ -1160,8 +1160,10 @@ def nabla_x(T, ch_2, X, var):
     The covariant derivative of tensor field along another vector field:
     >>> nabla_xt = nabla_x(T, ch_2, X, var)
     >>> print(nabla_xt)
-    0  -x1 + cos(x2)
-    -x1 + cos(x2)  0
+    x1*x2**3*(-x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2))  x1*x2**3*(x1*sin(x2)*cos(x2) + \
+    x2*sin(x2)*cos(x2)) + (x1 - cos(x2))*(x2*sin(x2)*cos(x2) - 1)  
+    x1*x2**3*(-x1*sin(x2)*cos(x2) - x2*sin(x2)*cos(x2)) + \
+    (x1 - cos(x2))*(-x1*sin(x2)*cos(x2) - 1)  x1*x2**3*(-x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)) 
     """
     # Handling of a input argument - var
     check_vector_of_arguments(var)
@@ -1274,7 +1276,7 @@ def delta(T, g, ch_2, var):
     The covariant divergence of a tensor field:
     >>> delta_T = delta(T, g, ch_2, var)
     >>> print(delta_T)
-    x1*sin(x2)/cos(x2) + 1  0
+    x1*sin(x2)*cos(x2) + 1  0
     """
     # Handling of a input argument - var
     check_vector_of_arguments(var)
@@ -1383,7 +1385,7 @@ def riemann_li(C, g, var, type_output='t'):
     - default function takes a parameter 't', so that the result will be a TensorArray.
 
     The curvature tensor:
-    >>> r_li = riemann(C, g, var, 'a')
+    >>> r_li = riemann_li(C, g, var, 'a')
     >>> print(r_li)
     -0.25*sin(x2)**2*cos(x2)**2  0
     0  0
@@ -1437,7 +1439,7 @@ def riemann_li(C, g, var, type_output='t'):
     if (idx_g != idx_c):
         raise ValueError(
             'The start index of the tensor field and Christoffel symbol \
-                of second kind must be equal')
+            of second kind must be equal')
     else:
         idx_start = idx_g
 
@@ -1501,19 +1503,21 @@ def k_sigma_li(R, g, var):
     >>> g[1,0] = 0
     >>> g[1,1] = 1
 
+    C it's a structural constant must be tensor with valence indices (1,-1,-1):
+    
+    >>> C = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
+    >>> C[0,0,0] = 0
+    >>> C[0,0,1] = sin(x2)
+    >>> C[0,1,1] = cos(x2)
+    >>> C[1,1,1] = cos(x2)
+    >>> C[1,0,1] = cos(x2)
+    >>> C[1,1,0] = 0
+    >>> C[1,0,0] = -sin(x2)
+    >>> C[0,1,0] = -sin(x2)
+
     R it's a Riemann curvature tensor must be symmetric matrix, arraypy or tensor
     with valences indices (1, -1, -1, -1):
-
-    C = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
-    C[0,0,0] = 0
-    C[0,0,1] = sin(x2)
-    C[0,1,1] = cos(x2)
-    C[1,1,1] = cos(x2)
-    C[1,0,1] = cos(x2)
-    C[1,1,0] = 0
-    C[1,0,0] = -sin(x2)
-    C[0,1,0] = -sin(x2)
-
+    
     >>> R = riemann_li(C, g, var, 't')
 
     The sectional curvature:
@@ -1691,13 +1695,14 @@ def kulkarni_nomizu(h, k, var, type_output='t'):
     return K
 
 
-def two_surf(surf, var, type_output='t'):
+def second_surf(surf, var, type_output='t'):
     """Return the second quadratic form.
 
     Examples:
     =========
 
     >>> from sympy import symbols
+    >>> from sympy.tensor.riemannian_geometry import second_surf
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
@@ -1715,11 +1720,11 @@ def two_surf(surf, var, type_output='t'):
 
     The the second quadratic form.
     >>> surf3 = [x1+x2, 2*x1**2-3*x2, (1+x2)*x1+x2-4]
-    >>> print(two_surf(surf3, var, 't'))
+    >>> print(second_surf(surf3, var, 't'))
     (-x1 + x2)/(3*x1)  -(4*x1 + 3)/((x1 + 1)*(x2 + 1))
     -(4*x1 + 3)/((x1 + 1)*(x2 + 1))  0
     >>> surf1 = [x1 + 4*x2**2]
-    >>> print(two_surf(surf1, var, 't'))
+    >>> print(second_surf(surf1, var, 't'))
     0  0
     0  8
     """
@@ -1800,6 +1805,7 @@ def k_surf(surf, arg):
     =========
 
     >>> from sympy import symbols
+    >>> from sympy.tensor.riemannian_geometry import k_surf
     >>> x1, x2 = symbols('x1, x2')
 
     var it's a list of symbolic arguments. May be a list, one-dimensional arraypy
@@ -1832,7 +1838,7 @@ def k_surf(surf, arg):
         g[1, 1] = diff(surf[0], var[1])**2 + \
             diff(surf[1], var[1])**2 + diff(surf[2], var[1])**2
 
-        b = two_surf(surf3, var, 't')
+        b = second_surf(surf3, var, 't')
 
         K = simplify(
             (b[0, 0] * b[1, 1] - b[0, 1]**2) / (g[0, 0] * g[1, 1] - g[0, 1]**2))

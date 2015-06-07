@@ -120,11 +120,11 @@ def test_christoffel_2_gtnsr():
     print('test_christoffel_2_gtnsr_t  <=== actual test code')
     assert christoffel_2(g, var_list) == res_ten
     assert isinstance(christoffel_2(g, var_list), TensorArray)
-    assert christoffel_2(g, var_list).type_pq == (0, 3)
+    assert christoffel_2(g, var_list).type_pq == (1, 2)
 
     assert christoffel_2(g, var_list) == res_ten
     assert isinstance(christoffel_2(g, var_list, 't'), TensorArray)
-    assert christoffel_2(g, var_list).type_pq == (0, 3)
+    assert christoffel_2(g, var_list).type_pq == (1, 2)
 
     print('test_christoffel_2_gtnsr_a  <=== actual test code')
     assert christoffel_2(g, var_list, 'a') == res_arr
@@ -150,11 +150,11 @@ def test_christoffel_2_gm():
     print('test_christoffel_2_gm_t  <=== actual test code')
     assert christoffel_2(g, var_list) == res_ten
     assert isinstance(christoffel_2(g, var_list), TensorArray)
-    assert christoffel_2(g, var_list).type_pq == (0, 3)
+    assert christoffel_2(g, var_list).type_pq == (1, 2)
 
     assert christoffel_2(g, var_list, 't') == res_ten
     assert isinstance(christoffel_2(g, var_list, 't'), TensorArray)
-    assert christoffel_2(g, var_list, 't').type_pq == (0, 3)
+    assert christoffel_2(g, var_list, 't').type_pq == (1, 2)
 
     print('test_christoffel_2_gm_a  <=== actual test code')
     assert christoffel_2(g, var_list, 'a') == res_arr
@@ -172,7 +172,7 @@ def test_covar_der():
     res_arr[0, 1] = x1 * x2**3 * sin(x2) * cos(x2) + 1
     res_arr[1, 0] = -x1 * x2**3 * sin(x2) / cos(x2) + 3 * x1 * x2**2
     res_arr[1, 1] = sin(x2)
-    res_ten = res_arr.to_tensor((-1, 1))
+    res_ten = res_arr.to_tensor(( 1, -1))
 
     print('test_covar_der_t  <=== actual test code')
     assert covar_der(X, g, var_list) == res_ten
@@ -490,7 +490,7 @@ def test_nabla():
     ch_2[1, 0, 0] = -sin(x2) * cos(x2)
     ch_2[0, 1, 0] = -sin(x2) * cos(x2)
 
-    res_ten = Arraypy([2, 2, 2]).to_tensor((1, -1, -1))
+    res_ten = Arraypy([2, 2, 0]).to_tensor((1, -1, -1))
     res_ten[0, 0, 0] = -x1 * sin(x2) * cos(x2) + x2 * sin(x2) * cos(x2)
     res_ten[0, 0, 1] = 0
     res_ten[0, 1, 1] = x2 * sin(x2) / cos(x2) - 1
@@ -508,6 +508,8 @@ def test_nabla_x():
     x1, x2 = symbols('x1, x2')
     var_list = [x1, x2]
 
+    X = [x1 * x2**3, x1 - cos(x2)]
+    
     T = Arraypy([2, 2, 0]).to_tensor((-1, -1))
     T[0, 0] = x2
     T[0, 1] = -x2
@@ -564,8 +566,8 @@ def test_delta():
     ch_2[1, 0, 0] = -sin(x2) * cos(x2)
     ch_2[0, 1, 0] = -sin(x2) * cos(x2)
 
-    res_ten = Arraypy((1)).to_tensor((-1))
-    res_ten[0] = x1 * sin(x2) / cos(x2) + 1
+    res_ten = Arraypy((2)).to_tensor((-1))
+    res_ten[0] = x1 * sin(x2) * cos(x2) + 1
     res_ten[1] = 0
 
     assert delta(T, g, ch_2, var_list) == res_ten
@@ -608,11 +610,12 @@ def test_riemann_Li():
     res_arr[1, 0, 1, 1] = 0
     res_arr[0, 1, 0, 0] = 0
     res_arr[0, 1, 1, 0] = 0
+    res_arr[1, 0, 0, 1] = 0
     res_ten = res_arr.to_tensor((1, -1, -1, -1))
     print('test_riemann_li_t  <=== actual test code')
     assert riemann_li(C, g, var_list) == res_ten
     assert isinstance(riemann_li(C, g, var_list), TensorArray)
-    assert riemann_li(g, var_list).type_pq == (1, 3)
+    assert riemann_li(C, g, var_list).type_pq == (1, 3)
 
     assert riemann_li(C, g, var_list, 't') == res_ten
     assert isinstance(riemann_li(C, g, var_list, 't'), TensorArray)
@@ -655,6 +658,7 @@ def test_kulkarni_nomizu():
     res_arr[1, 0, 1, 1] = 0
     res_arr[0, 1, 0, 0] = 0
     res_arr[0, 1, 1, 0] = -x1**2 - x2**2
+    res_arr[1, 0, 0, 1] = -x1**2 - x2**2
     res_ten = res_arr.to_tensor((-1, -1, -1, -1))
     
     print('test_kulkarni_nomizu_t  <=== actual test code')
