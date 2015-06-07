@@ -3380,6 +3380,7 @@ class MatrixBase(object):
 
         """
         from sympy.matrices import diag
+        from sympy import Matrix, ImmutableMatrix
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -3400,7 +3401,10 @@ class MatrixBase(object):
                     vec = vects[k]
                     if normalize:
                         vec = vec / vec.norm()
-                    P.col_insert(P.cols, vec)
+                    L = Matrix(P)
+                    k1 = P.cols
+                    L.col_insert(k1, vec)
+                    P = ImmutableMatrix(L)
             D = diag(*diagvals)
             self._diagonalize_clear_subproducts()
             return (P, D)
@@ -3958,12 +3962,12 @@ class MatrixBase(object):
         row
         col_insert
         """
-        from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
+        from sympy.matrices.sparse import MutableSparseMatrix
         i = pos
         if pos < 0:
             pos = self.rows + pos
         if pos < -1 or pos > self.rows:
-            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" 
+            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s"
                 % (i, self.rows + 1, self.rows))
         elif self.cols != mti.cols:
             raise ShapeError(
@@ -3972,12 +3976,14 @@ class MatrixBase(object):
             if pos == -1:
                 pos = 0
             k1 = self.rows
-            self.rows += mti.rows
             if not isinstance(self, MutableSparseMatrix):
                 self._mat[k1*mti.cols:k1*mti.cols] = [0 for i in range(0, mti.rows*self.cols)]
             if pos == self.rows:
-                self.rows, self[:, :] == self.rows + mti.rows, self.col_join(mti)[:,:]
+                w = self.col_join(mti)
+                self.rows += mti.rows
+                self[k1:self.rows,:] = w[k1:self.rows,:]
             else:
+                self.rows += mti.rows
                 self[pos + mti.rows:self.rows,:] = self[pos:self.rows - mti.rows,:]
                 self[pos:pos + mti.rows,:] = mti[:,:]
 
@@ -4009,7 +4015,7 @@ class MatrixBase(object):
         if pos < 0:
             pos = self.cols + pos
         if pos < -1 or pos > self.cols:
-            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" 
+            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s"
                 % (i, self.cols + 1, self.cols))
         elif self.rows != mti.rows:
             raise ShapeError(
@@ -4020,11 +4026,12 @@ class MatrixBase(object):
             k1 = self.cols
             if not isinstance(self, MutableSparseMatrix):
                 w = self.row_join(zeros(mti.rows, mti.cols))
-                self._mat = w._mat
-            self.cols += mti.cols
+                self._mat[:] = w._mat
             if pos == self.cols:
-                self.cols, self[:, :] == self.rows + mti.rows, self.col_join(mti)[:,:]
+                self.cols += mti.cols
+                self[:,k1:self.cols] = mti[:,:]
             else:
+                self.cols += mti.cols
                 self[:,pos + mti.cols:self.cols:] = self[:,pos:self.cols - mti.cols:]
                 self[:,pos:pos + mti.cols:] = mti[:,:]
 

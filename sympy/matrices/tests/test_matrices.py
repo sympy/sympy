@@ -1987,18 +1987,22 @@ def test_col_join():
 
 def test_row_insert():
     r4 = Matrix([[4, 4, 4]])
-    for i in range(-4, 5):
+    for i in range(-3, 3):
         l = [1, 0, 0]
         l.insert(i, 4)
-        assert flatten(eye(3).row_insert(i, r4).col(0).tolist()) == l
+        a = eye(3)
+        a.row_insert(i, r4)
+        assert flatten(a.col(0).tolist()) == l
 
 
 def test_col_insert():
     c4 = Matrix([4, 4, 4])
-    for i in range(-4, 5):
+    for i in range(-3, 3):
         l = [0, 0, 0]
         l.insert(i, 4)
-        assert flatten(zeros(3).col_insert(i, c4).row(0).tolist()) == l
+        a = zeros(3)
+        a.col_insert(i, c4)
+        assert flatten(a.row(0).tolist()) == l
 
 
 def test_normalized():

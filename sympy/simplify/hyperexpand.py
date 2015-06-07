@@ -700,10 +700,11 @@ class Formula(object):
         self.C = Matrix([[1] + [0]*n])
 
         m = eye(n)
-        m = m.col_insert(0, zeros(n, 1))
+        m.col_insert(0, zeros(n, 1))
         l = poly.all_coeffs()[1:]
         l.reverse()
-        self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
+        m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
+        self.M = m
 
     def __init__(self, func, z, res, symbols, B=None, C=None, M=None):
         z = sympify(z)
