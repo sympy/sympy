@@ -193,7 +193,8 @@ class Point(GeometryEntity):
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of eachother
         m = Matrix([p1.args, p2.args])
-        # we need `simplify=True` otherwise the rank may be computed incorrectly
+        # XXX: issue #9480 we need `simplify=True` otherwise the
+        # rank may be computed incorrectly
         return m.rank(simplify=True) < 2
 
     @property
