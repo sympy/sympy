@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from sympy.matrices import Matrix, eye, det
-from sympy.core import diff, Add, Symbol
-from sympy.simplify import simplify
-from sympy.tensor.arraypy import Arraypy, TensorArray, matrix2arraypy, \
-    matrix2tensor, list2arraypy, list2tensor
-from sympy.tensor.tensor_methods import is_asymmetric, perm_parity, \
-    lower_index, raise_index, is_symmetric, tensor_product
+from sympy.matrices import eye, det
+from sympy.core import diff, Add
 from sympy import sqrt
-from itertools import permutations
-from sympy.functions.combinatorial.factorials import factorial
+from sympy.tensor.arraypy import Arraypy, TensorArray, matrix2arraypy, \
+    matrix2tensor, list2arraypy, list2tensor, Matrix, Symbol
+
+from sympy.tensor.tensor_methods import is_asymmetric, simplify, factorial, \
+    lower_index, raise_index, is_symmetric, tensor_product, permutations
+
 from sympy.tensor.helper_functions import check_vector_of_arguments, \
     check_metric_tensor, check_the_vector_field, sign_permutations, \
     delete_index_from_list, replace_index_to_k
@@ -642,9 +641,9 @@ def lie_w(omega, X, args):
 
     >>> li = lie_w(omega,X,arg)
     >>> print(li)
-    0  x2**4 + 2*x2 - cos(x3)  -2*x1*x2**3 - 3*x1*x3**2 + x2*sin(x3)
-           -x2**4 - 2*x2 + cos(x3)  0  -3*x1**2*x2**2
-     2*x1*x2**3 + 3*x1*x3**2 - x2*sin(x3)  3*x1**2*x2**2  0
+    0 x2**4 + 2*x2 - cos(x3) -2*x1*x2**3 - 3*x1*x3**2 + x2*sin(x3)
+    -x2**4 - 2*x2 + cos(x3) 0 -3*x1**2*x2**2
+    2*x1*x2**3 + 3*x1*x3**2 - x2*sin(x3) 3*x1**2*x2**2 0
 
     >>> li.type_pq
     (0, 2)
