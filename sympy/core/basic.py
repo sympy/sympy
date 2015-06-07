@@ -1,9 +1,8 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 
-from .assumptions import ManagedProperties
+from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
-from .core import BasicType
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
@@ -1126,7 +1125,7 @@ class Basic(with_metaclass(ManagedProperties)):
             for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
-        if isinstance(pattern, BasicType):
+        if isinstance(pattern, BasicMeta):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
 
