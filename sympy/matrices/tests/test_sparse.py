@@ -567,7 +567,6 @@ def test_hermitian():
 
 def test_issue_9476():
     # for row_insert(index)
-    M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     V = Matrix([[10, 10, 10]])
 
     M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
@@ -586,8 +585,7 @@ def test_issue_9476():
     assert M == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
 
     M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    M.row_insert(-4, V)
-    assert M == Matrix([[10, 10, 10], [1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: M.row_insert(-4, V))
 
     # for col_insert(index)
     V = SparseMatrix([10, 10, 10])
@@ -604,5 +602,4 @@ def test_issue_9476():
     assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
 
     M = SparseMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    M.col_insert(-4, V)
-    assert M == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
+    raises(IndexError, lambda: M.col_insert(-4, V))

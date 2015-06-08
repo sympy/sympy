@@ -3402,8 +3402,7 @@ class MatrixBase(object):
                     if normalize:
                         vec = vec / vec.norm()
                     L = Matrix(P)
-                    k1 = P.cols
-                    L.col_insert(k1, vec)
+                    L.col_insert(L.cols, vec)
                     P = ImmutableMatrix(L)
             D = diag(*diagvals)
             self._diagonalize_clear_subproducts()
@@ -3966,26 +3965,23 @@ class MatrixBase(object):
         i = pos
         if pos < 0:
             pos = self.rows + pos
-        if pos < -1 or pos > self.rows:
+        if pos < 0 or pos > self.rows:
             raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s"
-                % (i, self.rows + 1, self.rows))
-        elif self.cols != mti.cols:
+                % (i, self.rows, self.rows))
+        if self.cols != mti.cols:
             raise ShapeError(
                     "`self` and `mti` must have the same number of columns.")
+        k1 = self.rows
+        if not isinstance(self, MutableSparseMatrix):
+            self._mat[k1*mti.cols:k1*mti.cols] = [0 for i in range(0, mti.rows*self.cols)]
+        if pos == self.rows:
+            w = self.col_join(mti)
+            self.rows += mti.rows
+            self[k1:self.rows,:] = w[k1:self.rows,:]
         else:
-            if pos == -1:
-                pos = 0
-            k1 = self.rows
-            if not isinstance(self, MutableSparseMatrix):
-                self._mat[k1*mti.cols:k1*mti.cols] = [0 for i in range(0, mti.rows*self.cols)]
-            if pos == self.rows:
-                w = self.col_join(mti)
-                self.rows += mti.rows
-                self[k1:self.rows,:] = w[k1:self.rows,:]
-            else:
-                self.rows += mti.rows
-                self[pos + mti.rows:self.rows,:] = self[pos:self.rows - mti.rows,:]
-                self[pos:pos + mti.rows,:] = mti[:,:]
+            self.rows += mti.rows
+            self[pos + mti.rows:self.rows,:] = self[pos:self.rows - mti.rows,:]
+            self[pos:pos + mti.rows,:] = mti[:,:]
 
     def col_insert(self, pos, mti):
         """Insert one or more columns at the given column position.
@@ -4010,30 +4006,27 @@ class MatrixBase(object):
         row_insert
         """
         from sympy.matrices.dense import zeros
-        from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
+        from sympy.matrices.sparse import MutableSparseMatrix
         i = pos
         if pos < 0:
             pos = self.cols + pos
-        if pos < -1 or pos > self.cols:
+        if pos < 0 or pos > self.cols:
             raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s"
-                % (i, self.cols + 1, self.cols))
-        elif self.rows != mti.rows:
+                % (i, self.cols, self.cols))
+        if self.rows != mti.rows:
             raise ShapeError(
                     "`self` and `mti` must have the same number of columns.")
+        k1 = self.cols
+        if not isinstance(self, MutableSparseMatrix):
+            w = self.row_join(zeros(mti.rows, mti.cols))
+            self._mat[:] = w._mat
+        if pos == self.cols:
+            self.cols += mti.cols
+            self[:,k1:self.cols] = mti[:,:]
         else:
-            if pos == -1:
-                pos = 0
-            k1 = self.cols
-            if not isinstance(self, MutableSparseMatrix):
-                w = self.row_join(zeros(mti.rows, mti.cols))
-                self._mat[:] = w._mat
-            if pos == self.cols:
-                self.cols += mti.cols
-                self[:,k1:self.cols] = mti[:,:]
-            else:
-                self.cols += mti.cols
-                self[:,pos + mti.cols:self.cols] = self[:,pos:self.cols - mti.cols]
-                self[:,pos:pos + mti.cols] = mti[:,:]
+            self.cols += mti.cols
+            self[:,pos + mti.cols:self.cols] = self[:,pos:self.cols - mti.cols]
+            self[:,pos:pos + mti.cols] = mti[:,:]
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.
