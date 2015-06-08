@@ -17,11 +17,23 @@ deprecated_predicates = [
     'infinity'
 ]
 
+# Memoization storage for predicates
+predicate_cache = {}
 
 class QClass(object):
     """
     This class contains all the supported keys by ``ask``.
     """
+
+    def _return_from_cache(self, key):
+        """
+        This function returns predicate objects from cache. If it is
+        not available, a new predicate object is created and stored.
+        """
+        if key in predicate_cache:
+            return predicate_cache[key]
+        predicate_cache[key] = Predicate(key)
+        return predicate_cache[key]
 
     @property
     def hermitian(self):
@@ -34,7 +46,7 @@ class QClass(object):
         TODO: Add examples
 
         """
-        return Predicate('Hermitian')
+        return self._return_from_cache('hermitian')
 
     @property
     def antihermitian(self):
@@ -48,7 +60,7 @@ class QClass(object):
         TODO: Add examples
 
         """
-        return Predicate('antihermitian')
+        return self._return_from_cache('antihermitian')
 
     @property
     def real(self):
@@ -102,7 +114,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Real_number
 
         """
-        return Predicate('real')
+        return self._return_from_cache('real')
 
     @property
     def extended_real(self):
@@ -126,7 +138,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('extended_real')
+        return self._return_from_cache('extended_real')
 
     @property
     def imaginary(self):
@@ -154,7 +166,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Imaginary_number
 
         """
-        return Predicate('imaginary')
+        return self._return_from_cache('imaginary')
 
     @property
     def complex(self):
@@ -182,7 +194,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Complex_number
 
         """
-        return Predicate('complex')
+        return self._return_from_cache('complex')
 
     @property
     def algebraic(self):
@@ -208,7 +220,7 @@ class QClass(object):
 
         .. [1] http://en.wikipedia.org/wiki/Algebraic_number
         """
-        return Predicate('algebraic')
+        return self._return_from_cache('algebraic')
 
     @property
     def transcendental(self):
@@ -222,7 +234,7 @@ class QClass(object):
         TODO: Add examples
 
         """
-        return Predicate('transcendental')
+        return self._return_from_cache('transcendental')
 
     @property
     def integer(self):
@@ -246,7 +258,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Integer
 
         """
-        return Predicate('integer')
+        return self._return_from_cache('integer')
 
     @property
     def rational(self):
@@ -273,7 +285,7 @@ class QClass(object):
         https://en.wikipedia.org/wiki/Rational_number
 
         """
-        return Predicate('rational')
+        return self._return_from_cache('rational')
 
     @property
     def irrational(self):
@@ -300,7 +312,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Irrational_number
 
         """
-        return Predicate('irrational')
+        return self._return_from_cache('irrational')
 
     @property
     def finite(self):
@@ -329,7 +341,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Finite
 
         """
-        return Predicate('finite')
+        return self._return_from_cache('finite')
 
     @property
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
@@ -337,7 +349,7 @@ class QClass(object):
         """
         See documentation of ``Q.finite``.
         """
-        return Predicate('finite')
+        return self._return_from_cache('finite')
 
     @property
     def infinite(self):
@@ -348,7 +360,7 @@ class QClass(object):
         arbitrarily large.
 
         """
-        return Predicate('infinite')
+        return self._return_from_cache('infinite')
 
     @property
     @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
@@ -356,14 +368,14 @@ class QClass(object):
         """
         See documentation of ``Q.infinite``.
         """
-        return Predicate('infinite')
+        return self._return_from_cache('infinite')
 
     @property
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
         """
-        return Predicate('infinitesimal')
+        return self._return_from_cache('infinitesimal')
 
     @property
     def positive(self):
@@ -401,7 +413,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('positive')
+        return self._return_from_cache('positive')
 
     @property
     def negative(self):
@@ -439,7 +451,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('negative')
+        return self._return_from_cache('negative')
 
     @property
     def zero(self):
@@ -462,7 +474,7 @@ class QClass(object):
         False
 
         """
-        return Predicate('zero')
+        return self._return_from_cache('zero')
 
     @property
     def nonzero(self):
@@ -500,7 +512,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('nonzero')
+        return self._return_from_cache('nonzero')
 
     @property
     def nonpositive(self):
@@ -526,7 +538,7 @@ class QClass(object):
         False
 
         """
-        return Predicate('nonpositive')
+        return self._return_from_cache('nonpositive')
 
     @property
     def nonnegative(self):
@@ -552,7 +564,7 @@ class QClass(object):
         False
 
         """
-        return Predicate('nonnegative')
+        return self._return_from_cache('nonnegative')
 
     @property
     def even(self):
@@ -575,7 +587,7 @@ class QClass(object):
         False
 
         """
-        return Predicate('even')
+        return self._return_from_cache('even')
 
     @property
     def odd(self):
@@ -598,7 +610,7 @@ class QClass(object):
         False
 
         """
-        return Predicate('odd')
+        return self._return_from_cache('odd')
 
     @property
     def prime(self):
@@ -623,7 +635,7 @@ class QClass(object):
         False
 
         """
-        return Predicate('prime')
+        return self._return_from_cache('prime')
 
     @property
     def composite(self):
@@ -647,7 +659,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('composite')
+        return self._return_from_cache('composite')
 
     @property
     def commutative(self):
@@ -660,7 +672,7 @@ class QClass(object):
         TODO: Add examples
 
         """
-        return Predicate('commutative')
+        return self._return_from_cache('commutative')
 
     @property
     def is_true(self):
@@ -679,7 +691,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('is_true')
+        return self._return_from_cache('is_true')
 
     @property
     def symmetric(self):
@@ -709,7 +721,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Symmetric_matrix
 
         """
-        return Predicate('symmetric')
+        return self._return_from_cache('symmetric')
 
     @property
     def invertible(self):
@@ -738,7 +750,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Invertible_matrix
 
         """
-        return Predicate('invertible')
+        return self._return_from_cache('invertible')
 
     @property
     def orthogonal(self):
@@ -767,7 +779,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Orthogonal_matrix
 
         """
-        return Predicate('orthogonal')
+        return self._return_from_cache('orthogonal')
 
     @property
     def unitary(self):
@@ -798,7 +810,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Unitary_matrix
 
         """
-        return Predicate('unitary')
+        return self._return_from_cache('unitary')
 
     @property
     def positive_definite(self):
@@ -830,7 +842,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Positive-definite_matrix
 
         """
-        return Predicate('positive_definite')
+        return self._return_from_cache('positive_definite')
 
     @property
     def upper_triangular(self):
@@ -855,7 +867,7 @@ class QClass(object):
         .. [1] http://mathworld.wolfram.com/UpperTriangularMatrix.html
 
         """
-        return Predicate('upper_triangular')
+        return self._return_from_cache('upper_triangular')
 
     @property
     def lower_triangular(self):
@@ -879,7 +891,7 @@ class QClass(object):
 
         .. [1] http://mathworld.wolfram.com/LowerTriangularMatrix.html
         """
-        return Predicate('lower_triangular')
+        return self._return_from_cache('lower_triangular')
 
     @property
     def diagonal(self):
@@ -905,7 +917,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Diagonal_matrix
 
         """
-        return Predicate('diagonal')
+        return self._return_from_cache('diagonal')
 
     @property
     def fullrank(self):
@@ -927,7 +939,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('fullrank')
+        return self._return_from_cache('fullrank')
 
     @property
     def square(self):
@@ -957,7 +969,7 @@ class QClass(object):
         .. [1] https://en.wikipedia.org/wiki/Square_matrix
 
         """
-        return Predicate('square')
+        return self._return_from_cache('square')
 
     @property
     def integer_elements(self):
@@ -976,7 +988,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('integer_elements')
+        return self._return_from_cache('integer_elements')
 
     @property
     def real_elements(self):
@@ -995,7 +1007,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('real_elements')
+        return self._return_from_cache('real_elements')
 
     @property
     def complex_elements(self):
@@ -1016,7 +1028,7 @@ class QClass(object):
         True
 
         """
-        return Predicate('complex_elements')
+        return self._return_from_cache('complex_elements')
 
     @property
     def singular(self):
@@ -1041,19 +1053,19 @@ class QClass(object):
         .. [1] http://mathworld.wolfram.com/SingularMatrix.html
 
         """
-        return Predicate('singular')
+        return self._return_from_cache('singular')
 
     @property
     def normal(self):
-        return Predicate('normal')
+        return self._return_from_cache('normal')
 
     @property
     def triangular(self):
-        return Predicate('triangular')
+        return self._return_from_cache('triangular')
 
     @property
     def unit_triangular(self):
-        return Predicate('unit_triangular')
+        return self._return_from_cache('unit_triangular')
 
 
 Q = QClass()
@@ -1216,16 +1228,16 @@ def register_handler(key, handler):
     if type(key) is Predicate:
         key = key.name
     try:
-        getattr(Q.__class__, key).add_handler(handler)
+        getattr(Q, key).add_handler(handler)
     except AttributeError:
-        setattr(Q.__class__, key, Predicate(key, handlers=[handler]))
+        setattr(Q, key, Predicate(key, handlers=[handler]))
 
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
     if type(key) is Predicate:
         key = key.name
-    getattr(Q.__class__, key).remove_handler(handler)
+    getattr(Q, key).remove_handler(handler)
 
 
 def single_fact_lookup(known_facts_keys, known_facts_cnf):

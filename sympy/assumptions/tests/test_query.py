@@ -2024,9 +2024,9 @@ def test_key_extensibility():
     register_handler('my_key', MyAskHandler)
     assert ask(Q.my_key(x)) is True
     assert ask(Q.my_key(x + 1)) is None
-    # remove_handler('my_key', MyAskHandler)
-    # del Q.my_key
-    # raises(AttributeError, lambda: ask(Q.my_key(x)))
+    remove_handler('my_key', MyAskHandler)
+    del Q.my_key
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
 
 
 def test_type_extensibility():
