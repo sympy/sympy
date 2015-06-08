@@ -842,8 +842,8 @@ class MatrixBase(object):
             L = (self.T*self)._cholesky()
             rhs = self.T*rhs
         else:
-            raise NotImplementedError('Under-determined System. \
-                                      Try M.gauss_jordan_solve(rhs)')
+            raise NotImplementedError('Under-determined System. '
+                                      'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         return (L.T)._upper_triangular_solve(Y)
 
@@ -913,8 +913,8 @@ class MatrixBase(object):
             L, D = (self.T*self).LDLdecomposition()
             rhs = self.T*rhs
         else:
-            raise NotImplementedError('Under-determined System. \
-                                      Try M.gauss_jordan_solve(rhs)')
+            raise NotImplementedError('Under-determined System. '
+                                      'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
@@ -985,8 +985,8 @@ class MatrixBase(object):
         """
         if not self.is_square:
             if self.rows < self.cols:
-                raise ValueError('Under-determined system. \
-                                 Try M.gauss_jordan_solve(rhs)')
+                raise ValueError('Under-determined system. '
+                                 'Try M.gauss_jordan_solve(rhs)')
             elif self.rows > self.cols:
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
