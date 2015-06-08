@@ -11,10 +11,11 @@ from sympy import (
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
     Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
+from sympy.polys.polyerrors import NotInvertible
 from sympy.polys.rootoftools import RootOf
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.core.compatibility import range
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
@@ -89,6 +90,7 @@ def test_ratsimpmodprime():
 def test_rootofsimp():
     r = RootOf(x**5 - 5*x + 12, 0)
     s = RootOf(x**4 - x**2 + 1, 0)
+    t = RootOf(x**4 - x**2 + 1, 1)
 
     f, g = r**5, 5*r - 12
     assert f != g and rootofsimp(f) == g
@@ -109,6 +111,15 @@ def test_rootofsimp():
     # test multiple roots in expression
     f, g = r**5 * s**4, expand((5*r - 12)*(s**2 - 1))
     assert f != g and rootofsimp(f).expand() == g
+
+    # test multiple roots of the same polynomial
+    r0 = RootOf(x**5 - 5*x + 12, 3)
+    r1 = RootOf(x**5 - 5*x + 12, 4)
+    f, g = r0**5 - 5*r1 + 12, 5*r0 - 5*r1
+    assert f != g and rootofsimp(f) == g
+
+    f, g = (s**4 + 1)*(t**4 + 1), s**2*t**2
+    assert f != g and rootofsimp(f) == g
 
     # test RootOfs with forced radicals=False
     u = RootOf(x**2 + 1, 0, radicals=False)
@@ -131,11 +142,10 @@ def test_rootofsimp():
     assert f != g and rootofsimp(f) != g
 
 
-@XFAIL
 def test_rootofsimp_notinvertible():
     r = RootOf(x**2 + 1, 0, radicals=False)
     expr = 1/(r**2 + 1)
-    rootofsimp(expr)
+    raises(NotInvertible, lambda: rootofsimp(expr))
 
 
 def test_trigsimp1():
