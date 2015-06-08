@@ -4032,8 +4032,8 @@ class MatrixBase(object):
                 self[:,k1:self.cols] = mti[:,:]
             else:
                 self.cols += mti.cols
-                self[:,pos + mti.cols:self.cols:] = self[:,pos:self.cols - mti.cols:]
-                self[:,pos:pos + mti.cols:] = mti[:,:]
+                self[:,pos + mti.cols:self.cols] = self[:,pos:self.cols - mti.cols]
+                self[:,pos:pos + mti.cols] = mti[:,:]
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.
