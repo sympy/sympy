@@ -995,18 +995,19 @@ def rootofsimp(expr):
         try:
             modulus = root.poly.xreplace({root.poly.gen:dummy})
             numer,denom = cancel(expr).as_numer_denom()
-            denom = denom.as_poly(dummy).invert(modulus)
-            expr = numer.as_poly(dummy)*denom % modulus
+            numer = numer.as_poly(dummy)
+            denom = denom.as_poly(dummy)
+
+            # if numer or denom is None then this is most likely because the
+            # numerator or denominator is not a polynomial expressions in
+            # `dummy`. skip simplification of the expression in this case
+            if (numer is not None) and (denom is not None):
+                expr = numer*denom.invert(modulus) % modulus
         except NotInvertible:
             denom = denom.xreplace(transform).as_expr()
             modulus = modulus.xreplace(transform).as_expr()
             raise NotInvertible('The denominator, %s, is not invertible '
                                 'modulo %s'%(denom, modulus))
-        except:
-            # if something else went wrong, leave the expression unsimplified
-            # with respect to the current RootOf. (for example, when expr is
-            # not a polynomial in the RootOf)
-            pass
 
     # apply the inverse dummy-to-RootOfs transform to the expression
     expr = expr.xreplace(transform)
