@@ -1363,7 +1363,8 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         Joining at row ends is the same as appending columns at the end
         of the matrix:
 
-        >>> C == A.col_insert(A.cols, B)
+        >>> A.col_insert(A.cols, B)
+        >>> C == A
         True
         """
         A, B = self, other
@@ -1421,7 +1422,8 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         Joining along columns is the same as appending rows at the end
         of the matrix:
 
-        >>> C == A.row_insert(A.rows, Matrix(B))
+        >>> A.row_insert(A.rows, Matrix(B))
+        >>> C == A
         True
         """
         A, B = self, other

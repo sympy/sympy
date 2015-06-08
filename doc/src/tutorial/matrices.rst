@@ -102,12 +102,12 @@ operations **do not** operate in place.
 
     >>> M
     [2  3]
-    >>> M = M.row_insert(1, Matrix([[0, 4]]))
+    >>> M.row_insert(1, Matrix([[0, 4]]))
     >>> M
     ⎡2  3⎤
     ⎢    ⎥
     ⎣0  4⎦
-    >>> M = M.col_insert(0, Matrix([1, -2]))
+    >>> M.col_insert(0, Matrix([1, -2]))
     >>> M
     ⎡1   2  3⎤
     ⎢        ⎥
