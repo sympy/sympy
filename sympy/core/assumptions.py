@@ -308,7 +308,7 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
+class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)

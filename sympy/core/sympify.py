@@ -233,6 +233,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if evaluate is None:
         evaluate = global_evaluate[0]
     try:
+        if a in sympy_classes:
+            return a
+    except TypeError: # Type of a is unhashable
+        pass
+    try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object
         cls = type(a)
