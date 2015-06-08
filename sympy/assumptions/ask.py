@@ -498,7 +498,7 @@ class QClass(object):
 
         >>> from sympy import Q, ask, symbols, I
         >>> x = symbols('x')
-        >>> ask(Q.nonzero(x), ~Q.zero(x))
+        >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
         None
         >>> ask(Q.nonzero(x), Q.positive(x))
         True
@@ -1057,14 +1057,69 @@ class QClass(object):
 
     @property
     def normal(self):
+        """
+        Normal matrix predicate.
+
+        A matrix is normal if it commutes with its conjugate transpose.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.normal(X), Q.unitary(X))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Normal_matrix
+
+        """
         return self._return_from_cache('normal')
 
     @property
     def triangular(self):
+        """
+        Triangular matrix predicate.
+
+        ``Q.triangular(X)`` is true if ``X`` is one that is either lower
+        triangular or upper triangular.
+
+        Examples
+        ========
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.triangular(X), Q.upper_triangular(X))
+        True
+        >>> ask(Q.triangular(X), Q.lower_triangular(X))
+        True
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Triangular_matrix
+
+        """
         return self._return_from_cache('triangular')
 
     @property
     def unit_triangular(self):
+        """
+        Unit triangular matrix predicate.
+
+        A unit triangular matrix is a triangular matrix with 1
+        on the diagonal.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 4, 4)
+        >>> ask(Q.triangular(X), Q.unit_triangular(X))
+        True
+
+        """
         return self._return_from_cache('unit_triangular')
 
 
