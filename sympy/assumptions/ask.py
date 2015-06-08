@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
+
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
@@ -130,6 +131,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
+    from sympy.assumptions.satask import satask
+
     if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
 
@@ -158,7 +161,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return
 
     if local_facts is None:
-        return
+        return satask(proposition, assumptions=assumptions, context=context)
+
 
     # See if there's a straight-forward conclusion we can make for the inference
     if local_facts.is_Atom:
@@ -184,7 +188,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return False
 
     # Failing all else, we do a full logical inference
-    return ask_full_inference(key, local_facts, known_facts_cnf)
+    res = ask_full_inference(key, local_facts, known_facts_cnf)
+    if res is None:
+        return satask(proposition, assumptions=assumptions, context=context)
+    return res
 
 
 def ask_full_inference(proposition, assumptions, known_facts_cnf):
