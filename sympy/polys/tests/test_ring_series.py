@@ -216,6 +216,14 @@ def test_fun():
     assert fun(p, rs_tan, x, 10) == rs_tan(p, x, 10)
     assert fun(p, _tan1, x, 10) == _tan1(p, x, 10)
 
+def test_nth_root():
+    R, x, y = ring('x, y', QQ)
+    assert rs_nth_root(1 + x**2*y, 4, x, 10) == -77/2048*x**8*y**4 + \
+    7/128*x**6*y**3 - 3/32*x**4*y**2 + 1/4*x**2*y + 1
+    assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -1/9*x**4*y**6 + \
+    5/27*x**4*y**5 - 10/243*x**4*y**4 - 2/9*x**3*y**4 + 5/81*x**3*y**3 + \
+    1/3*x**2*y**3 - 1/9*x**2*y**2 + 1/3*x*y + 1
+
 def test_atan():
     R, x, y = ring('x, y', QQ)
     assert rs_atan(x, x, 9) == -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x

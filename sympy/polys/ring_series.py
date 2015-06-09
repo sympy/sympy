@@ -11,6 +11,17 @@ from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
 from mpmath.libmp.libintmath import giant_steps
 import math
 
+"""
+Notes
+=====
+
+As of now, polynomials can not be defined over a symbolic ring, i.e, the
+coeffecients can't be symbolic expressions. This implies that operations such
+as: `rs_sin(x + y, x, 10)` are not possible as sin(y) and cos(y) can not be
+represented in the present setup. Hence, ring_series functions can not handle
+polynomials with symbolic constant terms.
+"""
+
 def _invert_monoms(p1):
     """
     Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in x.
@@ -650,15 +661,26 @@ def rs_nth_root(p, n, iv, prec):
       iv: variable name
       prec: precision of the series
 
+    Notes
+    =====
+
+    The result of this function is dependent on the ring over which the
+    polynomial has been defined. If the answer involves a root of a constant,
+    make sure that the polynomial is over a real field. It can not yet handle
+    roots of symbols. See note at the top.
+
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.domains import QQ, RR
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_nth_root
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_nth_root(1 + x + x*y, -3, x, 3)
     2/9*x**2*y**2 + 4/9*x**2*y + 2/9*x**2 - 1/3*x*y - 1/3*x + 1
+    >>> R, x, y = ring('x, y', RR)
+    >>> rs_nth_root(3 + x + x*y, 3, x, 2)
+    0.160249952256379*x*y + 0.160249952256379*x + 1.44224957030741
     """
     if n == 0:
         if p == 0:
@@ -689,14 +711,14 @@ def rs_nth_root(p, n, iv, prec):
                 cn = Pow(c, S.One/n)
             if cn.is_Rational:
                 cn = ring(cn.p, cn.q)
-                res = nth_root(cn*(p/c), n, iv, prec)
+                res = rs_nth_root(cn*(p/c), n, iv, prec)
                 if mq:
                     res = mul_xin(res, iv, mq)
                 return res
         if zm in p:
             c = p[zm]
             if c > 0:
-                res = nth_root(p/c, n, iv, prec)*c**Rational(1, n)
+                res = rs_nth_root(p/c, n, iv, prec)*c**Rational(1, n)
                 if mq:
                     res = mul_xin(res, iv, mq)
                 return res
