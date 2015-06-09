@@ -513,13 +513,19 @@ class Point3D(GeometryEntity):
         geometry.entity.scale
         geometry.entity.translate
         """
-        if isinstance(matrix, Matrix) and matrix.shape == (4, 4):
-            from sympy.matrices.expressions import Transpose
-            x, y, z = self.args
-            m = Transpose(matrix)
-            return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
-        else:
-            raise ValueError("You must specify a 4x4 matrix to transform by")
+        try:
+            col, row = matrix.shape
+            valid_matrix = matrix.is_square and col == 4
+        except AttributeError:
+            # We hit this block if matrix argument is not actually a Matrx.
+            valid_matrix = False
+        if not valid_matrix:
+            raise ValueError("The argument to the transform function must be " \
+            + "a 4x4 matrix")
+        from sympy.matrices.expressions import Transpose
+        x, y, z = self.args
+        m = Transpose(matrix)
+        return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
 
     def dot(self, p2):
         """Return dot product of self with another Point."""

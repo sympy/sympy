@@ -516,12 +516,18 @@ class Point(GeometryEntity):
         geometry.entity.scale
         geometry.entity.translate
         """
-        if isinstance(matrix, Matrix) and matrix.shape == (3, 3):
-            x, y = self.args
-            return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
-        else:
+        try:
+            col, row = matrix.shape
+            valid_matrix = matrix.is_square and col == 3
+        except AttributeError:
+            # We hit this block if matrix argument is not actually a Matrx.
+            valid_matrix = False
+        if not valid_matrix:
             raise ValueError("The argument to the transform function must be " \
             + "a 3x3 matrix")
+        x, y = self.args
+        return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
+
 
     def dot(self, p2):
         """Return dot product of self with another Point."""
