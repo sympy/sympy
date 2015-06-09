@@ -1,6 +1,8 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
+import functools
+
 from sympy.core import sympify
 
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
@@ -19,6 +21,7 @@ deprecated_predicates = [
 
 # Memoization storage for predicates
 predicate_cache = {}
+
 
 class QClass(object):
     """
@@ -1400,7 +1403,12 @@ for name, value in _handlers:
     register_handler(name, _val_template % value)
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__class__.__dict__
-                    if not (attr.startswith('__') or attr in deprecated_predicates)]
+                    if not (
+                        attr.startswith('__') or
+                        attr.startswith('_') or
+                        attr in deprecated_predicates
+                        )
+                    ]
 
 known_facts = And(
     Implies(Q.infinite, ~Q.finite),
