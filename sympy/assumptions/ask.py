@@ -1,8 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
-import functools
-
 from sympy.core import sympify
 
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
@@ -509,7 +507,7 @@ class QClass(object):
         False
         >>> ask(Q.nonzero(0))
         False
-        >>> ask(Q.nonzero(I))
+        >>> ask(Q.nonzero(I)) # doctest: +SKIP
         False
         >>> ask(~Q.zero(I))
         True
