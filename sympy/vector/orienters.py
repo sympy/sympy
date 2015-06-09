@@ -332,11 +332,17 @@ class QuaternionOrienter(Orienter):
         Quaternion orientation orients the new CoordSysCartesian with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
+
         This orientation is described by four parameters:
+
         q0 = cos(theta/2)
+
         q1 = lambda_x sin(theta/2)
+
         q2 = lambda_y sin(theta/2)
+
         q3 = lambda_z sin(theta/2)
+
         Quaternion does not take in a rotation order.
 
         Parameters
