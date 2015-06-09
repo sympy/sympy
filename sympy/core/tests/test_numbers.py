@@ -1482,3 +1482,7 @@ def test_comp():
     assert comp(sqrt(2).n(2), Float(1.4, 2), '')
     raises(ValueError, lambda: comp(sqrt(2).n(2), 1.4, ''))
     assert comp(sqrt(2).n(2), Float(1.4, 3), '') is False
+
+
+def test_issue_9491():
+    assert oo**zoo == nan
