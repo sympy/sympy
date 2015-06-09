@@ -4222,7 +4222,7 @@ class MatrixBase(object):
         >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
         >>> b = Matrix([7, 12, 4])
-        >>> sol, params= A.gauss_jordan_solve(b)
+        >>> sol, params = A.gauss_jordan_solve(b)
         >>> sol
         Matrix([
         [-2*_tau0 - 3*_tau1 + 2],
@@ -4268,7 +4268,7 @@ class MatrixBase(object):
         aug = self.hstack(self.copy(), b.copy())
         row, col = aug[:, :-1].shape
 
-        # solve by reduced row echleon form
+        # solve by reduced row echelon form
         A, pivots = aug.rref()
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))
