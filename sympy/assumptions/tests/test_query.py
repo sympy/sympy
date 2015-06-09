@@ -1635,10 +1635,6 @@ def test_zero():
     assert ask(Q.zero(x), Q.odd(x)) is False
     assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
-@XFAIL
-def test_zero_doesnt_work():
-    # This requires moving logic from the handler to the deduction system
-    assert ask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
 
 def test_odd():
     assert ask(Q.odd(x)) is None
