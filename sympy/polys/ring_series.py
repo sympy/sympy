@@ -4,6 +4,7 @@ from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
 from sympy.polys.polyerrors import DomainError
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
+from sympy.core.power import Pow
 from sympy.core.compatibility import as_int, range
 from sympy.core import S, evaluate
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
@@ -601,6 +602,113 @@ def mul_xin(p, i, n):
         k1[i] += n
         q[tuple(k1)] = v
     return q
+
+def _nth_root1(p, n, iv, prec):
+    """
+    Univariate series expansion of the nth root of p
+
+    While passing p, make sure that it is of the form `1 + f(iv)`.
+
+      n (integer): compute p**(1/n)
+      iv: name of the series variable
+      prec: precision of the series
+
+    The Newton method is used.
+    """
+    ring = p.ring
+    zm = ring.zero_monom
+    if zm not in p:
+        raise NotImplementedError('no constant term in series')
+    n = as_int(n)
+    assert p[zm] == 1
+    p1 = ring(1)
+    if p == 1:
+        return p
+    if n == 0:
+        return ring(1)
+    if n == 1:
+        return p
+    if n < 0:
+        n = -n
+        sign = 1
+    else:
+        sign = 0
+    for precx in _giant_steps(prec):
+        tmp = rs_pow(p1, n + 1, iv, precx)
+        tmp = rs_mul(tmp, p, iv, precx)
+        p1 += p1/n - tmp/n
+    if sign:
+        return p1
+    else:
+        return _series_inversion1(p1, iv, prec)
+
+def rs_nth_root(p, n, iv, prec):
+    """
+    Multivariate series expansion of the nth root of p
+
+      n(integer): compute p**(1/n)
+      iv: variable name
+      prec: precision of the series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_nth_root
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_nth_root(1 + x + x*y, -3, x, 3)
+    2/9*x**2*y**2 + 4/9*x**2*y + 2/9*x**2 - 1/3*x*y - 1/3*x + 1
+    """
+    if n == 0:
+        if p == 0:
+            raise ValueError('0**0 expression')
+        else:
+            return p.ring(1)
+    if n == 1:
+        return rs_trunc(p, iv, prec)
+    ring = p.ring
+    zm = ring.zero_monom
+    ii = ring.gens.index(iv)
+    m = min(p, key=lambda k: k[ii])[ii]
+    try:
+        mq, mr = divmod(m, n)
+    except TypeError:
+        raise ValueError
+    if mr:
+        raise ValueError('not analytic in the series variable')
+    p = mul_xin(p, ii, -m)
+    prec -= mq
+    if _has_constant_term(p - 1, iv):
+        if zm in p:
+            c = p[zm]
+            if isinstance(c, Rational):
+                c1 = Rational(c.p, c.q)
+                cn = Pow(c1, S.One/n)
+            else:
+                cn = Pow(c, S.One/n)
+            if cn.is_Rational:
+                cn = ring(cn.p, cn.q)
+                res = nth_root(cn*(p/c), n, iv, prec)
+                if mq:
+                    res = mul_xin(res, iv, mq)
+                return res
+        if zm in p:
+            c = p[zm]
+            if c > 0:
+                res = nth_root(p/c, n, iv, prec)*c**Rational(1, n)
+                if mq:
+                    res = mul_xin(res, iv, mq)
+                return res
+            else:
+                raise NotImplementedError
+    if ring.ngens == 1:
+        res = _nth_root1(p, n, iv, prec)
+    else:
+        res = fun(p, _nth_root1, n, iv, prec)
+    if mq:
+        res = mul_xin(res, ii, mq)
+    return res
 
 def rs_log(p, x, prec):
     """
