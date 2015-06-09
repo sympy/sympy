@@ -1810,6 +1810,15 @@ class LatexPrinter(Printer):
             return r"\sigma^{%s}%s" % (self._print(exp), tex)
         return r"\sigma%s" % tex
 
+    def _print_udivisor_sigma(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_%s\left(%s\right)" % tuple(map(self._print,
+                                                (expr.args[1], expr.args[0])))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
+        return r"\sigma^*%s" % tex
 
 def translate(s):
     r'''
