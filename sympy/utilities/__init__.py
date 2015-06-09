@@ -13,7 +13,7 @@ from .lambdify import lambdify
 
 from .source import source
 
-from .decorator import threaded, xthreaded, public
+from .decorator import threaded, xthreaded, public, cached_property
 
 from .runtests import test, doctest
 

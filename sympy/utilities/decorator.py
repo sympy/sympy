@@ -6,6 +6,8 @@ import sys
 import types
 import inspect
 
+from functools import update_wrapper
+
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
 
@@ -191,3 +193,15 @@ def public(obj):
         ns["__all__"].append(name)
 
     return obj
+
+
+def cached_property(cache):
+    """Create a property, where the lookup is stored in ``cache``"""
+    def decorator(method):
+        name = method.__name__
+        def wrapper(self):
+            if name not in cache:
+                cache[name] = method(self)
+            return cache[name]
+        return property(update_wrapper(wrapper, method))
+    return decorator
