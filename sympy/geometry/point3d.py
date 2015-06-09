@@ -517,7 +517,7 @@ class Point3D(GeometryEntity):
             col, row = matrix.shape
             valid_matrix = matrix.is_square and col == 4
         except AttributeError:
-            # We hit this block if matrix argument is not actually a Matrx.
+            # We hit this block if matrix argument is not actually a Matrix.
             valid_matrix = False
         if not valid_matrix:
             raise ValueError("The argument to the transform function must be " \
