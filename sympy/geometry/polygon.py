@@ -12,7 +12,7 @@ from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety, has_dups, uniq
 
-from .entity import GeometryEntity
+from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment
@@ -21,7 +21,7 @@ from .util import _symbol
 import warnings
 
 
-class Polygon(GeometryEntity):
+class Polygon(GeometrySet):
     """A two-dimensional polygon.
 
     A simple polygon in space. Can be constructed from a sequence of points
@@ -75,11 +75,11 @@ class Polygon(GeometryEntity):
     >>> from sympy import Point, Polygon, pi
     >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
-    Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+    Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
     >>> Polygon(p1, p2)
-    Segment(Point(0, 0), Point(1, 0))
+    Segment(Point2D(0, 0), Point2D(1, 0))
     >>> Polygon(p1, p2, p5)
-    Segment(Point(0, 0), Point(3, 0))
+    Segment(Point2D(0, 0), Point2D(3, 0))
 
     While the sides of a polygon are not allowed to cross implicitly, they
     can do so explicitly. For example, a polygon shaped like a Z with the top
@@ -101,14 +101,14 @@ class Polygon(GeometryEntity):
 
     >>> p = Polygon((0,0), 1, n=3)
     >>> p
-    RegularPolygon(Point(0, 0), 1, 3, 0)
+    RegularPolygon(Point2D(0, 0), 1, 3, 0)
     >>> p.vertices[0]
-    Point(1, 0)
+    Point2D(1, 0)
     >>> p.args[0]
-    Point(0, 0)
+    Point2D(0, 0)
     >>> p.spin(pi/2)
     >>> p.vertices[0]
-    Point(0, 1)
+    Point2D(0, 1)
 
     """
 
@@ -345,9 +345,9 @@ class Polygon(GeometryEntity):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.vertices
-        (Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
+        (Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
         >>> poly.args[0]
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         return self.args
@@ -373,7 +373,7 @@ class Polygon(GeometryEntity):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.centroid
-        Point(31/18, 11/18)
+        Point2D(31/18, 11/18)
 
         """
         A = 1/(6*self.area)
@@ -416,9 +416,9 @@ class Polygon(GeometryEntity):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.sides
-        [Segment(Point(0, 0), Point(1, 0)),
-        Segment(Point(1, 0), Point(5, 1)),
-        Segment(Point(0, 1), Point(5, 1)), Segment(Point(0, 0), Point(0, 1))]
+        [Segment(Point2D(0, 0), Point2D(1, 0)),
+        Segment(Point2D(1, 0), Point2D(5, 1)),
+        Segment(Point2D(0, 1), Point2D(5, 1)), Segment(Point2D(0, 0), Point2D(0, 1))]
 
         """
         res = []
@@ -426,6 +426,18 @@ class Polygon(GeometryEntity):
         for i in range(-len(args), 0):
             res.append(Segment(args[i], args[i + 1]))
         return res
+
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
+        verts = self.vertices
+        xs = [p.x for p in verts]
+        ys = [p.y for p in verts]
+        return (min(xs), min(ys), max(xs), max(ys))
 
     def is_convex(self):
         """Is the polygon convex?
@@ -592,7 +604,7 @@ class Polygon(GeometryEntity):
         >>> perimeter = tri.perimeter
         >>> s1, s2 = [s.length for s in tri.sides[:2]]
         >>> p.subs(t, (s1 + s2/2)/perimeter)
-        Point(1, 1/2)
+        Point2D(1, 1/2)
 
         """
         t = _symbol(parameter)
@@ -669,7 +681,7 @@ class Polygon(GeometryEntity):
         >>> p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
         >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
-        [Point(2/3, 0), Point(9/5, 1/5), Point(7/3, 1), Point(1/3, 1)]
+        [Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1), Point2D(1/3, 1)]
 
         """
         res = []
@@ -907,6 +919,28 @@ class Polygon(GeometryEntity):
                 break
         return min_dist
 
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the Polygon.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = map(N, self.vertices)
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" />'
+            ).format(2. * scale_factor, path, fill_color)
+
     def __eq__(self, o):
         if not isinstance(o, Polygon) or len(self.args) != len(o.args):
             return False
@@ -1037,9 +1071,9 @@ class RegularPolygon(Polygon):
     >>> from sympy.geometry import RegularPolygon, Point
     >>> r = RegularPolygon(Point(0, 0), 5, 3)
     >>> r
-    RegularPolygon(Point(0, 0), 5, 3, 0)
+    RegularPolygon(Point2D(0, 0), 5, 3, 0)
     >>> r.vertices[0]
-    Point(5, 0)
+    Point2D(5, 0)
 
     """
 
@@ -1074,7 +1108,7 @@ class RegularPolygon(Polygon):
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
         >>> r.args
-        (Point(0, 0), 5, 3, 0)
+        (Point2D(0, 0), 5, 3, 0)
         """
         return self._center, self._radius, self._n, self._rot
 
@@ -1145,7 +1179,7 @@ class RegularPolygon(Polygon):
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.center
-        Point(0, 0)
+        Point2D(0, 0)
         """
         return self._center
 
@@ -1162,7 +1196,7 @@ class RegularPolygon(Polygon):
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.circumcenter
-        Point(0, 0)
+        Point2D(0, 0)
         """
         return self.center
 
@@ -1348,7 +1382,7 @@ class RegularPolygon(Polygon):
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.circumcircle
-        Circle(Point(0, 0), 4)
+        Circle(Point2D(0, 0), 4)
 
         """
         return Circle(self.center, self.radius)
@@ -1373,7 +1407,7 @@ class RegularPolygon(Polygon):
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 7)
         >>> rp.incircle
-        Circle(Point(0, 0), 4*cos(pi/7))
+        Circle(Point2D(0, 0), 4*cos(pi/7))
 
         """
         return Circle(self.center, self.apothem)
@@ -1390,9 +1424,9 @@ class RegularPolygon(Polygon):
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
         >>> r.angles
-        {Point(-5/2, -5*sqrt(3)/2): pi/3,
-         Point(-5/2, 5*sqrt(3)/2): pi/3,
-         Point(5, 0): pi/3}
+        {Point2D(-5/2, -5*sqrt(3)/2): pi/3,
+         Point2D(-5/2, 5*sqrt(3)/2): pi/3,
+         Point2D(5, 0): pi/3}
         """
         ret = {}
         ang = self.interior_angle
@@ -1466,10 +1500,10 @@ class RegularPolygon(Polygon):
         >>> from sympy import Polygon, Point, pi
         >>> r = Polygon(Point(0,0), 1, n=3)
         >>> r.vertices[0]
-        Point(1, 0)
+        Point2D(1, 0)
         >>> r.spin(pi/6)
         >>> r.vertices[0]
-        Point(sqrt(3)/2, 1/2)
+        Point2D(sqrt(3)/2, 1/2)
 
         See Also
         ========
@@ -1487,9 +1521,9 @@ class RegularPolygon(Polygon):
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = RegularPolygon(Point(1, 0), 1, 3)
         >>> t.vertices[0] # vertex on x-axis
-        Point(2, 0)
+        Point2D(2, 0)
         >>> t.rotate(pi/2).vertices[0] # vertex on y axis now
-        Point(0, 2)
+        Point2D(0, 2)
 
         See Also
         ========
@@ -1512,12 +1546,12 @@ class RegularPolygon(Polygon):
         Symmetric scaling returns a RegularPolygon:
 
         >>> RegularPolygon((0, 0), 1, 4).scale(2, 2)
-        RegularPolygon(Point(0, 0), 2, 4, 0)
+        RegularPolygon(Point2D(0, 0), 2, 4, 0)
 
         Asymmetric scaling returns a kite as a Polygon:
 
         >>> RegularPolygon((0, 0), 1, 4).scale(2, 1)
-        Polygon(Point(2, 0), Point(0, 1), Point(-2, 0), Point(0, -1))
+        Polygon(Point2D(2, 0), Point2D(0, 1), Point2D(-2, 0), Point2D(0, -1))
 
         """
         if pt:
@@ -1536,7 +1570,7 @@ class RegularPolygon(Polygon):
         >>> from sympy import RegularPolygon, Line
 
         >>> RegularPolygon((0, 0), 1, 4).reflect(Line((0, 1), slope=-2))
-        RegularPolygon(Point(4/5, 2/5), -1, 4, acos(3/5))
+        RegularPolygon(Point2D(4/5, 2/5), -1, 4, acos(3/5))
 
         """
         c, r, n, rot = self.args
@@ -1569,7 +1603,7 @@ class RegularPolygon(Polygon):
         >>> from sympy.geometry import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.vertices
-        [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
+        [Point2D(5, 0), Point2D(0, 5), Point2D(-5, 0), Point2D(0, -5)]
 
         """
         c = self._center
@@ -1632,18 +1666,18 @@ class Triangle(Polygon):
 
     >>> from sympy.geometry import Triangle, Point
     >>> Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
-    Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+    Triangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 3))
 
     Keywords sss, sas, or asa can be used to give the desired
     side lengths (in order) and interior angles (in degrees) that
     define the triangle:
 
     >>> Triangle(sss=(3, 4, 5))
-    Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
+    Triangle(Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> Triangle(asa=(30, 1, 30))
-    Triangle(Point(0, 0), Point(1, 0), Point(1/2, sqrt(3)/6))
+    Triangle(Point2D(0, 0), Point2D(1, 0), Point2D(1/2, sqrt(3)/6))
     >>> Triangle(sas=(1, 45, 2))
-    Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
+    Triangle(Point2D(0, 0), Point2D(2, 0), Point2D(sqrt(2)/2, sqrt(2)/2))
 
     """
 
@@ -1710,7 +1744,7 @@ class Triangle(Polygon):
         >>> from sympy.geometry import Triangle, Point
         >>> t = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t.vertices
-        (Point(0, 0), Point(4, 0), Point(4, 3))
+        (Point2D(0, 0), Point2D(4, 0), Point2D(4, 3))
 
         """
         return self.args
@@ -1902,7 +1936,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.altitudes[p1]
-        Segment(Point(0, 0), Point(1/2, 1/2))
+        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -1935,7 +1969,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.orthocenter
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         a = self.altitudes
@@ -1965,7 +1999,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcenter
-        Point(1/2, 1/2)
+        Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
         return a.intersection(b)[0]
@@ -2018,7 +2052,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcircle
-        Circle(Point(1/2, 1/2), sqrt(2)/2)
+        Circle(Point2D(1/2, 1/2), sqrt(2)/2)
 
         """
         return Circle(self.circumcenter, self.circumradius)
@@ -2084,7 +2118,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
-        Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1)
+        Point2D(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1)
 
         """
         s = self.sides
@@ -2145,7 +2179,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point(-sqrt(2) + 2, -sqrt(2) + 2), -sqrt(2) + 2)
+        Circle(Point2D(-sqrt(2) + 2, -sqrt(2) + 2), -sqrt(2) + 2)
 
         """
         return Circle(self.incenter, self.inradius)
@@ -2177,7 +2211,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medians[p1]
-        Segment(Point(0, 0), Point(1/2, 1/2))
+        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2209,7 +2243,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medial
-        Triangle(Point(1/2, 0), Point(1/2, 1/2), Point(0, 1/2))
+        Triangle(Point2D(1/2, 0), Point2D(1/2, 1/2), Point2D(0, 1/2))
 
         """
         s = self.sides

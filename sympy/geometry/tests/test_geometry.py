@@ -200,7 +200,10 @@ def test_point3D():
     p1_1 = Point3D(x1, x1, x1)
     p1_2 = Point3D(y2, y2, y2)
     p1_3 = Point3D(x1 + 1, x1, x1)
-    assert Point3D.are_collinear(p3) is False
+    # according to the description in the docs, points are collinear
+    # if they like on a single line.  Thus a single point should always
+    # be collinear
+    assert Point3D.are_collinear(p3)
     assert Point3D.are_collinear(p3, p4)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_2)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_3) is False
@@ -1590,7 +1593,7 @@ def test_util():
 
 
 def test_repr():
-    assert repr(Circle((0, 1), 2)) == 'Circle(Point(0, 1), 2)'
+    assert repr(Circle((0, 1), 2)) == 'Circle(Point2D(0, 1), 2)'
 
 
 def test_transform():
@@ -1708,9 +1711,9 @@ def test_reflect():
     poly_pent = Polygon(*pent.vertices)
     assert rpent.center == pent.center.reflect(l)
     assert str([w.n(3) for w in rpent.vertices]) == (
-        '[Point(-0.586, 4.27), Point(-1.69, 4.66), '
-        'Point(-2.41, 3.73), Point(-1.74, 2.76), '
-        'Point(-0.616, 3.10)]')
+        '[Point2D(-0.586, 4.27), Point2D(-1.69, 4.66), '
+        'Point2D(-2.41, 3.73), Point2D(-1.74, 2.76), '
+        'Point2D(-0.616, 3.10)]')
     assert pent.area.equals(-rpent.area)
 
 
