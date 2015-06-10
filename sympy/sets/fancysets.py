@@ -699,3 +699,55 @@ class ComplexPlane(Set):
                         element.args[1]._contains(theta)):
                     return True
                 return False
+
+    def _intersect(self, other):
+
+        if other.is_ComplexPlane:
+            # self in rectangular form
+            if (not self.polar) and (not other.polar):
+                return ComplexPlane(Intersection(self.sets, other.sets))
+
+            # self in polar form
+            elif self.polar and other.polar:
+                r1, theta1 = self.a_interval, self.b_interval
+                r2, theta2 = other.a_interval, other.b_interval
+                new_r_interval = Intersection(r1, r2)
+                new_theta_interval = Intersection(theta1, theta2)
+                # 0 and 2*Pi means the same
+                if (2*S.Pi in theta1 and S(0) in theta2) or (2*S.Pi in theta2 and S(0) in theta1):
+                    new_theta_interval = Union(new_theta_interval, FiniteSet(0))
+                return ComplexPlane(new_r_interval*new_theta_interval,
+                                    polar=True)
+
+        if other.is_Interval:
+            new_interval = []
+
+            # self in rectangular form
+            if self.polar is False:
+                for element in self.psets:
+                    if (S.Zero, S.Zero) in element:
+                        new_interval.append(element.args[0])
+                new_interval = Union(*new_interval)
+                return Intersection(new_interval, other)
+
+            # self in polar form
+            elif self.polar:
+                for element in self.psets:
+                    if (0 in element.args[1]) or (S.Pi in element.args[1]):
+                        new_interval.append(element.args[0])
+                new_interval = Union(*new_interval)
+                return Intersection(new_interval, other)
+            return None
+
+    def _union(self, other):
+
+        if other.is_ComplexPlane:
+
+            # self in rectangular form
+            if (not self.polar) and (not other.polar):
+                return ComplexPlane(Union(self.sets, other.sets))
+
+            # self in polar form
+            elif self.polar and other.polar:
+                return ComplexPlane(Union(self.sets, other.sets), polar=True)
+        return None

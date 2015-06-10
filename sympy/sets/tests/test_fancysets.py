@@ -260,7 +260,6 @@ def test_ImageSet_simplification():
             imageset(Lambda(m, sin(tan(m))), S.Integers)
 
 
-@XFAIL
 def test_ComplexPlane_contains():
 
     # contains in ComplexPlane
@@ -284,7 +283,6 @@ def test_ComplexPlane_contains():
     assert 1 - I not in c2
 
 
-@XFAIL
 def test_ComplexPlane_intersect():
 
     # Polar form
@@ -328,7 +326,6 @@ def test_ComplexPlane_intersect():
     assert c1.intersect(Interval(6, 9)) == EmptySet()
 
 
-@XFAIL
 def test_ComplexPlane_union():
 
     # Polar form
