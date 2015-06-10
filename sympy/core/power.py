@@ -487,6 +487,20 @@ class Pow(Expr):
             if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
 
+    def _eval_is_prime(self):
+        if self.exp == S.One:
+            return self.base.is_prime
+        if self.is_number:
+            return self.doit().is_prime
+
+        if self.is_integer and self.is_positive:
+            """
+            a Power will be non-prime only if both base and exponent
+            are greater than 1
+            """
+            if (self.base-1).is_positive or (self.exp-1).is_positive:
+                return False
+
     def _eval_is_polar(self):
         return self.base.is_polar
 
