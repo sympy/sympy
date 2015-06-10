@@ -1044,6 +1044,12 @@ def test_extractions():
     assert (-x + y).could_extract_minus_sign() is True
 
 
+def test_nan_extractions():
+    for r in (1, 0, I, nan):
+        assert nan.extract_additively(r) is None
+        assert nan.extract_multiplicatively(r) is None
+
+
 def test_coeff():
     assert (x + 1).coeff(x + 1) == 1
     assert (3*x).coeff(0) == 0

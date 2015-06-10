@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from distutils.version import LooseVersion as V
+
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
@@ -71,7 +73,7 @@ def _make_message(ipython=True, quiet=False, source=None):
                 _source += '>>> ' + line + '\n'
 
         doc_version = sympy_version
-        if doc_version.find('-git') >= 0:
+        if 'dev' in doc_version:
             doc_version = "dev"
         else:
             doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
@@ -245,12 +247,12 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
     """Construct new IPython session. """
     import IPython
 
-    if IPython.__version__ >= '0.11':
+    if V(IPython.__version__) >= '0.11':
         # use an app to parse the command line, and init config
         # IPython 1.0 deprecates the frontend module, so we import directly
         # from the terminal module to prevent a deprecation message from being
         # shown.
-        if IPython.__version__ >= '1.0':
+        if V(IPython.__version__) >= '1.0':
             from IPython.terminal import ipapp
         else:
             from IPython.frontend.terminal import ipapp
@@ -404,7 +406,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
-            if IPython.__version__ >= '0.11':
+            if V(IPython.__version__) >= '0.11':
                 try:
                     ip = get_ipython()
                 except NameError:
@@ -425,7 +427,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
                 auto_int_to_Integer=auto_int_to_Integer)
 
-        if IPython.__version__ >= '0.11':
+        if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
             # take a symbol arg.  The second arg is `store_history`,
             # and False means don't add the line to IPython's history.
@@ -444,9 +446,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
             mainloop = ip.mainloop
 
     readline = import_module("readline")
-    if auto_symbols and (not ipython or IPython.__version__ < '0.11' or not readline):
+    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11' or not readline):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
-    if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
+    if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source

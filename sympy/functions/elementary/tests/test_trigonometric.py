@@ -713,6 +713,7 @@ def test_asin_rewrite():
 
 def test_acos():
     assert acos(nan) == nan
+    assert acos(zoo) == zoo
 
     assert acos.nargs == FiniteSet(1)
     assert acos(oo) == I*oo
@@ -1367,7 +1368,7 @@ def test_csc():
 
 def test_asec():
     z = Symbol('z', zero=True)
-    assert asec(z) == nan
+    assert asec(z) == zoo
     assert asec(nan) == nan
     assert asec(1) == 0
     assert asec(-1) == pi
@@ -1416,7 +1417,6 @@ def test_acsc():
 
 
 @XFAIL
-@slow
 def test_csc_rewrite_failing():
     # Move these 2 tests to test_csc() once bugs fixed
     # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth

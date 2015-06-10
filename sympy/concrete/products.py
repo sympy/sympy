@@ -66,13 +66,13 @@ class Product(ExprWithIntLimits):
 
     >>> from sympy.abc import a, b, i, k, m, n, x
     >>> from sympy import Product, factorial, oo
-    >>> Product(k,(k,1,m))
+    >>> Product(k, (k, 1, m))
     Product(k, (k, 1, m))
-    >>> Product(k,(k,1,m)).doit()
+    >>> Product(k, (k, 1, m)).doit()
     factorial(m)
-    >>> Product(k**2,(k,1,m))
+    >>> Product(k**2,(k, 1, m))
     Product(k**2, (k, 1, m))
-    >>> Product(k**2,(k,1,m)).doit()
+    >>> Product(k**2,(k, 1, m)).doit()
     (factorial(m))**2
 
     Wallis' product for pi:
@@ -101,7 +101,7 @@ class Product(ExprWithIntLimits):
     By the same formula we can compute sin(pi/2):
 
     >>> from sympy import pi, gamma, simplify
-    >>> P = pi * x * Product(1 - x**2/k**2,(k,1,n))
+    >>> P = pi * x * Product(1 - x**2/k**2, (k, 1, n))
     >>> P = P.subs(x, pi/2)
     >>> P
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
@@ -368,18 +368,18 @@ class Product(ExprWithIntLimits):
         >>> S = Sum(x*y, (x, a, b), (y, c, d))
         >>> S
         Sum(x*y, (x, a, b), (y, c, d))
-        >>> S0 = S.reverse_order( 0)
+        >>> S0 = S.reverse_order(0)
         >>> S0
         Sum(-x*y, (x, b + 1, a - 1), (y, c, d))
-        >>> S1 = S0.reverse_order( 1)
+        >>> S1 = S0.reverse_order(1)
         >>> S1
         Sum(x*y, (x, b + 1, a - 1), (y, d + 1, c - 1))
 
         Of course we can mix both notations:
 
-        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( x, 1)
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1)
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
-        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( y, x)
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x)
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
         See Also
@@ -406,7 +406,7 @@ class Product(ExprWithIntLimits):
             l = limit
             if i in l_indices:
                 e = -e
-                l = (limit[0], limit[2] + 1 , limit[1] - 1)
+                l = (limit[0], limit[2] + 1, limit[1] - 1)
             limits.append(l)
 
         return Product(expr.function ** e, *limits)
@@ -416,7 +416,7 @@ def product(*args, **kwargs):
     r"""
     Compute the product.
 
-    The notation for symbols is similiar to the notation used in Sum or
+    The notation for symbols is similar to the notation used in Sum or
     Integral. product(f, (i, a, b)) computes the product of f with
     respect to i from a to b, i.e.,
 

@@ -81,6 +81,19 @@ def test_linear_2eq_order1():
     assert dsolve(eq10) == sol10
 
 
+def test_linear_2eq_order1_nonhomog_linear():
+    e = [Eq(diff(f(x), x), f(x) + g(x) + 5*x),
+         Eq(diff(g(x), x), f(x) - g(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
+def test_linear_2eq_order1_nonhomog():
+    # Note: once implemented, add some tests esp. with resonance
+    e = [Eq(diff(f(x), x), f(x) + exp(x)),
+         Eq(diff(g(x), x), f(x) + g(x) + x*exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -269,6 +282,13 @@ def test_linear_3eq_order1():
     assert dsolve(eq6) == sol6
 
 
+def test_linear_3eq_order1_nonhomog():
+    e = [Eq(diff(f(x), x), -9*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*g(x)),
+         Eq(diff(h(x), x), h(x) + exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
 def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
@@ -453,6 +473,7 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
+@slow
 def test_nonlinear_3eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
@@ -511,6 +532,7 @@ def test_checkodesol():
     assert not checkodesol(eq3, sol3)[1].has(f(x))
 
 
+@slow
 def test_dsolve_options():
     eq = x*f(x).diff(x) + f(x)
     a = dsolve(eq, hint='all')
@@ -875,6 +897,7 @@ def test_old_ode_tests():
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 
+@slow
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
@@ -1100,6 +1123,7 @@ def test_homogeneous_order():
     raises(ValueError, lambda: homogeneous_order(x*y))
 
 
+@slow
 def test_1st_homogeneous_coeff_ode():
     # Type: First order homogeneous, y'=f(y/x)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
@@ -1247,6 +1271,7 @@ def test_1st_homogeneous_coeff_corner_case():
     assert sid not in c2 and sdi not in c2
 
 
+@slow
 def test_nth_linear_constant_coeff_homogeneous():
     # From Exercise 20, in Ordinary Differential Equations,
     #                      Tenenbaum and Pollard, pg. 220
@@ -1428,6 +1453,7 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf():
 
 
 @XFAIL
+@slow
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
@@ -1568,6 +1594,7 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
 
+@slow
 def test_nth_linear_constant_coeff_undetermined_coefficients():
     hint = 'nth_linear_constant_coeff_undetermined_coefficients'
     g = exp(-x)
@@ -1749,6 +1776,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     assert checkodesol(eq26a, sol26, order=5, solve_for_func=False)[0]
 
 
+@slow
 def test_nth_linear_constant_coeff_variation_of_parameters():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
     g = exp(-x)
@@ -1817,6 +1845,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert checkodesol(eq12, sol12, order=4, solve_for_func=False)[0]
 
 
+@slow
 def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     # solve_variation_of_parameters shouldn't attempt to simplify the
     # Wronskian if simplify=False.  If wronskian() ever gets good enough
@@ -2327,6 +2356,7 @@ def test_heuristic2():
     assert checkinfsol(eq, i)[0]
 
 
+@slow
 def test_heuristic3():
     y = Symbol('y')
     xi = Function('xi')
@@ -2433,6 +2463,7 @@ def test_series():
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
 
 
+@slow
 def test_lie_group():
     C1 = Symbol("C1")
     x = Symbol("x") # assuming x is real generates an error!

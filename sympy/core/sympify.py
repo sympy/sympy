@@ -139,7 +139,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> from sympy.abc import _clash1
     >>> _clash1
-    {'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
+    {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
     >>> sympify('I & Q', _clash1)
     And(I, Q)
 
@@ -232,6 +232,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     """
     if evaluate is None:
         evaluate = global_evaluate[0]
+    try:
+        if a in sympy_classes:
+            return a
+    except TypeError: # Type of a is unhashable
+        pass
     try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object

@@ -6,9 +6,13 @@ from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
+from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
+                                            besselk, hankel1, hankel2, airyai,
+                                            airybi, airyaiprime, airybiprime)
 from sympy.utilities.pytest import XFAIL
 from sympy.core.compatibility import range
 
+from sympy import octave_code
 from sympy import octave_code as mcode
 
 x, y, z = symbols('x,y,z')
@@ -347,3 +351,17 @@ def test_sparse():
     assert mcode(M) == (
         "sparse([4 2 3 1 2], [1 3 3 4 4], [x.*y 20 10 30 22], 5, 6)"
     )
+
+
+def test_specfun():
+    n = Symbol('n')
+    for f in [besselj, bessely, besseli, besselk]:
+        assert octave_code(f(n, x)) == f.__name__ + '(n, x)'
+    assert octave_code(hankel1(n, x)) == 'besselh(n, 1, x)'
+    assert octave_code(hankel2(n, x)) == 'besselh(n, 2, x)'
+    assert octave_code(airyai(x)) == 'airy(0, x)'
+    assert octave_code(airyaiprime(x)) == 'airy(1, x)'
+    assert octave_code(airybi(x)) == 'airy(2, x)'
+    assert octave_code(airybiprime(x)) == 'airy(3, x)'
+    assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
+    assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'

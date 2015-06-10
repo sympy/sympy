@@ -1,17 +1,16 @@
-"""Power series manipulating functions acting on polys.ring.PolyElement()"""
-
 from sympy.polys.domains import QQ
-from sympy.polys.rings import PolyElement
-from sympy.polys.monomials import monomial_min, monomial_mul
+from sympy.polys.rings import PolyElement, ring
+from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
+from sympy.core import S
 from mpmath.libmp.libintmath import giant_steps
 import math
 
 def _invert_monoms(p1):
     """
-    Compute ``x**n * p1(1/x)`` for ``p1`` univariate polynomial.
+    Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in x.
 
     Examples
     ========
@@ -26,6 +25,7 @@ def _invert_monoms(p1):
 
     See Also
     ========
+
     sympy.polys.densebasic.dup_reverse
 
     """
@@ -42,7 +42,7 @@ def _invert_monoms(p1):
 
 def _giant_steps(target):
     """
-    list of precision steps for the Newton's method
+    Return a list of precision steps for the Newton's method
 
     """
     res = giant_steps(2, target)
@@ -52,8 +52,8 @@ def _giant_steps(target):
 
 def rs_trunc(p1, x, prec):
     """
-    truncate the series in the ``x`` variable with precision ``prec``,
-    that is modulo ``O(x**prec)``
+    Truncate the series in the ``x`` variable with precision ``prec``,
+    that is, modulo ``O(x**prec)``
 
     Examples
     ========
@@ -68,7 +68,6 @@ def rs_trunc(p1, x, prec):
     >>> rs_trunc(p, x, 10)
     x**5 + x + 1
     """
-
     ring = p1.ring
     p = ring.zero
     i = ring.gens.index(x)
@@ -78,10 +77,9 @@ def rs_trunc(p1, x, prec):
         p[exp1] = p1[exp1]
     return p
 
-
 def rs_mul(p1, p2, x, prec):
     """
-    product of series modulo ``O(x**prec)``
+    Return the product of the given two series, modulo ``O(x**prec)``
 
     ``x`` is the series variable or its position in the generators.
 
@@ -97,7 +95,6 @@ def rs_mul(p1, p2, x, prec):
     >>> rs_mul(p1, p2, x, 3)
     3*x**2 + 3*x + 1
     """
-
     ring = p1.ring
     p = ring.zero
     if ring.__class__ != p2.ring.__class__ or ring != p2.ring:
@@ -133,7 +130,7 @@ def rs_mul(p1, p2, x, prec):
 
 def rs_square(p1, x, prec):
     """
-    square modulo ``O(x**prec)``
+    Square the series modulo ``O(x**prec)``
 
     Examples
     ========
@@ -173,7 +170,7 @@ def rs_square(p1, x, prec):
 
 def rs_pow(p1, n, x, prec):
     """
-    return ``p1**n`` modulo ``O(x**prec)``
+    Return ``p1**n`` modulo ``O(x**prec)``
 
     Examples
     ========
@@ -220,7 +217,7 @@ def rs_pow(p1, n, x, prec):
 
 def _has_constant_term(p, x):
     """
-    test if ``p`` has a constant term in ``x``
+    Check if ``p`` has a constant term in ``x``
 
     Examples
     ========
@@ -246,7 +243,7 @@ def _has_constant_term(p, x):
 
 def _series_inversion1(p, x, prec):
     """
-    univariate series inversion ``1/p`` modulo ``O(x**prec)``
+    Univariate series inversion ``1/p`` modulo ``O(x**prec)``
 
     The Newton method is used.
 
@@ -281,7 +278,7 @@ def _series_inversion1(p, x, prec):
 
 def rs_series_inversion(p, x, prec):
     """
-    multivariate series inversion ``1/p`` modulo ``O(x**prec)``
+    Multivariate series inversion ``1/p`` modulo ``O(x**prec)``
 
     Examples
     ========
@@ -309,11 +306,11 @@ def rs_series_inversion(p, x, prec):
 
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
-    series ``sum c[n]*p**n`` modulo ``O(x**prec)``
+    Return a series ``sum c[n]*p**n`` modulo ``O(x**prec)``
 
-    reduce the number of multiplication summing concurrently
+    It reduces the number of multiplications by summing concurrently
     ``ax = [1, p, p**2, .., p**(J - 1)]``
-    ``s = sum(c[i]*ax[i] for i in range(r, (r + 1)*J))*p**((K - 1)*J)``
+    ``s = sum(c[i]*ax[i] for i in range(r, (r + 1)*J)) * p**((K - 1)*J)``
     with ``K >= (n + 1)/J``
 
     Examples
@@ -335,10 +332,10 @@ def rs_series_from_list(p, c, x, prec, concur=1):
 
     See Also
     ========
+
     sympy.polys.ring.compose
 
     """
-
     ring = p.ring
     n = len(c)
     if not concur:
@@ -392,9 +389,38 @@ def rs_series_from_list(p, c, x, prec, concur=1):
         s += s1
     return s
 
-def rs_integrate(self, x):
+def rs_diff(p, x):
     """
-    integrate ``p`` with respect to ``x``
+    Computes partial derivative of p with respect to x
+
+      `x`: variable with respect to which p is differentiated,
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_diff
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x + x**2*y**3
+    >>> rs_diff(p, x)
+    2*x*y**3 + 1
+    """
+    ring = p.ring
+    n = ring.gens.index(x)
+    p1 = ring.zero
+    mn = [0]*ring.ngens
+    mn[n] = 1
+    mn = tuple(mn)
+    for expv in p:
+        if expv[n]:
+            e = monomial_div(expv, mn)
+            p1[e] = p[expv]*expv[n]
+    return p1
+
+def rs_integrate(p, x):
+    """
+    Integrate ``p`` with respect to ``x``
 
     Examples
     ========
@@ -407,21 +433,90 @@ def rs_integrate(self, x):
     >>> rs_integrate(p, x)
     1/3*x**3*y**3 + 1/2*x**2
     """
-    ring = self.ring
+    ring = p.ring
     p1 = ring.zero
     n = ring.gens.index(x)
     mn = [0]*ring.ngens
     mn[n] = 1
     mn = tuple(mn)
 
-    for expv in self:
+    for expv in p:
         e = monomial_mul(expv, mn)
-        p1[e] = self[expv]/(expv[n] + 1)
+        p1[e] = p[expv]/(expv[n] + 1)
     return p1
+
+def fun(p, f, *args):
+    """
+    Function of a multivariate series computed by substitution
+
+      p: multivariate series
+      f: method name or function
+      args[:-2] arguments of f, apart from the first one
+      args[-2] = iv: names of the series variables
+      args[-1] = prec: list of the precisions of the series variables
+
+    The case with f method name is used to compute tan and nth_root
+    of a multivariate series:
+
+      fun(p, tan, iv, prec)
+      tan series is first computed for a dummy variable _x, ie, tan(_x, iv, prec)
+      Then we substitute _x with p to get the desired series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import fun, _tan1
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x + x*y + x**2*y + x**3*y**2
+    >>> fun(p, _tan1, x, 4)
+    1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
+
+    """
+    _ring = p.ring
+    ring1, _x = ring('_x', _ring)
+    h = int(args[-1])
+    args1 = args[:-2] + (_x, h)
+    zm = _ring.zero_monom
+    # separate the constant term of the series
+    # compute the univariate series f(_x, .., 'x', sum(nv))
+    # or _x.f(..., 'x', sum(nv)
+    if zm in p:
+        x1 = _x + p[zm]
+        p1 = p - p[zm]
+    else:
+        x1 = _x
+        p1 = p
+    if isinstance(f, str):
+        q = getattr(x1, f)(*args1)
+    else:
+        q = f(x1, *args1)
+    a = sorted(q.items())
+    c = [0]*h
+    for x in a:
+        c[x[0][0]] = x[1]
+    p1 = rs_series_from_list(p1, c, args[-2], args[-1])
+    return p1
+
+def mul_xin(p, i, n):
+    """
+    Computes p*x_i**n
+
+    x_i is the ith variable in p
+    """
+    n = as_int(n)
+    ring = p.ring
+    q = ring(0)
+    for k, v in p.items():
+        k1 = list(k)
+        k1[i] += n
+        q[tuple(k1)] = v
+    return q
 
 def rs_log(p, x, prec):
     """
-    logarithm of ``p`` modulo ``O(x**prec)``
+    The Logarithm of ``p`` modulo ``O(x**prec)``
 
     Notes
     =====
@@ -447,9 +542,46 @@ def rs_log(p, x, prec):
     dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
     return rs_integrate(dlog, x)
 
+def rs_LambertW(p, iv, prec):
+    """
+    Calculates the series expansion of the principal branch of the Lambert W
+    function.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_LambertW
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_LambertW(x + x*y, x, 3)
+    -x**2*y**2 - 2*x**2*y - x**2 + x*y + x
+
+    See Also
+    ========
+
+    LambertW
+    """
+    ring = p.ring
+    p1 = ring(0)
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
+    if iv in ring.gens:
+        for precx in _giant_steps(prec):
+            e = rs_exp(p1, iv, precx)
+            p2 = rs_mul(e, p1, iv, precx) - p
+            p3 = rs_mul(e, p1 + 1, iv, precx)
+            p3 = rs_series_inversion(p3, iv, precx)
+            tmp = rs_mul(p2, p3, iv, precx)
+            p1 -= tmp
+        return p1
+    else:
+        raise NotImplementedError
+
 def _exp1(p, x, prec):
     """
-    helper function for ``rs_exp``
+    Helper function for ``rs_exp``
     """
     ring = p.ring
     p1 = ring(1)
@@ -461,7 +593,7 @@ def _exp1(p, x, prec):
 
 def rs_exp(p, x, prec):
     """
-    exponentiation of a series modulo ``O(x**prec)``
+    Exponentiation of a series modulo ``O(x**prec)``
 
     Examples
     ========
@@ -490,9 +622,363 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
+# TODO
+# Needs to be benchmarked before use in rs_atan
+def _atan_series(p, iv, prec):
+    ring = p.ring
+    mo = ring(-1)
+    c = [-mo]
+    p2 = rs_square(p, iv, prec)
+    for k in range(1, prec):
+        c.append(mo**k/(2*k + 1))
+    s = rs_series_from_list(p2, c, iv, prec)
+    s = rs_mul(s, p, iv, prec)
+    return s
+
+def rs_atan(p, x, prec):
+    """
+    The arctangent of a series
+
+    Returns the series expansion of the atan of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_atan
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_atan(x + x*y, x, 4)
+    -1/3*x**3*y**3 - x**3*y**2 - x**3*y - 1/3*x**3 + x*y + x
+
+    See Also
+    ========
+
+    atan
+    """
+    if _has_constant_term(p, x):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
+    ring = p.ring
+
+    # Instead of using a closed form formula, we differentiate atan(p) to get
+    # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
+    # Finally we integrate to get back atan
+    dp = p.diff(x)
+    p1 = rs_square(p, x, prec) + ring(1)
+    p1 = rs_series_inversion(p1, x, prec - 1)
+    p1 = rs_mul(dp, p1, x, prec - 1)
+    return rs_integrate(p1, x)
+
+def _tan1(p, x, prec):
+    """
+    Helper function of ``rs_tan``
+
+    Returns the series expansion of tan of a univariate series using Newton's
+    method. It takes advantage of the fact that series expansion of atan is
+    easier than that of tan.
+
+    Consider `f(x) = y - atan(x)`
+    Let r be a root of f(x) found using Newton's method.
+    Then `f(r) = 0`
+    Or `y  = atan(x)` where `x = tan(y)` as required.
+    """
+    ring = p.ring
+    p1 = ring(0)
+    for precx in _giant_steps(prec):
+        tmp = p - rs_atan(p1, x, precx)
+        tmp = rs_mul(tmp, 1 + p1.square(), x, precx)
+        p1 += tmp
+    return p1
+
+def rs_tan(p, x, prec):
+    """
+    Tangent of a series
+
+    Returns the series expansion of the tan of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_tan
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_tan(x + x*y, x, 4)
+    1/3*x**3*y**3 + x**3*y**2 + x**3*y + 1/3*x**3 + x*y + x
+
+   See Also
+   ========
+
+   tan
+   """
+    ring = p.ring
+    if _has_constant_term(p, x):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              series variables')
+    if ring.ngens == 1:
+        return _tan1(p, x, prec)
+    return fun(p, rs_tan, x, prec)
+
+def rs_sin(p, x, prec):
+    """
+    Sine of a series
+
+    Returns the series expansion of the sin of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_sin
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_sin(x + x*y, x, 4)
+    -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
+
+    See Also
+    ========
+
+    sin
+    """
+    ring = x.ring
+    if not p:
+        return ring(0)
+    # Support for constant term can be extended on the lines of rs_cos
+    if _has_constant_term(p, x):
+        raise NotImplementedError
+    # Series is calcualed in terms of tan as its evaluation is fast.
+    if len(p) > 20 and p.ngens == 1:
+        t = rs_tan(p/2, x, prec)
+        t2 = rs_square(t, x, prec)
+        p1 = rs_series_inversion(1 + t2, x, prec)
+        return rs_mul(p1, 2*t, x, prec)
+    one = ring(1)
+    n = 1
+    c = [0]
+    for k in range(2, prec + 2, 2):
+        c.append(one/n)
+        c.append(0)
+        n *= -k*(k + 1)
+    return rs_series_from_list(p, c, x, prec)
+
+def rs_cos(p, iv, prec):
+    """
+    Cosine of a series
+
+    Returns the series expansion of the cos of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cos
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_cos(x + x*y, x, 4)
+    -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
+
+    See Also
+    ========
+
+    cos
+    """
+    ring = p.ring
+    if _has_constant_term(p, iv):
+        zm = ring.zero_monom
+        c = S(p[zm])
+        if not c.is_real:
+            raise NotImplementedError
+        p1 = p - c
+
+    # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
+    # of the constant term. Should it be left unevaluated?
+        from sympy.functions import cos, sin
+        return cos(c)*rs_cos(p1, iv, prec) -  sin(c)*rs_sin(p1, iv, prec)
+
+    # Series is calculated in terms of tan as its evaluation is fast.
+    if len(p) > 20 and ring.ngens == 1:
+        t = rs_tan(p/2, iv, prec)
+        t2 = rs_square(t, iv, prec)
+        p1 = rs_series_inversion(1+t2, iv, prec)
+        return rs_mul(p1 ,1 - t2, iv, prec)
+    one = ring(1)
+    n = 1
+    c = []
+    for k in range(2, prec + 2, 2):
+        c.append(one/n)
+        c.append(0)
+        n *= -k*(k - 1)
+    return rs_series_from_list(p, c, iv, prec)
+
+def rs_cos_sin(p, iv, prec):
+    """
+    Returns the tuple (rs_cos(p, iv, iv), rs_sin(p, iv, iv))
+    Is faster than calling rs_cos and rs_sin separately
+    """
+    t = rs_tan(p/2, iv, prec)
+    t2 = rs_square(t, iv, prec)
+    p1 = rs_series_inversion(1+t2, iv, prec)
+    return (rs_mul(p1, 1 - t2, iv, prec), rs_mul(p1, 2*t, iv, prec))
+
+def check_series_var(p, iv):
+    ii = p.ring.gens.index(iv)
+    m = min(p, key=lambda k: k[ii])[ii]
+    return ii, m
+
+# TODO
+# Needs to be benchmarked before use in rs_atanh
+def _atanh(p, iv, prec):
+    ring = p.ring
+    one = ring(1)
+    c = [one]
+    p2 = rs_square(p, iv, prec)
+    for k in range(1, prec):
+        c.append(one/(2*k + 1))
+    s = rs_series_from_list(p2, c, iv, prec)
+    s = rs_mul(s, p, iv, prec)
+    return s
+
+def rs_atanh(p, iv, prec):
+    """
+    Hyperbolic arctangent of a series
+
+    Returns the series expansion of the atanh of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_atanh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_atanh(x + x*y, x, 4)
+    1/3*x**3*y**3 + x**3*y**2 + x**3*y + 1/3*x**3 + x*y + x
+
+    See Also
+    ========
+
+    atanh
+    """
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
+    ring = p.ring
+
+    # Instead of using a closed form formula, we differentiate atanh(p) to get
+    # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
+    # Finally we integrate to get back atanh
+    dp = rs_diff(p, iv)
+    p1 = - rs_square(p, iv, prec) + 1
+    p1 = rs_series_inversion(p1, iv, prec - 1)
+    p1 = rs_mul(dp, p1, iv, prec - 1)
+    return rs_integrate(p1, iv)
+
+def rs_sinh(p, iv, prec):
+    """
+    Hyperbolic sine of a series
+
+    Returns the series expansion of the sinh of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_sinh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_sinh(x + x*y, x, 4)
+    1/6*x**3*y**3 + 1/2*x**3*y**2 + 1/2*x**3*y + 1/6*x**3 + x*y + x
+
+    See Also
+    ========
+
+    sinh
+    """
+    # Check for negative exponent
+    t = rs_exp(p, iv, prec)
+    t1 = rs_series_inversion(t, iv, prec)
+    return (t - t1)/2
+
+def rs_cosh(p, iv, prec):
+    """
+    Hyperbolic cosine of a series
+
+    Returns the series expansion of the cosh of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cosh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_cosh(x + x*y, x, 4)
+    1/2*x**2*y**2 + x**2*y + 1/2*x**2 + 1
+
+    See Also
+    ========
+
+    cosh
+    """
+    # Check for negative exponent
+    t = rs_exp(p, iv, prec)
+    t1 = rs_series_inversion(t, iv, prec)
+    return (t + t1)/2
+
+def _tanh(p, iv, prec):
+    """
+    Helper function of ``rs_tanh``
+
+    Returns the series expansion of tanh of a univariate series using Newton's
+    method. It takes advantage of the fact that series expansion of atanh is
+    easier than that of tanh.
+
+    See Also
+    ========
+
+    _tanh
+    """
+    ring = p.ring
+    p1 = ring(0)
+    for precx in _giant_steps(prec):
+        tmp = p - rs_atanh(p1, iv, precx)
+        tmp = rs_mul(tmp, 1 - p1.square(), iv, precx)
+        p1 += tmp
+    return p1
+
+def rs_tanh(p, iv, prec):
+    """
+    Hyperbolic tangent of a series
+
+    Returns the series expansion of the tanh of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_tanh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_tanh(x + x*y, x, 4)
+    -1/3*x**3*y**3 - x**3*y**2 - x**3*y - 1/3*x**3 + x*y + x
+
+    See Also
+    ========
+
+    tanh
+    """
+    ring = p.ring
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              the series variables')
+    if ring.ngens == 1:
+        return _tanh(p, iv, prec)
+    return fun(p, _tanh, iv, prec)
+
 def rs_newton(p, x, prec):
     """
-    compute the truncated Newton sum of the polynomial ``p``
+    Compute the truncated Newton sum of the polynomial ``p``
 
     Examples
     ========
@@ -514,7 +1000,7 @@ def rs_newton(p, x, prec):
 
 def rs_hadamard_exp(p1, inverse=False):
     """
-    return ``sum f_i/i!*x**i`` from ``sum f_i*x**i``,
+    Return ``sum f_i/i!*x**i`` from ``sum f_i*x**i``,
     where ``x`` is the first variable.
 
     If ``invers=True`` return ``sum f_i*i!*x**i``

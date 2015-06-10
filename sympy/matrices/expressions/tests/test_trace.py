@@ -73,7 +73,6 @@ def test_Trace_MutableMatrix_plus():
     assert Trace(X) + Trace(X) == 2*Trace(X)
 
 
-@XFAIL
 def test_Trace_doit_deep_False():
     X = Matrix([[1, 2], [3, 4]])
     q = MatPow(X, 2)

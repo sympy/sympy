@@ -16,8 +16,7 @@ from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
-from .point3d import Point3D
-from .point import Point
+from .point import Point, Point3D
 from .line3d import LinearEntity3D, Line3D, Segment3D, Ray3D
 from .line import Line, Segment, Ray
 
@@ -54,7 +53,7 @@ class Plane(GeometryEntity):
             p2 = Point3D(a)
             p3 = Point3D(b)
             if Point3D.are_collinear(p1, p2, p3):
-                raise NotImplementedError('Enter three non-collinear points')
+                raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
             b = p1.direction_ratio(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
@@ -76,7 +75,7 @@ class Plane(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========

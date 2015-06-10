@@ -97,6 +97,7 @@ conjugate(f(x+1)) #
 f(x)
 f(x, y)
 f(x/(y+1), y) #
+f(x**x**x**x**x**x)
 sin(x)**2
 conjugate(a+b*I)
 conjugate(exp(a+b*I))
@@ -305,8 +306,8 @@ def test_upretty_modifiers():
     assert upretty( Symbol('Fhat') ) == u('F̂')
     assert upretty( Symbol('Fbar') ) == u('F̅')
     assert upretty( Symbol('Fvec') ) == u('F⃗')
-    assert upretty( Symbol('Fprime') ) == u('F ̍')
-    assert upretty( Symbol('Fprm') ) == u('F ̍')
+    assert upretty( Symbol('Fprime') ) == u('F′')
+    assert upretty( Symbol('Fprm') ) == u('F′')
     # No faces are actually implemented, but test to make sure the modifiers are stripped
     assert upretty( Symbol('Fbold') ) == u('Fbold')
     assert upretty( Symbol('Fbm') ) == u('Fbm')
@@ -322,8 +323,8 @@ def test_upretty_modifiers():
     assert upretty( Symbol('xvecdot') ) == u('x⃗̇')
     assert upretty( Symbol('xDotVec') ) == u('ẋ⃗')
     assert upretty( Symbol('xHATNorm') ) == u('‖x̂‖')
-    assert upretty( Symbol('xMathring_yCheckPRM__zbreveAbs') ) == u('x̊_y̌ ̍__|z̆|')
-    assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃ ̍')
+    assert upretty( Symbol('xMathring_yCheckPRM__zbreveAbs') ) == u('x̊_y̌′__|z̆|')
+    assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃′')
     assert upretty( Symbol('x_dot') ) == u('x_dot')
     assert upretty( Symbol('x__dot') ) == u('x__dot')
 
@@ -1522,6 +1523,28 @@ f⎜─────, y⎟\n\
 """)
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
+
+    expr = f(x**x**x**x**x**x)
+    ascii_str = \
+"""\
+ / / / / / x\\\\\\\\\\
+ | | | | \\x /||||
+ | | | \\x    /|||
+ | | \\x       /||
+ | \\x          /|
+f\\x             /\
+"""
+    ucode_str = \
+u("""\
+ ⎛ ⎛ ⎛ ⎛ ⎛ x⎞⎞⎞⎞⎞
+ ⎜ ⎜ ⎜ ⎜ ⎝x ⎠⎟⎟⎟⎟
+ ⎜ ⎜ ⎜ ⎝x    ⎠⎟⎟⎟
+ ⎜ ⎜ ⎝x       ⎠⎟⎟
+ ⎜ ⎝x          ⎠⎟
+f⎝x             ⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
     expr = sin(x)**2
     ascii_str = \
@@ -4335,9 +4358,9 @@ atan2⎜────, √x⎟\n\
 
 def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
-    assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
+    assert pretty(e) == 'Segment(Point2D(0, 1), Point2D(0, 2))'
     e = Ray((1, 1), angle=4.02*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/50) + 1))'
+    assert pretty(e) == 'Ray(Point2D(1, 1), Point2D(2, tan(pi/50) + 1))'
 
 
 def test_expint():

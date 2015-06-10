@@ -86,6 +86,7 @@ def test_mellin_transform_fail():
             (-1, -S(1)/2), True)
 
 
+@slow
 def test_mellin_transform():
     from sympy import Max, Min
     MT = mellin_transform
@@ -161,6 +162,7 @@ def test_mellin_transform():
         (-gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
 
 
+@slow
 def test_mellin_transform_bessel():
     from sympy import Max
     MT = mellin_transform
@@ -257,6 +259,7 @@ def test_mellin_transform_bessel():
     # TODO various strange products of special orders
 
 
+@slow
 def test_expint():
     from sympy import E1, expint, Max, re, lerchphi, Symbol, simplify, Si, Ci, Ei
     aneg = Symbol('a', negative=True)
@@ -303,6 +306,7 @@ def test_expint():
         (expint(2, x)*Heaviside(x)).rewrite(Ei).rewrite(expint).expand()
 
 
+@slow
 def test_inverse_mellin_transform():
     from sympy import (sin, simplify, Max, Min, expand,
                        powsimp, exp_polar, cos, cot)
@@ -438,6 +442,7 @@ def test_inverse_mellin_transform():
     assert IMT(pi/cos(pi*s), s, x, (0, S(1)/2)) == sqrt(x)/(x + 1)
 
 
+@slow
 def test_laplace_transform():
     from sympy import fresnels, fresnelc
     LT = laplace_transform

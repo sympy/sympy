@@ -404,6 +404,12 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jennifer White: Added checks into polynomials.py
 #. Alistair Lynn: Removed duplicate classifiers list in setup.py
 #. Govind Sahai: Fixed some typos
+#. Adam Bloomston: Improve conversion of Decimal to Float
+#. Kyle McDaniel: Fixes to Point3D
+#. Nguyen Truong Duy: Fix a bug in cancelling MatrixElement expressions
+#. Alex Lindsay: Fix typos in documentation
+#. Mathew Chong: Improve Mul handling of positive/negative assumptions.
+#. Gaurav Dhingra: M.row_del(index) and M.col_del(index) raise IndexError for out of bound Index
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
