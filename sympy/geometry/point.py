@@ -697,6 +697,15 @@ class Point2D(Point):
         geometry.entity.scale
         geometry.entity.translate
         """
+        try:
+            col, row = matrix.shape
+            valid_matrix = matrix.is_square and col == 3
+        except AttributeError:
+            # We hit this block if matrix argument is not actually a Matrix.
+            valid_matrix = False
+        if not valid_matrix:
+            raise ValueError("The argument to the transform function must be " \
+            + "a 3x3 matrix")
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
@@ -1053,6 +1062,15 @@ class Point3D(Point):
         geometry.entity.scale
         geometry.entity.translate
         """
+        try:
+            col, row = matrix.shape
+            valid_matrix = matrix.is_square and col == 4
+        except AttributeError:
+            # We hit this block if matrix argument is not actually a Matrix.
+            valid_matrix = False
+        if not valid_matrix:
+            raise ValueError("The argument to the transform function must be " \
+            + "a 4x4 matrix")
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)
