@@ -208,8 +208,8 @@ modifier_dict = {
     'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
     'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
     'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
-    'prm': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
+    'prime': lambda s: s+u('\N{PRIME}'),
+    'prm': lambda s: s+u('\N{PRIME}'),
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,

@@ -1,9 +1,8 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 
-from .assumptions import ManagedProperties
+from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
-from .core import BasicType
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
@@ -484,13 +483,13 @@ class Basic(with_metaclass(ManagedProperties)):
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
-        which are bound variables, so Integral has a method to return all symbols
-        except those. Derivative keeps track of symbols with respect to which it
-        will perform a derivative; those are bound variables, too, so it has
-        its own symbols method.
+        which are bound variables, so Integral has a method to return all
+        symbols except those. Derivative keeps track of symbols with respect
+        to which it will perform a derivative; those are
+        bound variables, too, so it has its own free_symbols method.
 
-        Any other method that uses bound variables should implement a symbols
-        method."""
+        Any other method that uses bound variables should implement a
+        free_symbols method."""
         return set().union(*[a.free_symbols for a in self.args])
 
     @property
@@ -1126,7 +1125,7 @@ class Basic(with_metaclass(ManagedProperties)):
             for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
-        if isinstance(pattern, BasicType):
+        if isinstance(pattern, BasicMeta):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
 

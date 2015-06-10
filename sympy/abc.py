@@ -1,3 +1,34 @@
+"""
+This module exports all latin and greek letters as Symbols, so you can
+conveniently do
+
+    >>> from sympy.abc import x, y
+
+instead of the slightly more clunky-looking
+
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
+
+Caveats
+=======
+
+1. As of the time of writing this, the names ``C``, ``O``, ``S``, ``I``, ``N``,
+``E``, and ``Q`` are colliding with names defined in SymPy. If you import them
+from both ``sympy.abc`` and ``sympy``, the second import will "win".
+This is an issue only for * imports, which should only be used for short-lived
+code such as interactive sessions and throwaway scripts that do not survive
+until the next SymPy upgrade, where ``sympy`` may contain a different set of
+names.
+
+2. This module does not define symbol names on demand, i.e.
+```from sympy.abc import foo``` will be reported as an error because
+``sympy.abc`` does not contain the name ``foo``. To get a symbol named `'foo'`,
+you still need to use ``Symbol('foo')`` or ``symbols('foo')``.
+You can freely mix usage of ``sympy.abc`` and ``Symbol``/``symbols``, though
+sticking with one and only one way to get the symbols does tend to make the code
+more readable.
+"""
+
 from __future__ import print_function, division
 
 import string

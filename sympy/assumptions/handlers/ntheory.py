@@ -85,6 +85,10 @@ class AskCompositeHandler(CommonHandler):
                 _prime = ask(Q.prime(expr), assumptions)
                 if _prime is None:
                     return
+                # Positive integer which is not prime is not
+                # necessarily composite
+                if expr.equals(1):
+                    return False
                 return not _prime
             else:
                 return _integer

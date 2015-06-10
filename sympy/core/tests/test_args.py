@@ -85,11 +85,51 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
 
-
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
+def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
+    from sympy.assumptions.sathandlers import UnevaluatedOnFree
+    from sympy import Q
+    assert _test_args(UnevaluatedOnFree(Q.positive))
+    assert _test_args(UnevaluatedOnFree(Q.positive(x)))
+    assert _test_args(UnevaluatedOnFree(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__AllArgs():
+    from sympy.assumptions.sathandlers import AllArgs
+    from sympy import Q
+    assert _test_args(AllArgs(Q.positive))
+    assert _test_args(AllArgs(Q.positive(x)))
+    assert _test_args(AllArgs(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__AnyArgs():
+    from sympy.assumptions.sathandlers import AnyArgs
+    from sympy import Q
+    assert _test_args(AnyArgs(Q.positive))
+    assert _test_args(AnyArgs(Q.positive(x)))
+    assert _test_args(AnyArgs(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__ExactlyOneArg():
+    from sympy.assumptions.sathandlers import ExactlyOneArg
+    from sympy import Q
+    assert _test_args(ExactlyOneArg(Q.positive))
+    assert _test_args(ExactlyOneArg(Q.positive(x)))
+    assert _test_args(ExactlyOneArg(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__CheckOldAssump():
+    from sympy.assumptions.sathandlers import CheckOldAssump
+    from sympy import Q
+    assert _test_args(CheckOldAssump(Q.positive))
+    assert _test_args(CheckOldAssump(Q.positive(x)))
+    assert _test_args(CheckOldAssump(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__CheckIsPrime():
+    from sympy.assumptions.sathandlers import CheckIsPrime
+    from sympy import Q
+    # Input must be a number
+    assert _test_args(CheckIsPrime(Q.positive))
+    assert _test_args(CheckIsPrime(Q.positive(5)))
 
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
@@ -1159,6 +1199,11 @@ def test_sympy__functions__elementary__integers__ceiling():
 def test_sympy__functions__elementary__integers__floor():
     from sympy.functions.elementary.integers import floor
     assert _test_args(floor(x))
+
+
+def test_sympy__functions__elementary__integers__frac():
+    from sympy.functions.elementary.integers import frac
+    assert _test_args(frac(x))
 
 
 def test_sympy__functions__elementary__miscellaneous__IdentityFunction():
@@ -3126,8 +3171,13 @@ def test_sympy__geometry__point__Point():
     assert _test_args(Point(0, 1))
 
 
-def test_sympy__geometry__point3d__Point3D():
-    from sympy.geometry.point3d import Point3D
+def test_sympy__geometry__point__Point2D():
+    from sympy.geometry.point import Point2D
+    assert _test_args(Point2D(0, 1))
+
+
+def test_sympy__geometry__point__Point3D():
+    from sympy.geometry.point import Point3D
     assert _test_args(Point3D(0, 1, 2))
 
 
@@ -3206,6 +3256,9 @@ def test_sympy__geometry__entity__GeometryEntity():
     from sympy.geometry.point import Point
     assert _test_args(GeometryEntity(Point(1, 0), 1, [1, 2]))
 
+@SKIP("abstract class")
+def test_sympy__geometry__entity__GeometrySet():
+    pass
 
 def test_sympy__diffgeom__diffgeom__Manifold():
     from sympy.diffgeom import Manifold
@@ -3364,6 +3417,14 @@ def test_sympy__ntheory__factor___divisor_sigma():
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = divisor_sigma(n, k)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___udivisor_sigma():
+    from sympy.ntheory.factor_ import udivisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = udivisor_sigma(n, k)
     assert _test_args(t)
 
 

@@ -16,7 +16,7 @@ from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
 
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, d, x, y, z
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -2345,14 +2345,12 @@ def test_replace_map():
     assert N == K
 
 def test_atoms():
-    from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.atoms() == set([S(1),S(2),S(-1), x])
     assert m.atoms(Symbol) == set([x])
 
 @slow
 def test_pinv():
-    from sympy.abc import a, b, c, d
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
     assert simplify(A1.pinv()) == simplify(A1.inv())
@@ -2469,3 +2467,28 @@ def test_doit():
     a = Matrix([[Add(x,x, evaluate=False)]])
     assert a[0] != 2*x
     assert a.doit() == Matrix([[2*x]])
+
+def test_issue_9457_9467():
+    # for row_del(index)
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.row_del(1)
+    assert M == Matrix([[1, 2, 3], [3, 4, 5]])
+    N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    N.row_del(-2)
+    assert N == Matrix([[1, 2, 3], [3, 4, 5]])
+    P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: P.row_del(10))
+    Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: Q.row_del(-10))
+
+    # for col_del(index)
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M.col_del(1)
+    assert M == Matrix([[1, 3], [2, 4], [3, 5]])
+    N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    N.col_del(-2)
+    assert N == Matrix([[1, 3], [2, 4], [3, 5]])
+    P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: P.col_del(10))
+    Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(IndexError, lambda: Q.col_del(-10))
