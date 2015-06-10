@@ -1218,8 +1218,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 matching_hints[s + "_Integral"] = r
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_constant_coeff_undetermined_"
-                        "coefficients"] = r
+                    matching_hints[
+                        "nth_linear_constant_coeff_undetermined_coefficients"
+                            ] = r
+
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
@@ -1391,11 +1393,11 @@ def classify_sysode(eq, funcs=None, **kwargs):
         if isinstance(func, list):
             for func_elem in func:
                 if len(func_elem.args) != 1:
-                    raise ValueError("dsolve() and classify_sysode() work with"
+                    raise ValueError("dsolve() and classify_sysode() work with "
                     "functions of one variable only, not %s" % func)
         else:
             if func and len(func.args) != 1:
-                raise ValueError("dsolve() and classify_sysode() work with"
+                raise ValueError("dsolve() and classify_sysode() work with "
                 "functions of one variable only, not %s" % func)
 
     # find the order of all equation in system of odes
@@ -5587,7 +5589,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 if xieta:
                     return xieta
                 else:
-                    raise NotImplementedError("Infinitesimals could not be found for"
+                    raise NotImplementedError("Infinitesimals could not be found for "
                         "the given ODE")
 
             elif hint == 'default':
