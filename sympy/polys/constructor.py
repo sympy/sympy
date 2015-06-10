@@ -6,6 +6,7 @@ from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
+from sympy.polys.domains.realfield import RealField
 from sympy.utilities import public
 from sympy.core import sympify
 
@@ -44,7 +45,10 @@ def _construct_simple(coeffs, opt):
         domain, result = _construct_algebraic(coeffs, opt)
     else:
         if reals:
-            domain = RR
+            # Use the maximum precision of all coefficients for the RR's
+            # precision
+            max_prec = max([c._prec for c in coeffs])
+            domain = RealField(prec=max_prec)
         else:
             if opt.field or rationals:
                 domain = QQ

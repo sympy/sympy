@@ -110,6 +110,7 @@ def test_issue_4891():
 
 
 @XFAIL
+@slow
 def test_issue_1796a():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), x).has(Integral)
 
@@ -138,20 +139,17 @@ def test_issue_4941():
 
 
 @XFAIL
-@slow
 def test_issue_4950():
     # Problem is with exception
     assert not integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x).has(Integral)
 
 
 @XFAIL
-@slow
 def test_issue_4968():
     assert not integrate(sin(log(x**2))).has(Integral)
 
 
 @XFAIL
-@slow
 def test_issue_4992():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)

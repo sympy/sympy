@@ -435,14 +435,48 @@ def test_Mul_is_even_odd():
     assert (x*x).is_even is None
     assert (x*(x + k)).is_even is True
     assert (x*(x + m)).is_even is None
-    assert (x*y*(y + k)).is_even is True
-    assert (x*y*(y + m)).is_even is None
 
     assert (x*y).is_odd is None
     assert (x*x).is_odd is None
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
+
+
+@XFAIL
+def test_evenness_in_ternary_integer_product_with_odd():
+    # Tests that oddness inference is independent of term ordering.
+    # Term ordering at the point of testing depends on SymPy's symbol order, so
+    # we try to force a different order by modifying symbol names.
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    k = Symbol('k', odd=True)
+    assert (x*y*(y + k)).is_even is True
+    assert (y*x*(x + k)).is_even is True
+
+
+def test_evenness_in_ternary_integer_product_with_even():
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    m = Symbol('m', even=True)
+    assert (x*y*(y + m)).is_even is None
+
+
+@XFAIL
+def test_oddness_in_ternary_integer_product_with_odd():
+    # Tests that oddness inference is independent of term ordering.
+    # Term ordering at the point of testing depends on SymPy's symbol order, so
+    # we try to force a different order by modifying symbol names.
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    k = Symbol('k', odd=True)
     assert (x*y*(y + k)).is_odd is False
+    assert (y*x*(x + k)).is_odd is False
+
+
+def test_oddness_in_ternary_integer_product_with_even():
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    m = Symbol('m', even=True)
     assert (x*y*(y + m)).is_odd is None
 
 
@@ -1519,7 +1553,14 @@ def test_Mod():
     assert (x + 3) % 1 == Mod(x, 1)
     assert (x + 3.0) % 1 == Mod(1.*x, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
-    assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
+
+    a = Mod(.6*x + y, .3*y)
+    b = Mod(0.1*y + 0.6*x, 0.3*y)
+    # Test that a, b are equal, with 1e-14 accuracy in coefficients
+    eps = 1e-14
+    assert abs((a.args[0] - b.args[0]).subs({x: 1, y: 1})) < eps
+    assert abs((a.args[1] - b.args[1]).subs({x: 1, y: 1})) < eps
+
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
@@ -1530,7 +1571,7 @@ def test_Mod():
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
     assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
     assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
-    assert (6*pi) % (.3*x*pi) == pi*Mod(6, 0.3*x)
+    assert (6*pi) % (.3*x*pi) == 0.3*pi*Mod(20, x)
     assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
     assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)
@@ -1622,10 +1663,13 @@ def test_issue_6040():
 
 
 def test_issue_6082():
-    assert Basic.compare(Max(x, 1), Max(x, 2)) == -1
-    assert Basic.compare(Max(x, 2), Max(x, 1)) == 1
+    # Comparison is symmetric
+    assert Basic.compare(Max(x, 1), Max(x, 2)) == \
+      - Basic.compare(Max(x, 2), Max(x, 1))
+    # Equal expressions compare equal
     assert Basic.compare(Max(x, 1), Max(x, 1)) == 0
-    assert Basic.compare(Max(1, x), frozenset((1, x))) == -1
+    # Basic subtypes (such as Max) compare different than standard types
+    assert Basic.compare(Max(1, x), frozenset((1, x))) != 0
 
 
 def test_issue_6077():
@@ -1812,6 +1856,17 @@ def test_mul_zero_detection():
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
+def test_Mul_with_zero_infinite():
+    zer = Dummy(zero=True)
+    inf = Dummy(finite=False)
+
+    e = Mul(zer, inf, evaluate=False)
+    assert e.is_positive is None
+    assert e.is_hermitian is None
+
+    e = Mul(inf, zer, evaluate=False)
+    assert e.is_positive is None
+    assert e.is_hermitian is None
 
 def test_issue_8247_8354():
     from sympy import tan

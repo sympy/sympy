@@ -49,6 +49,10 @@ class BesselBase(Function):
         """ The argument of the bessel-type function. """
         return self.args[1]
 
+    @classmethod
+    def eval(cls, nu, z):
+        return
+
     def fdiff(self, argindex=2):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)

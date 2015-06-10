@@ -14,7 +14,7 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
 from sympy.core.compatibility import range
 import mpmath
@@ -589,6 +589,8 @@ def test_root_factors():
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
 
+
+@slow
 def test_nroots1():
     n = 64
     p = legendre_poly(n, x, polys=True)

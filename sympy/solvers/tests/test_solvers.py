@@ -16,7 +16,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import RootOf
 
-from sympy.utilities.pytest import slow, XFAIL, raises, skip, ON_TRAVIS
+from sympy.utilities.pytest import slow, XFAIL, SKIP, raises, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
@@ -743,8 +743,8 @@ def test_issue_5335():
     assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 
-@XFAIL
-def test_issue_5335_float():
+@SKIP("Hangs")
+def _test_issue_5335_float():
     # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
@@ -770,6 +770,7 @@ def test_polysys():
                  y - 3, x - y - 4], (y, x))
 
 
+@slow
 def test_unrad1():
     raises(NotImplementedError, lambda:
         unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))

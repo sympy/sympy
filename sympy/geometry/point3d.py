@@ -41,9 +41,9 @@ class Point3D(GeometryEntity):
 
     NotImplementedError
         When trying to create a point other than 2 or 3 dimensions.
-        When `intersection` is called with object other than a Point.
     TypeError
         When trying to add or subtract points with different dimensions.
+        When `intersection` is called with object other than a Point.
 
     Notes
     =====
@@ -76,8 +76,6 @@ class Point3D(GeometryEntity):
         if isinstance(args[0], (Point, Point3D)):
             if not eval:
                 return args[0]
-            args = args[0].args
-        elif isinstance(args[0], Point):
             args = args[0].args
         else:
             if iterable(args[0]):
@@ -320,7 +318,7 @@ class Point3D(GeometryEntity):
                 for j in (0, 1, i):
                     points.pop(j)
                 return all(p.is_coplanar(i) for i in points)
-            except NotImplementedError:  # XXX should be ValueError
+            except ValueError:
                 pass
         raise ValueError('At least 3 non-collinear points needed to define plane.')
 
@@ -479,8 +477,7 @@ class Point3D(GeometryEntity):
         """
         if pt:
             pt = Point3D(pt)
-            return
-            self.translate(*(-pt).args).scale(x, y, z).translate(*pt.args)
+            return self.translate(*(-pt).args).scale(x, y, z).translate(*pt.args)
         return Point3D(self.x*x, self.y*y, self.z*z)
 
     def translate(self, x=0, y=0, z=0):
@@ -508,7 +505,7 @@ class Point3D(GeometryEntity):
 
     def transform(self, matrix):
         """Return the point after applying the transformation described
-        by the 3x3 Matrix, ``matrix``.
+        by the 4x4 Matrix, ``matrix``.
 
         See Also
         ========
@@ -516,8 +513,10 @@ class Point3D(GeometryEntity):
         geometry.entity.scale
         geometry.entity.translate
         """
+        from sympy.matrices.expressions import Transpose
         x, y, z = self.args
-        return Point3D(*(Matrix(1, 3, [x, y, z])*matrix).tolist()[0][:2])
+        m = Transpose(matrix)
+        return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
 
     def dot(self, p2):
         """Return dot product of self with another Point."""
