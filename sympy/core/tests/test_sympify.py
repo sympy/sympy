@@ -445,9 +445,9 @@ def test_issue_4988_builtins():
 
 def test_geometry():
     p = sympify(Point(0, 1))
-    assert p == Point(0, 1) and type(p) == Point
+    assert p == Point(0, 1) and isinstance(p, Point)
     L = sympify(Line(p, (1, 0)))
-    assert L == Line((0, 1), (1, 0)) and type(L) == Line
+    assert L == Line((0, 1), (1, 0)) and isinstance(L, Line)
 
 
 def test_kernS():

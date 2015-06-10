@@ -43,10 +43,6 @@ ordering_of_classes = [
 ]
 
 
-class BasicType(type):
-    pass
-
-
 class Registry(object):
     """
     Base class for registry objects.
@@ -69,7 +65,7 @@ class Registry(object):
 all_classes = set()
 
 
-class BasicMeta(BasicType):
+class BasicMeta(type):
 
     def __init__(cls, *args, **kws):
         all_classes.add(cls)
@@ -77,7 +73,7 @@ class BasicMeta(BasicType):
     def __cmp__(cls, other):
         # If the other object is not a Basic subclass, then we are not equal to
         # it.
-        if not isinstance(other, BasicType):
+        if not isinstance(other, BasicMeta):
             return -1
         n1 = cls.__name__
         n2 = other.__name__

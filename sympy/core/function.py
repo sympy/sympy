@@ -92,7 +92,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
+class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 

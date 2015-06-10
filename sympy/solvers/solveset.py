@@ -111,7 +111,7 @@ def _invert_real(f, g_ys, symbol):
                         return _invert_real(base, res, symbol)
             else:
                 if not base.is_positive:
-                    raise ValueError("x**w where w is irrational is not"
+                    raise ValueError("x**w where w is irrational is not "
                                      "defined for negative x")
                 return _invert_real(base, res, symbol)
 

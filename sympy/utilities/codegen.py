@@ -265,7 +265,7 @@ class Variable(object):
         if datatype is None:
             datatype = get_default_datatype(name)
         elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) `datatype' argument must be an"
+            raise TypeError("The (optional) `datatype' argument must be an "
                             "instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError(

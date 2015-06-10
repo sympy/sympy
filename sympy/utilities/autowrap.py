@@ -441,7 +441,7 @@ def _validate_backend_language(backend, language):
     if not langs:
         raise ValueError("Unrecognized backend: " + backend)
     if language.upper() not in langs:
-        raise ValueError(("Backend {0} and language {1} are"
+        raise ValueError(("Backend {0} and language {1} are "
                           "incompatible").format(backend, language))
 
 
