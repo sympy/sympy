@@ -508,6 +508,7 @@ def _test(*paths, **kwargs):
                     break
 
     if slow:
+        random.seed(18042102)
         random.shuffle(matched)
 
     if split:
