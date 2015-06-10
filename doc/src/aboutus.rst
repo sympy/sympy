@@ -409,6 +409,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nguyen Truong Duy: Fix a bug in cancelling MatrixElement expressions
 #. Alex Lindsay: Fix typos in documentation
 #. Mathew Chong: Improve Mul handling of positive/negative assumptions.
+#. Gaurav Dhingra: M.row_del(index) and M.col_del(index) raise IndexError for out of bound Index
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
