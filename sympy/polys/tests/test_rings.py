@@ -706,8 +706,6 @@ def test_PolyElement___pow__():
     assert f**4 == f._pow_generic(4) == f._pow_multinomial(4) == 16*x**4 + 96*x**3 + 216*x**2 + 216*x + 81
     assert f**5 == f._pow_generic(5) == f._pow_multinomial(5) == 32*x**5 + 240*x**4 + 720*x**3 + 1080*x**2 + 810*x + 243
 
-    raises(ValueError, lambda: f**-2)
-
     R, x,y,z = ring("x,y,z", ZZ, grlex)
     f = x**3*y - 2*x*y**2 - 3*z + 1
     g = x**6*y**2 - 4*x**4*y**3 - 6*x**3*y*z + 2*x**3*y + 4*x**2*y**4 + 12*x*y**2*z - 4*x*y**2 + 9*z**2 - 6*z + 1

@@ -7,8 +7,12 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_sinh, rs_cosh, rs_tanh, _tan1, fun, rs_series_reversion)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
+<<<<<<< HEAD
 from sympy.core.symbol import symbols
 from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh, log
+=======
+from sympy.core.numbers import Rational
+>>>>>>> 312f51e... Added tests for puiseux series
 
 def test_ring_series1():
     R, x = ring('x', QQ)
