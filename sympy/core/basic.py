@@ -188,6 +188,8 @@ class Basic(with_metaclass(ManagedProperties)):
             r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
                 c = l.compare(r)
+            elif l is None or r is None:
+                c = (l is not None) - (r is not None)
             else:
                 c = (l > r) - (l < r)
             if c:
