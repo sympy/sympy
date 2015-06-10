@@ -34,6 +34,9 @@ def test_rf_eval_apply():
 
     assert rf(1, 100) == factorial(100)
 
+    assert rf(x**2 + 3*x, 2) == x**4 + 8*x**3 + 19*x**2 + 12*x
+    assert rf(x**3 + x, -2) == 1/(x**6 - 9*x**5 + 35*x**4 - 75*x**3 + 94*x**2 - 66*x + 20)
+
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
     m = Symbol('m', integer=True, nonnegative=True)
@@ -72,6 +75,9 @@ def test_ff_eval_apply():
     assert ff(x, -3) == 1/((x + 1)*(x + 2)*(x + 3))
 
     assert ff(100, 100) == factorial(100)
+
+    assert ff(2*x**2 - 5*x, 2) == 4*x**4 - 28*x**3 + 59*x**2 - 35*x
+    assert ff(x**2 + 3*x, -2) == 1/(x**4 + 12*x**3 + 49*x**2 + 78*x + 40)
 
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
