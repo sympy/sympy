@@ -680,7 +680,7 @@ class ComplexPlane(Set):
         from sympy.functions import arg, Abs
 
         # self in rectangular form
-        if self.polar is False:
+        if not self.polar:
             re, im = other.as_real_imag()
             for element in self.psets:
                 if And(element.args[0]._contains(re),
@@ -723,9 +723,9 @@ class ComplexPlane(Set):
             new_interval = []
 
             # self in rectangular form
-            if self.polar is False:
+            if not self.polar:
                 for element in self.psets:
-                    if (S.Zero, S.Zero) in element:
+                    if S.Zero in element.args[0]:
                         new_interval.append(element.args[0])
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
