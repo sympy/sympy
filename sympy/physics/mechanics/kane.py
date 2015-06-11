@@ -519,11 +519,13 @@ class KanesMethod(object):
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
         # dictionary of auxiliary speeds & derivatives which are equal to zero
-        subdict = dict(list(zip(uaux + uauxdot, [0] * (len(uaux) + len(uauxdot)))))
+        subdict = dict(zip(uaux[:] + uauxdot[:],
+                           [0] * (len(uaux) + len(uauxdot))))
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = set(Matrix([self.q, self._qdot, self.u, self._udot, uaux, uauxdot]))
+        insyms = set(self.q[:] + self._qdot[:] + self.u[:] + self._udot[:] +
+                     uaux[:] + uauxdot)
         if any(find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
                 self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
             raise ValueError('Cannot have dynamicsymbols outside dynamic \
