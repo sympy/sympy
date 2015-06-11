@@ -491,7 +491,11 @@ class Pow(Expr):
         if self.exp == S.One:
             return self.base.is_prime
         if self.is_number:
-            return self.doit().is_prime
+            done_it = self.doit()
+            if self != done_it:
+                return done_it.is_prime
+            else:
+                return None
 
         if self.is_integer and self.is_positive:
             """
