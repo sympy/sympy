@@ -1222,7 +1222,10 @@ class Mul(Expr, AssocOp):
             r = S.One
             for arg in self.args:
                 r *= arg
-            return r.is_prime
+            if self != r:
+                return r.is_prime
+            else:
+                return None
 
         if self.is_integer and self.is_positive:
             """
