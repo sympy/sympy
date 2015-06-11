@@ -119,3 +119,9 @@ def test_collapse_MatrixBase():
 
 def test_refine():
     assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
+
+def test_issue_9503():
+    from sympy import I
+    a = symbols('a')
+    M = Matrix([[1, 2 + I], [3, 4]])
+    assert transpose(MatMul(a, M)) == MatMul(transpose(a), transpose(M))
