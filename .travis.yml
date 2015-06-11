@@ -1,4 +1,7 @@
 language: python
+cache:
+- apt
+- pip
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false"
