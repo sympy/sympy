@@ -1,6 +1,5 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
-                   SeqFormula, SeqFunc, Lambda, sequence, SeqAdd, SeqMul,
-                   Mul)
+                   SeqFormula, sequence, SeqAdd, SeqMul, Mul)
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 
@@ -18,41 +17,39 @@ def test_EmptySequence():
 
 
 def test_SeqExpr():
-    s = SeqExpr((1, 2, 3), (0, 10))
+    s = SeqExpr((1, n, y), (x, 0, 10))
 
     assert isinstance(s, SeqExpr)
-    assert s.gen == Tuple(1, 2, 3)
+    assert s.gen == (1, n, y)
     assert s.interval == Interval(0, 10)
     assert s.start == 0
     assert s.stop == 10
     assert s.length == 11
+    assert s.variables == (x,)
 
-    assert SeqExpr((1, 2, 3), (0, 10, 2)).length == 6
-    assert SeqExpr((1, 2, 3), (0, oo)).length is oo
-
-    assert SeqExpr((1, 2, 3), (oo, -oo)) is S.EmptySequence
-
-    raises(ValueError, lambda: SeqExpr((1, 2, 3), (0, 1, 2, 3)))
-    raises(ValueError, lambda: SeqExpr((1, 2, 3), (-oo, oo)))
-    raises(ValueError, lambda: SeqExpr((1, 2, 3), (0, oo, oo)))
+    assert SeqExpr((1, 2, 3), (x, 0, oo)).length is oo
 
 
 def test_SeqPer():
-    s = SeqPer((1, 2, 3), (0, 5))
+    s = SeqPer((1, n, 3), (x, 0, 5))
 
     assert isinstance(s, SeqPer)
-    assert s.periodical == Tuple(1, 2, 3)
+    assert s.periodical == Tuple(1, n, 3)
     assert s.period == 3
     assert s.coeff(3) == 1
+    assert s.free_symbols == set([n])
 
-    assert list(s) == [1, 2, 3, 1, 2, 3]
-    assert s[:] == [1, 2, 3, 1, 2, 3]
-    assert SeqPer((1, 2, 3), (0, 5, 2))[:] == [1, 3, 2]
-    assert SeqPer((1, 2, 3), (-oo, 0))[0:6] == [1, 2, 3, 1, 2, 3]
+    assert list(s) == [1, n, 3, 1, n, 3]
+    assert s[:] == [1, n, 3, 1, n, 3]
+    assert SeqPer((1, n, 3), (-oo, 0))[0:6] == [1, n, 3, 1, n, 3]
+
+    raises(ValueError, lambda: SeqPer((1, 2, 3), (0, 1, 2)))
+    raises(ValueError, lambda: SeqPer((1, 2, 3), (x, -oo, oo)))
+    raises(ValueError, lambda: SeqPer(n**2, (0, oo)))
 
 
 def test_SeqFormula():
-    s = SeqFormula((n**2, n), (0, 5))
+    s = SeqFormula(n**2, (n, 0, 5))
 
     assert isinstance(s, SeqFormula)
     assert s.formula == n**2
@@ -60,48 +57,35 @@ def test_SeqFormula():
 
     assert list(s) == [i**2 for i in range(6)]
     assert s[:] == [i**2 for i in range(6)]
-    assert SeqFormula((n**2, n), (0, 5, 2))[:] == [0, 4, 16]
-    assert SeqFormula((n**2, n), (-oo, 0))[0:6] == [i**2 for i in range(6)]
+    assert SeqFormula(n**2, (n, -oo, 0))[0:6] == [i**2 for i in range(6)]
 
-    assert SeqFormula(n**2, (0, oo)) == SeqFormula((n**2, n), (0, oo))
+    assert SeqFormula(n**2, (0, oo)) == SeqFormula(n**2, (n, 0, oo))
 
     assert SeqFormula(n**2, (0, m)).subs(m, x) == SeqFormula(n**2, (0, x))
-    assert SeqFormula((m*n**2, n), (0, oo)).subs(m, x) == \
-        SeqFormula((x*n**2, n), (0, oo))
+    assert SeqFormula(m*n**2, (n, 0, oo)).subs(m, x) == \
+        SeqFormula(x*n**2, (n, 0, oo))
 
-
-def test_SeqFunc():
-    s = SeqFunc(Lambda(n, n**2), (0, 5))
-
-    assert isinstance(s, SeqFunc)
-    assert s.function == Lambda(n, n**2)
-    assert s.coeff(3) == 9
-
-    assert list(s) == [i**2 for i in range(6)]
-    assert s[:] == [i**2 for i in range(6)]
-    assert SeqFunc(Lambda(n, n**2), (0, 5, 2))[:] == [0, 4, 16]
-    assert SeqFunc(Lambda(n, n**2), (-oo, 0))[0:6] == [i**2 for i in range(6)]
+    raises(ValueError, lambda: SeqFormula(n**2, (0, 1, 2)))
+    raises(ValueError, lambda: SeqFormula(n**2, (n, -oo, oo)))
+    raises(ValueError, lambda: SeqFormula(m*n**2, (0, oo)))
 
 
 def test_sequence():
-    form = SeqFormula((n**2, n), (0, 5))
-    per = SeqPer((1, 2, 3), (0, 5))
-    func = SeqFunc(Lambda(n, n**2), (0, 5))
-    inter = SeqFormula((n**2, n))
+    form = SeqFormula(n**2, (n, 0, 5))
+    per = SeqPer((1, 2, 3), (n, 0, 5))
+    inter = SeqFormula(n**2)
 
-    assert sequence(formula=(n**2, n), interval=(0, 5)) == form
-    assert sequence(periodical=(1, 2, 3), interval=(0, 5)) == per
-    assert sequence(func=Lambda(n, n**2), interval=(0, 5)) == func
-    assert sequence(formula=(n**2, n)) == inter
+    assert sequence(n**2, (n, 0, 5)) == form
+    assert sequence((1, 2, 3), (n, 0, 5)) == per
+    assert sequence(n**2) == inter
 
 
 def test_SeqExprOp():
-    form = SeqFormula((n**2, n), (0, 10))
-    per = SeqPer((1, 2, 3), (5, 10))
-    func = SeqFunc(Lambda(m, m**2), (0, 10))
+    form = SeqFormula(n**2, (n, 0, 10))
+    per = SeqPer((1, 2, 3), (m, 5, 10))
 
-    s = SeqExprOp(form, per, func)
-    assert s.gen == ((n**2, n), (1, 2, 3), Lambda(m, m**2))
+    s = SeqExprOp(form, per)
+    assert s.gen == (n**2, (1, 2, 3))
     assert s.interval == Interval(5, 10)
     assert s.start == 5
     assert s.stop == 10
@@ -110,13 +94,12 @@ def test_SeqExprOp():
 
 
 def test_SeqAdd():
-    per = SeqPer((1, 2, 3))
+    per = SeqPer((1, 2, 3), (n, 0, oo))
     form = SeqFormula(n**2)
-    func = SeqFunc(Lambda(n, n**2))
 
-    per_bou = SeqPer((1, 2), (1, 5))
+    per_bou = SeqPer((1, 2), (n, 1, 5))
     form_bou = SeqFormula(n**2, (6, 10))
-    func_bou = SeqFunc(Lambda(n, n**2), (0, 5))
+    form_bou2 = SeqFormula(n**2, (1, 5))
 
     assert SeqAdd() == S.EmptySequence
     assert SeqAdd(S.EmptySequence) == S.EmptySequence
@@ -124,8 +107,8 @@ def test_SeqAdd():
     assert SeqAdd(per, S.EmptySequence) == per
     assert SeqAdd(per_bou, form_bou) == S.EmptySequence
 
-    s = SeqAdd(per_bou, func_bou, evaluate=False)
-    assert s.args == (func_bou, per_bou)
+    s = SeqAdd(per_bou, form_bou2, evaluate=False)
+    assert s.args == (form_bou2, per_bou)
     assert s[:] == [2, 6, 10, 18, 26]
     assert list(s) == [2, 6, 10, 18, 26]
 
@@ -133,32 +116,29 @@ def test_SeqAdd():
 
     s1 =  SeqAdd(per, per_bou)
     assert isinstance(s1, SeqPer)
-    assert s1 == SeqPer((2, 4, 4, 3, 3, 5), (1, 5))
-    s2 = SeqAdd(func, func_bou)
-    assert isinstance(s2, SeqFunc)
-    assert s2 == SeqFunc(Lambda(n, 2*n**2), (0, 5))
-    s3 = SeqAdd(form, form_bou)
-    assert isinstance(s3, SeqFormula)
-    assert s3 == SeqFormula(2*n**2, (6, 10))
+    assert s1 == SeqPer((2, 4, 4, 3, 3, 5), (n, 1, 5))
+    s2 = SeqAdd(form, form_bou)
+    assert isinstance(s2, SeqFormula)
+    assert s2 == SeqFormula(2*n**2, (6, 10))
 
     assert SeqAdd(form, form_bou, per) == \
         SeqAdd(per, SeqFormula(2*n**2, (6, 10)))
     assert SeqAdd(form, SeqAdd(form_bou, per)) == \
         SeqAdd(per, SeqFormula(2*n**2, (6, 10)))
-    assert SeqAdd(per, SeqAdd(form, func), evaluate=False) == \
-        SeqAdd(per, form, func)
+    assert SeqAdd(per, SeqAdd(form, form_bou), evaluate=False) == \
+        SeqAdd(per, SeqFormula(2*n**2, (6, 10)))
 
-    assert SeqAdd(SeqPer((1, 2)), SeqPer((1, 2))) == SeqPer((2, 4))
+    assert SeqAdd(SeqPer((1, 2), (n, 0, oo)), SeqPer((1, 2), (m, 0, oo))) == \
+                  SeqPer((2, 4), (n, 0, oo))
 
 
 def test_SeqMul():
-    per = SeqPer((1, 2, 3))
+    per = SeqPer((1, 2, 3), (n, 0, oo))
     form = SeqFormula(n**2)
-    func = SeqFunc(Lambda(n, n**2))
 
-    per_bou = SeqPer((1, 2), (1, 5))
-    form_bou = SeqFormula(n**2, (6, 10))
-    func_bou = SeqFunc(Lambda(n, n**2), (0, 5))
+    per_bou = SeqPer((1, 2), (n, 1, 5))
+    form_bou = SeqFormula(n**2, (n, 6, 10))
+    form_bou2 = SeqFormula(n**2, (1, 5))
 
     assert SeqMul() == S.EmptySequence
     assert SeqMul(S.EmptySequence) == S.EmptySequence
@@ -166,8 +146,8 @@ def test_SeqMul():
     assert SeqMul(per, S.EmptySequence) == S.EmptySequence
     assert SeqMul(per_bou, form_bou) == S.EmptySequence
 
-    s = SeqMul(per_bou, func_bou, evaluate=False)
-    assert s.args == (func_bou, per_bou)
+    s = SeqMul(per_bou, form_bou2, evaluate=False)
+    assert s.args == (form_bou2, per_bou)
     assert s[:] == [1, 8, 9, 32, 25]
     assert list(s) == [1, 8, 9, 32, 25]
 
@@ -175,95 +155,82 @@ def test_SeqMul():
 
     s1 =  SeqMul(per, per_bou)
     assert isinstance(s1, SeqPer)
-    assert s1 == SeqPer((1, 4, 3, 2, 2, 6), (1, 5))
-    s2 = SeqMul(func, func_bou)
-    assert isinstance(s2, SeqFunc)
-    assert s2 == SeqFunc(Lambda(n, n**4), (0, 5))
-    s3 = SeqMul(form, form_bou)
-    assert isinstance(s3, SeqFormula)
-    assert s3 == SeqFormula(n**4, (6, 10))
+    assert s1 == SeqPer((1, 4, 3, 2, 2, 6), (n, 1, 5))
+    s2 = SeqMul(form, form_bou)
+    assert isinstance(s2, SeqFormula)
+    assert s2 == SeqFormula(n**4, (6, 10))
 
     assert SeqMul(form, form_bou, per) == \
         SeqMul(per, SeqFormula(n**4, (6, 10)))
     assert SeqMul(form, SeqMul(form_bou, per)) == \
         SeqMul(per, SeqFormula(n**4, (6, 10)))
-    assert SeqMul(per, SeqMul(form, func), evaluate=False) == \
-        SeqMul(per, form, func)
+    assert SeqMul(per, SeqMul(form, form_bou2, \
+                              evaluate=False), evaluate=False) == \
+                                SeqMul(form, per, form_bou2, evaluate=False)
 
-    assert SeqMul(SeqPer((1, 2)), SeqPer((1, 2))) == SeqPer((1, 4))
+    assert SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqPer((1, 2), (n, 0, oo))) == \
+        SeqPer((1, 4), (n, 0, oo))
 
 
 def test_add():
-    per = SeqPer((1, 2))
+    per = SeqPer((1, 2), (n, 0, oo))
     form = SeqFormula(n**2)
-    func = SeqFunc(Lambda(n, n**2))
 
-    assert per + (SeqPer((2, 3))) == SeqPer((3, 5))
-    assert form + (SeqFormula(n**3)) == SeqFormula(n**2 + n**3)
-    assert func + (SeqFunc(Lambda(n, n**3))) == \
-                                        SeqFunc(Lambda(n, n**2 + n**3))
+    assert per + (SeqPer((2, 3))) == SeqPer((3, 5), (n, 0, oo))
+    assert form + SeqFormula(n**3) == SeqFormula(n**2 + n**3)
 
-    assert per + (form) == SeqAdd(per, form)
-    assert per + (form) + (func) == SeqAdd(per, form, func)
+    assert per + form == SeqAdd(per, form)
 
 
 def test_sub():
-    per = SeqPer((1, 2))
+    per = SeqPer((1, 2), (n, 0, oo))
     form = SeqFormula(n**2)
-    func = SeqFunc(Lambda(n, n**2))
 
-    assert per - (SeqPer((2, 3))) == SeqPer((-1, -1))
+    assert per - (SeqPer((2, 3))) == SeqPer((-1, -1), (n, 0, oo))
     assert form - (SeqFormula(n**3)) == SeqFormula(n**2 - n**3)
-    assert func - (SeqFunc(Lambda(n, n**3))) == \
-                                        SeqFunc(Lambda(n, n**2 - n**3))
 
-    assert per - (form) == SeqAdd(per, -form)
-    assert per - (form) - (func) == SeqAdd(per, -form, -func)
+    assert per - form == SeqAdd(per, -form)
 
 
 def test_mul__coeff_mul():
-    assert SeqPer((1, 2)).coeff_mul(2) == SeqPer((2, 4))
+    assert SeqPer((1, 2), (n, 0, oo)).coeff_mul(2) == SeqPer((2, 4), (n, 0, oo))
     assert SeqFormula(n**2).coeff_mul(2) == SeqFormula(2*n**2)
-    assert SeqFunc(Lambda(n, n**2)).coeff_mul(2) == SeqFunc(Lambda(n, 2*n**2))
     assert S.EmptySequence.coeff_mul(100) == S.EmptySequence
 
-    assert SeqPer((1, 2)) * (SeqPer((2, 3))) == SeqPer((2, 6))
-    assert SeqFormula(n**2) * (SeqFormula(n**3)) == SeqFormula(n**5)
-    assert SeqFunc(Lambda(n, n**2)) * (SeqFunc(Lambda(n, n**3))) == \
-                                        SeqFunc(Lambda(n, n**5))
+    assert SeqPer((1, 2), (n, 0, oo)) * (SeqPer((2, 3))) == \
+        SeqPer((2, 6), (n, 0, oo))
+    assert SeqFormula(n**2) * SeqFormula(n**3) == SeqFormula(n**5)
 
-    assert S.EmptySequence * (SeqFormula(n**2)) == S.EmptySequence
-    assert SeqFormula(n**2) * (S.EmptySequence) == S.EmptySequence
+    assert S.EmptySequence * SeqFormula(n**2) == S.EmptySequence
+    assert SeqFormula(n**2) * S.EmptySequence == S.EmptySequence
 
     assert SeqFormula(n**2) * 3 == Mul(SeqFormula(n**2), 3)
 
 
 def test_neg():
-    assert -SeqPer((1, -2)) == SeqPer((-1, 2))
+    assert -SeqPer((1, -2), (n, 0, oo)) == SeqPer((-1, 2), (n, 0, oo))
     assert -SeqFormula(n**2) == SeqFormula(-n**2)
-    assert -SeqFunc(Lambda(n, n**2)) == SeqFunc(Lambda(n, -n**2))
 
 
 def test_operations():
-    per = SeqPer((1, 2))
-    per2 = SeqPer((2, 4))
+    per = SeqPer((1, 2), (n, 0, oo))
+    per2 = SeqPer((2, 4), (n, 0, oo))
     form = SeqFormula(n**2)
-    func = SeqFunc(Lambda(n, n**2))
+    form2 = SeqFormula(n**3)
 
-    assert per + form + func == SeqAdd(per, form, func)
-    assert per + form - func == SeqAdd(per, form, -func)
+    assert per + form + form2 == SeqAdd(per, form, form2)
+    assert per + form - form2 == SeqAdd(per, form, -form2)
     assert per + form - S.EmptySequence == SeqAdd(per, form)
-    assert per + per2 + form == SeqAdd(SeqPer((3, 6)), form)
+    assert per + per2 + form == SeqAdd(SeqPer((3, 6), (n, 0, oo)), form)
     assert S.EmptySequence - per == -per
     assert form + form == SeqFormula(2*n**2)
 
-    assert per * form * func == SeqMul(per, form, func)
+    assert per * form * form2 == SeqMul(per, form, form2)
     assert form * form == SeqFormula(n**4)
     assert form * -form == SeqFormula(-n**4)
 
-    assert form * (per + func) == SeqMul(form, SeqAdd(per, func))
+    assert form * (per + form2) == SeqMul(form, SeqAdd(per, form2))
     assert form * (per + per) == SeqMul(form, per2)
 
-    assert form.coeff_mul(n) == SeqFormula(n**3)
-    assert per.coeff_mul(n) == SeqPer((n, 2*n))
-    assert func.coeff_mul(n) == SeqFunc(Lambda(n, n**3))
+    assert form.coeff_mul(m) == SeqFormula(m*n**2, (n, 0, oo))
+    assert per.coeff_mul(m) == SeqPer((m, 2*m), (n, 0, oo))

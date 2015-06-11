@@ -1503,7 +1503,6 @@ class LatexPrinter(Printer):
             printset = ('\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
                 s.coeff(stop - 1), s.coeff(stop))
         elif s.stop is S.Infinity or s.length > 4:
-            it = iter(s)
             printset = s[:4]
             printset.append('\ldots')
         else:
@@ -1514,7 +1513,6 @@ class LatexPrinter(Printer):
               + r"\right\]")
 
     _print_SeqPer = _print_SeqFormula
-    _print_SeqFunc = _print_SeqFormula
     _print_SeqAdd = _print_SeqFormula
     _print_SeqMul = _print_SeqFormula
 

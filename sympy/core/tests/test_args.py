@@ -3015,44 +3015,39 @@ def test_sympy__series__sequences__EmptySequence():
     assert _test_args(EmptySequence())
 
 
+@SKIP('Abstract Class')
 def test_sympy__series__sequences__SeqExpr():
-    from sympy.series.sequences import SeqExpr
-    assert _test_args(SeqExpr((1, 2, 3), (0, 10)))
+    pass
 
 
 def test_sympy__series__sequences__SeqPer():
     from sympy.series.sequences import SeqPer
-    assert _test_args(SeqPer((1, 2, 3), (0, 10, 2)))
+    assert _test_args(SeqPer((1, 2, 3), (0, 10)))
 
 
 def test_sympy__series__sequences__SeqFormula():
     from sympy.series.sequences import SeqFormula
-    assert _test_args(SeqFormula((x**2, x), (0, 10, 2)))
-
-
-def test_sympy__series__sequences__SeqFunc():
-    from sympy.series.sequences import SeqFunc
-    assert _test_args(SeqFunc(Lambda(x, x**2), (0, 10, 2)))
+    assert _test_args(SeqFormula(x**2, (0, 10)))
 
 
 def test_sympy__series__sequences__SeqExprOp():
     from sympy.series.sequences import SeqExprOp, sequence
-    s1 = sequence(periodical=(1, 2, 3))
-    s2 = sequence(func=Lambda(x, x**2))
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
     assert _test_args(SeqExprOp(s1, s2))
 
 
 def test_sympy__series__sequences__SeqAdd():
     from sympy.series.sequences import SeqAdd, sequence
-    s1 = sequence(periodical=(1, 2, 3))
-    s2 = sequence(func=Lambda(x, x**2))
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
     assert _test_args(SeqAdd(s1, s2))
 
 
 def test_sympy__series__sequences__SeqMul():
     from sympy.series.sequences import SeqMul, sequence
-    s1 = sequence(periodical=(1, 2, 3))
-    s2 = sequence(func=Lambda(x, x**2))
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
     assert _test_args(SeqMul(s1, s2))
 
 

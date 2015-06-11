@@ -2,8 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.expr import Expr
 from sympy.core.singleton import S, Singleton
-from sympy.core.symbol import Dummy
-from sympy.core.function import Lambda
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
@@ -12,8 +11,6 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
-from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.polys import lcm
 from sympy.sets.sets import Interval, Set, Intersection
 from sympy.utilities.iterables import flatten
@@ -42,12 +39,11 @@ class SeqBase(Expr):
 
     def _intersect_interval(self, other):
         """
-        returns the start, stop and step
+        returns the start, stop
         takes intersection over the two intervals
         """
         interval = Intersection(self.interval, other.interval)
-        step = Max(self.step, other.step)
-        return (interval, step)
+        return interval.inf, interval.sup
 
     @property
     def gen(self):
@@ -70,11 +66,6 @@ class SeqBase(Expr):
         raise NotImplementedError("(%s).stop" % self)
 
     @property
-    def step(self):
-        """Increase points by step"""
-        raise NotImplementedError("(%s).step" % self)
-
-    @property
     def length(self):
         """Length of the sequence"""
         raise NotImplementedError("(%s).length" % self)
@@ -95,7 +86,7 @@ class SeqBase(Expr):
 
         >>> from sympy import SeqFormula
         >>> from sympy.abc import n, m
-        >>> SeqFormula((m*n**2, n), (0, 5)).free_symbols
+        >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
         set([m])
         """
         fsyms = set().union(*[a.free_symbols for a in self.args])
@@ -117,7 +108,7 @@ class SeqBase(Expr):
                                   " when coeff calls it."
                                   % self.func)
 
-    def _ith_point(self, i, step=None):
+    def _ith_point(self, i):
         """
         Returns the i'th point of a sequence
         If start point is negative infinity, point is returned from the end.
@@ -127,41 +118,34 @@ class SeqBase(Expr):
         =========
 
         >>> from sympy import oo
-        >>> from sympy.series.sequences import SeqExpr
+        >>> from sympy.series.sequences import SeqPer
 
         bounded
 
-        >>> SeqExpr((1, 2, 3), (-10, 10))._ith_point(0)
+        >>> SeqPer((1, 2, 3), (-10, 10))._ith_point(0)
         -10
-        >>> SeqExpr((1, 2, 3), (-10, 10))._ith_point(5)
+        >>> SeqPer((1, 2, 3), (-10, 10))._ith_point(5)
         -5
-        >>> SeqExpr((1, 2, 3), (-10, 10, 2))._ith_point(5)
-        0
 
         End is at infinity
 
-        >>> SeqExpr((1, 2, 3), (0, oo))._ith_point(5)
+        >>> SeqPer((1, 2, 3), (0, oo))._ith_point(5)
         5
-        >>> SeqExpr((1, 2, 3), (0, oo, 2))._ith_point(5)
-        10
 
         Starts at negative infinity
 
-        >>> SeqExpr((1, 2, 3), (-oo, 0))._ith_point(5)
+        >>> SeqPer((1, 2, 3), (-oo, 0))._ith_point(5)
         -5
-        >>> SeqExpr((1, 2, 3), (-oo, 0, 2))._ith_point(5)
-        -10
         """
         if self.start is S.NegativeInfinity:
             initial = self.stop
         else:
             initial = self.start
 
-        if step is None:
-            if self.start is S.NegativeInfinity:
-                step = -self.step
-            else:
-                step = self.step
+        if self.start is S.NegativeInfinity:
+            step = -1
+        else:
+            step = 1
 
         return initial + i*step
 
@@ -203,7 +187,7 @@ class SeqBase(Expr):
         >>> from sympy.abc import n
 
         >>> SeqFormula(n**2).coeff_mul(2)
-        SeqFormula((2*n**2, n), ([0, oo), 1))
+        SeqFormula(2*n**2, (n, 0, oo))
 
         Notes
         =====
@@ -223,8 +207,8 @@ class SeqBase(Expr):
 
         >>> from sympy import S, oo, SeqFormula
         >>> from sympy.abc import n
-        >>> SeqFormula(n**2) + (SeqFormula(n**3))
-        SeqFormula((n**3 + n**2, n), ([0, oo), 1))
+        >>> SeqFormula(n**2) + SeqFormula(n**3)
+        SeqFormula(n**3 + n**2, (n, 0, oo))
         """
         return SeqAdd(self, other)
 
@@ -239,7 +223,7 @@ class SeqBase(Expr):
         >>> from sympy import S, oo, SeqFormula
         >>> from sympy.abc import n
         >>> SeqFormula(n**2) - (SeqFormula(n))
-        SeqFormula((n**2 - n, n), ([0, oo), 1))
+        SeqFormula(n**2 - n, (n, 0, oo))
         """
         return SeqAdd(self, -other)
 
@@ -253,7 +237,7 @@ class SeqBase(Expr):
         >>> from sympy import S, oo, SeqFormula
         >>> from sympy.abc import n
         >>> -SeqFormula(n**2)
-        SeqFormula((-n**2, n), ([0, oo), 1))
+        SeqFormula(-n**2, (n, 0, oo))
         """
         return self.coeff_mul(-1)
 
@@ -270,7 +254,7 @@ class SeqBase(Expr):
         >>> from sympy.abc import n
 
         >>> SeqFormula(n**2) * (SeqFormula(n))
-        SeqFormula((n**3, n), ([0, oo), 1))
+        SeqFormula(n**3, (n, 0, oo))
         """
         if isinstance(other, SeqBase):
             return SeqMul(self, other)
@@ -292,8 +276,8 @@ class SeqBase(Expr):
                 start = 0
             if stop is None:
                 stop = self.length
-            return [self.coeff(self._ith_point(i, index.step)) for i in
-                               range(start, stop)]
+            return [self.coeff(self._ith_point(i)) for i in
+                               range(start, stop, index.step or 1)]
 
 
 class EmptySequence(with_metaclass(Singleton, SeqBase)):
@@ -305,12 +289,13 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
     ========
 
     >>> from sympy import S, SeqPer, oo
+    >>> from sympy.abc import x
     >>> S.EmptySequence
     EmptySequence()
 
-    >>> SeqPer((1, 2)) + (S.EmptySequence)
-    SeqPer((1, 2), ([0, oo), 1))
-    >>> SeqPer((1, 2)) * (S.EmptySequence)
+    >>> SeqPer((1, 2), (x, 0, 10)) + S.EmptySequence
+    SeqPer((1, 2), (x, 0, 10))
+    >>> SeqPer((1, 2)) * S.EmptySequence
     EmptySequence()
     >>> S.EmptySequence.coeff_mul(-1)
     EmptySequence()
@@ -332,73 +317,16 @@ class EmptySequence(with_metaclass(Singleton, SeqBase)):
         return iter([])
 
 
-def _parse_interval(interval):
-    """
-    interval should be of the form (start, step) or (start, stop, step)
-    Both start and stop cannot be unbounded
-    step cannot be unbounded
-
-    Allowed:
-    * Any instance of set
-    * (Set, step)
-    * (start, stop)
-    * (start, stop, step)
-
-    returns an Interval object and a step value
-
-    Examples
-    ========
-
-    >>> from sympy.series.sequences import _parse_interval as pari
-    >>> from sympy import Interval
-    >>> pari(Interval(0, 5))
-    ([0, 5], 1)
-    >>> pari((Interval(0, 5), 2))
-    ([0, 5], 2)
-    >>> pari((0, 5))
-    ([0, 5], 1)
-    >>> pari((0, 5, 2))
-    ([0, 5], 2)
-    """
-    start, stop, step = None, None, None
-    if isinstance(interval, Set):
-        start, stop = interval.inf, interval.sup
-    elif is_sequence(interval, Tuple):
-        if len(interval) == 2:
-            if isinstance(interval[0], Set):
-                start, stop = interval[0].inf, interval[0].sup
-                step = interval[1]
-            else:
-                start, stop = interval
-        elif len(interval) == 3:
-            start, stop, step = interval
-
-    if step is None:
-        step = 1 # default
-
-    if start is None or stop is None:
-        raise ValueError('Invalid limits given: %s' % str(interval))
-
-    if start is S.NegativeInfinity and stop is S.Infinity:
-            raise ValueError("Both the start and end value"
-                             " cannot be unbounded")
-
-    if step in [S.NegativeInfinity, S.Infinity]:
-        raise ValueError("step cannot be unbounded")
-
-    return (Interval(start, stop), sympify(step))
-
-
 class SeqExpr(SeqBase):
     """Sequence expression class
-    Various sequences (SeqPer, SeqFormula, SeqFunc...) should inherit from
-    this class
+    Various sequences should inherit from this class
 
     Examples
     ========
 
     >>> from sympy.series.sequences import SeqExpr
-    >>> s = SeqExpr((1, 2, 3), (0, 10))
+    >>> from sympy.abc import x
+    >>> s = SeqExpr((1, 2, 3), (x, 0, 10))
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
@@ -406,33 +334,12 @@ class SeqExpr(SeqBase):
     >>> s.length
     11
 
-    changing the step size
-
-    >>> SeqExpr((1, 2, 3), (0, 10, 2)).length
-    6
-
     See Also
     ========
 
     sympy.series.sequences.SeqPer
     sympy.series.sequences.SeqFormula
-    sympy.series.sequences.SeqFunc
     """
-
-    def __new__(cls, gen, interval=(0, S.Infinity, 1)):
-        bounds, step = _parse_interval(interval)
-        if bounds is S.EmptySet:
-            return S.EmptySequence
-        gen = cls._validate(gen)
-        interval = Tuple(bounds, step)
-        return Expr.__new__(cls, gen, interval)
-
-    @staticmethod
-    def _validate(gen):
-        """Validates the generator
-        Should return unnchanged if no change required
-        """
-        return sympify(gen)
 
     @property
     def gen(self):
@@ -440,7 +347,7 @@ class SeqExpr(SeqBase):
 
     @property
     def interval(self):
-        return self.args[1][0]
+        return Interval(self.args[1][1], self.args[1][2])
 
     @property
     def start(self):
@@ -451,12 +358,12 @@ class SeqExpr(SeqBase):
         return self.interval.sup
 
     @property
-    def step(self):
-        return self.args[1][1]
+    def length(self):
+        return self.stop - self.start + 1
 
     @property
-    def length(self):
-        return ceiling((self.stop - self.start + 1) / self.step)
+    def variables(self):
+        return (self.args[1][0],)
 
 
 class SeqPer(SeqExpr):
@@ -489,11 +396,6 @@ class SeqPer(SeqExpr):
     >>> list(s)
     [1, 2, 3, 1, 2, 3]
 
-    changing step size
-
-    >>> SeqPer((1, 2, 3), (0, 5, 2))[:]
-    [1, 3, 2]
-
     sequence starts from negative infinity
 
     >>> SeqPer((1, 2, 3), (-oo, 0))[0:6]
@@ -503,28 +405,38 @@ class SeqPer(SeqExpr):
     ========
 
     sympy.series.sequences.SeqFormula
-    sympy.series.sequences.SeqFunc
     """
 
-    @staticmethod
-    def _validate(periodical):
-        """
-        Examples
-        ========
+    def __new__(cls, periodical, limits=None):
+        x, start, stop = None, None, None
+        if limits is None:
+            x, start, stop = Dummy('k'), 0, S.Infinity
+        if is_sequence(limits, Tuple):
+            if len(limits) == 3:
+                x, start, stop = limits
+            elif len(limits) == 2:
+                x = Dummy('k')
+                start, stop = limits
 
-        >>> from sympy.series.sequences import SeqPer as seq
-        >>> seq._validate((1, 2, 3))
-        (1, 2, 3)
-        >>> seq._validate([1, 2, 3])
-        (1, 2, 3)
-        >>> seq._validate([1, (2, 3)])
-        (1, 2, 3)
-        """
+        if not isinstance(x, Symbol) or start is None or stop is None:
+            raise ValueError('Invalid limits given: %s' % str(limits))
+
+        if start is S.NegativeInfinity and stop is S.Infinity:
+                raise ValueError("Both the start and end value"
+                                " cannot be unbounded")
+
+        limits = sympify((x, start, stop))
+
         if is_sequence(periodical, Tuple):
-            periodical = tuple(flatten(periodical))
-            return sympify(periodical)
-        raise ValueError("invalid period %s should be something "
-                         "like e.g (1, 2) " % periodical)
+            periodical = sympify(tuple(flatten(periodical)))
+        else:
+            raise ValueError("invalid period %s should be something "
+                            "like e.g (1, 2) " % periodical)
+
+        if Interval(limits[1], limits[2]) is S.EmptySet:
+            return S.EmptySequence
+
+        return Expr.__new__(cls, periodical, limits)
 
     @property
     def period(self):
@@ -554,7 +466,9 @@ class SeqPer(SeqExpr):
                 ele1 = per1[x % lper1]
                 ele2 = per2[x % lper2]
                 new_per.append(ele1 + ele2)
-            return SeqPer(new_per, self._intersect_interval(other))
+
+            start, stop = self._intersect_interval(other)
+            return SeqPer(new_per, (self.variables[0], start, stop))
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
@@ -570,13 +484,14 @@ class SeqPer(SeqExpr):
                 ele2 = per2[x % lper2]
                 new_per.append(ele1 * ele2)
 
-            return SeqPer(new_per, self._intersect_interval(other))
+            start, stop = self._intersect_interval(other)
+            return SeqPer(new_per, (self.variables[0], start, stop))
 
     def coeff_mul(self, coeff):
         """See docstring of SeqBase.coeff_mul"""
         coeff = sympify(coeff)
         per = [x * coeff for x in self.periodical]
-        return SeqPer(per, (self.interval, self.step))
+        return SeqPer(per, self.args[1])
 
 
 class SeqFormula(SeqExpr):
@@ -589,7 +504,7 @@ class SeqFormula(SeqExpr):
 
     >>> from sympy import SeqFormula, oo, Symbol
     >>> n = Symbol('n')
-    >>> s = SeqFormula((n**2, n), (0, 5))
+    >>> s = SeqFormula(n**2, (n, 0, 5))
     >>> s.formula
     n**2
 
@@ -608,11 +523,6 @@ class SeqFormula(SeqExpr):
     >>> list(s)
     [0, 1, 4, 9, 16, 25]
 
-    changing step size
-
-    >>> SeqFormula(n**2, (0, 5, 2))[:]
-    [0, 4, 16]
-
     sequence starts from negative infinity
 
     >>> SeqFormula(n**2, (-oo, 0))[0:6]
@@ -622,53 +532,50 @@ class SeqFormula(SeqExpr):
     ========
 
     sympy.series.sequences.SeqPer
-    sympy.series.sequences.SeqFunc
     """
 
-    @staticmethod
-    def _validate(formula):
-        """
-        Examples
-        ========
-
-        >>> from sympy.series.sequences import SeqFormula as seq
-        >>> from sympy.abc import n, m
-        >>> seq._validate((n**2, n))
-        (n**2, n)
-        >>> seq._validate(n**2)
-        (n**2, n)
-        >>> seq._validate((m*n**2, n))
-        (m*n**2, n)
-        >>> seq._validate(1)
-        (1, _k)
-        """
+    def __new__(cls, formula, limits=None):
         formula = sympify(formula)
-        if not is_sequence(formula, Tuple):
+
+        def _find_x(formula):
             free = formula.free_symbols
-            if len(free) == 0:
-                k = Dummy('k')
-                formula = Tuple(formula, k)
-            elif len(free) == 1:
-                formula = Tuple(formula, free.pop())
+            if len(formula.free_symbols) == 1:
+                return free.pop()
+            elif len(formula.free_symbols) == 0:
+                return Dummy('k')
             else:
                 raise ValueError(
                     " specify dummy variables for %s. If the formula contains"
                     " more than one free symbol, a dummy variable should be"
-                    " supplied explicitly e.g., SeqFormula((m*n**2, n), (0, 5))"
+                    " supplied explicitly e.g., SeqFormula(m*n**2, (n, 0, 5))"
                     % formula)
-        return formula
+
+        x, start, stop = None, None, None
+        if limits is None:
+            x, start, stop = _find_x(formula), 0, S.Infinity
+        if is_sequence(limits, Tuple):
+            if len(limits) == 3:
+                x, start, stop = limits
+            elif len(limits) == 2:
+                x = _find_x(formula)
+                start, stop = limits
+
+        if not isinstance(x, Symbol) or start is None or stop is None:
+            raise ValueError('Invalid limits given: %s' % str(limits))
+
+        if start is S.NegativeInfinity and stop is S.Infinity:
+                raise ValueError("Both the start and end value"
+                                " cannot be unbounded")
+        limits = sympify((x, start, stop))
+
+        if Interval(limits[1], limits[2]) is S.EmptySet:
+            return S.EmptySequence
+
+        return Expr.__new__(cls, formula, limits)
 
     @property
     def formula(self):
-        return self.gen[0]
-
-    @property
-    def variables(self):
-        """Bounded variables
-        In the case of SeqFormula
-        it will be a tuple with only one symbol
-        """
-        return (self.gen[1],)
+        return self.gen
 
     def _eval_coeff(self, pt):
         d = self.variables[0]
@@ -679,157 +586,55 @@ class SeqFormula(SeqExpr):
         if isinstance(other, SeqFormula):
             form1, v1 = self.formula, self.variables[0]
             form2, v2 = other.formula, other.variables[0]
-            formula = (form1 + form2.subs(v2, v1), v1)
-            return SeqFormula(formula, self._intersect_interval(other))
+            formula = form1 + form2.subs(v2, v1)
+            start, stop = self._intersect_interval(other)
+            return SeqFormula(formula, (v1, start, stop))
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
         if isinstance(other, SeqFormula):
             form1, v1 = self.formula, self.variables[0]
             form2, v2 = other.formula, other.variables[0]
-            formula = (form1 * form2.subs(v2, v1), v1)
-            return SeqFormula(formula, self._intersect_interval(other))
+            formula = form1 * form2.subs(v2, v1)
+            start, stop = self._intersect_interval(other)
+            return SeqFormula(formula, (v1, start, stop))
 
     def coeff_mul(self, coeff):
         """See docstring of SeqBase.coeff_mul"""
         coeff = sympify(coeff)
         formula = self.formula * coeff
-        return SeqFormula((formula, self.variables[0]),
-                          (self.interval, self.step))
+        return SeqFormula(formula, self.args[1])
 
 
-class SeqFunc(SeqExpr):
-    """Represents sequence based on a function
-
-    Elements are generated by calling a function.
-    Only single argument functions are allowed.
-    Only SymPy's :class:`Lambda` functions are permitted.
-
-    Examples
-    ========
-
-    >>> from sympy import SeqFunc, oo, Lambda, Symbol
-    >>> n = Symbol('n')
-    >>> s = SeqFunc(Lambda(n, n**2), (0, 5))
-    >>> s.function
-    Lambda(n, n**2)
-
-    For value at a particular point
-
-    >>> s.coeff(3)
-    9
-
-    supports slicing
-
-    >>> s[:]
-    [0, 1, 4, 9, 16, 25]
-
-    iterable
-
-    >>> list(s)
-    [0, 1, 4, 9, 16, 25]
-
-    changing step size
-
-    >>> SeqFunc(Lambda(n, n**2), (0, 5, 2))[:]
-    [0, 4, 16]
-
-    sequence starts from negative infinity
-
-    >>> SeqFunc(Lambda(n, n**2), (-oo, 0))[0:6]
-    [0, 1, 4, 9, 16, 25]
-
-    See Also
-    ========
-
-    sympy.series.sequences.SeqPer
-    sympy.series.sequences.SeqFormula
-    sympy.core.function.Lambda
-    """
-
-    @staticmethod
-    def _validate(function):
-        if len(function.variables) != 1:
-            raise ValueError("Only single argument functions are allowed")
-        return sympify(function)
-
-    @property
-    def function(self):
-        return self.gen
-
-    @property
-    def variables(self):
-        return self.gen.variables
-
-    def _eval_coeff(self, pt):
-        return self.function(pt)
-
-    def _add(self, other):
-        """See docstring of SeqBase._add"""
-        if isinstance(other, SeqFunc):
-            func1, v1 = self.function, self.variables[0]
-            func2, v2 = other.function, other.variables[0]
-            function = Lambda(v1, func1.expr + func2.expr.subs(v2, v1))
-            return SeqFunc(function, self._intersect_interval(other))
-
-    def _mul(self, other):
-        """See docstring of SeqBase._mul"""
-        if isinstance(other, SeqFunc):
-            func1, v1 = self.function, self.variables[0]
-            func2, v2 = other.function, other.variables[0]
-            function = Lambda(v1, func1.expr * func2.expr.subs(v2, v1))
-            return SeqFunc(function, self._intersect_interval(other))
-
-    def coeff_mul(self, coeff):
-        """See docstring of SeqBase.coeff_mul"""
-        coeff = sympify(coeff)
-        expr = self.function.expr * coeff
-        return SeqFunc(Lambda(self.variables[0], expr),
-                          (self.interval, self.step))
-
-
-def sequence(**kwargs):
+def sequence(seq, limits=None):
     """Returns appropriate sequence object.
+    If seq is a sympy sequence, returns SeqPer object
+    otherwise returns SeqFormula object
 
     Examples
     ========
 
-    >>> from sympy import sequence, SeqPer, SeqFunc, SeqFormula, Lambda
+    >>> from sympy import sequence, SeqPer, SeqFormula
     >>> from sympy.abc import n
 
-    >>> sequence(formula=(n**2, n), interval=(0, 5))
-    SeqFormula((n**2, n), ([0, 5], 1))
+    >>> sequence(n**2, (n, 0, 5))
+    SeqFormula(n**2, (n, 0, 5))
 
-    >>> sequence(periodical=(1, 2, 3), interval=(0, 5))
-    SeqPer((1, 2, 3), ([0, 5], 1))
-
-    >>> sequence(func=Lambda(n, n**2), interval=(0, 5))
-    SeqFunc(Lambda(n, n**2), ([0, 5], 1))
+    >>> sequence((1, 2, 3), (n, 0, 5))
+    SeqPer((1, 2, 3), (n, 0, 5))
 
     See Also
     ========
 
     sympy.series.sequences.SeqPer
     sympy.series.sequences.SeqFormula
-    sympy.series.sequences.SeqFunc
     """
-    interval = kwargs.pop('interval', None)
-    if interval is None:
-        interval = (0, S.Infinity, 1)
+    seq = sympify(seq)
 
-    key = kwargs.pop('periodical', None)
-    if key is not None:
-        return SeqPer(key, interval)
-
-    key = kwargs.pop('func', None)
-    if key is not None:
-        return SeqFunc(key, interval)
-
-    key = kwargs.pop('formula', None)
-    if key is not None:
-        return SeqFormula(key, interval)
-
-    raise ValueError('Invalid Arguments')
+    if is_sequence(seq, Tuple):
+        return SeqPer(seq, limits)
+    else:
+        return SeqFormula(seq, limits)
 
 
 ################################################################################
@@ -845,11 +650,11 @@ class SeqExprOp(SeqBase):
 
     >>> from sympy.series.sequences import SeqExprOp, sequence
     >>> from sympy.abc import n
-    >>> s1 = sequence(formula=(n**2, n), interval=(0, 10))
-    >>> s2 = sequence(periodical=(1, 2, 3), interval=(5, 10))
+    >>> s1 = sequence(n**2, (n, 0, 10))
+    >>> s2 = sequence((1, 2, 3), (n, 5, 10))
     >>> s = SeqExprOp(s1, s2)
     >>> s.gen
-    ((n**2, n), (1, 2, 3))
+    (n**2, (1, 2, 3))
     >>> s.interval
     [5, 10]
     >>> s.length
@@ -889,13 +694,8 @@ class SeqExprOp(SeqBase):
         return tuple(flatten([a.variables for a in self.args]))
 
     @property
-    def step(self):
-        """By default maximum step size is taken as the step size"""
-        return max(a.step for a in self.args)
-
-    @property
     def length(self):
-        return ceiling((self.stop - self.start + 1) / self.step)
+        return self.stop - self.start + 1
 
 
 class SeqAdd(Add, SeqExprOp):
@@ -913,14 +713,14 @@ class SeqAdd(Add, SeqExprOp):
 
     >>> from sympy import S, oo, SeqAdd, SeqPer, SeqFormula
     >>> from sympy.abc import n
-    >>> SeqAdd(SeqPer((1, 2)), S.EmptySequence)
-    SeqPer((1, 2), ([0, oo), 1))
-    >>> SeqAdd(SeqPer((1, 2), (0, 5)), SeqPer((1, 2), (6, 10)))
+    >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), S.EmptySequence)
+    SeqPer((1, 2), (n, 0, oo))
+    >>> SeqAdd(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
     EmptySequence()
-    >>> SeqAdd(SeqPer((1, 2)), SeqFormula(n**2))
-    SeqFormula((n**2, n), ([0, oo), 1)) + SeqPer((1, 2), ([0, oo), 1))
+    >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2, (n, 0, oo)))
+    SeqFormula(n**2, (n, 0, oo)) + SeqPer((1, 2), (n, 0, oo))
     >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2))
-    SeqFormula((n**3 + n**2, n), ([0, oo), 1))
+    SeqFormula(n**3 + n**2, (n, 0, oo))
 
     See Also
     ========
@@ -950,7 +750,7 @@ class SeqAdd(Add, SeqExprOp):
         args = [a for a in args if a is not S.EmptySequence]
 
         # Addition of no sequences is EmptySequence
-        if len(args) == 0:
+        if not args:
             return S.EmptySequence
 
         if Intersection(a.interval for a in args) is S.EmptySet:
@@ -974,6 +774,7 @@ class SeqAdd(Add, SeqExprOp):
 
         Notes
         =====
+
         adapted from ``Union.reduce``
 
         """
@@ -1022,14 +823,14 @@ class SeqMul(Mul, SeqExprOp):
 
     >>> from sympy import S, oo, SeqMul, SeqPer, SeqFormula
     >>> from sympy.abc import n
-    >>> SeqMul(SeqPer((1, 2)), S.EmptySequence)
+    >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), S.EmptySequence)
     EmptySequence()
-    >>> SeqMul(SeqPer((1, 2), (0, 5)), SeqPer((1, 2), (6, 10)))
+    >>> SeqMul(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
     EmptySequence()
-    >>> SeqMul(SeqPer((1, 2)), SeqFormula(n**2))
-    SeqPer((1, 2), ([0, oo), 1))*SeqFormula((n**2, n), ([0, oo), 1))
+    >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2))
+    SeqFormula(n**2, (n, 0, oo))*SeqPer((1, 2), (n, 0, oo))
     >>> SeqMul(SeqFormula(n**3), SeqFormula(n**2))
-    SeqFormula((n**5, n), ([0, oo), 1))
+    SeqFormula(n**5, (n, 0, oo))
 
     See Also
     ========
@@ -1057,7 +858,7 @@ class SeqMul(Mul, SeqExprOp):
         args = _flatten(args)
 
         # Multiplication of no sequences is EmptySequence
-        if len(args) == 0:
+        if not args:
             return S.EmptySequence
 
         if Intersection(a.interval for a in args) is S.EmptySet:
