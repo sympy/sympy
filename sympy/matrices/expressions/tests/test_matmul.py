@@ -125,3 +125,7 @@ def test_issue_9503():
     a = symbols('a')
     M = Matrix([[1, 2 + I], [3, 4]])
     assert transpose(MatMul(a, M)) == MatMul(transpose(a), transpose(M))
+
+    M1 = Matrix([[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]])
+    M2 = Matrix([[11, 21, 31, 41], [12, 22, 32, 42], [13, 23, 33, 43]])
+    assert transpose(MatMul(M1, M2)).doit() == MatMul(transpose(M2), transpose(M1)).doit()
