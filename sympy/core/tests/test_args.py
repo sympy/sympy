@@ -3112,6 +3112,11 @@ def test_sympy__series__sequences__SeqMul():
     assert _test_args(SeqMul(s1, s2))
 
 
+@SKIP('Abstract Class')
+def test_sympy__series__series_class__SeriesBase():
+    pass
+
+
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
