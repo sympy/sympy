@@ -719,7 +719,7 @@ class ComplexPlane(Set):
                 return ComplexPlane(new_r_interval*new_theta_interval,
                                     polar=True)
 
-        if other.is_Interval:
+        if other.is_subset(S.Reals):
             new_interval = []
 
             # self in rectangular form
