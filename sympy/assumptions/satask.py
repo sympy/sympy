@@ -5,7 +5,7 @@ from sympy.core import oo, Tuple
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
 from sympy.logic.boolalg import And
-from sympy.assumptions.ask_generated import known_facts_cnf
+from sympy.assumptions.ask_generated import get_known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
 
 
@@ -53,7 +53,7 @@ def get_relevant_facts(proposition, assumptions=(True,),
 
     if use_known_facts:
         for expr in exprs:
-            relevant_facts.add(known_facts_cnf.rcall(expr))
+            relevant_facts.add(get_known_facts_cnf().rcall(expr))
 
     for expr in exprs:
         for fact in fact_registry[expr.func]:
