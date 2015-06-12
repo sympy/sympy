@@ -11,6 +11,7 @@ from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 from sympy.core.compatibility import range
+from sympy.functions import transpose
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -1689,3 +1690,7 @@ def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) == False
+
+def test_issue_9503():
+    a = symbols('a')
+    assert transpose(a) == a

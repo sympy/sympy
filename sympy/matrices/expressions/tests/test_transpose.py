@@ -1,6 +1,7 @@
 from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
-from sympy.matrices import eye, Matrix
+
+from sympy.matrices import eye, Matrix, MatMul
 from sympy import symbols, S
 from sympy import refine, Q
 
@@ -38,3 +39,12 @@ def test_transpose():
 
 def test_refine():
     assert refine(C.T, Q.symmetric(C)) == C
+
+def test_issue_9053():
+    from sympy import I
+    a = symbols('a')
+    M = Matrix([[1, 2 + I], [3, 4 + I]])
+    MT = transpose(M)
+    q = Transpose(MatMul(a, M))
+    assert transpose(MatMul(a, M)) == MatMul(a, MT)
+    assert q.doit() == MatMul(a, MT)

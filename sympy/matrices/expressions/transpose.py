@@ -38,9 +38,9 @@ class Transpose(MatrixExpr):
             arg = arg.doit(**hints)
         try:
             result = arg._eval_transpose()
-            return result if result is not None else Transpose(arg)
+            return result if result is not None else arg
         except AttributeError:
-            return Transpose(arg)
+            return arg
 
     @property
     def arg(self):

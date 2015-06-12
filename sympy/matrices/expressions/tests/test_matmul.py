@@ -2,7 +2,7 @@ from sympy.core import I, symbols, Basic
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
-from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
+from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow, MatMul
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
@@ -119,13 +119,3 @@ def test_collapse_MatrixBase():
 
 def test_refine():
     assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
-
-def test_issue_9503():
-    from sympy import I
-    a = symbols('a')
-    M = Matrix([[1, 2 + I], [3, 4]])
-    assert transpose(MatMul(a, M)) == MatMul(transpose(a), transpose(M))
-
-    M1 = Matrix([[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]])
-    M2 = Matrix([[11, 21, 31, 41], [12, 22, 32, 42], [13, 23, 33, 43]])
-    assert transpose(MatMul(M1, M2)).doit() == MatMul(transpose(M2), transpose(M1)).doit()
