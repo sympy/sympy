@@ -181,6 +181,9 @@ def test_add():
 
     assert per + form == SeqAdd(per, form)
 
+    raises(TypeError, lambda: per + n)
+    raises(TypeError, lambda: n + per)
+
 
 def test_sub():
     per = SeqPer((1, 2), (n, 0, oo))
@@ -190,6 +193,9 @@ def test_sub():
     assert form - (SeqFormula(n**3)) == SeqFormula(n**2 - n**3)
 
     assert per - form == SeqAdd(per, -form)
+
+    raises(TypeError, lambda: per - n)
+    raises(TypeError, lambda: n - per)
 
 
 def test_mul__coeff_mul():
@@ -204,7 +210,8 @@ def test_mul__coeff_mul():
     assert S.EmptySequence * SeqFormula(n**2) == S.EmptySequence
     assert SeqFormula(n**2) * S.EmptySequence == S.EmptySequence
 
-    assert SeqFormula(n**2) * 3 == Mul(SeqFormula(n**2), 3)
+    raises(TypeError, lambda: sequence(n**2) * n)
+    raises(TypeError, lambda: n * sequence(n**2))
 
 
 def test_neg():

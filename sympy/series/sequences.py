@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core.expr import Expr
+from sympy.core.basic import Basic
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.add import Add
-from sympy.core.mul import Mul
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
+from sympy.core.decorators import call_highest_priority
 from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
@@ -21,8 +20,11 @@ from sympy.utilities.iterables import flatten
 ################################################################################
 
 
-class SeqBase(Expr):
+class SeqBase(Basic):
     """Base class for sequences"""
+
+    is_commutative = True
+    _op_priority = 15
 
     @staticmethod
     def _start_key(expr):
@@ -210,7 +212,13 @@ class SeqBase(Expr):
         >>> SeqFormula(n**2) + SeqFormula(n**3)
         SeqFormula(n**3 + n**2, (n, 0, oo))
         """
+        if not isinstance(other, SeqBase):
+            raise TypeError('cannot add sequence and %s' % type(other))
         return SeqAdd(self, other)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return self + other
 
     def __sub__(self, other):
         """
@@ -225,7 +233,13 @@ class SeqBase(Expr):
         >>> SeqFormula(n**2) - (SeqFormula(n))
         SeqFormula(n**2 - n, (n, 0, oo))
         """
+        if not isinstance(other, SeqBase):
+            raise TypeError('cannot subtract sequence and %s' % type(other))
         return SeqAdd(self, -other)
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return (-self) + other
 
     def __neg__(self):
         """
@@ -256,10 +270,13 @@ class SeqBase(Expr):
         >>> SeqFormula(n**2) * (SeqFormula(n))
         SeqFormula(n**3, (n, 0, oo))
         """
-        if isinstance(other, SeqBase):
-            return SeqMul(self, other)
-        else:
-            return Mul(self, other)
+        if not isinstance(other, SeqBase):
+            raise TypeError('cannot multiply sequence and %s' % type(other))
+        return SeqMul(self, other)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return self * other
 
     def __iter__(self):
         for i in range(self.length):
@@ -436,7 +453,7 @@ class SeqPer(SeqExpr):
         if Interval(limits[1], limits[2]) is S.EmptySet:
             return S.EmptySequence
 
-        return Expr.__new__(cls, periodical, limits)
+        return Basic.__new__(cls, periodical, limits)
 
     @property
     def period(self):
@@ -571,7 +588,7 @@ class SeqFormula(SeqExpr):
         if Interval(limits[1], limits[2]) is S.EmptySet:
             return S.EmptySequence
 
-        return Expr.__new__(cls, formula, limits)
+        return Basic.__new__(cls, formula, limits)
 
     @property
     def formula(self):
@@ -698,7 +715,7 @@ class SeqExprOp(SeqBase):
         return self.stop - self.start + 1
 
 
-class SeqAdd(Add, SeqExprOp):
+class SeqAdd(SeqExprOp):
     """
     Represents term-wise addition of sequences
 
@@ -718,7 +735,7 @@ class SeqAdd(Add, SeqExprOp):
     >>> SeqAdd(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
     EmptySequence()
     >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2, (n, 0, oo)))
-    SeqFormula(n**2, (n, 0, oo)) + SeqPer((1, 2), (n, 0, oo))
+    SeqAdd(SeqFormula(n**2, (n, 0, oo)), SeqPer((1, 2), (n, 0, oo)))
     >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2))
     SeqFormula(n**3 + n**2, (n, 0, oo))
 
@@ -762,7 +779,7 @@ class SeqAdd(Add, SeqExprOp):
 
         args = list(ordered(args, SeqBase._start_key))
 
-        return Expr.__new__(cls, *args)
+        return Basic.__new__(cls, *args)
 
     @staticmethod
     def reduce(args):
@@ -806,7 +823,7 @@ class SeqAdd(Add, SeqExprOp):
         return sum(a.coeff(pt) for a in self.args)
 
 
-class SeqMul(Mul, SeqExprOp):
+class SeqMul(SeqExprOp):
     """
     Represents term-wise multiplication of sequences.
     Handles multiplication of sequences only. For multiplication
@@ -828,7 +845,7 @@ class SeqMul(Mul, SeqExprOp):
     >>> SeqMul(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
     EmptySequence()
     >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2))
-    SeqFormula(n**2, (n, 0, oo))*SeqPer((1, 2), (n, 0, oo))
+    SeqMul(SeqFormula(n**2, (n, 0, oo)), SeqPer((1, 2), (n, 0, oo)))
     >>> SeqMul(SeqFormula(n**3), SeqFormula(n**2))
     SeqFormula(n**5, (n, 0, oo))
 
@@ -870,7 +887,7 @@ class SeqMul(Mul, SeqExprOp):
 
         args = list(ordered(args, SeqBase._start_key))
 
-        return Expr.__new__(cls, *args)
+        return Basic.__new__(cls, *args)
 
     @staticmethod
     def reduce(args):
