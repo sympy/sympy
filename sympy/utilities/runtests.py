@@ -509,7 +509,7 @@ def _test(*paths, **kwargs):
 
     if slow:
         # Seed to evenly shuffle slow tests among splits
-        random.seed(83478032)
+        random.seed(41992450)
         random.shuffle(matched)
 
     if split:
@@ -980,6 +980,8 @@ class SymPyTests(object):
         """
         if sort:
             self._testfiles.sort()
+        elif slow:
+            pass
         else:
             random.seed(self._seed)
             random.shuffle(self._testfiles)
