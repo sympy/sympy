@@ -447,8 +447,88 @@ class Range(Set):
         return self
 
 
+def normalize_theta_set(theta):
+    """
+    Normalize a Real Set theta in the Interval [0, 2*pi). It currently
+    supports Interval and FiniteSet. It Returns a the normalized value
+    of theta in the Set. For Interval, a maximum of one cycle [0, 2*pi],
+    is returned i.e. for theta equal to [0, 10*pi], returned normalized
+    value would be [0, 2*pi).
+
+    Examples
+    ========
+
+    >>> from sympy.sets.fancysets import normalize_theta_set
+    >>> from sympy import Interval, FiniteSet, pi
+    >>> normalize_theta_set(Interval(9*pi/2, 5*pi))
+    [pi/2, pi]
+    >>> normalize_theta_set(Interval(-3*pi/2, pi/2))
+    [0, 2*pi)
+    >>> normalize_theta_set(Interval(-pi/2, pi/2))
+    [0, pi/2] U [3*pi/2, 2*pi)
+    >>> normalize_theta_set(Interval(-4*pi, 3*pi))
+    [0, 2*pi)
+    >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
+    [pi/2, 3*pi/2]
+    >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
+    {0, pi}
+
+    """
+    from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
+    from sympy.functions.elementary.complexes import Abs
+
+    if theta.is_Interval:
+        if Abs(theta.args[0] - theta.args[1]) >= 2*S.Pi:
+            return Interval(0, 2*S.Pi, False, True)
+
+        new_theta = []
+        for val in [theta.args[0], theta.args[1]]:
+            k = coeff(val)
+            if (not k) and (k != S.Zero):
+                raise NotImplementedError('Normalizing theta without pi as'
+                                          'coefficient, is not Implemented.')
+            elif k == S.Zero:
+                if val == S.Zero:
+                    new_theta.append(S.Zero)
+                else:
+                    # when theta is n*pi
+                    new_theta.append(2*S.Pi)
+            else:
+                new_theta.append(k*S.Pi)
+        # one complete circle
+        if (new_theta[0] == new_theta[1]):
+            return Interval(0, 2*S.Pi, False, True)
+
+        # for negative theta
+        if new_theta[0] > new_theta[1]:
+            return Union(Interval(S(0), new_theta[1]),
+                         Interval(new_theta[0], 2*S.Pi, False, True))
+        else:
+            return Interval(*new_theta)
+
+    elif theta.is_FiniteSet:
+        new_theta = []
+        for element in theta:
+            k = coeff(element)
+            if (not k) and (k != S.Zero):
+                raise NotImplementedError('Normalizing theta without pi as'
+                                          'coefficient, is not Implemented.')
+            elif k == S.Zero:
+                if element == S.Zero:
+                    new_theta.append(S.Zero)
+            else:
+                new_theta.append(k*S.Pi)
+        return FiniteSet(*new_theta)
+
+    elif theta.is_subset(S.Reals):
+        raise NotImplementedError("Normalizing theta when, its %s is not"
+                                  "Implemented" % type(theta))
+    else:
+        raise ValueError(" %s does not a belongs to S.Reals" % (theta))
+
+
 class ComplexPlane(Set):
-    r"""
+    """
     Represents the Set of all Complex Numbers. It can represent a
     region of Complex Plane in both the standard forms Polar and
     Rectangular coordinates.
@@ -503,7 +583,7 @@ class ComplexPlane(Set):
     >>> c2 = ComplexPlane(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
     ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))),
-                 [0, 1] x [0, 2*pi])
+                 [0, 1] x [0, 2*pi))
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -542,6 +622,19 @@ class ComplexPlane(Set):
 
         # Polar Form
         elif polar is True:
+            new_sets = []
+            if not sets.is_ProductSet:
+                for k in sets.args:
+                    new_sets.append(k)
+            else:
+                new_sets.append(sets)
+
+            for k, v in enumerate(new_sets):
+                from sympy.sets import ProductSet
+                new_sets[k] = ProductSet(v.args[0],
+                                         normalize_theta_set(v.args[1]))
+            sets = Union(*new_sets)
+
             from sympy import cos, sin
             obj = ImageSet.__new__(cls, Lambda((r, theta),
                                    r*(cos(theta) + I*sin(theta))),
@@ -713,9 +806,12 @@ class ComplexPlane(Set):
                 r2, theta2 = other.a_interval, other.b_interval
                 new_r_interval = Intersection(r1, r2)
                 new_theta_interval = Intersection(theta1, theta2)
+
                 # 0 and 2*Pi means the same
-                if (2*S.Pi in theta1 and S(0) in theta2) or (2*S.Pi in theta2 and S(0) in theta1):
-                    new_theta_interval = Union(new_theta_interval, FiniteSet(0))
+                if ((2*S.Pi in theta1 and S(0) in theta2) or
+                   (2*S.Pi in theta2 and S(0) in theta1)):
+                    new_theta_interval = Union(new_theta_interval,
+                                               FiniteSet(0))
                 return ComplexPlane(new_r_interval*new_theta_interval,
                                     polar=True)
 

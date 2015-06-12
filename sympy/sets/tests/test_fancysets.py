@@ -1,5 +1,6 @@
 from sympy.core.compatibility import range
-from sympy.sets.fancysets import ImageSet, Range, ComplexPlane
+from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
+                                  ComplexPlane)
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet, Union
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, Abs, I)
