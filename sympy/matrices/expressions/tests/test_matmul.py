@@ -7,7 +7,6 @@ from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
 from sympy import refine, Q
-from sympy.utilities.pytest import XFAIL
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -100,7 +99,6 @@ def test_doit_deep_false_still_canonical():
             (2, C, Transpose(D*C)))
 
 
-@XFAIL
 def test_matmul_scalar_Matrix_doit():
     # Issue 9053
     X = Matrix([[1, 2], [3, 4]])
