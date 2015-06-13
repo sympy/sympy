@@ -26,7 +26,7 @@ def hadamard_product(*matrices):
         raise TypeError("Empty Hadamard product is undefined")
     validate(*matrices)
     if len(matrices) == 1:
-        return matrices[0]
+        return HadamardProduct(matrices[0])
     else:
         return HadamardProduct(*matrices).doit()
 
