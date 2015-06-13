@@ -352,3 +352,26 @@ def test_ComplexPlane_union():
 
     assert c5.union(c6) == ComplexPlane(p3)
     assert c7.union(c8) == ComplexPlane(p4)
+
+
+def test_normalize_theta_set():
+
+    # Interval
+    assert normalize_theta_set(Interval(9*pi/2, 5*pi)) == Interval(pi/2, pi)
+    assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == \
+        Interval(0, 2*pi, False, True)
+    assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+    assert normalize_theta_set(Interval(-4*pi, 3*pi)) == \
+        Interval(0, 2*pi, False, True)
+    assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == \
+        Interval(pi/2, 3*pi/2)
+
+    # FiniteSet
+    assert normalize_theta_set(FiniteSet(0, pi, 3*pi)) == FiniteSet(0, pi)
+    assert normalize_theta_set(FiniteSet(0, pi/2, pi, 2*pi)) == \
+        FiniteSet(0, pi/2, pi)
+    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == \
+        FiniteSet(0, pi, 3*pi/2)
+    assert normalize_theta_set(FiniteSet(-3*pi/2, pi/2)) == \
+        FiniteSet(pi/2)
