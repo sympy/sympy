@@ -617,8 +617,7 @@ class ComplexPlane(Set):
 
         # Rectangular Form
         if polar is False:
-            obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y),
-                                   sets)
+            obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
 
         # Polar Form
         elif polar is True:
@@ -847,3 +846,10 @@ class ComplexPlane(Set):
             elif self.polar and other.polar:
                 return ComplexPlane(Union(self.sets, other.sets), polar=True)
         return None
+
+
+class Complex(with_metaclass(Singleton, ComplexPlane)):
+
+    def __new__(cls):
+        from sympy import oo
+        return ComplexPlane.__new__(cls, Interval(-oo, oo)*Interval(-oo, oo))
