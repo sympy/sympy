@@ -188,7 +188,7 @@ def wedge(first_tensor, second_tensor):
 
     Examples
     ========
-    from sympy.tensor.arraypy import Arraypy, Tensor
+    from sympy.tensor.arraypy import Arraypy, TensorArray
     from sympy.tensor.tensor_methods import wedge
     >>> a = Arraypy((3,), 'A').to_tensor((-1))
     >>> b = Arraypy((3,), 'B').to_tensor((1,))

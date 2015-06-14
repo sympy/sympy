@@ -346,6 +346,7 @@ class Arraypy(object):
         return self / other
 
     __rmul__ = __mul__
+    __div__ = __truediv__
 
     def __eq__(self, other):
         """
@@ -1001,6 +1002,7 @@ class TensorArray(Arraypy):
         return TensorArray(self.base / other, self.ind_char)
 
     __rmul__ = __mul__
+    __div__ = __truediv__
 
     def __eq__(self, other):
         """
