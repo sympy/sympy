@@ -10,6 +10,8 @@ from math import sqrt as _sqrt
 from sympy.core.compatibility import reduce, range
 from sympy.core.cache import cacheit
 
+from sympy.polys.polytools import poly_from_expr
+from sympy.polys.polyerrors import PolificationFailed
 
 
 class CombinatorialFunction(Function):
@@ -403,6 +405,11 @@ class RisingFactorial(CombinatorialFunction):
        more information check "Concrete mathematics" by Graham, pp. 66
        or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
+       When x is a polynomial f of a single variable y of order >= 1,
+       rf(x,k) = f(y) * f(y+1) * ... * f(x+k-1) as described in
+       Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
+       Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
+
        Examples
        ========
 
@@ -417,6 +424,9 @@ class RisingFactorial(CombinatorialFunction):
 
        >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
        True
+
+       >>> rf(x**3, 2)
+       Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
 
        See Also
        ========
@@ -448,14 +458,30 @@ class RisingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                        else:
+                            v = opt.gens[0]
+                            return reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                        else:
+                            v = opt.gens[0]
+                            return 1/reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
@@ -481,6 +507,11 @@ class FallingFactorial(CombinatorialFunction):
        more information check "Concrete mathematics" by Graham, pp. 66
        or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
+       When x is a polynomial f of a single variable y of order >= 1,
+       ff(x,k) = f(y) * f(y-1) * ... * f(x-k+1) as described in
+       Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
+       Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
+
        >>> from sympy import ff
        >>> from sympy.abc import x
 
@@ -492,6 +523,10 @@ class FallingFactorial(CombinatorialFunction):
 
        >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
        True
+
+       >>> ff(x**2, 2)
+       Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
+
 
        See Also
        ========
@@ -521,14 +556,30 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                        else:
+                            v = opt.gens[0]
+                            return reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                        else:
+                            v = opt.gens[0]
+                            return 1/reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
