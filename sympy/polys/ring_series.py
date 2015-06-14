@@ -255,6 +255,13 @@ def _has_constant_term(p, x):
             return True
     return False
 
+def _check_series_var(p, iv, name):
+    ii = p.ring.gens.index(iv)
+    m = min(p, key=lambda k: k[ii])[ii]
+    if m < 0:
+        raise PoleError('Asymptotic expansion of %s around [oo] not implemented.' % name)
+    return ii, m
+
 def _series_inversion1(p, x, prec):
     """
     Univariate series inversion ``1/p`` modulo ``O(x**prec)``
@@ -1013,6 +1020,30 @@ def rs_tan(p, x, prec):
     else:
         return fun(p, _tan1, x, prec)
 
+def rs_cot(p, iv, prec):
+    """
+    Cotangent of a series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cot
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_cot(x, x, 6)
+    -2/945*x**5 - 1/45*x**3 - 1/3*x + x**-1
+    """
+    i, m = _check_series_var(p, iv, 'cot')
+    prec1 = prec + 2*m
+    c, s = rs_cos_sin(p, iv, prec1)
+    s = mul_xin(s, i, -1)
+    s = rs_series_inversion(s, iv, prec1)
+    res = rs_mul(c, s, iv, prec1)
+    res = mul_xin(res, i, -1)
+    res = rs_trunc(res, iv, prec)
+    return res
+
 def rs_sin(p, x, prec):
     """
     Sine of a series
@@ -1142,11 +1173,6 @@ def rs_cos_sin(p, iv, prec):
     t2 = rs_square(t, iv, prec)
     p1 = rs_series_inversion(1+t2, iv, prec)
     return (rs_mul(p1, 1 - t2, iv, prec), rs_mul(p1, 2*t, iv, prec))
-
-def check_series_var(p, iv):
-    ii = p.ring.gens.index(iv)
-    m = min(p, key=lambda k: k[ii])[ii]
-    return ii, m
 
 # TODO
 # Needs to be benchmarked before use in rs_atanh
