@@ -728,8 +728,6 @@ class Point3D(Point):
     Raises
     ======
 
-    NotImplementedError
-        When trying to create a point other than 2 or 3 dimensions.
     TypeError
         When trying to add or subtract points with different dimensions.
         When `intersection` is called with object other than a Point.
