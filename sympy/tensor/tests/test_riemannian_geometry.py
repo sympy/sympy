@@ -115,7 +115,7 @@ def test_christoffel_2_gtnsr():
     res_arr[2, 2, 1] = 0
     res_arr[2, 1, 2] = 0
     res_arr[2, 2, 2] = 0
-    res_ten = res_arr.to_tensor((1, -1, -1))
+    res_ten = res_arr.to_tensor((-1, -1, 1))
 
     print('test_christoffel_2_gtnsr_t  <=== actual test code')
     assert christoffel_2(g, var_list) == res_ten
@@ -145,7 +145,7 @@ def test_christoffel_2_gm():
     res_arr[1, 1, 0] = 0
     res_arr[1, 0, 1] = 0
     res_arr[1, 1, 1] = 0
-    res_ten = res_arr.to_tensor((1, -1, -1))
+    res_ten = res_arr.to_tensor((-1, -1, 1))
 
     print('test_christoffel_2_gm_t  <=== actual test code')
     assert christoffel_2(g, var_list) == res_ten
@@ -172,7 +172,7 @@ def test_covar_der():
     res_arr[0, 1] = x1 * x2**3 * sin(x2) * cos(x2) + 1
     res_arr[1, 0] = -x1 * x2**3 * sin(x2) / cos(x2) + 3 * x1 * x2**2
     res_arr[1, 1] = sin(x2)
-    res_ten = res_arr.to_tensor(( 1, -1))
+    res_ten = res_arr.to_tensor((-1, 1))
 
     print('test_covar_der_t  <=== actual test code')
     assert covar_der(X, g, var_list) == res_ten
@@ -243,7 +243,7 @@ def test_riemann_gtnsr():
     res_arr[2, 1, 2, 1] = -1
     res_arr[2, 2, 1, 2] = 0
     res_arr[2, 2, 2, 2] = 0
-    res_ten = res_arr.to_tensor((1, -1, -1, -1))
+    res_ten = res_arr.to_tensor((-1, -1, -1, 1))
 
     print('test_riemann_gtnsr_t  <=== actual test code')
     assert riemann(g, var_list) == res_ten
@@ -281,7 +281,7 @@ def test_riemann_gm():
     res_arr[0, 1, 0, 0] = 0
     res_arr[0, 1, 1, 0] = 1
     res_arr[1, 0, 0, 1] = cos(x2)**2
-    res_ten = res_arr.to_tensor((1, -1, -1, -1))
+    res_ten = res_arr.to_tensor((-1, -1, -1, 1))
 
     print('test_riemann_gm_t  <=== actual test code')
     assert riemann(g, var_list) == res_ten
@@ -318,7 +318,7 @@ def test_ricci_riemtnsr1():
     riemann_arr[2, 1, 2, 1] = -1
     riemann_arr[2, 2, 1, 2] = 0
     riemann_arr[2, 2, 2, 2] = 0
-    riemann_ten = riemann_arr.to_tensor((1, -1, -1, -1))
+    riemann_ten = riemann_arr.to_tensor((-1, -1, -1, 1))
 
     res_arr = Arraypy([2, 2, 1])
     res_arr[1, 1] = cos(x2)**2
@@ -362,7 +362,7 @@ def test_ricci_riemtnsr0():
     riemann_arr[0, 1, 0, 0] = 0
     riemann_arr[0, 1, 1, 0] = 1
     riemann_arr[1, 0, 0, 1] = cos(x2)**2
-    riemann_ten = riemann_arr.to_tensor((1, -1, -1, -1))
+    riemann_ten = riemann_arr.to_tensor((-1, -1, -1, 1))
 
     res_arr = Arraypy([2, 2, 0])
     res_arr[0, 0] = cos(x2)**2
@@ -416,15 +416,15 @@ def test_scal_curv():
     ricci_ten0[1, 0] = 0
     ricci_ten0[1, 1] = 1
 
-    assert scal_curv(g, ricci, var_list) == 1
-    assert scal_curv(g_ten, ricci, var_list) == 1
-    assert scal_curv(g, ricci_ten, var_list) == 1
-    assert scal_curv(g_ten, ricci_ten, var_list) == 1
-    assert scal_curv(g_ten0, ricci, var_list) == 1
-    assert scal_curv(g_ten0, ricci_ten, var_list) == 1
-    assert scal_curv(g, ricci_ten0, var_list) == 1
-    assert scal_curv(g_ten, ricci_ten0, var_list) == 1
-    assert scal_curv(g_ten0, ricci_ten0, var_list) == 1
+    assert scal_curv(g, ricci, var_list) == 2
+    assert scal_curv(g_ten, ricci, var_list) == 2
+    assert scal_curv(g, ricci_ten, var_list) == 2
+    assert scal_curv(g_ten, ricci_ten, var_list) == 2
+    assert scal_curv(g_ten0, ricci, var_list) == 2
+    assert scal_curv(g_ten0, ricci_ten, var_list) == 2
+    assert scal_curv(g, ricci_ten0, var_list) == 2
+    assert scal_curv(g_ten, ricci_ten0, var_list) == 2
+    assert scal_curv(g_ten0, ricci_ten0, var_list) == 2
 
 
 def test_k_sigma():
@@ -509,7 +509,7 @@ def test_nabla_x():
     var_list = [x1, x2]
 
     X = [x1 * x2**3, x1 - cos(x2)]
-    
+
     T = Arraypy([2, 2, 0]).to_tensor((-1, -1))
     T[0, 0] = x2
     T[0, 1] = -x2
@@ -527,9 +527,9 @@ def test_nabla_x():
     ch_2[0, 1, 0] = -sin(x2) * cos(x2)
 
     res_ten = Arraypy((2, 2)).to_tensor((-1, -1))
-    res_ten[0, 0] = x1 * x2**3 * (x1 * sin(x2) * cos(x2) + x2 * 
+    res_ten[0, 0] = x1 * x2**3 * (x1 * sin(x2) * cos(x2) + x2 *
                                   sin(x2) * cos(x2)) + 2 * x2 * (x1 - cos(x2)) * sin(x2) * cos(x2)
-    res_ten[0, 1] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) + 
+    res_ten[0, 1] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) +
                                   x2 * sin(x2) * cos(x2)) + (x1 - cos(x2)) * (-x2 * sin(x2) * cos(x2) - 1)
     res_ten[1, 0] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) + x2 * sin(x2) * cos(x2)) + (x1 - cos(x2)) * (-x1 * sin(x2) * cos(x2) - 1)
     res_ten[1, 1] = x1 * x2**3 * (-x1 * sin(x2) * cos(x2) - x2 * sin(x2) * cos(x2))
@@ -658,7 +658,7 @@ def test_kulkarni_nomizu():
     res_arr[0, 1, 1, 0] = -x1**2 - x2**2
     res_arr[1, 0, 0, 1] = -x1**2 - x2**2
     res_ten = res_arr.to_tensor((-1, -1, -1, -1))
-    
+
     print('test_kulkarni_nomizu_t  <=== actual test code')
     assert kulkarni_nomizu(h, k, var_list) == res_ten
     assert isinstance(kulkarni_nomizu(h, k, var_list), TensorArray)
