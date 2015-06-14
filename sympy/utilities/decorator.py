@@ -195,13 +195,13 @@ def public(obj):
     return obj
 
 
-def cached_property(cache):
-    """Create a property, where the lookup is stored in ``cache``"""
+def memoize_property(storage):
+    """Create a property, where the lookup is stored in ``storage``"""
     def decorator(method):
         name = method.__name__
         def wrapper(self):
-            if name not in cache:
-                cache[name] = method(self)
-            return cache[name]
+            if name not in storage:
+                storage[name] = method(self)
+            return storage[name]
         return property(update_wrapper(wrapper, method))
     return decorator

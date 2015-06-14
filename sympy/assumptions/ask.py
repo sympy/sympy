@@ -9,7 +9,7 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core.decorators import deprecated
-from sympy.utilities.decorator import cached_property
+from sympy.utilities.decorator import memoize_property
 
 
 # Deprecated predicates should be added to this list
@@ -19,7 +19,7 @@ deprecated_predicates = [
 ]
 
 # Memoization storage for predicates
-predicate_cache = {}
+predicate_storage = {}
 
 
 class QClass(object):
@@ -27,7 +27,7 @@ class QClass(object):
     This class contains all the supported keys by ``ask``.
     """
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def hermitian(self):
         """
         Hermitian predicate.
@@ -40,7 +40,7 @@ class QClass(object):
         """
         return Predicate('hermitian')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def antihermitian(self):
         """
         Antihermitian predicate.
@@ -54,7 +54,7 @@ class QClass(object):
         """
         return Predicate('antihermitian')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def real(self):
         r"""
         Real number predicate.
@@ -108,7 +108,7 @@ class QClass(object):
         """
         return Predicate('real')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def extended_real(self):
         r"""
         Extended real predicate.
@@ -132,7 +132,7 @@ class QClass(object):
         """
         return Predicate('extended_real')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def imaginary(self):
         """
         Imaginary number predicate.
@@ -160,7 +160,7 @@ class QClass(object):
         """
         return Predicate('imaginary')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def complex(self):
         """
         Complex number predicate.
@@ -188,7 +188,7 @@ class QClass(object):
         """
         return Predicate('complex')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def algebraic(self):
         """
         Algebraic number predicate.
@@ -214,7 +214,7 @@ class QClass(object):
         """
         return Predicate('algebraic')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def transcendental(self):
         """
         Transcedental number predicate.
@@ -228,7 +228,7 @@ class QClass(object):
         """
         return Predicate('transcendental')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def integer(self):
         """
         Integer predicate.
@@ -252,7 +252,7 @@ class QClass(object):
         """
         return Predicate('integer')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def rational(self):
         """
         Rational number predicate.
@@ -279,7 +279,7 @@ class QClass(object):
         """
         return Predicate('rational')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def irrational(self):
         """
         Irrational number predicate.
@@ -306,7 +306,7 @@ class QClass(object):
         """
         return Predicate('irrational')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def finite(self):
         """
         Finite predicate.
@@ -335,7 +335,7 @@ class QClass(object):
         """
         return Predicate('finite')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
     def bounded(self):
         """
@@ -343,7 +343,7 @@ class QClass(object):
         """
         return Predicate('finite')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def infinite(self):
         """
         Infinite number predicate.
@@ -354,7 +354,7 @@ class QClass(object):
         """
         return Predicate('infinite')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
     def infinity(self):
         """
@@ -362,14 +362,14 @@ class QClass(object):
         """
         return Predicate('infinite')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
         """
         return Predicate('infinitesimal')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def positive(self):
         r"""
         Positive real number predicate.
@@ -407,7 +407,7 @@ class QClass(object):
         """
         return Predicate('positive')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def negative(self):
         r"""
         Negative number predicate.
@@ -445,7 +445,7 @@ class QClass(object):
         """
         return Predicate('negative')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def zero(self):
         """
         Zero number predicate.
@@ -468,7 +468,7 @@ class QClass(object):
         """
         return Predicate('zero')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def nonzero(self):
         """
         Nonzero real number predicate.
@@ -506,7 +506,7 @@ class QClass(object):
         """
         return Predicate('nonzero')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def nonpositive(self):
         """
         Nonpositive real number predicate.
@@ -532,7 +532,7 @@ class QClass(object):
         """
         return Predicate('nonpositive')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def nonnegative(self):
         """
         Nonnegative real number predicate.
@@ -558,7 +558,7 @@ class QClass(object):
         """
         return Predicate('nonnegative')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def even(self):
         """
         Even number predicate.
@@ -581,7 +581,7 @@ class QClass(object):
         """
         return Predicate('even')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def odd(self):
         """
         Odd number predicate.
@@ -604,7 +604,7 @@ class QClass(object):
         """
         return Predicate('odd')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def prime(self):
         """
         Prime number predicate.
@@ -629,7 +629,7 @@ class QClass(object):
         """
         return Predicate('prime')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def composite(self):
         """
         Composite number predicate.
@@ -653,7 +653,7 @@ class QClass(object):
         """
         return Predicate('composite')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def commutative(self):
         """
         Commutative predicate.
@@ -666,7 +666,7 @@ class QClass(object):
         """
         return Predicate('commutative')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def is_true(self):
         """
         Generic predicate.
@@ -685,7 +685,7 @@ class QClass(object):
         """
         return Predicate('is_true')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def symmetric(self):
         """
         Symmetric matrix predicate.
@@ -715,7 +715,7 @@ class QClass(object):
         """
         return Predicate('symmetric')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def invertible(self):
         """
         Invertible matrix predicate.
@@ -744,7 +744,7 @@ class QClass(object):
         """
         return Predicate('invertible')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def orthogonal(self):
         """
         Orthogonal matrix predicate.
@@ -773,7 +773,7 @@ class QClass(object):
         """
         return Predicate('orthogonal')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def unitary(self):
         """
         Unitary matrix predicate.
@@ -804,7 +804,7 @@ class QClass(object):
         """
         return Predicate('unitary')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def positive_definite(self):
         """
         Positive definite matrix predicate.
@@ -836,7 +836,7 @@ class QClass(object):
         """
         return Predicate('positive_definite')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def upper_triangular(self):
         """
         Upper triangular matrix predicate.
@@ -861,7 +861,7 @@ class QClass(object):
         """
         return Predicate('upper_triangular')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def lower_triangular(self):
         """
         Lower triangular matrix predicate.
@@ -885,7 +885,7 @@ class QClass(object):
         """
         return Predicate('lower_triangular')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def diagonal(self):
         """
         Diagonal matrix predicate.
@@ -911,7 +911,7 @@ class QClass(object):
         """
         return Predicate('diagonal')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def fullrank(self):
         """
         Fullrank matrix predicate.
@@ -933,7 +933,7 @@ class QClass(object):
         """
         return Predicate('fullrank')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def square(self):
         """
         Square matrix predicate.
@@ -963,7 +963,7 @@ class QClass(object):
         """
         return Predicate('square')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def integer_elements(self):
         """
         Integer elements matrix predicate.
@@ -982,7 +982,7 @@ class QClass(object):
         """
         return Predicate('integer_elements')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def real_elements(self):
         """
         Real elements matrix predicate.
@@ -1001,7 +1001,7 @@ class QClass(object):
         """
         return Predicate('real_elements')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def complex_elements(self):
         """
         Complex elements matrix predicate.
@@ -1022,7 +1022,7 @@ class QClass(object):
         """
         return Predicate('complex_elements')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def singular(self):
         """
         Singular matrix predicate.
@@ -1047,7 +1047,7 @@ class QClass(object):
         """
         return Predicate('singular')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def normal(self):
         """
         Normal matrix predicate.
@@ -1070,7 +1070,7 @@ class QClass(object):
         """
         return Predicate('normal')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def triangular(self):
         """
         Triangular matrix predicate.
@@ -1095,7 +1095,7 @@ class QClass(object):
         """
         return Predicate('triangular')
 
-    @cached_property(predicate_cache)
+    @memoize_property(predicate_storage)
     def unit_triangular(self):
         """
         Unit triangular matrix predicate.
