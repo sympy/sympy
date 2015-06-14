@@ -782,6 +782,27 @@ class _IndexStructure(CantSympify):
 
     @staticmethod
     def from_indices(*indices):
+        """
+        Create a new ``_IndexStructure`` object from a list of ``indices``
+
+        ``indices``     ``TensorIndex`` objects, the indices. Contractions are
+                        detected upon construction.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, _IndexStructure
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+        >>> _IndexStructure.from_indices(m0, m1, -m1, m3)
+        _IndexStructure([(m0, 0), (m3, 3)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz])
+
+        In case of many components the same indices have slightly different
+        indexes:
+
+        >>> _IndexStructure.from_indices(m0, m1, -m1, m3)
+        _IndexStructure([(m0, 0), (m3, 3)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz])
+        """
         free, dum = _IndexStructure._free_dum_from_indices(*indices)
         index_types = [i._tensortype for i in indices]
         return _IndexStructure(free, dum, index_types)
@@ -1082,11 +1103,8 @@ class _IndexStructure(CantSympify):
         """
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
-    #         types = list(set(self._types))
-    #         types.sort(key = lambda x: x._name)
         n = self._ext_rank
         g = [None]*n + [n, n+1]
-        pos = 0
 
         # ordered indices: first the free indices, ordered by types
         # then the dummy indices, ordered by types and contravariant before
@@ -2573,7 +2591,6 @@ class TensorHead(Basic):
 
         obj._name = obj.args[0].name
         obj._rank = len(obj.index_types)
-        #obj._index_types = typ.types
         obj._symmetry = typ.symmetry
         obj._comm = comm2i
         return obj
