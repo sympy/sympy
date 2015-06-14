@@ -683,6 +683,9 @@ def test_line3d():
     assert Line3D.are_concurrent(l1) is False
     assert Line3D.are_concurrent(l1, l2)
     assert Line3D.are_concurrent(l1, l1_1, l3) is False
+    parallel_1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+    parallel_2 = Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))
+    assert Line3D.are_concurrent(parallel_1, parallel_2) == False
 
     # Finding angles
     l1_1 = Line3D(p1, Point3D(5, 0, 0))
@@ -796,6 +799,64 @@ def test_line3d():
         [Point3D(t, t, 0)]
     assert Line3D((0, 0, 0), (x, y, z)).contains((2*x, 2*y, 2*z))
 
+    # Test is_perpendicular
+    perp_1 = Line3D(p1, Point3D(0, 1, 0))
+    assert Line3D.is_perpendicular(parallel_1, perp_1) is True
+    assert Line3D.is_perpendicular(parallel_1, parallel_2) is False
+
+    # Test projection
+    assert parallel_1.projection(Point3D(5, 5, 0)) == Point3D(5, 0, 0)
+    assert parallel_1.projection(parallel_2) == [parallel_1]
+    raises(GeometryError, lambda: parallel_1.projection(Plane(p1, p2, p6)))
+
+    # Test __new__
+    assert Line3D(perp_1) == perp_1
+    raises(ValueError, lambda: Line3D(p1))
+
+    # Test contains
+    pt2d = Point(1.0, 1.0)
+    assert perp_1.contains(pt2d) is False
+
+    # Test equals
+    assert perp_1.equals(pt2d) is False
+    col1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+    col2 = Line3D(Point3D(-5, 0, 0), Point3D(-1, 0, 0))
+    assert col1.equals(col2) is True
+    assert col1.equals(perp_1) is False
+
+    # Begin ray
+    # Test __new__
+    assert Ray3D(col1) == Ray3D(p1, Point3D(1, 0, 0))
+    raises(ValueError, lambda: Ray3D(pt2d))
+
+    # Test zdirection
+    negz = Ray3D(p1, Point3D(0, 0, -1))
+    assert negz.zdirection == S.NegativeInfinity
+
+    # Test contains
+    assert negz.contains(Segment3D(p1, Point3D(0, 0, -10))) is True
+    assert negz.contains(Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))) is False
+    posy = Ray3D(p1, Point3D(0, 1, 0))
+    posz = Ray3D(p1, Point3D(0, 0, 1))
+    assert posy.contains(p1) is True
+    assert posz.contains(p1) is True
+    assert posz.contains(pt2d) is False
+    ray1 = Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0))
+    raises(TypeError, lambda: ray1.contains([]))
+
+    # Test equals
+    assert negz.equals(pt2d) is False
+    assert negz.equals(negz) is True
+
+    assert ray1.is_similar(Line3D(Point3D(1, 1, 1), Point3D(1, 0, 0))) is True
+    assert ray1.is_similar(perp_1) is False
+    raises(NotImplementedError, lambda: ray1.is_similar(ray1))
+
+    # Begin Segment
+    seg1 = Segment3D(p1, Point3D(1, 0, 0))
+    raises(TypeError, lambda: seg1.contains([]))
+    seg2= Segment3D(Point3D(2, 2, 2), Point3D(3, 2, 2))
+    assert seg1.contains(seg2) is False
 
 @slow
 def test_plane():
@@ -893,6 +954,7 @@ def test_plane():
     assert are_coplanar(Plane(p1, p2, p3), Plane(p1, p3, p2))
     assert Plane.are_concurrent(pl3, pl4, pl5) is False
     assert Plane.are_concurrent(pl6) is False
+    raises(ValueError, lambda: Plane.are_concurrent(Point3D(0, 0, 0)))
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))

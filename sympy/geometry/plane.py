@@ -441,11 +441,11 @@ class Plane(GeometryEntity):
 
         """
         planes = set(planes)
-        if len(planes) < 2:
-            return False
         for i in planes:
             if not isinstance(i, Plane):
                 raise ValueError('All objects should be Planes but got %s' % i.func)
+        if len(planes) < 2:
+            return False
         planes = list(planes)
         first = planes.pop(0)
         sol = first.intersection(planes[0])
