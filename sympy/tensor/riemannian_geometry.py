@@ -40,6 +40,7 @@ classes and methods are contained in the module Arraypy.
 
 def scal_prod(X, Y, g):
     """Returns scalar product of vectors g(X,Y).
+    g(X,Y)=sum_{i,j}([g[i,j]*X[i]*Y[j])
 
     Examples:
     =========
@@ -105,9 +106,11 @@ def scal_prod(X, Y, g):
 
 
 def christoffel_1(g, var, type_output='t'):
-    """Return the (-1,-1,-1) - tensor of Christoffel symbols for the given metric.
+    """Return the tensor type (-1,-1,-1) - array of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of first kind that represents the
     Levi-Civita connection for the given metric.
+    christoffel_1[i,j,k] =
+        =(diff(g[j,k],x[i])+diff(g[i,k],x[j])-diff(g[i,j],x[k]))/2.
 
     Examples:
     =========
@@ -204,9 +207,11 @@ def christoffel_1(g, var, type_output='t'):
 
 
 def christoffel_2(g, var, type_output='t'):
-    """Return the (1, -1, -1) - tensor of Christoffel symbols for the given metric.
+    """Return the tensor type (-1, -1, 1) - array of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
+    christoffel_2[i,j,k] =
+        =Sum_{l}(g^{-1}[k,l]/2*(diff(g[j, l],x[i])+diff(g[i,l],x[j])-diff(g[i,j],x[l]))/2
 
     Examples:
     =========
@@ -286,14 +291,14 @@ def christoffel_2(g, var, type_output='t'):
             for k in indices:
                 Ch[i,
                    j,
-                   k] = Add(*[g_inv[k - idx_start,
-                                    l - idx_start] * (diff(g[j,
-                                                             l],
-                                                           var[i - idx_start]) + diff(g[i,
-                                                                                        l],
-                                                                                      var[j - idx_start]) - diff(g[i,
-                                                                                                                   j],
-                                                                                                                 var[l - idx_start])) / 2 for l in indices])
+                   k] = sum([g_inv[k - idx_start,
+                                   l - idx_start] * (diff(g[j,
+                                                            l],
+                                                          var[i - idx_start]) + diff(g[i,
+                                                                                       l],
+                                                                                     var[j - idx_start]) - diff(g[i,
+                                                                                                                  j],
+                                                                                                                var[l - idx_start])) / 2 for l in indices])
 
     # Other variant calculation
     # christ_1 = christoffel_1(g, var)
@@ -309,7 +314,7 @@ def christoffel_2(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        christoffel_2 = Ch.to_tensor((1, -1, -1))
+        christoffel_2 = Ch.to_tensor((-1, -1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
         christoffel_2 = Ch
     else:
@@ -322,6 +327,7 @@ def christoffel_2(g, var, type_output='t'):
 
 def covar_der(X, g, var, type_output='t'):
     """Return the covariant derivative the vector field.
+    nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k])
 
     Examples:
     =========
@@ -421,7 +427,7 @@ def covar_der(X, g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        cov_der = cov.to_tensor((1, -1))
+        cov_der = cov.to_tensor((-1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
         cov_der = cov
     else:
@@ -556,8 +562,10 @@ def covar_der_xy(X, Y, g, var, type_output='t'):
 
 
 def riemann(g, var, type_output='t'):
-    """Return the Riemann curvature tensor of type (1, -1, -1, -1)
+    """Return the Riemann curvature tensor of type (-1, -1, -1, 1)
     for the given metric tensor.
+    Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) +
+    + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p]
 
     Examples:
     =========
@@ -661,7 +669,7 @@ def riemann(g, var, type_output='t'):
 
     # Handling of an output array
     if type_output == str('t') or type_output == Symbol('t'):
-        riemann = R.to_tensor((1, -1, -1, -1))
+        riemann = R.to_tensor((-1, -1, -1, 1))
     elif type_output == str('a') or type_output == Symbol('a'):
         riemann = R
     else:
@@ -675,6 +683,7 @@ def riemann(g, var, type_output='t'):
 def ricci(riemann, var, type_output='t'):
     """Return the tensor Ricci of type (-1, -1), is symmetric tensor
     for given Riemann curvature tensor.
+    Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
 
     Examples:
     =========
@@ -736,7 +745,7 @@ def ricci(riemann, var, type_output='t'):
             if isinstance(riemann, TensorArray):
                 if not riemann.type_pq == (1, 3):
                     raise ValueError(
-                        'The valence of Riemann curvature tensor must be (1, -1, -1, -1)')
+                        'The valence of Riemann curvature tensor must be (-1, -1, -1, 1)')
                 if not (
                     riemann.start_index.count(
                         riemann.start_index[0]) == 4):
@@ -778,6 +787,7 @@ def ricci(riemann, var, type_output='t'):
 def scal_curv(g, ricci, var):
     """The scalar curvature (or the Ricci scalar) is the simplest curvature
     invariant of a Riemannian manifold.
+    S=Ricci[j,k]*g_inv[j,k]
 
     Examples:
     =========
@@ -863,9 +873,8 @@ def scal_curv(g, ricci, var):
 
     # Calculation
     indices = range(n)
-    for i in indices:
-        for j in indices:
-            scal_curv = g_inv[i, j] * ricci[i, j]
+    scal_curv = sum([g_inv[i, j] * ricci[i, j] for i in indices
+                     for j in indices])
     # Output
     return scal_curv
 
@@ -905,7 +914,7 @@ def k_sigma(X, Y, R, g, var):
     >>> g[1,1] = 1
 
     R it's a Riemann curvature tensor must be symmetric matrix, arraypy or tensor
-    with valences indices (1, -1, -1, -1):
+    with valences indices (-1, -1, -1, 1):
 
     >>> R = riemann(g, var)
 
@@ -958,7 +967,7 @@ def k_sigma(X, Y, R, g, var):
             if isinstance(R, TensorArray):
                 if not R.type_pq == (1, 3):
                     raise ValueError(
-                        'The valence of Riemann curvature tensor must be (1, -1,- 1, -1)')
+                        'The valence of Riemann curvature tensor must be (-1, -1,- 1, 1)')
                 if not (R.start_index[0] == R.start_index[1]):
                     raise ValueError(
                         'The starting indices of Riemann curtivate tensor must be identical')
@@ -1033,9 +1042,9 @@ def nabla(T, ch_2, var):
     The covariant derivative of tensor field:
     >>> nabla_t = nabla(T, ch_2, var)
     >>> print(nabla_t)
-    -x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  0  
-    x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  x2*sin(x2)*cos(x2) - 1  
-    -x1*sin(x2)*cos(x2) - x2*sin(x2)*cos(x2)  -x1*sin(x2)*cos(x2) - 1  
+    -x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  0
+    x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  x2*sin(x2)*cos(x2) - 1
+    -x1*sin(x2)*cos(x2) - x2*sin(x2)*cos(x2)  -x1*sin(x2)*cos(x2) - 1
     -x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)  0
     """
     # Handling of a input argument - var
@@ -1161,9 +1170,9 @@ def nabla_x(T, ch_2, X, var):
     >>> nabla_xt = nabla_x(T, ch_2, X, var)
     >>> print(nabla_xt)
     x1*x2**3*(-x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2))  x1*x2**3*(x1*sin(x2)*cos(x2) + \
-    x2*sin(x2)*cos(x2)) + (x1 - cos(x2))*(x2*sin(x2)*cos(x2) - 1)  
+    x2*sin(x2)*cos(x2)) + (x1 - cos(x2))*(x2*sin(x2)*cos(x2) - 1)
     x1*x2**3*(-x1*sin(x2)*cos(x2) - x2*sin(x2)*cos(x2)) + \
-    (x1 - cos(x2))*(-x1*sin(x2)*cos(x2) - 1)  x1*x2**3*(-x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2)) 
+    (x1 - cos(x2))*(-x1*sin(x2)*cos(x2) - 1)  x1*x2**3*(-x1*sin(x2)*cos(x2) + x2*sin(x2)*cos(x2))
     """
     # Handling of a input argument - var
     check_vector_of_arguments(var)
@@ -1341,7 +1350,7 @@ def delta(T, g, ch_2, var):
 
 
 def riemann_li(C, g, var, type_output='t'):
-    """Return the Riemann curvature tensor of type (1, -1, -1, -1)
+    """Return the Riemann curvature tensor of type (-1, -1, -1, 1)
     for the given left-invariant metric tensor.
 
     Examples:
@@ -1504,7 +1513,7 @@ def k_sigma_li(R, g, var):
     >>> g[1,1] = 1
 
     C it's a structural constant must be tensor with valence indices (1,-1,-1):
-    
+
     >>> C = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
     >>> C[0,0,0] = 0
     >>> C[0,0,1] = sin(x2)
@@ -1516,14 +1525,14 @@ def k_sigma_li(R, g, var):
     >>> C[0,1,0] = -sin(x2)
 
     R it's a Riemann curvature tensor must be symmetric matrix, arraypy or tensor
-    with valences indices (1, -1, -1, -1):
-    
+    with valences indices (-1, -1, -1, 1):
+
     >>> R = riemann_li(C, g, var, 't')
 
     The sectional curvature:
     >>> k_sig_li = k_sigma_li(R, g, var)
     >>> print(k_sig_li)
-    Division by zero!
+    -0.5*x1*sin(x2)*cos(x2)/(-x1**2 + x1*x2)
     """
     # Handling of input vector arguments var
     check_vector_of_arguments(var)
@@ -1571,17 +1580,16 @@ def k_sigma_li(R, g, var):
             'The rank of the Riemann curvature tensor does not concide with the number of variables.')
 
     indices = range(n)
-    k_sig_li = Arraypy([2, n, idx_start])
-
-    # Calculation
     for i in indices:
         for j in indices:
-            for k in indices:
-                if (g[i, j] * g[j, j] - g[i, j]**2) == 0:
+            if j == i:
+                continue
+            else:
+                if (g[i, i] * g[j, j] - g[i, j]**2) == 0:
                     raise ValueError('Division by zero!')
                 else:
-                    k_sig_li = sum(
-                        (g[k, i] * R[k, i, j, j]) / (g[i, i] * g[j, j] - g[i, j]**2))
+                    k_sig_li = sum([(g[k, i] * R[i, j, j, k]) / (g[i, i] * g[j, j] - g[i, j]**2)
+                                    for k in indices])
 
     # Output
     return k_sig_li
@@ -1737,9 +1745,9 @@ def second_surf(surf, var, type_output='t'):
 
     # Calculation
     if (len(surf) == 1):
-        b[0, 0] = diff(diff(surf[0], var[0]), var[0])
+        b[0, 0] = diff(surf[0], var[0], 2)
         b[0, 1] = b[1, 0] = diff((diff(surf[0], var[0])), var[1])
-        b[1, 1] = diff((diff(surf[0], var[1])), var[1])
+        b[1, 1] = diff(surf[0], var[1], 2)
     elif (len(surf) == 3):
         # The first partial derivatives
         r_u = diff(surf[0], var[0]) * i + diff(surf[1], var[0]) * j +\
@@ -1826,7 +1834,7 @@ def k_surf(surf, var):
     """
     # Calculation
     if (len(surf) == 1):
-        K = diff(diff(surf[0], var[0]), var[0]) * diff(diff(surf[0], var[1]), var[1]) -\
+        K = diff(surf[0], var[0], 2) * diff(surf[0], var[1], 2) -\
             (diff(diff(surf[0], var[0]), var[1]))**2 / \
             (1 + diff(surf[0], var[0])**2 + diff(surf[0], var[1])**2)**2
     elif (len(surf) == 3):
@@ -1838,7 +1846,7 @@ def k_surf(surf, var):
         g[1, 1] = diff(surf[0], var[1])**2 + \
             diff(surf[1], var[1])**2 + diff(surf[2], var[1])**2
 
-        b = second_surf(surf3, var, 't')
+        b = second_surf(surf, var, 't')
 
         K = simplify(
             (b[0, 0] * b[1, 1] - b[0, 1]**2) / (g[0, 0] * g[1, 1] - g[0, 1]**2))
