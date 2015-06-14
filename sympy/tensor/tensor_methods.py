@@ -23,9 +23,9 @@ def symmetric(in_arr):
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = symmetric(a)
     >>> print (b)
-    0  2  4  
-    2  4  6  
-    4  6  8  
+    0  2  4
+    2  4  6
+    4  6  8
     """
     if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or TensorArray type')
@@ -76,9 +76,9 @@ def asymmetric(in_arr):
     >>> a = list2arraypy(list(range(9)), (3,3))
     >>> b = asymmetric(a)
     >>> print (b)
-    0  -1  -2  
-    1  0  -1  
-    2  1  0 
+    0  -1  -2
+    1  0  -1
+    2  1  0
     """
     if not isinstance(in_arr, Arraypy):
         raise TypeError('Input must be Arraypy or TensorArray type')
@@ -169,13 +169,13 @@ def tensor_product(first_tensor, second_tensor):
         Arraypy(arg),
         first_tensor.ind_char +
         second_tensor.ind_char)
-    
+
     # loop over current tensor
     for i in first_tensor.index_list:
         # loop over second_tensor tensor
         for j in second_tensor.index_list:
             res[i + j] = first_tensor[i] * second_tensor[j]
-            
+
     return res
 
 
@@ -188,6 +188,16 @@ def wedge(first_tensor, second_tensor):
 
     Examples
     ========
+    from sympy.tensor.arraypy import Arraypy, Tensor
+    from sympy.tensor.tensor_methods import wedge
+    >>> a = Arraypy((3,), 'A').to_tensor((-1))
+    >>> b = Arraypy((3,), 'B').to_tensor((1,))
+    >>> c = wedge(a, b)
+    >>> print(c)
+    0  10*A[0]*B[1] - 10*A[1]*B[0]  10*A[0]*B[2] - 10*A[2]*B[0]
+    -10*A[0]*B[1] + 10*A[1]*B[0]  0  10*A[1]*B[2] - 10*A[2]*B[1]
+    -10*A[0]*B[2] + 10*A[2]*B[0]  -10*A[1]*B[2] + 10*A[2]*B[1]  0
+
 
     """
     if not isinstance(first_tensor, TensorArray):
@@ -198,7 +208,7 @@ def wedge(first_tensor, second_tensor):
     p = len(first_tensor)
     s = len(second_tensor)
 
-    coeff = factorial(p + s) / factorial(p) * factorial(s)
+    coeff = factorial(p + s) / (factorial(p) * factorial(s))
     return coeff * asymmetric(tensor_product(first_tensor, second_tensor))
 
 
@@ -481,7 +491,7 @@ def perm_parity(lst):
 def is_symmetric(array):
     """Check if array or tensor is already symmetric."""
     for i in array.index_list:
-            array[i] = simplify(array[i])
+        array[i] = simplify(array[i])
     return array == symmetric(array)
 
 

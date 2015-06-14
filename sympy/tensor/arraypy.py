@@ -334,18 +334,18 @@ class Arraypy(object):
 
     # imethods. += -= *= /=
     def __iadd__(self, other):
-            return self + other
+        return self + other
+
     def __isub__(self, other):
-            return self - other
+        return self - other
+
     def __imul__(self, other):
-            return self * other
+        return self * other
+
     def __itruediv__(self, other):
         return self / other
 
-    __radd__ = __add__
     __rmul__ = __mul__
-    __rsub__ = __sub__
-    __rtruediv__ = __truediv__
 
     def __eq__(self, other):
         """
@@ -450,7 +450,7 @@ class Arraypy(object):
             if index[i] >= self._end_index[
                     i] or index[i] < self._start_index[i]:
                 raise ValueError('Value ' + str(i) + ' out of border')
-            
+
         # temporary fix. Arraypy sympify is not correct
         if not isinstance(value, Arraypy):
             value = sympify(value)
@@ -683,7 +683,7 @@ class Arraypy(object):
             idx2 = new_base._start_index
 
             for i in range(self.__len__()):
-                new_base[idx2] = self._output[idx1]
+                new_base[idx2] = self.[idx1]
                 idx2 = new_base.next_index(idx2)
                 idx1 = self.next_index(idx1)
 
@@ -985,6 +985,22 @@ class TensorArray(Arraypy):
         res_tensor = TensorArray(res_base, self._ind_char)
 
         return res_tensor
+
+    def __mul__(self, other):
+        """
+        Overloads *.
+        n-dimensional arrays can be multiplyed on atom types (int, float, Symbol)
+        """
+        return TensorArray(self.base * other, self.ind_char)
+
+    def __truediv__(self, other):
+        """
+        Overloads *.
+        n-dimensional arrays can be multiplyed on atom types (int, float, Symbol)
+        """
+        return TensorArray(self.base / other, self.ind_char)
+
+    __rmul__ = __mul__
 
     def __eq__(self, other):
         """
