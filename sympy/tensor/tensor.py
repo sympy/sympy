@@ -368,8 +368,6 @@ class TIDS(CantSympify):
         """
         index_up = lambda u: u if u.is_up else -u
 
-        # lambda returns True is index is not a matrix index:
-        notmat = lambda i: i not in (i._tensortype.auto_left, -i._tensortype.auto_right)
         f_free = f.free[:]
         g_free = g.free[:]
         nc1 = len(f.components)
@@ -2156,7 +2154,7 @@ class TensorSymmetry(Basic):
 
     Define a symmetric tensor
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
     >>> S2 = TensorType([Lorentz]*2, sym2)
@@ -2235,7 +2233,7 @@ def tensorsymmetry(*args):
 
     Symmetric tensor using a ``BSGS`` (base, strong generator set)
 
-    >>> from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
+    >>> from sympy.tensor.tensor import get_symmetric_group_sgs
     >>> sym2 = tensorsymmetry(*get_symmetric_group_sgs(2))
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
@@ -3006,7 +3004,6 @@ class TensAdd(TensExpr):
 
     Examples with components data added to the tensor expression:
 
-    >>> from sympy import eye
     >>> Lorentz.data = [1, -1, -1, -1]
     >>> a, b = tensor_indices('a, b', Lorentz)
     >>> p.data = [2, 3, -2, 7]
