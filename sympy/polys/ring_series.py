@@ -947,6 +947,49 @@ def rs_atan(p, x, prec):
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
 
+def rs_asin(p, iv, prec):
+    """
+    Arcsine of a series
+
+    Returns the series expansion of the asin of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_asin
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_asin(x, x, 8)
+    5/112*x**7 + 3/40*x**5 + 1/6*x**3 + x
+
+    See Also
+    ========
+
+    asin
+    """
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              series variables')
+    ring = p.ring
+    if iv in ring.gens:
+        # get a good value
+        if len(p) > 20:
+            dp = rs_diff(p, iv)
+            p1 = 1 - rs_square(p, iv, prec - 1)
+            p1 = rs_nth_root(p1, -2, iv, prec - 1)
+            p1 = rs_mul(dp, p1, iv, prec - 1)
+            return rs_integrate(p1, iv)
+        one = ring(1)
+        c = [0, one, 0]
+        for k in range(3, prec, 2):
+            c.append((k - 2)**2*c[-2]/(k*(k - 1)))
+            c.append(0)
+        return rs_series_from_list(p, c, iv, prec)
+
+    else:
+        raise NotImplementedError
+
 def _tan1(p, x, prec):
     """
     Helper function of ``rs_tan``
@@ -1024,6 +1067,8 @@ def rs_cot(p, iv, prec):
     """
     Cotangent of a series
 
+    Returns the series expansion of the cot of p, about 0.
+
     Examples
     ========
 
@@ -1033,6 +1078,11 @@ def rs_cot(p, iv, prec):
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_cot(x, x, 6)
     -2/945*x**5 - 1/45*x**3 - 1/3*x + x**-1
+
+    See Also
+    ========
+
+    cot
     """
     i, m = _check_series_var(p, iv, 'cot')
     prec1 = prec + 2*m
@@ -1234,6 +1284,40 @@ def rs_atanh(p, x, prec):
     p1 = rs_series_inversion(p1, x, prec - 1)
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
+
+def rs_asinh(p, iv, prec):
+    """
+    Hyperbolic arcsine of a series
+
+    Returns the series expansion of the asinh of p, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_asinh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_asinh(x, x, 8)
+    -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
+
+    See Also
+    ========
+
+    asinh
+    """
+    if _has_constant_term(p, iv):
+        raise NotImplementedError('Polynomial must not have constant term in \
+              series variables')
+    ring = p.ring
+    if iv in ring.gens:
+        dp = rs_diff(p, iv)
+        p1 = 1 + rs_square(p, iv, prec - 1)
+        p1 = rs_nth_root(p, -2, iv, prec - 1)
+        p1 = rs_mul(dp, p1, iv, prec - 1)
+        return rs_integrate(p1, iv)
+    else:
+        raise NotImplementedError
 
 def rs_sinh(p, iv, prec):
     """
