@@ -641,10 +641,9 @@ def lie_w(omega, X, args):
 
     >>> li = lie_w(omega,X,arg)
     >>> print(li)
-    0  x2**3*x3 + x3**3 + x3  -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)  
-    -x2**3*x3 - x3**3 - x3  0  -2*x1*x2**3 + 3*x1*x3**2 + x1  
+    0  x2**3*x3 + x3**3 + x3  -x2**4 - 3*x2*x3**2 - x2 + x3*sin(x3) + cos(x3)
+    -x2**3*x3 - x3**3 - x3  0  -2*x1*x2**3 + 3*x1*x3**2 + x1
     x2**4 + 3*x2*x3**2 + x2 - x3*sin(x3) - cos(x3)  2*x1*x2**3 - 3*x1*x3**2 - x1  0
-
     >>> li.type_pq
     (0, 2)
 
@@ -713,7 +712,7 @@ def lie_w(omega, X, args):
     return diff_Lie
 
 
-class Wedge_array():
+class WedgeArray():
 
     """This class contains the elements of the array that has the numbers \ in
     the index are in ascending order.
@@ -738,11 +737,59 @@ class Wedge_array():
         for key, value in self._output.items():
             return str(key) + ':' + str(value)
 
+    def to_tensor(self):
+        """Function takes the WedgeArray and creates a full skew-array.
+
+        Examples:
+        =========
+
+        >>> from sympy import symbols
+        >>> from sympy.tensor.arraypy import Arraypy, TensorArray
+        >>> from sympy.tensor.tensor_fields import tensor2wedgearray
+
+        >>> x1, x2, x3 = symbols('x1 x2 x3')
+        >>> y2 = TensorArray(Arraypy((3, 3)), (-1, -1))
+        >>> y2[0, 1] = x3
+        >>> y2[0, 2] = -x2
+        >>> y2[1, 0] = -x3
+        >>> y2[1, 2] = x1
+        >>> y2[2, 0] = x2
+        >>> y2[2, 1] = -x1
+        >>> A=tensor2wedgearray(y2)
+        >>> wdg=A.to_tensor()
+        >>> print(wdg)
+        0  x3  -x2
+        -x3  0  x1
+        x2  -x1  0
+
+        """
+        B = self._output
+        list_indices = sorted(B.keys())
+        # (min_index, max_index) - the range of indexes
+        max_index = max(max(list_indices))
+        # for the start index of arraypy
+        min_index = min(min(list_indices))
+        # shape output array
+        rank = len(list_indices[0])
+
+        # Creating the output array
+        arr = Arraypy([rank, max_index - min_index + 1, min_index])
+        valence_list = [(-1) for k in range(max_index - min_index)]
+        tensor = arr.to_tensor(valence_list)
+
+        for key, value in B.items():
+            tensor[key] = value
+            # multiply by the sign of the permutation
+            for p in permutations(list(key)):
+                tensor[p] = sign_permutations(list(p)) * value
+
+        return tensor
+
 
 def tensor2wedgearray(A):
     """Function takes a skew-symmetric array and will give array in
     which the indices are in ascending order. Return array of type
-    Wedge_array.
+    WedgeArray.
 
     Examples:
     =========
@@ -791,68 +838,12 @@ def tensor2wedgearray(A):
             lst_of_new_index.append(index)
 
     # creating class instance
-    wedge = Wedge_array()
+    wedge = WedgeArray()
 
     # wedge._output - it's a dictionary Wedge_array
     for index in lst_of_new_index:
         wedge._output[index] = A[index]
     return wedge
-
-
-def wedgearray2tensor(B):
-    """Function takes the Wedge_array(or dictionary) and creates a full skew
-    array.
-
-    Examples:
-    =========
-
-    >>> from sympy import symbols
-    >>> from sympy.tensor.arraypy import Arraypy, TensorArray
-    >>> from sympy.tensor.tensor_fields import tensor2wedgearray, \
-    wedgearray2tensor
-
-    >>> x1, x2, x3 = symbols('x1 x2 x3')
-    >>> y2 = TensorArray(Arraypy((3, 3)), (-1, -1))
-    >>> y2[0, 1] = x3
-    >>> y2[0, 2] = -x2
-    >>> y2[1, 0] = -x3
-    >>> y2[1, 2] = x1
-    >>> y2[2, 0] = x2
-    >>> y2[2, 1] = -x1
-    >>> A=tensor2wedgearray(y2)
-    >>> wdg=wedgearray2tensor(A)
-    >>> print(wdg)
-    0  x3  -x2
-    -x3  0  x1
-    x2  -x1  0
-
-    """
-
-    if isinstance(B, Wedge_array):
-        B = B._output
-    else:
-        raise TypeError('Input tensor must be of Wedge_array or dict type')
-
-    list_indices = sorted(B.keys())
-    # (min_index, max_index) - the range of indexes
-    max_index = max(max(list_indices))
-    # for the start index of arraypy
-    min_index = min(min(list_indices))
-    # shape output array
-    rank = len(list_indices[0])
-
-    # Creating the output array
-    arr = Arraypy([rank, max_index - min_index + 1, min_index])
-    valence_list = [(-1) for k in range(max_index - min_index)]
-    tensor = arr.to_tensor(valence_list)
-
-    for key, value in B.items():
-        tensor[key] = value
-        # multiply by the sign of the permutation
-        for p in permutations(list(key)):
-            tensor[p] = sign_permutations(list(p)) * value
-
-    return tensor
 
 
 def inner_product(w, X):
