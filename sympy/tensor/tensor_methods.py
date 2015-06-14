@@ -183,14 +183,13 @@ def wedge(first_tensor, second_tensor):
     """
     Finds outer product (wedge) of two tensor arguments.
     The algoritm is too find the asymmetric form of tensor product of
-    two arguments. The resulted array is multiplied on coefficient which is
-    coeff = factorial(p+s)/factorial(p)*factorial(s)
+    two arguments. The resulted array is multiplied on coefficient.
 
     Examples
     ========
     from sympy.tensor.arraypy import Arraypy, TensorArray
     from sympy.tensor.tensor_methods import wedge
-    >>> a = Arraypy((3,), 'A').to_tensor((-1))
+    >>> a = Arraypy((3,), 'A').to_tensor((-1,))
     >>> b = Arraypy((3,), 'B').to_tensor((1,))
     >>> c = wedge(a, b)
     >>> print(c)
