@@ -4,7 +4,7 @@ import warnings
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicType
+from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
@@ -42,7 +42,7 @@ def check(a, exclude=[], check_attr=True):
             continue
 
         if callable(protocol):
-            if isinstance(a, BasicType):
+            if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
                 return
             b = protocol(a)
@@ -78,7 +78,7 @@ def test_core_basic():
     for c in (Atom, Atom(),
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
-              # BasicType, BasicType("test", (), {}),
+              # BasicMeta, BasicMeta("test", (), {}),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 

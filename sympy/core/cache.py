@@ -12,8 +12,8 @@ class _cache(list):
         for item in self:
             name = item.__name__
             myfunc = item
-            while hasattr(myfunc,'__wrapped__'):
-                if hasattr(myfunc,'cache_info'):
+            while hasattr(myfunc, '__wrapped__'):
+                if hasattr(myfunc, 'cache_info'):
                     info = myfunc.cache_info()
                     break
                 else:
@@ -21,14 +21,14 @@ class _cache(list):
             else:
                 info = None
 
-            print(name,info)
+            print(name, info)
 
     def clear_cache(self):
         """clear cache content"""
         for item in self:
             myfunc = item
-            while hasattr(myfunc,'__wrapped__'):
-                if hasattr(myfunc,'cache_clear'):
+            while hasattr(myfunc, '__wrapped__'):
+                if hasattr(myfunc, 'cache_clear'):
                     myfunc.cache_clear()
                     break
                 else:
@@ -73,12 +73,12 @@ except ImportError:
 
            >>> from sympy.core.cache import cacheit
            >>> @cacheit
-           ... def f(a,b):
+           ... def f(a, b):
            ...    return a+b
 
            >>> @cacheit
-           ... def f(a,b):
-           ...    return [a,b] # <-- WRONG, returns mutable object
+           ... def f(a, b):
+           ...    return [a, b] # <-- WRONG, returns mutable object
 
            to force cacheit to check returned results mutability and consistency,
            set environment variable SYMPY_USE_CACHE to 'debug'
@@ -116,12 +116,12 @@ else:
 
            >>> from sympy.core.cache import cacheit
            >>> @cacheit
-           ... def f(a,b):
+           ... def f(a, b):
            ...    return a+b
 
            >>> @cacheit
-           ... def f(a,b):
-           ...    return [a,b] # <-- WRONG, returns mutable object
+           ... def f(a, b):
+           ...    return [a, b] # <-- WRONG, returns mutable object
 
            to force cacheit to check returned results mutability and consistency,
            set environment variable SYMPY_USE_CACHE to 'debug'
@@ -182,7 +182,7 @@ USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
 # special cases :
 #  SYMPY_CACHE_SIZE=0    -> No caching
 #  SYMPY_CACHE_SIZE=None -> Unbounded caching
-scs = _getenv('SYMPY_CACHE_SIZE','1000')
+scs = _getenv('SYMPY_CACHE_SIZE', '1000')
 if scs.lower() == 'none':
     SYMPY_CACHE_SIZE = None
 else:

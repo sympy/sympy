@@ -1086,8 +1086,12 @@ def centers_of_faces(array):
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
     np = import_module('numpy')
-    vector_a = x - y
-    vector_b = z - y
+    # Workaround plotting piecewise (#8577):
+    #   workaround for `lambdify` in `.experimental_lambdify` fails
+    #   to return numerical values in some cases. Lower-level fix
+    #   in `lambdify` is possible.
+    vector_a = (x - y).astype(np.float)
+    vector_b = (z - y).astype(np.float)
     dot_product = np.dot(vector_a, vector_b)
     vector_a_norm = np.linalg.norm(vector_a)
     vector_b_norm = np.linalg.norm(vector_b)

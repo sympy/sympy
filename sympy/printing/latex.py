@@ -1497,6 +1497,25 @@ class LatexPrinter(Printer):
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
 
+    def _print_SeqFormula(self, s):
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = ('\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
+                s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append('\ldots')
+        else:
+            printset = tuple(s)
+
+        return (r"\left\["
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\]")
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left\{%s\right\}" % self._print(i.start)
@@ -1810,6 +1829,15 @@ class LatexPrinter(Printer):
             return r"\sigma^{%s}%s" % (self._print(exp), tex)
         return r"\sigma%s" % tex
 
+    def _print_udivisor_sigma(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_%s\left(%s\right)" % tuple(map(self._print,
+                                                (expr.args[1], expr.args[0])))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
+        return r"\sigma^*%s" % tex
 
 def translate(s):
     r'''

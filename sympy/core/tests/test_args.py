@@ -9,7 +9,7 @@ import re
 import warnings
 import io
 
-from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
+from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -85,11 +85,51 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
 
-
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
+def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
+    from sympy.assumptions.sathandlers import UnevaluatedOnFree
+    from sympy import Q
+    assert _test_args(UnevaluatedOnFree(Q.positive))
+    assert _test_args(UnevaluatedOnFree(Q.positive(x)))
+    assert _test_args(UnevaluatedOnFree(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__AllArgs():
+    from sympy.assumptions.sathandlers import AllArgs
+    from sympy import Q
+    assert _test_args(AllArgs(Q.positive))
+    assert _test_args(AllArgs(Q.positive(x)))
+    assert _test_args(AllArgs(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__AnyArgs():
+    from sympy.assumptions.sathandlers import AnyArgs
+    from sympy import Q
+    assert _test_args(AnyArgs(Q.positive))
+    assert _test_args(AnyArgs(Q.positive(x)))
+    assert _test_args(AnyArgs(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__ExactlyOneArg():
+    from sympy.assumptions.sathandlers import ExactlyOneArg
+    from sympy import Q
+    assert _test_args(ExactlyOneArg(Q.positive))
+    assert _test_args(ExactlyOneArg(Q.positive(x)))
+    assert _test_args(ExactlyOneArg(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__CheckOldAssump():
+    from sympy.assumptions.sathandlers import CheckOldAssump
+    from sympy import Q
+    assert _test_args(CheckOldAssump(Q.positive))
+    assert _test_args(CheckOldAssump(Q.positive(x)))
+    assert _test_args(CheckOldAssump(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__CheckIsPrime():
+    from sympy.assumptions.sathandlers import CheckIsPrime
+    from sympy import Q
+    # Input must be a number
+    assert _test_args(CheckIsPrime(Q.positive))
+    assert _test_args(CheckIsPrime(Q.positive(5)))
 
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
@@ -240,7 +280,6 @@ def test_sympy__core__function__Function():
 
 
 def test_sympy__core__function__Lambda():
-    from sympy.core.function import Lambda
     assert _test_args(Lambda((x, y), x + y + z))
 
 
@@ -498,7 +537,7 @@ def test_sympy__sets__fancysets__Reals():
 
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet
-    from sympy import S, Lambda, Symbol
+    from sympy import S, Symbol
     x = Symbol('x')
     assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
@@ -1159,6 +1198,11 @@ def test_sympy__functions__elementary__integers__ceiling():
 def test_sympy__functions__elementary__integers__floor():
     from sympy.functions.elementary.integers import floor
     assert _test_args(floor(x))
+
+
+def test_sympy__functions__elementary__integers__frac():
+    from sympy.functions.elementary.integers import frac
+    assert _test_args(frac(x))
 
 
 def test_sympy__functions__elementary__miscellaneous__IdentityFunction():
@@ -2065,7 +2109,7 @@ def test_sympy__matrices__expressions__determinant__Determinant():
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
-    from sympy import Lambda, symbols
+    from sympy import symbols
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
@@ -3006,6 +3050,52 @@ def test_sympy__series__order__Order():
     assert _test_args(Order(1, x, y))
 
 
+@SKIP('Abstract Class')
+def test_sympy__series__sequences__SeqBase():
+    pass
+
+
+def test_sympy__series__sequences__EmptySequence():
+    from sympy.series.sequences import EmptySequence
+    assert _test_args(EmptySequence())
+
+
+@SKIP('Abstract Class')
+def test_sympy__series__sequences__SeqExpr():
+    pass
+
+
+def test_sympy__series__sequences__SeqPer():
+    from sympy.series.sequences import SeqPer
+    assert _test_args(SeqPer((1, 2, 3), (0, 10)))
+
+
+def test_sympy__series__sequences__SeqFormula():
+    from sympy.series.sequences import SeqFormula
+    assert _test_args(SeqFormula(x**2, (0, 10)))
+
+
+def test_sympy__series__sequences__SeqExprOp():
+    from sympy.series.sequences import SeqExprOp, sequence
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
+    assert _test_args(SeqExprOp(s1, s2))
+
+
+def test_sympy__series__sequences__SeqAdd():
+    from sympy.series.sequences import SeqAdd, sequence
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
+    assert _test_args(SeqAdd(s1, s2))
+
+
+def test_sympy__series__sequences__SeqMul():
+    from sympy.series.sequences import SeqMul, sequence
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
+    assert _test_args(SeqMul(s1, s2))
+
+
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
@@ -3372,6 +3462,14 @@ def test_sympy__ntheory__factor___divisor_sigma():
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = divisor_sigma(n, k)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___udivisor_sigma():
+    from sympy.ntheory.factor_ import udivisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = udivisor_sigma(n, k)
     assert _test_args(t)
 
 

@@ -2,11 +2,9 @@ from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
 from sympy.assumptions.assume import global_assumptions
-from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
-                                   known_facts_dict, single_fact_lookup)
+from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
-from sympy.core.compatibility import exec_
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
@@ -39,7 +37,7 @@ def test_int_1():
     assert ask(Q.finite(z)) is True
     assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is True
+    assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
@@ -102,7 +100,7 @@ def test_float_1():
     assert ask(Q.finite(z)) is True
     assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is True
+    assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
@@ -1373,7 +1371,7 @@ def test_hermitian():
     assert ask(Q.antihermitian(x + 1), Q.complex(x)) is None
     assert ask(Q.antihermitian(x + 1), Q.hermitian(x)) is None
     assert ask(Q.antihermitian(x + 1), Q.imaginary(x)) is False
-    assert ask(Q.antihermitian(x + 1), Q.real(x)) is None
+    assert ask(Q.antihermitian(x + 1), Q.real(x)) is False
     assert ask(Q.antihermitian(x + I), Q.antihermitian(x)) is True
     assert ask(Q.antihermitian(x + I), Q.complex(x)) is None
     assert ask(Q.antihermitian(x + I), Q.hermitian(x)) is False
@@ -1401,7 +1399,7 @@ def test_hermitian():
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.imaginary(y)) is True
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.real(y)) is False
     assert ask(Q.antihermitian(x + y), Q.real(x) & Q.complex(y)) is None
-    assert ask(Q.antihermitian(x + y), Q.real(x) & Q.real(y)) is None
+    assert ask(Q.antihermitian(x + y), Q.real(x) & Q.real(y)) is False
 
     assert ask(Q.antihermitian(I*x), Q.real(x)) is True
     assert ask(Q.antihermitian(I*x), Q.antihermitian(x)) is False
@@ -1409,7 +1407,7 @@ def test_hermitian():
     assert ask(Q.antihermitian(x*y), Q.antihermitian(x) & Q.real(y)) is True
 
     assert ask(Q.antihermitian(x + y + z),
-        Q.real(x) & Q.real(y) & Q.real(z)) is None
+        Q.real(x) & Q.real(y) & Q.real(z)) is False
     assert ask(Q.antihermitian(x + y + z),
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is None
     assert ask(Q.antihermitian(x + y + z),
@@ -1633,11 +1631,8 @@ def test_zero():
     assert ask(Q.odd(x), Q.zero(x)) is False
     assert ask(Q.zero(x), Q.even(x)) is None
     assert ask(Q.zero(x), Q.odd(x)) is False
+    assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
-@XFAIL
-def test_zero_doesnt_work():
-    # This requires moving logic from the handler to the deduction system
-    assert ask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
 
 def test_odd():
     assert ask(Q.odd(x)) is None
@@ -2073,12 +2068,13 @@ def test_compute_known_facts():
 
 @slow
 def test_known_facts_consistent():
-    from sympy.assumptions.ask import known_facts, known_facts_keys
-    ns = {}
-    exec_('from sympy.logic.boolalg import And, Or, Not', globals(), ns)
-    exec_(compute_known_facts(known_facts, known_facts_keys), globals(), ns)
-    assert ns['known_facts_cnf'] == known_facts_cnf
-    assert ns['known_facts_dict'] == known_facts_dict
+    """"Test that ask_generated.py is up-to-date"""
+    from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
+    from os.path import abspath, dirname, join
+    filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
+    with open(filename, 'r') as f:
+        assert f.read() == \
+            compute_known_facts(get_known_facts(), get_known_facts_keys())
 
 
 def test_Add_queries():

@@ -51,7 +51,19 @@ Ntheory Functions Reference
 
 .. autofunction:: divisor_count
 
+.. autofunction:: udivisors
+
+.. autofunction:: udivisor_count
+
+.. autofunction:: antidivisors
+
+.. autofunction:: antidivisor_count
+
 .. autofunction:: totient
+
+.. autofunction:: divisor_sigma
+
+.. autofunction:: udivisor_sigma
 
 .. autofunction:: core
 

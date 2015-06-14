@@ -5484,6 +5484,15 @@ def gff_list(f, *gens, **args):
     >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
     True
 
+    >>> f = x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
+        1401*x**6 + 1090*x**5 + 2715*x**4 - 6720*x**3 - 1092*x**2 + 5040*x
+
+    >>> gff_list(f)
+    [(x**3 + 7, 2), (x**2 + 5*x, 3)]
+
+    >>> ff(x**3 + 7, 2)*ff(x**2 + 5*x, 3) == f
+    True
+
     """
     options.allowed_flags(args, ['polys'])
 
