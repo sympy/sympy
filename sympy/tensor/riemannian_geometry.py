@@ -825,7 +825,7 @@ def scal_curv(g, ricci, var):
     The Ricci tensor for the Riemann curvature tensor:
     >>> sc_c = scal_curv(g, r, var)
     >>> print(sc_c)
-    1
+    2
 
     """
     # Handling of input vector of arguments - var
@@ -1029,7 +1029,7 @@ def nabla(T, ch_2, var):
     ch_2 it's a Christoffel symbol of second kind must be arraypy or tensor
     with valence indices (1, -1, -1):
 
-    >>> ch_2 = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
+    >>> ch_2 = Arraypy([3, 2, 0]).to_tensor((-1, -1, 1))
     >>> ch_2[0,0,0] = 0
     >>> ch_2[0,0,1] = sin(x2)*cos(x2)
     >>> ch_2[0,1,1] = 0
@@ -1151,7 +1151,7 @@ def nabla_x(T, ch_2, X, var):
     ch_2 it's a Christoffel symbol of second kind must be arraypy or tensor
     with valence indices (1, -1, -1):
 
-    >>> ch_2 = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
+    >>> ch_2 = Arraypy([3, 2, 0]).to_tensor((-1, -1, 1))
     >>> ch_2[0,0,0] = 0
     >>> ch_2[0,0,1] = sin(x2)*cos(x2)
     >>> ch_2[0,1,1] = 0
@@ -1263,7 +1263,7 @@ def delta(T, g, ch_2, var):
     ch_2 it's a Christoffel symbol of second kind must be arraypy or tensor
     with valence indices (1, -1, -1):
 
-    >>> ch_2 = Arraypy([3, 2, 0]).to_tensor((1, -1, -1))
+    >>> ch_2 = Arraypy([3, 2, 0]).to_tensor((-1, -1, 1))
     >>> ch_2[0,0,0] = 0
     >>> ch_2[0,0,1] = sin(x2)*cos(x2)
     >>> ch_2[0,1,1] = 0
@@ -1532,7 +1532,7 @@ def k_sigma_li(R, g, var):
     The sectional curvature:
     >>> k_sig_li = k_sigma_li(R, g, var)
     >>> print(k_sig_li)
-    -0.5*x1*sin(x2)*cos(x2)/(-x1**2 + x1*x2)
+    -0.75*sin(x2)/cos(x2)
     """
     # Handling of input vector arguments var
     check_vector_of_arguments(var)
@@ -1826,8 +1826,7 @@ def k_surf(surf, var):
     The Gaussian curvature:
     >>> surf3 = [x1+x2, 2*x1**2-3*x2, (1+x2)*x1+x2-4]
     >>> print(k_surf(surf3, var))
-    -(4*x1 + 3)**2/((x1 + 1)**2*(x2 + 1)**2*(((x1 + 1)**2 + 10)* \
-    (16*x1**2 + (x2 + 1)**2 + 1) - (-12*x1 + (x1 + 1)*(x2 + 1) + 1)**2))
+    -(4*x1 + 3)**2/((x1 + 1)**2*(x2 + 1)**2*(((x1 + 1)**2 + 10)*(16*x1**2 + (x2 + 1)**2 + 1) - (-12*x1 + (x1 + 1)*(x2 + 1) + 1)**2))
     >>> surf1 = [x1 + 4*x2**2]
     >>> print(k_surf(surf1, var))
     0
