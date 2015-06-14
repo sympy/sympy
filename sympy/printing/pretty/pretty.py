@@ -1496,7 +1496,6 @@ class PrettyPrinter(Printer):
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
                                or set.is_Union)
 
-
     def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\N{SMALL ELEMENT OF}")
@@ -1517,6 +1516,28 @@ class PrettyPrinter(Printer):
                                                el, self._print(set)), binding=8)
         else:
             return prettyForm(sstr(e))
+
+    def _print_SeqFormula(self, s):
+        if self._use_unicode:
+            dots = u("\N{HORIZONTAL ELLIPSIS}")
+        else:
+            dots = '...'
+
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
+                s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append(dots)
+            printset = tuple(printset)
+        else:
+            printset = tuple(s)
+        return self._print_list(printset)
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
