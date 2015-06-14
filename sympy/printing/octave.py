@@ -24,6 +24,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "asin", "acos", "atan", "atan2",
                    "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
                    "log", "exp", "erf", "gamma", "sign", "floor", "csc",
                    "sec", "cot", "coth", "acot", "acoth", "erfc",
+                   "besselj", "bessely", "besseli", "besselk",
                    "erfinv", "erfcinv", "factorial" ]
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
@@ -31,6 +32,8 @@ known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
     "conjugate": "conj",
+    "DiracDelta": "dirac",
+    "Heaviside": "heaviside",
 }
 
 
@@ -365,6 +368,47 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
+
+
+    def _print_hankel1(self, expr):
+        return "besselh(%s, 1, %s)" % (self._print(expr.order),
+                                       self._print(expr.argument))
+
+
+    def _print_hankel2(self, expr):
+        return "besselh(%s, 2, %s)" % (self._print(expr.order),
+                                       self._print(expr.argument))
+
+
+    # Note: as of 2015, Octave doesn't have spherical Bessel functions
+    def _print_jn(self, expr):
+        from sympy.functions import sqrt, besselj
+        x = expr.argument
+        expr2 = sqrt(S.Pi/(2*x))*besselj(expr.order + S.Half, x)
+        return self._print(expr2)
+
+
+    def _print_yn(self, expr):
+        from sympy.functions import sqrt, bessely
+        x = expr.argument
+        expr2 = sqrt(S.Pi/(2*x))*bessely(expr.order + S.Half, x)
+        return self._print(expr2)
+
+
+    def _print_airyai(self, expr):
+        return "airy(0, %s)" % self._print(expr.args[0])
+
+
+    def _print_airyaiprime(self, expr):
+        return "airy(1, %s)" % self._print(expr.args[0])
+
+
+    def _print_airybi(self, expr):
+        return "airy(2, %s)" % self._print(expr.args[0])
+
+
+    def _print_airybiprime(self, expr):
+        return "airy(3, %s)" % self._print(expr.args[0])
 
 
     def _print_Piecewise(self, expr):

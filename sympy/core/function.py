@@ -92,7 +92,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
+class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -2287,6 +2287,10 @@ def count_ops(expr, visual=False):
         ADD = Symbol('ADD')
         while args:
             a = args.pop()
+
+            if isinstance(a, str):
+                continue
+
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:

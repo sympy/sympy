@@ -388,11 +388,35 @@ def test_symbol_falsepositive():
     assert x.is_nonzero is None
 
 
+def test_symbol_falsepositive_mul():
+    # To test pull request 9379
+    # Explicit handling of arg.is_positive=False was added to Mul._eval_is_positive
+    x = 2*Symbol('x', positive=False)
+    assert x.is_positive is False  # This was None before
+    assert x.is_nonpositive is None
+    assert x.is_negative is None
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
 def test_neg_symbol_falsepositive():
     x = -Symbol('x', positive=False)
     assert x.is_positive is None
     assert x.is_nonpositive is None
     assert x.is_negative is False
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
+def test_neg_symbol_falsenegative():
+    # To test pull request 9379
+    # Explicit handling of arg.is_negative=False was added to Mul._eval_is_positive
+    x = -Symbol('x', negative=False)
+    assert x.is_positive is False  # This was None before
+    assert x.is_nonpositive is None
+    assert x.is_negative is None
     assert x.is_nonnegative is None
     assert x.is_zero is None
     assert x.is_nonzero is None
@@ -713,6 +737,33 @@ def test_Pow_is_algebraic():
     assert Pow(2, sqrt(2), evaluate=False).is_algebraic is False
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
+
+def test_Mul_is_prime():
+    from sympy import Mul
+    x = Symbol('x', positive=True, integer=True)
+    y = Symbol('y', positive=True, integer=True)
+    assert (x*y).is_prime is None
+    assert ( (x+1)*(y+1) ).is_prime is False
+
+    x = Symbol('x', positive=True)
+    assert (x*y).is_prime is None
+
+    assert Mul(6, S.Half, evaluate=False).is_prime is True
+    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
+    assert Mul(5, S.Half, evaluate=False).is_prime is False
+
+def test_Pow_is_prime():
+    from sympy import Pow
+    x = Symbol('x', positive=True, integer=True)
+    y = Symbol('y', positive=True, integer=True)
+    assert (x**y).is_prime is None
+
+    x = Symbol('x', positive=True)
+    assert (x**y).is_prime is None
+
+    assert Pow(6, S.One, evaluate=False).is_prime is False
+    assert Pow(9, S.Half, evaluate=False).is_prime is True
+    assert Pow(5, S.One, evaluate=False).is_prime is True
 
 
 def test_Mul_is_infinite():

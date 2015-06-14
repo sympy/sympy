@@ -16,8 +16,7 @@ Examples
 ========
 
 """
-from sympy.geometry.point import Point
-from sympy.geometry.point3d import Point3D
+from sympy.geometry.point import Point, Point2D, Point3D
 from sympy.geometry.line import Line, Ray, Segment
 from sympy.geometry.line3d import Line3D, Segment3D, Ray3D
 from sympy.geometry.plane import Plane

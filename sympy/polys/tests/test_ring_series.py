@@ -1,9 +1,10 @@
 from sympy.polys.domains import QQ
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
-  rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term,
-  rs_series_inversion, rs_series_from_list, rs_exp, rs_log, rs_newton,
-  rs_hadamard_exp, rs_compose_add)
+  rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_series_inversion,
+  rs_series_from_list, rs_exp, rs_log, rs_newton, rs_hadamard_exp,
+  rs_compose_add, rs_atan, rs_atanh, rs_tan, rs_sin, rs_cos, rs_cos_sin,
+  rs_sinh, rs_cosh, rs_tanh, _tan1, fun)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 
@@ -155,7 +156,6 @@ def test_exp():
     p1 = rs_exp(p, x, prec)
     assert p1 == x + 1
 
-
 def test_newton():
     R, x = ring('x', QQ)
     p = x**2 - 2
@@ -168,3 +168,83 @@ def test_compose_add():
     p1 = x**3 - 1
     p2 = x**2 - 2
     assert rs_compose_add(p1, p2) == x**6 - 6*x**4 - 2*x**3 + 12*x**2 - 12*x - 7
+
+def test_fun():
+    R, x, y = ring('x, y', QQ)
+    p = x*y + x**2*y**3 + x**5*y
+    assert fun(p, rs_tan, x, 10) == rs_tan(p, x, 10)
+    assert fun(p, _tan1, x, 10) == _tan1(p, x, 10)
+
+def test_atan():
+    R, x, y = ring('x, y', QQ)
+    assert rs_atan(x, x, 9) == -1/7*x**7 + 1/5*x**5 - 1/3*x**3 + x
+    assert rs_atan(x*y + x**2*y**3, x, 9) == 2*x**8*y**11 - x**8*y**9 + \
+        2*x**7*y**9 - 1/7*x**7*y**7 - 1/3*x**6*y**9 + x**6*y**7 - x**5*y**7 + \
+        1/5*x**5*y**5 - x**4*y**5 - 1/3*x**3*y**3 + x**2*y**3 + x*y
+
+def test_tan():
+    R, x, y = ring('x, y', QQ)
+    assert rs_tan(x, x, 9) == \
+        x + x**3/3 + 2*x**5/15 + 17*x**7/315
+    assert rs_tan(x*y + x**2*y**3, x, 9) == 4/3*x**8*y**11 + 17/45*x**8*y**9 + \
+        4/3*x**7*y**9 + 17/315*x**7*y**7 + 1/3*x**6*y**9 + 2/3*x**6*y**7 + \
+        x**5*y**7 + 2/15*x**5*y**5 + x**4*y**5 + 1/3*x**3*y**3 + x**2*y**3 + x*y
+
+def test_sin():
+    R, x, y = ring('x, y', QQ)
+    assert rs_sin(x, x, 9) == \
+        x - x**3/6 + x**5/120 - x**7/5040
+    assert rs_sin(x*y + x**2*y**3, x, 9) == 1/12*x**8*y**11 - \
+        1/720*x**8*y**9 + 1/12*x**7*y**9 - 1/5040*x**7*y**7 - 1/6*x**6*y**9 \
+        + 1/24*x**6*y**7 - 1/2*x**5*y**7 + 1/120*x**5*y**5 - 1/2*x**4*y**5 \
+        - 1/6*x**3*y**3 + x**2*y**3 + x*y
+
+def test_cos():
+    R, x, y = ring('x, y', QQ)
+    assert rs_cos(x, x, 9) == \
+        1/40320*x**8 - 1/720*x**6 + 1/24*x**4 - 1/2*x**2 + 1
+    assert rs_cos(x*y + x**2*y**3, x, 9) == 1/24*x**8*y**12 - \
+        1/48*x**8*y**10 + 1/40320*x**8*y**8 + 1/6*x**7*y**10 - \
+        1/120*x**7*y**8 + 1/4*x**6*y**8 - 1/720*x**6*y**6 + 1/6*x**5*y**6 \
+        - 1/2*x**4*y**6 + 1/24*x**4*y**4 - x**3*y**4 - 1/2*x**2*y**2 + 1
+
+def test_cos_sin():
+    R, x, y = ring('x, y', QQ)
+    cos, sin = rs_cos_sin(x, x, 9)
+    assert cos == rs_cos(x, x, 9)
+    assert sin == rs_sin(x, x, 9)
+    cos, sin = rs_cos_sin(x + x*y, x, 5)
+    assert cos == rs_cos(x + x*y, x, 5)
+    assert sin == rs_sin(x + x*y, x, 5)
+
+def test_atanh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_atanh(x, x, 9) == 1/7*x**7 + 1/5*x**5 + 1/3*x**3 + x
+    assert rs_atanh(x*y + x**2*y**3, x, 9) == 2*x**8*y**11 + x**8*y**9 + \
+        2*x**7*y**9 + 1/7*x**7*y**7 + 1/3*x**6*y**9 + x**6*y**7 + x**5*y**7 + \
+        1/5*x**5*y**5 + x**4*y**5 + 1/3*x**3*y**3 + x**2*y**3 + x*y
+
+def test_sinh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_sinh(x, x, 9) == 1/5040*x**7 + 1/120*x**5 + 1/6*x**3 + x
+    assert rs_sinh(x*y + x**2*y**3, x, 9) == 1/12*x**8*y**11 + \
+        1/720*x**8*y**9 + 1/12*x**7*y**9 + 1/5040*x**7*y**7 + 1/6*x**6*y**9 + \
+        1/24*x**6*y**7 + 1/2*x**5*y**7 + 1/120*x**5*y**5 + 1/2*x**4*y**5 + \
+        1/6*x**3*y**3 + x**2*y**3 + x*y
+
+def test_cosh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_cosh(x, x, 9) == 1/40320*x**8 + 1/720*x**6 + 1/24*x**4 + \
+        1/2*x**2 + 1
+    assert rs_cosh(x*y + x**2*y**3, x, 9) == 1/24*x**8*y**12 + \
+        1/48*x**8*y**10 + 1/40320*x**8*y**8 + 1/6*x**7*y**10 + \
+        1/120*x**7*y**8 + 1/4*x**6*y**8 + 1/720*x**6*y**6 + 1/6*x**5*y**6 + \
+        1/2*x**4*y**6 + 1/24*x**4*y**4 + x**3*y**4 + 1/2*x**2*y**2 + 1
+
+def test_tanh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_tanh(x, x, 9) == -17/315*x**7 + 2/15*x**5 - 1/3*x**3 + x
+    assert rs_tanh(x*y + x**2*y**3 , x, 9) == 4/3*x**8*y**11 - \
+        17/45*x**8*y**9 + 4/3*x**7*y**9 - 17/315*x**7*y**7 - 1/3*x**6*y**9 + \
+        2/3*x**6*y**7 - x**5*y**7 + 2/15*x**5*y**5 - x**4*y**5 - \
+        1/3*x**3*y**3 + x**2*y**3 + x*y

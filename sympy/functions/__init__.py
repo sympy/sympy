@@ -15,12 +15,12 @@ from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
         principal_branch, transpose, adjoint)
 from sympy.functions.elementary.trigonometric import (sin, cos, tan,
-        sec, csc, cot, asin, acos, atan, asec, acsc, acot, atan2)
+        sec, csc, cot, sinc, asin, acos, atan, asec, acsc, acot, atan2)
 from sympy.functions.elementary.exponential import (exp_polar, exp, log,
         LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
-        sech, csch, asinh, acosh, atanh, acoth)
-from sympy.functions.elementary.integers import floor, ceiling
+        sech, csch, asinh, acosh, atanh, acoth, asech)
+from sympy.functions.elementary.integers import floor, ceiling, frac
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,

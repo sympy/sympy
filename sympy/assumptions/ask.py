@@ -2,17 +2,20 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
+from sympy.core.cache import cacheit
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
+from sympy.core.decorators import deprecated
+from sympy.utilities.decorator import classproperty, ClassPropertyDescriptor
 
 
-class Q:
+class Q(object):
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
-    bounded = Predicate('bounded')
+    finite = Predicate('finite')
     commutative = Predicate('commutative')
     complex = Predicate('complex')
     composite = Predicate('composite')
@@ -21,7 +24,7 @@ class Q:
     hermitian = Predicate('hermitian')
     imaginary = Predicate('imaginary')
     infinitesimal = Predicate('infinitesimal')
-    infinity = Predicate('infinity')
+    infinite = Predicate('infinite')
     integer = Predicate('integer')
     irrational = Predicate('irrational')
     rational = Predicate('rational')
@@ -55,6 +58,16 @@ class Q:
     real_elements = Predicate('real_elements')
     complex_elements = Predicate('complex_elements')
     integer_elements = Predicate('integer_elements')
+
+    @classproperty
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    def bounded(self):
+        return Predicate('finite')
+
+    @classproperty
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    def infinity(self):
+        return Predicate('infinite')
 
 
 def _extract_facts(expr, symbol):
@@ -118,6 +131,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
+    from sympy.assumptions.satask import satask
+
     if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
 
@@ -134,6 +149,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     local_facts = _extract_facts(assumptions, expr)
 
+    known_facts_cnf = get_known_facts_cnf()
+    known_facts_dict = get_known_facts_dict()
+
     if local_facts and satisfiable(And(local_facts, known_facts_cnf)) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
@@ -146,7 +164,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return
 
     if local_facts is None:
-        return
+        return satask(proposition, assumptions=assumptions, context=context)
+
 
     # See if there's a straight-forward conclusion we can make for the inference
     if local_facts.is_Atom:
@@ -154,7 +173,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif local_facts.func is And and all(k in known_facts_dict for k in local_facts.args):
+    elif (local_facts.func is And and
+            all(k in known_facts_dict for k in local_facts.args)):
         for assum in local_facts.args:
             if assum.is_Atom:
                 if key in known_facts_dict[assum]:
@@ -172,7 +192,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return False
 
     # Failing all else, we do a full logical inference
-    return ask_full_inference(key, local_facts, known_facts_cnf)
+    res = ask_full_inference(key, local_facts, known_facts_cnf)
+    if res is None:
+        return satask(proposition, assumptions=assumptions, context=context)
+    return res
 
 
 def ask_full_inference(proposition, assumptions, known_facts_cnf):
@@ -236,8 +259,8 @@ def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
 
-    This function is typically applied to the variables
-    ``known_facts`` and ``known_facts_keys`` defined at the bottom of
+    This function is typically applied to the results of the ``get_known_facts``
+    and ``get_known_facts_keys`` functions defined at the bottom of
     this file.
     """
     from textwrap import dedent, wrap
@@ -245,25 +268,32 @@ def compute_known_facts(known_facts, known_facts_keys):
     fact_string = dedent('''\
     """
     The contents of this file are the return value of
-    ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
-    edit this file.  Instead, run ./bin/ask_update.py.
+    ``sympy.assumptions.ask.compute_known_facts``.
+
+    Do NOT manually edit this file.
+    Instead, run ./bin/ask_update.py.
     """
 
+    from sympy.core.cache import cacheit
     from sympy.logic.boolalg import And, Not, Or
     from sympy.assumptions.ask import Q
 
-    # -{ Known facts in CNF }-
-    known_facts_cnf = And(
-        %s
-    )
+    # -{ Known facts in Conjunctive Normal Form }-
+    @cacheit
+    def get_known_facts_cnf():
+        return And(
+            %s
+        )
 
     # -{ Known facts in compressed sets }-
-    known_facts_dict = {
-        %s
-    }
+    @cacheit
+    def get_known_facts_dict():
+        return {
+            %s
+        }
     ''')
     # Compute the known facts in CNF form for logical inference
-    LINE = ",\n    "
+    LINE = ",\n        "
     HANG = ' '*8
     cnf = to_cnf(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
@@ -283,7 +313,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("bounded",           "calculus.AskBoundedHandler"),
+    ("finite",           "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),
@@ -324,56 +354,66 @@ _handlers = [
 for name, value in _handlers:
     register_handler(name, _val_template % value)
 
-known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
-                    if not attr.startswith('__')]
-known_facts = And(
-    Implies(Q.real, Q.complex),
-    Implies(Q.real, Q.hermitian),
-    Equivalent(Q.even, Q.integer & ~Q.odd),
-    Equivalent(Q.extended_real, Q.real | Q.infinity),
-    Equivalent(Q.odd, Q.integer & ~Q.even),
-    Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
-    Implies(Q.integer, Q.rational),
-    Implies(Q.rational, Q.algebraic),
-    Implies(Q.algebraic, Q.complex),
-    Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
-    Implies(Q.imaginary, Q.complex & ~Q.real),
-    Implies(Q.imaginary, Q.antihermitian),
-    Implies(Q.antihermitian, ~Q.hermitian),
-    Equivalent(Q.negative, Q.nonzero & ~Q.positive),
-    Equivalent(Q.positive, Q.nonzero & ~Q.negative),
-    Equivalent(Q.rational, Q.real & ~Q.irrational),
-    Equivalent(Q.real, Q.rational | Q.irrational),
-    Implies(Q.nonzero, Q.real),
-    Equivalent(Q.nonzero, Q.positive | Q.negative),
-    Equivalent(Q.nonpositive, ~Q.positive & Q.real),
-    Equivalent(Q.nonnegative, ~Q.negative & Q.real),
-    Equivalent(Q.zero, Q.real & ~Q.nonzero),
-    Implies(Q.zero, Q.even),
+@cacheit
+def get_known_facts_keys():
+    return [
+        getattr(Q, attr)
+        for attr in Q.__dict__
+        if not (attr.startswith('__') or
+                isinstance(Q.__dict__[attr], ClassPropertyDescriptor))]
 
-    Implies(Q.orthogonal, Q.positive_definite),
-    Implies(Q.orthogonal, Q.unitary),
-    Implies(Q.unitary & Q.real, Q.orthogonal),
-    Implies(Q.unitary, Q.normal),
-    Implies(Q.unitary, Q.invertible),
-    Implies(Q.normal, Q.square),
-    Implies(Q.diagonal, Q.normal),
-    Implies(Q.positive_definite, Q.invertible),
-    Implies(Q.diagonal, Q.upper_triangular),
-    Implies(Q.diagonal, Q.lower_triangular),
-    Implies(Q.lower_triangular, Q.triangular),
-    Implies(Q.upper_triangular, Q.triangular),
-    Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
-    Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
-    Implies(Q.diagonal, Q.symmetric),
-    Implies(Q.unit_triangular, Q.triangular),
-    Implies(Q.invertible, Q.fullrank),
-    Implies(Q.invertible, Q.square),
-    Implies(Q.symmetric, Q.square),
-    Implies(Q.fullrank & Q.square, Q.invertible),
-    Equivalent(Q.invertible, ~Q.singular),
-    Implies(Q.integer_elements, Q.real_elements),
-    Implies(Q.real_elements, Q.complex_elements),
-)
+@cacheit
+def get_known_facts():
+    return And(
+        Implies(Q.infinite, ~Q.finite),
+        Implies(Q.real, Q.complex),
+        Implies(Q.real, Q.hermitian),
+        Equivalent(Q.even, Q.integer & ~Q.odd),
+        Equivalent(Q.extended_real, Q.real | Q.infinite),
+        Equivalent(Q.odd, Q.integer & ~Q.even),
+        Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
+        Implies(Q.integer, Q.rational),
+        Implies(Q.rational, Q.algebraic),
+        Implies(Q.algebraic, Q.complex),
+        Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
+        Implies(Q.imaginary, Q.complex & ~Q.real),
+        Implies(Q.imaginary, Q.antihermitian),
+        Implies(Q.antihermitian, ~Q.hermitian),
+        Equivalent(Q.negative, Q.nonzero & ~Q.positive),
+        Equivalent(Q.positive, Q.nonzero & ~Q.negative),
+        Equivalent(Q.rational, Q.real & ~Q.irrational),
+        Equivalent(Q.real, Q.rational | Q.irrational),
+        Implies(Q.nonzero, Q.real),
+        Equivalent(Q.nonzero, Q.positive | Q.negative),
+        Equivalent(Q.nonpositive, ~Q.positive & Q.real),
+        Equivalent(Q.nonnegative, ~Q.negative & Q.real),
+        Equivalent(Q.zero, Q.real & ~Q.nonzero),
+        Implies(Q.zero, Q.even),
 
-from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf
+        Implies(Q.orthogonal, Q.positive_definite),
+        Implies(Q.orthogonal, Q.unitary),
+        Implies(Q.unitary & Q.real, Q.orthogonal),
+        Implies(Q.unitary, Q.normal),
+        Implies(Q.unitary, Q.invertible),
+        Implies(Q.normal, Q.square),
+        Implies(Q.diagonal, Q.normal),
+        Implies(Q.positive_definite, Q.invertible),
+        Implies(Q.diagonal, Q.upper_triangular),
+        Implies(Q.diagonal, Q.lower_triangular),
+        Implies(Q.lower_triangular, Q.triangular),
+        Implies(Q.upper_triangular, Q.triangular),
+        Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
+        Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
+        Implies(Q.diagonal, Q.symmetric),
+        Implies(Q.unit_triangular, Q.triangular),
+        Implies(Q.invertible, Q.fullrank),
+        Implies(Q.invertible, Q.square),
+        Implies(Q.symmetric, Q.square),
+        Implies(Q.fullrank & Q.square, Q.invertible),
+        Equivalent(Q.invertible, ~Q.singular),
+        Implies(Q.integer_elements, Q.real_elements),
+        Implies(Q.real_elements, Q.complex_elements),
+    )
+
+from sympy.assumptions.ask_generated import (
+    get_known_facts_dict, get_known_facts_cnf)

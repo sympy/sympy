@@ -10,10 +10,9 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise
-from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.utilities.randtest import verify_numerically as tn
-from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
@@ -140,6 +139,7 @@ def randcplx(offset=-1):
     return _randrat() + I*_randrat() + I*(1 + offset)
 
 
+@slow
 def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
     formulae = FormulaCollection().formulae
@@ -338,6 +338,7 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
 
+@slow
 def test_meijerg_expand():
     from sympy import combsimp, simplify
     # from mpmath docs
@@ -431,6 +432,7 @@ def test_meijerg_expand_fail():
     assert can_do_meijer([S.Half], [], [-a, a], [0])
 
 
+@slow
 def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
@@ -500,6 +502,7 @@ def test_meijerg_shift_operators():
         s.apply(g, op), meijerg([a1], [a3 + 1, a4], [b1], [b3, b4], z), z)
 
 
+@slow
 def test_meijerg_confluence():
     def t(m, a, b):
         from sympy import sympify, Piecewise
@@ -819,7 +822,6 @@ def test_prudnikov_8():
                         assert can_do([a, b], [c, d])
 
 
-@slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
     for i in range(9):
@@ -853,7 +855,6 @@ def test_prudnikov_10():
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
 
 
-@slow
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
@@ -887,6 +888,7 @@ def test_prudnikov_12():
     assert can_do([], [2, S(3)/2, S(3)/2])
 
 
+@slow
 def test_prudnikov_2F1():
     h = S.Half
     # Elliptic integrals

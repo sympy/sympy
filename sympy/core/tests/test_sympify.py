@@ -445,9 +445,9 @@ def test_issue_4988_builtins():
 
 def test_geometry():
     p = sympify(Point(0, 1))
-    assert p == Point(0, 1) and type(p) == Point
+    assert p == Point(0, 1) and isinstance(p, Point)
     L = sympify(Line(p, (1, 0)))
-    assert L == Line((0, 1), (1, 0)) and type(L) == Line
+    assert L == Line((0, 1), (1, 0)) and isinstance(L, Line)
 
 
 def test_kernS():
@@ -479,7 +479,7 @@ def test_issue_6540_6552():
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
-def test_issue_5596():
+def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'

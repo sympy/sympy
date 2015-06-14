@@ -2475,7 +2475,7 @@ def partition(n, k=None, zeros=False):
     =========
 
     .. [1] Generating Integer Partitions, [online],
-        Available: http://homepages.ed.ac.uk/jkellehe/partitions.php
+        Available: http://jeromekelleher.net/partitions.php
     """
     if n < 1:
         yield tuple()

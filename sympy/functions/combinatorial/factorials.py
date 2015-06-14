@@ -10,6 +10,8 @@ from math import sqrt as _sqrt
 from sympy.core.compatibility import reduce, range
 from sympy.core.cache import cacheit
 
+from sympy.polys.polytools import poly_from_expr
+from sympy.polys.polyerrors import PolificationFailed
 
 
 class CombinatorialFunction(Function):
@@ -197,7 +199,7 @@ class MultiFactorial(CombinatorialFunction):
 
 
 class subfactorial(CombinatorialFunction):
-    """The subfactorial counts the derangements of n items and is
+    r"""The subfactorial counts the derangements of n items and is
     defined for non-negative integers as::
 
               ,
@@ -209,9 +211,14 @@ class subfactorial(CombinatorialFunction):
     It can also be written as int(round(n!/exp(1))) but the recursive
     definition with caching is implemented for this function.
 
-    This function is generalized to noninteger arguments [2]_ as
+    An interesting analytic expression is the following [2]_
 
     .. math:: !x = \Gamma(x + 1, -1)/e
+
+    which is valid for non-negative integers x. The above formula
+    is not very useful incase of non-integers. :math:`\Gamma(x + 1, -1)` is
+    single-valued only for integral arguments x, elsewhere on the positive real
+    axis it has an infinite number of branches none of which are real.
 
     References
     ==========
@@ -251,8 +258,10 @@ class subfactorial(CombinatorialFunction):
         if arg.is_Number:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
+            elif arg is S.NaN:
+                return S.NaN
             elif arg is S.Infinity:
-                return arg
+                return S.Infinity
 
     def _eval_is_even(self):
         if self.args[0].is_odd and self.args[0].is_nonnegative:
@@ -396,6 +405,11 @@ class RisingFactorial(CombinatorialFunction):
        more information check "Concrete mathematics" by Graham, pp. 66
        or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
+       When x is a polynomial f of a single variable y of order >= 1,
+       rf(x,k) = f(y) * f(y+1) * ... * f(x+k-1) as described in
+       Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
+       Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
+
        Examples
        ========
 
@@ -410,6 +424,9 @@ class RisingFactorial(CombinatorialFunction):
 
        >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
        True
+
+       >>> rf(x**3, 2)
+       Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
 
        See Also
        ========
@@ -441,14 +458,30 @@ class RisingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                        else:
+                            v = opt.gens[0]
+                            return reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                        else:
+                            v = opt.gens[0]
+                            return 1/reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
@@ -474,6 +507,11 @@ class FallingFactorial(CombinatorialFunction):
        more information check "Concrete mathematics" by Graham, pp. 66
        or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
+       When x is a polynomial f of a single variable y of order >= 1,
+       ff(x,k) = f(y) * f(y-1) * ... * f(x-k+1) as described in
+       Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
+       Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
+
        >>> from sympy import ff
        >>> from sympy.abc import x
 
@@ -485,6 +523,10 @@ class FallingFactorial(CombinatorialFunction):
 
        >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
        True
+
+       >>> ff(x**2, 2)
+       Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
+
 
        See Also
        ========
@@ -514,14 +556,30 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                        else:
+                            v = opt.gens[0]
+                            return reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                        try:
+                            F, opt = poly_from_expr(x)
+                        except PolificationFailed:
+                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                        if len(opt.gens) > 1 or F.degree() <= 1:
+                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                        else:
+                            v = opt.gens[0]
+                            return 1/reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
@@ -677,15 +735,13 @@ class binomial(CombinatorialFunction):
     def eval(cls, n, k):
         n, k = map(sympify, (n, k))
         d = n - k
-        if d.is_zero:
+        if d.is_zero or k.is_zero:
             return S.One
         elif d.is_zero is False:
             if (k - 1).is_zero:
                 return n
             elif k.is_negative:
                 return S.Zero
-            elif k.is_zero:
-                return S.One
             elif n.is_integer and n.is_nonnegative and d.is_negative:
                 return S.Zero
         if k.is_Integer and k > 0 and n.is_Number:
@@ -728,4 +784,8 @@ class binomial(CombinatorialFunction):
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
     def _eval_is_integer(self):
-        return self.args[0].is_integer and self.args[1].is_integer
+        n, k = self.args
+        if n.is_integer and k.is_integer:
+            return True
+        elif k.is_integer is False:
+            return False

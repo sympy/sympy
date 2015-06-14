@@ -107,6 +107,8 @@ def test_Singleton():
             instantiated += 1
             return Basic.__new__(cls)
 
+    assert instantiated == 0
+    MySingleton() # force instantiation
     assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
@@ -115,6 +117,8 @@ def test_Singleton():
 
     class MySingleton_sub(MySingleton):
         pass
+    assert instantiated == 1
+    MySingleton_sub()
     assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
