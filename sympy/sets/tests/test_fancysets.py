@@ -186,6 +186,15 @@ def test_reals():
     assert sqrt(-1) not in S.Reals
 
 
+def test_Complex():
+    assert 5 in S.Complex
+    assert 5 + 4*I in S.Complex
+    assert S.Pi in S.Complex
+    assert -sqrt(2) in S.Complex
+    assert -I in S.Complex
+    assert sqrt(-1) in S.Complex
+
+
 def take(n, iterable):
     "Return first n items of the iterable as a list"
     return list(itertools.islice(iterable, n))

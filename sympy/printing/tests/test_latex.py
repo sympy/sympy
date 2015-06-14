@@ -568,6 +568,10 @@ def test_latex_Complement():
     assert latex(Complement(S.Reals, S.Naturals)) == r"\mathbb{R} \setminus \mathbb{N}"
 
 
+def test_latex_Complex():
+    assert latex(S.Complex) == r"\mathbb{C}"
+
+
 def test_latex_productset():
     line = Interval(0, 1)
     bigline = Interval(0, 10)
