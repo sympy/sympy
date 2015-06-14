@@ -6,7 +6,7 @@ from sympy.tensor.tensor_methods import tensor_product
 from sympy import Symbol, symbols
 from sympy.matrices import Matrix, MatrixSymbol
 import sys
-
+from copy import copy
 
 def test_arraypy_initiation():
     arr_with_one_element = Arraypy()
