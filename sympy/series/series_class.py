@@ -105,4 +105,4 @@ class SeriesBase(Expr):
             if stop is None:
                 stop = self.length
             return [self.term(self._ith_point(i)) for i in
-                               range(start, stop, index.stop or 1)]
+                               range(start, stop, index.step or 1)]

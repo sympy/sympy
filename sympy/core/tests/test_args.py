@@ -9,7 +9,7 @@ import re
 import warnings
 import io
 
-from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda
+from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -2747,7 +2747,6 @@ def test_sympy__physics__quantum__spin__JzOp():
 
 def test_sympy__physics__quantum__spin__Rotation():
     from sympy.physics.quantum.spin import Rotation
-    from sympy import pi
     assert _test_args(Rotation(pi, 0, pi/2))
 
 
@@ -2809,7 +2808,7 @@ def test_sympy__physics__quantum__state__TimeDepState():
 def test_sympy__physics__quantum__state__Wavefunction():
     from sympy.physics.quantum.state import Wavefunction
     from sympy.functions import sin
-    from sympy import Piecewise, pi
+    from sympy import Piecewise
     n = 1
     L = 1
     g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
@@ -3115,6 +3114,11 @@ def test_sympy__series__sequences__SeqMul():
 @SKIP('Abstract Class')
 def test_sympy__series__series_class__SeriesBase():
     pass
+
+
+def test_sympy__series__fourier__FourierSeries():
+    from sympy.series.fourier import FourierSeries
+    assert _test_args(FourierSeries(x, (x, -pi, pi)))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():
