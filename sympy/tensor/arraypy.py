@@ -683,7 +683,7 @@ class Arraypy(object):
             idx2 = new_base._start_index
 
             for i in range(self.__len__()):
-                new_base[idx2] = self.[idx1]
+                new_base[idx2] = self[idx1]
                 idx2 = new_base.next_index(idx2)
                 idx1 = self.next_index(idx1)
 
