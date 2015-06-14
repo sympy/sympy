@@ -73,6 +73,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Not = False
     is_Matrix = False
     is_Vector = False
+    is_Point = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)

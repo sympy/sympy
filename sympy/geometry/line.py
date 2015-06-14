@@ -1150,7 +1150,7 @@ class Line(LinearEntity):
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
-            return self.equal(o)
+            return self.equals(o)
         elif not self.is_similar(o):
             return False
         else:
@@ -1187,7 +1187,7 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
-    def equal(self, other):
+    def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
             return False

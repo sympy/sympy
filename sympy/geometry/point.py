@@ -101,6 +101,8 @@ class Point(GeometryEntity):
 
         return GeometryEntity.__new__(cls, *coords)
 
+    is_Point = True
+
     def __contains__(self, item):
         return item == self
 
@@ -378,6 +380,17 @@ class Point(GeometryEntity):
 
     def __iter__(self):
         return self.args.__iter__()
+
+    def __eq__(self, other):
+        if not isinstance(other, Point) or len(self.args) != len(other.args):
+            return False
+        return self.args == other.args
+
+    def __hash__(self):
+        return hash(self.args)
+
+    def __getitem__(self, key):
+        return self.args[key]
 
     def __add__(self, other):
         """Add other to self by incrementing self's coordinates by those of other.

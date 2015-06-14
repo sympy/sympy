@@ -49,8 +49,8 @@ poly3 = Polygon(p1, p2, p5)
 
 def test_booleans():
     """ test basic unions and intersections """
-    assert Union(l1, l2).equal(l1)
-    assert Intersection(l1, l2).equal(l1)
+    assert Union(l1, l2).equals(l1)
+    assert Intersection(l1, l2).equals(l1)
     assert Intersection(l1, l4) == FiniteSet(Point(1,1))
     assert Intersection(Union(l1, l4), l3) == FiniteSet(Point(-1/3, -1/3), Point(5, 1))
     assert Intersection(l1, FiniteSet(Point(7,-7))) == EmptySet()
