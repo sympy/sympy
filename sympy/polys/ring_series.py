@@ -304,6 +304,71 @@ def rs_series_inversion(p, x, prec):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     return _series_inversion1(p, x, prec)
 
+def series_reversion(p, i, n, j):
+    """reversion of a series
+
+    p is a series with O(x**n) of the form p = a*x + f(x)
+    where `a` is a number different from 0
+
+    f(x) = sum( a_k*x_k, k in range(2, n))
+
+      a_k can depend polynomially on other variables, not indicated.
+      x variable with index i, or with name i
+      y variable with index j, or with name j
+
+    solve p = y, that is given
+    a*x + f(x) - y = 0
+    find the solution x = r(y) up to O(y**n)
+
+    Algorithm:
+    if r_i is the solution at order i
+    a*r_i + f(r_i) - y = O(y^(i + 1))
+    r_(i + 1) = r_i + e such that
+    a*r_(i + 1) + f(r_(i + 1)) - y = O(y^(i + 2))
+    a*e + f(r_i) = O(y^(i + 2))
+    e = -f(r_i)/a
+    so that one uses the recursion relation
+    r_(i + 1) = r_i -f(r_i)/a
+    with the boundary condition
+    r_1 = y
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.lpoly import lgens
+    >>> lp, x, y = lgens('x, y', QQ)
+    >>> p = x + x**2
+    >>> p1 = p.series_reversion('x', 4, 'y')
+    >>> p1
+    2*y**3 - y**2 + y
+    >>> (p1 + p1**2).trunc('y', 4)
+    y
+    """
+    ring = p.ring
+    nx = ring.gens.index(i)
+    y = ring(j)
+    ny = ring.gens.index(j)
+    if _has_contant_term(p, i):
+        raise ValueError('part independent from %s must be 0' % nx)
+    expv1 = [0]*ring.ngens
+    expv1[nx] = 1
+    expv1 = tuple(expv1)
+    p1 = ring(0)
+    for expv in p:
+        if expv[nx] == 1:
+            p1[monomial_div(expv, expv1)] = p[expv]
+    zm = ring.zero_monom
+    assert zm in p1 and len(p1) == 1
+    p1 = p1[zm]
+    r = ring(ny)/p1
+    for i in range(2, n):
+        sb = LPolySubs(lp, lp, {nx:r})
+        sp = sb.subs_trunc(p, ny, i + 1)
+        sp = sp.coefficient_t((j, i))*y**i
+        r -= sp/a
+    return r
+
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
     Return a series ``sum c[n]*p**n`` modulo ``O(x**prec)``
