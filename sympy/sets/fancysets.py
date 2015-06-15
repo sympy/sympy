@@ -453,7 +453,19 @@ def normalize_theta_set(theta):
     supports Interval and FiniteSet. It Returns a the normalized value
     of theta in the Set. For Interval, a maximum of one cycle [0, 2*pi],
     is returned i.e. for theta equal to [0, 10*pi], returned normalized
-    value would be [0, 2*pi).
+    value would be [0, 2*pi). As of now it supports theta as FiniteSet
+    and Interval.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The algorithms for Normalizing theta Set are not yet
+        implemented.
+    ValueError
+        The input is not valid, i.e. the input is not a real set.
+    RuntimeError
+        It is a bug, please report to the github issue tracker.
 
     Examples
     ========
@@ -524,7 +536,7 @@ def normalize_theta_set(theta):
         raise NotImplementedError("Normalizing theta when, its %s is not"
                                   "Implemented" % type(theta))
     else:
-        raise ValueError(" %s does not a belongs to S.Reals" % (theta))
+        raise ValueError(" %s is not a real set" % (theta))
 
 
 class ComplexPlane(Set):
@@ -814,6 +826,9 @@ class ComplexPlane(Set):
                 return ComplexPlane(new_r_interval*new_theta_interval,
                                     polar=True)
 
+        if other is S.Reals:
+            return other
+
         if other.is_subset(S.Reals):
             new_interval = []
 
@@ -845,6 +860,10 @@ class ComplexPlane(Set):
             # self in polar form
             elif self.polar and other.polar:
                 return ComplexPlane(Union(self.sets, other.sets), polar=True)
+
+        if other is S.Reals:
+            return self
+
         return None
 
 

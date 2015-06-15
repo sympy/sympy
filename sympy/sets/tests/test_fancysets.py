@@ -178,7 +178,7 @@ def test_fun():
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
 
 
-def test_reals():
+def test_Reals():
     assert 5 in S.Reals
     assert S.Pi in S.Reals
     assert -sqrt(2) in S.Reals
@@ -193,6 +193,8 @@ def test_Complex():
     assert -sqrt(2) in S.Complex
     assert -I in S.Complex
     assert sqrt(-1) in S.Complex
+    assert S.Complex.intersect(S.Reals) == S.Reals
+    assert S.Complex.union(S.Reals) == S.Complex
 
 
 def take(n, iterable):
@@ -282,9 +284,9 @@ def test_ComplexPlane_contains():
     assert 2.5 + 6.1*I not in c1
     assert 4.5 + 3.2*I not in c1
 
-    r = Interval(0, 1)
-    theta = Interval(0, 2*S.Pi)
-    c2 = ComplexPlane(r*theta, polar=True)
+    r1 = Interval(0, 1)
+    theta1 = Interval(0, 2*S.Pi)
+    c2 = ComplexPlane(r1*theta1, polar=True)
     assert 0.5 + 0.6*I in c2
     assert I in c2
     assert 1 in c2
@@ -384,3 +386,6 @@ def test_normalize_theta_set():
         FiniteSet(0, pi, 3*pi/2)
     assert normalize_theta_set(FiniteSet(-3*pi/2, pi/2)) == \
         FiniteSet(pi/2)
+
+    # ValueError for non-real sets
+    raises(ValueError, lambda: normalize_theta_set(S.Complex))
