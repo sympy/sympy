@@ -174,6 +174,8 @@ def test_log_values():
     assert log(2*3).func is log
     assert log(2*3**2).func is log
 
+    assert log(0 ,2) == zoo
+    assert log(0 ,10) == zoo
 
 def test_log_base():
     assert log(1, 2) == 0
