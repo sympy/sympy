@@ -780,6 +780,27 @@ class ComplexPlane(Set):
         """
         return self.args[0].args[1].is_Mul
 
+    @property
+    def _measure(self):
+        """
+        The measure of self.sets.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexPlane, S
+        >>> a, b = Interval(2, 5), Interval(4, 8)
+        >>> c = Interval(0, 2*S.Pi)
+        >>> c1 = ComplexPlane(a*b)
+        >>> c1.measure
+        12
+        >>> c2 = ComplexPlane(a*c, polar=True)
+        >>> c2.measure
+        6*pi
+
+        """
+        return self.sets._measure
+
     def _contains(self, other):
         from sympy.functions import arg, Abs
 

@@ -365,6 +365,16 @@ def test_ComplexPlane_union():
     assert c7.union(c8) == ComplexPlane(p4)
 
 
+def test_ComplexPlane_measure():
+    a, b = Interval(2, 5), Interval(4, 8)
+    theta1, theta2 = Interval(0, 2*S.Pi), Interval(0, S.Pi)
+    c1 = ComplexPlane(a*b)
+    c2 = ComplexPlane(Union(a*theta1, b*theta2), polar=True)
+
+    assert c1.measure == 12
+    assert c2.measure == 9*pi
+
+
 def test_normalize_theta_set():
 
     # Interval
