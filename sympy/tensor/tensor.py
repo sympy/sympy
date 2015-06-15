@@ -3060,6 +3060,9 @@ class TensAdd(TensExpr):
         if len(args) == 1:
             return args[0]
 
+        # Collect terms appearing more than once, differing by their coefficients:
+        args = TensAdd._tensAdd_collect_terms(args)
+
         # collect canonicalized terms
         def sort_key(t):
             x = get_index_structure(t)
@@ -3067,7 +3070,7 @@ class TensAdd(TensExpr):
                 return ([], [], [])
             return (t.components, x.free, x.dum)
         args.sort(key=sort_key)
-        args = TensAdd._tensAdd_collect_terms(args)
+
         if not args:
             return S.Zero
         # it there is only a component tensor return it
@@ -3166,13 +3169,14 @@ class TensAdd(TensExpr):
             if free_indices != set(arg.get_free_indices()):
                 raise ValueError("wrong valence")
             # TODO: what is the part which is not a coeff?
+            # needs an implementation similar to .as_coeff_Mul()
             terms_dict[arg/arg.coeff] += arg.coeff
 
-        new_args = tuple(coeff*t for t, coeff in terms_dict.items() if coeff != 0)
+        new_args = list(coeff*t for t, coeff in terms_dict.items() if coeff != 0)
         if isinstance(scalars, Add):
             new_args = scalars.args + new_args
         elif scalars != 0:
-            new_args = (scalars,) + new_args
+            new_args = [scalars] + new_args
         return new_args
 
     @property
