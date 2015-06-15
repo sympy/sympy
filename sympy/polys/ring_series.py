@@ -1084,13 +1084,15 @@ def rs_cot(p, iv, prec):
 
     cot
     """
+    # It can not handle series like `p = x + x*y` where the coefficient of the
+    # linear term in the series variable is symbolic.
     i, m = _check_series_var(p, iv, 'cot')
     prec1 = prec + 2*m
     c, s = rs_cos_sin(p, iv, prec1)
-    s = mul_xin(s, i, -1)
+    s = mul_xin(s, i, -m)
     s = rs_series_inversion(s, iv, prec1)
     res = rs_mul(c, s, iv, prec1)
-    res = mul_xin(res, i, -1)
+    res = mul_xin(res, i, -m)
     res = rs_trunc(res, iv, prec)
     return res
 
@@ -1221,7 +1223,7 @@ def rs_cos_sin(p, iv, prec):
     """
     t = rs_tan(p/2, iv, prec)
     t2 = rs_square(t, iv, prec)
-    p1 = rs_series_inversion(1+t2, iv, prec)
+    p1 = rs_series_inversion(1 + t2, iv, prec)
     return (rs_mul(p1, 1 - t2, iv, prec), rs_mul(p1, 2*t, iv, prec))
 
 # TODO
@@ -1284,40 +1286,6 @@ def rs_atanh(p, x, prec):
     p1 = rs_series_inversion(p1, x, prec - 1)
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
-
-def rs_asinh(p, iv, prec):
-    """
-    Hyperbolic arcsine of a series
-
-    Returns the series expansion of the asinh of p, about 0.
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_asinh
-    >>> R, x, y = ring('x, y', QQ)
-    >>> rs_asinh(x, x, 8)
-    -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
-
-    See Also
-    ========
-
-    asinh
-    """
-    if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              series variables')
-    ring = p.ring
-    if iv in ring.gens:
-        dp = rs_diff(p, iv)
-        p1 = 1 + rs_square(p, iv, prec - 1)
-        p1 = rs_nth_root(p, -2, iv, prec - 1)
-        p1 = rs_mul(dp, p1, iv, prec - 1)
-        return rs_integrate(p1, iv)
-    else:
-        raise NotImplementedError
 
 def rs_sinh(p, iv, prec):
     """
