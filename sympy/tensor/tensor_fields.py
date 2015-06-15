@@ -1037,9 +1037,9 @@ def g_wedge(T, S, g):
     """
 
     # Handling of the input tensor
-    if isinstance(S, (Wedge_array)):
+    if isinstance(S, (WedgeArray)):
         S = wedgearray2tensor(S)
-    if isinstance(T, (Wedge_array)):
+    if isinstance(T, (WedgeArray)):
         T = wedgearray2tensor(T)
 
     g_t = g_tensor(T, S, g)
