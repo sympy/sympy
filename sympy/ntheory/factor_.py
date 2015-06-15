@@ -231,7 +231,7 @@ def multiplicity(p, n):
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
-        raise ValueError('no such integer exists: n must be non-zero')
+        raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
     if p == 2:
         return trailing(n)
     if p < 2:
