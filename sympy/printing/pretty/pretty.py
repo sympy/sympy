@@ -1425,7 +1425,8 @@ class PrettyPrinter(Printer):
         else:
             prod_char = u('\xd7')
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
-                parenthesize=lambda set: set.is_Union or set.is_Intersection)
+                                   parenthesize=lambda set: set.is_Union or
+                                   set.is_Intersection or set.is_ProductSet)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
