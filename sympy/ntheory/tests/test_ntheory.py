@@ -65,6 +65,8 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
+    raises(ValueError, lambda: multiplicity(2, 0))
+    raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
     assert multiplicity(10, Rational(30, 7)) == 0
