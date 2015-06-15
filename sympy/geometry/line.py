@@ -24,6 +24,7 @@ from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .util import _symbol
 from sympy.core.compatibility import is_sequence
+from sympy.core.decorators import deprecated
 
 # TODO: this should be placed elsewhere and reused in other modules
 
@@ -1186,6 +1187,10 @@ class Line(LinearEntity):
         x = o.x
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
+
+    @deprecated(useinstead="equals", deprecated_since_version="0.7.7")
+    def equal(self, other):
+        return self.equals(other)
 
     def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
