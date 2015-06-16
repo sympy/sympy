@@ -567,7 +567,7 @@ class CodeGen(object):
 
             missing = [x for x in arg_list if x.name not in argument_sequence]
             if missing:
-                msg = "Argument list didn't specify: {} "
+                msg = "Argument list didn't specify: {0} "
                 msg = msg.format(", ".join([str(m.name) for m in missing]))
                 raise CodeGenArgumentListError(msg, missing)
 
@@ -1164,7 +1164,7 @@ class OctaveCodeGen(CodeGen):
 
             missing = [x for x in arg_list if x.name not in argument_sequence]
             if missing:
-                msg = "Argument list didn't specify: {} "
+                msg = "Argument list didn't specify: {0} "
                 msg = msg.format(", ".join([str(m.name) for m in missing]))
                 raise CodeGenArgumentListError(msg, missing)
 
