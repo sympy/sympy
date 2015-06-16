@@ -180,15 +180,15 @@ def tensor_product(first_tensor, second_tensor):
 
 
 def wedge(first_tensor, second_tensor):
-    """
-    Finds outer product (wedge) of two tensor arguments.
-    The algoritm is too find the asymmetric form of tensor product of
-    two arguments. The resulted array is multiplied on coefficient.
+    """Finds outer product (wedge) of two tensor arguments. The algoritm is too
+    find the asymmetric form of tensor product of two arguments. The resulted
+    array is multiplied on coefficient.
 
     Examples
     ========
-    from sympy.tensor.arraypy import Arraypy, TensorArray
-    from sympy.tensor.tensor_methods import wedge
+
+    >>> from sympy.tensor.arraypy import Arraypy, TensorArray
+    >>> from sympy.tensor.tensor_methods import wedge
     >>> a = Arraypy((3,), 'A').to_tensor((-1,))
     >>> b = Arraypy((3,), 'B').to_tensor((1,))
     >>> c = wedge(a, b)
@@ -196,7 +196,6 @@ def wedge(first_tensor, second_tensor):
     0  10*A[0]*B[1] - 10*A[1]*B[0]  10*A[0]*B[2] - 10*A[2]*B[0]
     -10*A[0]*B[1] + 10*A[1]*B[0]  0  10*A[1]*B[2] - 10*A[2]*B[1]
     -10*A[0]*B[2] + 10*A[2]*B[0]  -10*A[1]*B[2] + 10*A[2]*B[1]  0
-
 
     """
     if not isinstance(first_tensor, TensorArray):
