@@ -1063,6 +1063,7 @@ def test_fun():
     p, q = tensorhead('p q', [Lorentz], [[1]])
     t = q(c)*p(a)*q(b) + g(a,b)*g(c,d)*q(-d)
     assert t(a,b,c) == t
+    assert t - t(b,a,c) == q(c)*p(a)*q(b) - q(c)*p(b)*q(a)
     assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
     t1 = t.fun_eval((a,b),(b,a))
     assert t1 == q(c)*p(b)*q(a) + g(a,b)*g(c,d)*q(-d)
@@ -1219,10 +1220,6 @@ def test_hidden_indices_for_matrix_multiplication():
     assert _is_equal(B(-m1), B(-m1))
 
     assert _is_equal(A(m0) - A(m0), 0)
-    zzz1 = A(m0)*A(m1)
-    zzz2 = A(m1)*A(m0)
-    zzz2.canon_bp()
-    zzz1 + zzz2
     ts1 = A(m0)*A(m1) + A(m1)*A(m0)
     ts2 = A(m1)*A(m0) + A(m0)*A(m1)
     assert _is_equal(ts1, ts2)
