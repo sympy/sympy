@@ -20,7 +20,6 @@ Contents
     secondquant.rst
     wigner.rst
     units.rst
-    hep/index.rst
     vector/index.rst
     mechanics/index.rst
     quantum/index.rst
