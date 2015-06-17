@@ -11,17 +11,6 @@ from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
 from mpmath.libmp.libintmath import giant_steps
 import math
 
-"""
-Notes
-=====
-
-As of now, polynomials can not be defined over a symbolic ring, i.e, the
-coeffecients can't be symbolic expressions. This implies that operations such
-as: `rs_sin(x + y, x, 10)` are not possible as sin(y) and cos(y) can not be
-represented in the present setup. Hence, ring_series functions can not handle
-polynomials with symbolic constant terms.
-"""
-
 def _invert_monoms(p1):
     """
     Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in x.
@@ -674,7 +663,7 @@ def rs_nth_root(p, n, iv, prec):
     The result of this function is dependent on the ring over which the
     polynomial has been defined. If the answer involves a root of a constant,
     make sure that the polynomial is over a real field. It can not yet handle
-    roots of symbols. See note at the top.
+    roots of symbols.
 
     Examples
     ========
