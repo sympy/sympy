@@ -232,7 +232,6 @@ def test_atan():
         2*x**7*y**9 - 1/7*x**7*y**7 - 1/3*x**6*y**9 + x**6*y**7 - x**5*y**7 + \
         1/5*x**5*y**5 - x**4*y**5 - 1/3*x**3*y**3 + x**2*y**3 + x*y
 
-<<<<<<< HEAD
     # Constant term in series
     a = symbols('a')
     R, x, y = ring('x, y', EX)
@@ -245,15 +244,13 @@ def test_atan():
         EX(1/(a**2 + 1))*x**2*y - EX(a/(a**4 + 2*a**2 + 1))*x**2 + EX(1/(a**2 \
         + 1))*x + EX(atan(a))
 
-
-=======
 def test_asin():
     R, x, y = ring('x, y', QQ)
     assert rs_asin(x + x*y, x, 5) == x**3*y**3/6 + x**3*y**2/2 + x**3*y/2 + \
         x**3/6 + x*y + x
     assert rs_asin(x*y + x**2*y**3, x, 6) == x**5*y**7/2 + 3*x**5*y**5/40 + \
         x**4*y**5/2 + x**3*y**3/6 + x**2*y**3 + x*y
->>>>>>> 9d2c0df... Added tests for functions
+
 def test_tan():
     R, x, y = ring('x, y', QQ)
     assert rs_tan(x, x, 9) == \
@@ -262,7 +259,6 @@ def test_tan():
         4/3*x**7*y**9 + 17/315*x**7*y**7 + 1/3*x**6*y**9 + 2/3*x**6*y**7 + \
         x**5*y**7 + 2/15*x**5*y**5 + x**4*y**5 + 1/3*x**3*y**3 + x**2*y**3 + x*y
 
-<<<<<<< HEAD
     # Constant term in series
     a = symbols('a')
     R, x, y = ring('x, y', QQ[tan(a), a])
@@ -285,14 +281,13 @@ def test_tan():
     p = x + x**2 + 5
     assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + 67701870330562640/ \
         668083460499)
-=======
+
 def test_cot():
     R, x, y = ring('x, y', QQ)
     assert rs_cot(x**6 + x**7, x, 8) == x**-6 - x**-5 + x**-4 - x**-3 + \
         x**-2 - x**-1 + 1 - x + x**2 - x**3 + x**4 - x**5 + 2*x**6/3 - 4*x**7/3
     assert rs_cot(x + x**2*y, x, 5) == -x**4*y**5 - x**4*y/15 + x**3*y**4 - \
         x**3/45 - x**2*y**3 - x**2*y/3 + x*y**2 - x/3 - y + x**-1
->>>>>>> 9d2c0df... Added tests for functions
 
 def test_sin():
     R, x, y = ring('x, y', QQ)
@@ -413,3 +408,11 @@ def test_tanh():
     p = rs_tanh(x + x**2*y + a, x, 4)
     assert (p.compose(x, 10)).compose(y, 5) == EX(-1000*tanh(a)**4 + \
         10100*tanh(a)**3 + 2470*tanh(a)**2/3 - 10099*tanh(a) + QQ(530, 3))
+
+def test_puiseux_series():
+    R, x, y = ring('x, y', QQ)
+    assert rs_sin(x, x, 10)*x**QQ(-4, 1) == x**5/362880 - \
+        1*x**3/5040 + 1*x/120 - x**-1/6 + x**-3
+    assert rs_exp(x + x*y, x, 3)*x**QQ(2, 5) == x**QQ(12, 5)*y**2/2 + \
+        x**QQ(12, 5)*y + x**QQ(12, 5)/2 + x**QQ(7, 5)*y + x**QQ(7, 5) + \
+        x**QQ(2, 5)
