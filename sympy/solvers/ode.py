@@ -6422,20 +6422,23 @@ def sysode_linear_order1_jordan(match_):
     eq = match_['eq']
     n = len(eq)
 
+    # todo: inhomog test?
+
     t = func[0].args[0]
     # FIXME: check all same: add test, or maybe this is dealt with higher up?
     if not all([f.args[0] == t for f in func]):
         raise ValueError("The ODEs must all be in the same variables")
 
+    # TODO: M = r['M']
     M = Matrix(n, n, lambda i,j: fc[i, func[j], 1])
     L = Matrix(n, n, lambda i,j: -fc[i, func[j], 0])
+    # todo: where/what to raise if M not invertible
     A = M.inv() * L
-    pprint(A)
 
     T, JJ = A.jordan_cells()
-    if len(JJ) != T.rows:
+    if sum([J.rows for J in JJ]) != T.cols:
+        pprint(("A, T, JJ:", A, T, JJ))
         raise NotImplementedError("Too many Jordan blocks: probably #9274")
-    pprint(("orig T, JJ:", T, JJ))
 
     if not all(a.is_real for a in flatten(A.tolist())):
         # Cannot tell if matrix A is real: matrix exponential of each block
@@ -6463,7 +6466,7 @@ def sysode_linear_order1_jordan(match_):
             expm = Matrix(2*m, 2*m, lambda r,c: 0)
             for i in range(m):
                 for j in range(i, m):
-                    r = j-i
+                    r = j - i
                     expm[2*i:2*i+2, 2*j:2*j+2] = t**r/factorial(r)*R
             expm = exp(a*t)*expm
             T2 = []
@@ -6505,7 +6508,7 @@ def sysode_linear_order1_jordan(match_):
         for evs in ev_lol:
             for ev in evs:
                 T = T.row_join(ev)
-        pprint(("TT,JJ,T,expm:",TT,JJ,T,expm))
+        #print(); pprint(("A,TT,JJ,T,expm:",A,TT,JJ,T,expm))
     q = T*expm*T.inv()
     Cvec = Matrix(get_numbered_constants(eq, num=n))
     q = q*Cvec
