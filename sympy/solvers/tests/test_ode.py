@@ -113,7 +113,7 @@ def test_linear_2eq_order1_type2_degen():
 def test_dsolve_linear_2eq_order1_diag_triangular():
     e = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x))]
-    s1 = [Eq(f(x), C2*exp(x)), Eq(g(x), C1*exp(x))]
+    s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x))]
     s = dsolve(e)
     solves(s, e)
     assert s == s1
@@ -127,7 +127,6 @@ def test_dsolve_linear_2eq_order1_diag_triangular():
     assert s == s1
 
 
-@XFAIL
 def test_sysode_linear_2eq_order1_type1_D_lt_0():
     e = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)),
          Eq(diff(g(x), x), -4*I*g(x))]
@@ -135,7 +134,6 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0():
     solves(s, e)
 
 
-@XFAIL
 def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
     e = [Eq(diff(f(x), x), -9*I*f(x)),
          Eq(diff(g(x), x), -4*I*g(x))]
@@ -340,9 +338,8 @@ def test_linear_3eq_order1_nonhomog():
     raises(NotImplementedError, lambda: dsolve(e))
 
 
-@XFAIL
 def test_linear_3eq_order1_diagonal():
-    # code makes assumptions about coefficients being nonzero, breaks when assumptions are not true
+    # older code made assumptions about coefficients being nonzero
     e = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x)),
          Eq(diff(h(x), x), h(x))]
@@ -2650,6 +2647,8 @@ def test_issue_7093():
 def test_dsolve_linsystem_symbol():
     eps = Symbol('epsilon', positive=True)
     eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
-    sol1 = [Eq(f(x), -eps*(C1*sin(eps*x) + C2*cos(eps*x))),
-            Eq(g(x), C1*eps*cos(eps*x) - C2*eps*sin(eps*x))]
-    assert dsolve(eq1) == sol1
+    sol1 = [Eq(f(x), C1*cos(eps*x) - C2*sin(eps*x)),
+            Eq(g(x), C2*cos(eps*x) + C1*sin(eps*x))]
+    s = dsolve(eq1)
+    solves(s, eq1)
+    assert s == sol1
