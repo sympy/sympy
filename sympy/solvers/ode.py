@@ -606,11 +606,13 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                solvefunc = globals()['sysode_linear_order%(order)s_jordan' % match]
-                #if match['no_of_equation'] > 3:
-                #    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
-                #else:
-                #    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+                # TODO: use 'hint', c.f., scalar case
+                if match['type_of_equation'] == 'linear_order1_jordan':
+                    solvefunc = globals()['sysode_%(type_of_equation)s' % match]
+                elif match['no_of_equation'] > 3:
+                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                else:
+                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
@@ -1451,26 +1453,32 @@ def classify_sysode(eq, funcs=None, **kwargs):
     if len(set(order.values()))==1:
         order_eq = list(matching_hints['order'].values())[0]
         if matching_hints['is_linear'] == True:
-            if matching_hints['no_of_equation'] == 2:
-                if order_eq == 1:
-                    type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+            type_of_equation = None
+            if order_eq == 1:
+                # TODO: seperate hint for real?
+                type_of_equation = check_linear_order1_jordan(eq, funcs, func_coef)
 
-            elif matching_hints['no_of_equation'] == 3:
-                if order_eq == 1:
-                    type_of_equation = check_linear_3eq_order1(eq, funcs, func_coef)
-                    if type_of_equation==None:
+            if type_of_equation is None:
+                if matching_hints['no_of_equation'] == 2:
+                    if order_eq == 1:
+                        type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
+                    elif order_eq == 2:
+                        type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
+                    else:
+                        type_of_equation = None
+
+                elif matching_hints['no_of_equation'] == 3:
+                    if order_eq == 1:
+                        type_of_equation = check_linear_3eq_order1(eq, funcs, func_coef)
+                        if type_of_equation==None:
+                            type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
+                    else:
+                        type_of_equation = None
+                else:
+                    if order_eq == 1:
                         type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
-            else:
-                if order_eq == 1:
-                    type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+                    else:
+                        type_of_equation = None
         else:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
@@ -1490,6 +1498,38 @@ def classify_sysode(eq, funcs=None, **kwargs):
     matching_hints['type_of_equation'] = type_of_equation
 
     return matching_hints
+
+def check_linear_order1_jordan(eq, func, func_coef):
+    n = len(eq)
+    fc = func_coef
+    M = Matrix(n, n, lambda i,j: fc[i, func[j], 1])
+    L = Matrix(n, n, lambda i,j: -fc[i, func[j], 0])
+
+    # TODO: if M.inv() does not exist, return None
+
+    #t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = func[0].args[0]
+
+    #print()
+    #print(eq)
+    #print(func)
+    #print(func_coef)
+
+    r = dict()
+    r['M'] = M;
+    r['L'] = L;
+    forcing = [S(0)]*n
+    for i in range(n):
+        for j in Add.make_args(eq[i]):
+            if not j.has(*func):
+                forcing[i] += j
+    r['forcing'] = forcing
+    #print(("forcing", forcing))
+    #print('_________________')
+    if forcing != [S(0)]*n:
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        return None
+    return 'linear_order1_jordan'
 
 
 def check_linear_2eq_order1(eq, func, func_coef):
