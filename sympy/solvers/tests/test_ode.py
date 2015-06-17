@@ -26,6 +26,13 @@ h = Function('h')
 # constant_renumber because it will normalize it (constant_renumber causes
 # dsolve() to return different results on different machines)
 
+
+def solves(s, eq):
+    s = [(l.lhs, l.rhs) for l in s]
+    for i in range(len(eq)):
+        assert (eq[i].lhs - eq[i].rhs).subs(s).doit().simplify().doit() == 0
+
+
 def test_linear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -99,10 +106,8 @@ def test_linear_2eq_order1_type2_degen():
          Eq(diff(g(x), x), f(x) + 7)]
     s1 = [Eq(f(x), C2*exp(x) - 5), Eq(g(x), C2*exp(x) - C1 + 2*x - 5)]
     s = dsolve(e)
+    solves(s, e)
     assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
 
 
 def test_dsolve_linear_2eq_order1_diag_triangular():
@@ -110,20 +115,16 @@ def test_dsolve_linear_2eq_order1_diag_triangular():
          Eq(diff(g(x), x), g(x))]
     s1 = [Eq(f(x), C2*exp(x)), Eq(g(x), C1*exp(x))]
     s = dsolve(e)
+    solves(s, e)
     assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
 
     e = [Eq(diff(f(x), x), 2*f(x)),
          Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
     s1 = [Eq(f(x), -5*C1*exp(2*x)),
           Eq(g(x), 3*C1*exp(2*x) + 8*C2*exp(7*x))];
     s = dsolve(e)
+    solves(s, e)
     assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
 
 
 @XFAIL
@@ -131,10 +132,7 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0():
     e = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)),
          Eq(diff(g(x), x), -4*I*g(x))]
     s = dsolve(e)
-    s = [(l.lhs, l.rhs) for l in s]
-    # bit of a hassle to get these to clean up
-    assert (e[0].lhs - e[0].rhs).subs(s).doit().simplify().doit() == 0
-    assert (e[1].lhs - e[1].rhs).subs(s).doit().simplify().doit() == 0
+    solves(s, e)
 
 
 @XFAIL
@@ -143,10 +141,8 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
          Eq(diff(g(x), x), -4*I*g(x))]
     s1 = [Eq(f(x), C1*exp(-9*I*x)), Eq(g(x), C2*exp(-4*I*x))]
     s = dsolve(e)
+    solves(s, e)
     assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
 
 
 def test_linear_2eq_order2():
