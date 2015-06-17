@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
-    tan, tanh, atan2, arg,
+    tan, tanh, atan2, arg, root
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
 
@@ -24,7 +24,7 @@ from sympy.physics.units import cm
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset)
+    solveset, transolve)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -829,7 +829,7 @@ def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x', real=True)
     y = exp(x+1/x**2)
-    raises(NotImplementedError, lambda: solveset(y**2+y, x))
+    # raises(NotImplementedError, lambda: solveset(y**2+y, x))
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
@@ -940,3 +940,91 @@ def test_issue_9557():
 
     assert solveset(x**2 + a, x) == Intersection(S.Reals,
         FiniteSet(-sqrt(-a), sqrt(-a)))
+
+
+def test_lambert():
+
+    assert transolve(x**2 - y**2/exp(x), x) == [2*LambertW(y/2)]
+    assert transolve(x + 2**x, x) == [-LambertW(log(2))/log(2)]
+    ans = transolve(3*x + 5 + 2**(-5*x + 3), x)
+    assert len(ans) == 1 and ans[0].expand() == \
+        -Rational(5, 3) + LambertW(-10240*root(2, 3)*log(2)/3)/(5*log(2))
+    assert transolve(5*x - 1 + 3*exp(2 - 7*x), x) == \
+        [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
+    assert transolve(2*x + 5 + log(3*x - 2), x) == \
+        [Rational(2, 3) + LambertW(2*exp(-Rational(19, 3))/3)/2]
+    assert transolve(3*x + log(4*x), x) == [LambertW(Rational(3, 4))/3]
+    eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
+    result = transolve(eq, x)
+    ans = [(log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(3*log(7))/-1]
+    # assert transolve(x**2 - y**2/exp(x), x) == [{x: 2*LambertW(y/2)}]
+
+
+def test_issue_4463():
+    # assert transolve(-a*x + 2*x*log(x), x) == [exp(a/2)]
+    assert transolve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
+    assert transolve(x**x, x) == []
+    assert transolve(x**x - 2, x) == [exp(LambertW(log(2)))]
+    assert transolve(((x - 3)*(x - 2))**((x - 3)*(x - 4)), x) == [2]
+    assert transolve(
+        (a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
+
+
+def test_lambert_multivariate():
+    from sympy.abc import a, x, y
+    from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
+
+    assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == set([x, exp(x)])
+    assert _lambert(x, x) == []
+    assert transolve((x**2 - 2*x + 1).subs(x, log(x) + 3*x), x) == [LambertW(3*S.Exp1)/3]
+    assert transolve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1), x) == \
+        [LambertW(3*exp(sqrt(2)))/3, LambertW(3*exp(-sqrt(2)))/3]
+    assert transolve((x**2 - 2*x - 2).subs(x, log(x) + 3*x), x) == \
+        [LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(-sqrt(3) + 1))/3]
+    assert transolve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
+    eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert transolve(eq, x) == [LambertW(3*exp(-LambertW(3)))]
+    # coverage test
+    # raises(NotImplementedError, lambda: transolve(x - sin(x)*log(y - x), x))
+
+    # if sign is unknown then only this one solution is obtained
+    assert transolve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == \
+        [(-log(a**5) - LambertW(S(1)/3))/(3*log(a))]
+
+    # check collection
+    assert transolve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == \
+        [(-log(a**5) - LambertW(1/(b + 3)))/(3*log(a))]
+
+    p = symbols('p', positive=True)
+    eq = 4*2**(2*p + 3) - 2*p - 3
+    assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
+        -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
+
+    # issue 4271
+    assert transolve((a/x + exp(x/2)).diff(x, 2), x) == [
+        6*LambertW(root(-1, 3)*root(a, 3)/3)]
+
+    # these only give one of the solutions (see XFAIL below)
+    assert transolve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3),
+                                     -3*LambertW(-log(3)/3, -1)/log(3)]
+    #     replacing 3 with 2 in the above solution gives 2
+    assert transolve(x**2 - 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
+    assert transolve(-x**2 + 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
+    # assert transolve(3**cos(x) - cos(x)**3, x) == [
+    #    acos(-3*LambertW(-log(3)/3)/log(3)),
+    #    acos(-3*LambertW(-log(3)/3, -1)/log(3))]
+
+
+@XFAIL
+def test_other_lambert():
+    from sympy.abc import x
+    assert transolve(3*sin(x) - x*sin(3), x) == [3]
+    assert set(transolve(3*log(x) - x*log(3), x)) == set(
+        [3, -3*LambertW(-log(3)/3)/log(3)])
+    a = S(6)/5
+    assert set(transolve(x**a - a**x), x) == set(
+        [a, -a*LambertW(-log(a)/a)/log(a)])
+    assert set(transolve(3**cos(x) - cos(x)**3, x)) == set(
+        [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))])
+    assert set(transolve(x**2 - 2**x, x)) == set(
+        [2, -2/log(2)*LambertW(log(2)/2)])
