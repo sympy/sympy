@@ -34,8 +34,12 @@ from mpmath.libmp.libmpf import prec_to_dps
 from sympy.utilities import lambdify, public
 
 from sympy.core.compatibility import range
+from sympy.core.decorators import deprecated
 
 from math import log as mathlog
+
+__all__ = ['CRootOf']
+
 def _ispow2(i):
     v = mathlog(i, 2)
     return v == int(v)
@@ -43,16 +47,37 @@ def _ispow2(i):
 _reals_cache = {}
 _complexes_cache = {}
 
+
+@public
+def rootof(f, x, index=None, radicals=True, expand=True):
+    """Construct a new ``ComplexRootOf`` object for ``k``-th root of ``f``."""
+    return CRootOf(f, x, index=index, radicals=radicals, expand=expand)
+
+
 @public
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
-    __slots__ = ['poly', 'index']
+    __slots__ = ['poly']
+
+    @deprecated(
+        feature="Calling RootOf",
+        deprecated_since_version="0.7.7",
+        useinstead="rootof",
+        issue=9541)
+    def __new__(cls, f, x, index=None, radicals=True, expand=True):
+        """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
+        return rootof(f, x, index=index, radicals=radicals, expand=expand)
+
+@public
+class ComplexRootOf(RootOf):
+    """Represents indexed complex roots of a polynomial."""
+
+    __slots__ = ['index']
     is_complex = True
     is_number = True
 
-    def __new__(cls, f, x, index=None, radicals=True, expand=True):
-        """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
+    def __new__(cls, f, x, index=None, radicals=False, expand=True):
         x = sympify(x)
 
         if index is None and x.is_Integer:
@@ -73,7 +98,7 @@ class RootOf(Expr):
         degree = poly.degree()
 
         if degree <= 0:
-            raise PolynomialError("can't construct RootOf object for %s" % f)
+            raise PolynomialError("can't construct CRootOf object for %s" % f)
 
         if index < -degree or index >= degree:
             raise IndexError("root index out of [%d, %d] range, got %d" %
@@ -95,7 +120,7 @@ class RootOf(Expr):
         dom = poly.get_domain()
 
         if not dom.is_ZZ:
-            raise NotImplementedError("RootOf is not supported over %s" % dom)
+            raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
         root = cls._indexed_root(poly, index)
         return coeff*cls._postprocess_root(root, radicals)
@@ -678,6 +703,7 @@ class RootOf(Expr):
             r1 < re and re < r2) and (
             i1 < im and im < i2))
 
+CRootOf = ComplexRootOf
 
 @public
 class RootSum(Expr):
