@@ -123,7 +123,7 @@ class ComplexRootOf(RootOf):
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
         root = cls._indexed_root(poly, index)
-        return coeff*cls._postprocess_root(root, radicals)
+        return coeff * cls._postprocess_root(root, radicals)
 
     @classmethod
     def _new(cls, poly, index):
@@ -175,7 +175,7 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _get_reals_sqf(cls, factor):
-        """Compute real root isolating intervals for a square-free polynomial. """
+        """Get real root isolating intervals for a square-free factor."""
         if factor in _reals_cache:
             real_part = _reals_cache[factor]
         else:
@@ -187,7 +187,7 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _get_complexes_sqf(cls, factor):
-        """Compute complex root isolating intervals for a square-free polynomial. """
+        """Get complex root isolating intervals for a square-free factor."""
         if factor in _complexes_cache:
             complex_part = _complexes_cache[factor]
         else:
@@ -203,7 +203,7 @@ class ComplexRootOf(RootOf):
 
         for factor, k in factors:
             real_part = cls._get_reals_sqf(factor)
-            reals.extend([ (root, factor, k) for root in real_part ])
+            reals.extend([(root, factor, k) for root in real_part])
 
         return reals
 
@@ -214,7 +214,7 @@ class ComplexRootOf(RootOf):
 
         for factor, k in factors:
             complex_part = cls._get_complexes_sqf(factor)
-            complexes.extend([ (root, factor, k) for root in complex_part ])
+            complexes.extend([(root, factor, k) for root in complex_part])
 
         return complexes
 
@@ -246,6 +246,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _separate_imaginary_from_complex(cls, complexes):
         from sympy.utilities.iterables import sift
+
         def is_imag(c):
             '''
             return True if all roots are imaginary (ax**2 + b)
@@ -258,7 +259,7 @@ class ComplexRootOf(RootOf):
                     return True  # both imag
                 elif _ispow2(deg):
                     if f.LC()*f.TC() < 0:
-                        return None # 2 are imag
+                        return None  # 2 are imag
             return False  # none are imag
         # separate according to the function
         sifted = sift(complexes, lambda c: c[1])
@@ -298,9 +299,9 @@ class ComplexRootOf(RootOf):
         roots would intersect if slid horizontally or vertically/
         """
         while complexes:  # break when all are distinct
-            # get the intervals pairwise-disjoint. If rectangles were drawn around
-            # the coordinates of the bounding rectangles, no rectangles would
-            # intersect after this procedure
+            # get the intervals pairwise-disjoint.
+            # If rectangles were drawn around the coordinates of the bounding
+            # rectangles, no rectangles would intersect after this procedure.
             for i, (u, f, k) in enumerate(complexes):
                 for j, (v, g, m) in enumerate(complexes[i + 1:]):
                     u, v = u.refine_disjoint(v)
@@ -359,8 +360,7 @@ class ComplexRootOf(RootOf):
         # sort complexes and combine with imag
         if complexes:
             # key is (x1, y1) e.g. (1, 2)x(3, 4) -> (1,3)
-            complexes = sorted(complexes, key=
-                lambda c: c[0].a)
+            complexes = sorted(complexes, key=lambda c: c[0].a)
             # find insertion point for imaginary
             for i, c in enumerate(reversed(complexes)):
                 if c[0].bx <= 0:
@@ -386,7 +386,10 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _reals_index(cls, reals, index):
-        """Map initial real root index to an index in a factor where the root belongs. """
+        """
+        Map initial real root index to an index in a factor where
+        the root belongs.
+        """
         i = 0
 
         for j, (_, factor, k) in enumerate(reals):
@@ -403,7 +406,10 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _complexes_index(cls, complexes, index):
-        """Map initial complex root index to an index in a factor where the root belongs. """
+        """
+        Map initial complex root index to an index in a factor where
+        the root belongs.
+        """
         index, i = index, 0
 
         for j, (_, factor, k) in enumerate(complexes):
@@ -422,8 +428,8 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _count_roots(cls, roots):
-        """Count the number of real or complex roots including multiplicities."""
-        return sum([ k for _, _, k in roots ])
+        """Count the number of real or complex roots with multiplicities."""
+        return sum([k for _, _, k in roots])
 
     @classmethod
     def _indexed_root(cls, poly, index):
@@ -499,7 +505,7 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _preprocess_roots(cls, poly):
-        """Take heroic measures to make ``poly`` compatible with ``RootOf``. """
+        """Take heroic measures to make ``poly`` compatible with ``RootOf``."""
         dom = poly.get_domain()
 
         if not dom.is_Exact:
@@ -626,11 +632,12 @@ class ComplexRootOf(RootOf):
                     pass
                 interval = interval.refine()
 
-        return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
+        return (Float._new(root.real._mpf_, prec)
+                + I*Float._new(root.imag._mpf_, prec))
 
     def eval_rational(self, tol):
         """
-        Returns a Rational approximation to ``self`` with the tolerance ``tol``.
+        Return a Rational approximation to ``self`` with the tolerance ``tol``.
 
         This method uses bisection, which is very robust and it will always
         converge. The returned Rational instance will be at most 'tol' from the
@@ -652,7 +659,8 @@ class ComplexRootOf(RootOf):
         """
 
         if not self.is_real:
-            raise NotImplementedError("eval_rational() only works for real polynomials so far")
+            raise NotImplementedError(
+                "eval_rational() only works for real polynomials so far")
         func = lambdify(self.poly.gen, self.expr)
         interval = self._get_interval()
         a = Rational(str(interval.a))
@@ -712,7 +720,7 @@ class RootSum(Expr):
     __slots__ = ['poly', 'fun', 'auto']
 
     def __new__(cls, expr, func=None, x=None, auto=True, quadratic=False):
-        """Construct a new ``RootSum`` instance carrying all roots of a polynomial. """
+        """Construct a new ``RootSum`` instance of roots of a polynomial."""
         coeff, poly = cls._transform(expr, x)
 
         if not poly.is_univariate:
@@ -892,7 +900,7 @@ class RootSum(Expr):
         if len(_roots) < self.poly.degree():
             return self
         else:
-            return Add(*[ self.fun(r) for r in _roots ])
+            return Add(*[self.fun(r) for r in _roots])
 
     def _eval_evalf(self, prec):
         try:
@@ -900,12 +908,13 @@ class RootSum(Expr):
         except (DomainError, PolynomialError):
             return self
         else:
-            return Add(*[ self.fun(r) for r in _roots ])
+            return Add(*[self.fun(r) for r in _roots])
 
     def _eval_derivative(self, x):
         var, expr = self.fun.args
         func = Lambda(var, expr.diff(x))
         return self.new(self.poly, func, self.auto)
+
 
 def bisect(f, a, b, tol):
     """
@@ -933,7 +942,7 @@ def bisect(f, a, b, tol):
         c = (a + b)/2
         fc = f(c)
         if (fc == 0):
-            return c # We need to make sure f(c) is not zero below
+            return c  # We need to make sure f(c) is not zero below
         if (fa * fc < 0):
             b = c
             fb = fc
