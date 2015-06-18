@@ -3,7 +3,7 @@ This module contains functions to solve a single equation for a single variable.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, iterable
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
 from sympy.core.numbers import I, Number, Rational, oo
@@ -463,9 +463,14 @@ def solveset_real(f, symbol):
                                                          as_poly_solver)
                         except NotImplementedError:
                             try:
-                                result += transolve(equation, symbol)
+                                solutions = transolve(equation, symbol)
+                                if solutions is not None:
+                                    if iterable(solutions):
+                                        result += FiniteSet(*solutions)
+                                    else:
+                                        result += FiniteSet(solutions)
                             except NotImplementedError:
-                                raise NotImplementedError
+                                pass
                 else:
                     result += solveset_real(equation, symbol)
         else:
@@ -1240,50 +1245,50 @@ def transolve(eq, sym, **flags):
             # to try get powers in standard form for better factoring
             f = factor(powdenest(lhs - rhs))
             if f.is_Mul:
-                return _solve(f, sym, **flags)
+                return solveset_real(f, sym)
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', True))
                 if f.count(log) != lhs.count(log):
                     if f.func is log:
-                        return _solve(f.args[0] - exp(rhs), sym, **flags)
+                        return solveset_real(f.args[0] - exp(rhs), sym)
                     return transolve(f - rhs, sym)
 
         elif lhs.is_Pow:
             if lhs.exp.is_Integer:
                 if lhs - rhs != eq:
-                    return _solve(lhs - rhs, sym, **flags)
+                    return solveset_real(lhs - rhs, sym)
             elif sym not in lhs.exp.free_symbols:
-                return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
+                return solveset_real(lhs.base - rhs**(1/lhs.exp), sym)
             elif not rhs and sym in lhs.exp.free_symbols:
                 # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
                 # the same place
-                sol_base = _solve(lhs.base, sym, **flags)
+                sol_base = solveset_real(lhs.base, sym)
                 if not sol_base:
                     return sol_base  # no solutions to remove so return now
                 return list(ordered(set(sol_base) - set(
-                    _solve(lhs.exp, sym, **flags))))
+                    solveset_real(lhs.exp, sym))))
             elif (rhs is not S.Zero and
                         lhs.base.is_positive and
                         lhs.exp.is_real):
-                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
+                return solveset_real(lhs.exp*log(lhs.base) - log(rhs), sym)
             elif lhs.base == 0 and rhs == 1:
-                return _solve(lhs.exp, sym, **flags)
+                return solveset_real(lhs.exp, sym)
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
             if llhs.is_Add:
-                return _solve(llhs - log(rhs), sym, **flags)
+                return solveset_real(llhs - log(rhs), sym)
 
         elif lhs.is_Function and len(lhs.args) == 1 and lhs.func in multi_inverses:
             # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
             soln = []
             for i in multi_inverses[lhs.func](rhs):
-                soln.extend(_solve(lhs.args[0] - i, sym, **flags))
+                soln.extend(solveset_real(lhs.args[0] - i, sym))
             return list(ordered(soln))
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
-            return _solve(rewrite - rhs, sym, **flags)
+            return solveset_real(rewrite - rhs, sym)
     except NotImplementedError:
         pass
 
@@ -1324,7 +1329,7 @@ def transolve(eq, sym, **flags):
                         flags['bivariate'] = False
                         inversion = transolve(g - u, sym, **flags)
                         if inversion:
-                            sol = _solve(p, u, **flags)
+                            sol = solveset_real(p, u)
                             return list(ordered(set([i.subs(u, s)
                                 for i in inversion for s in sol])))
                     except NotImplementedError:
@@ -1342,7 +1347,7 @@ def transolve(eq, sym, **flags):
             u = sym
         if pos.has(u):
             try:
-                soln = _solve(pos, u, **flags)
+                soln = solveset_real(pos, u)
                 return list(ordered([s.subs(reps) for s in soln]))
             except NotImplementedError:
                 pass
