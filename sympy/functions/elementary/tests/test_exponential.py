@@ -167,6 +167,8 @@ def test_log_values():
 
     assert log(oo*I) == oo
     assert log(-oo*I) == oo
+    assert log(0, 2) == zoo
+    assert log(0, 5) == zoo
 
     assert exp(-log(3))**(-1) == 3
 
