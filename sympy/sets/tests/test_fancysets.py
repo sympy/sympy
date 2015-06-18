@@ -1,7 +1,8 @@
 from sympy.core.compatibility import range
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexPlane)
-from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet, Union
+from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
+                             Intersection)
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, Abs, I)
 from sympy.utilities.pytest import XFAIL, raises
@@ -277,22 +278,25 @@ def test_ComplexPlane_contains():
     # contains in ComplexPlane
     a = Interval(2, 3)
     b = Interval(4, 6)
+    c = Interval(7, 9)
     c1 = ComplexPlane(a*b)
+    c2 = ComplexPlane(Union(a*b, c*a))
     assert 2.5 + 4.5*I in c1
     assert 2 + 4*I in c1
     assert 3 + 4*I in c1
+    assert 8 + 2.5*I in c2
     assert 2.5 + 6.1*I not in c1
     assert 4.5 + 3.2*I not in c1
 
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
-    c2 = ComplexPlane(r1*theta1, polar=True)
-    assert 0.5 + 0.6*I in c2
-    assert I in c2
-    assert 1 in c2
-    assert 0 in c2
-    assert 1 + I not in c2
-    assert 1 - I not in c2
+    c3 = ComplexPlane(r1*theta1, polar=True)
+    assert 0.5 + 0.6*I in c3
+    assert I in c3
+    assert 1 in c3
+    assert 0 in c3
+    assert 1 + I not in c3
+    assert 1 - I not in c3
 
 
 def test_ComplexPlane_intersect():
@@ -337,6 +341,11 @@ def test_ComplexPlane_intersect():
     assert c1.intersect(Interval(5, 7)) == FiniteSet(5)
     assert c1.intersect(Interval(6, 9)) == EmptySet()
 
+    # unevaluated object
+    C1 = ComplexPlane(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    C2 = ComplexPlane(Interval(-1, 1)*Interval(-1, 1))
+    assert C1.intersect(C2) == Intersection(C1, C2)
+
 
 def test_ComplexPlane_union():
 
@@ -363,6 +372,9 @@ def test_ComplexPlane_union():
 
     assert c5.union(c6) == ComplexPlane(p3)
     assert c7.union(c8) == ComplexPlane(p4)
+
+    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
+    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4))
 
 
 def test_ComplexPlane_measure():

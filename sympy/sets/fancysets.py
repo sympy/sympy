@@ -490,6 +490,7 @@ def normalize_theta_set(theta):
     from sympy.functions.elementary.complexes import Abs
 
     if theta.is_Interval:
+        # one complete circle
         if Abs(theta.args[0] - theta.args[1]) >= 2*S.Pi:
             return Interval(0, 2*S.Pi, False, True)
 
@@ -507,9 +508,6 @@ def normalize_theta_set(theta):
                     new_theta.append(2*S.Pi)
             else:
                 new_theta.append(k*S.Pi)
-        # one complete circle
-        if (new_theta[0] == new_theta[1]):
-            return Interval(0, 2*S.Pi, False, True)
 
         # for negative theta
         if new_theta[0] > new_theta[1]:
@@ -868,7 +866,6 @@ class ComplexPlane(Set):
                         new_interval.append(element.args[0])
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
-            return None
 
     def _union(self, other):
 
