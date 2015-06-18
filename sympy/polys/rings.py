@@ -1378,6 +1378,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         for f in fv:
             if f.ring != ring:
                 raise ValueError('self and f must have the same ring')
+        if len(fv) == 1 and fv[0].is_monomial:
+            return self*(fv[0]**(-1)), 0
         s = len(fv)
         qv = [ring.zero for i in range(s)]
         p = self.copy()

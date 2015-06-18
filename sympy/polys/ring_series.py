@@ -80,6 +80,10 @@ def rs_trunc(p1, x, prec):
         p[exp1] = p1[exp1]
     return p
 
+# TODO This also needs to take care of negative precision
+def _check_precision(prec, n):
+        return prec/n
+
 def rs_mul(p1, p2, x, prec):
     """
     Return the product of the given two series, modulo ``O(x**prec)``
@@ -840,6 +844,9 @@ def rs_exp(p, x, prec):
     1/6*x**6 + 1/2*x**4 + x**2 + 1
     """
     R = p.ring
+    index = ring.gens.index(x)
+    #n = max(p, key=lambda k: k[index])[index]
+    #prec = _check_precision(prec, n)
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
