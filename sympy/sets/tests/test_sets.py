@@ -238,9 +238,7 @@ def test_intersect():
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
-        Union(FiniteSet(2, 3, 4, 5),
-              Intersection(FiniteSet(6), Union(Interval(0, 5),
-                                               FiniteSet('ham'))))
+        Union(FiniteSet(2, 3, 4, 5), Intersection(FiniteSet(6), Union(Interval(0, 5), FiniteSet('ham'))))
 
     # issue 8217
     assert Intersection(FiniteSet(x), FiniteSet(y)) == \
