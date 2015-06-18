@@ -3306,10 +3306,10 @@ class Poly(Expr):
         IndexError: root index out of [-3, 2] range, got 3
 
         >>> Poly(x**5 + x + 1).root(0)
-        RootOf(x**3 - x**2 + 1, 0)
+        CRootOf(x**3 - x**2 + 1, 0)
 
         """
-        return sympy.polys.rootoftools.RootOf(f, index, radicals=radicals)
+        return sympy.polys.rootoftools.rootof(f, index, radicals=radicals)
 
     def real_roots(f, multiple=True, radicals=True):
         """
@@ -3324,10 +3324,10 @@ class Poly(Expr):
         >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).real_roots()
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).real_roots()
-        [RootOf(x**3 + x + 1, 0)]
+        [CRootOf(x**3 + x + 1, 0)]
 
         """
-        reals = sympy.polys.rootoftools.RootOf.real_roots(f, radicals=radicals)
+        reals = sympy.polys.rootoftools.CRootOf.real_roots(f, radicals=radicals)
 
         if multiple:
             return reals
@@ -3347,12 +3347,12 @@ class Poly(Expr):
         >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).all_roots()
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).all_roots()
-        [RootOf(x**3 + x + 1, 0),
-         RootOf(x**3 + x + 1, 1),
-         RootOf(x**3 + x + 1, 2)]
+        [CRootOf(x**3 + x + 1, 0),
+         CRootOf(x**3 + x + 1, 1),
+         CRootOf(x**3 + x + 1, 2)]
 
         """
-        roots = sympy.polys.rootoftools.RootOf.all_roots(f, radicals=radicals)
+        roots = sympy.polys.rootoftools.CRootOf.all_roots(f, radicals=radicals)
 
         if multiple:
             return roots

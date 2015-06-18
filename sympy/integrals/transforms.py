@@ -449,7 +449,7 @@ def _rewrite_gamma(f, s, a, b):
     (([], []), ([], []), 1/2, 1, 8)
     """
     from itertools import repeat
-    from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, expand,
+    from sympy import (Poly, gamma, Mul, re, CRootOf, exp as exp_, expand,
                        roots, ilcm, pi, sin, cos, tan, cot, igcd, exp_polar)
     # Our strategy will be as follows:
     # 1) Guess a constant c such that the inversion integral should be
@@ -597,12 +597,12 @@ def _rewrite_gamma(f, s, a, b):
             p = Poly(fact, s)
             if p.degree() != 1:
                 # We completely factor the poly. For this we need the roots.
-                # Now roots() only works in some cases (low degree), and RootOf
+                # Now roots() only works in some cases (low degree), and CRootOf
                 # only works without parameters. So try both...
                 coeff = p.LT()[1]
                 rs = roots(p, s)
                 if len(rs) != p.degree():
-                    rs = RootOf.all_roots(p)
+                    rs = CRootOf.all_roots(p)
                 ufacs += [coeff]
                 args += [(s - c, is_numer) for c in rs]
                 continue
