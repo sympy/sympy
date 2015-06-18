@@ -528,11 +528,16 @@ def test_PolyElement___div__():
     assert (2*x**2 - 4)/2 == x**2 - 2
     assert (2*x**2 - 3)/2 == x**2
 
-    assert (x**2 - 1)/x == (x**2 - 1).quo(x) == x
-    assert (x**2 - x)/x == (x**2 - x).quo(x) == x - 1
+    assert (x**2 - 1).quo(x) == x
+    assert (x**2 - x).quo(x) == x - 1
 
-    assert (x**2 - 1)/(2*x) == (x**2 - 1).quo(2*x) == 0
+    assert (x**2 - 1)/x == x - x**(-1)
+    assert (x**2 - x)/x == x - 1
+    assert (x**2 - 1)/(2*x) == x/2 - x**(-1)/2
+
+    assert (x**2 - 1).quo(2*x) == 0
     assert (x**2 - x)/(x - 1) == (x**2 - x).quo(x - 1) == x
+
 
     R, x,y,z = ring("x,y,z", ZZ)
     assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 0
