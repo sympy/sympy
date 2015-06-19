@@ -36,15 +36,9 @@ def test_equality():
     assert not(Basic() == 0)
 
 
-def test_compare_issue_9464_a():
+def test_compare_issue_9464():
     assert(Basic(1).compare(Basic(None)) > 0)
-
-
-def test_compare_issue_9464_b():
     assert(Basic(None).compare(Basic(1)) < 0)
-
-
-def test_compare_issue_9464_c():
     assert(Basic(None).compare(Basic(None)) == 0)
 
 
