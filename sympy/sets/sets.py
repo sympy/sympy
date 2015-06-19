@@ -1673,6 +1673,10 @@ class FiniteSet(Set, EvalfMixin):
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
+    >>> members = [1, 2, 3, 4]
+    >>> FiniteSet(*members)
+    {1, 2, 3, 4}
+
     References
     ==========
 
