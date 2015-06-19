@@ -12,7 +12,8 @@ from sympy import (
     sympify, tan, tanh, trigsimp, Wild, zoo, Sum, Lt)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
-    collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
+    collect_sqrt, _unevaluated_Add, nthroot)
+from sympy.simplify.radsimp import fraction_expand
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
@@ -386,7 +387,7 @@ def test_hyperbolic_simp():
 
 
 def test_trigsimp_groebner():
-    from sympy.simplify.simplify import trigsimp_groebner
+    from sympy.simplify.trigsimp import trigsimp_groebner
 
     c = cos(x)
     s = sin(x)

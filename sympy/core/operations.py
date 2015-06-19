@@ -241,7 +241,7 @@ class AssocOp(Basic):
                         continue
 
                     # try collection on non-Wild symbols
-                    from sympy.simplify.simplify import collect
+                    from sympy.simplify.radsimp import collect
                     was = expr
                     did = set()
                     for w in reversed(wild_part):

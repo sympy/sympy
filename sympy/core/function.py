@@ -2273,7 +2273,7 @@ def count_ops(expr, visual=False):
 
     """
     from sympy import Integral, Symbol
-    from sympy.simplify.simplify import fraction
+    from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
 
     expr = sympify(expr)

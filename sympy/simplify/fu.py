@@ -188,8 +188,9 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import combinations
 
-from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
+from sympy.simplify.simplify import (simplify, ratsimp, combsimp,
     _mexpand, bottom_up)
+from sympy.simplify.powsimp import powsimp
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
@@ -2119,7 +2120,8 @@ def hyper_as_trig(rv):
 
     http://en.wikipedia.org/wiki/Hyperbolic_function
     """
-    from sympy.simplify.simplify import signsimp, collect
+    from sympy.simplify.simplify import signsimp
+    from sympy.simplify.radsimp import collect
 
     # mask off trig functions
     trigs = rv.atoms(TrigonometricFunction)
