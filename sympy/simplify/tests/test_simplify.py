@@ -1106,6 +1106,9 @@ def test_nsimplify():
     # issue 7322 direct test
     assert nsimplify(1e-42, rational=True) != 0
 
+def test_issue_9448():
+    tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
+    assert nsimplify(tmp) == S(1)/2
 
 def test_extract_minus_sign():
     x = Symbol("x")
