@@ -5,7 +5,11 @@ from .limits import limit, Limit
 from .gruntz import gruntz
 from .series import series
 from .residues import residue
+from .sequences import (EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd,
+                        SeqMul)
 
 O = Order
 
-__all__ = ['gruntz', 'limit', 'series', 'O', 'Order', 'Limit', "residue"]
+__all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'residue',
+           'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence',
+           'SeqAdd', 'SeqMul']

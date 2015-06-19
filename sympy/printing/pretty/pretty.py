@@ -94,6 +94,7 @@ class PrettyPrinter(Printer):
     _print_Naturals = _print_Atom
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
+    _print_Complex = _print_Atom
 
     def _print_subfactorial(self, e):
         x = e.args[0]
@@ -1425,7 +1426,8 @@ class PrettyPrinter(Printer):
         else:
             prod_char = u('\xd7')
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
-                parenthesize=lambda set: set.is_Union or set.is_Intersection)
+                                   parenthesize=lambda set: set.is_Union or
+                                   set.is_Intersection or set.is_ProductSet)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
@@ -1496,7 +1498,6 @@ class PrettyPrinter(Printer):
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
                                or set.is_Union)
 
-
     def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\N{SMALL ELEMENT OF}")
@@ -1517,6 +1518,28 @@ class PrettyPrinter(Printer):
                                                el, self._print(set)), binding=8)
         else:
             return prettyForm(sstr(e))
+
+    def _print_SeqFormula(self, s):
+        if self._use_unicode:
+            dots = u("\N{HORIZONTAL ELLIPSIS}")
+        else:
+            dots = '...'
+
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
+                s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append(dots)
+            printset = tuple(printset)
+        else:
+            printset = tuple(s)
+        return self._print_list(printset)
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
