@@ -42,6 +42,7 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
+    is_ComplexPlane = False
 
     @staticmethod
     def _infimum_key(expr):
@@ -517,7 +518,7 @@ class Set(Basic):
         return bool(symb)
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return None
 
@@ -654,7 +655,7 @@ class ProductSet(Set):
 
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.sets)
 
@@ -724,7 +725,7 @@ class Interval(Set, EvalfMixin):
     is_Interval = True
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return True
 
@@ -1320,7 +1321,7 @@ class Union(Set, EvalfMixin):
             raise TypeError("Not all constituent sets are iterable")
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.args)
 
@@ -1672,6 +1673,10 @@ class FiniteSet(Set, EvalfMixin):
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
+    >>> members = [1, 2, 3, 4]
+    >>> FiniteSet(*members)
+    {1, 2, 3, 4}
+
     References
     ==========
 
@@ -1819,7 +1824,7 @@ class FiniteSet(Set, EvalfMixin):
         return Or(*[Eq(symbol, elem) for elem in self])
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(el.is_real for el in self)
 

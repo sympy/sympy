@@ -7,7 +7,8 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union)
+
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -3098,6 +3099,14 @@ def test_pretty_sets():
     ucode_str = u('{-∞, …, -3, -2}')
     assert pretty(Range(-2, -oo, -1)) == ascii_str
     assert upretty(Range(-2, -oo, -1)) == ucode_str
+
+
+def test_ProductSet_paranthesis():
+    from sympy import Interval, Union, FiniteSet
+    ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')
+
+    a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
+    assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
 
 def test_pretty_sequences():

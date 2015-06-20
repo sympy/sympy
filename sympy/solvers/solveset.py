@@ -855,7 +855,8 @@ def solveset(f, symbol=None):
     f = sympify(f)
 
     if isinstance(f, Eq):
-        f = f.lhs - f.rhs
+        from sympy.core import Add
+        f = Add(f.lhs, - f.rhs, evaluate=False)
 
     if f.is_Relational:
         if real is False:

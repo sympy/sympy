@@ -1558,6 +1558,9 @@ class LatexPrinter(Printer):
     def _print_Reals(self, i):
         return r"\mathbb{R}"
 
+    def _print_Complex(self, i):
+        return r"\mathbb{C}"
+
     def _print_ImageSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}" % (
             self._print(s.lamda.expr),

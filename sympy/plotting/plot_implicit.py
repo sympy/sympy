@@ -3,9 +3,8 @@
 The module implements a data series called ImplicitSeries which is used by
 ``Plot`` class to plot implicit plots for different backends. The module,
 by default, implements plotting using interval arithmetic. It switches to a
-fall back algorithm if the expression cannot be plotted used interval
-interval arithmetic. It is also possible to specify to use the fall back
-algorithm for all plots.
+fall back algorithm if the expression cannot be plotted using interval arithmetic.
+It is also possible to specify to use the fall back algorithm for all plots.
 
 Boolean combinations of expressions cannot be plotted by the fall back
 algorithm.

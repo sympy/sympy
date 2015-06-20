@@ -805,3 +805,12 @@ def test_improve_coverage():
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
+
+
+def test_issue_9522():
+    x = Symbol('x', real=True)
+    expr1 = Eq(1/(x**2 - 4) + x, 1/(x**2 - 4) + 2)
+    expr2 = Eq(1/x + x, 1/x)
+
+    assert solveset(expr1, x) == EmptySet()
+    assert solveset(expr2, x) == EmptySet()
