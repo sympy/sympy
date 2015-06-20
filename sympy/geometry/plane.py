@@ -58,7 +58,7 @@ class Plane(GeometryEntity):
             b = p1.direction_ratio(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
-            a = kwargs.pop('normal_vector', a)
+            a = kwargs.pop('normal_vector', None)
             if is_sequence(a) and len(a) == 3:
                 normal_vector = Point3D(a).args
             else:
