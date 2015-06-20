@@ -20,7 +20,7 @@ R3 are currently the only ambient spaces implemented.
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple

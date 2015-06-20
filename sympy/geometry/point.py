@@ -8,20 +8,22 @@ Point3D
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.compatibility import iterable, range
 from sympy.core.containers import Tuple
-from sympy.simplify import simplify, nsimplify
+from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
-from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.core.evaluate import global_evaluate
 from sympy.core.add import Add
+
+from .entity import GeometryEntity
+
 
 class Point(GeometryEntity):
     """A point in a n-dimensional Euclidean space.
