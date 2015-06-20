@@ -1981,6 +1981,9 @@ def test_composite_proposition():
     assert ask(Equivalent(Q.positive(x), Q.integer(x)), Q.integer(x)) is None
     assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
 
+def test_tautology():
+    assert ask(Q.real(x) | ~Q.real(x)) is True
+    assert ask(Q.real(x) & ~Q.real(x)) is False
 
 def test_composite_assumptions():
     assert ask(Q.real(x), Q.real(x) & Q.real(y)) is True
