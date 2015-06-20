@@ -4,7 +4,7 @@ This module contains functions to solve a single equation for a single variable.
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
 from sympy.core.numbers import I, Number, Rational
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
@@ -1124,11 +1124,15 @@ def linsolve(system, *symbols):
     """
 
     if not symbols:
-        raise ValueError('Symbols must be given, for which solution of the \
-                         system are to be found.')
+        raise ValueError('Symbols must be given, for which solution of the '
+                         'system is to be found.')
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
+
+    if not type(symbols[0]) == Symbol:
+        raise ValueError('Symbols or iterable of symbols must be given as '
+                         'second argument, not type %s: %s' % (type(symbols[0]), symbols[0]))
 
     # 1). Augmented Matrix input Form
     if isinstance(system, Matrix):

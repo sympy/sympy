@@ -860,6 +860,12 @@ def test_linsolve():
     # raise ValueError if no symbols are given
     raises(ValueError, lambda: linsolve(system))
 
+    # raise ValueError if, A & b is not given as tuple
+    raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
+
+    # raise ValueError for garbage value
+    raises(ValueError, lambda: linsolve(Eqns[0], x1, x2, x3, x4))
+
     # Fully symbolic test
     a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     A = Matrix([[a, b], [c, d]])

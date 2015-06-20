@@ -2443,13 +2443,14 @@ def test_gauss_jordan_solve():
     # Square, reduced rank, parametrized solution
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     b = Matrix([3, 6, 9])
-    sol, params = A.gauss_jordan_solve(b)
+    sol, params, freevar = A.gauss_jordan_solve(b, freevar=True)
     w = {}
     for s in sol.atoms(Symbol):
         # Extract dummy symbols used in the solution.
         w[s.name] = s
     assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
     assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
 
     # Square, reduced rank, parametrized solution
     A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
