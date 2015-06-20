@@ -489,8 +489,8 @@ def test_Relational():
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
 
 
-def test_RootOf():
-    assert str(rootof(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+def test_CRootOf():
+    assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 
 
 def test_RootSum():

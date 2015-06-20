@@ -1632,10 +1632,10 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
-    def _print_RootOf(self, expr):
+    def _print_ComplexRootOf(self, expr):
         args = [self._print_Add(expr.expr, order='lex'), expr.index]
         pform = prettyForm(*self._print_seq(args).parens())
-        pform = prettyForm(*pform.left('RootOf'))
+        pform = prettyForm(*pform.left('CRootOf'))
         return pform
 
     def _print_RootSum(self, expr):

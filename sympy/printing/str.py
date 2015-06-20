@@ -567,8 +567,9 @@ class StrPrinter(Printer):
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
-    def _print_RootOf(self, expr):
-        return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)
+    def _print_ComplexRootOf(self, expr):
+        return "CRootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'),
+                                    expr.index)
 
     def _print_RootSum(self, expr):
         args = [self._print_Add(expr.expr, order='lex')]

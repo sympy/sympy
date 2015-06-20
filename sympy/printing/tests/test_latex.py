@@ -889,9 +889,9 @@ def test_latex_Poly():
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
 
-def test_latex_RootOf():
+def test_latex_ComplexRootOf():
     assert latex(rootof(x**5 + x + 3, 0)) == \
-        r"\operatorname{ComplexRootOf} {\left(x^{5} + x + 3, 0\right)}"
+        r"\operatorname{CRootOf} {\left(x^{5} + x + 3, 0\right)}"
 
 
 def test_latex_RootSum():
