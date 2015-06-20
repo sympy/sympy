@@ -805,9 +805,9 @@ def test_plane():
     p4 = Point3D(x, x, x)
     p5 = Point3D(y, y, y)
 
-    raises(ValueError, lambda: Plane(p1, p2))
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
+    pl4b = Plane(p1, p2)
     pl5 = Plane(p3, normal_vector=(1, 2, 3))
     pl6 = Plane(Point3D(2, 3, 7), normal_vector=(2, 2, 2))
     pl7 = Plane(Point3D(1, -5, -6), normal_vector=(1, -2, 1))
@@ -820,6 +820,7 @@ def test_plane():
     assert Plane(p1, p2, p3).is_coplanar(Plane(p1, p3, p2))
     assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=(1, -2, 1))
     assert pl3 != pl4
+    assert pl4 == pl4b
     assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=(1, 2, 3))
 
     assert pl5.equation(x, y, z) == x + 2*y + 3*z - 14
