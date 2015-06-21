@@ -5,7 +5,9 @@ from sympy.logic.boolalg import (
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
     simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table
+    BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table,
+    to_anf, is_anf, distribute_xor_over_and, anf_coeffs, ANFform,
+    minterm, maxterm, monomial
 )
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
@@ -357,6 +359,7 @@ def test_distribute():
 
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
     assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
+    assert distribute_xor_over_and(And(A, Xor(B, C))) == Xor(And(A, B), And(A, C))
 
 
 def test_to_nnf():
@@ -708,3 +711,66 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table('x >> y', ['x', 'y'], input=False)) == [True, True, False, True]
+
+
+def test_to_anf():
+    x, y = symbols('x,y')
+    assert to_anf(And(x, y)) == And(x, y)
+    assert to_anf(Or(x, y)) == Xor(x, y, And(x, y))
+    assert to_anf(Xor(x, y)) == Xor(x, y)
+    assert to_anf(Not(x)) == Xor(x, True, remove_true=False)
+    assert to_anf(Nand(x, y)) == Xor(True, And(x, y), remove_true=False)
+    assert to_anf(Nor(x, y)) == Xor(x, y, True, And(x, y), remove_true=False)
+    assert to_anf(Implies(x, y)) == Xor(x, True, And(x, y), remove_true=False)
+    assert to_anf(Equivalent(x, y)) == Xor(x, y, True, remove_true=False)
+    assert to_anf(Nand(x | y, x >> y), deep=False) == \
+           Xor(True, And(Or(x, y), Implies(x, y)), remove_true=False)
+    assert to_anf(Nor(x ^ y, x & y), deep=False) == \
+           Xor(True, Or(Xor(x, y), And(x, y)), remove_true=False)
+
+
+def test_is_anf():
+    x, y = symbols('x,y')
+    assert is_anf(true) is True
+    assert is_anf(false) is True
+    assert is_anf(x) is True
+    assert is_anf(And(x, y)) is True
+    assert is_anf(Xor(x, y, And(x, y))) is True
+    assert is_anf(Xor(x, y, Or(x, y))) is False
+    assert is_anf(Xor(Not(x), y)) is False
+
+
+def test_anf_coeffs():
+    assert anf_coeffs([1, 0]) == [1, 1]
+    assert anf_coeffs([0, 0, 0, 1]) == [0, 0, 0, 1]
+    assert anf_coeffs([0, 1, 1, 1]) == [0, 1, 1, 1]
+    assert anf_coeffs([1, 1, 1, 0]) == [1, 0, 0, 1]
+    assert anf_coeffs([1, 0, 0, 0]) == [1, 1, 1, 1]
+    assert anf_coeffs([1, 0, 0, 1]) == [1, 1, 1, 0]
+    assert anf_coeffs([1, 1, 0, 1]) == [1, 0, 1, 1]
+
+
+def test_ANFform():
+    x, y = symbols('x,y')
+    assert ANFform([x], [1, 1]) == True
+    assert ANFform([x], [0, 0]) == False
+    assert ANFform([x], [1, 0]) == Xor(x, True, remove_true=False)
+    assert ANFform([x, y], [1, 1, 1, 0]) == Xor(True, And(x, y), remove_true=False)
+
+
+def test_minterm():
+    x, y = symbols('x,y')
+    assert minterm(3, [x, y]) == And(x, y)
+    assert minterm([1, 0], [x, y]) == And(Not(y), x)
+
+
+def test_maxterm():
+    x, y = symbols('x,y')
+    assert maxterm(2, [x, y]) == Or(Not(x), y)
+    assert maxterm([0, 1], [x, y]) == Or(Not(y), x)
+
+
+def test_monomial():
+    x, y = symbols('x,y')
+    assert monomial(1, [x, y]) == y
+    assert monomial([1, 1], [x, y]) == And(x, y)
