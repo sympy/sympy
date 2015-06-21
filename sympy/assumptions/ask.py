@@ -160,9 +160,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return bool(res)
 
-    if assumptions == True:
-        return
-
     if local_facts is None:
         return satask(proposition, assumptions=assumptions, context=context)
 
