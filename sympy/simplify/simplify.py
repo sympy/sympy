@@ -46,7 +46,7 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.ntheory.factor_ import multiplicity
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, lcm, gcd, parallel_poly_from_expr)
+    ComputationFailed, lcm, gcd, parallel_poly_from_expr, NotInvertible)
 from sympy.polys.domains import ZZ
 from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import PolificationFailed, DomainError
@@ -941,6 +941,77 @@ def ratsimpmodprime(expr, G, *gens, **args):
     r = Rational(cn, dn)
 
     return (c*r.q)/(d*r.p)
+
+
+def rootofsimp(expr):
+    """
+    Reduce expressions containing ``RootOf`` types modulo their defining
+    polynomials.
+
+    A root `r` of a polynomial `p(x) = a_n x^n + ... + a_0` satisfies `p(r) =
+    0` by definition. Therefore, any power of `r` greater than `n` can be
+    rewritten in terms of smaller powers. In general, any polynomial or
+    rational expression of `r` can be reduced modulo its defining polynomial
+    `p`.
+
+    ``rootofsimp`` rewrites the expression as a numerator-denominator pair,
+    computes the modular inverse of the denominator, and returns the product of
+    this inverse with the numerator modulo the defining polynomial of the
+    root. This is done for each ``RootOf`` appearing in the expression.
+
+    Examples
+    ========
+
+    >>> from sympy import rootofsimp, RootOf
+    >>> from sympy.abc import x,y
+    >>> r = RootOf(x**4 - x - 1, 0)
+    >>> rootofsimp(r**4)
+    RootOf(x**4 - x - 1, 0) + 1
+    >>> rootofsimp(r**8)
+    2*RootOf(x**4 - x - 1, 0) + RootOf(x**4 - x - 1, 0)**2 + 1
+    >>> rootofsimp(1/r)
+    -1 + RootOf(x**4 - x - 1, 0)**3
+
+    """
+    from sympy.polys.rootoftools import RootOf
+    expr = sympify(expr)
+
+    # temporarily replace each RootOf with a dummy variable. this is necessary
+    # to preserve options such as "radicals=False" as well as for avoiding
+    # conflicts when the defining polynomial of multiple RootOfs use the same
+    # variable
+    rootofs = expr.find(RootOf)
+    dummies = [Dummy() for _ in rootofs]
+    transform = dict(zip(rootofs,dummies))
+    expr = expr.xreplace(transform)
+
+    # prepare the inverse dummy-variable-to-RootOfs transformation for the
+    # simpified expression. we create the inverse transform here so it can be
+    # applied to the expression if a 'NotInvertible' error occurs
+    transform = dict(zip(dummies,rootofs))
+
+    # simplify the expression in each root
+    for root,dummy in zip(rootofs,dummies):
+        try:
+            modulus = root.poly.xreplace({root.poly.gen:dummy})
+            numer,denom = cancel(expr).as_numer_denom()
+            numer = numer.as_poly(dummy)
+            denom = denom.as_poly(dummy)
+
+            # if numer or denom is None then this is most likely because the
+            # numerator or denominator is not a polynomial expressions in
+            # `dummy`. skip simplification of the expression in this case
+            if (numer is not None) and (denom is not None):
+                expr = numer*denom.invert(modulus) % modulus
+        except NotInvertible:
+            denom = denom.xreplace(transform).as_expr()
+            modulus = modulus.xreplace(transform).as_expr()
+            raise NotInvertible('The denominator, %s, is not invertible '
+                                'modulo %s'%(denom, modulus))
+
+    # apply the inverse dummy-to-RootOfs transform to the expression
+    expr = expr.xreplace(transform)
+    return expr.as_expr()
 
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",

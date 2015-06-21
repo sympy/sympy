@@ -293,7 +293,6 @@ def test_RootOf_eval_rational():
              "0.86113631159405258",
              ]
 
-
 def test_RootSum___new__():
     f = x**3 + x + 3
 

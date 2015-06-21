@@ -36,6 +36,10 @@ ratsimp
 -------
 .. autofunction:: ratsimp
 
+rootofsimp
+----------
+.. autofunction:: rootofsimp
+
 fraction
 --------
 .. autofunction:: fraction
