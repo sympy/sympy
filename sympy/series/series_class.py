@@ -39,17 +39,9 @@ class SeriesBase(Expr):
         """
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
-
-        Examples
-        ========
-
-        TODO
         """
-        fsyms = set().union(*[a.free_symbols for a in self.args])
-        for d in self.variables:
-            if d in fsyms:
-                fsyms.remove(d)
-        return fsyms
+        return (set(j for i in self.args for j in i.free_symbols)
+                .difference(self.variables))
 
     @cacheit
     def term(self, pt):
@@ -71,25 +63,22 @@ class SeriesBase(Expr):
         Assumes the first point to be indexed zero.
 
         Examples
-        =========
+        ========
 
         TODO
         """
         if self.start is S.NegativeInfinity:
             initial = self.stop
-        else:
-            initial = self.start
-
-        if self.start is S.NegativeInfinity:
             step = -1
         else:
+            initial = self.start
             step = 1
 
         return initial + i*step
 
     def __iter__(self):
         i = 0
-        while(i < self.length):
+        while i < self.length:
             pt = self._ith_point(i)
             yield self.term(pt)
             i += 1

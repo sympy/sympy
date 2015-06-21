@@ -1,6 +1,7 @@
 """Fourier Series"""
 
 from __future__ import print_function, division
+from itertools import ifilter, count
 
 from sympy import pi, oo
 from sympy.core.expr import Expr
@@ -21,8 +22,10 @@ def fourier_cos_seq(func, limits, n):
     from sympy.integrals import integrate
     x, L = limits[0], limits[2] - limits[1]
     cos_term = cos(2*n*pi*x / L)
-    return SeqFormula(2 * cos_term * integrate(func * cos_term, limits)
-                        / L, (n, 0, oo))
+    formula = 2 * cos_term * integrate(func * cos_term, limits) / L
+    a0 = formula.subs(n, S.Zero) / 2
+    return a0, SeqFormula(2 * cos_term * integrate(func * cos_term, limits)
+                          / L, (n, 1, oo))
 
 
 def fourier_sin_seq(func, limits, n):
@@ -104,22 +107,17 @@ class FourierSeries(SeriesBase):
 
     Shifting
 
-    >>> s.shift(1)
-    FourierSeries(x**2 + 1, (x, -pi, pi))
-    >>> s.shiftx(1)
-    FourierSeries((x + 1)**2, (x, -pi, pi))
+    >>> s.shift(1).as_series()
+    -4*cos(x) + cos(2*x) + 1 + pi**2/3
+    >>> s.shiftx(1).as_series()
+    -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
 
     Scaling
 
-    >>> s.scale(2)
-    FourierSeries(2*x**2, (x, -pi, pi))
-    >>> s.scalex(2)
-    FourierSeries(4*x**2, (x, -pi, pi))
-
-    Differentiating
-
-    >>> s.diff(x)
-    FourierSeries(2*x, (x, -pi, pi))
+    >>> s.scale(2).as_series()
+    -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
+    >>> s.scalex(2).as_series()
+    -4*cos(2*x) + cos(4*x) + pi**2/3
 
     Notes
     =====
@@ -134,48 +132,42 @@ class FourierSeries(SeriesBase):
     again.
 
     eg. If Fourier series of x**2 is known
-    fourier series of x**2 - 1 can be found by shifting by 1
+    fourier series of x**2 - 1 can be found by shifting by -1
 
     References
     =========
 
     .. [1] mathworld.wolfram.com/FourierSeries.html
     """
-    def __new__(cls, func, limits=None, **kwargs):
+    def __new__(cls, func, *args):
         func = sympify(func)
 
-        limits = _process_limits(func, limits)
+        if args:
+            limits = _process_limits(func, args[0])
+        else:
+            limits = _process_limits(func, None)
         x, lower, upper = limits
 
         if x not in func.free_symbols:
             return func
 
-        kan = kwargs.pop('an', None)
-        kbn = kwargs.pop('bn', None)
-
-        if kan is None and kbn is None:
+        if len(args) != 4:
             n = Dummy('n')
             neg_func = func.subs(x, -x)
             if func == neg_func:
-                an = fourier_cos_seq(func, limits, n)
+                a0, an = fourier_cos_seq(func, limits, n)
                 bn = SeqFormula(0, (1, oo))
             elif func == -neg_func:
+                a0 = S.Zero
                 an = SeqFormula(0, (1, oo))
                 bn = fourier_sin_seq(func, limits, n)
             else:
-                an = fourier_cos_seq(func, limits, n)
+                a0, an = fourier_cos_seq(func, limits, n)
                 bn = fourier_sin_seq(func, limits, n)
         else:
-            an, bn = kan, kbn
+            a0, an, bn = args[1:]
 
-        a0 = kwargs.pop('a0', None)
-        if a0 is None:
-            a0 = an[0] / 2
-
-
-        obj = Expr.__new__(cls, func, limits)
-        obj.a0, obj.an, obj.bn = a0, an, bn
-        return obj
+        return Expr.__new__(cls, func, limits, a0, an, bn)
 
     @property
     def function(self):
@@ -188,6 +180,18 @@ class FourierSeries(SeriesBase):
     @property
     def period(self):
         return (self.args[1][1], self.args[1][2])
+
+    @property
+    def a0(self):
+        return self.args[2]
+
+    @property
+    def an(self):
+        return self.args[3]
+
+    @property
+    def bn(self):
+        return self.args[4]
 
     @property
     def interval(self):
@@ -205,22 +209,21 @@ class FourierSeries(SeriesBase):
     def length(self):
         return oo
 
+    def _eval_subs(self, old, new):
+        x = self.x
+        if old.has(x):
+            return self
+
     def as_series(self, n=3):
         """"returns the first n terms(non-zero) of the series
         if n is none returns an iterator"""
         if n is None:
             return iter(self)
 
-        i, j = 0, 0
-        terms = []
-        while(i < n):
-                t = self.term(j)
-                if t != S.Zero:
-                    terms.append(t)
-                    i += 1
-                j += 1
+        gen = ifilter(lambda a: a is not S.Zero,
+                      (self.term(j) for j in count(0)))
 
-        return Add(*terms)
+        return Add(*[t for t, _ in zip(gen, range(n))])
 
     def shift(self, s):
         """
@@ -238,20 +241,18 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.shift(1)
-        FourierSeries(x**2 + 1, (x, -pi, pi))
+        >>> s.shift(1).as_series()
+        -4*cos(x) + cos(2*x) + 1 + pi**2/3
         """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" %(s, x))
 
-        an = self.an
-        bn = self.bn
         a0 = self.a0 + s
-        sfunc = self.args[0] + s
+        sfunc = self.function + s
 
-        return FourierSeries(sfunc, self.args[1], a0=a0, an=an, bn=bn)
+        return self.func(sfunc, self.args[1], a0, *self.args[3:])
 
     def shiftx(self, s):
         """
@@ -269,8 +270,8 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.shiftx(1)
-        FourierSeries((x + 1)**2, (x, -pi, pi))
+        >>> s.shiftx(1).as_series()
+        -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
         """
         s, x = sympify(s), self.x
 
@@ -279,10 +280,9 @@ class FourierSeries(SeriesBase):
 
         an = self.an.subs(x, x + s)
         bn = self.bn.subs(x, x + s)
-        a0 = self.a0
-        sfunc = self.args[0].subs(x, x + s)
+        sfunc = self.function.subs(x, x + s)
 
-        return FourierSeries(sfunc, self.args[1], a0=a0, an=an, bn=bn)
+        return self.func(sfunc, self.args[1], self.args[2], an, bn)
 
     def scale(self, s):
         """
@@ -300,8 +300,8 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.scale(2)
-        FourierSeries(2*x**2, (x, -pi, pi))
+        >>> s.scale(2).as_series()
+        -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
         """
         s, x = sympify(s), self.x
 
@@ -313,7 +313,7 @@ class FourierSeries(SeriesBase):
         a0 = self.a0 * s
         sfunc = self.args[0] * s
 
-        return FourierSeries(sfunc, self.args[1], a0=a0, an=an, bn=bn)
+        return self.func(sfunc, self.args[1], a0, an, bn)
 
     def scalex(self, s):
         """
@@ -331,8 +331,8 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.scalex(2)
-        FourierSeries(4*x**2, (x, -pi, pi))
+        >>> s.scalex(2).as_series()
+        -4*cos(2*x) + cos(4*x) + pi**2/3
         """
         s, x = sympify(s), self.x
 
@@ -341,28 +341,13 @@ class FourierSeries(SeriesBase):
 
         an = self.an.subs(x, x * s)
         bn = self.bn.subs(x, x * s)
-        a0 = self.a0
-        sfunc = self.args[0].subs(x, x * s)
+        sfunc = self.function.subs(x, x * s)
 
-        return FourierSeries(sfunc, self.args[1], a0=a0, an=an, bn=bn)
-
-    def _eval_derivative(self, x):
-        an, bn = self.an, self.bn
-        van, vbn = an.variables[0], bn.variables[0]
-
-        fan = an.formula.diff(x)
-        fbn = bn.formula.diff(x)
-
-        an = SeqFormula(fan, an.args[1])
-        bn = SeqFormula(fbn, bn.args[1])
-
-        dfunc = self.args[0].diff(x)
-
-        return FourierSeries(dfunc, self.args[1], an=an, bn=bn)
+        return self.func(sfunc, self.args[1], self.args[2], an, bn)
 
     def _eval_as_leading_term(self, x):
         for t in self:
-            if t != S.Zero:
+            if t is not S.Zero:
                 return t
 
     def _eval_term(self, pt):
@@ -383,7 +368,7 @@ class FourierSeries(SeriesBase):
             an = self.an + other.an
             bn = self.bn + other.bn
             a0 = self.a0 + other.a0
-            return FourierSeries(function, self.args[1], a0=a0, an=an, bn=bn)
+            return FourierSeries(function, self.args[1], a0, an, bn)
 
         return Add(self, other)
 

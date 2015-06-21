@@ -44,7 +44,6 @@ def test_FourierSeries_2():
     p = Piecewise((0, x < 0), (x, True))
     f = FourierSeries(p, (x, -2, 2))
 
-    assert f.args == (p, (x, -2, 2))
     assert f.term(3) == (2*sin(3*pi*x / 2) / (3*pi) -
                          4*cos(3*pi*x / 2) / (9*pi**2))
     assert f.as_series() == (2*sin(pi*x / 2) / pi - sin(pi*x) / pi
@@ -52,14 +51,7 @@ def test_FourierSeries_2():
 
 
 def test_FourierSeries__operations():
-    assert fo.diff(x) == 1
-
-    fed =  fe.diff(x).scale(Rational(1, 2))
-    assert fed.args == (x, (x, -pi, pi))
-    assert fed == fo
-
     fes = fe.scale(-1).shift(pi**2)
-    assert fes.args == (pi**2 - x**2, (x, -pi, pi))
     assert fes.as_series() == 4*cos(x) - cos(2*x) + 2*pi**2 / 3
 
     assert fp.shift(-pi/2).as_series() == (2*sin(x) + (2*sin(3*x) / 3) +
@@ -70,16 +62,11 @@ def test_FourierSeries__operations():
     assert fos.as_series() == 6*sin(x) - 3*sin(2*x) + 2*sin(3*x)
 
     fx = fe.scalex(2).shiftx(1)
-    assert fx.args == (4*(x + 1)**2, (x, -pi, pi))
     assert fx.as_series() == -4*cos(2*x + 2) + cos(4*x + 4) + pi**2 / 3
 
     fl = fe.scalex(3).shift(-pi).scalex(2).shiftx(1).scale(4)
-    assert fl.args == (144*(x + 1)**2 - 4*pi, (x, -pi, pi))
     assert fl.as_series() == (-16*cos(6*x + 6) + 4*cos(12*x + 12)
                               + -4*pi + 4*pi**2 / 3)
-
-    assert fl.diff(x).as_series() == (96*sin(6*x + 6) - 48*sin(12*x + 12)
-                                      + 32*sin(18*x + 18))
 
     raises(ValueError, lambda: fo.shift(x))
     raises(ValueError, lambda: fo.shiftx(sin(x)))
