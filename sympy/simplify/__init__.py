@@ -5,7 +5,7 @@ the expression E**(pi*I) will be converted into -1
 the expression (x+x)**2 will be converted into 4*x**2
 """
 from .simplify import (ratsimp,
-    simplify, combsimp, hypersimp, hypersimilar,
+    simplify, hypersimp, hypersimilar,
     logcombine, separatevars, posify, polarify,
     unpolarify, signsimp, ratsimpmodprime, bottom_up, nsimplify)
 
@@ -28,3 +28,5 @@ from .trigsimp import trigsimp, exptrigsimp
 from .besselsimp import besselsimp
 
 from .powsimp import powsimp, powdenest
+
+from .combsimp import combsimp

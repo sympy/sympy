@@ -451,7 +451,7 @@ def collect_sqrt(expr, evaluate=None):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.simplify.simplify import collect_sqrt
+    >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b
 
     >>> r2, r3, r5 = [sqrt(i) for i in [2, 3, 5]]
@@ -526,7 +526,7 @@ def collect_const(expr, *vars, **kwargs):
 
     >>> from sympy import sqrt
     >>> from sympy.abc import a, s, x, y, z
-    >>> from sympy.simplify.simplify import collect_const
+    >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
     >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
@@ -649,7 +649,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
     >>> from sympy import factor_terms, fraction, signsimp
-    >>> from sympy.simplify.simplify import collect_sqrt
+    >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c
 
     >>> radsimp(1/(I + 1))
@@ -754,6 +754,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # Handle first reduces to the case
         # expr = 1/d, where d is an add, or d is base**p/2.
         # We do this by recursively calling handle on each piece.
+        from sympy.simplify.simplify import nsimplify
+
         n, d = fraction(expr)
 
         if expr.is_Atom or (d.is_Atom and n.is_Atom):
@@ -794,7 +796,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return 1/d
 
         # is it a number that might be handled easily?
-        from sympy.simplify.simplify import nsimplify
         if d.is_number:
             _d = nsimplify(d)
             if _d.is_Number and _d.equals(d):
@@ -886,7 +887,7 @@ def rad_rationalize(num, den):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.simplify.simplify import rad_rationalize
+    >>> from sympy.simplify.radsimp import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
     (-sqrt(3) + sqrt(6)/3, -7/9)
     """
@@ -1014,7 +1015,7 @@ def split_surds(expr):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.simplify.simplify import split_surds
+    >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
     (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
     """
@@ -1054,7 +1055,7 @@ def _split_gcd(*a):
     Examples
     ========
 
-    >>> from sympy.simplify.simplify import _split_gcd
+    >>> from sympy.simplify.radsimp import _split_gcd
     >>> _split_gcd(55, 35, 22, 14, 77, 10)
     (5, [55, 35, 10], [22, 14, 77])
     """
