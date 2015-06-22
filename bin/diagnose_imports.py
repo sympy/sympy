@@ -61,15 +61,22 @@ class Option(object):
             long_opt=UseDefault,
             meta_var=UseDefault,
             action=UseDefault,
+            type_=UseDefault,
             default=UseDefault,
+            choices=UseDefault,
+            nargs=UseDefault,
             help_text=None):
         self.attr_name = attr_name
         if short_opt is UseDefault:
             self.short_opt = '-' + attr_name[0:1]
+        elif short_opt is None:
+            self.short_opt = None
         else:
-            self.short_opt = '-' + short_opt
+            self.short_opt = short_opt
         if long_opt is UseDefault:
             self.long_opt = '--' + attr_name
+        elif long_opt is None:
+            self.long_opt = None
         else:
             self.long_opt = long_opt
         if meta_var is UseDefault:
@@ -77,7 +84,10 @@ class Option(object):
         else:
             self.meta_var = meta_var
         self.action = action
+        self.type_ = type_
         self.default = default
+        self.choices = choices
+        self.nargs = nargs
         assert help_text is not None
         self.help_text = help_text
 
@@ -100,10 +110,14 @@ class Option(object):
         def add_kwarg(key, value):
             if value is not UseDefault:
                 kwargs[key] = value
-        add_kwarg('meta_var', self.meta_var)
+        add_kwarg('dest', self.attr_name)
+        add_kwarg('metavar', self.meta_var)
         add_kwarg('action', self.action)
-        add_kwarg('default', self.action)
-        add_kwarg('help_text', self.help_text)
+        add_kwarg('type', self.type_)
+        add_kwarg('default', self.default)
+        add_kwarg('choices', self.choices)
+        add_kwarg('nargs', self.nargs)
+        add_kwarg('help', self.help_text)
         option_group.add_option(*args, **kwargs)
 
     def append_to_subprocess_options(self, option_dto, subprocess_options):
@@ -158,7 +172,7 @@ class ListOption(Option):
             long_opt=UseDefault,
             meta_var=UseDefault,
             help_text=None):
-        Option.__init___(
+        Option.__init__(self,
             attr_name,
             short_opt=short_opt,
             long_opt=long_opt,
@@ -172,28 +186,20 @@ class ChoiceOption(Option):
 
     def __init__(self,
             attr_name,
-            short_opt=None,
-            long_opt=None,
+            short_opt=UseDefault,
+            long_opt=UseDefault,
             choices=None,
             help_text=None):
-        assert choices is not None
-        assert help_text is not None
-        super(self.__class__, self).__init__(
+        assert choices
+        assert help_text
+        Option.__init__(self,
             attr_name=attr_name,
             short_opt=short_opt,
             long_opt=long_opt,
             meta_var='|'.join(choices),
+            default=choices[0],
+            choices=choices,
             help_text=help_text)
-        self.choices = choices
-
-    def add_to_option_group(self, option_group):
-        option_group.add_option(
-            self.short_opt,
-            self.long_opt,
-            choices=self.choices,
-            default=self.choices[0],
-            metavar=self.meta_var,
-            help=self.help_text)
 
 
 class IntOption(Option):
@@ -206,25 +212,18 @@ class IntOption(Option):
             default=None,
             help_text=None):
         assert default is not None
-        assert help_text is not None
-        super(self.__class__, self).__init__(
+        assert help_text
+        Option.__init__(self,
             attr_name=attr_name,
             short_opt=short_opt,
             long_opt=long_opt,
             meta_var=meta_var,
+            type_='int',
             help_text=help_text)
         self.default = default
 
-    def add_to_option_group(self, option_group):
-        option_group.add_option(
-            self.short_opt,
-            self.long_opt,
-            type='int',
-            default=self.default,
-            help=self.help_text)
 
-
-class DictOption(Option):
+class PairListOption(Option):
 
     def __init__(self,
             attr_name,
@@ -236,44 +235,24 @@ class DictOption(Option):
         assert meta_var is not None
         assert meta_var_2 is not None
         assert help_text is not None
-        super(self.__class__, self).__init__(
+        Option.__init__(self,
             attr_name=attr_name,
             short_opt=short_opt,
             long_opt=long_opt,
-            meta_var=meta_var,
-            help_text=help_text)
-        self.meta_var_2 = meta_var_2
-
-    def add_to_option_group(self, option_group):
-        option_group.add_option(
-            self.short_opt,
-            self.long_opt,
-            nargs=2,
+            meta_var = meta_var + ' ' + meta_var_2,
             action='append',
             default=[],
-            metavar = self.meta_var + ' ' + self.meta_var_2,
-            help=self.help_text)
-
-
-class ImportsOption(Option):
-
-    def __init__(self):
-        self.imports = []
-        self.subproces_option_code = 'Si'
-
-    def append_to_subprocess_options(self, result):
-        result.extend(map(lambda module: 'Si%s' % module, self.imports))
-
-    def load_from_subprocess_options(self, options):
-        options.imports.append(value)
+            nargs=2,
+            help_text=help_text)
+        self.meta_var_2 = meta_var_2
 
 
 class ExcludeOption(ListOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        ListOption.__init__(self,
             attr_name='excludes',
-            short_opt='X',
+            short_opt='-X',
             long_opt='--exclude',
             meta_var='EXCLUDED',
             help_text=
@@ -285,7 +264,7 @@ class ExcludeOption(ListOption):
 class IncludeOption(ListOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        ListOption.__init__(self,
             attr_name='includes',
             short_opt='-I',
             long_opt='--include',
@@ -295,11 +274,28 @@ class IncludeOption(ListOption):
                 'and all its submodules not in --exclude '
                 '(defaults to no includes)')
 
+class FilterModeOption(ChoiceOption):
+
+    def __init__(self):
+        ChoiceOption.__init__(self,
+            attr_name='filter_mode',
+            short_opt=None,
+            long_opt='--filter-mode',
+            choices=['conservative', 'aggressive', 'local'],
+            help_text=
+                'what to do if include/exclude filtering has a filtered module '
+                'import an unfiltered one; '
+                'conservative: include the filtered module anyway; '
+                'agressive: exclude the unfiltered module anyway; '
+                'local: stick with the filter settings - the unfiltered module '
+                'will be shown as being imported directly from the next '
+                'unfiltered module up the import chain '
+                '(defaults to %default)')
 
 class DuplicateOption(BooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        BooleanOption.__init__(self,
             attr_name='duplicate',
             help_text=
                 'in the error report, '
@@ -310,7 +306,7 @@ class DuplicateOption(BooleanOption):
 class RedefinitionOption(BooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        BooleanOption.__init__(self,
             attr_name='redefinition',
             help_text=
                 'in the error report, '
@@ -322,7 +318,7 @@ class RedefinitionOption(BooleanOption):
 class IndirectOption(BooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        BooleanOption.__init__(self,
             attr_name='indirect',
             help_text=
                 'in the error report, '
@@ -337,7 +333,7 @@ class IndirectOption(BooleanOption):
 class OriginsOption(BooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        BooleanOption.__init__(self,
             attr_name='origins',
             help_text=
                 'print the origins report, '
@@ -348,7 +344,7 @@ class OriginsOption(BooleanOption):
 class TraceOption(BooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        BooleanOption.__init__(self,
             attr_name='trace',
             help_text=
                 'print the trace report, '
@@ -358,7 +354,7 @@ class TraceOption(BooleanOption):
 class SubcommandOption(BooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        BooleanOption.__init__(self,
             attr_name='subcommand',
             help_text=
                 'print the subcommand report, which shows the internal options '
@@ -369,7 +365,7 @@ class SubcommandOption(BooleanOption):
 class SortOption(ChoiceOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        ChoiceOption.__init__(self,
             attr_name='sort',
             short_opt=None,
             long_opt=UseDefault,
@@ -385,8 +381,9 @@ class SortOption(ChoiceOption):
 class IndentOption(IntOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        IntOption.__init__(self,
             attr_name='indent',
+            short_opt=None,
             default=2,
             help_text=
                 'How many blanks to indent the output for a subelement '
@@ -396,7 +393,7 @@ class IndentOption(IntOption):
 class ReportOption(ChoiceOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        ChoiceOption.__init__(self,
             attr_name='report',
             short_opt=None,
             choices=['global', 'local', 'calls'],
@@ -408,14 +405,16 @@ class ReportOption(ChoiceOption):
                 '(defaults to %default)')
 
 
-class DirOption(DictOption):
+class DirOption(PairListOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
-            attr_name='dir',
+        PairListOption.__init__(self,
+            attr_name='dirs',
+            short_opt=None,
+            long_opt='--dir',
             meta_var='NAME',
             meta_var_2='DIR',
-            help=
+            help_text=
                 'display any directory prefix DIR as $NAME '
                 '(can be repeated)')
 
@@ -423,8 +422,9 @@ class DirOption(DictOption):
 class HeadersOption(TriBooleanOption):
 
     def __init__(self):
-        super(self.__class__, self).__init__(
+        TriBooleanOption.__init__(self,
             attr_name='headers',
+            short_opt=None,
             help_text=
                 'print a header before each report '
                 '(default: no headers if one report, '
@@ -434,54 +434,61 @@ class HeadersOption(TriBooleanOption):
 class SubprocessOptions(object):
     """Defines the command-line options for the subprocess."""
     # The command line is a series of Xyv with:
-    #   X = S for scope options, A for analysis options, O for output options
+    #   X = S for scope options, R for report options, O for output options
     #   y = letter to further select the actual option to set
     #   v = value to pass in (not for yes/no options)
     # *All* yes/no options are present on the command line.
     # Lists are transmitted as a series of Options, e.g. Si<module> gives a
     # module to import and analyse, S-<module> one module to exclude from the
-    # analysis outputs.
+    # reports.
+
     def as_list(self):
         result = []
         ##################################
         # ==> append_to_subprocess_options
         ##################################
-        # Scope
+        # Scope options
+        result.extend(map(lambda module: 'Si%s' % module, self.imports))
         result.extend(map(lambda module: 'S-%s' % module, self.excludes))
         result.extend(map(lambda module: 'S+%s' % module, self.includes))
-        # Analysis
-        if self.duplicate: result.append('Ad')
-        if self.redefinition: result.append('Ar')
-        if self.indirect: result.append('Ai')
-        if self.origins: result.append('Ao')
-        if self.trace: result.append('At')
-        if self.subcommand: result.append('As')
-        # Output
-        result.append('Os%s' % self.sort)
+        if self.filter_mode != 'conservative':
+            result.append('Sf%s' % self.filter_mode)
+        # Report options
+        if self.duplicate: result.append('Rd')
+        if self.redefinition: result.append('Rr')
+        if self.indirect: result.append('Ri')
+        if self.origins: result.append('Ro')
+        if self.trace: result.append('Rt')
+        if self.subcommand: result.append('Rs')
+        # Output options
+        if self.sort != 'no': result.append('Os%s' % self.sort)
         if self.indent != 2: result.append('Oi%s' % self.indent)
-        result.append('Or%s' % self.report)
+        if self.report != 'global': result.append('Or%s' % self.report)
         result.extend(map(lambda dir_name: 'Od%s=%s' % dir_name, self.dirs))
         if self.headers: result.append('Oh')
         return result
+
     def __init__(self, args=[]):
         ##############
         # ==> __init__
         ##############
         self.args = args # just for __repr__
-        # Scope
+        # Scope options
+        self.imports = []
         self.excludes = []
         self.includes = []
-        # Analysis
+        self.filter_mode = 'conservative'
+        # Report options
         self.duplicate = False
         self.redefinition = False
         self.indirect = False
         self.origins = False
         self.trace = False
         self.subcommand = False
-        # Output
-        self.sort = None
+        # Output options
+        self.sort = 'no'
         self.indent = 2
-        self.report = None
+        self.report = 'global'
         self.dirs = []
         self.headers = False
         for arg in args:
@@ -491,52 +498,56 @@ class SubprocessOptions(object):
             ##############################################################
             option = arg[0:2]
             value = arg[2:]
-            # Scope
-            if option == 'S-': self.excludes.append(value)
+            # Scope options
+            if option == 'Si': self.imports.append(value)
+            elif option == 'S-': self.excludes.append(value)
             elif option == 'S+': self.includes.append(value)
-            # Analysis
-            elif option == 'Ad': self.duplicate = True
-            elif option == 'Ar': self.redefinition = True
-            elif option == 'Ai': self.indirect = True
-            elif option == 'Ao': self.origins = True
-            elif option == 'At': self.trace = True
-            elif option == 'As': self.subcommand = True
-            # Output
+            elif option == 'Sf': self.filter_mode = value
+            # Report options
+            elif option == 'Rd': self.duplicate = True
+            elif option == 'Rr': self.redefinition = True
+            elif option == 'Ri': self.indirect = True
+            elif option == 'Ro': self.origins = True
+            elif option == 'Rt': self.trace = True
+            elif option == 'Rs': self.subcommand = True
+            # Output options
             elif option == 'Os': self.sort = value
             elif option == 'Oi': self.indent = int(value)
             elif option == 'Or': self.report = value
-            elif option == 'Od': self.dirs.append(value.split('=', 1))
+            elif option == 'Od': self.dirs.append(tuple(value.split('=', 1)))
             elif option == 'Oh': self.headers = True
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.args)
 
-def prepare_diagnostics():
-    """Main process: Inspect the command line using optparse, then start a
-    subprocess using this same program with a command line that's easy to
-    inspect without using optparse.
-
-    The goal is to allow the subprocess to do the imports to diagnose without
-    having to import other modules first."""
-
-    # Parse options
+def parse_main_process_options(args, exit_program=True):
 
     import optparse
 
-    analysis_options = []
-    option_parser = optparse.OptionParser(
+    class OptionParser(optparse.OptionParser):
+
+        def __init__(self, *args, **kwargs):
+            optparse.OptionParser.__init__(self, *args, **kwargs)
+            self.exit_program = False
+
+        def error(self, msg):
+            if self.exit_program:
+                optparse.OptionParser.error(self, msg)
+            else:
+                raise AssertionError(msg)
+
+    report_options = []
+    option_parser = OptionParser(
         usage=
             "%prog [OPTION...] MODULE...\n"
             "Diagnose imports triggered by importing the given MODULEs.\n"
             "Later OPTIONs silently override earlier ones.\n"
             "\n"
-            "Use the environment variable PYTHONPATH to add directories to Python's module\n"
-            "directory search path.\n"
+            "There is no option to extend the directory search path; use the environment\n"
+            "variable PYTHONPATH for that.\n"
             "\n"
             "You may see multiple imports of the same module, but module initialization\n"
             "happens only during the initial import. That means that any nested imports\n"
-            "during initialization happen and be reported only during the initial import.\n"
-            "\n"
-            "If you request multiple outputs, each output will get a title.\n"
+            "during initialization happen and are reported only during the initial import.\n"
             "\n"
             "This tool can not work well for \"as\" imports (\"from foo import bar as baz\")\n"
             "because Python does not provide renaming information to the import tracing\n"
@@ -559,6 +570,7 @@ def prepare_diagnostics():
         # nested import. Functions that modify themselves would show up as
         # reinterpretations if called from module initialization code other than
         # the module that imports them; there might be more tricky corner cases.
+    option_parser.exit_program = exit_program
 
     option_group = optparse.OptionGroup(
         option_parser,
@@ -566,23 +578,24 @@ def prepare_diagnostics():
         'Define which imports to analyze.')
     ExcludeOption().add_to_option_group(option_group)
     IncludeOption().add_to_option_group(option_group)
+    FilterModeOption().add_to_option_group(option_group)
     option_parser.add_option_group(option_group)
 
     option_group = optparse.OptionGroup(
         option_parser,
-        'Analysis options',
-        'Define what kind of analysis to run.')
-    analysis_options.append('duplicate')
+        'Reports options',
+        'Define what reports to print.')
+    report_options.append('duplicate')
     DuplicateOption().add_to_option_group(option_group)
-    analysis_options.append('redefinition')
+    report_options.append('redefinition')
     RedefinitionOption().add_to_option_group(option_group)
-    analysis_options.append('indirect')
+    report_options.append('indirect')
     IndirectOption().add_to_option_group(option_group)
-    analysis_options.append('origins')
+    report_options.append('origins')
     OriginsOption().add_to_option_group(option_group)
-    analysis_options.append('trace')
+    report_options.append('trace')
     TraceOption().add_to_option_group(option_group)
-    analysis_options.append('subcommand')
+    report_options.append('subcommand')
     SubcommandOption().add_to_option_group(option_group)
     option_parser.add_option_group(option_group)
 
@@ -595,79 +608,90 @@ def prepare_diagnostics():
     DirOption().add_to_option_group(option_group)
     HeadersOption().add_to_option_group(option_group)
     option_group.add_option(
-        '--headers',
-        action='store_true',
-        default=None,
-        help=
-            'print a header before each report '
-            '(default: no headers if one report, '
-            'headers if there are multiple reports)'
-        )
-    option_group.add_option(
         '--no-headers',
         dest='headers',
         action='store_false',
         default=None,
         help=
-            'print a header before each report '
+            'print reports without headers '
             '(default: no headers if one report, '
             'headers if there are multiple reports)'
         )
     option_parser.add_option_group(option_group)
 
-    (options, imports) = option_parser.parse_args()
+    options, imports = option_parser.parse_args(args)
     options.imports = imports
-    del imports
+    options.report_option_count = \
+        sum(1 for option in report_options if getattr(options, option))
+    options.parser = option_parser
+    return options
+
+
+def validate_options(options):
     # Check that we have something to do
     if not options.imports:
-        option_parser.error('No module to import given')
+        options.parser.error('No module to import given')
     # Check that no module is both --included and --excluded
-    if set(options.include) & set(options.exclude):
-        option_parser.error(
+    if set(options.includes) & set(options.excludes):
+        options.parser.error(
             '"%s" both on --include and --exclude'
             % '", "'.join(set(options.include) & set(options.exclude)))
-    # Check that at least one analysis option is present
-    analysis_option_count = reduce(
-        lambda acc, option: acc + (1 if options.__dict__[option] else 0),
-        analysis_options, 0)
-    if analysis_option_count == 0:
-        option_parser.error(
-            "At least one analysis option must be given (try --help)")
+    # Check that at least one report option is present
+    if options.report_option_count == 0:
+        options.parser.error(
+            "At least one report option must be given (try --help)")
 
-    # The above code would error out on any problem with the command-line
-    # options, so we're good to go at this point.
 
+def make_subprocess_options(options):
     subprocess_options = SubprocessOptions()
-    # Scope
+    # Scope options
     subprocess_options.imports = options.imports
-    subprocess_options.excludes = options.exclude
-    subprocess_options.includes = options.include
-    # Analysis
+    subprocess_options.excludes = options.excludes
+    subprocess_options.includes = options.includes
+    subprocess_options.filter_mode = options.filter_mode
+    # Report options
     subprocess_options.duplicate = options.duplicate
     subprocess_options.redefinition = options.redefinition
     subprocess_options.indirect = options.indirect
     subprocess_options.origins = options.origins
     subprocess_options.trace = options.trace
     subprocess_options.subcommand = options.subcommand
-    # Output
+    # Output options
     subprocess_options.sort = options.sort
     subprocess_options.indent = options.indent
     subprocess_options.report = options.report
-    subprocess_options.dirs = options.dir
+    subprocess_options.dirs = options.dirs
     if options.headers is None:
-        subprocess_options.headers = analysis_option_count > 1
+        subprocess_options.headers = options.report_option_count > 1
     else:
         subprocess_options.headers = options.headers
+    return subprocess_options
 
+
+def prepare_diagnostics():
+    """Main process: Inspect the command line using optparse, then start a
+    subprocess using this same program with a command line that's easy to
+    inspect without using optparse.
+
+    The goal is to allow the subprocess to do the imports to diagnose without
+    having to import other modules first."""
+
+    options = parse_main_process_options(sys.argv[1:])
+    validate_options(options)
+
+    # Option parsing and validation will do a hard program abort if anything was
+    # wrong with the command line.
+    # So we can now assume everything is okay with the options object.
     import subprocess
     process = subprocess.Popen(
         [
             sys.executable, # the Python interpreter
             __file__, # this program
             '--!', # "run as subprocess" marker
-        ] + subprocess_options.as_list(),
+        ] + make_subprocess_options(options).as_list(),
         bufsize = -1)
     process.wait()
+
 
 class ImportLogRecord(object):
     """Import statements and their callers, as a call tree.
@@ -721,6 +745,9 @@ class ImportLogRecord(object):
             self.children,
             self.seq)
 
+# The stack frame that started the current import run
+import_root_frame = None
+
 # An ImportLogRecord for each module to diagnose.
 # This intentionally is the same type as that of ImportLogRecord.children.
 import_log = []
@@ -728,13 +755,14 @@ import_log = []
 # For each name, a list of ImportLogRecords where the name was imported.
 origins = {}
 
-def run_and_log_import():
+def run_import(imports):
     """Run the import, with a logging hook installed.
     Return the log.
     No imports (other than sys and builtins) inside this function, until after
     the import to be diagnosed has finished!"""
-    options = SubprocessOptions(sys.argv[2:])
     # Set up the import hook and the associated log data structures
+    global import_root_frame
+    import_root_frame = sys._getframe()
     if sys.version_info[0] > 2:
         import builtins
     else:
@@ -749,19 +777,18 @@ def run_and_log_import():
     global import_log
     # Run the imports
     try:
-        for (i, module) in enumerate(options.imports, start=1):
+        for (i, module) in enumerate(imports, start=1):
             import_log.append(ImportLogRecord(None, None, i))
             __import__(module)
     finally:
         # Restore the import hook
         builtins.__import__ = _builtin_import
-    # Generate output
-    generate_output(options)
 
 def _import_wrapper(module, globals_=globals(), locals_=[], fromlist=None, level=-1):
     """This is a replacement for __import__ that traces imports.
     It recordes the current stack state in import_log and calls the original
-    __import__ (as saved in _builtin_import)."""
+    __import__ (as saved in _builtin_import).
+    """
 
     # This function will find stack frames, from current frame outwards:
     # 0) _import_wrapper itself
@@ -787,9 +814,25 @@ def _import_wrapper(module, globals_=globals(), locals_=[], fromlist=None, level
 
     current_frame = sys._getframe()
     frames = []
-    import_wrapper_code = current_frame.f_code
     global __name__
-    while current_frame != None:
+    global import_root_frame
+    #print('Scanning stack')
+    while current_frame != import_root_frame:
+        def get_from_dict(d, key):
+            not_found = object()
+            value=d.get(key, not_found)
+            if value is not_found:
+                result = '[Not present]'
+            elif value is None:
+                result = 'None'
+            else:
+                result= repr(value)
+            return result
+        #frame_globals = current_frame.f_globals
+        #print('package: %s' % get_from_dict(frame_globals,  '__package__'))
+        #print('   name: %s' % get_from_dict(frame_globals, '__name__'))
+        #print('   file: %s' % get_from_dict(frame_globals, '__file__'))
+        #print('   line: %d' % current_frame.f_lineno)
         if __name__ != current_frame.f_globals['__name__']:
             # not same module as this function, hence not type (0)
             frames.append(current_frame)
@@ -809,13 +852,15 @@ def _import_wrapper(module, globals_=globals(), locals_=[], fromlist=None, level
             current_log.append(ImportLogRecord(
                 file_name=frame_file, module=frame_module, line=frame_line))
     log_entry = current_log[-1]
-    log_entry.imported_module = 'importing %s failed with an exception' % module
     # Run the import and record the outcome
     result = None
     try:
         result = _builtin_import(module, globals_, locals_, fromlist, level)
         # Import worked, now record the actual module name
         log_entry.imported_module = result.__name__
+    except BaseException as e:
+        log_entry.imported_module = \
+            'importing %s failed with with exception %s' % (module, e)
     finally:
         # Fill in imported_names
         if fromlist != None:
@@ -878,7 +923,6 @@ def iterate_log(preorder, postorder, options):
     Specify preorder(log_entry, options) to do something before subentries are
     visited (options is the SubprocessOptions object).
     log is the current ImportLogRecord.
-    parents is a tuple containing all the parent ImportLogRecords.
     Let preorder return False to prevent iterate_log from visiting subentries.
 
     Specify postorder(log_entry, options) to do something after subentries have
@@ -943,7 +987,7 @@ def generate_output(options):
     # collect the output lines in a map where the key establishes the requested
     # sort order, then print the map.
     # TODO
-    # As analysis type:
+    # As report option:
     # --duplicate
     # --redefinition
     # --indirect
@@ -1002,8 +1046,10 @@ def generate_output(options):
             options.depth = options.depth - 1
         iterate_log(trace_pre, trace_post, options)
 
-# Main program
-if len(sys.argv) > 1 and sys.argv[1] == '--!':
-    run_and_log_import()
-else:
-    prepare_diagnostics()
+if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == '--!':
+        options = SubprocessOptions(sys.argv[2:])
+        run_import(options.options)
+        generate_output(options)
+    else:
+        prepare_diagnostics()
