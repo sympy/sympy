@@ -1,16 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import S
+from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
 from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.expr import Expr
-from sympy.core import Add, Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
@@ -984,6 +984,155 @@ class principal_branch(Function):
         if abs(p) > pi or p == -pi:
             return self  # Cannot evalf for this argument.
         return (abs(z)*exp(I*p))._eval_evalf(prec)
+
+
+def _polarify(eq, lift, pause=False):
+    from sympy import Integral
+    if eq.is_polar:
+        return eq
+    if eq.is_number and not pause:
+        return polar_lift(eq)
+    if isinstance(eq, Symbol) and not pause and lift:
+        return polar_lift(eq)
+    elif eq.is_Atom:
+        return eq
+    elif eq.is_Add:
+        r = eq.func(*[_polarify(arg, lift, pause=True) for arg in eq.args])
+        if lift:
+            return polar_lift(r)
+        return r
+    elif eq.is_Function:
+        return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
+    elif isinstance(eq, Integral):
+        # Don't lift the integration variable
+        func = _polarify(eq.function, lift, pause=pause)
+        limits = []
+        for limit in eq.args[1:]:
+            var = _polarify(limit[0], lift=False, pause=pause)
+            rest = _polarify(limit[1:], lift=lift, pause=pause)
+            limits.append((var,) + rest)
+        return Integral(*((func,) + tuple(limits)))
+    else:
+        return eq.func(*[_polarify(arg, lift, pause=pause)
+                         if isinstance(arg, Expr) else arg for arg in eq.args])
+
+
+def polarify(eq, subs=True, lift=False):
+    """
+    Turn all numbers in eq into their polar equivalents (under the standard
+    choice of argument).
+
+    Note that no attempt is made to guess a formal convention of adding
+    polar numbers, expressions like 1 + x will generally not be altered.
+
+    Note also that this function does not promote exp(x) to exp_polar(x).
+
+    If ``subs`` is True, all symbols which are not already polar will be
+    substituted for polar dummies; in this case the function behaves much
+    like posify.
+
+    If ``lift`` is True, both addition statements and non-polar symbols are
+    changed to their polar_lift()ed versions.
+    Note that lift=True implies subs=False.
+
+    >>> from sympy import polarify, sin, I
+    >>> from sympy.abc import x, y
+    >>> expr = (-x)**y
+    >>> expr.expand()
+    (-x)**y
+    >>> polarify(expr)
+    ((_x*exp_polar(I*pi))**_y, {_x: x, _y: y})
+    >>> polarify(expr)[0].expand()
+    _x**_y*exp_polar(_y*I*pi)
+    >>> polarify(x, lift=True)
+    polar_lift(x)
+    >>> polarify(x*(1+y), lift=True)
+    polar_lift(x)*polar_lift(y + 1)
+
+    Adds are treated carefully:
+
+    >>> polarify(1 + sin((1 + I)*x))
+    (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
+    """
+    if lift:
+        subs = False
+    eq = _polarify(sympify(eq), lift)
+    if not subs:
+        return eq
+    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.free_symbols])
+    eq = eq.subs(reps)
+    return eq, dict([(r, s) for s, r in reps.items()])
+
+
+def _unpolarify(eq, exponents_only, pause=False):
+    if isinstance(eq, bool) or eq.is_Atom:
+        return eq
+
+    if not pause:
+        if eq.func is exp_polar:
+            return exp(_unpolarify(eq.exp, exponents_only))
+        if eq.func is principal_branch and eq.args[1] == 2*pi:
+            return _unpolarify(eq.args[0], exponents_only)
+        if (
+            eq.is_Add or eq.is_Mul or eq.is_Boolean or
+            eq.is_Relational and (
+                eq.rel_op in ('==', '!=') and 0 in eq.args or
+                eq.rel_op not in ('==', '!='))
+        ):
+            return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
+        if eq.func is polar_lift:
+            return _unpolarify(eq.args[0], exponents_only)
+
+    if eq.is_Pow:
+        expo = _unpolarify(eq.exp, exponents_only)
+        base = _unpolarify(eq.base, exponents_only,
+            not (expo.is_integer and not pause))
+        return base**expo
+
+    if eq.is_Function and getattr(eq.func, 'unbranched', False):
+        return eq.func(*[_unpolarify(x, exponents_only, exponents_only)
+            for x in eq.args])
+
+    return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
+
+
+def unpolarify(eq, subs={}, exponents_only=False):
+    """
+    If p denotes the projection from the Riemann surface of the logarithm to
+    the complex line, return a simplified version eq' of `eq` such that
+    p(eq') == p(eq).
+    Also apply the substitution subs in the end. (This is a convenience, since
+    ``unpolarify``, in a certain sense, undoes polarify.)
+
+    >>> from sympy import unpolarify, polar_lift, sin, I
+    >>> unpolarify(polar_lift(I + 2))
+    2 + I
+    >>> unpolarify(sin(polar_lift(I + 7)))
+    sin(7 + I)
+    """
+    if isinstance(eq, bool):
+        return eq
+
+    eq = sympify(eq)
+    if subs != {}:
+        return unpolarify(eq.subs(subs))
+    changed = True
+    pause = False
+    if exponents_only:
+        pause = True
+    while changed:
+        changed = False
+        res = _unpolarify(eq, exponents_only, pause)
+        if res != eq:
+            changed = True
+            eq = res
+        if isinstance(res, bool):
+            return res
+    # Finally, replacing Exp(0) by 1 is always correct.
+    # So is polar_lift(0) -> 0.
+    return res.subs({exp_polar(0): 1, polar_lift(0): 0})
+
+
 
 # /cyclic/
 from sympy.core import basic as _

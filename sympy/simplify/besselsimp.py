@@ -5,6 +5,7 @@ from sympy.core import Mul, S, Dummy
 from sympy.functions import exp_polar, exp, log
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
+from sympy.functions.elementary.complexes import unpolarify
 
 
 def besselsimp(expr):
@@ -35,8 +36,6 @@ def besselsimp(expr):
     # - better algorithm?
     # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
     # - use contiguity relations?
-
-    from .simplify import unpolarify
 
     def replacer(fro, to, factors):
         factors = set(factors)

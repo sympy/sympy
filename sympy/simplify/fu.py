@@ -188,10 +188,11 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import combinations
 
-from sympy.simplify.simplify import (simplify, ratsimp,
+from sympy.simplify.simplify import (simplify,
     _mexpand, bottom_up)
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.combsimp import combsimp
+from sympy.simplify.ratsimp import ratsimp
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)

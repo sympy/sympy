@@ -373,7 +373,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # If our fraction is a polynomial in the free generators, simplify all
     # coefficients separately:
 
-    from sympy.simplify.simplify import ratsimpmodprime
+    from sympy.simplify.ratsimp import ratsimpmodprime
 
     if freegens and pdenom.has_only_gens(*set(gens).intersection(pdenom.gens)):
         num = Poly(num, gens=gens+freegens).eject(*gens)
