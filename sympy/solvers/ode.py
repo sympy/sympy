@@ -252,7 +252,8 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, rootof, terms_gcd, PolynomialError, lcm
+from sympy.polys import (Poly, RootOf, CRootOf, rootof, terms_gcd,
+                         PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -2059,7 +2060,7 @@ def odesimp(eq, func, order, constants, hint):
     eq = constantsimp(eq, constants)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
-    # When RootOf is implemented in solve(), we will want to return a RootOf
+    # When CRootOf is implemented in solve(), we will want to return a CRootOf
     # everytime instead of an Equality.
 
     # Get the f(x) on the left if possible.
@@ -2463,8 +2464,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     if sol.has(Integral):
         return oo
 
-    # Next, try to solve for func.  This code will change slightly when RootOf
-    # is implemented in solve().  Probably a RootOf solution should fall
+    # Next, try to solve for func.  This code will change slightly when CRootOf
+    # is implemented in solve().  Probably a CRootOf solution should fall
     # somewhere between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
@@ -3900,7 +3901,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     are returned, based on expansions with Eulers formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
     to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be returned
+    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be returned
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -4536,7 +4537,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     constants) as `e^{a x} \left(C_1 \cos(b x) + C_2 \sin(b x)\right)`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be return
+    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be return
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -4545,11 +4546,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
-    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) +
-    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) +
-    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4)))
+    Eq(f(x), C1*exp(x*CRootOf(_x**5 + 10*_x - 2, 0)) +
+    C2*exp(x*CRootOf(_x**5 + 10*_x - 2, 1)) +
+    C3*exp(x*CRootOf(_x**5 + 10*_x - 2, 2)) +
+    C4*exp(x*CRootOf(_x**5 + 10*_x - 2, 3)) +
+    C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 4)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.

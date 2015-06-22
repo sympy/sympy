@@ -50,13 +50,34 @@ _complexes_cache = {}
 
 @public
 def rootof(f, x, index=None, radicals=True, expand=True):
-    """Construct a new ``ComplexRootOf`` object for ``k``-th root of ``f``."""
+    """An indexed root of a univariate polynomial.
+
+    Returns either a ``ComplexRootOf`` object or an explicit
+    expression involving radicals.
+
+    Parameters
+    ----------
+    f : Expr
+        Univariate polynomial.
+    x : Symbol, optional
+        Generator for ``f``.
+    index : int or Integer
+    radicals : bool
+               Return a radical expression if possible.
+    expand : bool
+             Expand ``f``.
+    """
     return CRootOf(f, x, index=index, radicals=radicals, expand=expand)
 
 
 @public
 class RootOf(Expr):
-    """Represents ``k``-th root of a univariate polynomial. """
+    """Represents a root of a univariate polynomial.
+
+.. note:: Calls deprecated in SymPy 0.7.7.
+          There is no support for root indexing.
+          Use ``rootof`` instead.
+    """
 
     __slots__ = ['poly']
 
@@ -66,18 +87,31 @@ class RootOf(Expr):
         useinstead="rootof",
         issue=9541)
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
-        """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
+        """Construct a new ``CRootOf`` object for ``k``-th root of ``f``."""
         return rootof(f, x, index=index, radicals=radicals, expand=expand)
 
 @public
 class ComplexRootOf(RootOf):
-    """Represents indexed complex roots of a polynomial."""
+    """Represents an indexed complex root of a polynomial.
+
+    Roots of a univariate polynomial separated into disjoint
+    real or complex intervals and indexed in a fixed order.
+    Currently only rational coefficients are allowed.
+    Can be imported as ``CRootOf``.
+    """
 
     __slots__ = ['index']
     is_complex = True
     is_number = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
+        """ Construct an indexed complex root of a polynomial.
+
+        See ``rootof`` for the parameters.
+
+        The default value of ``radicals`` is ``False`` to satisfy
+        ``eval(srepr(expr) == expr``.
+        """
         x = sympify(x)
 
         if index is None and x.is_Integer:
@@ -127,7 +161,7 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _new(cls, poly, index):
-        """Construct new ``RootOf`` object from raw data. """
+        """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
         obj.poly = PurePoly(poly)
@@ -154,7 +188,7 @@ class ComplexRootOf(RootOf):
 
     @property
     def free_symbols(self):
-        # RootOf currently only works with univariate expressions and although
+        # CRootOf currently only works with univariate expressions and although
         # the poly attribute is often a PurePoly, sometimes it is a Poly. In
         # either case no free symbols should be reported.
         return set()
@@ -505,7 +539,7 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _preprocess_roots(cls, poly):
-        """Take heroic measures to make ``poly`` compatible with ``RootOf``."""
+        """Take heroic measures to make ``poly`` compatible with ``CRootOf``."""
         dom = poly.get_domain()
 
         if not dom.is_Exact:
@@ -522,7 +556,7 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _postprocess_root(cls, root, radicals):
-        """Return the root if it is trivial or a ``RootOf`` object. """
+        """Return the root if it is trivial or a ``CRootOf`` object. """
         poly, index = root
         roots = cls._roots_trivial(poly, radicals)
 
@@ -668,10 +702,10 @@ class ComplexRootOf(RootOf):
         return bisect(func, a, b, tol)
 
     def _eval_Eq(self, other):
-        # RootOf represents a Root, so if other is that root, it should set
+        # CRootOf represents a Root, so if other is that root, it should set
         # the expression to zero *and* it should be in the interval of the
-        # RootOf instance. It must also be a number that agrees with the
-        # is_real value of the RootOf instance.
+        # CRootOf instance. It must also be a number that agrees with the
+        # is_real value of the CRootOf instance.
         if type(self) == type(other):
             return sympify(self.__eq__(other))
         if not (other.is_number and not other.has(AppliedUndef)):
