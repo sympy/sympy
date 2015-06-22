@@ -1,7 +1,6 @@
 """Fourier Series"""
 
 from __future__ import print_function, division
-from itertools import ifilter, count
 
 from sympy import pi, oo
 from sympy.core.expr import Expr
@@ -220,10 +219,14 @@ class FourierSeries(SeriesBase):
         if n is None:
             return iter(self)
 
-        gen = ifilter(lambda a: a is not S.Zero,
-                      (self.term(j) for j in count(0)))
+        terms = []
+        for t in self:
+            if len(terms) == n:
+                break
+            if t is not S.Zero:
+                terms.append(t)
 
-        return Add(*[t for t, _ in zip(gen, range(n))])
+        return Add(*terms)
 
     def shift(self, s):
         """
