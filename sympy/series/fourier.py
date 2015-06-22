@@ -134,23 +134,20 @@ class FourierSeries(SeriesBase):
     fourier series of x**2 - 1 can be found by shifting by -1
 
     References
-    =========
+    ==========
 
     .. [1] mathworld.wolfram.com/FourierSeries.html
     """
-    def __new__(cls, func, *args):
+    def __new__(cls, func, limits, *args):
         func = sympify(func)
 
-        if args:
-            limits = _process_limits(func, args[0])
-        else:
-            limits = _process_limits(func, None)
+        limits = _process_limits(func, limits)
         x, lower, upper = limits
 
         if x not in func.free_symbols:
             return func
 
-        if len(args) != 4:
+        if len(args) != 3:
             n = Dummy('n')
             neg_func = func.subs(x, -x)
             if func == neg_func:
@@ -164,7 +161,7 @@ class FourierSeries(SeriesBase):
                 a0, an = fourier_cos_seq(func, limits, n)
                 bn = fourier_sin_seq(func, limits, n)
         else:
-            a0, an, bn = args[1:]
+            a0, an, bn = args
 
         return Expr.__new__(cls, func, limits, a0, an, bn)
 
@@ -377,3 +374,30 @@ class FourierSeries(SeriesBase):
 
     def __sub__(self, other):
         return self.__add__(-other)
+
+
+def fourier_series(f, limits=None):
+    """Computes fourier sine/cosine series expansion
+
+    returns a ``FourierSeries`` object
+
+    see :class:`FourierSeries` for details
+
+    Examples
+    ========
+
+    >>> from sympy import fourier_series, pi, cos
+    >>> from sympy.abc import x
+
+    >>> fourier_series(x, (x, -pi, pi)).as_series()
+    2*sin(x) - sin(2*x) + 2*sin(3*x)/3
+
+    >>> fourier_series(x**2, (x, -pi, pi)).as_series()
+    -4*cos(x) + cos(2*x) + pi**2/3
+
+    See Also
+    ========
+
+    sympy.series.fourier.FourierSeries
+    """
+    return FourierSeries(f, limits)

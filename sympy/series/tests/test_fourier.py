@@ -1,5 +1,6 @@
-from sympy import FourierSeries, symbols, pi, Piecewise, sin, cos, Rational, oo
-from sympy.utilities.pytest import raises, slow
+from sympy import (FourierSeries, symbols, pi, Piecewise, sin, cos, Rational,
+                   oo, fourier_series)
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
 
@@ -39,7 +40,6 @@ def test_FourierSeries():
     raises(ValueError, lambda: FourierSeries(x, (x, 0, oo)))
 
 
-@slow
 def test_FourierSeries_2():
     p = Piecewise((0, x < 0), (x, True))
     f = FourierSeries(p, (x, -2, 2))
@@ -48,6 +48,10 @@ def test_FourierSeries_2():
                          4*cos(3*pi*x / 2) / (9*pi**2))
     assert f.as_series() == (2*sin(pi*x / 2) / pi - sin(pi*x) / pi
                       - 4*cos(pi*x / 2) / pi**2 + Rational(1, 2))
+
+
+def test_fourier_series():
+    assert isinstance(fourier_series(x), FourierSeries)
 
 
 def test_FourierSeries__operations():
