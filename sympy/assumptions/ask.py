@@ -20,27 +20,31 @@ deprecated_predicates = [
 
 # Memoization storage for predicates
 predicate_storage = {}
+predicate_memo = memoize_property(predicate_storage)
+# Memoization is necessary for the properties of AssumptionKeys to
+# ensure that only one object of Predicate objects are created.
+# This is because assumption handlers are registered on those objects.
 
 
-class QClass(object):
+class AssumptionKeys(object):
     """
     This class contains all the supported keys by ``ask``.
     """
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def hermitian(self):
         """
         Hermitian predicate.
 
-        ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the field of
-        hermitian operators.
+        ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
+        Hermitian operators.
 
         TODO: Add examples
 
         """
         return Predicate('hermitian')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def antihermitian(self):
         """
         Antihermitian predicate.
@@ -54,41 +58,44 @@ class QClass(object):
         """
         return Predicate('antihermitian')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def real(self):
         r"""
         Real number predicate.
 
         ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
-        interval :math:`(-\infty, \infty)`.  Note that, in particular the infinities
-        are not real. Use ``Q.extended_real`` if you want to consider those as well.
+        interval `(-\infty, \infty)`.  Note that, in particular the infinities
+        are not real. Use ``Q.extended_real`` if you want to consider those as
+        well.
 
         A few important facts about reals:
 
-        - Every real number is positive, negative, or zero.  Furthermore, because
-          these sets are pairwise disjoint, each real number is exactly one of
-          those three.
+        - Every real number is positive, negative, or zero.  Furthermore,
+          because these sets are pairwise disjoint, each real number is exactly
+          one of those three.
 
         - Every real number is also complex.
+
+        - Every real number is finite.
 
         - Every real number is either rational or irrational.
 
         - Every real number is either algebraic or transcendental.
 
-        - The facts ``Q.negative``, ``Q.zero``, ``Q.positive``, ``Q.nonnegative``,
-          ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``, ``Q.rational``, and
-          ``Q.irrational`` all imply ``Q.real``, as do all facts that imply those
-          facts.
+        - The facts ``Q.negative``, ``Q.zero``, ``Q.positive``,
+          ``Q.nonnegative``, ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``,
+          ``Q.rational``, and ``Q.irrational`` all imply ``Q.real``, as do all
+          facts that imply those facts.
 
         - The facts ``Q.algebraic``, and ``Q.transcendental`` do not imply
           ``Q.real``; they imply ``Q.complex``. An algebraic or transcendental
           number may or may not be real.
 
-        - The "non" facts (i.e., ``Q.nonnegative``, ``Q.nonzero``, and
-          ``Q.nonpositive``) are not equivalent to not the fact, but rather, not
-          the fact *and* ``Q.real``.  For example, ``Q.nonnegative`` means
-          ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
-          nonzero, or nonpositive.
+        - The "non" facts (i.e., ``Q.nonnegative``, ``Q.nonzero``,
+          ``Q.nonpositive`` and ``Q.noninteger``) are not equivalent to not the
+          fact, but rather, not the fact *and* ``Q.real``.  For example,
+          ``Q.nonnegative`` means ``~Q.negative & Q.real``. So for example,
+          ``I`` is not nonnegative, nonzero, or nonpositive.
 
         Examples
         ========
@@ -108,13 +115,13 @@ class QClass(object):
         """
         return Predicate('real')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def extended_real(self):
         r"""
         Extended real predicate.
 
-        ``Q.extended_real(x)`` is true iff ``x`` is a real number including
-        :math:`{-\infty, \infty}`.
+        ``Q.extended_real(x)`` is true iff ``x`` is a real number or
+        `\{-\infty, \infty\}`.
 
         See documentation of ``Q.real`` for more information about related facts.
 
@@ -132,7 +139,7 @@ class QClass(object):
         """
         return Predicate('extended_real')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def imaginary(self):
         """
         Imaginary number predicate.
@@ -160,13 +167,13 @@ class QClass(object):
         """
         return Predicate('imaginary')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def complex(self):
         """
         Complex number predicate.
 
         ``Q.complex(x)`` is true iff ``x`` belongs to the set of complex
-        numbers.
+        numbers. Note that every complex number is finite.
 
         Examples
         ========
@@ -188,13 +195,14 @@ class QClass(object):
         """
         return Predicate('complex')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def algebraic(self):
-        """
+        r"""
         Algebraic number predicate.
 
         ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
-        algebraic numbers.
+        algebraic numbers. ``x`` is algebraic if there is some polynomial
+        in ``p(x)\in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
 
         Examples
         ========
@@ -214,12 +222,12 @@ class QClass(object):
         """
         return Predicate('algebraic')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def transcendental(self):
         """
         Transcedental number predicate.
 
-        ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
+        ``Q.transcendental(x)`` is true iff ``x`` belongs to the set of
         transcendental numbers. A transcendental number is a real
         or complex number that is not algebraic.
 
@@ -228,7 +236,7 @@ class QClass(object):
         """
         return Predicate('transcendental')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def integer(self):
         """
         Integer predicate.
@@ -252,7 +260,7 @@ class QClass(object):
         """
         return Predicate('integer')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def rational(self):
         """
         Rational number predicate.
@@ -279,7 +287,7 @@ class QClass(object):
         """
         return Predicate('rational')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def irrational(self):
         """
         Irrational number predicate.
@@ -297,6 +305,8 @@ class QClass(object):
         False
         >>> ask(Q.irrational(pi))
         True
+        >>> ask(Q.irrational(I))
+        False
 
         References
         ==========
@@ -306,7 +316,7 @@ class QClass(object):
         """
         return Predicate('irrational')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def finite(self):
         """
         Finite predicate.
@@ -335,7 +345,7 @@ class QClass(object):
         """
         return Predicate('finite')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
     def bounded(self):
         """
@@ -343,18 +353,20 @@ class QClass(object):
         """
         return Predicate('finite')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def infinite(self):
         """
         Infinite number predicate.
 
         ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
-        arbitrarily large.
+        infinity.
+
+        TODO: Add examples
 
         """
         return Predicate('infinite')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
     def infinity(self):
         """
@@ -362,14 +374,14 @@ class QClass(object):
         """
         return Predicate('infinite')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
         """
         return Predicate('infinitesimal')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def positive(self):
         r"""
         Positive real number predicate.
@@ -383,7 +395,7 @@ class QClass(object):
         - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
           thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
           whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
-          positive, i.e., ``Q.positive(x)`` is logically equivalent to
+          positive, i.e., ``Q.nonpositive(x)`` is logically equivalent to
           `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
           true, whereas ``Q.nonpositive(I)`` is false.
 
@@ -407,7 +419,7 @@ class QClass(object):
         """
         return Predicate('positive')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def negative(self):
         r"""
         Negative number predicate.
@@ -445,7 +457,7 @@ class QClass(object):
         """
         return Predicate('negative')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def zero(self):
         """
         Zero number predicate.
@@ -464,11 +476,13 @@ class QClass(object):
         False
         >>> ask(Q.zero(1))
         False
+        >>> ask(Q.zero(x*y), Q.zero(x) | Q.zero(y))
+        True
 
         """
         return Predicate('zero')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def nonzero(self):
         """
         Nonzero real number predicate.
@@ -506,13 +520,20 @@ class QClass(object):
         """
         return Predicate('nonzero')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def nonpositive(self):
         """
         Nonpositive real number predicate.
 
         ``ask(Q.nonpositive(x))`` is true iff ``x`` belongs to the set of
         negative numbers including zero.
+
+        - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
+          thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
+          whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
+          positive, i.e., ``Q.nonpositive(x)`` is logically equivalent to
+          `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
+          true, whereas ``Q.nonpositive(I)`` is false.
 
         Examples
         ========
@@ -532,13 +553,20 @@ class QClass(object):
         """
         return Predicate('nonpositive')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def nonnegative(self):
         """
         Nonnegative real number predicate.
 
         ``ask(Q.nonnegative(x))`` is true iff ``x`` belongs to the set of
         positive numbers including zero.
+
+        - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
+          thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
+          whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+          negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
+          ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
+          true, whereas ``Q.nonnegative(I)`` is false.
 
         Examples
         ========
@@ -558,12 +586,13 @@ class QClass(object):
         """
         return Predicate('nonnegative')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def even(self):
         """
         Even number predicate.
 
-        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even numbers.
+        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even
+        integers.
 
         Examples
         ========
@@ -581,7 +610,7 @@ class QClass(object):
         """
         return Predicate('even')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def odd(self):
         """
         Odd number predicate.
@@ -604,7 +633,7 @@ class QClass(object):
         """
         return Predicate('odd')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def prime(self):
         """
         Prime number predicate.
@@ -625,11 +654,13 @@ class QClass(object):
         True
         >>> ask(Q.prime(20))
         False
+        >>> ask(Q.prime(-3))
+        False
 
         """
         return Predicate('prime')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def composite(self):
         """
         Composite number predicate.
@@ -653,7 +684,7 @@ class QClass(object):
         """
         return Predicate('composite')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def commutative(self):
         """
         Commutative predicate.
@@ -666,7 +697,7 @@ class QClass(object):
         """
         return Predicate('commutative')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def is_true(self):
         """
         Generic predicate.
@@ -685,12 +716,12 @@ class QClass(object):
         """
         return Predicate('is_true')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def symmetric(self):
         """
         Symmetric matrix predicate.
 
-        ``Q.symmetric(x)`` is true iff the square matrix ``x`` is equal to
+        ``Q.symmetric(x)`` is true iff ``x`` is a square matrix and is equal to
         its transpose. Every square diagonal matrix is a symmetric matrix.
 
         Examples
@@ -707,20 +738,24 @@ class QClass(object):
         >>> ask(Q.symmetric(Y))
         False
 
+
         References
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Symmetric_matrix
 
         """
+        # TODO: Add handlers to make these keys work with
+        # actual matrices and add more examples in the docstring.
         return Predicate('symmetric')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def invertible(self):
         """
         Invertible matrix predicate.
 
         ``Q.invertible(x)`` is true iff ``x`` is an invertible matrix.
+        A square matrix is called invertible only if its determinant is 0.
 
         Examples
         ========
@@ -744,12 +779,16 @@ class QClass(object):
         """
         return Predicate('invertible')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def orthogonal(self):
         """
         Orthogonal matrix predicate.
 
         ``Q.orthogonal(x)`` is true iff ``x`` is an orthogonal matrix.
+        A square matrix ``M`` is an orthogonal matrix if it satisfies
+        ``M^TM = MM^T = I`` where ``M^T`` is the transpose matrix of
+        ``M`` and ``I`` is an identity matrix. Note that an orthogonal
+        matrix is necessarily invertible.
 
         Examples
         ========
@@ -764,6 +803,8 @@ class QClass(object):
         True
         >>> ask(Q.orthogonal(Identity(3)))
         True
+        >>> ask(Q.invertible(x), Q.orthogonal(x))
+        True
 
         References
         ==========
@@ -773,14 +814,15 @@ class QClass(object):
         """
         return Predicate('orthogonal')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def unitary(self):
         """
         Unitary matrix predicate.
 
+        ``Q.unitary(x)`` is true iff ``x`` is a unitary matrix.
         Unitary matrix is an analogue to orthogonal matrix. A square
-        matrix ``M`` with complex elements is unitary if ``M'M = MM' = I``
-        where ``M'`` is the conjugate transpose matrix of ``M``.
+        matrix ``M`` with complex elements is unitary if :math:``M^TM = MM^T= I``
+        where :math:``M^T`` is the conjugate transpose matrix of ``M``.
 
         Examples
         ========
@@ -804,12 +846,12 @@ class QClass(object):
         """
         return Predicate('unitary')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def positive_definite(self):
-        """
+        r"""
         Positive definite matrix predicate.
 
-        If ``M`` is a ``nxn`` symmetric real matrix, it is said
+        If ``M`` is a :math:``n \times n`` symmetric real matrix, it is said
         to be positive definite if :math:`Z^TMZ` is positive for
         every non-zero column vector ``Z`` of ``n`` real numbers.
 
@@ -836,13 +878,13 @@ class QClass(object):
         """
         return Predicate('positive_definite')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def upper_triangular(self):
         """
         Upper triangular matrix predicate.
 
-        A matrix ``M`` is called upper triangular matrix if :math:`a_{ij}=0`
-        for :math:`i>j`.
+        A matrix ``M`` is called upper triangular matrix if :math:`M_{ij}=0`
+        for :math:`i<j`.
 
         Examples
         ========
@@ -861,7 +903,7 @@ class QClass(object):
         """
         return Predicate('upper_triangular')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def lower_triangular(self):
         """
         Lower triangular matrix predicate.
@@ -885,12 +927,14 @@ class QClass(object):
         """
         return Predicate('lower_triangular')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def diagonal(self):
         """
         Diagonal matrix predicate.
 
-        ``Q.diagonal(x)`` is true iff ``x`` is a diagonal matrix.
+        ``Q.diagonal(x)`` is true iff ``x`` is a diagonal matrix. A diagonal
+        matrix is a matrix in which the entries outside the main diagonal
+        are all zero.
 
         Examples
         ========
@@ -911,12 +955,15 @@ class QClass(object):
         """
         return Predicate('diagonal')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def fullrank(self):
         """
         Fullrank matrix predicate.
 
         ``Q.fullrank(x)`` is true iff ``x`` is a full rank matrix.
+        A matrix is full rank if all rows and columns of the matrix
+        are linearly independent. A square matrix is full rank iff
+        its determinant is nonzero.
 
         Examples
         ========
@@ -933,12 +980,13 @@ class QClass(object):
         """
         return Predicate('fullrank')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def square(self):
         """
         Square matrix predicate.
 
-        ``Q.square(x)`` is true iff ``x`` is a square matrix.
+        ``Q.square(x)`` is true iff ``x`` is a square matrix. A square matrix
+        is a matrix with the same number of rows and columns.
 
         Examples
         ========
@@ -963,7 +1011,7 @@ class QClass(object):
         """
         return Predicate('square')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def integer_elements(self):
         """
         Integer elements matrix predicate.
@@ -982,7 +1030,7 @@ class QClass(object):
         """
         return Predicate('integer_elements')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def real_elements(self):
         """
         Real elements matrix predicate.
@@ -1001,7 +1049,7 @@ class QClass(object):
         """
         return Predicate('real_elements')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def complex_elements(self):
         """
         Complex elements matrix predicate.
@@ -1022,12 +1070,12 @@ class QClass(object):
         """
         return Predicate('complex_elements')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def singular(self):
         """
         Singular matrix predicate.
 
-        A matrix is singular iff the value of it's determinant is 0.
+        A matrix is singular iff the value of its determinant is 0.
 
         Examples
         ========
@@ -1047,7 +1095,7 @@ class QClass(object):
         """
         return Predicate('singular')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def normal(self):
         """
         Normal matrix predicate.
@@ -1070,7 +1118,7 @@ class QClass(object):
         """
         return Predicate('normal')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def triangular(self):
         """
         Triangular matrix predicate.
@@ -1095,12 +1143,12 @@ class QClass(object):
         """
         return Predicate('triangular')
 
-    @memoize_property(predicate_storage)
+    @predicate_memo
     def unit_triangular(self):
         """
         Unit triangular matrix predicate.
 
-        A unit triangular matrix is a triangular matrix with 1
+        A unit triangular matrix is a triangular matrix with 1s
         on the diagonal.
 
         Examples
@@ -1115,7 +1163,7 @@ class QClass(object):
         return Predicate('unit_triangular')
 
 
-Q = QClass()
+Q = AssumptionKeys()
 
 
 def _extract_facts(expr, symbol):
