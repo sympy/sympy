@@ -253,3 +253,10 @@ def test_real():
     assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y)) is None
+
+
+def test_pos_neg():
+    assert satask(Q.positive(x + y), Q.positive(x) & Q.positive(y)) is True
+    assert satask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
+    assert satask(Q.positive(x + y), Q.negative(x) & Q.negative(y)) is False
+    assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False

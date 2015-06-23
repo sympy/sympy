@@ -378,6 +378,8 @@ def get_known_facts():
         Implies(Q.antihermitian, ~Q.hermitian),
         Equivalent(Q.negative, Q.nonzero & ~Q.positive),
         Equivalent(Q.positive, Q.nonzero & ~Q.negative),
+        Implies(Q.positive, ~Q.negative),
+        Implies(Q.negative, ~Q.positive),
         Equivalent(Q.rational, Q.real & ~Q.irrational),
         Equivalent(Q.real, Q.rational | Q.irrational),
         Implies(Q.nonzero, Q.real),
