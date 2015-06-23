@@ -1,7 +1,7 @@
 from sympy.polys.domains import QQ, EX, ExpressionDomain
 from sympy.polys.rings import PolyElement, ring
-from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
 from sympy.polys.polyerrors import DomainError
+from sympy.polys.monomials import monomial_min, monomial_mul, monomial_ldiv
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -530,7 +530,7 @@ def rs_diff(p, x):
     mn = tuple(mn)
     for expv in p:
         if expv[n]:
-            e = monomial_div(expv, mn)
+            e = monomial_ldiv(expv, mn)
             p1[e] = p[expv]*expv[n]
     return p1
 
@@ -748,6 +748,7 @@ def rs_nth_root(p, n, iv, prec):
         res = mul_xin(res, ii, mq)
     return res
 
+@check_precision
 def rs_log(p, x, prec):
     """
     The Logarithm of ``p`` modulo ``O(x**prec)``
