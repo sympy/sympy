@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from collections import MutableMapping, defaultdict
 
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
+from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol, Symbol)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.sympify import _sympify
 from sympy.core.rules import Transform
@@ -370,7 +370,20 @@ for klass, fact in [
     (ImaginaryUnit, CheckOldAssump(Q.nonpositive)),
     (ImaginaryUnit, CheckOldAssump(Q.rational)),
     (ImaginaryUnit, CheckOldAssump(Q.irrational)),
-    (ImaginaryUnit, CheckOldAssump(Q.imaginary))
+    (ImaginaryUnit, CheckOldAssump(Q.imaginary)),
+
+    (Symbol, CheckOldAssump(Q.negative)),
+    (Symbol, CheckOldAssump(Q.zero)),
+    (Symbol, CheckOldAssump(Q.positive)),
+    (Symbol, CheckOldAssump(Q.nonnegative)),
+    (Symbol, CheckOldAssump(Q.nonzero)),
+    (Symbol, CheckOldAssump(Q.nonpositive)),
+    (Symbol, CheckOldAssump(Q.rational)),
+    (Symbol, CheckOldAssump(Q.irrational)),
+    (Symbol, CheckOldAssump(Q.even)),
+    (Symbol, CheckOldAssump(Q.odd)),
+    (Symbol, CheckOldAssump(Q.integer)),
+    (Symbol, CheckOldAssump(Q.imaginary))
     ]:
 
     register_fact(klass, fact)
