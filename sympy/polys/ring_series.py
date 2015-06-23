@@ -304,7 +304,22 @@ def rs_series_inversion(p, x, prec):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     return _series_inversion1(p, x, prec)
 
-def series_reversion(p, i, n, j):
+def _coefficient_t(p, t):
+    """coefficient x_i^j of self where t = (i, j)
+    for j=0 it gives the terms independent from the variable x_i
+    """
+    i, j = t
+    ring = p.ring
+    expv1 = [0]*ring.ngens
+    expv1[i] = j
+    expv1 = tuple(expv1)
+    p1 = ring(0)
+    for expv in p:
+        if expv[i] == j:
+            p1[monomial_div(expv, expv1)] = p[expv]
+    return p1
+
+def series_reversion(p, x, n, y):
     """reversion of a series
 
     p is a series with O(x**n) of the form p = a*x + f(x)
@@ -346,26 +361,21 @@ def series_reversion(p, i, n, j):
     y
     """
     ring = p.ring
-    nx = ring.gens.index(i)
-    y = ring(j)
-    ny = ring.gens.index(j)
-    if _has_contant_term(p, i):
+    nx = ring.gens.index(x)
+    y = ring(y)
+    ny = ring.gens.index(y)
+    if _has_constant_term(p, x):
         raise ValueError('part independent from %s must be 0' % nx)
-    expv1 = [0]*ring.ngens
-    expv1[nx] = 1
-    expv1 = tuple(expv1)
-    p1 = ring(0)
-    for expv in p:
-        if expv[nx] == 1:
-            p1[monomial_div(expv, expv1)] = p[expv]
+    a = _coefficient_t(p, (nx, 1))
     zm = ring.zero_monom
-    assert zm in p1 and len(p1) == 1
-    p1 = p1[zm]
-    r = ring(ny)/p1
+    assert zm in a and len(a) == 1
+    a = a[zm]
+    r = y/a
     for i in range(2, n):
-        sb = LPolySubs(lp, lp, {nx:r})
-        sp = sb.subs_trunc(p, ny, i + 1)
-        sp = sp.coefficient_t((j, i))*y**i
+        sb = p
+        sp = sb.compose(x, r)
+        sp = rs_trunc(sp, y, i + 1)
+        sp = _coefficient_t(sp, (ny, i))*y**i
         r -= sp/a
     return r
 
