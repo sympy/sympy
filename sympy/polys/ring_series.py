@@ -8,8 +8,23 @@ from sympy.core.power import Pow
 from sympy.core.compatibility import as_int, range
 from sympy.core import S, evaluate
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
+from sympy.functions import ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
+from functools import wraps
+
+def check_precision(func):
+    @wraps(func)
+    def precision_wrapper(p, x, prec):
+        n = p.degree(x)
+        prec0 = prec
+        if n > 0 and prec > 0 and n != int(n):
+            prec = ceiling(prec/n)
+        if prec != prec0:
+            return rs_trunc(func(p, x, prec), x, prec0)
+        else:
+            return func(p, x, prec)
+    return precision_wrapper
 
 def _invert_monoms(p1):
     """
@@ -80,8 +95,9 @@ def rs_trunc(p1, x, prec):
         p[exp1] = p1[exp1]
     return p
 
-# TODO This also needs to take care of negative precision
+# TODO What to do with negative degree/precision?
 def _check_precision(prec, n):
+    if n > 0:
         return prec/n
 
 def rs_mul(p1, p2, x, prec):
@@ -829,6 +845,7 @@ def _exp1(p, x, prec):
         p1 += tmp
     return p1
 
+@check_precision
 def rs_exp(p, x, prec):
     """
     Exponentiation of a series modulo ``O(x**prec)``
@@ -845,8 +862,6 @@ def rs_exp(p, x, prec):
     """
     R = p.ring
     index = ring.gens.index(x)
-    #n = max(p, key=lambda k: k[index])[index]
-    #prec = _check_precision(prec, n)
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
@@ -895,6 +910,7 @@ def _atan_series(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
+@check_precision
 def rs_atan(p, x, prec):
     """
     The arctangent of a series
@@ -943,6 +959,7 @@ def rs_atan(p, x, prec):
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
 
+@check_precision
 def rs_asin(p, iv, prec):
     """
     Arcsine of a series
@@ -1007,6 +1024,7 @@ def _tan1(p, x, prec):
         p1 += tmp
     return p1
 
+@check_precision
 def rs_tan(p, x, prec):
     """
     Tangent of a series
@@ -1059,6 +1077,7 @@ def rs_tan(p, x, prec):
     else:
         return fun(p, _tan1, x, prec)
 
+@check_precision
 def rs_cot(p, iv, prec):
     """
     Cotangent of a series
@@ -1092,6 +1111,7 @@ def rs_cot(p, iv, prec):
     res = rs_trunc(res, iv, prec)
     return res
 
+@check_precision
 def rs_sin(p, x, prec):
     """
     Sine of a series
@@ -1116,6 +1136,8 @@ def rs_sin(p, x, prec):
     R = x.ring
     if not p:
         return R(0)
+    # Support for constant term can be extended on the lines of rs_cos
+    # XXX Do we always need to truncate?
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
@@ -1153,6 +1175,7 @@ def rs_sin(p, x, prec):
         n *= -k*(k + 1)
     return rs_series_from_list(p, c, x, prec)
 
+@check_precision
 def rs_cos(p, iv, prec):
     """
     Cosine of a series
@@ -1212,6 +1235,7 @@ def rs_cos(p, iv, prec):
         n *= -k*(k - 1)
     return rs_series_from_list(p, c, iv, prec)
 
+@check_precision
 def rs_cos_sin(p, iv, prec):
     """
     Returns the tuple (rs_cos(p, iv, iv), rs_sin(p, iv, iv))
@@ -1235,7 +1259,8 @@ def _atanh(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def rs_atanh(p, x, prec):
+@check_precision
+def rs_atanh(p, iv, prec):
     """
     Hyperbolic arctangent of a series
 
@@ -1283,6 +1308,7 @@ def rs_atanh(p, x, prec):
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
 
+@check_precision
 def rs_sinh(p, iv, prec):
     """
     Hyperbolic sine of a series
@@ -1309,6 +1335,7 @@ def rs_sinh(p, iv, prec):
     t1 = rs_series_inversion(t, iv, prec)
     return (t - t1)/2
 
+@check_precision
 def rs_cosh(p, iv, prec):
     """
     Hyperbolic cosine of a series
@@ -1356,7 +1383,8 @@ def _tanh(p, iv, prec):
         p1 += tmp
     return p1
 
-def rs_tanh(p, x, prec):
+@check_precision
+def rs_tanh(p, iv, prec):
     """
     Hyperbolic tangent of a series
 
