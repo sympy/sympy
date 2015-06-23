@@ -7,7 +7,7 @@ from collections import defaultdict
 from itertools import combinations, product
 
 from sympy.core.basic import Basic
-from sympy.core.cache import cacheit
+from sympy.core.cache import cached_property, cacheit
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
@@ -643,8 +643,7 @@ class Xor(BooleanFunction):
             obj._argset = frozenset(argset)
             return obj
 
-    @property
-    @cacheit
+    @cached_property
     def args(self):
         return tuple(ordered(self._argset))
 
@@ -859,8 +858,7 @@ class Equivalent(BooleanFunction):
         obj._argset = _args
         return obj
 
-    @property
-    @cacheit
+    @cached_property
     def args(self):
         return tuple(ordered(self._argset))
 

@@ -202,3 +202,37 @@ elif USE_CACHE == 'debug':
 else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+
+
+class _Desc(object):
+    "Attribute descriptor for `@cached_property`."
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, instance, clazz=None):
+        value = self.func(instance)
+        instance.__dict__[self.func.__name__] = value
+        return value
+
+def cached_property(func):
+    """A decorator that combines the effects of `@cacheit` (compute value and
+    cache it so it does not need to be recomputed) and `@property` (implement
+    a property through a function). However, this is far more efficient.
+
+    It is recommended practice to use this decorator to initialize properties
+    with code that needs to call into SymPy; such initialization tends to create
+    import cycles.
+
+    This decorator will not work with class or module properties: These do not
+    offer the machinery needed to implement a property through a function.
+
+    The usual `@cacheit` caveat applies: The function's result value must not
+    depend on anything that can change over time.
+
+    This can be efficient because it does not need to construct keys from
+    function parameters and store them in a dict, as `@cacheit` needs to do
+    so that it can associate results with previously-seen parameter
+    combinations.
+
+    The `@property` semantics is useful because parameterless, constant
+    functions are indistinguishable from mere values."""
+    return _Desc(func)
