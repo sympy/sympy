@@ -18,7 +18,7 @@ class AskInfinitesimalHandler(CommonHandler):
 
     @staticmethod
     def Symbol(expr, assumptions):
-        return expr.is_infinitesimal
+        return expr.is_zero
 
     @staticmethod
     def _number(expr, assumptions):
