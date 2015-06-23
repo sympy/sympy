@@ -18,6 +18,10 @@ class AskPrimeHandler(CommonHandler):
     """
 
     @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_prime
+
+    @staticmethod
     def _number(expr, assumptions):
         # helper method
         try:
@@ -76,6 +80,11 @@ class AskPrimeHandler(CommonHandler):
 
 
 class AskCompositeHandler(CommonHandler):
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_composite
+
     @staticmethod
     def Basic(expr, assumptions):
         _positive = ask(Q.positive(expr), assumptions)
@@ -97,6 +106,11 @@ class AskCompositeHandler(CommonHandler):
 
 
 class AskEvenHandler(CommonHandler):
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_even
+
     @staticmethod
     def _number(expr, assumptions):
         # helper method
@@ -222,6 +236,10 @@ class AskOddHandler(CommonHandler):
     Handler for key 'odd'
     Test that an expression represents an odd number
     """
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_odd
 
     @staticmethod
     def Basic(expr, assumptions):
