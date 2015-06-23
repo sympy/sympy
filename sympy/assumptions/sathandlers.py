@@ -208,10 +208,28 @@ def _old_assump_replacer(obj):
         ret = e.is_odd
     if obj.func == Q.integer:
         ret = e.is_integer
+    if obj.func == Q.real:
+        ret = e.is_real
     if obj.func == Q.imaginary:
         ret = e.is_imaginary
+    if obj.func == Q.complex:
+        ret = e.is_complex
     if obj.func == Q.commutative:
         ret = e.is_commutative
+    if obj.func == Q.finite:
+        ret = e.is_finite
+    if obj.func == Q.prime:
+        ret = e.is_prime
+    if obj.func == Q.composite:
+        ret = e.is_composite
+    if obj.func == Q.even:
+        ret = e.is_even
+    if obj.func == Q.odd:
+        ret = e.is_odd
+    if obj.func == Q.infinitesimal:
+        ret = e.is_zero
+    if obj.func == Q.integer:
+        ret = e.is_integer
 
     if ret is None:
         return obj
@@ -380,10 +398,17 @@ for klass, fact in [
     (Symbol, CheckOldAssump(Q.nonpositive)),
     (Symbol, CheckOldAssump(Q.rational)),
     (Symbol, CheckOldAssump(Q.irrational)),
+    (Symbol, CheckOldAssump(Q.real)),
+    (Symbol, CheckOldAssump(Q.imaginary)),
+    (Symbol, CheckOldAssump(Q.complex)),
+    (Symbol, CheckOldAssump(Q.commutative)),
+    (Symbol, CheckOldAssump(Q.finite)),
+    (Symbol, CheckOldAssump(Q.prime)),
+    (Symbol, CheckOldAssump(Q.composite)),
     (Symbol, CheckOldAssump(Q.even)),
     (Symbol, CheckOldAssump(Q.odd)),
-    (Symbol, CheckOldAssump(Q.integer)),
-    (Symbol, CheckOldAssump(Q.imaginary))
+    (Symbol, CheckOldAssump(Q.infinitesimal)),
+    (Symbol, CheckOldAssump(Q.integer))
     ]:
 
     register_fact(klass, fact)
