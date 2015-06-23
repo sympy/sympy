@@ -305,8 +305,8 @@ def rs_series_inversion(p, x, prec):
     return _series_inversion1(p, x, prec)
 
 def _coefficient_t(p, t):
-    """coefficient x_i^j of self where t = (i, j)
-    for j=0 it gives the terms independent from the variable x_i
+    """
+    Coefficient of `x_i**j` in p, where t = (i, j)
     """
     i, j = t
     ring = p.ring
@@ -319,8 +319,9 @@ def _coefficient_t(p, t):
             p1[monomial_div(expv, expv1)] = p[expv]
     return p1
 
-def series_reversion(p, x, n, y):
-    """reversion of a series
+def rs_series_reversion(p, x, n, y):
+    """
+    Reversion of a series
 
     p is a series with O(x**n) of the form p = a*x + f(x)
     where `a` is a number different from 0
@@ -328,8 +329,8 @@ def series_reversion(p, x, n, y):
     f(x) = sum( a_k*x_k, k in range(2, n))
 
       a_k can depend polynomially on other variables, not indicated.
-      x variable with index i, or with name i
-      y variable with index j, or with name j
+      x: variable with name x
+      y: variable with name y
 
     solve p = y, that is given
     a*x + f(x) - y = 0
@@ -351,13 +352,14 @@ def series_reversion(p, x, n, y):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> lp, x, y = lgens('x, y', QQ)
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_series_reversion, rs_trunc
+    >>> R, x, y = ring('x, y', QQ)
     >>> p = x + x**2
-    >>> p1 = p.series_reversion('x', 4, 'y')
+    >>> p1 = rs_series_reversion(p, x, 4, y)
     >>> p1
     2*y**3 - y**2 + y
-    >>> (p1 + p1**2).trunc('y', 4)
+    >>> rs_trunc(p1 + p1**2, y, 4)
     y
     """
     ring = p.ring
@@ -365,7 +367,8 @@ def series_reversion(p, x, n, y):
     y = ring(y)
     ny = ring.gens.index(y)
     if _has_constant_term(p, x):
-        raise ValueError('part independent from %s must be 0' % nx)
+        raise ValueError('p must not contain a constant term in the series \
+            variable')
     a = _coefficient_t(p, (nx, 1))
     zm = ring.zero_monom
     assert zm in a and len(a) == 1
