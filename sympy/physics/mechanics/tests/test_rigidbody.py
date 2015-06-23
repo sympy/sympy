@@ -1,5 +1,6 @@
 from sympy import symbols
-from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
+from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody,\
+    inertia
 from sympy.physics.mechanics import dynamicsymbols, outer
 from sympy.physics.mechanics import inertia_of_point_mass
 
@@ -73,3 +74,22 @@ def test_rigidbody3():
 
     assert rb1.central_inertia == rb2.central_inertia
     assert rb1.angular_momentum(O, A) == rb2.angular_momentum(O, A)
+
+def test_rigidbody_joints():
+    name = "Ground"
+    reference_frame = ReferenceFrame(name + "_Frame")
+    center_of_mass = Point(name + "_CenterOfMass")
+    center_of_mass.set_vel(reference_frame, 0)
+    ground_inertia = inertia(reference_frame, 1, 1, 1)
+    inertia_tuple = (ground_inertia, center_of_mass)
+    mass = symbols(name + "_Mass")
+
+    rb1 = RigidBody(name, center_of_mass, reference_frame,
+                    mass, inertia_tuple)
+    assert rb1.system is None
+    assert rb1.parent is None
+    assert rb1.child is None
+
+    rb2 = RigidBody(name, center_of_mass, reference_frame,
+                    mass, inertia_tuple)
+    # TODO

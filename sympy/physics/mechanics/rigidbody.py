@@ -62,6 +62,58 @@ class RigidBody(object):
 
     __repr__ = __str__
 
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent):
+        if isinstance(parent, RigidBody):
+            self._parent = parent
+        else:
+            raise TypeError("parent of {0} should be a Rigidbody".format(self._name))
+
+    @property
+    def child(self):
+        return self.child
+
+    @child.setter
+    def child(self, child):
+        if isinstance(child, RigidBody):
+            self._child = child
+        else:
+            raise TypeError("child of {0} should be a Rigidbody".format(self._name))
+
+    @property
+    def system(self):
+        return self.system
+
+    @system.setter
+    def system(self, system):
+        # TODO Checking if this is an instance of pydy.System will include
+        # pydy as an dependency. How to deal with this?
+        self.coordinates = []
+        self.diff_coordinates = []
+        self.velocities = []
+        self.kdequations = []
+        self.force_list = []
+        self._system = system
+
+    def add_coordinate(self, coordinate):
+        self.coordinates.append(coordinate)
+
+    def add_diff_velocity(self, diff_velocity):
+        self.diff_coordinates.append(diff_velocity)
+
+    def add_velocity(self, velocity):
+        self.velocities.append(velocity)
+
+    def add_kdequation(self, kdequation):
+        self.kdequations.append(kdequation)
+
+    def add_force(self, force):
+        self.force_list.append(force)
+
     def get_frame(self):
         return self._frame
 
