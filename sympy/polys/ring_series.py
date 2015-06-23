@@ -13,15 +13,17 @@ from mpmath.libmp.libintmath import giant_steps
 import math
 from functools import wraps
 
+# prec must not be of the type `Sympy.Integer`
+# XXX Should we support fractional precision?
 def check_precision(func):
     @wraps(func)
     def precision_wrapper(p, x, prec):
         n = p.degree(x)
         prec0 = prec
         if n > 0 and prec > 0 and n != int(n):
-            prec = ceiling(prec/n)
+            prec = int(ceiling(prec/n))
         if prec != prec0:
-            return rs_trunc(func(p, x, prec), x, prec0)
+            return rs_trunc(func(p, x, prec), x, int(prec0))
         else:
             return func(p, x, prec)
     return precision_wrapper
