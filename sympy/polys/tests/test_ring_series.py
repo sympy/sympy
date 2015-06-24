@@ -4,7 +4,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_series_inversion,
   rs_series_from_list, rs_exp, rs_log, rs_newton, rs_hadamard_exp,
   rs_compose_add, rs_atan, rs_atanh, rs_tan, rs_sin, rs_cos, rs_cos_sin,
-  rs_sinh, rs_cosh, rs_tanh, _tan1, fun)
+  rs_sinh, rs_cosh, rs_tanh, _tan1, fun, rs_series_reversion)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 
@@ -103,10 +103,10 @@ def test_series_reversion():
     R, x, y = ring('x, y', QQ)
 
     p = rs_tan(x, x, 10)
-    assert rs_series_inversion(p, x, 8, y) == rs_atan(y, y, 8)
+    assert rs_series_reversion(p, x, 8, y) == rs_atan(y, y, 8)
 
     p = rs_sin(x, x, 10)
-    assert rs_series_inversion(p, x, 8, y) == 5*y**7/112 + 3*y**5/40 + \
+    assert rs_series_reversion(p, x, 8, y) == 5*y**7/112 + 3*y**5/40 + \
         y**3/6 + y
 
 def test_series_from_list():
