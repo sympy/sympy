@@ -101,21 +101,21 @@ class FourierSeries(SeriesBase):
     >>> from sympy.abc import x
 
     >>> s = FourierSeries(x**2, (x, -pi, pi))
-    >>> s.as_series(n=3)
+    >>> s.truncate(n=3)
     -4*cos(x) + cos(2*x) + pi**2/3
 
     Shifting
 
-    >>> s.shift(1).as_series()
+    >>> s.shift(1).truncate()
     -4*cos(x) + cos(2*x) + 1 + pi**2/3
-    >>> s.shiftx(1).as_series()
+    >>> s.shiftx(1).truncate()
     -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
 
     Scaling
 
-    >>> s.scale(2).as_series()
+    >>> s.scale(2).truncate()
     -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
-    >>> s.scalex(2).as_series()
+    >>> s.scalex(2).truncate()
     -4*cos(2*x) + cos(4*x) + pi**2/3
 
     Notes
@@ -210,7 +210,7 @@ class FourierSeries(SeriesBase):
         if old.has(x):
             return self
 
-    def as_series(self, n=3):
+    def truncate(self, n=3):
         """"returns the first n terms(non-zero) of the series
         if n is none returns an iterator"""
         if n is None:
@@ -241,7 +241,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.shift(1).as_series()
+        >>> s.shift(1).truncate()
         -4*cos(x) + cos(2*x) + 1 + pi**2/3
         """
         s, x = sympify(s), self.x
@@ -270,7 +270,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.shiftx(1).as_series()
+        >>> s.shiftx(1).truncate()
         -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
         """
         s, x = sympify(s), self.x
@@ -300,7 +300,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.scale(2).as_series()
+        >>> s.scale(2).truncate()
         -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
         """
         s, x = sympify(s), self.x
@@ -331,7 +331,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy import FourierSeries, pi
         >>> from sympy.abc import x
         >>> s = FourierSeries(x**2, (x, -pi, pi))
-        >>> s.scalex(2).as_series()
+        >>> s.scalex(2).truncate()
         -4*cos(2*x) + cos(4*x) + pi**2/3
         """
         s, x = sympify(s), self.x
@@ -389,10 +389,10 @@ def fourier_series(f, limits=None):
     >>> from sympy import fourier_series, pi, cos
     >>> from sympy.abc import x
 
-    >>> fourier_series(x, (x, -pi, pi)).as_series()
+    >>> fourier_series(x, (x, -pi, pi)).truncate()
     2*sin(x) - sin(2*x) + 2*sin(3*x)/3
 
-    >>> fourier_series(x**2, (x, -pi, pi)).as_series()
+    >>> fourier_series(x**2, (x, -pi, pi)).truncate()
     -4*cos(x) + cos(2*x) + pi**2/3
 
     See Also

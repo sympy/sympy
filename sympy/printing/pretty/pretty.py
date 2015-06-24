@@ -1519,6 +1519,13 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm(sstr(e))
 
+    def _print_FourierSeries(self, s):
+        if self._use_unicode:
+            dots = u("\N{HORIZONTAL ELLIPSIS}")
+        else:
+            dots = '...'
+        return self._print_Add(s.truncate()) + self._print(dots)
+
     def _print_SeqFormula(self, s):
         if self._use_unicode:
             dots = u("\N{HORIZONTAL ELLIPSIS}")
