@@ -435,20 +435,20 @@ def test_puiseux_series():
 def test_check_precision():
     R, x, y = ring('x, y', QQ)
 
-    assert rs_exp(x**QQ(2, 5), x, 4) == x**QQ(18, 5)/362880 + \
+    assert rs_exp(x**QQ(2, 5), x, 10) == x**QQ(18, 5)/362880 + \
         x**QQ(16, 5)/40320 + x**QQ(14, 5)/5040 + x**QQ(12, 5)/720 + \
         x**2/120 + x**QQ(8, 5)/24 + x**QQ(6, 5)/6 + x**QQ(4, 5)/2 + \
         x**QQ(2, 5) + 1
-    assert rs_sin(x**QQ(5, 7), x, 10) == x**QQ(65, 7)/6227020800 - \
+    assert rs_sin(x**QQ(5, 7), x, 14) == x**QQ(65, 7)/6227020800 - \
         x**QQ(55, 7)/39916800 + x**QQ(45, 7)/362880 - x**5/5040 + \
         x**QQ(25, 7)/120 - x**QQ(15, 7)/6 + x**QQ(5, 7)
-    assert rs_cos(x**QQ(2, 5), x, 4) == x**QQ(16, 5)/40320 - \
+    assert rs_cos(x**QQ(2, 5), x, 10) == x**QQ(16, 5)/40320 - \
         x**QQ(12, 5)/720 + x**QQ(8, 5)/24 - x**QQ(4, 5)/2 + 1
-    assert rs_tan(x**QQ(2, 5), x, 4) ==  62*x**QQ(18, 5)/2835 + \
+    assert rs_tan(x**QQ(2, 5), x, 10) ==  62*x**QQ(18, 5)/2835 + \
         17*x**QQ(14, 5)/315 + 2*x**2/15 + x**QQ(6, 5)/3 + x**QQ(2, 5)
-    assert rs_atan(x**QQ(2, 5), x, 4) == x**QQ(18, 5)/9 - x**QQ(14, 5)/7 + \
-        x**2/5 - x**QQ(6, 5)/3 + x**QQ(2, 5)
-    assert rs_asin(x**QQ(2, 5), x, 4) == 35*x**QQ(18, 5)/1152 + \
+    assert rs_atan(x**QQ(2, 5), x, 5) == -x**QQ(14, 5)/7 + x**2/5 - \
+        x**QQ(6,5)/3 + x**QQ(2, 5)
+    assert rs_asin(x**QQ(2, 5), x, 10) == 35*x**QQ(18, 5)/1152 + \
         5*x**QQ(14, 5)/112 + 3*x**2/40 + x**QQ(6, 5)/6 + x**QQ(2, 5)
-    assert rs_atanh(x**QQ(2, 5), x, 4) == x**QQ(18, 5)/9 + x**QQ(14, 5)/7 + \
-        x**2/5 + x**QQ(6, 5)/3 + x**QQ(2, 5)
+    assert rs_atanh(x**QQ(2, 5), x, 5) == x**QQ(14, 5)/7 + x**2/5 + \
+        x**QQ(6, 5)/3 + x**QQ(2, 5)
