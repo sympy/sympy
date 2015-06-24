@@ -99,7 +99,7 @@ def test_inversion():
         p1 = rs_series_inversion(p, x, 4)
     raises(NotImplementedError, lambda: test2(p))
 
-def tet_series_reversion():
+def test_series_reversion():
     R, x, y = ring('x, y', QQ)
 
     p = rs_tan(x, x, 10)

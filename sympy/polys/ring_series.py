@@ -332,21 +332,24 @@ def rs_series_reversion(p, x, n, y):
       x: variable with name x
       y: variable with name y
 
-    solve p = y, that is given
-    a*x + f(x) - y = 0
+    Solve p = y, that is, given a*x + f(x) - y = 0,
     find the solution x = r(y) up to O(y**n)
 
     Algorithm:
-    if r_i is the solution at order i
-    a*r_i + f(r_i) - y = O(y^(i + 1))
-    r_(i + 1) = r_i + e such that
-    a*r_(i + 1) + f(r_(i + 1)) - y = O(y^(i + 2))
-    a*e + f(r_i) = O(y^(i + 2))
-    e = -f(r_i)/a
-    so that one uses the recursion relation
+
+    If r_i is the solution at order i, then:
+    a*r_i + f(r_i) - y = O(y**(i + 1))
+
+    and if r_(i + 1) is the solution at order i + 1, then:
+    a*r_(i + 1) + f(r_(i + 1)) - y = O(y**(i + 2))
+
+    We have, r_(i + 1) = r_i + e, such that,
+    a*e + f(r_i) = O(y**(i + 2))
+    or e = -f(r_i)/a
+
+    So we use the recursion relation:
     r_(i + 1) = r_i -f(r_i)/a
-    with the boundary condition
-    r_1 = y
+    with the boundary condition: r_1 = y
 
     Examples
     ========
