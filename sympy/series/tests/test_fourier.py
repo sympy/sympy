@@ -1,15 +1,17 @@
 from sympy import (FourierSeries, symbols, pi, Piecewise, sin, cos, Rational,
-                   oo, fourier_series)
+                   oo, fourier_series, Add)
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
 
 fo = FourierSeries(x, (x, -pi, pi))
-fe = FourierSeries(x**2, (x, -pi, pi))
+fe = FourierSeries(x**2, (-pi, pi))
 fp = FourierSeries(Piecewise((0, x < 0), (pi, True)), (x, -pi, pi))
 
 
 def test_FourierSeries():
+    assert FourierSeries(1, (-pi, pi)) == 1
+
     assert fo.function == x
     assert fo.x == x
     assert fo.period == (-pi, pi)
@@ -26,6 +28,13 @@ def test_FourierSeries():
     assert fe.truncate() == -4*cos(x) + cos(2*x) + pi**2 / 3
     assert fp.truncate() == 2*sin(x) + (2*sin(3*x) / 3) + pi / 2
 
+    fot = fo.truncate(n=None)
+    s = [0, 2*sin(x), -sin(2*x)]
+    for i, t in enumerate(fot):
+        if i == 3:
+            break
+        assert s[i] == t
+
     def _check_iter(f, i):
         for ind, t in enumerate(f):
             assert t == f[ind]
@@ -36,8 +45,11 @@ def test_FourierSeries():
     _check_iter(fe, 3)
     _check_iter(fp, 3)
 
+    assert fo.subs(x, x**2) == fo
+
     raises(ValueError, lambda: FourierSeries(x, (0, 1, 2)))
     raises(ValueError, lambda: FourierSeries(x, (x, 0, oo)))
+    raises(ValueError, lambda: FourierSeries(x*y, (0, oo)))
 
 
 def test_FourierSeries_2():
@@ -92,3 +104,7 @@ def test_FourierSeries__add__sub():
         + pi**2 / 3
     assert (fo - fe).truncate() == 2*sin(x) - sin(2*x) + 4*cos(x) - cos(2*x) \
         - pi**2 / 3
+
+    assert isinstance(fo + 1, Add)
+
+    raises(ValueError, lambda: fo + FourierSeries(x, (x, 0, 2)))
