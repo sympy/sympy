@@ -2,8 +2,7 @@ from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp
-)
+    Interval, comp, Integral)
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -602,6 +601,86 @@ def test_transpose():
     assert transpose(x * y) == transpose(y) * transpose(x)
     assert transpose(x / y) == 1 / transpose(y) * transpose(x)
     assert transpose(-x) == -transpose(x)
+
+
+def test_polarify():
+    from sympy import polar_lift, polarify
+    x = Symbol('x')
+    z = Symbol('z', polar=True)
+    f = Function('f')
+    ES = {}
+
+    assert polarify(-1) == (polar_lift(-1), ES)
+    assert polarify(1 + I) == (polar_lift(1 + I), ES)
+
+    assert polarify(exp(x), subs=False) == exp(x)
+    assert polarify(1 + x, subs=False) == 1 + x
+    assert polarify(f(I) + x, subs=False) == f(polar_lift(I)) + x
+
+    assert polarify(x, lift=True) == polar_lift(x)
+    assert polarify(z, lift=True) == z
+    assert polarify(f(x), lift=True) == f(polar_lift(x))
+    assert polarify(1 + x, lift=True) == polar_lift(1 + x)
+    assert polarify(1 + f(x), lift=True) == polar_lift(1 + f(polar_lift(x)))
+
+    newex, subs = polarify(f(x) + z)
+    assert newex.subs(subs) == f(x) + z
+
+    mu = Symbol("mu")
+    sigma = Symbol("sigma", positive=True)
+
+    # Make sure polarify(lift=True) doesn't try to lift the integration
+    # variable
+    assert polarify(
+        Integral(sqrt(2)*x*exp(-(-mu + x)**2/(2*sigma**2))/(2*sqrt(pi)*sigma),
+        (x, -oo, oo)), lift=True) == Integral(sqrt(2)*(sigma*exp_polar(0))**exp_polar(I*pi)*
+        exp((sigma*exp_polar(0))**(2*exp_polar(I*pi))*exp_polar(I*pi)*polar_lift(-mu + x)**
+        (2*exp_polar(0))/2)*exp_polar(0)*polar_lift(x)/(2*sqrt(pi)), (x, -oo, oo))
+
+
+def test_unpolarify():
+    from sympy import (exp_polar, polar_lift, exp, unpolarify,
+                       principal_branch)
+    from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
+    from sympy.abc import x
+    p = exp_polar(7*I) + 1
+    u = exp(7*I) + 1
+
+    assert unpolarify(1) == 1
+    assert unpolarify(p) == u
+    assert unpolarify(p**2) == u**2
+    assert unpolarify(p**x) == p**x
+    assert unpolarify(p*x) == u*x
+    assert unpolarify(p + x) == u + x
+    assert unpolarify(sqrt(sin(p))) == sqrt(sin(u))
+
+    # Test reduction to principal branch 2*pi.
+    t = principal_branch(x, 2*pi)
+    assert unpolarify(t) == x
+    assert unpolarify(sqrt(t)) == sqrt(t)
+
+    # Test exponents_only.
+    assert unpolarify(p**p, exponents_only=True) == p**u
+    assert unpolarify(uppergamma(x, p**p)) == uppergamma(x, p**u)
+
+    # Test functions.
+    assert unpolarify(sin(p)) == sin(u)
+    assert unpolarify(tanh(p)) == tanh(u)
+    assert unpolarify(gamma(p)) == gamma(u)
+    assert unpolarify(erf(p)) == erf(u)
+    assert unpolarify(uppergamma(x, p)) == uppergamma(x, p)
+
+    assert unpolarify(uppergamma(sin(p), sin(p + exp_polar(0)))) == \
+        uppergamma(sin(u), sin(u + 1))
+    assert unpolarify(uppergamma(polar_lift(0), 2*exp_polar(0))) == \
+        uppergamma(0, 2)
+
+    assert unpolarify(Eq(p, 0)) == Eq(u, 0)
+    assert unpolarify(Ne(p, 0)) == Ne(u, 0)
+    assert unpolarify(polar_lift(x) > 0) == (x > 0)
+
+    # Test bools
+    assert unpolarify(True) is True
 
 
 def test_issue_4035():

@@ -1242,7 +1242,8 @@ class Mul(Expr, AssocOp):
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity
-        from sympy.simplify.simplify import powdenest, fraction
+        from sympy.simplify.powsimp import powdenest
+        from sympy.simplify.radsimp import fraction
 
         if not old.is_Mul:
             return None

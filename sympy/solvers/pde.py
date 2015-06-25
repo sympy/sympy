@@ -47,7 +47,7 @@ from sympy.utilities.iterables import has_dups
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
-from sympy.simplify.simplify import collect
+from sympy.simplify.radsimp import collect
 import operator
 
 allhints = (
