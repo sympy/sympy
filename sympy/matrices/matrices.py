@@ -516,7 +516,7 @@ class MatrixBase(object):
     def __rmul__(self, a):
         if getattr(a, 'is_Matrix', False):
             return self._new(a)*self
-        return self*a
+        return self._new(self.rows, self.cols, [a*i for i in self._mat])
 
     def __pow__(self, num):
         from sympy.matrices import eye
