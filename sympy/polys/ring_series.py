@@ -1,10 +1,10 @@
-from sympy.polys.domains import QQ
+from sympy.polys.domains import QQ, EX, ExpressionDomain
 from sympy.polys.rings import PolyElement, ring
 from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
-from sympy.core import S
+from sympy.core import S, evaluate
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -741,19 +741,41 @@ def rs_sin(p, x, prec):
 
     sin
     """
-    ring = x.ring
+    R = x.ring
     if not p:
         return ring(0)
     # Support for constant term can be extended on the lines of rs_cos
     if _has_constant_term(p, x):
-        raise NotImplementedError
+        zm = R.zero_monom
+        c = p[zm]
+        if isinstance(c, ExpressionDomain.Expression):
+            pass
+        elif isinstance(c, PolyElement):
+            try:
+                R(c)
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this"
+                "domain.")
+        elif not c.is_real:
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
+        p1 = p - c
+
+        from sympy.functions import cos, sin
+    # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        with evaluate(True):
+            return rs_sin(p1, x, prec)*cos(c.as_expr()) + \
+                rs_cos(p1, x, prec)*sin(c.as_expr())
+
     # Series is calcualed in terms of tan as its evaluation is fast.
     if len(p) > 20 and p.ngens == 1:
         t = rs_tan(p/2, x, prec)
         t2 = rs_square(t, x, prec)
         p1 = rs_series_inversion(1 + t2, x, prec)
         return rs_mul(p1, 2*t, x, prec)
-    one = ring(1)
+    one = R(1)
     n = 1
     c = [0]
     for k in range(2, prec + 2, 2):
@@ -783,26 +805,38 @@ def rs_cos(p, iv, prec):
 
     cos
     """
-    ring = p.ring
+    R = p.ring
     if _has_constant_term(p, iv):
-        zm = ring.zero_monom
-        c = S(p[zm])
-        if not c.is_real:
+        zm = R.zero_monom
+        c = p[zm]
+        if isinstance(c, ExpressionDomain.Expression):
+            pass
+        elif isinstance(c, PolyElement):
+            try:
+                R(c)
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this"
+                "domain.")
+        elif not c.is_real:
+            raise NotImplementedError
+        else:
             raise NotImplementedError
         p1 = p - c
 
-    # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
-    # of the constant term. Should it be left unevaluated?
         from sympy.functions import cos, sin
-        return cos(c)*rs_cos(p1, iv, prec) -  sin(c)*rs_sin(p1, iv, prec)
+    # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        with evaluate(True):
+            return cos(c.as_expr())*rs_cos(p1, iv, prec) - \
+                sin(c.as_expr())*rs_sin(p1, iv, prec)
 
     # Series is calculated in terms of tan as its evaluation is fast.
-    if len(p) > 20 and ring.ngens == 1:
+    if len(p) > 20 and R.ngens == 1:
         t = rs_tan(p/2, iv, prec)
         t2 = rs_square(t, iv, prec)
         p1 = rs_series_inversion(1+t2, iv, prec)
         return rs_mul(p1 ,1 - t2, iv, prec)
-    one = ring(1)
+    one = R(1)
     n = 1
     c = []
     for k in range(2, prec + 2, 2):
