@@ -1,4 +1,4 @@
-from sympy.polys.domains import QQ
+from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_series_inversion,
@@ -7,6 +7,8 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
   rs_sinh, rs_cosh, rs_tanh, _tan1, fun)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
+from sympy.core.symbol import symbols
+from sympy.functions import sin, cos
 
 def test_ring_series1():
     R, x = ring('x', QQ)
@@ -199,6 +201,23 @@ def test_sin():
         + 1/24*x**6*y**7 - 1/2*x**5*y**7 + 1/120*x**5*y**5 - 1/2*x**4*y**5 \
         - 1/6*x**3*y**3 + x**2*y**3 + x*y
 
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sin(a), cos(a), a])
+    assert rs_sin(x + a, x, 5) == sin(a)*x**4/24 - cos(a)*x**3/6 - \
+        sin(a)*x**2/2 + cos(a)*x + sin(a)
+    assert rs_sin(x + x**2*y + a, x, 5) == -sin(a)*x**4*y**2/2 - \
+        cos(a)*x**4*y/2 + sin(a)*x**4/24 - sin(a)*x**3*y - cos(a)*x**3/6 + \
+        cos(a)*x**2*y - sin(a)*x**2/2 + cos(a)*x + sin(a)
+
+    R, x, y = ring('x, y', EX)
+    assert rs_sin(x + a, x, 5) == EX(sin(a)/24)*x**4 - EX(cos(a)/6)*x**3 - \
+        EX(sin(a)/2)*x**2 + EX(cos(a))*x + EX(sin(a))
+    assert rs_sin(x + x**2*y + a, x, 5) == -EX(sin(a)/2)*x**4*y**2 - \
+        EX(cos(a)/2)*x**4*y + EX(sin(a)/24)*x**4 - EX(sin(a))*x**3*y - \
+        EX(cos(a)/6)*x**3 + EX(cos(a))*x**2*y - EX(sin(a)/2)*x**2 + \
+        EX(cos(a))*x + EX(sin(a))
+
 def test_cos():
     R, x, y = ring('x, y', QQ)
     assert rs_cos(x, x, 9) == \
@@ -207,6 +226,23 @@ def test_cos():
         1/48*x**8*y**10 + 1/40320*x**8*y**8 + 1/6*x**7*y**10 - \
         1/120*x**7*y**8 + 1/4*x**6*y**8 - 1/720*x**6*y**6 + 1/6*x**5*y**6 \
         - 1/2*x**4*y**6 + 1/24*x**4*y**4 - x**3*y**4 - 1/2*x**2*y**2 + 1
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sin(a), cos(a), a])
+    assert rs_cos(x + a, x, 5) == cos(a)*x**4/24 + sin(a)*x**3/6 - \
+        cos(a)*x**2/2 - sin(a)*x + cos(a)
+    assert rs_cos(x + x**2*y + a, x, 5) == -cos(a)*x**4*y**2/2 + \
+        sin(a)*x**4*y/2 + cos(a)*x**4/24 - cos(a)*x**3*y + sin(a)*x**3/6 - \
+        sin(a)*x**2*y - cos(a)*x**2/2 - sin(a)*x + cos(a)
+
+    R, x, y = ring('x, y', EX)
+    assert rs_cos(x + a, x, 5) == EX(cos(a)/24)*x**4 + EX(sin(a)/6)*x**3 - \
+        EX(cos(a)/2)*x**2 - EX(sin(a))*x + EX(cos(a))
+    assert rs_cos(x + x**2*y + a, x, 5) == -EX(cos(a)/2)*x**4*y**2 + \
+        EX(sin(a)/2)*x**4*y + EX(cos(a)/24)*x**4 - EX(cos(a))*x**3*y + \
+        EX(sin(a)/6)*x**3 - EX(sin(a))*x**2*y - EX(cos(a)/2)*x**2 - \
+        EX(sin(a))*x + EX(cos(a))
 
 def test_cos_sin():
     R, x, y = ring('x, y', QQ)

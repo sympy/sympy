@@ -765,9 +765,8 @@ def rs_sin(p, x, prec):
         from sympy.functions import cos, sin
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        with evaluate(True):
-            return rs_sin(p1, x, prec)*cos(c.as_expr()) + \
-                rs_cos(p1, x, prec)*sin(c.as_expr())
+        c = c.as_expr()
+        return rs_sin(p1, x, prec)*cos(c) + rs_cos(p1, x, prec)*sin(c)
 
     # Series is calcualed in terms of tan as its evaluation is fast.
     if len(p) > 20 and p.ngens == 1:
@@ -826,9 +825,8 @@ def rs_cos(p, iv, prec):
         from sympy.functions import cos, sin
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        with evaluate(True):
-            return cos(c.as_expr())*rs_cos(p1, iv, prec) - \
-                sin(c.as_expr())*rs_sin(p1, iv, prec)
+        c = c.as_expr()
+        return cos(c)*rs_cos(p1, iv, prec) - sin(c)*rs_sin(p1, iv, prec)
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
