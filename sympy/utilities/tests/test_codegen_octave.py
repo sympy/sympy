@@ -566,6 +566,7 @@ def test_m_not_supported():
     )
     assert source == expected
 
+
 def test_global_vars_octave():
     x, y, z, t = symbols("x y z t")
     result = codegen(('f', x*y), "Octave", header=False, empty=False,
@@ -573,6 +574,7 @@ def test_global_vars_octave():
     source = result[0][1]
     expected = (
         "function out1 = f(x)\n"
+        "  global y\n"
         "  out1 = x.*y;\n"
         "end\n"
         )
@@ -583,6 +585,7 @@ def test_global_vars_octave():
     source = result[0][1]
     expected = (
         "function out1 = f(x, y)\n"
+        "  global t z\n"
         "  out1 = x.*y + z;\n"
         "end\n"
     )
