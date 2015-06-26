@@ -548,6 +548,11 @@ def test_latex_FormalPowerSeries():
     assert latex(fps(log(1 + x))) == latex_str
 
 
+def test_latex_FormalPowerSeries():
+    latex_str = r'x - \frac{x^{2}}{2} + \frac{x^{3}}{3} - \frac{x^{4}}{4} + \frac{x^{5}}{5} + \mathcal{O}\left(x^{6}\right)'
+    assert latex(fps(log(1 + x))) == latex_str
+
+
 def test_latex_intervals():
     a = Symbol('a', real=True)
     assert latex(Interval(0, 0)) == r"\left\{0\right\}"
