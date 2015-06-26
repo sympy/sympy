@@ -218,7 +218,11 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=Fals
 class FormalPowerSeries(SeriesBase):
     """Represents Formal Power Series
 
-    see :func:`fps` for details
+    No computation is performed.
+    This class should only to be used to represent
+    a series. No checks are performed.
+
+    For computing a series use :func:`fps`.
 
     See Also
     ========
@@ -226,45 +230,8 @@ class FormalPowerSeries(SeriesBase):
     sympy.series.formal.fps
     sympy.series.formal.compute_fps
     """
-    def __new__(cls, f, *args):
-        f= sympify(f)
-
-        if args[0] is None:
-            free = f.free_symbols
-            if len(free) == 1:
-                x = free.pop()
-            elif not free:
-                return f
-            else:
-                raise NotImplementedError("multivariate formal power series")
-        else:
-            x = sympify(args[0])
-
-        if not f.has(x):
-            return f
-
-        x0 = sympify(args[1])
-        dir = sympify(args[2])
-        hyper = sympify(args[3])
-        order = sympify(args[4])
-        rational = sympify(args[5])
-        full = sympify(args[6])
-
-        if dir not in [S.One, -S.One]:
-            raise ValueError("Dir must be 1 or -1")
-
-        if len(args) != 10:
-            result = compute_fps(f, x, x0, dir, hyper, order, rational, full)
-
-            if result is None:
-                return f
-
-            ak, xk, ind = result
-        else:
-            ak, xk, ind = args[7:]
-
-        return Expr.__new__(cls, f, x, x0, dir, hyper, order, rational, full,
-                            ak, xk, ind)
+    def __new__(cls, *args):
+        return Expr.__new__(cls, *args)
 
     @property
     def function(self):
@@ -280,15 +247,15 @@ class FormalPowerSeries(SeriesBase):
 
     @property
     def ak(self):
-        return self.args[8]
+        return self.args[4]
 
     @property
     def xk(self):
-        return self.args[9]
+        return self.args[5]
 
     @property
     def ind(self):
-        return self.args[10]
+        return self.args[6]
 
     @property
     def interval(self):
@@ -432,4 +399,31 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     sympy.series.formal.FormalPowerSeries
     sympy.series.formal.compute_fps
     """
-    return FormalPowerSeries(f, x, x0, dir, hyper, order, rational, full)
+    f= sympify(f)
+
+    if x is None:
+        free = f.free_symbols
+        if len(free) == 1:
+            x = free.pop()
+        elif not free:
+            return f
+        else:
+            raise NotImplementedError("multivariate formal power series")
+    else:
+        x = sympify(x)
+
+    if not f.has(x):
+        return f
+
+    x0 = sympify(x0)
+    dir = sympify(dir)
+
+    if dir not in [S.One, -S.One]:
+        raise ValueError("Dir must be 1 or -1")
+
+    result = compute_fps(f, x, x0, dir, hyper, order, rational, full)
+
+    if result is None:
+        return f
+
+    return FormalPowerSeries(f, x, x0, dir, *result)
