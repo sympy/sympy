@@ -7,7 +7,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -3204,6 +3204,29 @@ u("""\
                       2⋅sin(3⋅x)    \n\
 2⋅sin(x) - sin(2⋅x) + ────────── + …\n\
                           3         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
+
+
+def test_pretty_FormalPowerSeries():
+    f = fps(log(1 + x))
+
+    ascii_str = \
+"""\
+     2    3    4    5        \n\
+    x    x    x    x     / 6\\\n\
+x - -- + -- - -- + -- + O\\x /\n\
+    2    3    4    5         \
+"""
+
+    ucode_str = \
+u("""\
+     2    3    4    5        \n\
+    x    x    x    x     ⎛ 6⎞\n\
+x - ── + ── - ── + ── + O⎝x ⎠\n\
+    2    3    4    5         \
 """)
 
     assert pretty(f) == ascii_str
