@@ -669,6 +669,7 @@ class CodeGen(object):
                 code_lines.append("\n")
             code_lines.extend(self._get_routine_opening(routine))
             code_lines.extend(self._declare_arguments(routine))
+            code_lines.extend(self._declare_globals(routine))
             code_lines.extend(self._declare_locals(routine))
             if empty:
                 code_lines.append("\n")
@@ -764,6 +765,10 @@ class CCodeGen(CodeGen):
 
     def _declare_arguments(self, routine):
         # arguments are declared in prototype
+        return []
+
+    def _declare_globals(self, routine):
+        # global variables are not explicitly declared within C functions
         return []
 
     def _declare_locals(self, routine):
@@ -968,6 +973,12 @@ class FCodeGen(CodeGen):
         code_list.extend(array_list)
 
         return code_list
+
+    def _declare_globals(self, routine):
+        # F77 has "common" blocks, could generate here.  What about F90?
+        if not routine.global_vars:
+            return []
+        raise NotImplementedError("TODO: Fortran global variables are not implemented.")
 
     def _declare_locals(self, routine):
         code_list = []
