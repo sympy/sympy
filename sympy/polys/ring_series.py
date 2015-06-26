@@ -304,6 +304,87 @@ def rs_series_inversion(p, x, prec):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     return _series_inversion1(p, x, prec)
 
+def _coefficient_t(p, t):
+    """
+    Coefficient of `x_i**j` in p, where t = (i, j)
+    """
+    i, j = t
+    ring = p.ring
+    expv1 = [0]*ring.ngens
+    expv1[i] = j
+    expv1 = tuple(expv1)
+    p1 = ring(0)
+    for expv in p:
+        if expv[i] == j:
+            p1[monomial_div(expv, expv1)] = p[expv]
+    return p1
+
+def rs_series_reversion(p, x, n, y):
+    """
+    Reversion of a series
+
+    p is a series with O(x**n) of the form p = a*x + f(x)
+    where `a` is a number different from 0
+
+    f(x) = sum( a_k*x_k, k in range(2, n))
+
+      a_k can depend polynomially on other variables, not indicated.
+      x: variable with name x
+      y: variable with name y
+
+    Solve p = y, that is, given a*x + f(x) - y = 0,
+    find the solution x = r(y) up to O(y**n)
+
+    Algorithm:
+
+    If r_i is the solution at order i, then:
+    a*r_i + f(r_i) - y = O(y**(i + 1))
+
+    and if r_(i + 1) is the solution at order i + 1, then:
+    a*r_(i + 1) + f(r_(i + 1)) - y = O(y**(i + 2))
+
+    We have, r_(i + 1) = r_i + e, such that,
+    a*e + f(r_i) = O(y**(i + 2))
+    or e = -f(r_i)/a
+
+    So we use the recursion relation:
+    r_(i + 1) = r_i -f(r_i)/a
+    with the boundary condition: r_1 = y
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_series_reversion, rs_trunc
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x + x**2
+    >>> p1 = rs_series_reversion(p, x, 4, y)
+    >>> p1
+    2*y**3 - y**2 + y
+    >>> rs_trunc(p1 + p1**2, y, 4)
+    y
+    """
+    ring = p.ring
+    nx = ring.gens.index(x)
+    y = ring(y)
+    ny = ring.gens.index(y)
+    if _has_constant_term(p, x):
+        raise ValueError('p must not contain a constant term in the series \
+            variable')
+    a = _coefficient_t(p, (nx, 1))
+    zm = ring.zero_monom
+    assert zm in a and len(a) == 1
+    a = a[zm]
+    r = y/a
+    for i in range(2, n):
+        sb = p
+        sp = sb.compose(x, r)
+        sp = rs_trunc(sp, y, i + 1)
+        sp = _coefficient_t(sp, (ny, i))*y**i
+        r -= sp/a
+    return r
+
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
     Return a series ``sum c[n]*p**n`` modulo ``O(x**prec)``
