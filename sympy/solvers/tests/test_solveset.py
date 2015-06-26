@@ -36,7 +36,6 @@ n = Symbol('n', real=True)
 
 
 def test_invert_real():
-    x = Symbol('x', real=True)
     x = Dummy(real=True)
     n = Symbol('n')
     d = Dummy()
