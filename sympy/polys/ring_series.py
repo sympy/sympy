@@ -607,7 +607,28 @@ def rs_exp(p, x, prec):
     """
     ring = p.ring
     if _has_constant_term(p, x):
-        raise NotImplementedError
+        zm = R.zero_monom
+        c = p[zm]
+        if isinstance(c, ExpressionDomain.Expression):
+            pass
+        elif isinstance(c, PolyElement):
+            try:
+                R(c)
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this"
+                "domain.")
+        elif not c.is_real:
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
+        p1 = p - c
+
+        from sympy.functions import exp
+    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        c = c.as_expr()
+        return exp(c)*rs_exp(p1, x, prec)
+
     if len(p) > 20:
         return _exp1(p, x, prec)
     one = ring(1)
@@ -712,10 +733,33 @@ def rs_tan(p, x, prec):
 
    tan
    """
-    ring = p.ring
+    R = p.ring
     if _has_constant_term(p, x):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              series variables')
+        zm = R.zero_monom
+        c = p[zm]
+        if isinstance(c, ExpressionDomain.Expression):
+            pass
+        elif isinstance(c, PolyElement):
+            try:
+                R(c)
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this"
+                "domain.")
+        elif not c.is_real:
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
+        p1 = p - c
+
+        from sympy.functions import tan
+    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        c = c.as_expr()
+        t1 = tan(c)
+        t2 = rs_tan(p1, x, prec)
+        t = rs_series_inversion(1 - t1*t2, x, prec)
+        return rs_mul(t1 + t2, t, x, prec)
+
     if ring.ngens == 1:
         return _tan1(p, x, prec)
     return fun(p, rs_tan, x, prec)
