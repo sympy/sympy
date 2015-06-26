@@ -975,10 +975,9 @@ class FCodeGen(CodeGen):
         return code_list
 
     def _declare_globals(self, routine):
-        # F77 has "common" blocks, could generate here.  What about F90?
-        if not routine.global_vars:
-            return []
-        raise NotImplementedError("TODO: Fortran global variables are not implemented.")
+        # Global variables not explicitly declared within Fortran 90 functions.
+        # Note: a future F77 mode may need to generate "common" blocks.
+        return []
 
     def _declare_locals(self, routine):
         code_list = []
