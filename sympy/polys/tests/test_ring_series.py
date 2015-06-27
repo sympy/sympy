@@ -1,11 +1,11 @@
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
-  rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_series_inversion,
-  rs_series_from_list, rs_exp, rs_log, rs_newton, rs_hadamard_exp,
-  rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
-  rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, fun, rs_nth_root,
-  rs_series_reversion, check_precision)
+    rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
+    rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
+    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
+    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, fun, rs_nth_root,
+    rs_series_reversion, check_precision)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
@@ -464,4 +464,3 @@ def test_check_precision():
     p = rs_atan(x**QQ(3, 7), x, prec)
     assert rs_trunc(p, x, 5) ==  -x**QQ(33, 7)/11 + x**QQ(27, 7)/9 - \
         x**3/7 + x**QQ(15, 7)/5 - x**QQ(9, 7)/3 + x**QQ(3, 7)
-
