@@ -1524,6 +1524,10 @@ class Complement(Set, EvalfMixin):
             return EmptySet()
 
         if isinstance(B, Union):
+            if A.has(S.UniversalSet):
+                if A is S.UniversalSet:
+                    return Complement(A, B, evaluate=False)
+                return Complement(S.UniversalSet, Union(A.args[1], B))
             return Intersection(s.complement(A) for s in B.args)
 
         result = B._complement(A)
