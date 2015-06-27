@@ -265,7 +265,10 @@ def _series_inversion1(p, x, prec):
         raise ValueError('no constant term in series')
     if _has_constant_term(p - p[zm], x):
         raise ValueError('p cannot contain a constant term depending on parameters')
-    if p[zm] != R(1):
+    one = R(1)
+    if isinstance(p[zm], ExpressionDomain.Expression):
+        one = 1
+    if p[zm] != one:
         # TODO add check that it is a unit
         p1 = R(1)/p[zm]
     else:
@@ -760,8 +763,8 @@ def rs_tan(p, x, prec):
         t = rs_series_inversion(1 - t1*t2, x, prec)
         return rs_mul(t1 + t2, t, x, prec)
 
-    if R.ngens == 1:
-        return _tan1(p, x, prec)
+    #if R.ngens == 1:
+    return _tan1(p, x, prec)
     return fun(p, rs_tan, x, prec)
 
 def rs_sin(p, x, prec):

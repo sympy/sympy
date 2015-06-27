@@ -8,7 +8,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import sin, cos
+from sympy.functions import sin, cos, exp, tan
 
 def test_ring_series1():
     R, x = ring('x', QQ)
@@ -158,6 +158,23 @@ def test_exp():
     p1 = rs_exp(p, x, prec)
     assert p1 == x + 1
 
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[exp(a), a])
+    assert rs_exp(x + a, x, 5) == exp(a)*x**4/24 + exp(a)*x**3/6 + \
+        exp(a)*x**2/2 + exp(a)*x + exp(a)
+    assert rs_exp(x + x**2*y + a, x, 5) == exp(a)*x**4*y**2/2 + \
+            exp(a)*x**4*y/2 + exp(a)*x**4/24 + exp(a)*x**3*y + \
+            exp(a)*x**3/6 + exp(a)*x**2*y + exp(a)*x**2/2 + exp(a)*x + exp(a)
+
+    R, x, y = ring('x, y', EX)
+    assert rs_exp(x + a, x, 5) ==  EX(exp(a)/24)*x**4 + EX(exp(a)/6)*x**3 + \
+        EX(exp(a)/2)*x**2 + EX(exp(a))*x + EX(exp(a))
+    assert rs_exp(x + x**2*y + a, x, 5) == EX(exp(a)/2)*x**4*y**2 + \
+        EX(exp(a)/2)*x**4*y + EX(exp(a)/24)*x**4 + EX(exp(a))*x**3*y + \
+        EX(exp(a)/6)*x**3 + EX(exp(a))*x**2*y + EX(exp(a)/2)*x**2 + \
+        EX(exp(a))*x + EX(exp(a))
+
 def test_newton():
     R, x = ring('x', QQ)
     p = x**2 - 2
@@ -191,6 +208,25 @@ def test_tan():
     assert rs_tan(x*y + x**2*y**3, x, 9) == 4/3*x**8*y**11 + 17/45*x**8*y**9 + \
         4/3*x**7*y**9 + 17/315*x**7*y**7 + 1/3*x**6*y**9 + 2/3*x**6*y**7 + \
         x**5*y**7 + 2/15*x**5*y**5 + x**4*y**5 + 1/3*x**3*y**3 + x**2*y**3 + x*y
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[tan(a), a])
+    assert rs_tan(x + a, x, 5) == (tan(a)**5 + 5*tan(a)**3/3 + \
+        2*tan(a)/3)*x**4 + (tan(a)**4 + 4*tan(a)**2/3 + 1/3)*x**3 + \
+        (tan(a)**3 + tan(a))*x**2 + (tan(a)**2 + 1)*x + tan(a)
+    assert rs_tan(x + x**2*y + a, x, 4) == (2*tan(a)**3 + 2*tan(a))*x**3*y + \
+        (tan(a)**4 + 4/3*tan(a)**2 + 1/3)*x**3 + (tan(a)**2 + 1)*x**2*y + \
+        (tan(a)**3 + tan(a))*x**2 + (tan(a)**2 + 1)*x + tan(a)
+
+    R, x, y = ring('x, y', EX)
+    assert rs_tan(x + a, x, 5) == EX(tan(a)**5 + 5*tan(a)**3/3 + \
+        2*tan(a)/3)*x**4 + EX(tan(a)**4 + 4*tan(a)**2/3 + EX(1)/3)*x**3 + \
+        EX(tan(a)**3 + tan(a))*x**2 + EX(tan(a)**2 + 1)*x + EX(tan(a))
+    assert rs_tan(x + x**2*y + a, x, 4) ==  EX(2*tan(a)**3 + \
+        2*tan(a))*x**3*y + EX(tan(a)**4 + 4*tan(a)**2/3 + EX(1)/3)*x**3 + \
+        EX(tan(a)**2 + 1)*x**2*y + EX(tan(a)**3 + tan(a))*x**2 + \
+        EX(tan(a)**2 + 1)*x + EX(tan(a))
 
 def test_sin():
     R, x, y = ring('x, y', QQ)
