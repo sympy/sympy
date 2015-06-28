@@ -1,10 +1,12 @@
 from sympy.polys.domains import QQ, EX, ExpressionDomain
 from sympy.polys.rings import PolyElement, ring
 from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
+from sympy.polys.polyerrors import DomainError
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
 from sympy.core import S, evaluate
+from sympy.functions import sin, cos, tan, atan, exp
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -612,25 +614,23 @@ def rs_exp(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        if isinstance(c, ExpressionDomain.Expression):
-            pass
+        c_expr = (p[zm]).as_expr()
+        if R.domain is EX:
+            const = exp(c_expr)
         elif isinstance(c, PolyElement):
             try:
-                R(c)
+                const = R(exp(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in this"
-                "domain.")
-        elif not c.is_real:
-            raise NotImplementedError
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
         else:
-            raise NotImplementedError
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
         p1 = p - c
 
-        from sympy.functions import exp
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        c = c.as_expr()
-        return exp(c)*rs_exp(p1, x, prec)
+        return const*rs_exp(p1, x, prec)
 
     if len(p) > 20:
         return _exp1(p, x, prec)
@@ -680,10 +680,23 @@ def rs_atan(p, x, prec):
 
     atan
     """
-    if _has_constant_term(p, x):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
     R = p.ring
+    const = 0
+    if _has_constant_term(p, x):
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = (p[zm]).as_expr()
+        if R.domain is EX:
+            const = atan(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(atan(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
@@ -692,7 +705,7 @@ def rs_atan(p, x, prec):
     p1 = rs_square(p, x, prec) + R(1)
     p1 = rs_series_inversion(p1, x, prec - 1)
     p1 = rs_mul(dp, p1, x, prec - 1)
-    return rs_integrate(p1, x)
+    return rs_integrate(p1, x) + const
 
 def _tan1(p, x, prec):
     """
@@ -737,31 +750,30 @@ def rs_tan(p, x, prec):
    tan
    """
     R = p.ring
+    const = 0
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        if isinstance(c, ExpressionDomain.Expression):
-            pass
+        c_expr = (p[zm]).as_expr()
+        if R.domain is EX:
+            const = tan(c_expr)
         elif isinstance(c, PolyElement):
             try:
-                R(c)
+                const = R(tan(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in this"
-                "domain.")
-        elif not c.is_real:
-            raise NotImplementedError
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
         else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
             raise NotImplementedError
         p1 = p - c
 
-        from sympy.functions import tan
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        c = c.as_expr()
-        t1 = tan(c)
         t2 = rs_tan(p1, x, prec)
-        t = rs_series_inversion(1 - t1*t2, x, prec)
-        return rs_mul(t1 + t2, t, x, prec)
+        t = rs_series_inversion(1 - const*t2, x, prec)
+        return rs_mul(const + t2, t, x, prec)
 
     #if R.ngens == 1:
     return _tan1(p, x, prec)
@@ -795,25 +807,24 @@ def rs_sin(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        if isinstance(c, ExpressionDomain.Expression):
-            pass
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            t1, t2 = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
-                R(c)
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in this"
-                "domain.")
-        elif not c.is_real:
-            raise NotImplementedError
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
         else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
             raise NotImplementedError
         p1 = p - c
 
-        from sympy.functions import cos, sin
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        c = c.as_expr()
-        return rs_sin(p1, x, prec)*cos(c) + rs_cos(p1, x, prec)*sin(c)
+        return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
     # Series is calcualed in terms of tan as its evaluation is fast.
     if len(p) > 20 and p.ngens == 1:
@@ -855,25 +866,24 @@ def rs_cos(p, iv, prec):
     if _has_constant_term(p, iv):
         zm = R.zero_monom
         c = p[zm]
-        if isinstance(c, ExpressionDomain.Expression):
-            pass
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            t1, t2 = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
-                R(c)
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in this"
-                "domain.")
-        elif not c.is_real:
-            raise NotImplementedError
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
         else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
             raise NotImplementedError
         p1 = p - c
 
-        from sympy.functions import cos, sin
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        c = c.as_expr()
-        return cos(c)*rs_cos(p1, iv, prec) - sin(c)*rs_sin(p1, iv, prec)
+        return rs_cos(p1, iv, prec)*t2 - rs_sin(p1, iv, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
