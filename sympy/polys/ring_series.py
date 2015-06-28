@@ -6,7 +6,7 @@ from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
 from sympy.core import S, evaluate
-from sympy.functions import sin, cos, tan, atan, exp
+from sympy.functions import sin, cos, tan, atan, exp, atanh
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -805,7 +805,6 @@ def rs_sin(p, x, prec):
     R = x.ring
     if not p:
         return R(0)
-    # Support for constant term can be extended on the lines of rs_cos
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
@@ -930,7 +929,7 @@ def _atanh(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def rs_atanh(p, iv, prec):
+def rs_atanh(p, x, prec):
     """
     Hyperbolic arctangent of a series
 
@@ -951,19 +950,32 @@ def rs_atanh(p, iv, prec):
 
     atanh
     """
-    if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
     R = p.ring
+    const = 0
+    if _has_constant_term(p, x):
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = (p[zm]).as_expr()
+        if R.domain is EX:
+            const = atanh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(atanh(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
     # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
     # Finally we integrate to get back atanh
-    dp = rs_diff(p, iv)
-    p1 = - rs_square(p, iv, prec) + 1
-    p1 = rs_series_inversion(p1, iv, prec - 1)
-    p1 = rs_mul(dp, p1, iv, prec - 1)
-    return rs_integrate(p1, iv)
+    dp = rs_diff(p, x)
+    p1 = - rs_square(p, x, prec) + 1
+    p1 = rs_series_inversion(p1, x, prec - 1)
+    p1 = rs_mul(dp, p1, x, prec - 1)
+    return rs_integrate(p1, x) + const
 
 def rs_sinh(p, iv, prec):
     """
