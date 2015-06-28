@@ -616,7 +616,7 @@ def rs_exp(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = (p[zm]).as_expr()
+        c_expr = c.as_expr()
         if R.domain is EX:
             const = exp(c_expr)
         elif isinstance(c, PolyElement):
@@ -687,7 +687,7 @@ def rs_atan(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = (p[zm]).as_expr()
+        c_expr = c.as_expr()
         if R.domain is EX:
             const = atan(c_expr)
         elif isinstance(c, PolyElement):
@@ -756,7 +756,7 @@ def rs_tan(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = (p[zm]).as_expr()
+        c_expr = c.as_expr()
         if R.domain is EX:
             const = tan(c_expr)
         elif isinstance(c, PolyElement):
@@ -777,8 +777,8 @@ def rs_tan(p, x, prec):
         t = rs_series_inversion(1 - const*t2, x, prec)
         return rs_mul(const + t2, t, x, prec)
 
-    #if R.ngens == 1:
-    return _tan1(p, x, prec)
+    if R.ngens == 1:
+        return _tan1(p, x, prec)
     return fun(p, rs_tan, x, prec)
 
 def rs_sin(p, x, prec):
@@ -955,7 +955,7 @@ def rs_atanh(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = (p[zm]).as_expr()
+        c_expr = c.as_expr()
         if R.domain is EX:
             const = atanh(c_expr)
         elif isinstance(c, PolyElement):
@@ -1050,7 +1050,7 @@ def _tanh(p, iv, prec):
         p1 += tmp
     return p1
 
-def rs_tanh(p, iv, prec):
+def rs_tanh(p, x, prec):
     """
     Hyperbolic tangent of a series
 
@@ -1072,12 +1072,31 @@ def rs_tanh(p, iv, prec):
     tanh
     """
     R = p.ring
-    if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
+    const = 0
+    if _has_constant_term(p, x):
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = tanh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(tanh(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
+            raise NotImplementedError
+        p1 = p - c
+        t1 = rs_tanh(p1, x, prec)
+        t = rs_series_inversion(1 + const*t1, x, prec)
+        return rs_mul(const + t1, t, x, prec)
+
     if R.ngens == 1:
-        return _tanh(p, iv, prec)
-    return fun(p, _tanh, iv, prec)
+        return _tanh(p, x, prec)
+    return fun(p, _tanh, x, prec)
 
 def rs_newton(p, x, prec):
     """
