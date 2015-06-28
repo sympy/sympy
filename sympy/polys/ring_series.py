@@ -263,16 +263,18 @@ def _series_inversion1(p, x, prec):
     """
     R = p.ring
     zm = R.zero_monom
+    c = p[zm]
     if zm not in p:
         raise ValueError('no constant term in series')
-    if _has_constant_term(p - p[zm], x):
-        raise ValueError('p cannot contain a constant term depending on parameters')
+    if _has_constant_term(p - c, x):
+        raise ValueError('p cannot contain a constant term depending on '
+            'parameters')
     one = R(1)
-    if isinstance(p[zm], ExpressionDomain.Expression):
+    if R.domain is EX:
         one = 1
-    if p[zm] != one:
+    if c != one:
         # TODO add check that it is a unit
-        p1 = R(1)/p[zm]
+        p1 = R(1)/c
     else:
         p1 = R(1)
     for precx in _giant_steps(prec):
@@ -826,7 +828,7 @@ def rs_sin(p, x, prec):
     # of the constant term.
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
-    # Series is calcualed in terms of tan as its evaluation is fast.
+    # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and p.ngens == 1:
         t = rs_tan(p/2, x, prec)
         t2 = rs_square(t, x, prec)
