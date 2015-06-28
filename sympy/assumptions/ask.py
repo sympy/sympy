@@ -39,9 +39,8 @@ class AssumptionKeys(object):
         ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
         Hermitian operators.
 
-        TODO: Add examples
-
         """
+        # TODO: Add examples
         return Predicate('hermitian')
 
     @predicate_memo
@@ -53,9 +52,8 @@ class AssumptionKeys(object):
         antihermitian operators, i.e., operators in the form ``x*I``, where
         ``x`` is Hermitian.
 
-        TODO: Add examples
-
         """
+        # TODO: Add examples
         return Predicate('antihermitian')
 
     @predicate_memo
@@ -231,9 +229,8 @@ class AssumptionKeys(object):
         transcendental numbers. A transcendental number is a real
         or complex number that is not algebraic.
 
-        TODO: Add examples
-
         """
+        # TODO: Add examples
         return Predicate('transcendental')
 
     @predicate_memo
@@ -361,9 +358,8 @@ class AssumptionKeys(object):
         ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
         infinity.
 
-        TODO: Add examples
-
         """
+        # TODO: Add examples
         return Predicate('infinite')
 
     @predicate_memo
@@ -692,9 +688,8 @@ class AssumptionKeys(object):
         ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
         object with respect to multiplication operation.
 
-        TODO: Add examples
-
         """
+        # TODO: Add examples
         return Predicate('commutative')
 
     @predicate_memo
