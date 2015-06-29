@@ -8,7 +8,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import sin, cos, exp, tan, atan, atanh
+from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh
 
 def test_ring_series1():
     R, x = ring('x', QQ)
@@ -353,3 +353,14 @@ def test_tanh():
         17/45*x**8*y**9 + 4/3*x**7*y**9 - 17/315*x**7*y**7 - 1/3*x**6*y**9 + \
         2/3*x**6*y**7 - x**5*y**7 + 2/15*x**5*y**5 - x**4*y**5 - \
         1/3*x**3*y**3 + x**2*y**3 + x*y
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', EX)
+    assert rs_tanh(x + a, x, 5) == EX(tanh(a)**5 - 5*tanh(a)**3/3 + \
+        2*tanh(a)/3)*x**4 + EX(-tanh(a)**4 + 4*tanh(a)**2/3 - QQ(1, 3))*x**3 + \
+        EX(tanh(a)**3 - tanh(a))*x**2 + EX(-tanh(a)**2 + 1)*x + EX(tanh(a))
+
+    p = rs_tanh(x + x**2*y + a, x, 4)
+    assert (p.compose(x, 10)).compose(y, 5) == EX(-1000*tanh(a)**4 + \
+        10100*tanh(a)**3 + 2470*tanh(a)**2/3 - 10099*tanh(a) + QQ(530, 3))

@@ -6,7 +6,7 @@ from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
 from sympy.core import S, evaluate
-from sympy.functions import sin, cos, tan, atan, exp, atanh
+from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -777,9 +777,7 @@ def rs_tan(p, x, prec):
         t = rs_series_inversion(1 - const*t2, x, prec)
         return rs_mul(const + t2, t, x, prec)
 
-    if R.ngens == 1:
-        return _tan1(p, x, prec)
-    return fun(p, rs_tan, x, prec)
+    return _tan1(p, x, prec)
 
 def rs_sin(p, x, prec):
     """
@@ -1094,9 +1092,7 @@ def rs_tanh(p, x, prec):
         t = rs_series_inversion(1 + const*t1, x, prec)
         return rs_mul(const + t1, t, x, prec)
 
-    if R.ngens == 1:
-        return _tanh(p, x, prec)
-    return fun(p, _tanh, x, prec)
+    return _tanh(p, x, prec)
 
 def rs_newton(p, x, prec):
     """
