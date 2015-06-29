@@ -27,7 +27,7 @@ def test_zero():
     assert z.is_complex is True
     assert z.is_noninteger is False
     assert z.is_irrational is False
-    assert z.is_imaginary is False
+    assert z.is_imaginary is True
     assert z.is_positive is False
     assert z.is_negative is False
     assert z.is_nonpositive is True

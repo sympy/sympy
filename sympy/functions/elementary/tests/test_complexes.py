@@ -185,9 +185,9 @@ def test_sign():
 
     x = Symbol('x', imaginary=True)
     assert sign(x).is_imaginary is True
-    assert sign(x).is_integer is False
+    assert sign(x).is_integer is None
     assert sign(x).is_real is False
-    assert sign(x).is_zero is False
+    assert sign(x).is_zero is None
     assert sign(x).diff(x) == 2*DiracDelta(-I*x)
     assert sign(x).doit() == x / Abs(x)
     assert conjugate(sign(x)) == -sign(x)
@@ -220,7 +220,7 @@ def test_sign():
     assert Abs(sign(x)) == 1
 
     x = 0
-    assert sign(x).is_imaginary is False
+    assert sign(x).is_imaginary is True
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is True
