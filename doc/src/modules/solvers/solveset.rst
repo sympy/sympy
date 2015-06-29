@@ -34,6 +34,8 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset.domain_check
 
+.. autofunction:: sympy.solvers.solveset.linear_eq_to_matrix
+
 Diophantine Equations (DEs)
 ---------------------------
 

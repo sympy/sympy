@@ -1,6 +1,6 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
-    LambertW, Piecewise, Poly, Rational, S, Symbol,
+    LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
     tan, tanh, atan2, arg,
@@ -21,8 +21,9 @@ from sympy.physics.units import cm
 
 
 from sympy.solvers.solveset import (
-    solveset_real, domain_check, solveset_complex,
-    _is_function_class_equation, invert_real, invert_complex, solveset)
+    solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
+    linsolve, _is_function_class_equation, invert_real, invert_complex,
+    solveset)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -813,3 +814,62 @@ def test_issue_9522():
 
     assert solveset(expr1, x) == EmptySet()
     assert solveset(expr2, x) == EmptySet()
+
+
+def test_linear_eq_to_matrix():
+    x, y, z = symbols('x, y, z')
+    eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
+    eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
+
+    A, b = linear_eq_to_matrix(eqns1, x, y, z)
+    assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
+    assert b == Matrix([[3], [0], [12]])
+
+    A, b = linear_eq_to_matrix(eqns2, x, y, z)
+    assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
+    assert b == Matrix([[1], [-2], [0]])
+
+    # Pure symbolic coefficients
+    from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
+    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    A, B = linear_eq_to_matrix(eqns3, x, y, z)
+    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
+    assert B == Matrix([[d], [h], [l]])
+
+    # raise ValueError if no symbols are given
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+
+
+def test_linsolve():
+    x, y, z, u, v, w = symbols("x, y, z, u, v, w")
+    x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
+
+    # Test for different input forms
+
+    M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
+    system = A, b = M[:, :-1], M[:, -1]
+    Eqns = [x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
+            2*x1 + 4*x2 + 6*x4 - 4]
+
+    sol = FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+    assert linsolve(M, (x1, x2, x3, x4)) == sol
+    assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
+    assert linsolve(system, (x1, x2, x3, x4)) == sol
+
+    # raise ValueError if no symbols are given
+    raises(ValueError, lambda: linsolve(system))
+
+    # raise ValueError if, A & b is not given as tuple
+    raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
+
+    # raise ValueError for garbage value
+    raises(ValueError, lambda: linsolve(Eqns[0], x1, x2, x3, x4))
+
+    # Fully symbolic test
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    A = Matrix([[a, b], [c, d]])
+    B = Matrix([[e], [f]])
+    system = (A, B)
+    sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
+                    (f - c*e/a)/(d - b*c/a)))
+    assert linsolve(system, [x, y]) == sol
