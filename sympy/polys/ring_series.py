@@ -415,8 +415,7 @@ def rs_series_reversion(p, x, n, y):
     r = y/a
     for i in range(2, n):
         sb = p
-        sp = sb.compose(x, r)
-        sp = rs_trunc(sp, y, i + 1)
+        sp = rs_subs(p, {x: r}, y, i + 1)
         sp = _coefficient_t(sp, (ny, i))*y**i
         r -= sp/a
     return r
@@ -766,6 +765,8 @@ def rs_log(p, x, prec):
     >>> R, x = ring('x', QQ)
     >>> rs_log(1 + x, x, 8)
     1/7*x**7 - 1/6*x**6 + 1/5*x**5 - 1/4*x**4 + 1/3*x**3 - 1/2*x**2 + x
+    >>> rs_log(x**QQ(3, 2) + 1, x, 5)
+    1/3*x**(9/2) - 1/2*x**3 + x**(3/2)
     """
     R = p.ring
     if p == 1:
@@ -1096,6 +1097,7 @@ def rs_cot(p, iv, prec):
     """
     # It can not handle series like `p = x + x*y` where the coefficient of the
     # linear term in the series variable is symbolic.
+    # TODO Does not work with puiseux series. What should be the value of m?
     i, m = _check_series_var(p, iv, 'cot')
     prec1 = prec + 2*m
     c, s = rs_cos_sin(p, iv, prec1)
@@ -1121,6 +1123,8 @@ def rs_sin(p, x, prec):
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_sin(x + x*y, x, 4)
     -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
+    >>> rs_sin(x**QQ(3, 2) + x*y**QQ(7, 5), x, 4)
+    -1/2*x**(7/2)*y**(14/5) - 1/6*x**3*y**(21/5) + x**(3/2) + x*y**(7/5)
 
     See Also
     ========
@@ -1184,6 +1188,8 @@ def rs_cos(p, iv, prec):
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_cos(x + x*y, x, 4)
     -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
+    >>> rs_cos(x + x*y, x, 4)/x**QQ(7, 5)
+    -1/2*x**(3/5)*y**2 - x**(3/5)*y - 1/2*x**(3/5) + x**(-7/5)
 
     See Also
     ========
@@ -1472,6 +1478,71 @@ def rs_hadamard_exp(p1, inverse=False):
         for exp1, v1 in p1.items():
             p[exp1] = v1*int(ifac(exp1[0]))
     return p
+
+def rs_subs(p, rules, x, prec):
+    """
+    Substitution with truncation according to the mapping in `rules`.
+    Returns a series with precision `prec` in the generator `x`
+
+      p:     input polynomial
+      rules: dict with substitution mappings
+      x:     variable in which the series truncation is done
+      prec:  order of the truncation
+
+    Note that substitutions are not done one after the other
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_subs
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x**2 + y**2
+    >>> rs_subs(p, {x: x+ y, y: x+ 2*y}, x, 3)
+    2*x**2 + 6*x*y + 5*y**2
+    >>> (x + y)**2 + (x + 2*y)**2
+    2*x**2 + 6*x*y + 5*y**2
+
+    which differs from
+
+    >>> rs_subs(rs_subs(p, {x: x+ y}, x, 3), {y: x+ 2*y}, x, 3)
+    5*x**2 + 12*x*y + 8*y**2
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_subs
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_subs(x**2+y**2, {y: (x+y)**2}, x, 3)
+     6*x**2*y**2 + x**2 + 4*x*y**3 + y**4
+    """
+    R = p.ring
+    ngens = R.ngens
+    d = R(0)
+    for i in range(R.ngens):
+        d[(i, 1)] = R.gens[i]
+    for var in rules:
+        d[(R.index(var), 1)] = rules[var]
+    p1 = R(0)
+    p_keys = sorted(p.keys())
+    for expv in p_keys:
+        p2 = R(1)
+        for i in range(ngens):
+            power = expv[i]
+            if power == 0:
+                continue
+            if (i, power) not in d:
+                q, r = divmod(power, 2)
+                if r == 0 and (i, q) in d:
+                    d[(i, power)] = rs_square(d[(i, q)], x, prec)
+                elif (i, power - 1) in d:
+                    d[(i, power)] = rs_mul(d[(i, power - 1)], d[(i, 1)], \
+                        x, prec)
+                else:
+                    d[(i, power)] = rs_pow(d[(i, 1)], power, x, prec)
+            p2 = rs_mul(p2, d[(i, power)], x, prec)
+        p1 += p2*p[expv]
+    return p1
 
 def rs_compose_add(p1, p2):
     """
