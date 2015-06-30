@@ -1026,21 +1026,21 @@ def linsolve(system, *symbols):
     .. math:: 2x - 2y + 4z = -2
     .. math:: 2x -   y + 2z = 0
 
-    * Augmented Matrix Form
+    * Augmented Matrix Form, `system` given below:
 
-                 [3   2  -1  1]
-    system   =   [2  -2   4 -2]  (Matrix)
-                 [2  -1   2  0]
+    [3   2  -1  1]
+    [2  -2   4 -2]
+    [2  -1   2  0]
 
     * List Of Equations Form
 
     system  =  [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, 2*x - y + 2*z]
 
-    * Input A & b Matrix Form (from Ax = b)
+    * Input A & b Matrix Form (from Ax = b) are given as below:
 
-            [3   2  -1 ]          [  1 ]
-    A   =   [2  -2   4 ]    b  =  [ -2 ]
-            [2  -1   2 ]          [  0 ]
+    [3   2  -1 ]    [  1 ]
+    [2  -2   4 ]    [ -2 ]
+    [2  -1   2 ]    [  0 ]
 
     system = (A, b)
 
