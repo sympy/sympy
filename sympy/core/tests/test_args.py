@@ -3117,8 +3117,8 @@ def test_sympy__series__series_class__SeriesBase():
 
 
 def test_sympy__series__fourier__FourierSeries():
-    from sympy.series.fourier import FourierSeries
-    assert _test_args(FourierSeries(x, (x, -pi, pi)))
+    from sympy.series.fourier import fourier_series
+    assert _test_args(fourier_series(x, (x, -pi, pi)))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():

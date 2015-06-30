@@ -15,7 +15,7 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, FourierSeries, pi)
+    SeqAdd, SeqMul, fourier_series, pi)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -540,7 +540,7 @@ def test_latex_sequences():
 
 def test_latex_FourierSeries():
     latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2}{3} \sin{\left (3 x \right )}\ldots'
-    assert latex(FourierSeries(x, (x, -pi, pi))) == latex_str
+    assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
 
 
 def test_latex_intervals():

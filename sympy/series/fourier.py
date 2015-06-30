@@ -94,76 +94,20 @@ def _process_limits(func, limits):
 class FourierSeries(SeriesBase):
     r"""Represents fourier sine/cosine series
 
-    Examples
+    This class only represents a fourier series.
+    No computation is performed.
+
+    For how to compute Fourier series, see the :func:`fourier_series`
+    docstring.
+
+    See Also
     ========
 
-    >>> from sympy import FourierSeries, pi, cos
-    >>> from sympy.abc import x
-
-    >>> s = FourierSeries(x**2, (x, -pi, pi))
-    >>> s.truncate(n=3)
-    -4*cos(x) + cos(2*x) + pi**2/3
-
-    Shifting
-
-    >>> s.shift(1).truncate()
-    -4*cos(x) + cos(2*x) + 1 + pi**2/3
-    >>> s.shiftx(1).truncate()
-    -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
-
-    Scaling
-
-    >>> s.scale(2).truncate()
-    -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
-    >>> s.scalex(2).truncate()
-    -4*cos(2*x) + cos(4*x) + pi**2/3
-
-    Notes
-    =====
-
-    Computing a fourier series can be slow
-    due to the integration required in computing
-    an, bn.
-
-    It is faster to compute fourier series of a function
-    by using shifting and scaling on an already
-    computed fourier series rather than computing
-    again.
-
-    eg. If Fourier series of x**2 is known
-    fourier series of x**2 - 1 can be found by shifting by -1
-
-    References
-    ==========
-
-    .. [1] mathworld.wolfram.com/FourierSeries.html
+    sympy.series.fourier.fourier_series
     """
-    def __new__(cls, func, limits, *args):
-        func = sympify(func)
-
-        limits = _process_limits(func, limits)
-        x, lower, upper = limits
-
-        if x not in func.free_symbols:
-            return func
-
-        if len(args) != 3:
-            n = Dummy('n')
-            neg_func = func.subs(x, -x)
-            if func == neg_func:
-                a0, an = fourier_cos_seq(func, limits, n)
-                bn = SeqFormula(0, (1, oo))
-            elif func == -neg_func:
-                a0 = S.Zero
-                an = SeqFormula(0, (1, oo))
-                bn = fourier_sin_seq(func, limits, n)
-            else:
-                a0, an = fourier_cos_seq(func, limits, n)
-                bn = fourier_sin_seq(func, limits, n)
-        else:
-            a0, an, bn = args
-
-        return Expr.__new__(cls, func, limits, a0, an, bn)
+    def __new__(cls, *args):
+        args = map(sympify, args)
+        return Expr.__new__(cls, *args)
 
     @property
     def function(self):
@@ -179,15 +123,15 @@ class FourierSeries(SeriesBase):
 
     @property
     def a0(self):
-        return self.args[2]
+        return self.args[2][0]
 
     @property
     def an(self):
-        return self.args[3]
+        return self.args[2][1]
 
     @property
     def bn(self):
-        return self.args[4]
+        return self.args[2][2]
 
     @property
     def interval(self):
@@ -238,9 +182,9 @@ class FourierSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import FourierSeries, pi
+        >>> from sympy import fourier_series, pi
         >>> from sympy.abc import x
-        >>> s = FourierSeries(x**2, (x, -pi, pi))
+        >>> s = fourier_series(x**2, (x, -pi, pi))
         >>> s.shift(1).truncate()
         -4*cos(x) + cos(2*x) + 1 + pi**2/3
         """
@@ -252,7 +196,7 @@ class FourierSeries(SeriesBase):
         a0 = self.a0 + s
         sfunc = self.function + s
 
-        return self.func(sfunc, self.args[1], a0, *self.args[3:])
+        return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
     def shiftx(self, s):
         """
@@ -267,9 +211,9 @@ class FourierSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import FourierSeries, pi
+        >>> from sympy import fourier_series, pi
         >>> from sympy.abc import x
-        >>> s = FourierSeries(x**2, (x, -pi, pi))
+        >>> s = fourier_series(x**2, (x, -pi, pi))
         >>> s.shiftx(1).truncate()
         -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
         """
@@ -282,7 +226,7 @@ class FourierSeries(SeriesBase):
         bn = self.bn.subs(x, x + s)
         sfunc = self.function.subs(x, x + s)
 
-        return self.func(sfunc, self.args[1], self.args[2], an, bn)
+        return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def scale(self, s):
         """
@@ -297,9 +241,9 @@ class FourierSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import FourierSeries, pi
+        >>> from sympy import fourier_series, pi
         >>> from sympy.abc import x
-        >>> s = FourierSeries(x**2, (x, -pi, pi))
+        >>> s = fourier_series(x**2, (x, -pi, pi))
         >>> s.scale(2).truncate()
         -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
         """
@@ -313,7 +257,7 @@ class FourierSeries(SeriesBase):
         a0 = self.a0 * s
         sfunc = self.args[0] * s
 
-        return self.func(sfunc, self.args[1], a0, an, bn)
+        return self.func(sfunc, self.args[1], (a0, an, bn))
 
     def scalex(self, s):
         """
@@ -328,9 +272,9 @@ class FourierSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import FourierSeries, pi
+        >>> from sympy import fourier_series, pi
         >>> from sympy.abc import x
-        >>> s = FourierSeries(x**2, (x, -pi, pi))
+        >>> s = fourier_series(x**2, (x, -pi, pi))
         >>> s.scalex(2).truncate()
         -4*cos(2*x) + cos(4*x) + pi**2/3
         """
@@ -343,7 +287,7 @@ class FourierSeries(SeriesBase):
         bn = self.bn.subs(x, x * s)
         sfunc = self.function.subs(x, x * s)
 
-        return self.func(sfunc, self.args[1], self.args[2], an, bn)
+        return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def _eval_as_leading_term(self, x):
         for t in self:
@@ -365,10 +309,15 @@ class FourierSeries(SeriesBase):
 
             x, y = self.x, other.x
             function = self.function + other.function.subs(y, x)
+
+            if self.x not in function.free_symbols:
+                return function
+
             an = self.an + other.an
             bn = self.bn + other.bn
             a0 = self.a0 + other.a0
-            return FourierSeries(function, self.args[1], a0, an, bn)
+
+            return self.func(function, self.args[1], (a0, an, bn))
 
         return Add(self, other)
 
@@ -381,23 +330,74 @@ def fourier_series(f, limits=None):
 
     returns a ``FourierSeries`` object
 
-    see :class:`FourierSeries` for details
-
     Examples
     ========
 
     >>> from sympy import fourier_series, pi, cos
     >>> from sympy.abc import x
 
-    >>> fourier_series(x, (x, -pi, pi)).truncate()
-    2*sin(x) - sin(2*x) + 2*sin(3*x)/3
-
-    >>> fourier_series(x**2, (x, -pi, pi)).truncate()
+    >>> s = fourier_series(x**2, (x, -pi, pi))
+    >>> s.truncate(n=3)
     -4*cos(x) + cos(2*x) + pi**2/3
+
+    Shifting
+
+    >>> s.shift(1).truncate()
+    -4*cos(x) + cos(2*x) + 1 + pi**2/3
+    >>> s.shiftx(1).truncate()
+    -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
+
+    Scaling
+
+    >>> s.scale(2).truncate()
+    -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
+    >>> s.scalex(2).truncate()
+    -4*cos(2*x) + cos(4*x) + pi**2/3
+
+    Notes
+    =====
+
+    Computing a fourier series can be slow
+    due to the integration required in computing
+    an, bn.
+
+    It is faster to compute fourier series of a function
+    by using shifting and scaling on an already
+    computed fourier series rather than computing
+    again.
+
+    eg. If Fourier series of x**2 is known
+    fourier series of x**2 - 1 can be found by shifting by -1
 
     See Also
     ========
 
     sympy.series.fourier.FourierSeries
+
+    References
+    ==========
+
+    .. [1] mathworld.wolfram.com/FourierSeries.html
     """
-    return FourierSeries(f, limits)
+    f = sympify(f)
+
+    limits = _process_limits(f, limits)
+    x, lower, upper = limits
+
+    if x not in f.free_symbols:
+        return f
+
+    n = Dummy('n')
+    neg_f= f.subs(x, -x)
+    if f == neg_f:
+        a0, an = fourier_cos_seq(f, limits, n)
+        bn = SeqFormula(0, (1, oo))
+    elif f== -neg_f:
+        a0 = S.Zero
+        an = SeqFormula(0, (1, oo))
+        bn = fourier_sin_seq(f, limits, n)
+    else:
+        a0, an = fourier_cos_seq(f, limits, n)
+        bn = fourier_sin_seq(f, limits, n)
+
+    return FourierSeries(f, limits, (a0, an, bn))

@@ -7,7 +7,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, FourierSeries)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -3190,7 +3190,7 @@ def test_pretty_sequences():
 
 
 def test_pretty_FourierSeries():
-    f = FourierSeries(x, (x, -pi, pi))
+    f = fourier_series(x, (x, -pi, pi))
 
     ascii_str = \
 """\
