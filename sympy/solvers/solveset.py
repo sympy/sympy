@@ -9,8 +9,9 @@ from sympy.core.numbers import I, Number, Rational
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import fraction, trigsimp
-from sympy.functions import (log, Abs, tan, cot, exp,
-                             arg, Piecewise, piecewise_fold)
+from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
+                             acos, asin, atan, acot, acsc, asec, arg,
+                             Piecewise, piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.sets import FiniteSet, EmptySet, imageset, Union
@@ -121,9 +122,64 @@ def _invert_real(f, g_ys, symbol):
             return _invert_real(expo, imageset(Lambda(n, log(n)/log(base)),
                                                g_ys), symbol)
 
+    if isinstance(f, sin) or isinstance(f, csc):
+        n = Dummy('n')
+        if isinstance(g_ys, FiniteSet):
+            fi = sympify('a' + f.func.__name__)
+            # remove all the invalid elements
+            _a = []
+            for i in g_ys:
+                try:
+                    if i.is_real is S.false or isinstance(f, sin) and \
+                        i < -1 and i > -1 or \
+                        isinstance(f, csc) and i < 1 and i > -1:
+                            _a.append(i)
+                except TypeError:
+                    pass
+            g_ys = g_ys - FiniteSet(*_a)
+
+            sin_csc_invs_f1 = Union(*[imageset(Lambda(n, 2*n*pi + fi(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            sin_csc_invs_f2 = Union(*[imageset(Lambda(n, 2*n*pi + pi - fi(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            sin_csc_invs = Union(sin_csc_invs_f1, sin_csc_invs_f2)
+            return _invert_real(f.args[0], sin_csc_invs, symbol)
+
+    if isinstance(f, cos) or isinstance(f, sec):
+        n = Dummy('n')
+        if isinstance(g_ys, FiniteSet):
+            fi = sympify('a' + f.func.__name__)
+            # remove all the invalid elements
+            _a = []
+            for i in g_ys:
+                try:
+                    if i.is_real is S.false or isinstance(f, cos) and \
+                        i < -1 and i > -1 or \
+                        isinstance(f, sec) and i < 1 and i > -1:
+                            _a.append(i)
+                except TypeError:
+                    pass
+            g_ys = g_ys - FiniteSet(*_a)
+
+            cos_sec_invs_f1 = Union(*[imageset(Lambda(n, 2*n*pi + acos(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            cos_sec_invs_f2 = Union(*[imageset(Lambda(n, 2*n*pi - acos(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            cos_sec_invs = Union(cos_sec_invs_f1, cos_sec_invs_f2)
+            return _invert_real(f.args[0], cos_sec_invs, symbol)
+
     if isinstance(f, tan) or isinstance(f, cot):
         n = Dummy('n')
         if isinstance(g_ys, FiniteSet):
+            # remove all the invalid elements
+            _a = []
+            for i in g_ys:
+                try:
+                    if i.is_real is S.false:
+                        _a.append(i)
+                except TypeError:
+                    pass
+            g_ys = g_ys - FiniteSet(*_a)
             tan_cot_invs = Union(*[imageset(Lambda(n, n*pi + f.inverse()(g_y)),
                                             S.Integers) for g_y in g_ys])
             return _invert_real(f.args[0], tan_cot_invs, symbol)
@@ -210,6 +266,36 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys])
             return _invert_complex(f.args[0], exp_invs, symbol)
+
+    if isinstance(f, sin) or isinstance(f, csc):
+        n = Dummy('n')
+        if isinstance(g_ys, FiniteSet):
+            fi = sympify('a' + f.func.__name__)
+            sin_csc_invs_f1 = Union(*[imageset(Lambda(n, 2*n*pi + fi(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            sin_csc_invs_f2 = Union(*[imageset(Lambda(n, 2*n*pi + pi - fi(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            sin_csc_invs = Union(sin_csc_invs_f1, sin_csc_invs_f2)
+            return _invert_real(f.args[0], sin_csc_invs, symbol)
+
+    if isinstance(f, cos) or isinstance(f, sec):
+        n = Dummy('n')
+        if isinstance(g_ys, FiniteSet):
+            fi = sympify('a' + f.func.__name__)
+            cos_sec_invs_f1 = Union(*[imageset(Lambda(n, 2*n*pi + acos(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            cos_sec_invs_f2 = Union(*[imageset(Lambda(n, 2*n*pi - acos(g_y)), \
+                                            S.Integers) for g_y in g_ys])
+            cos_sec_invs = Union(cos_sec_invs_f1, cos_sec_invs_f2)
+            return _invert_real(f.args[0], cos_sec_invs, symbol)
+
+    if isinstance(f, tan) or isinstance(f, cot):
+        n = Dummy('n')
+        if isinstance(g_ys, FiniteSet):
+            tan_cot_invs = Union(*[imageset(Lambda(n, n*pi + f.inverse()(g_y)),
+                                            S.Integers) for g_y in g_ys])
+            return _invert_real(f.args[0], tan_cot_invs, symbol)
+
     return (f, g_ys)
 
 

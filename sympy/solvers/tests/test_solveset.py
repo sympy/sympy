@@ -14,7 +14,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.sets import FiniteSet
+from sympy.sets import FiniteSet, ImageSet
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -672,8 +672,10 @@ def test_solve_invalid_sol():
 
 
 def test_solve_complex_unsolvable():
-    raises(NotImplementedError, lambda: solveset_complex(cos(x) - S.Half, x))
-
+    from sympy.abc import n
+    assert solveset_complex(cos(x) - S.Half, x) == \
+            Union(imageset(Lambda(n, 2*n*pi - pi/3), S.Integer), \
+            imageset(Lambda(n, 2*n*pi + pi/3), S.Integers)
 
 @XFAIL
 def test_solve_trig_simplified():
