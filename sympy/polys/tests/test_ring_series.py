@@ -4,7 +4,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
-    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, fun, rs_nth_root,
+    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_series_reversion, check_precision)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -214,8 +214,8 @@ def test_compose_add():
 def test_fun():
     R, x, y = ring('x, y', QQ)
     p = x*y + x**2*y**3 + x**5*y
-    assert fun(p, rs_tan, x, 10) == rs_tan(p, x, 10)
-    assert fun(p, _tan1, x, 10) == _tan1(p, x, 10)
+    assert rs_fun(p, rs_tan, x, 10) == rs_tan(p, x, 10)
+    assert rs_fun(p, _tan1, x, 10) == _tan1(p, x, 10)
 
 def test_nth_root():
     R, x, y = ring('x, y', QQ)

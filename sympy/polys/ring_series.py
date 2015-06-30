@@ -394,12 +394,11 @@ def rs_series_reversion(p, x, n, y):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_series_reversion, rs_trunc
-    >>> R, x, y = ring('x, y', QQ)
-    >>> p = x + x**2
-    >>> p1 = rs_series_reversion(p, x, 4, y)
-    >>> p1
-    2*y**3 - y**2 + y
-    >>> rs_trunc(p1 + p1**2, y, 4)
+    >>> R, x, y, a, b = ring('x, y, a, b', QQ)
+    >>> p = x - x**2 - 2*b*x**2 + 2*a*b*x**2
+    >>> p1 = rs_series_reversion(p, x, 3, y); p1
+    -2*y**2*a*b + 2*y**2*b + y**2 + y
+    >>> rs_trunc(p.compose(x, p1), y, 3)
     y
     """
     ring = p.ring
@@ -563,7 +562,7 @@ def rs_integrate(p, x):
         p1[e] = p[expv]/(expv[n] + 1)
     return p1
 
-def fun(p, f, *args):
+def rs_fun(p, f, *args):
     """
     Function of a multivariate series computed by substitution
 
@@ -576,7 +575,7 @@ def fun(p, f, *args):
     The case with f method name is used to compute rs_tan and rs_nth_root
     of a multivariate series:
 
-      fun(p, tan, iv, prec)
+      rs_fun(p, tan, iv, prec)
       tan series is first computed for a dummy variable _x, ie, tan(_x, iv, prec)
       Then we substitute _x with p to get the desired series
 
@@ -585,10 +584,10 @@ def fun(p, f, *args):
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import fun, _tan1
+    >>> from sympy.polys.ring_series import rs_fun, _tan1
     >>> R, x, y = ring('x, y', QQ)
     >>> p = x + x*y + x**2*y + x**3*y**2
-    >>> fun(p, _tan1, x, 4)
+    >>> rs_fun(p, _tan1, x, 4)
     1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
 
     """
@@ -599,7 +598,6 @@ def fun(p, f, *args):
     zm = _R.zero_monom
     # separate the constant term of the series
     # compute the univariate series f(_x, .., 'x', sum(nv))
-    # or _x.f(..., 'x', sum(nv)
     if zm in p:
         x1 = _x + p[zm]
         p1 = p - p[zm]
@@ -745,7 +743,7 @@ def rs_nth_root(p, n, iv, prec):
     if ring.ngens == 1:
         res = _nth_root1(p, n, iv, prec)
     else:
-        res = fun(p, _nth_root1, n, iv, prec)
+        res = rs_fun(p, _nth_root1, n, iv, prec)
     if mq:
         res = mul_xin(res, ii, mq)
     return res
@@ -1073,7 +1071,7 @@ def rs_tan(p, x, prec):
     if R.ngens == 1:
         return _tan1(p, x, prec)
     else:
-        return fun(p, _tan1, x, prec)
+        return rs_fun(p, rs_tan, x, prec)
 
 def rs_cot(p, iv, prec):
     """
@@ -1421,7 +1419,7 @@ def rs_tanh(p, iv, prec):
     if R.ngens == 1:
         return _tanh(p, x, prec)
     else:
-        return fun(p, _tanh, x, prec)
+        return rs_fun(p, _tanh, x, prec)
 
 def rs_newton(p, x, prec):
     """
