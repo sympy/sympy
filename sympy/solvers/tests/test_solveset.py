@@ -588,7 +588,7 @@ def test_solveset_complex_polynomial():
 
 def test_sol_zero_complex():
     # This should return the complex set after it is implemented
-    raises(NotImplementedError, lambda: solveset_complex(0, x))
+    assert solveset_complex(0, x) == S.Complex
 
 
 def test_solveset_complex_rational():

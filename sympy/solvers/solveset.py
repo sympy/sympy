@@ -725,7 +725,7 @@ def solveset_complex(f, symbol):
         f = expand(f)
 
     if f.is_zero:
-        raise NotImplementedError("S.Complex set is not yet implemented")
+        return S.Complex
     elif not f.has(symbol):
         result = EmptySet()
     elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
