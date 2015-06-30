@@ -914,9 +914,9 @@ def linear_eq_to_matrix(equations, *symbols):
     The Matrix form corresponds to the augmented matrix form.
     For example:
 
-    4.x + 2.y + 3.z  = 1
-    3.x +   y +   z  = -6
-    2.x + 4.y + 9.z  = 2
+    .. math:: 4x + 2y + 3z  = 1
+    .. math:: 3x +  y +  z  = -6
+    .. math:: 2x + 4y + 9z  = 2
 
     This system would return A & b as given below:
 
@@ -1022,9 +1022,9 @@ def linsolve(system, *symbols):
     For the given set of Equations, the respective input types
     are given below:
 
-    3*x + 2*y -   z = 1
-    2*x - 2*y + 4*z = -2
-    2*x -   y + 2*z = 0
+    .. math:: 3x + 2y -   z = 1
+    .. math:: 2x - 2y + 4z = -2
+    .. math:: 2x -   y + 2z = 0
 
     * Augmented Matrix Form
 

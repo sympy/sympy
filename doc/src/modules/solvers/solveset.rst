@@ -36,6 +36,8 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset.linear_eq_to_matrix
 
+.. autofunction:: sympy.solvers.solveset.linsolve
+
 Diophantine Equations (DEs)
 ---------------------------
 
