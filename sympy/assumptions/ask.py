@@ -295,7 +295,7 @@ class AssumptionKeys(object):
         Examples
         ========
 
-        >>> from sympy import ask, Q, pi, S
+        >>> from sympy import ask, Q, pi, S, I
         >>> ask(Q.irrational(0))
         False
         >>> ask(Q.irrational(S(1)/2))
@@ -463,7 +463,8 @@ class AssumptionKeys(object):
         Examples
         ========
 
-        >>> from sympy import ask, Q, oo
+        >>> from sympy import ask, Q, oo, symbols
+        >>> x, y = symbols('x, y')
         >>> ask(Q.zero(0))
         True
         >>> ask(Q.zero(1/oo))
@@ -798,7 +799,7 @@ class AssumptionKeys(object):
         True
         >>> ask(Q.orthogonal(Identity(3)))
         True
-        >>> ask(Q.invertible(x), Q.orthogonal(x))
+        >>> ask(Q.invertible(X), Q.orthogonal(X))
         True
 
         References
