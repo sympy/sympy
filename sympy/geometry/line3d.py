@@ -8,17 +8,19 @@ Ray3D
 Segment3D
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Dummy, nan
+from sympy.core import Dummy, S, nan
 from sympy.functions.elementary.trigonometric import acos
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
+from sympy.core.compatibility import is_sequence, range
+
 from .entity import GeometryEntity
 from .point import Point3D
 from .util import _symbol
-from sympy.core.compatibility import is_sequence, range
+
 
 class LinearEntity3D(GeometryEntity):
     """An base class for all linear entities (line, ray and segment)
