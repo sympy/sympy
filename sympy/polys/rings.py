@@ -773,7 +773,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     continue
                 symbol = printer.parenthesize(symbols[i], prec_atom-1)
                 if exp != 1:
-                    sexpv.append(exp_pattern % (symbol, exp))
+                    if exp != int(exp):
+                        sexp = printer.parenthesize(exp, prec_atom)
+                    else:
+                        sexp = exp
+                    sexpv.append(exp_pattern % (symbol, sexp))
                 else:
                     sexpv.append('%s' % symbol)
             if scoeff:
