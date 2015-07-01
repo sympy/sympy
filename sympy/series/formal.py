@@ -6,10 +6,10 @@ from sympy import oo, zoo, nan
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.symbol import Wild, Dummy, symbols
+from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.series.sequences import sequence
@@ -221,6 +221,48 @@ def simpleDE(f, x, g, order=4):
                 DE = DE.as_numer_denom()[0]
                 DE = DE.factor().as_coeff_mul(Derivative)[1][0]
                 return DE.collect(Derivative(g(x)))
+
+
+def exp_re(DE, r, k):
+    """
+    Converts a DE with constant coefficients (explike)
+    into a RE
+
+    substitutes :math:`f^j(x) \to r(k + j)`
+
+    Normalises so that lowest term is always r(k).
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative
+    >>> from sympy.series.formal import exp_re
+    >>> from sympy.abc import x, k
+    >>> f, r = Function('f'), Function('r')
+
+    >>> exp_re(-f(x) + Derivative(f(x)), r, k)
+    -r(k) + r(k + 1)
+    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), x, x), r, k)
+    r(k) + r(k + 1)
+    """
+    RE = S.Zero
+
+    g = DE.atoms(Function).pop()
+    x = g.atoms(Symbol).pop()
+
+    mini = None
+    for t in Add.make_args(DE):
+        coeff, d = t.as_independent(g)
+        if isinstance(d, Derivative):
+            j = len(d.args[1:])
+        else:
+            j = 0
+        if mini is None or j < mini:
+            mini = j
+        RE += coeff * r(k + j)
+    if mini:
+        RE = RE.subs(k, k - mini)
+    return RE
 
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):

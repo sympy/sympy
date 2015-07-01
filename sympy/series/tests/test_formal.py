@@ -2,11 +2,12 @@ from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
                    airyai)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
-                                 rational_independent, simpleDE)
+                                 rational_independent, simpleDE, exp_re)
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
 n, m, k = symbols('n m k')
+f, r = Function('f'), Function('r')
 
 
 def test_rational_algorithm():
@@ -69,8 +70,6 @@ def test_rational_independent():
 
 
 def test_simpleDE():
-    f = Function('f')
-
     assert simpleDE(exp(x), x, f) == -f(x) + Derivative(f(x), x)
     assert simpleDE(sin(x), x, f) == f(x) + Derivative(f(x), x, x)
     assert simpleDE(log(1 + x), x, f) == \
@@ -82,6 +81,23 @@ def test_simpleDE():
     assert simpleDE(((1 + x)/(1 - x))**n, x, f) == \
         2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
     assert simpleDE(airyai(x), x, f) == -x*f(x) + Derivative(f(x), x, x)
+
+
+def test_exp_re():
+    d = -f(x) + Derivative(f(x), x)
+    assert exp_re(d, r, k) == -r(k) + r(k + 1)
+
+    d = f(x) + Derivative(f(x), x, x)
+    assert exp_re(d, r, k) == r(k) + r(k + 2)
+
+    d = f(x) + Derivative(f(x), x) + Derivative(f(x), x, x)
+    assert exp_re(d, r, k) == r(k) + r(k + 1) + r(k + 2)
+
+    d = Derivative(f(x), x) + Derivative(f(x), x, x)
+    assert exp_re(d, r, k) == r(k) + r(k + 1)
+
+    d = Derivative(f(x), x, 3) + Derivative(f(x), x, 4) + Derivative(f(x))
+    assert exp_re(d, r, k) == r(k) + r(k + 2) + r(k + 3)
 
 
 def test_fps():
