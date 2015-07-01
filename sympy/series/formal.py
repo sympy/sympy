@@ -6,6 +6,7 @@ from sympy import oo, zoo, nan
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.function import Derivative
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Wild, Dummy, symbols
@@ -134,6 +135,92 @@ def rational_algorithm(f, x, k, order=4, full=False):
             ds.append(diff)
 
     return None
+
+
+def rational_independent(terms, x):
+    """returns a list of all the rationally independent terms
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos
+    >>> from sympy.series.formal import rational_independent
+    >>> from sympy.abc import x
+
+    >>> rational_independent([cos(x), sin(x)], x)
+    [cos(x), sin(x)]
+    >>> rational_independent([x**2, sin(x), x*sin(x), x**3], x)
+    [x**3 + x**2, x*sin(x) + sin(x)]
+    """
+    if not terms:
+        return []
+
+    ind = terms[0:1]
+
+    for t in terms[1:]:
+        dep = False
+        n = t.as_independent(x)[1]
+        for i in range(len(ind)):
+            d = ind[i].as_independent(x)[1]
+            q = (n / d).cancel()
+            if q.is_rational_function(x):
+                ind[i] += t
+                dep = True
+                break
+        if not dep:
+            ind.append(t)
+    return ind
+
+
+def simpleDE(f, x, g, order=4):
+    """
+    Computes a simple DE of the form
+
+    .. math::
+        f^k(x) + \sum\limits\_{j=0}^{k-1} A_j f^j(x) = 0
+
+    where :math:`A_j` should be rational function in x.
+
+    By default DE is tried uptill order 4. If it is not
+    found ``None`` is returned. By increasing order, higher
+    order DE's can be found.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, exp, ln
+    >>> from sympy.series.formal import simpleDE
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+
+    >>> simpleDE(exp(x), x, f)
+    -f(x) + Derivative(f(x), x)
+    >>> simpleDE(ln(1 + x), x, f)
+    (x + 1)*Derivative(f(x), x, x) + Derivative(f(x), x)
+    """
+    from sympy.solvers import solve
+    a = symbols('a:%d' %(order))
+
+    def _makeDE(k):
+        eq = f.diff(x, k) + Add(*[a[i]*f.diff(x, i) for i in range(0, k)])
+        DE = g(x).diff(x, k) + Add(*[a[i]*g(x).diff(x, i) for i in range(0, k)])
+        return eq, DE
+
+    eq, DE = _makeDE(order)
+
+    for k in range(1, order + 1):
+        eq, DE = _makeDE(k)
+        eq = eq.expand()
+        terms = eq.as_ordered_terms()
+        ind = rational_independent(terms, x)
+        if len(ind) == k:
+            sol = solve(ind, a, dict=True)
+            if sol:
+                for k, v in sol[0].items():
+                    DE = DE.subs(k, v)
+                DE = DE.as_numer_denom()[0]
+                DE = DE.factor().as_coeff_mul(Derivative)[1][0]
+                return DE.collect(Derivative(g(x)))
 
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):

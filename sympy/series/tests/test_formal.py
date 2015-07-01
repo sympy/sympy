@@ -1,6 +1,8 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
-                   Sum, oo, S, pi, cos)
-from sympy.series.formal import rational_algorithm, FormalPowerSeries
+                   Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
+                   airyai)
+from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
+                                 rational_independent, simpleDE)
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
@@ -55,6 +57,31 @@ def test_rational_algorithm():
           Rational(1, 2)) / k, 0, 1)
 
     assert rational_algorithm(cos(x), x, k) is None
+
+
+def test_rational_independent():
+    ri = rational_independent
+    assert ri([cos(x), sin(x)], x) == [cos(x), sin(x)]
+    assert ri([x**2, sin(x), x*sin(x), x**3], x) == \
+        [x**3 + x**2, x*sin(x) + sin(x)]
+    assert ri([S.One, x*log(x), log(x), sin(x)/x, cos(x), sin(x), x], x) == \
+        [x + 1, x*log(x) + log(x), sin(x)/x + sin(x), cos(x)]
+
+
+def test_simpleDE():
+    f = Function('f')
+
+    assert simpleDE(exp(x), x, f) == -f(x) + Derivative(f(x), x)
+    assert simpleDE(sin(x), x, f) == f(x) + Derivative(f(x), x, x)
+    assert simpleDE(log(1 + x), x, f) == \
+        (x + 1)*Derivative(f(x), x, 2) + Derivative(f(x), x)
+    assert simpleDE(asin(x), x, f) == \
+        x*Derivative(f(x), x) + (x**2 - 1)*Derivative(f(x), x, x)
+    assert simpleDE(exp(x)*sin(x), x, f) == \
+        2*f(x) - 2*Derivative(f(x)) + Derivative(f(x), x, x)
+    assert simpleDE(((1 + x)/(1 - x))**n, x, f) == \
+        2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
+    assert simpleDE(airyai(x), x, f) == -x*f(x) + Derivative(f(x), x, x)
 
 
 def test_fps():
