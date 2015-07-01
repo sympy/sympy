@@ -464,3 +464,8 @@ def test_check_precision():
     p = rs_atan(x**QQ(3, 7), x, prec)
     assert rs_trunc(p, x, 5) ==  -x**QQ(33, 7)/11 + x**QQ(27, 7)/9 - \
         x**3/7 + x**QQ(15, 7)/5 - x**QQ(9, 7)/3 + x**QQ(3, 7)
+
+    prec = check_precision(x**QQ(1, 2) + x**QQ(3, 2), x, 3)
+    p = rs_exp(x**QQ(1, 2) + x**QQ(3, 2), x, prec)
+    assert rs_trunc(p, x, 3) == 61*x**(5/2)/120 + 25*x**2/24 + 7*x**(3/2)/6 + \
+        x/2 + x**(1/2) + 1

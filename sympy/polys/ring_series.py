@@ -17,9 +17,11 @@ from functools import wraps
 # Note
 # ====
 #
-# In most cases, none of these functions are guaranteed to output a series of
-# the order `prec`, especially in the case of fractional series. `prec` merely
-# determines approximate the number of terms in the final series.
+# In case the series contains terms with negative or fractional exponents, none
+# of these functions are guaranteed to output a series of the order `prec`. In
+# those cases it is recommended to use `check_precision` to find out the
+# #`prec` that should be used with the series. However, the resulting series
+# may be of higher order. So, it should be truncated.
 
 def _invert_monoms(p1):
     """
@@ -96,8 +98,15 @@ def check_precision(p, x, prec):
     """
     For puiseux series, calculates the number of iterations required in
     `ring_series` functions, to give a series of the order `prec`
+
+    Note
+    ====
+
+    The resulting series may need to be truncated as it may contain more terms
+    than needed.
     """
-    n = p.degree(x)
+    x = p.ring.gens.index(x)
+    n = min(p, key=lambda k: k[x])[x]
     if n > 0 and prec > 0 and n != int(n):
         prec = int(ceiling(prec/n))
     return prec
@@ -239,6 +248,71 @@ def rs_pow(p1, n, x, prec):
         p1 = rs_square(p1, x, prec)
         n = n // 2
     return p
+
+def rs_subs(p, rules, x, prec):
+    """
+    Substitution with truncation according to the mapping in `rules`.
+    Returns a series with precision `prec` in the generator `x`
+
+      p:     input polynomial
+      rules: dict with substitution mappings
+      x:     variable in which the series truncation is done
+      prec:  order of the truncation
+
+    Note that substitutions are not done one after the other
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_subs
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x**2 + y**2
+    >>> rs_subs(p, {x: x+ y, y: x+ 2*y}, x, 3)
+    2*x**2 + 6*x*y + 5*y**2
+    >>> (x + y)**2 + (x + 2*y)**2
+    2*x**2 + 6*x*y + 5*y**2
+
+    which differs from
+
+    >>> rs_subs(rs_subs(p, {x: x+ y}, x, 3), {y: x+ 2*y}, x, 3)
+    5*x**2 + 12*x*y + 8*y**2
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_subs
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_subs(x**2+y**2, {y: (x+y)**2}, x, 3)
+     6*x**2*y**2 + x**2 + 4*x*y**3 + y**4
+    """
+    R = p.ring
+    ngens = R.ngens
+    d = R(0)
+    for i in range(R.ngens):
+        d[(i, 1)] = R.gens[i]
+    for var in rules:
+        d[(R.index(var), 1)] = rules[var]
+    p1 = R(0)
+    p_keys = sorted(p.keys())
+    for expv in p_keys:
+        p2 = R(1)
+        for i in range(ngens):
+            power = expv[i]
+            if power == 0:
+                continue
+            if (i, power) not in d:
+                q, r = divmod(power, 2)
+                if r == 0 and (i, q) in d:
+                    d[(i, power)] = rs_square(d[(i, q)], x, prec)
+                elif (i, power - 1) in d:
+                    d[(i, power)] = rs_mul(d[(i, power - 1)], d[(i, 1)], \
+                        x, prec)
+                else:
+                    d[(i, power)] = rs_pow(d[(i, 1)], power, x, prec)
+            p2 = rs_mul(p2, d[(i, power)], x, prec)
+        p1 += p2*p[expv]
+    return p1
 
 def _has_constant_term(p, x):
     """
@@ -1478,71 +1552,6 @@ def rs_hadamard_exp(p1, inverse=False):
         for exp1, v1 in p1.items():
             p[exp1] = v1*int(ifac(exp1[0]))
     return p
-
-def rs_subs(p, rules, x, prec):
-    """
-    Substitution with truncation according to the mapping in `rules`.
-    Returns a series with precision `prec` in the generator `x`
-
-      p:     input polynomial
-      rules: dict with substitution mappings
-      x:     variable in which the series truncation is done
-      prec:  order of the truncation
-
-    Note that substitutions are not done one after the other
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_subs
-    >>> R, x, y = ring('x, y', QQ)
-    >>> p = x**2 + y**2
-    >>> rs_subs(p, {x: x+ y, y: x+ 2*y}, x, 3)
-    2*x**2 + 6*x*y + 5*y**2
-    >>> (x + y)**2 + (x + 2*y)**2
-    2*x**2 + 6*x*y + 5*y**2
-
-    which differs from
-
-    >>> rs_subs(rs_subs(p, {x: x+ y}, x, 3), {y: x+ 2*y}, x, 3)
-    5*x**2 + 12*x*y + 8*y**2
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_subs
-    >>> R, x, y = ring('x, y', QQ)
-    >>> rs_subs(x**2+y**2, {y: (x+y)**2}, x, 3)
-     6*x**2*y**2 + x**2 + 4*x*y**3 + y**4
-    """
-    R = p.ring
-    ngens = R.ngens
-    d = R(0)
-    for i in range(R.ngens):
-        d[(i, 1)] = R.gens[i]
-    for var in rules:
-        d[(R.index(var), 1)] = rules[var]
-    p1 = R(0)
-    p_keys = sorted(p.keys())
-    for expv in p_keys:
-        p2 = R(1)
-        for i in range(ngens):
-            power = expv[i]
-            if power == 0:
-                continue
-            if (i, power) not in d:
-                q, r = divmod(power, 2)
-                if r == 0 and (i, q) in d:
-                    d[(i, power)] = rs_square(d[(i, q)], x, prec)
-                elif (i, power - 1) in d:
-                    d[(i, power)] = rs_mul(d[(i, power - 1)], d[(i, 1)], \
-                        x, prec)
-                else:
-                    d[(i, power)] = rs_pow(d[(i, 1)], power, x, prec)
-            p2 = rs_mul(p2, d[(i, power)], x, prec)
-        p1 += p2*p[expv]
-    return p1
 
 def rs_compose_add(p1, p2):
     """
