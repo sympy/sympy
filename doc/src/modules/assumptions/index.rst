@@ -50,13 +50,6 @@ from module sympy.assumptions. ::
      True
 
 
-Supported predicates
-====================
-
-.. autoclass:: sympy.assumptions.ask.AssumptionKeys
-   :members:
-
-
 Design
 ======
 
