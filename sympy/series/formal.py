@@ -273,6 +273,16 @@ class FormalPowerSeries(SeriesBase):
     def length(self):
         return oo
 
+    @property
+    def infinite(self):
+        """returns an infinite representation of the series"""
+        from sympy.concrete import Sum
+
+        ak, xk = self.ak, self.xk
+        k = ak.variables[0]
+
+        return self.ind + Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
+
     def truncate(self, n=6):
         """Returns truncated series
         expansion of f upto order O(x**n)
@@ -293,15 +303,6 @@ class FormalPowerSeries(SeriesBase):
             x0 = S.Infinity
 
         return Add(*terms) + Order(pt_xk, (x, x0))
-
-    def as_infinite(self):
-        """returns an infinite representation of the series"""
-        from sympy.concrete import Sum
-
-        ak, xk = self.ak, self.xk
-        k = ak.variables[0]
-
-        return self.ind + Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
     def _eval_term(self, pt):
         pt_xk = self.xk.coeff(pt)

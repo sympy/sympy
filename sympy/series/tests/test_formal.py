@@ -70,7 +70,7 @@ def test_fps():
     assert f.as_leading_term(x) == x
 
     k = f.ak.variables[0]
-    assert f.as_infinite() == Sum((-(-1)**(-k)*x**k)/k, (k, 1, oo))
+    assert f.infinite == Sum((-(-1)**(-k)*x**k)/k, (k, 1, oo))
 
 
 def test_fps__rational():
