@@ -382,7 +382,6 @@ def get_known_facts():
         Equivalent(Q.irrational | Q.rational, Q.real),
         Implies(Q.irrational, ~Q.rational),
         Implies(Q.nonzero, Q.real),
-        Equivalent(Q.nonzero, Q.positive | Q.negative),
         Equivalent(Q.nonpositive, ~Q.positive & Q.real),
         Equivalent(Q.nonnegative, ~Q.negative & Q.real),
         Equivalent(Q.zero, Q.real & ~Q.nonzero),
