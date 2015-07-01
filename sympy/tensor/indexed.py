@@ -134,7 +134,7 @@ class Indexed(Expr):
     """
     is_commutative = True
 
-    def __new__(cls, base, *args, **kw_args):
+    def __new__(cls, base, *args):
         from sympy.utilities.misc import filldedent
 
         if not args:
@@ -145,7 +145,11 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol or IndexedBase as base."""))
         args = list(map(sympify, args))
-        return Expr.__new__(cls, base, *args, **kw_args)
+        return Expr.__new__(cls, base, *args)
+
+    @property
+    def free_symbols(self):
+        return set(self.args)
 
     @property
     def base(self):
