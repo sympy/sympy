@@ -69,7 +69,6 @@ def get_known_facts_cnf():
         Or(Not(Q.irrational), Not(Q.rational)),
         Or(Not(Q.negative), Not(Q.positive)),
         Or(Not(Q.negative), Not(Q.zero)),
-        Or(Not(Q.nonzero), Not(Q.zero)),
         Or(Not(Q.positive), Not(Q.zero)),
         Or(Not(Q.complex), Q.algebraic, Q.transcendental),
         Or(Not(Q.integer), Q.even, Q.odd),
