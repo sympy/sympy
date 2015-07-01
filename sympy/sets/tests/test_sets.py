@@ -846,3 +846,11 @@ def test_SymmetricDifference():
           Set(2, 3, 4) - Set(1, 2, 3))
    assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
           Interval(2, 5), Interval(2, 5) - Interval(0, 4))
+
+
+def test_issue_9447():
+    a = Interval(1, 2) + Interval(3, 4)
+    assert Complement(S.UniversalSet, a) == Complement(S.UniversalSet, \
+            Union(Interval(1, 2), Interval(3, 4)))
+    assert Complement(Complement(S.UniversalSet, Interval(1, 2)), \
+            Union(Interval(3, 4), Interval(5, 6)))
