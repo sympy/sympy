@@ -877,7 +877,8 @@ def test_linsolve():
 
 def test_issue_9556():
     x = Symbol('x', real=True)
-    b = Symbol('b', real=True, positive=True)
+    b = Symbol('b', positive=True)
 
     assert solveset(Abs(x) + 1, x) == EmptySet()
     assert solveset(Abs(x) + b, x) == EmptySet()
+    assert solveset(Eq(b, -1), b) == EmptySet()

@@ -856,6 +856,9 @@ def solveset(f, symbol=None):
 
     f = sympify(f)
 
+    if f is S.false:
+        return EmptySet()
+
     if isinstance(f, Eq):
         from sympy.core import Add
         f = Add(f.lhs, - f.rhs, evaluate=False)
