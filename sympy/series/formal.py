@@ -231,6 +231,7 @@ class FormalPowerSeries(SeriesBase):
     sympy.series.formal.compute_fps
     """
     def __new__(cls, *args):
+        args = map(sympify, args)
         return Expr.__new__(cls, *args)
 
     @property
@@ -247,15 +248,15 @@ class FormalPowerSeries(SeriesBase):
 
     @property
     def ak(self):
-        return self.args[4]
+        return self.args[4][0]
 
     @property
     def xk(self):
-        return self.args[5]
+        return self.args[4][1]
 
     @property
     def ind(self):
-        return self.args[6]
+        return self.args[4][2]
 
     @property
     def interval(self):
@@ -427,4 +428,6 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     if result is None:
         return f
 
-    return FormalPowerSeries(f, x, x0, dir, *result)
+    ak, xk, ind = result
+
+    return FormalPowerSeries(f, x, x0, dir, (ak, xk, ind))
