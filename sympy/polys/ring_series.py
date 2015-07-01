@@ -6,7 +6,7 @@ from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
 from sympy.core import S, evaluate
-from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh
+from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -462,7 +462,7 @@ def fun(p, f, *args):
       args[-2] = iv: names of the series variables
       args[-1] = prec: list of the precisions of the series variables
 
-    The case with f method name is used to compute tan and nth_root
+    The case with f method name is used to compute rs_tan and rs_nth_root
     of a multivariate series:
 
       fun(p, tan, iv, prec)
@@ -482,7 +482,7 @@ def fun(p, f, *args):
 
     """
     _R = p.ring
-    R1, _x = ring('_x', _R)
+    R1, _x = ring('_x', _R.domain)
     h = int(args[-1])
     args1 = args[:-2] + (_x, h)
     zm = _R.zero_monom
@@ -543,11 +543,31 @@ def rs_log(p, x, prec):
     R = p.ring
     if p == 1:
         return 0
-    if _has_constant_term(p - 1, x):
-        raise NotImplementedError('p - 1 must not have a constant term in the series variables')
-    dlog = p.diff(x)
-    dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
-    return rs_integrate(dlog, x)
+    if _has_constant_term(p, x):
+        const = 0
+        zm = R.zero_monom
+        c = p[zm]
+        if c == 1:
+            pass
+        else:
+            c_expr = c.as_expr()
+            if R.domain is EX:
+                const = log(c_expr)
+            elif isinstance(c, PolyElement):
+                try:
+                    const = R(log(c_expr))
+                except ValueError:
+                    raise DomainError("The given series can't be expanded in this "
+                        "domain.")
+            else:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain")
+
+        dlog = p.diff(x)
+        dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
+        return rs_integrate(dlog, x) + const
+    else:
+        raise NotImplementedError
 
 def rs_LambertW(p, iv, prec):
     """
@@ -777,7 +797,10 @@ def rs_tan(p, x, prec):
         t = rs_series_inversion(1 - const*t2, x, prec)
         return rs_mul(const + t2, t, x, prec)
 
-    return _tan1(p, x, prec)
+    if R.ngens == 1:
+        return _tan1(p, x, prec)
+    else:
+        return fun(p, _tan1, x, prec)
 
 def rs_sin(p, x, prec):
     """
@@ -1092,7 +1115,10 @@ def rs_tanh(p, x, prec):
         t = rs_series_inversion(1 + const*t1, x, prec)
         return rs_mul(const + t1, t, x, prec)
 
-    return _tanh(p, x, prec)
+    if R.ngens == 1:
+        return _tanh(p, x, prec)
+    else:
+        return fun(p, _tanh, x, prec)
 
 def rs_newton(p, x, prec):
     """

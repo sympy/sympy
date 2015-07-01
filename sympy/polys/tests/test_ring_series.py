@@ -8,7 +8,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh
+from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh, log
 
 def test_ring_series1():
     R, x = ring('x', QQ)
@@ -142,6 +142,18 @@ def test_log():
     p1 = rs_log(p, x, 6)
     assert p1 == (4*x**5*y**2 - 2*x**5*y - 2*x**4*y**2 + x**5/5 + 2*x**4*y -
                   x**4/4 - 2*x**3*y + x**3/3 + 2*x**2*y - x**2/2 + x)
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', EX)
+    assert rs_log(x + a, x, 5) == -EX(1/(4*a**4))*x**4 + EX(1/(3*a**3))*x**3 \
+        - EX(1/(2*a**2))*x**2 + EX(1/a)*x + EX(log(a))
+    assert rs_log(x + x**2*y + a, x, 4) == -EX(a**(-2))*x**3*y + \
+        EX(1/(3*a**3))*x**3 + EX(1/a)*x**2*y - EX(1/(2*a**2))*x**2 + \
+        EX(1/a)*x + EX(log(a))
+
+    p = x + x**2 + 3
+    assert rs_log(p, x, 10).compose(x, 5) == EX(log(3) + 19281291595/9920232)
 
 def test_exp():
     R, x = ring('x', QQ)
