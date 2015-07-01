@@ -411,8 +411,8 @@ def solveset_real(f, symbol):
         # if f(x) and g(x) are both finite we can say that the solution of
         # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
         # general. g(x) can grow to infinitely large for the values where
-        # f(x) == 0. To be sure that we not are silently allowing any
-        # wrong solutions we are using this technique only if both f and g and
+        # f(x) == 0. To be sure that we are not silently allowing any
+        # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solveset_real(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
