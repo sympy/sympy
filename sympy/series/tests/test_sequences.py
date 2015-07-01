@@ -1,5 +1,5 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
-                   SeqFormula, sequence, SeqAdd, SeqMul)
+                   SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx)
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 
@@ -246,3 +246,11 @@ def test_operations():
 
     assert form.coeff_mul(m) == SeqFormula(m*n**2, (n, 0, oo))
     assert per.coeff_mul(m) == SeqPer((m, 2*m), (n, 0, oo))
+
+
+def test_Idx_limits():
+    i = symbols('i', cls=Idx)
+    r = Indexed('r', i)
+
+    assert SeqFormula(r, (i, 0, 5))[:] == [r.subs(i, j) for j in range(6)]
+    assert SeqPer((1, 2), (i, 0, 5))[:] == [1, 2, 1, 2, 1, 2]
