@@ -77,6 +77,13 @@ matrix:
     - python: 2.7
       env:
         - TEST_THEANO="true"
+      addons:
+        apt:
+          packages:
+          - libatlas-dev
+          - libatlas-base-dev
+          - liblapack-dev
+          - gfortran
     - python: 3.4
       env:
         - TEST_THEANO="true"
