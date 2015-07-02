@@ -852,3 +852,9 @@ def test_SymmetricDifference():
           Set(2, 3, 4) - Set(1, 2, 3))
    assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
           Interval(2, 5), Interval(2, 5) - Interval(0, 4))
+
+
+def test_issue_9536():
+    from sympy.functions.elementary.exponential import log
+    a = Symbol('a', real=True)
+    assert FiniteSet(log(a)).intersect(S.Reals) == Intersection((-oo, oo), {log(a)})
