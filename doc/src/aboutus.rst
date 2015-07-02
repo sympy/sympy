@@ -413,6 +413,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kevin Ventullo: Fix some problems with matrix expressions
 #. Longqi Wang: Fix for plotting of piecewise functions
 #. Isuru Fernando: Use docker for travis testing
+#. Shivam Tyagi solveset_complex(0, x) now returns S.Complex
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
