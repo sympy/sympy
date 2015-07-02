@@ -1750,3 +1750,28 @@ def rs_compose_add(p1, p2):
     if dp:
         q = q*x**dp
     return q
+
+
+class RingSeries(object):
+    """Sparse Multivariate Ring Series"""
+
+    def __init__(cls, series, ring, degree=None):
+        cls.series = series
+        cls.ring = ring
+        if degree:
+            cls.degree = degree
+
+    def __repr__(f):
+        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.series,
+            f.ring.domain, f.ring.gens)
+
+    def __hash__(f):
+        return hash((f.__class__.__name__, tuple(p.listterms()), f.ring))
+
+    #def degree():
+
+
+
+
+
+
