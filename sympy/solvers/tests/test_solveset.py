@@ -4,7 +4,8 @@ from sympy import (
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
     tan, tanh, atan2, arg,
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, oo)
+    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
+    oo)
 
 from sympy.core.function import nfloat
 from sympy.functions.elementary.complexes import im, re
@@ -40,7 +41,7 @@ def test_invert_real():
     x = Dummy(real=True)
     n = Symbol('n')
     d = Dummy()
-    assert solveset(abs(x) - n, x) == solveset(abs(x) - d, x) == EmptySet()
+    assert solveset(abs(x) - n, x) == Intersection(S.Reals, FiniteSet(-n, n))
 
     n = Symbol('n', real=True)
     assert invert_real(x + 3, y, x) == (x, FiniteSet(y - 3))
