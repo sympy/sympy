@@ -412,6 +412,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Gaurav Dhingra: M.row_del(index) and M.col_del(index) raise IndexError for out of bound Index
 #. Kevin Ventullo: Fix some problems with matrix expressions
 #. Longqi Wang: Fix for plotting of piecewise functions
+#. Isuru Fernando: Use docker for travis testing
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
