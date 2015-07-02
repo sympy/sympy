@@ -467,5 +467,5 @@ def test_check_precision():
 
     prec = check_precision(x**QQ(1, 2) + x**QQ(3, 2), x, 3)
     p = rs_exp(x**QQ(1, 2) + x**QQ(3, 2), x, prec)
-    assert rs_trunc(p, x, 3) == 61*x**(5/2)/120 + 25*x**2/24 + 7*x**(3/2)/6 + \
-        x/2 + x**(1/2) + 1
+    assert rs_trunc(p, x, 3) == 61*x**QQ(5, 2)/120 + 25*x**2/24 + \
+        7*x**QQ(3, 2)/6 + x/2 + x**QQ(1, 2) + 1
