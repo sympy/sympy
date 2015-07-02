@@ -148,10 +148,6 @@ class Indexed(Expr):
         return Expr.__new__(cls, base, *args)
 
     @property
-    def free_symbols(self):
-        return set(self.args)
-
-    @property
     def base(self):
         """Returns the IndexedBase of the Indexed object.
 

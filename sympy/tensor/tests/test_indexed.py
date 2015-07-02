@@ -192,9 +192,3 @@ def test_Indexed_coeff():
     a = (1/y[i+1]*y[i]).coeff(y[i])
     b = (y[i]/y[i+1]).coeff(y[i])
     assert a == b
-
-
-def test_Indexed_free_symbols():
-    i, j = symbols('i j', cls=Idx)
-    r = IndexedBase('r')
-    assert Indexed(r, i, j).free_symbols.difference(set([i, r, j])) == set()

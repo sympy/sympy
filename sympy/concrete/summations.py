@@ -11,6 +11,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 from sympy.core.compatibility import range
+from sympy.tensor.indexed import Idx
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -176,6 +177,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
+            if isinstance(i, Idx):
+                i = i.label
 
             newf = eval_sum(f, (i, a, b))
             if newf is None:
