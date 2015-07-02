@@ -2,7 +2,8 @@ from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
                    airyai)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
-                                 rational_independent, simpleDE, exp_re)
+                                 rational_independent, simpleDE, exp_re,
+                                 hyper_re)
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
@@ -98,6 +99,26 @@ def test_exp_re():
 
     d = Derivative(f(x), x, 3) + Derivative(f(x), x, 4) + Derivative(f(x))
     assert exp_re(d, r, k) == r(k) + r(k + 2) + r(k + 3)
+
+
+def test_hyper_re():
+    d = f(x) + Derivative(f(x), x, x)
+    assert hyper_re(d, r, k) == r(k) + (k+1)*(k+2)*r(k + 2)
+
+    d = -x*f(x) + Derivative(f(x), x, x)
+    assert hyper_re(d, r, k) == (k + 2)*(k + 3)*r(k + 3) - r(k)
+
+    d = 2*f(x) - 2*Derivative(f(x), x) + Derivative(f(x), x, x)
+    assert hyper_re(d, r, k) == \
+        (-2*k - 2)*r(k + 1) + (k + 1)*(k + 2)*r(k + 2) + 2*r(k)
+
+    d = 2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
+    assert hyper_re(d, r, k) == \
+        k*r(k) + 2*n*r(k + 1) + (-k - 2)*r(k + 2)
+
+    d = (x**10 + 4)*Derivative(f(x), x) + x*(x**10 - 1)*Derivative(f(x), x, x)
+    assert hyper_re(d, r, k) == \
+        (k*(k - 1) + k)*r(k) + (4*k - (k + 9)*(k + 10) + 40)*r(k + 10)
 
 
 def test_fps():
