@@ -1,3 +1,8 @@
+"""
+Contains the base class for series
+Made using sequences in mind
+"""
+
 from __future__ import print_function, division
 
 from sympy.core.expr import Expr
@@ -47,13 +52,13 @@ class SeriesBase(Expr):
     def term(self, pt):
         """Term at point pt of a series"""
         if pt < self.start or pt > self.stop:
-            raise IndexError("Index %s out of bounds %s" %(pt, self.interval))
+            raise IndexError("Index %s out of bounds %s" % (pt, self.interval))
         return self._eval_term(pt)
 
     def _eval_term(self, pt):
         raise NotImplementedError("The _eval_term method should be added to"
-                                  " %s to return series term so it is available"
-                                  " when 'term' calls it."
+                                  "%s to return series term so it is available"
+                                  "when 'term' calls it."
                                   % self.func)
 
     def _ith_point(self, i):
@@ -94,4 +99,4 @@ class SeriesBase(Expr):
             if stop is None:
                 stop = self.length
             return [self.term(self._ith_point(i)) for i in
-                               range(start, stop, index.step or 1)]
+                    range(start, stop, index.step or 1)]

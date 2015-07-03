@@ -33,7 +33,7 @@ def fourier_sin_seq(func, limits, n):
     x, L = limits[0], limits[2] - limits[1]
     sin_term = sin(2*n*pi*x / L)
     return SeqFormula(2 * sin_term * integrate(func * sin_term, limits)
-                        / L, (n, 1, oo))
+                      / L, (n, 1, oo))
 
 
 def _process_limits(func, limits):
@@ -67,7 +67,7 @@ def _process_limits(func, limits):
             raise ValueError(
                 " specify dummy variables for %s. If the function contains"
                 " more than one free symbol, a dummy variable should be"
-                " supplied explicitly e.g., FourierSeries(m*n**2, (n, -pi, pi))"
+                " supplied explicitly e.g. FourierSeries(m*n**2, (n, -pi, pi))"
                 % func)
 
     x, start, stop = None, None, None
@@ -85,8 +85,7 @@ def _process_limits(func, limits):
 
     unbounded = [S.NegativeInfinity, S.Infinity]
     if start in unbounded or stop in unbounded:
-            raise ValueError("Both the start and end value"
-                             " should be bounded")
+        raise ValueError("Both the start and end value should be bounded")
 
     return sympify((x, start, stop))
 
@@ -191,7 +190,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" %(s, x))
+            raise ValueError("'%s' should be independent of %s" % (s, x))
 
         a0 = self.a0 + s
         sfunc = self.function + s
@@ -220,7 +219,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" %(s, x))
+            raise ValueError("'%s' should be independent of %s" % (s, x))
 
         an = self.an.subs(x, x + s)
         bn = self.bn.subs(x, x + s)
@@ -250,7 +249,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" %(s, x))
+            raise ValueError("'%s' should be independent of %s" % (s, x))
 
         an = self.an.coeff_mul(s)
         bn = self.bn.coeff_mul(s)
@@ -281,7 +280,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" %(s, x))
+            raise ValueError("'%s' should be independent of %s" % (s, x))
 
         an = self.an.subs(x, x * s)
         bn = self.bn.subs(x, x * s)
@@ -382,17 +381,17 @@ def fourier_series(f, limits=None):
     f = sympify(f)
 
     limits = _process_limits(f, limits)
-    x, lower, upper = limits
+    x = limits[0]
 
     if x not in f.free_symbols:
         return f
 
     n = Dummy('n')
-    neg_f= f.subs(x, -x)
+    neg_f = f.subs(x, -x)
     if f == neg_f:
         a0, an = fourier_cos_seq(f, limits, n)
         bn = SeqFormula(0, (1, oo))
-    elif f== -neg_f:
+    elif f == -neg_f:
         a0 = S.Zero
         an = SeqFormula(0, (1, oo))
         bn = fourier_sin_seq(f, limits, n)
