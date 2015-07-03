@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
+from sympy.core.mul import Mul
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
@@ -11,13 +12,13 @@ from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
 from sympy.polys import lcm
-from sympy.sets.sets import Interval, Set, Intersection
+from sympy.sets.sets import Interval, Intersection
 from sympy.utilities.iterables import flatten
 
 
-################################################################################
-#                            SEQUENCES                                         #
-################################################################################
+###############################################################################
+#                            SEQUENCES                                        #
+###############################################################################
 
 
 class SeqBase(Basic):
@@ -101,13 +102,13 @@ class SeqBase(Basic):
     def coeff(self, pt):
         """Returns the coefficient at point pt"""
         if pt < self.start or pt > self.stop:
-            raise IndexError("Index %s out of bounds %s" %(pt, self.interval))
+            raise IndexError("Index %s out of bounds %s" % (pt, self.interval))
         return self._eval_coeff(pt)
 
     def _eval_coeff(self, pt):
         raise NotImplementedError("The _eval_coeff method should be added to"
-                                  " %s to return coefficient so it is available"
-                                  " when coeff calls it."
+                                  "%s to return coefficient so it is available"
+                                  "when coeff calls it."
                                   % self.func)
 
     def _ith_point(self, i):
@@ -197,7 +198,7 @@ class SeqBase(Basic):
         '*' defines multiplication of sequences with sequences only.
         For multiplying sequences use ``mul`` method.
         """
-        return Mul(self, coeff)
+        return Mul(self, other)
 
     def __add__(self, other):
         """
@@ -294,7 +295,7 @@ class SeqBase(Basic):
             if stop is None:
                 stop = self.length
             return [self.coeff(self._ith_point(i)) for i in
-                               range(start, stop, index.step or 1)]
+                    range(start, stop, index.step or 1)]
 
 
 class EmptySequence(with_metaclass(Singleton, SeqBase)):
@@ -392,6 +393,8 @@ class SeqPer(SeqExpr):
     ========
 
     >>> from sympy import SeqPer, oo
+    >>> from sympy.abc import k
+
     >>> s = SeqPer((1, 2, 3), (0, 5))
     >>> s.periodical
     (1, 2, 3)
@@ -418,6 +421,11 @@ class SeqPer(SeqExpr):
     >>> SeqPer((1, 2, 3), (-oo, 0))[0:6]
     [1, 2, 3, 1, 2, 3]
 
+    Periodic formulas
+
+    >>> SeqPer((k, k**2, k**3), (k, 0, oo))[0:6]
+    [0, 1, 8, 3, 16, 125]
+
     See Also
     ========
 
@@ -425,14 +433,23 @@ class SeqPer(SeqExpr):
     """
 
     def __new__(cls, periodical, limits=None):
+        periodical = sympify(periodical)
+
+        def _find_x(periodical):
+            free = periodical.free_symbols
+            if len(periodical.free_symbols) == 1:
+                return free.pop()
+            else:
+                return Dummy('k')
+
         x, start, stop = None, None, None
         if limits is None:
-            x, start, stop = Dummy('k'), 0, S.Infinity
+            x, start, stop = _find_x(periodical), 0, S.Infinity
         if is_sequence(limits, Tuple):
             if len(limits) == 3:
                 x, start, stop = limits
             elif len(limits) == 2:
-                x = Dummy('k')
+                x = _find_x(periodical)
                 start, stop = limits
 
         if not isinstance(x, Symbol) or start is None or stop is None:
@@ -440,7 +457,7 @@ class SeqPer(SeqExpr):
 
         if start is S.NegativeInfinity and stop is S.Infinity:
                 raise ValueError("Both the start and end value"
-                                " cannot be unbounded")
+                                 "cannot be unbounded")
 
         limits = sympify((x, start, stop))
 
@@ -448,7 +465,7 @@ class SeqPer(SeqExpr):
             periodical = sympify(tuple(flatten(periodical)))
         else:
             raise ValueError("invalid period %s should be something "
-                            "like e.g (1, 2) " % periodical)
+                             "like e.g (1, 2) " % periodical)
 
         if Interval(limits[1], limits[2]) is S.EmptySet:
             return S.EmptySequence
@@ -468,7 +485,7 @@ class SeqPer(SeqExpr):
             idx = (self.stop - pt) % self.period
         else:
             idx = (pt - self.start) % self.period
-        return self.periodical[idx]
+        return self.periodical[idx].subs(self.variables[0], pt)
 
     def _add(self, other):
         """See docstring of SeqBase._add"""
@@ -582,7 +599,7 @@ class SeqFormula(SeqExpr):
 
         if start is S.NegativeInfinity and stop is S.Infinity:
                 raise ValueError("Both the start and end value"
-                                " cannot be unbounded")
+                                 "cannot be unbounded")
         limits = sympify((x, start, stop))
 
         if Interval(limits[1], limits[2]) is S.EmptySet:
@@ -654,9 +671,9 @@ def sequence(seq, limits=None):
         return SeqFormula(seq, limits)
 
 
-################################################################################
-#                            OPERATIONS                                        #
-################################################################################
+###############################################################################
+#                            OPERATIONS                                       #
+###############################################################################
 
 
 class SeqExprOp(SeqBase):

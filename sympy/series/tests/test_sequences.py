@@ -1,5 +1,5 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
-                   SeqFormula, sequence, SeqAdd, SeqMul, Mul)
+                   SeqFormula, sequence, SeqAdd, SeqMul)
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 
@@ -41,11 +41,16 @@ def test_SeqPer():
 
     assert list(s) == [1, n, 3, 1, n, 3]
     assert s[:] == [1, n, 3, 1, n, 3]
-    assert SeqPer((1, n, 3), (-oo, 0))[0:6] == [1, n, 3, 1, n, 3]
+    assert SeqPer((1, n, 3), (x, -oo, 0))[0:6] == [1, n, 3, 1, n, 3]
 
     raises(ValueError, lambda: SeqPer((1, 2, 3), (0, 1, 2)))
     raises(ValueError, lambda: SeqPer((1, 2, 3), (x, -oo, oo)))
     raises(ValueError, lambda: SeqPer(n**2, (0, oo)))
+
+    assert SeqPer((n, n**2, n**3), (m, 0, oo))[:6] == \
+        [n, n**2, n**3, n, n**2, n**3]
+    assert SeqPer((n, n**2, n**3), (n, 0, oo))[:6] == [0, 1, 8, 3, 16, 125]
+    assert SeqPer((n, m), (n, 0, oo))[:6] == [0, m, 2, m, 4, m]
 
 
 def test_SeqFormula():
@@ -114,7 +119,7 @@ def test_SeqAdd():
 
     assert isinstance(SeqAdd(per, per_bou, evaluate=False), SeqAdd)
 
-    s1 =  SeqAdd(per, per_bou)
+    s1 = SeqAdd(per, per_bou)
     assert isinstance(s1, SeqPer)
     assert s1 == SeqPer((2, 4, 4, 3, 3, 5), (n, 1, 5))
     s2 = SeqAdd(form, form_bou)
@@ -129,7 +134,7 @@ def test_SeqAdd():
         SeqAdd(per, SeqFormula(2*n**2, (6, 10)))
 
     assert SeqAdd(SeqPer((1, 2), (n, 0, oo)), SeqPer((1, 2), (m, 0, oo))) == \
-                  SeqPer((2, 4), (n, 0, oo))
+        SeqPer((2, 4), (n, 0, oo))
 
 
 def test_SeqMul():
@@ -153,7 +158,7 @@ def test_SeqMul():
 
     assert isinstance(SeqMul(per, per_bou, evaluate=False), SeqMul)
 
-    s1 =  SeqMul(per, per_bou)
+    s1 = SeqMul(per, per_bou)
     assert isinstance(s1, SeqPer)
     assert s1 == SeqPer((1, 4, 3, 2, 2, 6), (n, 1, 5))
     s2 = SeqMul(form, form_bou)
@@ -164,9 +169,9 @@ def test_SeqMul():
         SeqMul(per, SeqFormula(n**4, (6, 10)))
     assert SeqMul(form, SeqMul(form_bou, per)) == \
         SeqMul(per, SeqFormula(n**4, (6, 10)))
-    assert SeqMul(per, SeqMul(form, form_bou2, \
+    assert SeqMul(per, SeqMul(form, form_bou2,
                               evaluate=False), evaluate=False) == \
-                                SeqMul(form, per, form_bou2, evaluate=False)
+        SeqMul(form, per, form_bou2, evaluate=False)
 
     assert SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqPer((1, 2), (n, 0, oo))) == \
         SeqPer((1, 4), (n, 0, oo))
