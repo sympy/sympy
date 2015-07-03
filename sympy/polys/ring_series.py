@@ -1361,7 +1361,7 @@ def _rs_sin(p, x, prec):
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
-    if len(p) > 20 and p.ngens == 1:
+    if len(p) > 20 and R.ngens == 1:
         t = rs_tan(p/2, x, prec)
         t2 = rs_square(t, x, prec)
         p1 = rs_series_inversion(1 + t2, x, prec)
@@ -1802,33 +1802,45 @@ class RingSeries(RingSeriesBase):
             return self.degree
 
 class rs_sin(RingSeriesBase):
+    def new(self, args, **kwargs):
+        return self.__class__(args, **kwargs)
+
     def __init__(cls, ring_series):
+        cls.ring_series = ring_series
         cls.series = ring_series.series
-        cls.ring = ring_series.ring
 
     def __repr__(self):
-        return "rs_sin(%s)" % self.series
+        return "rs_sin(%s)" % self.ring_series
 
-    def eval(self, x, prec):
+    def _eval(self, x, prec):
         return _rs_sin(self.series, x, prec)
 
 class rs_cos(RingSeriesBase):
+    def new(self, args, **kwargs):
+        return self.__class__(args, **kwargs)
+
     def __init__(cls, ring_series):
+        cls.ring_series = ring_series
         cls.series = ring_series.series
-        cls.ring = ring_series.ring
 
     def __repr__(self):
-        return "rs_cos(%s)" % self.series
+        return "rs_cos(%s)" % self.ring_series
 
-    def eval(self, x, prec):
+    def _eval(self, x, prec):
         return _rs_cos(self.series, x, prec)
 
-def ring_series(series, x, prec=5, x0=0):
+def taylor_series(series, x, prec=5, x0=0):
     if isinstance(series, RingSeriesBase):
-        if hasattr(series, "eval"):
-            return series.eval(x, prec)
+        if hasattr(series, "_eval"):
+            if isinstance(series.ring_series, RingSeries):
+                return RingSeries(series._eval(x, prec))
+            elif isinstance(series.ring_series, RingSeriesBase):
+                series_inner = taylor_series(series.ring_series, x, prec + 1)
+                return RingSeries(series.new(series_inner)._eval(x, prec))
+            else:
+                raise TypeError("The series shoud be a RingSeries")
         else:
             return series
     else:
-        raise TypeError("The series should be a ring series")
+        raise TypeError("The series should be a RingSeries")
 
