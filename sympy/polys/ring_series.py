@@ -387,7 +387,40 @@ def _series_inversion1(p, x, prec):
     return p1
 
 
-def rs_series_inversion(p, x, prec):
+def _series_inversion2(p, x, prec):
+    """
+    Univariate series inversion ``1/p`` modulo ``O(x**prec)``
+
+    The expansion `1/(a + b) = 1/a - b/a**2 + ...` is used.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.core.numbers import Rational
+    >>> from sympy.polys.ring_series import _series_inversion2
+    >>> R, x = ring('x', QQ)
+    >>> p = 1 + x**Rational(1, 4)
+    >>> _series_inversion2(p, x, 2)
+    -x**(7/4) + x**(3/2) - x**(5/4) + x - x**(3/4) + x**(1/2) - x**(1/4) + 1
+
+    """
+    ring = p.ring
+    zm = ring.zero_monom
+    ii = ring.gens.index(x)
+    pm = min(p, key=lambda k: k[ii])
+    c = p[pm]
+    b = p/c - 1
+    pm1 = min(b, key=lambda k: k[ii])
+    prec1 = prec/pm1[ii]
+    ca = [(-1)**(i+1) for i in range(1, prec1 + 1)]
+    r = rs_series_from_list(b, ca, x, prec)
+    r = r/c
+    return r
+
+
+def rs_series_inversion(p, x, prec, algo='newton'):
     """
     Multivariate series inversion ``1/p`` modulo ``O(x**prec)``
 
@@ -402,18 +435,28 @@ def rs_series_inversion(p, x, prec):
     -x**3*y**6 + x**2*y**4 - x*y**2 + 1
     >>> rs_series_inversion(1 + x*y**2, y, 4)
     -x*y**2 + 1
+    >>> rs_series_inversion(x + x**2, x, 4)
+    x**3 - x**2 + x - 1 + x**-1
     """
     R = p.ring
     zm = R.zero_monom
     ii = R.gens.index(x)
     m = min(p, key=lambda k: k[ii])[ii]
     if m:
-        raise NotImplementedError('no constant term in series')
+        p = mul_xin(p, ii, -m)
+        prec = prec + m
     if zm not in p:
         raise NotImplementedError('no constant term in series')
+
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
-    return _series_inversion1(p, x, prec)
+    if algo == 'newton':
+        r = _series_inversion1(p, x, prec)
+    else:
+        r = _series_inversion2(p, x, prec)
+    if m != 0:
+        r = mul_xin(r, ii, -m)
+    return r
 
 
 def _coefficient_t(p, t):
@@ -695,7 +738,6 @@ def mul_xin(p, i, n):
 
     x_i is the ith variable in p
     """
-    n = as_int(n)
     R = p.ring
     q = R(0)
     for k, v in p.items():
