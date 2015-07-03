@@ -883,3 +883,12 @@ def test_issue_9556():
     assert solveset(Abs(x) + 1, x) == EmptySet()
     assert solveset(Abs(x) + b, x) == EmptySet()
     assert solveset(Eq(b, -1), b) == EmptySet()
+
+
+def test_issue_9611():
+    x = Symbol('x', real=True)
+    a = Symbol('a', real=True)
+    y = Symbol('y')
+
+    assert solveset(Eq(x - x + a, a), x) == S.Reals
+    assert solveset(Eq(y - y + a, a), y) == S.Complex

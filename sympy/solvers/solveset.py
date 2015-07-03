@@ -859,6 +859,12 @@ def solveset(f, symbol=None):
     if f is S.false:
         return EmptySet()
 
+    if f is S.true:
+        if real:
+            return S.Reals
+        else:
+            return S.Complex
+
     if isinstance(f, Eq):
         from sympy.core import Add
         f = Add(f.lhs, - f.rhs, evaluate=False)
