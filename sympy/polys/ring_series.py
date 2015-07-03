@@ -1,5 +1,5 @@
 from sympy.polys.domains import QQ, EX, ExpressionDomain
-from sympy.polys.rings import PolyElement, ring
+from sympy.polys.rings import PolyElement, PolyRing, ring
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
     monomial_ldiv)
@@ -1755,6 +1755,9 @@ def rs_compose_add(p1, p2):
 class RingSeries(object):
     """Sparse Multivariate Ring Series"""
 
+    def new(self, *args, **kwargs):
+        return self.__class__(*args, **kwargs)
+
     def __init__(cls, series, ring, degree=None):
         cls.series = series
         cls.ring = ring
@@ -1765,13 +1768,33 @@ class RingSeries(object):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f.series,
             f.ring.domain, f.ring.gens)
 
-    def __hash__(f):
-        return hash((f.__class__.__name__, tuple(p.listterms()), f.ring))
+    def __pos__(self):
+        return self
 
-    #def degree():
+    def __neg__(self):
+        return self.new(-self.series, self.ring)
 
+    def __add__(self, other):
+        if self.ring == other.ring:
+            return self.new(self.series + other.series, self.ring)
+        else:
+            raise DomainError("Both the series should be defined on the same"
+                "ring")
 
+    def __mul__(self, other):
+        if self.ring == other.ring:
+            return self.new(self.series * other.series, self.ring)
+        else:
+            raise DomainError("Both the series should be defined on the same"
+                "ring")
 
+    def __sub__(self, other):
+        return self + (-other)
 
-
+    def get_degree(self):
+        if self.degree:
+            return self.degree
+        else:
+            self.degree = self.series.degree()
+            return self.degree
 
