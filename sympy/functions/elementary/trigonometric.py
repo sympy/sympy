@@ -6,10 +6,12 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import igcdex, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.core.logic import fuzzy_not
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log, exp
-from sympy.functions.elementary.hyperbolic import acoth, asinh, atanh, cosh, coth, HyperbolicFunction, sinh, tanh
+from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
+    coth, HyperbolicFunction, sinh, tanh)
 from sympy.utilities.iterables import numbered_symbols
 from sympy.core.compatibility import range
 
@@ -26,7 +28,7 @@ class TrigonometricFunction(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational and s.args[0].is_nonzero:
+            if s.args[0].is_rational and fuzzy_not(s.args[0].is_zero):
                 return False
         else:
             return s.is_rational
@@ -34,7 +36,7 @@ class TrigonometricFunction(Function):
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if self.args[0].is_nonzero and self.args[0].is_algebraic:
+            if fuzzy_not(self.args[0].is_zero) and self.args[0].is_algebraic:
                 return False
             pi_coeff = _pi_coeff(self.args[0])
             if pi_coeff is not None and pi_coeff.is_rational:
@@ -1637,7 +1639,7 @@ class sinc(TrigonometricFunction):
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is not None:
             if pi_coeff.is_integer:
-                if arg.is_nonzero:
+                if fuzzy_not(arg.is_zero):
                     return S.Zero
             elif (2*pi_coeff).is_integer:
                 return S.NegativeOne**(pi_coeff - S.Half) / arg
@@ -2599,7 +2601,7 @@ class atan2(InverseTrigonometricFunction):
                     return -S.Pi/2
                 elif y.is_zero:
                     return S.NaN
-        if y.is_zero and x.is_real and x.is_nonzero:
+        if y.is_zero and x.is_real and fuzzy_not(x.is_zero):
             return S.Pi * (S.One - Heaviside(x))
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(

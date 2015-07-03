@@ -542,9 +542,9 @@ class Mul(Expr, AssocOp):
             #   bounded_real + infinite_im
             #   infinite_real + infinite_im
             # and non-zero real or imaginary will not change that status.
-            c_part = [c for c in c_part if not (c.is_nonzero and
+            c_part = [c for c in c_part if not (fuzzy_not(c.is_zero) and
                                                 c.is_real is not None)]
-            nc_part = [c for c in nc_part if not (c.is_nonzero and
+            nc_part = [c for c in nc_part if not (fuzzy_not(c.is_zero) and
                                                   c.is_real is not None)]
 
         # 0
@@ -1115,7 +1115,7 @@ class Mul(Expr, AssocOp):
             if a:
                 others = list(self.args)
                 others.remove(t)
-                if all((x.is_rational and x.is_nonzero) is True for x in others):
+                if all((x.is_rational and fuzzy_not(x.is_zero)) is True for x in others):
                     return True
                 return
             if a is None:

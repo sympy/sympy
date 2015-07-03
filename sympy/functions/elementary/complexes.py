@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
+from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.elementary.trigonometric import atan2
 
@@ -257,7 +258,7 @@ class sign(Function):
     is_complex = True
 
     def doit(self):
-        if self.args[0].is_nonzero:
+        if self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
         return self
 
@@ -309,7 +310,7 @@ class sign(Function):
                 return -S.ImaginaryUnit
 
     def _eval_Abs(self):
-        if self.args[0].is_nonzero:
+        if fuzzy_not(self.args[0].is_zero):
             return S.One
 
     def _eval_conjugate(self):
@@ -344,8 +345,7 @@ class sign(Function):
 
     def _eval_power(self, other):
         if (
-            self.args[0].is_real and
-            self.args[0].is_nonzero and
+            fuzzy_not(self.args[0].is_zero) and
             other.is_integer and
             other.is_even
         ):
@@ -497,8 +497,13 @@ class Abs(Function):
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
 
+    def _eval_is_zero(self):
+            return self._args[0].is_zero
+
     def _eval_is_positive(self):
-        return self.is_nonzero
+        is_z = self.is_zero
+        if is_z is not None:
+            return not is_z
 
     def _eval_is_rational(self):
         if self.args[0].is_real:

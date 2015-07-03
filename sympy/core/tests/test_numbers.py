@@ -5,6 +5,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     mpf_norm, comp)
 from mpmath import mpf
@@ -1289,7 +1290,7 @@ def test_zoo():
             assert (zoo + i) is S.NaN
             assert (zoo - i) is S.NaN
 
-        if i.is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not(i.is_zero) and (i.is_real or i.is_imaginary):
             assert i*zoo is zoo
             assert zoo*i is zoo
         elif i.is_zero:
@@ -1299,7 +1300,7 @@ def test_zoo():
             assert (i*zoo).is_Mul
             assert (zoo*i).is_Mul
 
-        if (1/i).is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not((1/i).is_zero) and (i.is_real or i.is_imaginary):
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN
