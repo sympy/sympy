@@ -382,10 +382,10 @@ def _series_inversion1(p, x, prec):
     else:
         p1 = R(1)
     for precx in _giant_steps(prec):
-        tmp = p1.square()
-        tmp = rs_mul(tmp, p, x, precx)
-        p1 = 2*p1 - tmp
+        t = 1 - rs_mul(p1, p, x, precx)
+        p1 = p1 + rs_mul(p1, t, x, precx)
     return p1
+
 
 def rs_series_inversion(p, x, prec):
     """
@@ -414,6 +414,7 @@ def rs_series_inversion(p, x, prec):
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     return _series_inversion1(p, x, prec)
+
 
 def _coefficient_t(p, t):
     """
