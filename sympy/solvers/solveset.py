@@ -76,6 +76,7 @@ def _invert_real(f, g_ys, symbol):
                             imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, Abs):
+        g_ys = g_ys - FiniteSet(*[g_y for g_y in g_ys if g_y.is_negative])
         return _invert_real(f.args[0],
                             Union(g_ys, imageset(Lambda(n, -n), g_ys)), symbol)
 
@@ -410,8 +411,8 @@ def solveset_real(f, symbol):
         # if f(x) and g(x) are both finite we can say that the solution of
         # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
         # general. g(x) can grow to infinitely large for the values where
-        # f(x) == 0. To be sure that we not are silently allowing any
-        # wrong solutions we are using this technique only if both f and g and
+        # f(x) == 0. To be sure that we are not silently allowing any
+        # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solveset_real(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
@@ -854,6 +855,9 @@ def solveset(f, symbol=None):
     real = (symbol.is_real is True)
 
     f = sympify(f)
+
+    if f is S.false:
+        return EmptySet()
 
     if isinstance(f, Eq):
         from sympy.core import Add

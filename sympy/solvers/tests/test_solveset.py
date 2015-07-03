@@ -873,3 +873,12 @@ def test_linsolve():
     sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
                     (f - c*e/a)/(d - b*c/a)))
     assert linsolve(system, [x, y]) == sol
+
+
+def test_issue_9556():
+    x = Symbol('x', real=True)
+    b = Symbol('b', positive=True)
+
+    assert solveset(Abs(x) + 1, x) == EmptySet()
+    assert solveset(Abs(x) + b, x) == EmptySet()
+    assert solveset(Eq(b, -1), b) == EmptySet()
