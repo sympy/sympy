@@ -1305,7 +1305,7 @@ def rs_cot(p, x, prec):
     res = rs_trunc(res, x, prec)
     return res
 
-def rs_sin(p, x, prec):
+def _rs_sin(p, x, prec):
     """
     Sine of a series
 
@@ -1375,7 +1375,7 @@ def rs_sin(p, x, prec):
         n *= -k*(k + 1)
     return rs_series_from_list(p, c, x, prec)
 
-def rs_cos(p, x, prec):
+def _rs_cos(p, x, prec):
     """
     Cosine of a series
 
@@ -1752,21 +1752,24 @@ def rs_compose_add(p1, p2):
     return q
 
 
-class RingSeries(object):
+class RingSeriesBase(object):
+    pass
+
+class RingSeries(RingSeriesBase):
     """Sparse Multivariate Ring Series"""
 
     def new(self, *args, **kwargs):
         return self.__class__(*args, **kwargs)
 
-    def __init__(cls, series, ring, degree=None):
+    def __init__(cls, series, degree=None):
         cls.series = series
-        cls.ring = ring
+        cls.ring = series.ring
         if degree:
             cls.degree = degree
 
-    def __repr__(f):
-        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.series,
-            f.ring.domain, f.ring.gens)
+    def __repr__(self):
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, self.series,
+            self.ring.domain, self.ring.gens)
 
     def __pos__(self):
         return self
@@ -1797,4 +1800,35 @@ class RingSeries(object):
         else:
             self.degree = self.series.degree()
             return self.degree
+
+class rs_sin(RingSeriesBase):
+    def __init__(cls, ring_series):
+        cls.series = ring_series.series
+        cls.ring = ring_series.ring
+
+    def __repr__(self):
+        return "rs_sin(%s)" % self.series
+
+    def eval(self, x, prec):
+        return _rs_sin(self.series, x, prec)
+
+class rs_cos(RingSeriesBase):
+    def __init__(cls, ring_series):
+        cls.series = ring_series.series
+        cls.ring = ring_series.ring
+
+    def __repr__(self):
+        return "rs_cos(%s)" % self.series
+
+    def eval(self, x, prec):
+        return _rs_cos(self.series, x, prec)
+
+def ring_series(series, x, prec=5, x0=0):
+    if isinstance(series, RingSeriesBase):
+        if hasattr(series, "eval"):
+            return series.eval(x, prec)
+        else:
+            return series
+    else:
+        raise TypeError("The series should be a ring series")
 
