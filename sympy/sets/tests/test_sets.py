@@ -238,7 +238,13 @@ def test_intersect():
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
-        FiniteSet(2, 3, 4, 5)
+        Union(FiniteSet(2, 3, 4, 5), Intersection(FiniteSet(6), Union(Interval(0, 5), FiniteSet('ham'))))
+
+    # issue 8217
+    assert Intersection(FiniteSet(x), FiniteSet(y)) == \
+        Intersection(FiniteSet(x), FiniteSet(y), evaluate=False)
+    assert FiniteSet(x).intersect(S.Reals) == \
+        Intersection(S.Reals, FiniteSet(x), evaluate=False)
 
     # tests for the intersection alias
     assert Interval(0, 5).intersection(FiniteSet(1, 3)) == FiniteSet(1, 3)
@@ -846,3 +852,9 @@ def test_SymmetricDifference():
           Set(2, 3, 4) - Set(1, 2, 3))
    assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
           Interval(2, 5), Interval(2, 5) - Interval(0, 4))
+
+
+def test_issue_9536():
+    from sympy.functions.elementary.exponential import log
+    a = Symbol('a', real=True)
+    assert FiniteSet(log(a)).intersect(S.Reals) == Intersection(S.Reals, FiniteSet(log(a)))
