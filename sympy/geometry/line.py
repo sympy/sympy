@@ -8,22 +8,24 @@ Ray
 Segment
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, sympify, Dummy
+from sympy.core import Dummy, S, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (acos,
-     _pi_coeff as pi_coeff, sqrt, tan)
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, sqrt, tan)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
+from sympy.core.compatibility import is_sequence
+from sympy.core.decorators import deprecated
+
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .util import _symbol
-from sympy.core.compatibility import is_sequence
+
 
 # TODO: this should be placed elsewhere and reused in other modules
 
@@ -1150,7 +1152,7 @@ class Line(LinearEntity):
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
-            return self.equal(o)
+            return self.equals(o)
         elif not self.is_similar(o):
             return False
         else:
@@ -1187,7 +1189,11 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
+    @deprecated(useinstead="equals", deprecated_since_version="0.7.7")
     def equal(self, other):
+        return self.equals(other)
+
+    def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
             return False

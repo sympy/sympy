@@ -5,9 +5,9 @@ Contains
 Plane
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Dummy, Symbol, Rational
+from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
@@ -17,8 +17,9 @@ from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
-from .line3d import LinearEntity3D, Line3D, Segment3D, Ray3D
-from .line import Line, Segment, Ray
+from .line3d import Line3D, LinearEntity3D, Ray3D, Segment3D
+from .line import Line, Ray, Segment
+
 
 class Plane(GeometryEntity):
     """

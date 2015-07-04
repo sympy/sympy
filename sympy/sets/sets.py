@@ -1374,11 +1374,13 @@ class Intersection(Set):
         if len(args) == 0:
             raise TypeError("Intersection expected at least one argument")
 
+        # args can't be ordered for Partition see issue #9608
+        if 'Partition' not in [type(a).__name__ for a in args]:
+            args = list(ordered(args, Set._infimum_key))
+
         # Reduce sets using known rules
         if evaluate:
             return Intersection.reduce(args)
-
-        args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
 
@@ -1431,8 +1433,14 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.func(*[x for x in s
-                    if all(other.contains(x) == True for other in args)])
+                other_args = [a for a in args if a != s]
+                res = FiniteSet(*[x for x in s
+                             if all(other.contains(x) == True for other in other_args)])
+                unk = [x for x in s
+                       if any(other.contains(x) not in (True, False) for other in other_args)]
+                if unk:
+                    res += Intersection(*([s.func(*unk)] + other_args), evaluate=False)
+                return res
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:

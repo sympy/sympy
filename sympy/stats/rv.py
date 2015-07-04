@@ -1037,9 +1037,10 @@ def pspace_independent(a, b):
     pspace_independent(a, b) implies independent(a, b)
     independent(a, b) does not imply pspace_independent(a, b)
     """
-    a_symbols = pspace(b).symbols
-    b_symbols = pspace(a).symbols
-    if len(a_symbols.intersect(b_symbols)) == 0:
+    a_symbols = set(pspace(b).symbols)
+    b_symbols = set(pspace(a).symbols)
+
+    if len(a_symbols.intersection(b_symbols)) == 0:
         return True
     return None
 
