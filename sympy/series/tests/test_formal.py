@@ -1,10 +1,10 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai)
+                   airyai, acos, acosh)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x, y, z = symbols('x y z')
 n, m, k = symbols('n m k')
@@ -28,9 +28,9 @@ def test_rational_algorithm():
     assert rational_algorithm(f, x, k) is None
     assert rational_algorithm(f, x, k, full=True) == \
         (((-Rational(1, 2) + sqrt(5)/2)**(-k - 1) *
-        (-sqrt(5)/10 + Rational(1,2))) +
-        ((-sqrt(5)/2 - Rational(1,2))**(-k - 1) *
-        (sqrt(5)/10 + Rational(1,2))), 0, 0)
+         (-sqrt(5)/10 + Rational(1, 2))) +
+         ((-sqrt(5)/2 - Rational(1, 2))**(-k - 1) *
+         (sqrt(5)/10 + Rational(1, 2))), 0, 0)
 
     f = 1 / (x**2 + 2*x + 2)
     assert rational_algorithm(f, x, k) is None
@@ -120,6 +120,12 @@ def test_hyper_re():
     assert hyper_re(d, r, k) == \
         (k*(k - 1) + k)*r(k) + (4*k - (k + 9)*(k + 10) + 40)*r(k + 10)
 
+    d = ((x**2 - 1)*Derivative(f(x), x, 3) + 3*x*Derivative(f(x), x, x) +
+         Derivative(f(x), x))
+    assert hyper_re(d, r, k) == \
+        ((k*(k - 2)*(k - 1) + 3*k*(k - 1) + k)*r(k) +
+         (-k*(k + 1)*(k + 2))*r(k + 2))
+
 
 def test_fps():
     raises(NotImplementedError, lambda: fps(y*x))
@@ -166,7 +172,7 @@ def test_fps__rational():
     assert fps(f, x, dir=1).truncate() == fps(f, x, dir=-1).truncate()
     assert fps(f, x, 2).truncate() == \
         (log(3) - Rational(2, 3) - (x - 2)**2/18 + (x - 2)**3/81
-         - (x - 2)**4/324 + (x -2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
+         - (x - 2)**4/324 + (x - 2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
     assert fps(f, x, 2, dir=-1).truncate() == \
         (log(3) - Rational(2, 3) - (-x + 2)**2/18 - (-x + 2)**3/81
          - (-x + 2)**4/324 - (-x + 2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
@@ -180,7 +186,8 @@ def test_fps__rational():
          - 6*(x - 2)**4/625 + 41*(x - 2)**5/15625 + x/5 + O((x - 2)**6, (x, 2)))
     assert fps(f, x, 2, full=True, dir=-1).truncate() == \
         (atan(2) - Rational(2, 5) - 2*(-x + 2)**2/25 - 11*(-x + 2)**3/375
-         - 6*(-x + 2)**4/625 - 41*(-x + 2)**5/15625 + x/5 + O((x - 2)**6, (x, 2)))
+         - 6*(-x + 2)**4/625 - 41*(-x + 2)**5/15625 + x/5 + O((x - 2)**6,
+                                                              (x, 2)))
     assert fps(f, x, oo, full=True).truncate() == \
         -1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2 + O(1/x**6, (x, oo))
     assert fps(f, x, -oo, full=True).truncate() == \
@@ -191,3 +198,51 @@ def test_fps__rational():
 
     f = log((1 + x) / (1 - x)) / 2 - atan(x)
     assert fps(f, x, full=True).truncate(n=10) == 2*x**3/3 + 2*x**7/7 + O(x**10)
+
+
+def test_fps__hyper():
+    f = sin(x)
+    assert fps(f, x).truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
+    f = cos(x)
+    assert fps(f, x).truncate() == 1 - x**2/2 + x**4/24 + O(x**6)
+
+    f = exp(x)
+    assert fps(f, x).truncate() == \
+        1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120 + O(x**6)
+
+    f = atan(x)
+    assert fps(f, x).truncate() == x - x**3/3 + x**5/5 + O(x**6)
+
+    f = exp(acos(x))
+    assert fps(f, x).truncate() == \
+        (exp(pi/2) - x*exp(pi/2) + x**2*exp(pi/2)/2 - x**3*exp(pi/2)/3 +
+         5*x**4*exp(pi/2)/24 - x**5*exp(pi/2)/6 + O(x**6))
+
+    f = exp(acosh(x))
+    assert fps(f, x).truncate() == I + x - I*x**2/2 - I*x**4/8 + O(x**6)
+
+
+@XFAIL
+def test_xfail_fps__hyper():
+    f = x*atan(x) - log(1 + x**2) / 2
+    assert fps(f, x, rational=False).truncate() == x**2/2 - x**4/12 + O(x**6)
+
+    f = atan(1/x)
+    assert fps(f, x).truncate() == pi/2 - x + x**3/3 - x**5/5 + O(x**6)
+
+    f = exp(x)
+    assert fps(f, x, -oo).truncate() == O(1/x**6, (x, oo))
+
+    f = sin(sqrt(x)) / x
+    assert fps(f, x).truncate() == \
+        (1/sqrt(x) - sqrt(x)/6 + x**Rational(3, 2)/120 - x**Rational(5, 2)/5040
+         + x**Rational(7, 2)/362880 - x**Rational(9, 2)/39916800
+         + x**Rational(11, 2)/6227020800 + O(x**6))
+
+    f = log(1 + x)
+    assert fps(f, x, rational=False).truncate() == \
+        x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
+
+    f = x*exp(x)*sin(2*x)
+    assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)

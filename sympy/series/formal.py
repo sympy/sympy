@@ -10,8 +10,11 @@ from sympy.core.function import Derivative, Function
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
+from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.miscellaneous import Min
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.series.order import Order
@@ -74,7 +77,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     from sympy.polys import RootSum, apart
 
     diff = f
-    ds = [] # list of diff
+    ds = []  # list of diff
 
     for i in range(order + 1):
         if i:
@@ -118,7 +121,8 @@ def rational_algorithm(f, x, k, order=4, full=False):
             # Hacky, better way?
             if coeff is S.Zero:
                 return None
-            if coeff.has(x) or coeff.has(zoo) or coeff.has(oo) or coeff.has(nan):
+            if (coeff.has(x) or coeff.has(zoo) or coeff.has(oo) or
+                    coeff.has(nan)):
                 return None
 
             from sympy.integrals import integrate
@@ -199,7 +203,7 @@ def simpleDE(f, x, g, order=4):
     (x + 1)*Derivative(f(x), x, x) + Derivative(f(x), x)
     """
     from sympy.solvers import solve
-    a = symbols('a:%d' %(order))
+    a = symbols('a:%d' % (order))
 
     def _makeDE(k):
         eq = f.diff(x, k) + Add(*[a[i]*f.diff(x, i) for i in range(0, k)])
@@ -253,7 +257,6 @@ def exp_re(DE, r, k):
     RE = S.Zero
 
     g = DE.atoms(Function).pop()
-    x = g.atoms(Symbol).pop()
 
     mini = None
     for t in Add.make_args(DE):
@@ -313,13 +316,209 @@ def hyper_re(DE, r, k):
         RE += c * rf(k + 1 - l, j) * r(k + j - l)
         if mini is None or j - l < mini:
             mini = j - l
-    if mini > 0:
-        RE = RE.subs(k, k + mini)
-    else:
-        RE = RE.subs(k, k - mini)
+
+    RE = RE.subs(k, k - mini)
 
     m = Wild('m')
     return RE.collect(r(k + m))
+
+
+def rsolve_hypergeometric(f, x, P, Q, k, m):
+    """
+    Attempts to solve RE of the form
+
+    Q(k)*a(k + m) - P(k)*a(k)
+
+    Transformations that preserve Hypergeometric type:
+        a. x**n*f(x): b(k + m) = R(k - n)*b(k)
+        b. f(A*x): b(k + m) = A**m*R(k)*b(k)
+        c. f(x**n): b(k + n*m) = R(k/n)*b(k)
+        d. f(x**(1/m)): b(k + 1) = R(k*m)*b(k)
+        e. f'(x): b(k + m) = ((k + m + 1)/(k + 1))*R(k + 1)*b(k)
+
+    Some of these transformations have been used to solve
+    the RE
+
+    returns a Tuple of (formula, series independent terms, order) if successful
+    otherwise None.
+
+    Examples
+    ========
+
+    >>> from sympy import exp, S
+    >>> from sympy.series.formal import rsolve_hypergeometric as rh
+    >>> from sympy.abc import x, k
+
+    >>> rh(exp(x), x, -S.One, (k + 1), k, 1)
+    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+
+    References
+    ==========
+
+    .. [1] Formal Power Series - Dominik Gruntz, Wolfram Koepf
+    .. [2] Power Series in Computer Algebra - Wolfram Koepf
+    """
+    from sympy.polys import lcm, roots
+
+    # tranformation - c
+    proots, qroots = roots(P, k), roots(Q, k)
+    sol = dict(proots)
+    sol.update(qroots)
+    scale = lcm([r.as_numer_denom()[1] for r, t in sol.items()
+                 if r.is_rational])
+
+    f = f.subs(x, x**scale)
+    m *= scale
+    P = P.subs(k, k / scale)
+    Q = Q.subs(k, k / scale)
+
+    # transformation - a
+    qroots = roots(Q, k)
+    k_min = Min(*qroots.keys())
+    shift = k_min + m
+    f *= x**(-shift)
+    P = P.subs(k, k + shift)
+    Q = Q.subs(k, k + shift)
+
+    if (x*f).limit(x, 0) is not S.Zero:
+        return None
+
+    sol = []
+    for i in range(m):
+        res = S.One
+
+        r = f.diff(x, i).limit(x, 0) / factorial(i)
+        if r is S.Zero:
+            continue
+        elif r.is_finite is False:
+            return None
+
+        res *= r
+
+        p = P.subs(k, m*k + i)
+        q = Q.subs(k, m*k + i)
+        c1 = p.subs(k, 1/k).leadterm(k)[0]
+        c2 = q.subs(k, 1/k).leadterm(k)[0]
+        res *= (-c1 / c2)**k
+
+        for r, mul in roots(p, k).items():
+            res *= rf(-r, k)**mul
+        for r, mul in roots(q, k).items():
+            res /= rf(-r, k)**mul
+
+        t_p = (m*k + i + shift) / scale
+        j, mk = t_p.as_coeff_Add()
+        c = mk.coeff(k)
+
+        if j.is_integer is False:
+            res *= x**(j)
+            j = S.Zero
+        if c is S.One:
+            j = S.Zero
+
+        res = res.subs(k, (k - j) / c)
+
+        sol.append((res, Eq(k % c, j)))
+
+    sol.append((S.Zero, True))
+
+    return (Piecewise(*sol), S.Zero, S.Zero)
+
+
+def solve_re(f, x, RE, g, k):
+    """
+    Solves the RE
+
+    If The RE is of the form Q(k)*a(k + m) - P(k)*a(k),
+    uses :func:`rsolve_hypergeometric`,
+    otherwise fallsback to :func:`rsolve`
+
+    returns a Tuple of (formula, series independent terms, order) if successful
+    otherwise None.
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.series.formal import solve_re
+    >>> from sympy.abc import x, k, f
+
+    >>> solve_re(exp(x), x, (k+1)*f(k+1) - f(k), f, k)
+    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+
+    See Also
+    ========
+
+    sympy.series.formal.rsolve_hypergeometric
+    sympy.solvers.recurr.rsolve
+
+    """
+    m = Wild('m')
+    RE = RE.collect(g(k + m))
+    terms = Add.make_args(RE)
+
+    if len(terms) == 2:
+        gs = list(RE.atoms(Function))
+        P, Q = map(RE.coeff, gs)
+        m = gs[1].args[0] - gs[0].args[0]
+        if m < 0:
+            P, Q = Q, P
+            m = abs(m)
+        return rsolve_hypergeometric(f, x, P, Q, k, m)
+
+    init = {}
+    for i in range(len(terms)):
+        if i:
+            f = f.diff(x)
+        init[g(k).subs(k, i)] = f.subs(x, 0) / factorial(i)
+
+    from sympy.solvers import rsolve
+    sol = rsolve(RE, g(k), init)
+
+    if sol:
+        return (sol, S.Zero, S.Zero)
+
+
+def hyper_algorithm(f, x, k, order=4):
+    """Hypergeometric algorithm
+
+    Steps:
+        * Compute a simpleDE
+        * Convert the DE into RE
+        * Solve The RE
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.series.formal import hyper_algorithm
+
+    >>> from sympy.abc import x, k
+
+    >>> hyper_algorithm(exp(x), x, k)
+    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+
+    See Also
+    ========
+
+    sympy.series.formal.simpleDE
+    sympy.series.formal.hyper_re
+    sympy.series.formal.solve_re
+    """
+    g = Function('g')
+
+    DE = simpleDE(f, x, g, order)
+
+    if DE is None:
+        return None
+
+    RE = hyper_re(DE, g, k)
+    sol = solve_re(f, x, RE, g, k)
+
+    if sol is None:
+        return None
+
+    return sol
 
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
@@ -381,15 +580,18 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=Fals
         return (result[0], result[1].subs(x, rep2 + rep2b),
                 result[2].subs(x, rep2 + rep2b))
 
+    if f.is_polynomial(x):
+        return None
+
     result = None
 
     # from here on it's x0=0 and dir=1 handling
+    k = Dummy('k')
     if rational:
-        k = Dummy('k')
         result = rational_algorithm(f, x, k, order, full)
 
     if result is None and hyper:
-        return None # TODO
+        result = hyper_algorithm(f, x, k, order)
 
     if result is None:
         return None
@@ -525,7 +727,7 @@ class FormalPowerSeries(SeriesBase):
                         ind += t
 
         try:
-            pt_ak = self.ak.coeff(pt).simplify() # TODO: Thoughts?
+            pt_ak = self.ak.coeff(pt).simplify()  # TODO: Thoughts?
         except IndexError:
             pt_ak = S.Zero
 
@@ -599,7 +801,7 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     sympy.series.formal.FormalPowerSeries
     sympy.series.formal.compute_fps
     """
-    f= sympify(f)
+    f = sympify(f)
 
     if x is None:
         free = f.free_symbols
