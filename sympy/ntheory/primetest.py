@@ -4,7 +4,8 @@ Primality testing
 """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, as_int
+from sympy.core.numbers import Float
 
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
@@ -89,7 +90,9 @@ def mr(n, bases):
     from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
-    n = int(n)
+    if isinstance(n, (float, Float)):
+        return False
+    n = as_int(n)
     if n < 2:
         return False
     # remove powers of 2 from n = t * 2**s + 1
@@ -204,7 +207,9 @@ def isprime(n):
     sympy.ntheory.generate.prime : Return the nth prime
 
     """
-    n = int(n)
+    if isinstance(n, (float, Float)):
+        return False
+    n = as_int(n)
     if n < 2:
         return False
     if n & 1 == 0:

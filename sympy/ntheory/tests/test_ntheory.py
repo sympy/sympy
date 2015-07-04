@@ -138,6 +138,9 @@ def test_isprime():
     assert _mr_safe_helper(
         "if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])") == \
         ' # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases'
+    #Floating point numbers
+    assert not isprime(3.3)
+    assert not isprime(11.7)
 
 
 def test_prime():
