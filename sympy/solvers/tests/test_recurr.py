@@ -72,7 +72,7 @@ def test_rsolve_hyper():
     assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
         C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
 
-    assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == None
+    assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) is None
 
 
 def recurrence_term(c, f):
@@ -183,6 +183,10 @@ def test_rsolve():
     assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
             (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
              C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0
+
+    assert rsolve((k + 1)*y(k), y(k)) is None
+    assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
+            is None)
 
 
 def test_rsolve_raises():
