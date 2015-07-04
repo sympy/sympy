@@ -1753,19 +1753,17 @@ def rs_compose_add(p1, p2):
 
 
 class RingSeriesBase(object):
-    pass
-
-class RingSeries(RingSeriesBase):
-    """Sparse Multivariate Ring Series"""
-
     def new(self, *args, **kwargs):
         return self.__class__(*args, **kwargs)
 
-    def __init__(cls, series, degree=None):
-        cls.series = series
-        cls.ring = series.ring
+
+class RingSeries(RingSeriesBase):
+    """Sparse Multivariate Ring Series"""
+    def __init__(self, series, degree=None):
+        self.series = series
+        self.ring = series.ring
         if degree:
-            cls.degree = degree
+            self.degree = degree
 
     def __repr__(self):
         return "%s(%s, %s, %s)" % (self.__class__.__name__, self.series,
@@ -1802,12 +1800,9 @@ class RingSeries(RingSeriesBase):
             return self.degree
 
 class rs_sin(RingSeriesBase):
-    def new(self, args, **kwargs):
-        return self.__class__(args, **kwargs)
-
-    def __init__(cls, ring_series):
-        cls.ring_series = ring_series
-        cls.series = ring_series.series
+    def __init__(self, ring_series):
+        self.ring_series = ring_series
+        self.series = ring_series.series
 
     def __repr__(self):
         return "rs_sin(%s)" % self.ring_series
@@ -1816,12 +1811,9 @@ class rs_sin(RingSeriesBase):
         return _rs_sin(self.series, x, prec)
 
 class rs_cos(RingSeriesBase):
-    def new(self, args, **kwargs):
-        return self.__class__(args, **kwargs)
-
-    def __init__(cls, ring_series):
-        cls.ring_series = ring_series
-        cls.series = ring_series.series
+    def __init__(self, ring_series):
+        self.ring_series = ring_series
+        self.series = ring_series.series
 
     def __repr__(self):
         return "rs_cos(%s)" % self.ring_series
@@ -1838,7 +1830,7 @@ def taylor_series(series, x, prec=5, x0=0):
                 series_inner = taylor_series(series.ring_series, x, prec + 1)
                 return RingSeries(series.new(series_inner)._eval(x, prec))
             else:
-                raise TypeError("The series shoud be a RingSeries")
+                raise TypeError("The series should be a RingSeries")
         else:
             return series
     else:
