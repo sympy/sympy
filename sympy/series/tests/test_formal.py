@@ -68,6 +68,7 @@ def test_fps():
     assert f.subs(x, y) == f
     assert f[:5] == [0, x, -x**2/2, x**3/3, -x**4/4]
     assert f.as_leading_term(x) == x
+    assert f.polynomial(6) == x - x**2/2 + x**3/3 - x**4/4 + x**5/5
 
     k = f.ak.variables[0]
     assert f.infinite == Sum((-(-1)**(-k)*x**k)/k, (k, 1, oo))

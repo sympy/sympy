@@ -284,13 +284,12 @@ class FormalPowerSeries(SeriesBase):
 
         return self.ind + Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
-    def truncate(self, n=6):
-        """Returns truncated series
-        expansion of f upto order O(x**n)
-        """
-        if n is None:
-            return iter(self)
+    def polynomial(self, n=6):
+        """truncated series as polynomial.
 
+        returns series sexpansion of f upto order ``O(x**n)``
+        as a polynomial (without ``O`` term)
+        """
         terms = []
         for i, t in enumerate(self):
             if i >= n:
@@ -298,12 +297,25 @@ class FormalPowerSeries(SeriesBase):
             if t is not S.Zero:
                 terms.append(t)
 
+        return Add(*terms)
+
+    def truncate(self, n=6):
+        """truncated series.
+
+        returns truncated series expansion of f upto
+        order ``O(x**n)``
+
+        if n is ``None``, returns an infinite iterator
+        """
+        if n is None:
+            return iter(self)
+
         x, x0 = self.x, self.x0
-        pt_xk = self.xk.coeff(i)
+        pt_xk = self.xk.coeff(n)
         if x0 is S.NegativeInfinity:
             x0 = S.Infinity
 
-        return Add(*terms) + Order(pt_xk, (x, x0))
+        return self.polynomial(n) + Order(pt_xk, (x, x0))
 
     def _eval_term(self, pt):
         pt_xk = self.xk.coeff(pt)
