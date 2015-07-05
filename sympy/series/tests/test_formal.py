@@ -235,6 +235,10 @@ def test_fps__hyper():
     f = x*exp(x)*sin(2*x)  # TODO: solved using rsolve, improve algo
     assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
 
+    f = x**2*atan(x)
+    assert fps(f, x, rational=False).truncate() == \
+        x**3 - x**5/3 + O(x**6)
+
 
 @XFAIL
 def test_xfail_fps__hyper():

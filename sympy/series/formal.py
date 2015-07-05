@@ -390,10 +390,11 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     qroots = roots(Q, k)
     k_max = Max(*qroots.keys())
     ind = S.Zero
-    if k_max >= 0:
+    if k_max + m >= 0:
         for i in range(k_max + m + 1):
             r = f.diff(x, i).limit(x, 0) / factorial(i)
-            ind += r*x**i
+            ind += r*x**(i + shift)
+        ind = ind.subs(x, x**(1/scale))
         s, e = k_max + 1, m + k_max + 1
     else:
         s, e = 0, m
@@ -435,8 +436,9 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
     sol.append((S.Zero, True))
 
-    if k_max >= 0:
-        return (Piecewise(*sol), ind, k_max + m + 1)
+
+    if k_max + m >= 0:
+        return (Piecewise(*sol), ind, k_max + m + 1 + shift)
     else:
         return (Piecewise(*sol), S.Zero, S.Zero)
 
