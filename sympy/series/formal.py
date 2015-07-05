@@ -350,7 +350,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     >>> from sympy.abc import x, k
 
     >>> rh(exp(x), x, -S.One, (k + 1), k, 1)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> rh(ln(1 + x), x, k**2, k*(k + 1), k, 1)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -426,16 +426,11 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         j, mk = t_p.as_coeff_Add()
         c = mk.coeff(k)
 
-        #if j.is_integer is False:
-            #res *= x**(j)
-            #j = S.Zero
-
         res = res.subs(k, (k - j) / c)
 
         sol.append((res, Eq(k % c, j % m)))
 
     sol.append((S.Zero, True))
-
 
     if k_max + m >= 0:
         return (Piecewise(*sol), ind, k_max + m + 1 + shift)
@@ -462,7 +457,7 @@ def solve_re(f, x, RE, g, k):
     >>> from sympy.abc import x, k, f
 
     >>> solve_re(exp(x), x, (k+1)*f(k+1) - f(k), f, k)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> solve_re(ln(1 + x), x, k*(k + 1)*f(k + 1) + k**2*f(k), f, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -518,7 +513,7 @@ def hyper_algorithm(f, x, k, order=4):
     >>> from sympy.abc import x, k
 
     >>> hyper_algorithm(exp(x), x, k)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> hyper_algorithm(ln(1 + x), x, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -547,7 +542,8 @@ def hyper_algorithm(f, x, k, order=4):
     return sol
 
 
-def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
+def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
+                full=False):
     """Computes the formula for Formal Power Series of a function
 
     returns (sequence of coefficients, sequence of x, independent terms)
@@ -605,6 +601,35 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=Fals
             return None
         return (result[0], result[1].subs(x, rep2 + rep2b),
                 result[2].subs(x, rep2 + rep2b))
+
+    #  Break instances of Add
+    #  this allows application of different
+    #  algorithms on different terms increasing the
+    #  range of admissible functions.
+    if isinstance(f, Add):
+        result = False
+        ak = sequence(S.Zero, (0, oo))
+        ind, xk = S.Zero, None
+        for t in Add.make_args(f):
+            res = compute_fps(t, x, 0, S.One, hyper, order, rational, full)
+            if res:
+                if not result:
+                    result = True
+                    xk = res[1]
+                if res[0].start > ak.start:
+                    seq = ak
+                    s, f = ak.start, res[0].start
+                else:
+                    seq = res[0]
+                    s, f = res[0].start, ak.start
+                save = Add(*[z[0]*z[1] for z in zip(seq[0:(f - s)], xk[s:f])])
+                ak += res[0]
+                ind += res[2] + save
+            else:
+                ind += t
+        if result:
+            return ak, xk, ind
+        return None
 
     if f.is_polynomial(x):
         return None
