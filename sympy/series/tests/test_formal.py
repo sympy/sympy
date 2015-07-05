@@ -222,15 +222,22 @@ def test_fps__hyper():
     f = exp(acosh(x))
     assert fps(f, x).truncate() == I + x - I*x**2/2 - I*x**4/8 + O(x**6)
 
-
-@XFAIL
-def test_xfail_fps__hyper():
-    f = x*atan(x) - log(1 + x**2) / 2
-    assert fps(f, x, rational=False).truncate() == x**2/2 - x**4/12 + O(x**6)
-
     f = atan(1/x)
     assert fps(f, x).truncate() == pi/2 - x + x**3/3 - x**5/5 + O(x**6)
 
+    f = x*atan(x) - log(1 + x**2) / 2
+    assert fps(f, x, rational=False).truncate() == x**2/2 - x**4/12 + O(x**6)
+
+    f = log(1 + x)
+    assert fps(f, x, rational=False).truncate() == \
+        x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
+
+    f = x*exp(x)*sin(2*x)  # TODO: solved using rsolve, improve algo
+    assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
+
+
+@XFAIL
+def test_xfail_fps__hyper():
     f = exp(x)
     assert fps(f, x, -oo).truncate() == O(1/x**6, (x, oo))
 
@@ -239,10 +246,3 @@ def test_xfail_fps__hyper():
         (1/sqrt(x) - sqrt(x)/6 + x**Rational(3, 2)/120 - x**Rational(5, 2)/5040
          + x**Rational(7, 2)/362880 - x**Rational(9, 2)/39916800
          + x**Rational(11, 2)/6227020800 + O(x**6))
-
-    f = log(1 + x)
-    assert fps(f, x, rational=False).truncate() == \
-        x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
-
-    f = x*exp(x)*sin(2*x)
-    assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)

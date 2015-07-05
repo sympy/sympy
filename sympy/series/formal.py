@@ -14,7 +14,7 @@ from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.miscellaneous import Min
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.series.order import Order
@@ -345,12 +345,16 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     Examples
     ========
 
-    >>> from sympy import exp, S
+    >>> from sympy import exp, ln, S
     >>> from sympy.series.formal import rsolve_hypergeometric as rh
     >>> from sympy.abc import x, k
 
     >>> rh(exp(x), x, -S.One, (k + 1), k, 1)
     (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+
+    >>> rh(ln(1 + x), x, k**2, k*(k + 1), k, 1)
+    (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
+     Eq(Mod(k, 1), 0)), (0, True)), x, 2)
 
     References
     ==========
@@ -383,8 +387,19 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     if (x*f).limit(x, 0) is not S.Zero:
         return None
 
+    qroots = roots(Q, k)
+    k_max = Max(*qroots.keys())
+    ind = S.Zero
+    if k_max >= 0:
+        for i in range(k_max + m + 1):
+            r = f.diff(x, i).limit(x, 0) / factorial(i)
+            ind += r*x**i
+        s, e = k_max + 1, m + k_max + 1
+    else:
+        s, e = 0, m
+
     sol = []
-    for i in range(m):
+    for i in range(s, e):
         res = S.One
 
         r = f.diff(x, i).limit(x, 0) / factorial(i)
@@ -410,19 +425,20 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         j, mk = t_p.as_coeff_Add()
         c = mk.coeff(k)
 
-        if j.is_integer is False:
-            res *= x**(j)
-            j = S.Zero
-        if c is S.One:
-            j = S.Zero
+        #if j.is_integer is False:
+            #res *= x**(j)
+            #j = S.Zero
 
         res = res.subs(k, (k - j) / c)
 
-        sol.append((res, Eq(k % c, j)))
+        sol.append((res, Eq(k % c, j % m)))
 
     sol.append((S.Zero, True))
 
-    return (Piecewise(*sol), S.Zero, S.Zero)
+    if k_max >= 0:
+        return (Piecewise(*sol), ind, k_max + m + 1)
+    else:
+        return (Piecewise(*sol), S.Zero, S.Zero)
 
 
 def solve_re(f, x, RE, g, k):
@@ -439,12 +455,16 @@ def solve_re(f, x, RE, g, k):
     Examples
     ========
 
-    >>> from sympy import exp
+    >>> from sympy import exp, ln
     >>> from sympy.series.formal import solve_re
     >>> from sympy.abc import x, k, f
 
     >>> solve_re(exp(x), x, (k+1)*f(k+1) - f(k), f, k)
     (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+
+    >>> solve_re(ln(1 + x), x, k*(k + 1)*f(k + 1) + k**2*f(k), f, k)
+    (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
+     Eq(Mod(k, 1), 0)), (0, True)), x, 2)
 
     See Also
     ========
@@ -490,13 +510,17 @@ def hyper_algorithm(f, x, k, order=4):
     Examples
     ========
 
-    >>> from sympy import exp
+    >>> from sympy import exp, ln
     >>> from sympy.series.formal import hyper_algorithm
 
     >>> from sympy.abc import x, k
 
     >>> hyper_algorithm(exp(x), x, k)
     (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 0, 0)
+
+    >>> hyper_algorithm(ln(1 + x), x, k)
+    (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
+     Eq(Mod(k, 1), 0)), (0, True)), x, 2)
 
     See Also
     ========
