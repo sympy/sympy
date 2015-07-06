@@ -5,7 +5,7 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
-from sympy.core.numbers import I, Number, Rational
+from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import fraction, trigsimp
@@ -13,7 +13,7 @@ from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.sets import FiniteSet, EmptySet, imageset, Union
+from sympy.sets import FiniteSet, EmptySet, imageset, Interval, Union
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -40,11 +40,11 @@ def invert_real(f_x, y, x):
     >>> from sympy import tan, Abs, exp
     >>> from sympy.abc import x, y, n
     >>> invert_real(exp(Abs(x)), y, x)
-    (x, {-log(y), log(y)})
+    (x, Intersection([0, oo), {log(y)}) U Intersection((-oo, 0], {-log(y)}))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
     >>> invert_real(Abs(x**31 + x), y, x)
-    (x**31 + x, {-y, y})
+    (x**31 + x, Intersection([0, oo), {y}) U Intersection((-oo, 0], {-y}))
     >>> invert_real(tan(x), y, x)
     (x, ImageSet(Lambda(_n, _n*pi + atan(y)), Integers()))
 
@@ -77,6 +77,17 @@ def _invert_real(f, g_ys, symbol):
 
     if isinstance(f, Abs):
         g_ys = g_ys - FiniteSet(*[g_y for g_y in g_ys if g_y.is_negative])
+
+        _a = []
+        from sympy.functions.elementary.complexes import sign
+        for g_y in g_ys:
+            if g_y.is_Mul and (g_y.args[0] == -1):
+                _a.append(FiniteSet(g_y).intersect(Interval(-oo, 0)))
+            else:
+                _a.append(FiniteSet(g_y).intersect(Interval(0, oo)))
+
+        g_ys = Union(*[element for element in _a if element.args])
+
         return _invert_real(f.args[0],
                             Union(g_ys, imageset(Lambda(n, -n), g_ys)), symbol)
 
