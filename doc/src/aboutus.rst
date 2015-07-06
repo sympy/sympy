@@ -392,6 +392,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Lokesh Sharma: reorder setup.py file imports to correct NameError
 #. Sartaj Singh: use \left \| instead of \lvert for latex Abs
 #. Chris Swierczewski: RootOf.evalf watches for root on interval boundary
+#. Sumith: implemented columnspace of a matrix
 #. Konstantin Togoi: added truth_table and binary digit utilities to boolalg
 #. Param Singh: added missing units from mks system
 #. Philippe Bouafia: Fixed a typo.
