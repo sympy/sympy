@@ -805,7 +805,7 @@ def pow_xin(p, i, n):
         q[tuple(k1)] = v
     return q
 
-def _nth_root1(p, n, iv, prec):
+def _nth_root1(p, n, iv, prec, reg=True):
     """
     Univariate series expansion of the nth root of p
 
@@ -817,6 +817,9 @@ def _nth_root1(p, n, iv, prec):
 
     The Newton method is used.
     """
+
+    if not reg:
+        return rs_puiseux2(_nth_root1, p, n, iv, prec)
     ring = p.ring
     zm = ring.zero_monom
     if zm not in p:
@@ -873,8 +876,6 @@ def rs_nth_root(p, n, iv, prec, reg=True):
     >>> rs_nth_root(3 + x + x*y, 3, x, 2)
     0.160249952256379*x*y + 0.160249952256379*x + 1.44224957030741
     """
-    if not reg:
-        return rs_puiseux2(rs_nth_root, p, n, iv, prec)
     if n == 0:
         if p == 0:
             raise ValueError('0**0 expression')
@@ -886,15 +887,10 @@ def rs_nth_root(p, n, iv, prec, reg=True):
     zm = ring.zero_monom
     ii = ring.gens.index(iv)
     m = min(p, key=lambda k: k[ii])[ii]
-    try:
-        mq, mr = divmod(m, n)
-    except TypeError:
-        raise ValueError
-    if mr:
-        raise ValueError('not analytic in the series variable')
     p = mul_xin(p, ii, -m)
-    prec -= mq
+    prec -= m
     if _has_constant_term(p - 1, iv):
+        raise NotImplementedError
         if zm in p:
             c = p[zm]
             if isinstance(c, Rational):
@@ -917,12 +913,13 @@ def rs_nth_root(p, n, iv, prec, reg=True):
                 return res
             else:
                 raise NotImplementedError
-    if ring.ngens == 1:
-        res = _nth_root1(p, n, iv, prec)
-    else:
-        res = rs_fun(p, _nth_root1, n, iv, prec)
-    if mq:
-        res = mul_xin(res, ii, mq)
+    res = _nth_root1(p, n, iv, prec, reg=False)
+    if m:
+        if isinstance(m, Rational):
+            m = m/n
+        else:
+            m = Rational(m, n)
+        res = mul_xin(res, ii, m)
     return res
 
 def rs_log(p, x, prec, reg=True):
