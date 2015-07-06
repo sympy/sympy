@@ -390,14 +390,11 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     qroots = roots(Q, k)
     k_max = Max(*qroots.keys())
     ind = S.Zero
-    if k_max + m >= 0:
-        for i in range(k_max + m + 1):
-            r = f.diff(x, i).limit(x, 0) / factorial(i)
-            ind += r*x**(i + shift)
-        ind = ind.subs(x, x**(1/scale))
-        s, e = k_max + 1, m + k_max + 1
-    else:
-        s, e = 0, m
+    for i in range(k_max + m + 1):
+        r = f.diff(x, i).limit(x, 0) / factorial(i)
+        ind += r*x**(i + shift)
+    ind = ind.subs(x, x**(1/scale))
+    s, e = k_max + 1, m + k_max + 1
 
     sol = []
     for i in range(s, e):
@@ -432,19 +429,21 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
     sol.append((S.Zero, True))
 
-    if k_max + m >= 0:
-        return (Piecewise(*sol), ind, k_max + m + 1 + shift)
-    else:
-        return (Piecewise(*sol), S.Zero, S.Zero)
+    return (Piecewise(*sol), ind, k_max + m + 1 + shift)
 
 
-def solve_re(f, x, RE, g, k):
-    """
-    Solves the RE
+def solve_de(f, x, DE, g, k):
+    """Solves the DE
+
+    First converts the DE into a RE using :func:`hyper_re`
 
     If The RE is of the form Q(k)*a(k + m) - P(k)*a(k),
-    uses :func:`rsolve_hypergeometric`,
-    otherwise fallsback to :func:`rsolve`
+    uses :func:`rsolve_hypergeometric` to solve
+
+    Checks if DE is explike, if yes again forms RE
+    using :func:`exp_re`.
+
+    Tries to solve RE using :func:`rsolve`
 
     returns a Tuple of (formula, series independent terms, order) if successful
     otherwise None.
@@ -452,26 +451,27 @@ def solve_re(f, x, RE, g, k):
     Examples
     ========
 
+    >>> from sympy import Derivative as D
     >>> from sympy import exp, ln
-    >>> from sympy.series.formal import solve_re
+    >>> from sympy.series.formal import solve_de
     >>> from sympy.abc import x, k, f
 
-    >>> solve_re(exp(x), x, (k+1)*f(k+1) - f(k), f, k)
+    >>> solve_de(exp(x), x, D(f(x), x) - f(x), f, k)
     (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
-    >>> solve_re(ln(1 + x), x, k*(k + 1)*f(k + 1) + k**2*f(k), f, k)
+    >>> solve_de(ln(1 + x), x, (x + 1)*D(f(x), x, 2) + D(f(x)), f, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
      Eq(Mod(k, 1), 0)), (0, True)), x, 2)
 
     See Also
     ========
 
+    sympy.series.formal.hyper_re
+    sympy.series.formal.exp_re
     sympy.series.formal.rsolve_hypergeometric
     sympy.solvers.recurr.rsolve
-
     """
-    m = Wild('m')
-    RE = RE.collect(g(k + m))
+    RE = hyper_re(DE, g, k)
     terms = Add.make_args(RE)
 
     if len(terms) == 2:
@@ -483,15 +483,30 @@ def solve_re(f, x, RE, g, k):
             m = abs(m)
         return rsolve_hypergeometric(f, x, P, Q, k, m)
 
+    explike = True
+    for t in Add.make_args(DE):
+        coeff, d = t.as_independent(g)
+        if coeff.free_symbols:
+            explike = False
+            break
+
+    if explike:
+        RE = exp_re(DE, g, k)
+
     init = {}
     for i in range(len(terms)):
         if i:
             f = f.diff(x)
-        init[g(k).subs(k, i)] = f.subs(x, 0) / factorial(i)
+        if explike:
+            init[g(k).subs(k, i)] = f.subs(x, 0)
+        else:
+            init[g(k).subs(k, i)] = f.subs(x, 0) / factorial(i)
 
     from sympy.solvers import rsolve
     sol = rsolve(RE, g(k), init)
 
+    if explike:
+        sol /= factorial(k)
     if sol:
         return (sol, S.Zero, S.Zero)
 
@@ -524,7 +539,7 @@ def hyper_algorithm(f, x, k, order=4):
 
     sympy.series.formal.simpleDE
     sympy.series.formal.hyper_re
-    sympy.series.formal.solve_re
+    sympy.series.formal.solve_de
     """
     g = Function('g')
 
@@ -533,8 +548,7 @@ def hyper_algorithm(f, x, k, order=4):
     if DE is None:
         return None
 
-    RE = hyper_re(DE, g, k)
-    sol = solve_re(f, x, RE, g, k)
+    sol = solve_de(f, x, DE, g, k)
 
     if sol is None:
         return None
@@ -579,7 +593,9 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
 
     sympy.series.rational_algorithm
     """
-    if x0 in [S.Infinity, -S.Infinity]:
+    if not f.has(x):
+        return None
+    elif x0 in [S.Infinity, -S.Infinity]:
         dir = {S.Infinity: S.One, S.NegativeInfinity: -S.One}[x0]
         temp = f.subs(x, 1/x)
         result = compute_fps(temp, x, 0, dir, hyper, order, rational, full)
@@ -601,6 +617,9 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
             return None
         return (result[0], result[1].subs(x, rep2 + rep2b),
                 result[2].subs(x, rep2 + rep2b))
+
+    if f.is_polynomial(x):
+        return None
 
     #  Break instances of Add
     #  this allows application of different
@@ -629,9 +648,6 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
                 ind += t
         if result:
             return ak, xk, ind
-        return None
-
-    if f.is_polynomial(x):
         return None
 
     result = None
@@ -865,14 +881,16 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     else:
         x = sympify(x)
 
-    if not f.has(x):
-        return f
-
     x0 = sympify(x0)
-    dir = sympify(dir)
 
-    if dir not in [S.One, -S.One]:
-        raise ValueError("Dir must be 1 or -1")
+    if dir == '+':
+        dir = S.One
+    elif dir == '-':
+        dir = -S.One
+    elif dir not in [S.One, -S.One]:
+        raise ValueError("Dir must be '+' or '-'")
+    else:
+        dir = sympify(dir)
 
     result = compute_fps(f, x, x0, dir, hyper, order, rational, full)
 
