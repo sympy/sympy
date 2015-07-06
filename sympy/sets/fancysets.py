@@ -177,6 +177,10 @@ class Reals(with_metaclass(Singleton, Interval)):
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 
+    def __eq__(self, other):
+        if other == Interval(-S.Infinity, S.Infinity):
+            return True
+
 
 class ImageSet(Set):
     """
