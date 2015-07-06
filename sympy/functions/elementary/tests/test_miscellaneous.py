@@ -21,6 +21,7 @@ def test_Min():
     p_ = Symbol('p_', positive=True)
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
+    r = Symbol('r', real=True)
 
     assert Min(5, 4) == 4
     assert Min(-oo, -oo) == -oo
@@ -115,6 +116,27 @@ def test_Min():
     e = Min(0, x)
     assert e.evalf == e.n
     assert e.n().args == (0, x)
+
+    # issue 8643
+    m = Min(n, p_, n_, r)
+    assert m.is_positive is False
+    assert m.is_nonnegative is False
+    assert m.is_negative is True
+
+    m = Min(p, p_)
+    assert m.is_positive is True
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Min(p, nn_, p_)
+    assert m.is_positive is None
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Min(nn, p, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is None
+    assert m.is_negative is None
 
 
 def test_Max():

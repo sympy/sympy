@@ -643,3 +643,36 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_is_positive(self):
+        f = True
+        for a in self.args:
+            if a.is_negative:
+                return False
+            if f is not None and a.is_positive is True:
+                f = True
+            else:
+                f = None
+        return f
+
+    def _eval_is_nonnegative(self):
+        f = True
+        for a in self.args:
+            if a.is_negative:
+                return False
+            if f is not None and a.is_nonnegative is True:
+                f = True
+            else:
+                f = None
+        return f
+
+    def _eval_is_negative(self):
+        f = False
+        for a in self.args:
+            if a.is_negative:
+                return True
+            if f is not None and a.is_nonnegative is True:
+                f = False
+            else:
+                f = None
+        return f
