@@ -560,6 +560,39 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_is_positive(self):
+        f = False
+        for a in self.args:
+            if a.is_positive:
+                return True
+            if f is not None and a.is_positive is False:
+                f = False
+            else:
+                f = None
+        return f
+
+    def _eval_is_nonnegative(self):
+        f = False
+        for a in self.args:
+            if a.is_nonnegative:
+                return True
+            if f is not None and a.is_positive is False:
+                f = False
+            else:
+                f = None
+        return f
+
+    def _eval_is_negative(self):
+        f = True
+        for a in self.args:
+            if a.is_nonnegative:
+                return False
+            if f is not None and a.is_negative is True:
+                f = True
+            else:
+                f = None
+        return f
+
 
 class Min(MinMaxBase, Application):
     """
