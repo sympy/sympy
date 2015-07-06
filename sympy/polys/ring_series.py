@@ -118,6 +118,71 @@ def rs_puiseux(f, p, x, prec):
         r = f(p, x, prec)
     return r
 
+def rs_puiseux2(f, p, q, x, prec):
+    """
+    Return the puiseux series for `f(p, x, prec)` when `f` is implemented only for regular series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
+    >>> from sympy.core.numbers import Rational
+    >>> R, x = ring('x', QQ)
+    >>> p = x**Rational(2,5) + x**Rational(2,3) + x
+    >>> rs_puiseux(rs_exp,p, x, 1)
+    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
+
+    """
+    ii = p.ring.gens.index(x)
+    n = 1
+    for k in p:
+        if isinstance(k[ii], Rational):
+            num, den = k[ii].as_numer_denom()
+            n = n*den // igcd(n, den)
+    if n != 1:
+        p1 = pow_xin(p, ii, n)
+        r = f(p1, q, x, prec*n)
+        n1 = Rational(1, n)
+        r = pow_xin(r, ii, n1)
+    else:
+        r = f(p, q, x, prec)
+    return r
+
+
+def rs_puiseux3(f, p, x, prec):
+    """
+    Return the puiseux series for `f(p, x, prec)` when `f` is implemented only for regular series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
+    >>> from sympy.core.numbers import Rational
+    >>> R, x = ring('x', QQ)
+    >>> p = x**Rational(2,5) + x**Rational(2,3) + x
+    >>> rs_puiseux(rs_exp,p, x, 1)
+    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
+
+    """
+    ii = p.ring.gens.index(x)
+    n = 1
+    for k in p:
+        if isinstance(k[ii], Rational):
+            num, den = k[ii].as_numer_denom()
+            n = n*den // igcd(n, den)
+    if n != 1:
+        p1 = pow_xin(p, ii, n)
+        r = f(p1, x, prec*n)
+        n1 = Rational(1, n)
+        r = [pow_xin(rx, ii, n1) for rx in r]
+    else:
+        r = f(p, x, prec)
+    return r
+
 def rs_mul(p1, p2, x, prec):
     """
     Return the product of the given two series, modulo ``O(x**prec)``
@@ -354,7 +419,7 @@ def _check_series_var(p, iv, name):
         raise PoleError('Asymptotic expansion of %s around [oo] not implemented.' % name)
     return ii, m
 
-def _series_inversion1(p, x, prec):
+def _series_inversion1(p, x, prec, reg=True):
     """
     Univariate series inversion ``1/p`` modulo ``O(x**prec)``
 
@@ -372,9 +437,12 @@ def _series_inversion1(p, x, prec):
     -x**3 + x**2 - x + 1
 
     """
+    if not reg:
+        return rs_puiseux(_series_inversion1, p, x, prec)
     R = p.ring
     zm = R.zero_monom
     c = p[zm]
+
     if zm not in p:
         raise ValueError('no constant term in series')
     if _has_constant_term(p - c, x):
@@ -394,40 +462,7 @@ def _series_inversion1(p, x, prec):
     return p1
 
 
-def _series_inversion2(p, x, prec):
-    """
-    Univariate series inversion ``1/p`` modulo ``O(x**prec)``
-
-    The expansion `1/(a + b) = 1/a - b/a**2 + ...` is used.
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.core.numbers import Rational
-    >>> from sympy.polys.ring_series import _series_inversion2
-    >>> R, x = ring('x', QQ)
-    >>> p = 1 + x**Rational(1, 4)
-    >>> _series_inversion2(p, x, 2)
-    -x**(7/4) + x**(3/2) - x**(5/4) + x - x**(3/4) + x**(1/2) - x**(1/4) + 1
-
-    """
-    ring = p.ring
-    zm = ring.zero_monom
-    ii = ring.gens.index(x)
-    pm = min(p, key=lambda k: k[ii])
-    c = p[pm]
-    b = p/c - 1
-    pm1 = min(b, key=lambda k: k[ii])
-    prec1 = prec/pm1[ii]
-    ca = [(-1)**(i+1) for i in range(1, prec1 + 1)]
-    r = rs_series_from_list(b, ca, x, prec)
-    r = r/c
-    return r
-
-
-def rs_series_inversion(p, x, prec, algo='newton'):
+def rs_series_inversion(p, x, prec, reg=True):
     """
     Multivariate series inversion ``1/p`` modulo ``O(x**prec)``
 
@@ -457,10 +492,7 @@ def rs_series_inversion(p, x, prec, algo='newton'):
 
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
-    if algo == 'newton':
-        r = _series_inversion1(p, x, prec)
-    else:
-        r = _series_inversion2(p, x, prec)
+    r = _series_inversion1(p, x, prec, reg)
     if m != 0:
         r = mul_xin(r, ii, -m)
     return r
@@ -756,6 +788,7 @@ def mul_xin(p, i, n):
 def pow_xin(p, i, n):
     """
     >>> from sympy.core.numbers import Rational
+    >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import pow_xin
     >>> R, x, y = ring('x, y', QQ)
@@ -811,7 +844,7 @@ def _nth_root1(p, n, iv, prec):
     else:
         return _series_inversion1(p1, iv, prec)
 
-def rs_nth_root(p, n, iv, prec):
+def rs_nth_root(p, n, iv, prec, reg=True):
     """
     Multivariate series expansion of the nth root of p
 
@@ -840,6 +873,8 @@ def rs_nth_root(p, n, iv, prec):
     >>> rs_nth_root(3 + x + x*y, 3, x, 2)
     0.160249952256379*x*y + 0.160249952256379*x + 1.44224957030741
     """
+    if not reg:
+        return rs_puiseux2(rs_nth_root, p, n, iv, prec)
     if n == 0:
         if p == 0:
             raise ValueError('0**0 expression')
@@ -1171,7 +1206,7 @@ def _tan1(p, x, prec):
     p1 = R(0)
     for precx in _giant_steps(prec):
         tmp = p - rs_atan(p1, x, precx)
-        tmp = rs_mul(tmp, 1 + p1.square(), x, precx)
+        tmp = rs_mul(tmp, 1 + rs_square(p1, x, precx), x, precx)
         p1 += tmp
     return p1
 
@@ -1397,12 +1432,13 @@ def rs_cos(p, iv, prec, reg=True):
         n *= -k*(k - 1)
     return rs_series_from_list(p, c, iv, prec)
 
-def rs_cos_sin(p, iv, prec):
+def rs_cos_sin(p, iv, prec, reg=True):
     """
     Returns the tuple (rs_cos(p, iv, iv), rs_sin(p, iv, iv))
     Is faster than calling rs_cos and rs_sin separately
-    TODO: puiseux case
     """
+    if not reg:
+        return rs_puiseux3(rs_cos_sin, p, iv, prec)
     t = rs_tan(p/2, iv, prec)
     t2 = rs_square(t, iv, prec)
     p1 = rs_series_inversion(1 + t2, iv, prec)
@@ -1544,7 +1580,7 @@ def _tanh(p, iv, prec):
     p1 = R(0)
     for precx in _giant_steps(prec):
         tmp = p - rs_atanh(p1, iv, precx)
-        tmp = rs_mul(tmp, 1 - p1.square(), iv, precx)
+        tmp = rs_mul(tmp, 1 - rs_square(p1, iv, prec), iv, precx)
         p1 += tmp
     return p1
 

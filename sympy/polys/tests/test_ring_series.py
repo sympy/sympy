@@ -419,6 +419,13 @@ def test_puiseux():
     R, x, y = ring('x, y', QQ)
     p = x**Rational(2,5) + x**Rational(2,3) + x
 
+    r = rs_series_inversion(p, x, 1, reg=0)
+    r1 = -x**RQ(14,15) + x**RQ(4,5) - 3*x**RQ(11,15) + x**RQ(2,3) + 2*x**RQ(7,15) - x**RQ(2,5) - x**RQ(1,5) + x**RQ(2,15) - x**RQ(-2,15) + x**RQ(-2,5)
+    assert r == r1
+
+    r = rs_nth_root(1 + p, 3, x, 1, 0)
+    assert r == -x**RQ(4,5)/9 + x**RQ(2,3)/3 + x**RQ(2,5)/3 + 1
+
     r = rs_log(1 + p, x, 1, 0)
     assert r == -x**RQ(4,5)/2 + x**RQ(2,3) + x**RQ(2,5)
 
@@ -455,6 +462,12 @@ def test_puiseux():
     r = rs_cos(p, x, 2, 0)
     assert r == x**RQ(28,15)/6 - x**RQ(5,3) + x**RQ(8,5)/24 - x**RQ(7,5) - \
             x**RQ(4,3)/2 - x**RQ(16,15) - x**RQ(4,5)/2 + 1
+
+    r = rs_cos_sin(p, x, 2, 0)
+    assert r[0] == x**RQ(28,15)/6 - x**RQ(5,3) + x**RQ(8,5)/24 - x**RQ(7,5) - \
+            x**RQ(4,3)/2 - x**RQ(16,15) - x**RQ(4,5)/2 + 1
+    assert r[1] == -x**RQ(9,5)/2 - x**RQ(26,15)/2 - x**RQ(22,15)/2 - \
+            x**RQ(6,5)/6 + x + x**RQ(2,3) + x**RQ(2,5)
 
     r = rs_atanh(p, x, 2, 0)
     assert r == x**RQ(9,5) + x**RQ(26,15) + x**RQ(22,15) + x**RQ(6,5)/3 + x + x**RQ(2,3) + x**RQ(2,5)
