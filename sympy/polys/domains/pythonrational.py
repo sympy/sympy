@@ -8,6 +8,7 @@ from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core.compatibility import integer_types
+from sympy.core.numbers import Rational
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 
@@ -241,6 +242,9 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     @property
     def denom(self):
         return self.q
+
+    def _sympy_(self):
+        return Rational(self.p, self.q)
 
     numerator = numer
     denominator = denom
