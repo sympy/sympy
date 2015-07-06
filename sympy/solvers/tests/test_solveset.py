@@ -40,7 +40,6 @@ n = Symbol('n', real=True)
 def test_invert_real():
     x = Dummy(real=True)
     n = Symbol('n')
-    d = Dummy()
     assert solveset(abs(x) - n, x) == Intersection(S.Reals, FiniteSet(-n, n))
 
     n = Symbol('n', real=True)
@@ -588,7 +587,6 @@ def test_solveset_complex_polynomial():
 
 
 def test_sol_zero_complex():
-    # This should return the complex set after it is implemented
     assert solveset_complex(0, x) == S.Complex
 
 
