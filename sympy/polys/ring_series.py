@@ -13,15 +13,8 @@ from sympy.functions import ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
 from functools import wraps
+from sympy.core.numbers import igcd
 
-# Note
-# ====
-#
-# In case the series contains terms with negative or fractional exponents, none
-# of these functions are guaranteed to output a series of the order `prec`. In
-# those cases it is recommended to use `check_precision` to find out the
-# #`prec` that should be used with the series. However, the resulting series
-# may be of higher order. So, it should be truncated.
 
 def _invert_monoms(p1):
     """
@@ -92,24 +85,38 @@ def rs_trunc(p1, x, prec):
         p[exp1] = p1[exp1]
     return p
 
-# TODO What to do with negative degree/precision?
-# XXX Should we support fractional precision?
-def check_precision(p, x, prec):
-    """
-    For puiseux series, calculates the number of iterations required in
-    `ring_series` functions, to give a series of the order `prec`
 
-    Note
-    ====
-
-    The resulting series may need to be truncated as it may contain more terms
-    than needed.
+def rs_puiseux(f, p, x, prec):
     """
-    x = p.ring.gens.index(x)
-    n = min(p, key=lambda k: k[x])[x]
-    if n > 0 and prec > 0 and n != int(n):
-        prec = int(ceiling(prec/n))
-    return prec
+    Return the puiseux series for `f(p, x, prec)` when `f` is implemented only for regular series
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
+    >>> from sympy.core.numbers import Rational
+    >>> R, x = ring('x', QQ)
+    >>> p = x**Rational(2,5) + x**Rational(2,3) + x
+    >>> rs_puiseux(rs_exp,p, x, 1)
+    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
+
+    """
+    ii = p.ring.gens.index(x)
+    n = 1
+    for k in p:
+        if isinstance(k[ii], Rational):
+            num, den = k[ii].as_numer_denom()
+            n = n*den // igcd(n, den)
+    if n != 1:
+        p1 = pow_xin(p, ii, n)
+        r = f(p1, x, prec*n)
+        n1 = Rational(1, n)
+        r = pow_xin(r, ii, n1)
+    else:
+        r = f(p, x, prec)
+    return r
 
 def rs_mul(p1, p2, x, prec):
     """
@@ -746,6 +753,25 @@ def mul_xin(p, i, n):
         q[tuple(k1)] = v
     return q
 
+def pow_xin(p, i, n):
+    """
+    >>> from sympy.core.numbers import Rational
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import pow_xin
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x**Rational(2,5) + x + x**Rational(2,3)
+    >>> ii = p.ring.gens.index(x)
+    >>> pow_xin(p, ii, 15)
+    x**15 + x**10 + x**6
+    """
+    ring = p.ring
+    q = ring(0)
+    for k, v in p.items():
+        k1 = list(k)
+        k1[i] *= n
+        q[tuple(k1)] = v
+    return q
+
 def _nth_root1(p, n, iv, prec):
     """
     Univariate series expansion of the nth root of p
@@ -864,7 +890,7 @@ def rs_nth_root(p, n, iv, prec):
         res = mul_xin(res, ii, mq)
     return res
 
-def rs_log(p, x, prec):
+def rs_log(p, x, prec, reg=True):
     """
     The Logarithm of ``p`` modulo ``O(x**prec)``
 
@@ -886,6 +912,8 @@ def rs_log(p, x, prec):
     1/3*x**(9/2) - 1/2*x**3 + x**(3/2)
     """
     R = p.ring
+    if not reg:
+        return rs_puiseux(rs_log, p, x, prec)
     if p == 1:
         return 0
     if _has_constant_term(p, x):
@@ -914,7 +942,7 @@ def rs_log(p, x, prec):
     else:
         raise NotImplementedError
 
-def rs_LambertW(p, iv, prec):
+def rs_LambertW(p, iv, prec, reg=True):
     """
     Calculates the series expansion of the principal branch of the Lambert W
     function.
@@ -934,6 +962,8 @@ def rs_LambertW(p, iv, prec):
 
     LambertW
     """
+    if not reg:
+        return rs_puiseux(rs_LambertW, p, iv, prec)
     R = p.ring
     p1 = R(0)
     if _has_constant_term(p, iv):
@@ -963,7 +993,7 @@ def _exp1(p, x, prec):
         p1 += tmp
     return p1
 
-def rs_exp(p, x, prec):
+def rs_exp(p, x, prec, reg=True):
     """
     Exponentiation of a series modulo ``O(x**prec)``
 
@@ -977,6 +1007,8 @@ def rs_exp(p, x, prec):
     >>> rs_exp(x**2, x, 7)
     1/6*x**6 + 1/2*x**4 + x**2 + 1
     """
+    if not reg:
+        return rs_puiseux(rs_exp, p, x, prec)
     R = p.ring
     index = ring.gens.index(x)
     if _has_constant_term(p, x):
@@ -1027,7 +1059,7 @@ def _atan_series(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def rs_atan(p, x, prec):
+def rs_atan(p, x, prec, reg=True):
     """
     The arctangent of a series
 
@@ -1048,6 +1080,8 @@ def rs_atan(p, x, prec):
 
     atan
     """
+    if not reg:
+        return rs_puiseux(rs_atan, p, x, prec)
     R = p.ring
     const = 0
     if _has_constant_term(p, x):
@@ -1075,7 +1109,7 @@ def rs_atan(p, x, prec):
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
 
-def rs_asin(p, iv, prec):
+def rs_asin(p, iv, prec, reg=True):
     """
     Arcsine of a series
 
@@ -1096,6 +1130,8 @@ def rs_asin(p, iv, prec):
 
     asin
     """
+    if not reg:
+        return rs_puiseux(rs_asin, p, iv, prec)
     if _has_constant_term(p, iv):
         raise NotImplementedError('Polynomial must not have constant term in \
               series variables')
@@ -1139,7 +1175,7 @@ def _tan1(p, x, prec):
         p1 += tmp
     return p1
 
-def rs_tan(p, x, prec):
+def rs_tan(p, x, prec, reg=True):
     """
     Tangent of a series
 
@@ -1160,6 +1196,9 @@ def rs_tan(p, x, prec):
 
    tan
    """
+    if not reg:
+        r = rs_puiseux(rs_tan, p, x, prec)
+        return r
     R = p.ring
     const = 0
     if _has_constant_term(p, x):
@@ -1191,7 +1230,7 @@ def rs_tan(p, x, prec):
     else:
         return rs_fun(p, rs_tan, x, prec)
 
-def rs_cot(p, iv, prec):
+def rs_cot(p, iv, prec, reg=True):
     """
     Cotangent of a series
 
@@ -1215,6 +1254,9 @@ def rs_cot(p, iv, prec):
     # It can not handle series like `p = x + x*y` where the coefficient of the
     # linear term in the series variable is symbolic.
     # TODO Does not work with puiseux series. What should be the value of m?
+    if not reg:
+        r = rs_puiseux(rs_cot, p, iv, prec)
+        return r
     i, m = _check_series_var(p, iv, 'cot')
     prec1 = prec + 2*m
     c, s = rs_cos_sin(p, iv, prec1)
@@ -1225,7 +1267,7 @@ def rs_cot(p, iv, prec):
     res = rs_trunc(res, iv, prec)
     return res
 
-def rs_sin(p, x, prec):
+def rs_sin(p, x, prec, reg=True):
     """
     Sine of a series
 
@@ -1248,6 +1290,8 @@ def rs_sin(p, x, prec):
 
     sin
     """
+    if not reg:
+        return rs_puiseux(rs_sin, p, x, prec)
     R = x.ring
     if not p:
         return R(0)
@@ -1290,7 +1334,7 @@ def rs_sin(p, x, prec):
         n *= -k*(k + 1)
     return rs_series_from_list(p, c, x, prec)
 
-def rs_cos(p, iv, prec):
+def rs_cos(p, iv, prec, reg=True):
     """
     Cosine of a series
 
@@ -1313,6 +1357,8 @@ def rs_cos(p, iv, prec):
 
     cos
     """
+    if not reg:
+        return rs_puiseux(rs_cos, p, iv, prec)
     R = p.ring
     if _has_constant_term(p, iv):
         zm = R.zero_monom
@@ -1355,6 +1401,7 @@ def rs_cos_sin(p, iv, prec):
     """
     Returns the tuple (rs_cos(p, iv, iv), rs_sin(p, iv, iv))
     Is faster than calling rs_cos and rs_sin separately
+    TODO: puiseux case
     """
     t = rs_tan(p/2, iv, prec)
     t2 = rs_square(t, iv, prec)
@@ -1374,7 +1421,7 @@ def _atanh(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def rs_atanh(p, iv, prec):
+def rs_atanh(p, iv, prec, reg=True):
     """
     Hyperbolic arctangent of a series
 
@@ -1395,6 +1442,8 @@ def rs_atanh(p, iv, prec):
 
     atanh
     """
+    if not reg:
+        return rs_puiseux(rs_atanh, p, iv, prec)
     R = p.ring
     const = 0
     if _has_constant_term(p, x):
@@ -1422,7 +1471,7 @@ def rs_atanh(p, iv, prec):
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
 
-def rs_sinh(p, iv, prec):
+def rs_sinh(p, iv, prec, reg=True):
     """
     Hyperbolic sine of a series
 
@@ -1444,11 +1493,13 @@ def rs_sinh(p, iv, prec):
     sinh
     """
     # Check for negative exponent
+    if not reg:
+        return rs_puiseux(rs_sinh, p, iv, prec)
     t = rs_exp(p, iv, prec)
     t1 = rs_series_inversion(t, iv, prec)
     return (t - t1)/2
 
-def rs_cosh(p, iv, prec):
+def rs_cosh(p, iv, prec, reg=True):
     """
     Hyperbolic cosine of a series
 
@@ -1470,6 +1521,8 @@ def rs_cosh(p, iv, prec):
     cosh
     """
     # Check for negative exponent
+    if not reg:
+        return rs_puiseux(rs_cosh, p, iv, prec)
     t = rs_exp(p, iv, prec)
     t1 = rs_series_inversion(t, iv, prec)
     return (t + t1)/2
@@ -1495,7 +1548,7 @@ def _tanh(p, iv, prec):
         p1 += tmp
     return p1
 
-def rs_tanh(p, iv, prec):
+def rs_tanh(p, iv, prec, reg=True):
     """
     Hyperbolic tangent of a series
 
@@ -1516,6 +1569,8 @@ def rs_tanh(p, iv, prec):
 
     tanh
     """
+    if not reg:
+        return rs_puiseux(rs_tanh, p, iv, prec)
     R = p.ring
     const = 0
     if _has_constant_term(p, x):
