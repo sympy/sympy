@@ -148,6 +148,8 @@ class AskNonZeroHandler(CommonHandler):
 
     @staticmethod
     def Basic(expr, assumptions):
+        if ask(Q.real(expr)) is False:
+            return False
         if expr.is_number:
             # if there are no symbols just evalf
             i = expr.evalf(2)
