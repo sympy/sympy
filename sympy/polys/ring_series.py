@@ -462,6 +462,11 @@ def _series_inversion1(p, x, prec):
     zm = R.zero_monom
     c = p[zm]
 
+    # giant_steps does not seem to work with PythonRational numbers with 1 as
+    # denominator. This makes sure such a number is converted to integer.
+    if prec == int(prec):
+        prec = int(prec)
+
     if zm not in p:
         raise ValueError('no constant term in series')
     if _has_constant_term(p - c, x):
@@ -1064,7 +1069,7 @@ def rs_exp(p, x, prec):
     if not reg:
         return rs_puiseux(rs_exp, p, x, prec)
     R = p.ring
-    index = ring.gens.index(x)
+    index = R.gens.index(x)
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
@@ -1483,7 +1488,7 @@ def _atanh(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def rs_atanh(p, iv, prec):
+def rs_atanh(p, x, prec):
     """
     Hyperbolic arctangent of a series
 
@@ -1504,9 +1509,9 @@ def rs_atanh(p, iv, prec):
 
     atanh
     """
-    reg = rs_is_regular(p, iv)
+    reg = rs_is_regular(p, x)
     if not reg:
-        return rs_puiseux(rs_atanh, p, iv, prec)
+        return rs_puiseux(rs_atanh, p, x, prec)
     R = p.ring
     const = 0
     if _has_constant_term(p, x):
@@ -1613,7 +1618,7 @@ def _tanh(p, iv, prec):
         p1 += tmp
     return p1
 
-def rs_tanh(p, iv, prec):
+def rs_tanh(p, x, prec):
     """
     Hyperbolic tangent of a series
 
@@ -1634,9 +1639,9 @@ def rs_tanh(p, iv, prec):
 
     tanh
     """
-    reg = rs_is_regular(p, iv)
+    reg = rs_is_regular(p, x)
     if not reg:
-        return rs_puiseux(rs_tanh, p, iv, prec)
+        return rs_puiseux(rs_tanh, p, x, prec)
     R = p.ring
     const = 0
     if _has_constant_term(p, x):
