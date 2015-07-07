@@ -7,7 +7,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion)
+    rs_LambertW, rs_series_reversion, rs_is_regular)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
@@ -415,72 +415,89 @@ def test_tanh():
         10100*tanh(a)**3 + 2470*tanh(a)**2/3 - 10099*tanh(a) + QQ(530, 3))
 
 RQ = Rational
+def test_is_regular():
+    R, x, y = ring('x, y', QQ)
+    p = 1 + 2*x + x**2 + 3*x**3
+    assert rs_is_regular(p, x)
+
+    p = x + x**Rational(1,5)*y
+    assert not rs_is_regular(p, x)
+    assert rs_is_regular(p, y)
+
+    p = x + x**2*y**Rational(1,5)*y
+    assert rs_is_regular(p, x)
+
 def test_puiseux():
     R, x, y = ring('x, y', QQ)
     p = x**Rational(2,5) + x**Rational(2,3) + x
 
-    r = rs_series_inversion(p, x, 1, reg=0)
+    r = rs_series_inversion(p, x, 1)
     r1 = -x**RQ(14,15) + x**RQ(4,5) - 3*x**RQ(11,15) + x**RQ(2,3) + 2*x**RQ(7,15) - x**RQ(2,5) - x**RQ(1,5) + x**RQ(2,15) - x**RQ(-2,15) + x**RQ(-2,5)
     assert r == r1
 
-    r = rs_nth_root(1 + p, 3, x, 1, 0)
+    r = rs_nth_root(1 + p, 3, x, 1)
     assert r == -x**RQ(4,5)/9 + x**RQ(2,3)/3 + x**RQ(2,5)/3 + 1
 
-    r = rs_log(1 + p, x, 1, 0)
+    r = rs_log(1 + p, x, 1)
     assert r == -x**RQ(4,5)/2 + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_LambertW(p, x, 1, 0)
+    r = rs_LambertW(p, x, 1)
     assert r == -x**RQ(4,5) + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_exp(p, x, 1, 0)
+    r = rs_exp(p, x, 1)
     assert r == x**RQ(4,5)/2 + x**RQ(2,3) + x**RQ(2,5) + 1
 
     p1 = x + x**Rational(1,5)*y
-    r = rs_exp(p1, x, 1, 0)
+    r = rs_exp(p1, x, 1)
     assert r == x**RQ(4,5)*y**4/24 + x**RQ(3,5)*y**3/6 + x**RQ(2,5)*y**2/2 + x**RQ(1,5)*y + 1
 
-    r = rs_atan(p, x, 2, 0)
+    r = rs_atan(p, x, 2)
     assert r ==  -x**RQ(9,5) - x**RQ(26,15) - x**RQ(22,15) - x**RQ(6,5)/3 + \
             x + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_asin(p, x, 2, 0)
+    r = rs_atan(p1, x, 2)
+    assert r ==  x**RQ(9,5)*y**9/9 + x**RQ(9,5)*y**4 - x**RQ(7,5)*y**7/7 - \
+      x**RQ(7,5)*y**2 + x*y**5/5 + x - x**RQ(3,5)*y**3/3 + x**RQ(1,5)*y
+
+
+    r = rs_asin(p, x, 2)
     assert r == x**RQ(9,5)/2 + x**RQ(26,15)/2 + x**RQ(22,15)/2 + x**RQ(6,5)/6 + x + x**RQ(2,3) + x**RQ(2,5)
 
 
-    r = rs_tan(p, x, 2, 0)
+    r = rs_tan(p, x, 2)
     assert r == x**RQ(9,5) + x**RQ(26,15) + x**RQ(22,15) + x**RQ(6,5)/3 + x + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_cot(p, x, 1, 0)
+    r = rs_cot(p, x, 1)
     assert r == -x**RQ(14,15) + x**RQ(4,5) - 3*x**RQ(11,15) + \
     2*x**RQ(2,3)/3 + 2*x**RQ(7,15) - 4*x**RQ(2,5)/3 - x**RQ(1,5) + \
     x**RQ(2,15) - x**RQ(-2,15) + x**RQ(-2,5)
 
-    r = rs_sin(p, x, 2, 0)
+    r = rs_sin(p, x, 2)
     assert r == -x**RQ(9,5)/2 - x**RQ(26,15)/2 - x**RQ(22,15)/2 - \
             x**RQ(6,5)/6 + x + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_cos(p, x, 2, 0)
+    r = rs_cos(p, x, 2)
     assert r == x**RQ(28,15)/6 - x**RQ(5,3) + x**RQ(8,5)/24 - x**RQ(7,5) - \
             x**RQ(4,3)/2 - x**RQ(16,15) - x**RQ(4,5)/2 + 1
 
-    r = rs_cos_sin(p, x, 2, 0)
+    r = rs_cos_sin(p, x, 2)
     assert r[0] == x**RQ(28,15)/6 - x**RQ(5,3) + x**RQ(8,5)/24 - x**RQ(7,5) - \
             x**RQ(4,3)/2 - x**RQ(16,15) - x**RQ(4,5)/2 + 1
     assert r[1] == -x**RQ(9,5)/2 - x**RQ(26,15)/2 - x**RQ(22,15)/2 - \
             x**RQ(6,5)/6 + x + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_atanh(p, x, 2, 0)
+    r = rs_atanh(p, x, 2)
     assert r == x**RQ(9,5) + x**RQ(26,15) + x**RQ(22,15) + x**RQ(6,5)/3 + x + x**RQ(2,3) + x**RQ(2,5)
 
 
-    r = rs_sinh(p, x, 2, 0)
+    r = rs_sinh(p, x, 2)
     assert r == x**RQ(9,5)/2 + x**RQ(26,15)/2 + x**RQ(22,15)/2 + \
             x**RQ(6,5)/6 + x + x**RQ(2,3) + x**RQ(2,5)
 
-    r = rs_cosh(p, x, 2, 0)
+    r = rs_cosh(p, x, 2)
     assert r == x**RQ(28,15)/6 + x**RQ(5,3) + x**RQ(8,5)/24 + x**RQ(7,5) + x**RQ(4,3)/2 + x**RQ(16,15) + x**RQ(4,5)/2 + 1
 
-    r = rs_tanh(p, x, 2, 0)
+    r = rs_tanh(p, x, 2)
     assert r == -x**RQ(9,5) - x**RQ(26,15) - x**RQ(22,15) - x**RQ(6,5)/3 + x + x**RQ(2,3) + x**RQ(2,5)
 
 def test1():
@@ -489,7 +506,7 @@ def test1():
     assert r == x**8/6227020800 - x**6/39916800 + x**4/362880 - x**2/5040 + QQ(1,120) - x**-2/6 + x**-4
 
     p = rs_sin(x, x, 10)
-    r = rs_nth_root(p, 2, x, 10, 0)
+    r = rs_nth_root(p, 2, x, 10)
     assert  r == -67*x**RQ(17,2)/29030400 - x**RQ(13,2)/24192 + x**RQ(9,2)/1440 - x**RQ(5,2)/12 + x**RQ(1,2)
 
     p = rs_sin(x, x, 10)
@@ -498,7 +515,7 @@ def test1():
     assert r == -97*x**RQ(61,7)/124467840 - x**RQ(47,7)/16464 + \
             11*x**RQ(33,7)/3528 - 5*x**RQ(19,7)/42 + x**RQ(5,7)
 
-    r = rs_exp(x**Rational(1,2), x, 10, 0)
+    r = rs_exp(x**Rational(1,2), x, 10)
     assert r == x**RQ(19,2)/121645100408832000 + x**9/6402373705728000 + \
     x**RQ(17,2)/355687428096000 + x**8/20922789888000 + \
     x**RQ(15,2)/1307674368000 + x**7/87178291200 + \
@@ -506,3 +523,13 @@ def test1():
     x**5/3628800 + x**RQ(9,2)/362880 + x**4/40320 + x**RQ(7,2)/5040 + \
     x**3/720 + x**RQ(5,2)/120 + x**2/24 + x**RQ(3,2)/6 + x/2 + \
     x**RQ(1,2) + 1
+
+def test_puiseux2():
+    R, y = ring('y', QQ)
+    S, x = ring('x', R)
+
+    p = x + x**Rational(1,5)*y
+    r = rs_atan(p, x, 3)
+    assert r == (y**13/13 + y**8 + 2*y**3)*x**RQ(13,5) - \
+    (y**11/11 + y**6 + y)*x**RQ(11,5) + (y**9/9 + y**4)*x**RQ(9,5) - \
+    (y**7/7 + y**2)*x**RQ(7,5) + (y**5/5 + 1)*x - y**3*x**RQ(3,5)/3 + y*x**RQ(1,5)
