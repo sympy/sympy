@@ -39,6 +39,11 @@ class AssumptionKeys(object):
         ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
         Hermitian operators.
 
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/HermitianOperator.html
+
         """
         # TODO: Add examples
         return Predicate('hermitian')
@@ -51,6 +56,11 @@ class AssumptionKeys(object):
         ``Q.antihermitian(x)`` is true iff ``x`` belongs to the field of
         antihermitian operators, i.e., operators in the form ``x*I``, where
         ``x`` is Hermitian.
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/HermitianOperator.html
 
         """
         # TODO: Add examples
@@ -325,13 +335,15 @@ class AssumptionKeys(object):
         Examples
         ========
 
-        >>> from sympy import Q, ask, Symbol, S, oo
+        >>> from sympy import Q, ask, Symbol, S, oo, I
         >>> x = Symbol('x')
         >>> ask(Q.finite(S.NaN))
         False
         >>> ask(Q.finite(oo))
         False
         >>> ask(Q.finite(1))
+        True
+        >>> ask(Q.finite(2 + 3*I))
         True
 
         References
@@ -499,7 +511,7 @@ class AssumptionKeys(object):
         Examples
         ========
 
-        >>> from sympy import Q, ask, symbols, I
+        >>> from sympy import Q, ask, symbols, I, oo
         >>> x = symbols('x')
         >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
         None
@@ -513,6 +525,8 @@ class AssumptionKeys(object):
         False
         >>> ask(~Q.zero(I))
         True
+        >>> ask(Q.nonzero(oo)) # doctest: +SKIP
+        False
 
         """
         return Predicate('nonzero')
