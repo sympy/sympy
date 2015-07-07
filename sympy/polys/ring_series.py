@@ -91,10 +91,8 @@ def rs_is_regular(p, x):
     ii = p.ring.gens.index(x)
     n = 1
     for k in p:
-        if isinstance(k[ii], Rational):
-            num, den = k[ii].as_numer_denom()
-            if den != 1:
-                return False
+        if k[ii] != int(k[ii]):
+            return False
     return True
 
 def rs_puiseux(f, p, x, prec):
@@ -107,9 +105,8 @@ def rs_puiseux(f, p, x, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> from sympy.core.numbers import Rational
     >>> R, x = ring('x', QQ)
-    >>> p = x**Rational(2,5) + x**Rational(2,3) + x
+    >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_puiseux(rs_exp,p, x, 1)
     1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
 
@@ -117,13 +114,17 @@ def rs_puiseux(f, p, x, prec):
     ii = p.ring.gens.index(x)
     n = 1
     for k in p:
-        if isinstance(k[ii], Rational):
-            num, den = k[ii].as_numer_denom()
+        power = k[ii]
+        if isinstance(power, Rational):
+            num, den = power.as_numer_denom()
+            n = n*den // igcd(n, den)
+        elif power != int(power):
+            num, den = power.numerator, power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
         p1 = pow_xin(p, ii, n)
         r = f(p1, x, prec*n)
-        n1 = Rational(1, n)
+        n1 = QQ(1, n)
         r = pow_xin(r, ii, n1)
     else:
         r = f(p, x, prec)
@@ -139,9 +140,8 @@ def rs_puiseux2(f, p, q, x, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> from sympy.core.numbers import Rational
     >>> R, x = ring('x', QQ)
-    >>> p = x**Rational(2,5) + x**Rational(2,3) + x
+    >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_puiseux(rs_exp,p, x, 1)
     1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
 
@@ -149,13 +149,17 @@ def rs_puiseux2(f, p, q, x, prec):
     ii = p.ring.gens.index(x)
     n = 1
     for k in p:
-        if isinstance(k[ii], Rational):
-            num, den = k[ii].as_numer_denom()
+        power = k[ii]
+        if isinstance(power, Rational):
+            num, den = power.as_numer_denom()
+            n = n*den // igcd(n, den)
+        elif power != int(power):
+            num, den = power.numerator, power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
         p1 = pow_xin(p, ii, n)
         r = f(p1, q, x, prec*n)
-        n1 = Rational(1, n)
+        n1 = QQ(1, n)
         r = pow_xin(r, ii, n1)
     else:
         r = f(p, q, x, prec)
@@ -172,9 +176,8 @@ def rs_puiseux3(f, p, x, prec):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> from sympy.core.numbers import Rational
     >>> R, x = ring('x', QQ)
-    >>> p = x**Rational(2,5) + x**Rational(2,3) + x
+    >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_puiseux(rs_exp,p, x, 1)
     1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
 
@@ -182,13 +185,17 @@ def rs_puiseux3(f, p, x, prec):
     ii = p.ring.gens.index(x)
     n = 1
     for k in p:
-        if isinstance(k[ii], Rational):
-            num, den = k[ii].as_numer_denom()
+        power = k[ii]
+        if isinstance(power, Rational):
+            num, den = power.as_numer_denom()
+            n = n*den // igcd(n, den)
+        elif power != int(power):
+            num, den = power.numerator, power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
         p1 = pow_xin(p, ii, n)
         r = f(p1, x, prec*n)
-        n1 = Rational(1, n)
+        n1 = QQ(1, n)
         r = [pow_xin(rx, ii, n1) for rx in r]
     else:
         r = f(p, x, prec)
@@ -799,12 +806,11 @@ def mul_xin(p, i, n):
 
 def pow_xin(p, i, n):
     """
-    >>> from sympy.core.numbers import Rational
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import pow_xin
     >>> R, x, y = ring('x, y', QQ)
-    >>> p = x**Rational(2,5) + x + x**Rational(2,3)
+    >>> p = x**QQ(2,5) + x + x**QQ(2,3)
     >>> ii = p.ring.gens.index(x)
     >>> pow_xin(p, ii, 15)
     x**15 + x**10 + x**6
@@ -920,7 +926,7 @@ def rs_nth_root(p, n, iv, prec):
         if zm in p:
             c = p[zm]
             if c > 0:
-                res = rs_nth_root(p/c, n, iv, prec)*c**Rational(1, n)
+                res = rs_nth_root(p/c, n, iv, prec)*c**QQ(1, n)
                 if mq:
                     res = mul_xin(res, iv, mq)
                 return res
@@ -931,7 +937,7 @@ def rs_nth_root(p, n, iv, prec):
         if isinstance(m, Rational):
             m = m/n
         else:
-            m = Rational(m, n)
+            m = QQ(m, n)
         res = mul_xin(res, ii, m)
     return res
 
