@@ -44,7 +44,8 @@ from sympy.utilities import (
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
-from sympy.simplify.simplify import _is_sum_surds, _split_gcd
+from sympy.simplify.radsimp import _split_gcd
+from sympy.simplify.simplify import _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from mpmath import pslq, mp

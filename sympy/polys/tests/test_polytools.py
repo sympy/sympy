@@ -52,7 +52,7 @@ from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr)
+    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
@@ -1421,6 +1421,13 @@ def test_Poly_diff():
 
     assert Poly(x**2*y**2 + x*y).diff(x, y) == Poly(4*x*y + 1)
     assert Poly(x**2*y**2 + x*y).diff(y, x) == Poly(4*x*y + 1)
+
+
+def test_issue_9585():
+    assert diff(Poly(x**2 + x)) == Poly(2*x + 1)
+    assert diff(Poly(x**2 + x), x, evaluate=False) == \
+        Derivative(Poly(x**2 + x), x)
+    assert Derivative(Poly(x**2 + x), x).doit() == Poly(2*x + 1)
 
 
 def test_Poly_eval():

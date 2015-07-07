@@ -1,10 +1,12 @@
-from sympy.polys.domains import QQ
+from sympy.polys.domains import QQ, EX, ExpressionDomain
 from sympy.polys.rings import PolyElement, ring
 from sympy.polys.monomials import monomial_min, monomial_mul, monomial_div
+from sympy.polys.polyerrors import DomainError
 from mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int, range
-from sympy.core import S
+from sympy.core import S, evaluate
+from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -32,8 +34,8 @@ def _invert_monoms(p1):
     terms = list(p1.items())
     terms.sort()
     deg = p1.degree()
-    ring = p1.ring
-    p = ring.zero
+    R = p1.ring
+    p = R.zero
     cv = p1.listcoeffs()
     mv = p1.listmonoms()
     for i in range(len(mv)):
@@ -68,9 +70,9 @@ def rs_trunc(p1, x, prec):
     >>> rs_trunc(p, x, 10)
     x**5 + x + 1
     """
-    ring = p1.ring
-    p = ring.zero
-    i = ring.gens.index(x)
+    R = p1.ring
+    p = R.zero
+    i = R.gens.index(x)
     for exp1 in p1:
         if exp1[i] >= prec:
             continue
@@ -95,18 +97,18 @@ def rs_mul(p1, p2, x, prec):
     >>> rs_mul(p1, p2, x, 3)
     3*x**2 + 3*x + 1
     """
-    ring = p1.ring
-    p = ring.zero
-    if ring.__class__ != p2.ring.__class__ or ring != p2.ring:
+    R = p1.ring
+    p = R.zero
+    if R.__class__ != p2.ring.__class__ or R != p2.ring:
         raise ValueError('p1 and p2 must have the same ring')
-    iv = ring.gens.index(x)
+    iv = R.gens.index(x)
     if not isinstance(p2, PolyElement):
         raise ValueError('p1 and p2 must have the same ring')
-    if ring == p2.ring:
+    if R == p2.ring:
         get = p.get
         items2 = list(p2.items())
         items2.sort(key=lambda e: e[0][iv])
-        if ring.ngens == 1:
+        if R.ngens == 1:
             for exp1, v1 in p1.items():
                 for exp2, v2 in items2:
                     exp = exp1[0] + exp2[0]
@@ -116,7 +118,7 @@ def rs_mul(p1, p2, x, prec):
                     else:
                         break
         else:
-            monomial_mul = ring.monomial_mul
+            monomial_mul = R.monomial_mul
             for exp1, v1 in p1.items():
                 for exp2, v2 in items2:
                     if exp1[iv] + exp2[iv] < prec:
@@ -143,13 +145,13 @@ def rs_square(p1, x, prec):
     >>> rs_square(p, x, 3)
     6*x**2 + 4*x + 1
     """
-    ring = p1.ring
-    p = ring.zero
-    iv = ring.gens.index(x)
+    R = p1.ring
+    p = R.zero
+    iv = R.gens.index(x)
     get = p.get
     items = list(p1.items())
     items.sort(key=lambda e: e[0][iv])
-    monomial_mul = ring.monomial_mul
+    monomial_mul = R.monomial_mul
     for i in range(len(items)):
         exp1, v1 = items[i]
         for j in range(i):
@@ -230,10 +232,10 @@ def _has_constant_term(p, x):
     >>> _has_constant_term(p, x)
     True
     """
-    ring = p.ring
-    iv = ring.gens.index(x)
-    zm = ring.zero_monom
-    a = [0]*ring.ngens
+    R = p.ring
+    iv = R.gens.index(x)
+    zm = R.zero_monom
+    a = [0]*R.ngens
     a[iv] = 1
     miv = tuple(a)
     for expv in p:
@@ -259,17 +261,22 @@ def _series_inversion1(p, x, prec):
     -x**3 + x**2 - x + 1
 
     """
-    ring = p.ring
-    zm = ring.zero_monom
+    R = p.ring
+    zm = R.zero_monom
+    c = p[zm]
     if zm not in p:
         raise ValueError('no constant term in series')
-    if _has_constant_term(p - p[zm], x):
-        raise ValueError('p cannot contain a constant term depending on parameters')
-    if p[zm] != ring(1):
+    if _has_constant_term(p - c, x):
+        raise ValueError('p cannot contain a constant term depending on '
+            'parameters')
+    one = R(1)
+    if R.domain is EX:
+        one = 1
+    if c != one:
         # TODO add check that it is a unit
-        p1 = ring(1)/p[zm]
+        p1 = R(1)/c
     else:
-        p1 = ring(1)
+        p1 = R(1)
     for precx in _giant_steps(prec):
         tmp = p1.square()
         tmp = rs_mul(tmp, p, x, precx)
@@ -292,9 +299,9 @@ def rs_series_inversion(p, x, prec):
     >>> rs_series_inversion(1 + x*y**2, y, 4)
     -x*y**2 + 1
     """
-    ring = p.ring
-    zm = ring.zero_monom
-    ii = ring.gens.index(x)
+    R = p.ring
+    zm = R.zero_monom
+    ii = R.gens.index(x)
     m = min(p, key=lambda k: k[ii])[ii]
     if m:
         raise NotImplementedError('no constant term in series')
@@ -303,6 +310,87 @@ def rs_series_inversion(p, x, prec):
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     return _series_inversion1(p, x, prec)
+
+def _coefficient_t(p, t):
+    """
+    Coefficient of `x_i**j` in p, where t = (i, j)
+    """
+    i, j = t
+    ring = p.ring
+    expv1 = [0]*ring.ngens
+    expv1[i] = j
+    expv1 = tuple(expv1)
+    p1 = ring(0)
+    for expv in p:
+        if expv[i] == j:
+            p1[monomial_div(expv, expv1)] = p[expv]
+    return p1
+
+def rs_series_reversion(p, x, n, y):
+    """
+    Reversion of a series
+
+    p is a series with O(x**n) of the form p = a*x + f(x)
+    where `a` is a number different from 0
+
+    f(x) = sum( a_k*x_k, k in range(2, n))
+
+      a_k can depend polynomially on other variables, not indicated.
+      x: variable with name x
+      y: variable with name y
+
+    Solve p = y, that is, given a*x + f(x) - y = 0,
+    find the solution x = r(y) up to O(y**n)
+
+    Algorithm:
+
+    If r_i is the solution at order i, then:
+    a*r_i + f(r_i) - y = O(y**(i + 1))
+
+    and if r_(i + 1) is the solution at order i + 1, then:
+    a*r_(i + 1) + f(r_(i + 1)) - y = O(y**(i + 2))
+
+    We have, r_(i + 1) = r_i + e, such that,
+    a*e + f(r_i) = O(y**(i + 2))
+    or e = -f(r_i)/a
+
+    So we use the recursion relation:
+    r_(i + 1) = r_i -f(r_i)/a
+    with the boundary condition: r_1 = y
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_series_reversion, rs_trunc
+    >>> R, x, y = ring('x, y', QQ)
+    >>> p = x + x**2
+    >>> p1 = rs_series_reversion(p, x, 4, y)
+    >>> p1
+    2*y**3 - y**2 + y
+    >>> rs_trunc(p1 + p1**2, y, 4)
+    y
+    """
+    ring = p.ring
+    nx = ring.gens.index(x)
+    y = ring(y)
+    ny = ring.gens.index(y)
+    if _has_constant_term(p, x):
+        raise ValueError('p must not contain a constant term in the series \
+            variable')
+    a = _coefficient_t(p, (nx, 1))
+    zm = ring.zero_monom
+    assert zm in a and len(a) == 1
+    a = a[zm]
+    r = y/a
+    for i in range(2, n):
+        sb = p
+        sp = sb.compose(x, r)
+        sp = rs_trunc(sp, y, i + 1)
+        sp = _coefficient_t(sp, (ny, i))*y**i
+        r -= sp/a
+    return r
 
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
@@ -336,10 +424,10 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     sympy.polys.ring.compose
 
     """
-    ring = p.ring
+    R = p.ring
     n = len(c)
     if not concur:
-        q = ring(1)
+        q = R(1)
         s = c[0]*q
         for i in range(1, n):
             q = rs_mul(q, p, x, prec)
@@ -349,9 +437,9 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     K, r = divmod(n, J)
     if r:
         K += 1
-    ax = [ring(1)]
+    ax = [R(1)]
     b = 1
-    q = ring(1)
+    q = R(1)
     if len(p) < 20:
         for i in range(1, J):
             q = rs_mul(q, p, x, prec)
@@ -365,8 +453,8 @@ def rs_series_from_list(p, c, x, prec, concur=1):
             ax.append(q)
     # optimize using rs_square
     pj = rs_mul(ax[-1], p, x, prec)
-    b = ring(1)
-    s = ring(0)
+    b = R(1)
+    s = R(0)
     for k in range(K - 1):
         r = J*k
         s1 = c[r]
@@ -380,7 +468,7 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     k = K - 1
     r = J*k
     if r < n:
-        s1 = c[r]*ring(1)
+        s1 = c[r]*R(1)
         for j in range(1, J):
             if r + j >= n:
                 break
@@ -406,10 +494,10 @@ def rs_diff(p, x):
     >>> rs_diff(p, x)
     2*x*y**3 + 1
     """
-    ring = p.ring
-    n = ring.gens.index(x)
-    p1 = ring.zero
-    mn = [0]*ring.ngens
+    R = p.ring
+    n = R.gens.index(x)
+    p1 = R.zero
+    mn = [0]*R.ngens
     mn[n] = 1
     mn = tuple(mn)
     for expv in p:
@@ -433,10 +521,10 @@ def rs_integrate(p, x):
     >>> rs_integrate(p, x)
     1/3*x**3*y**3 + 1/2*x**2
     """
-    ring = p.ring
-    p1 = ring.zero
-    n = ring.gens.index(x)
-    mn = [0]*ring.ngens
+    R = p.ring
+    p1 = R.zero
+    n = R.gens.index(x)
+    mn = [0]*R.ngens
     mn[n] = 1
     mn = tuple(mn)
 
@@ -455,7 +543,7 @@ def fun(p, f, *args):
       args[-2] = iv: names of the series variables
       args[-1] = prec: list of the precisions of the series variables
 
-    The case with f method name is used to compute tan and nth_root
+    The case with f method name is used to compute rs_tan and rs_nth_root
     of a multivariate series:
 
       fun(p, tan, iv, prec)
@@ -474,11 +562,11 @@ def fun(p, f, *args):
     1/3*x**3*y**3 + 2*x**3*y**2 + x**3*y + 1/3*x**3 + x**2*y + x*y + x
 
     """
-    _ring = p.ring
-    ring1, _x = ring('_x', _ring)
+    _R = p.ring
+    R1, _x = ring('_x', _R.domain)
     h = int(args[-1])
     args1 = args[:-2] + (_x, h)
-    zm = _ring.zero_monom
+    zm = _R.zero_monom
     # separate the constant term of the series
     # compute the univariate series f(_x, .., 'x', sum(nv))
     # or _x.f(..., 'x', sum(nv)
@@ -506,8 +594,8 @@ def mul_xin(p, i, n):
     x_i is the ith variable in p
     """
     n = as_int(n)
-    ring = p.ring
-    q = ring(0)
+    R = p.ring
+    q = R(0)
     for k, v in p.items():
         k1 = list(k)
         k1[i] += n
@@ -533,14 +621,34 @@ def rs_log(p, x, prec):
     >>> rs_log(1 + x, x, 8)
     1/7*x**7 - 1/6*x**6 + 1/5*x**5 - 1/4*x**4 + 1/3*x**3 - 1/2*x**2 + x
     """
-    ring = p.ring
+    R = p.ring
     if p == 1:
         return 0
-    if _has_constant_term(p - 1, x):
-        raise NotImplementedError('p - 1 must not have a constant term in the series variables')
-    dlog = p.diff(x)
-    dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
-    return rs_integrate(dlog, x)
+    if _has_constant_term(p, x):
+        const = 0
+        zm = R.zero_monom
+        c = p[zm]
+        if c == 1:
+            pass
+        else:
+            c_expr = c.as_expr()
+            if R.domain is EX:
+                const = log(c_expr)
+            elif isinstance(c, PolyElement):
+                try:
+                    const = R(log(c_expr))
+                except ValueError:
+                    raise DomainError("The given series can't be expanded in this "
+                        "domain.")
+            else:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain")
+
+        dlog = p.diff(x)
+        dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
+        return rs_integrate(dlog, x) + const
+    else:
+        raise NotImplementedError
 
 def rs_LambertW(p, iv, prec):
     """
@@ -562,12 +670,12 @@ def rs_LambertW(p, iv, prec):
 
     LambertW
     """
-    ring = p.ring
-    p1 = ring(0)
+    R = p.ring
+    p1 = R(0)
     if _has_constant_term(p, iv):
         raise NotImplementedError('Polynomial must not have constant term in \
               the series variables')
-    if iv in ring.gens:
+    if iv in R.gens:
         for precx in _giant_steps(prec):
             e = rs_exp(p1, iv, precx)
             p2 = rs_mul(e, p1, iv, precx) - p
@@ -583,8 +691,8 @@ def _exp1(p, x, prec):
     """
     Helper function for ``rs_exp``
     """
-    ring = p.ring
-    p1 = ring(1)
+    R = p.ring
+    p1 = R(1)
     for precx in _giant_steps(prec):
         pt = p - rs_log(p1, x, precx)
         tmp = rs_mul(pt, p1, x, precx)
@@ -605,12 +713,31 @@ def rs_exp(p, x, prec):
     >>> rs_exp(x**2, x, 7)
     1/6*x**6 + 1/2*x**4 + x**2 + 1
     """
-    ring = p.ring
+    R = p.ring
     if _has_constant_term(p, x):
-        raise NotImplementedError
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = exp(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(exp(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
+        p1 = p - c
+
+    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        return const*rs_exp(p1, x, prec)
+
     if len(p) > 20:
         return _exp1(p, x, prec)
-    one = ring(1)
+    one = R(1)
     n = 1
     k = 1
     c = []
@@ -625,8 +752,8 @@ def rs_exp(p, x, prec):
 # TODO
 # Needs to be benchmarked before use in rs_atan
 def _atan_series(p, iv, prec):
-    ring = p.ring
-    mo = ring(-1)
+    R = p.ring
+    mo = R(-1)
     c = [-mo]
     p2 = rs_square(p, iv, prec)
     for k in range(1, prec):
@@ -656,19 +783,32 @@ def rs_atan(p, x, prec):
 
     atan
     """
+    R = p.ring
+    const = 0
     if _has_constant_term(p, x):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
-    ring = p.ring
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = atan(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(atan(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
     # Finally we integrate to get back atan
     dp = p.diff(x)
-    p1 = rs_square(p, x, prec) + ring(1)
+    p1 = rs_square(p, x, prec) + R(1)
     p1 = rs_series_inversion(p1, x, prec - 1)
     p1 = rs_mul(dp, p1, x, prec - 1)
-    return rs_integrate(p1, x)
+    return rs_integrate(p1, x) + const
 
 def _tan1(p, x, prec):
     """
@@ -683,8 +823,8 @@ def _tan1(p, x, prec):
     Then `f(r) = 0`
     Or `y  = atan(x)` where `x = tan(y)` as required.
     """
-    ring = p.ring
-    p1 = ring(0)
+    R = p.ring
+    p1 = R(0)
     for precx in _giant_steps(prec):
         tmp = p - rs_atan(p1, x, precx)
         tmp = rs_mul(tmp, 1 + p1.square(), x, precx)
@@ -712,13 +852,36 @@ def rs_tan(p, x, prec):
 
    tan
    """
-    ring = p.ring
+    R = p.ring
+    const = 0
     if _has_constant_term(p, x):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              series variables')
-    if ring.ngens == 1:
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = tan(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(tan(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
+            raise NotImplementedError
+        p1 = p - c
+
+    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        t2 = rs_tan(p1, x, prec)
+        t = rs_series_inversion(1 - const*t2, x, prec)
+        return rs_mul(const + t2, t, x, prec)
+
+    if R.ngens == 1:
         return _tan1(p, x, prec)
-    return fun(p, rs_tan, x, prec)
+    else:
+        return fun(p, _tan1, x, prec)
 
 def rs_sin(p, x, prec):
     """
@@ -741,19 +904,38 @@ def rs_sin(p, x, prec):
 
     sin
     """
-    ring = x.ring
+    R = x.ring
     if not p:
-        return ring(0)
-    # Support for constant term can be extended on the lines of rs_cos
+        return R(0)
     if _has_constant_term(p, x):
-        raise NotImplementedError
-    # Series is calcualed in terms of tan as its evaluation is fast.
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            t1, t2 = sin(c_expr), cos(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
+            raise NotImplementedError
+        p1 = p - c
+
+    # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
+    # of the constant term.
+        return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
+
+    # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and p.ngens == 1:
         t = rs_tan(p/2, x, prec)
         t2 = rs_square(t, x, prec)
         p1 = rs_series_inversion(1 + t2, x, prec)
         return rs_mul(p1, 2*t, x, prec)
-    one = ring(1)
+    one = R(1)
     n = 1
     c = [0]
     for k in range(2, prec + 2, 2):
@@ -783,26 +965,36 @@ def rs_cos(p, iv, prec):
 
     cos
     """
-    ring = p.ring
+    R = p.ring
     if _has_constant_term(p, iv):
-        zm = ring.zero_monom
-        c = S(p[zm])
-        if not c.is_real:
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            t1, t2 = sin(c_expr), cos(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
             raise NotImplementedError
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
-    # of the constant term. Should it be left unevaluated?
-        from sympy.functions import cos, sin
-        return cos(c)*rs_cos(p1, iv, prec) -  sin(c)*rs_sin(p1, iv, prec)
+    # of the constant term.
+        return rs_cos(p1, iv, prec)*t2 - rs_sin(p1, iv, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
-    if len(p) > 20 and ring.ngens == 1:
+    if len(p) > 20 and R.ngens == 1:
         t = rs_tan(p/2, iv, prec)
         t2 = rs_square(t, iv, prec)
         p1 = rs_series_inversion(1+t2, iv, prec)
         return rs_mul(p1 ,1 - t2, iv, prec)
-    one = ring(1)
+    one = R(1)
     n = 1
     c = []
     for k in range(2, prec + 2, 2):
@@ -829,8 +1021,8 @@ def check_series_var(p, iv):
 # TODO
 # Needs to be benchmarked before use in rs_atanh
 def _atanh(p, iv, prec):
-    ring = p.ring
-    one = ring(1)
+    R = p.ring
+    one = R(1)
     c = [one]
     p2 = rs_square(p, iv, prec)
     for k in range(1, prec):
@@ -839,7 +1031,7 @@ def _atanh(p, iv, prec):
     s = rs_mul(s, p, iv, prec)
     return s
 
-def rs_atanh(p, iv, prec):
+def rs_atanh(p, x, prec):
     """
     Hyperbolic arctangent of a series
 
@@ -860,19 +1052,32 @@ def rs_atanh(p, iv, prec):
 
     atanh
     """
-    if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
-    ring = p.ring
+    R = p.ring
+    const = 0
+    if _has_constant_term(p, x):
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = atanh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(atanh(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
     # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
     # Finally we integrate to get back atanh
-    dp = rs_diff(p, iv)
-    p1 = - rs_square(p, iv, prec) + 1
-    p1 = rs_series_inversion(p1, iv, prec - 1)
-    p1 = rs_mul(dp, p1, iv, prec - 1)
-    return rs_integrate(p1, iv)
+    dp = rs_diff(p, x)
+    p1 = - rs_square(p, x, prec) + 1
+    p1 = rs_series_inversion(p1, x, prec - 1)
+    p1 = rs_mul(dp, p1, x, prec - 1)
+    return rs_integrate(p1, x) + const
 
 def rs_sinh(p, iv, prec):
     """
@@ -939,15 +1144,15 @@ def _tanh(p, iv, prec):
 
     _tanh
     """
-    ring = p.ring
-    p1 = ring(0)
+    R = p.ring
+    p1 = R(0)
     for precx in _giant_steps(prec):
         tmp = p - rs_atanh(p1, iv, precx)
         tmp = rs_mul(tmp, 1 - p1.square(), iv, precx)
         p1 += tmp
     return p1
 
-def rs_tanh(p, iv, prec):
+def rs_tanh(p, x, prec):
     """
     Hyperbolic tangent of a series
 
@@ -968,13 +1173,33 @@ def rs_tanh(p, iv, prec):
 
     tanh
     """
-    ring = p.ring
-    if _has_constant_term(p, iv):
-        raise NotImplementedError('Polynomial must not have constant term in \
-              the series variables')
-    if ring.ngens == 1:
-        return _tanh(p, iv, prec)
-    return fun(p, _tanh, iv, prec)
+    R = p.ring
+    const = 0
+    if _has_constant_term(p, x):
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = tanh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(tanh(c_expr))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
+        else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
+            raise NotImplementedError
+        p1 = p - c
+        t1 = rs_tanh(p1, x, prec)
+        t = rs_series_inversion(1 + const*t1, x, prec)
+        return rs_mul(const + t1, t, x, prec)
+
+    if R.ngens == 1:
+        return _tanh(p, x, prec)
+    else:
+        return fun(p, _tanh, x, prec)
 
 def rs_newton(p, x, prec):
     """

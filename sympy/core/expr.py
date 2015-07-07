@@ -655,9 +655,10 @@ class Expr(Basic, EvalfMixin):
                         if sol:
                             if s in sol:
                                 return True
-                            if any(nsimplify(si, [s]) == s and simplify(si) == s
-                                    for si in sol):
-                                return True
+                            if s.is_real:
+                                if any(nsimplify(si, [s]) == s and simplify(si) == s
+                                        for si in sol):
+                                    return True
                     except NotImplementedError:
                         pass
 
@@ -2869,7 +2870,7 @@ class Expr(Basic, EvalfMixin):
         more information.
 
         """
-        from sympy.simplify.simplify import fraction
+        from sympy.simplify.radsimp import fraction
 
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
            log=log, multinomial=multinomial, basic=basic)

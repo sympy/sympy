@@ -160,9 +160,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return bool(res)
 
-    if assumptions == True:
-        return
-
     if local_facts is None:
         return satask(proposition, assumptions=assumptions, context=context)
 
@@ -368,27 +365,28 @@ def get_known_facts():
         Implies(Q.infinite, ~Q.finite),
         Implies(Q.real, Q.complex),
         Implies(Q.real, Q.hermitian),
-        Equivalent(Q.even, Q.integer & ~Q.odd),
         Equivalent(Q.extended_real, Q.real | Q.infinite),
-        Equivalent(Q.odd, Q.integer & ~Q.even),
+        Equivalent(Q.even | Q.odd, Q.integer),
+        Implies(Q.even, ~Q.odd),
         Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
         Implies(Q.algebraic, Q.complex),
-        Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
+        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+        Implies(Q.transcendental, ~Q.algebraic),
         Implies(Q.imaginary, Q.complex & ~Q.real),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.negative, Q.nonzero & ~Q.positive),
-        Equivalent(Q.positive, Q.nonzero & ~Q.negative),
-        Equivalent(Q.rational, Q.real & ~Q.irrational),
-        Equivalent(Q.real, Q.rational | Q.irrational),
-        Implies(Q.nonzero, Q.real),
-        Equivalent(Q.nonzero, Q.positive | Q.negative),
-        Equivalent(Q.nonpositive, ~Q.positive & Q.real),
-        Equivalent(Q.nonnegative, ~Q.negative & Q.real),
-        Equivalent(Q.zero, Q.real & ~Q.nonzero),
+        Equivalent(Q.irrational | Q.rational, Q.real),
+        Implies(Q.irrational, ~Q.rational),
         Implies(Q.zero, Q.even),
+
+        Equivalent(Q.real, Q.negative | Q.zero | Q.positive),
+        Implies(Q.zero, ~Q.negative & ~Q.positive),
+        Implies(Q.negative, ~Q.positive),
+        Equivalent(Q.nonnegative, Q.zero | Q.positive),
+        Equivalent(Q.nonpositive, Q.zero | Q.negative),
+        Equivalent(Q.nonzero, Q.negative | Q.positive),
 
         Implies(Q.orthogonal, Q.positive_definite),
         Implies(Q.orthogonal, Q.unitary),

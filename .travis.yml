@@ -1,4 +1,5 @@
 language: python
+sudo: false
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false"
@@ -19,9 +20,17 @@ matrix:
     - python: 2.7
       env:
         - TEST_GMPY="true" TEST_MATPLOTLIB="true"
+      addons:
+        apt:
+          packages:
+          - libgmp-dev
     - python: 3.4
       env:
         - TEST_GMPY="true" TEST_MATPLOTLIB="true"
+      addons:
+        apt:
+          packages:
+          - libgmp-dev
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
@@ -40,6 +49,7 @@ matrix:
         - FASTCACHE="false"
     - python: 2.7
       env: TEST_SPHINX="true" FASTCACHE="false"
+      sudo: true
     - python: 2.7
       env:
         - TEST_SLOW="true"
@@ -67,12 +77,27 @@ matrix:
     - python: 2.7
       env:
         - TEST_THEANO="true"
+      addons:
+        apt:
+          packages:
+          - libatlas-dev
+          - libatlas-base-dev
+          - liblapack-dev
+          - gfortran
     - python: 3.4
       env:
         - TEST_THEANO="true"
+      addons:
+        apt:
+          packages:
+          - libatlas-dev
+          - libatlas-base-dev
+          - liblapack-dev
+          - gfortran
     - python: 2.7
       env:
         - TEST_AUTOWRAP="true"
+      sudo: true
       virtualenv:
         system_site_packages: true
     - python: 2.7
@@ -86,6 +111,7 @@ matrix:
       env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
+      sudo: true
     - python: "pypy"
       env:
         - SPLIT="4/4"
@@ -99,8 +125,6 @@ before_install:
       sudo apt-get install gfortran gcc python-numpy cython;
     fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install libgmp-dev;
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
@@ -113,8 +137,6 @@ before_install:
       pip install --allow-external "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran;
       pip install "numpy==1.7.1";
       pip install "scipy==0.12.0";
       pip install --no-deps https://github.com/Theano/Theano/archive/rel-0.6.zip;

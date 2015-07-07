@@ -300,6 +300,7 @@ for klass, fact in [
     (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),
     (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
+    (Add, Implies(AllArgs(Q.negative), Q.negative)),
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
     (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
     (Mul, Implies(AllArgs(Q.real), Q.commutative)),

@@ -260,7 +260,8 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, posify, cse
-from sympy.simplify.simplify import collect_const, powdenest
+from sympy.simplify.powsimp import powdenest
+from sympy.simplify.radsimp import collect_const
 from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 
@@ -6494,6 +6495,12 @@ def _linear_2eq_order1_type1(x, y, t, r):
     .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
+    # FIXME: at least some of these can fail to give two linearly
+    # independent solutions e.g., because they make assumptions about
+    # zero/nonzero of certain coefficients.  I've "fixed" one and
+    # raised NotImplementedError in another.  I think this should probably
+    # just be re-written in terms of eigenvectors...
+
     l = Dummy('l')
     C1, C2, C3, C4 = symbols('C1:5')
     l1 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
@@ -6501,14 +6508,21 @@ def _linear_2eq_order1_type1(x, y, t, r):
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D > 0:
-            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
-            gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
+            if r['b'].is_zero:
+                # tempting to use this in all cases, but does not guarantee linearly independent eigenvectors
+                gsol1 = C1*(l1 - r['d'] + r['b'])*exp(l1*t) + C2*(l2 - r['d'] + r['b'])*exp(l2*t)
+                gsol2 = C1*(l1 - r['a'] + r['c'])*exp(l1*t) + C2*(l2 - r['a'] + r['c'])*exp(l2*t)
+            else:
+                gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
+                gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
         if D < 0:
             sigma = re(l1)
             if im(l1).is_positive:
                 beta = im(l1)
             else:
                 beta = im(l2)
+            if r['b'].is_zero:
+                raise NotImplementedError('b == 0 case not implemented')
             gsol1 = r['b']*exp(sigma*t)*(C1*sin(beta*t)+C2*cos(beta*t))
             gsol2 = exp(sigma*t)*(((C1*(sigma-r['a'])-C2*beta)*sin(beta*t)+(C1*beta+(sigma-r['a'])*C2)*cos(beta*t)))
         if D == 0:
@@ -6567,13 +6581,14 @@ def _linear_2eq_order1_type2(x, y, t, r):
         x0, y0 = symbols('x0, y0', cls=Dummy)
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
-    elif (r['a']*a[d] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
+    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
         k = r['c']/r['a']
         sigma = r['a'] + r['b']*k
         if sigma != 0:
             sol1 = r['b']*sigma**-1*(r['k1']*k-r['k2'])*t - sigma**-2*(r['a']*r['k1']+r['b']*r['k2'])
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         else:
+            # FIXME: a previous typo fix shows this is not covered by tests
             sol1 = r['b']*(r['k2']-r['k1']*k)*t**2 + r['k1']*t
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         psol = [sol1, sol2]
@@ -7084,6 +7099,8 @@ def _linear_2eq_order2_type4(x, y, t, r):
     peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
     peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
     peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
+    # FIXME: solve for what in what?  Ra, Rb, etc I guess
+    # but then psol not used for anything?
     psol = solve([peq1, peq2, peq3, peq4])
 
     chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)

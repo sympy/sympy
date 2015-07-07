@@ -12,6 +12,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
+from sympy.core.function import Derivative
 
 from sympy.logic.boolalg import BooleanAtom
 
@@ -2183,7 +2184,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'integrate')
 
-    def diff(f, *specs):
+    def diff(f, *specs, **kwargs):
         """
         Computes partial derivative of ``f``.
 
@@ -2200,6 +2201,9 @@ class Poly(Expr):
         Poly(2*x*y, x, y, domain='ZZ')
 
         """
+        if not kwargs.get('evaluate', True):
+            return Derivative(f, *specs, **kwargs)
+
         if hasattr(f.rep, 'diff'):
             if not specs:
                 return f.per(f.rep.diff(m=1))
@@ -2217,6 +2221,9 @@ class Poly(Expr):
             return f.per(rep)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'diff')
+
+    _eval_derivative = diff
+    _eval_diff = diff
 
     def eval(self, x, a=None, auto=True):
         """

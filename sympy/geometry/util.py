@@ -8,10 +8,10 @@ are_coplanar
 are_similar
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, Function, solve
-from sympy.core.compatibility import string_types, is_sequence, range
+from sympy import Function, Symbol, solve
+from sympy.core.compatibility import is_sequence, range, string_types
 
 
 def idiff(eq, y, x, n=1):
