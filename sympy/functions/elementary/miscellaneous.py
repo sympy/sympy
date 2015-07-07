@@ -14,7 +14,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And
 
@@ -561,37 +561,13 @@ class Max(MinMaxBase, Application):
                 for j in args])
 
     def _eval_is_positive(self):
-        f = False
-        for a in self.args:
-            if a.is_positive:
-                return True
-            if f is not None and a.is_positive is False:
-                f = False
-            else:
-                f = None
-        return f
+        return fuzzy_or(a.is_positive for a in self.args)
 
     def _eval_is_nonnegative(self):
-        f = False
-        for a in self.args:
-            if a.is_nonnegative:
-                return True
-            if f is not None and a.is_positive is False:
-                f = False
-            else:
-                f = None
-        return f
+        return fuzzy_or(a.is_nonnegative for a in self.args)
 
     def _eval_is_negative(self):
-        f = True
-        for a in self.args:
-            if a.is_nonnegative:
-                return False
-            if f is not None and a.is_negative is True:
-                f = True
-            else:
-                f = None
-        return f
+        return fuzzy_and(a.is_negative for a in self.args)
 
 
 class Min(MinMaxBase, Application):
@@ -645,34 +621,10 @@ class Min(MinMaxBase, Application):
                 for j in args])
 
     def _eval_is_positive(self):
-        f = True
-        for a in self.args:
-            if a.is_negative:
-                return False
-            if f is not None and a.is_positive is True:
-                f = True
-            else:
-                f = None
-        return f
+        return fuzzy_and(a.is_positive for a in self.args)
 
     def _eval_is_nonnegative(self):
-        f = True
-        for a in self.args:
-            if a.is_negative:
-                return False
-            if f is not None and a.is_nonnegative is True:
-                f = True
-            else:
-                f = None
-        return f
+        return fuzzy_and(a.is_nonnegative for a in self.args)
 
     def _eval_is_negative(self):
-        f = False
-        for a in self.args:
-            if a.is_negative:
-                return True
-            if f is not None and a.is_nonnegative is True:
-                f = False
-            else:
-                f = None
-        return f
+        return fuzzy_or(a.is_negative for a in self.args)
