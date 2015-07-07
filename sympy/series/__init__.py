@@ -7,9 +7,10 @@ from .series import series
 from .residues import residue
 from .sequences import (EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd,
                         SeqMul)
+from .fourier import fourier_series
 
 O = Order
 
 __all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'residue',
            'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence',
-           'SeqAdd', 'SeqMul']
+           'SeqAdd', 'SeqMul', 'fourier_series']

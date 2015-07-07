@@ -7,7 +7,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -3187,6 +3187,27 @@ def test_pretty_sequences():
 
     assert pretty(SeqMul(s5, s6)) == ascii_str
     assert upretty(SeqMul(s5, s6)) == ucode_str
+
+
+def test_pretty_FourierSeries():
+    f = fourier_series(x, (x, -pi, pi))
+
+    ascii_str = \
+"""\
+                      2*sin(3*x)      \n\
+2*sin(x) - sin(2*x) + ---------- + ...\n\
+                          3           \
+"""
+
+    ucode_str = \
+u("""\
+                      2⋅sin(3⋅x)    \n\
+2⋅sin(x) - sin(2⋅x) + ────────── + …\n\
+                          3         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
 
 
 def test_pretty_limits():

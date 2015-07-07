@@ -1570,6 +1570,9 @@ class LatexPrinter(Printer):
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
+    def _print_FourierSeries(self, s):
+        return self._print_Add(s.truncate()) + self._print(' + \ldots')
+
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
 
