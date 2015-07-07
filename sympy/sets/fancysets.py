@@ -177,6 +177,13 @@ class Reals(with_metaclass(Singleton, Interval)):
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 
+    def __eq__(self, other):
+        if other == Interval(-S.Infinity, S.Infinity):
+            return True
+
+    def __hash__(self):
+        return hash(Interval(-S.Infinity, S.Infinity))
+
 
 class ImageSet(Set):
     """
