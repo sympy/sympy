@@ -3085,9 +3085,12 @@ class MatrixBase(object):
         return out
 
     def left_eigenvects(self, **flags):
-        """Return list of triples (eigenval, multiplicity, basis).
-           for the left eigenvectors.  Options are the same as
-           for eigenvects()
+        """Returns left eigenvectors and eigenvalues.
+
+        This function returns the list of triples (eigenval, multiplicity,
+        basis) for the left eigenvectors. Options are the same as for
+        eigenvects(), i.e. the **flags arguments gets passed directly to
+        eigenvects().
         """
         mat = self
         left_transpose = mat.transpose().eigenvects(**flags)
