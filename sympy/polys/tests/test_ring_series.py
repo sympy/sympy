@@ -9,7 +9,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh, log
+from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh, log, sqrt
 
 def test_ring_series1():
     R, x = ring('x', QQ)
@@ -227,6 +227,16 @@ def test_nth_root():
     assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -x**4*y**6/9 + \
         5*x**4*y**5/27 - 10*x**4*y**4/243 - 2*x**3*y**4/9 + 5*x**3*y**3/81 + \
         x**2*y**3/3 - x**2*y**2/9 + x*y/3 + 1
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', EX)
+    assert rs_nth_root(x + a, 3, x, 4) == EX(5/(81*a**QQ(8, 3)))*x**3 - \
+        EX(1/(9*a**QQ(5, 3)))*x**2 + EX(1/(3*a**QQ(2, 3)))*x + EX(a**QQ(1, 3))
+    assert rs_nth_root(x**QQ(2, 3) + x**2*y + 5, 2, x, 3) == -EX(sqrt(5)/100)*\
+        x**QQ(8, 3)*y - EX(sqrt(5)/16000)*x**QQ(8, 3) + EX(sqrt(5)/10)*x**2*y + \
+        EX(sqrt(5)/2000)*x**2 - EX(sqrt(5)/200)*x**QQ(4, 3) + \
+        EX(sqrt(5)/10)*x**QQ(2, 3) + EX(sqrt(5))
 
 def test_atan():
     R, x, y = ring('x, y', QQ)

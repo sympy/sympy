@@ -871,7 +871,7 @@ def _nth_root1(p, n, iv, prec):
     else:
         return _series_inversion1(p1, iv, prec)
 
-def rs_nth_root(p, n, iv, prec):
+def rs_nth_root(p, n, x, prec):
     """
     Multivariate series expansion of the nth root of p
 
@@ -906,44 +906,37 @@ def rs_nth_root(p, n, iv, prec):
         else:
             return p.ring(1)
     if n == 1:
-        return rs_trunc(p, iv, prec)
-    ring = p.ring
-    zm = ring.zero_monom
-    ii = ring.gens.index(iv)
-    m = min(p, key=lambda k: k[ii])[ii]
-    p = mul_xin(p, ii, -m)
+        return rs_trunc(p, x, prec)
+    R = p.ring
+    zm = R.zero_monom
+    index = R.gens.index(x)
+    m = min(p, key=lambda k: k[index])[index]
+    p = mul_xin(p, index, -m)
     prec -= m
-    if _has_constant_term(p - 1, iv):
-        raise NotImplementedError
-        if zm in p:
-            c = p[zm]
-            if isinstance(c, Rational):
-                c1 = Rational(c.p, c.q)
-                cn = Pow(c1, S.One/n)
-            else:
-                cn = Pow(c, S.One/n)
-            if cn.is_Rational:
-                cn = ring(cn.p, cn.q)
-                res = rs_nth_root(cn*(p/c), n, iv, prec)
-                if mq:
-                    res = mul_xin(res, iv, mq)
-                return res
-        if zm in p:
-            c = p[zm]
-            if c > 0:
-                res = rs_nth_root(p/c, n, iv, prec)*c**QQ(1, n)
-                if mq:
-                    res = mul_xin(res, iv, mq)
-                return res
-            else:
-                raise NotImplementedError
-    res = _nth_root1(p, n, iv, prec)
-    if m:
-        if isinstance(m, Rational):
-            m = m/n
+
+    if _has_constant_term(p - 1, x):
+        zm = R.zero_monom
+        c = p[zm]
+        c_expr = c.as_expr()
+        if R.domain is EX:
+            const = c_expr**QQ(1, n)
+        elif isinstance(c, PolyElement):
+            try:
+                const = R(c_expr**(QQ(1, n)))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
+                    "domain.")
         else:
+            raise DomainError("The given series can't be expanded in this "
+                "domain")
+        res = rs_nth_root(p/c_expr, n, x, prec)*const
+        return res
+
+    res = _nth_root1(p, n, x, prec)
+    if m:
+        if m != int(m):
             m = QQ(m, n)
-        res = mul_xin(res, ii, m)
+        res = mul_xin(res, index, m)
     return res
 
 def rs_log(p, x, prec):
