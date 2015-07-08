@@ -87,12 +87,27 @@ def rs_trunc(p1, x, prec):
 
 def rs_is_regular(p, x):
     """
+    Test if `p` is Puiseux series in `x`; raise an exception if it has
+    negatine powers in `x`.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_is_regular
+    >>> R, x = ring('x', QQ)
+    >>> p = x**QQ(2,5) + x**QQ(2,3) + x
+    >>> rs_is_regular(p, x)
+    False
     """
     ii = p.ring.gens.index(x)
     n = 1
     for k in p:
         if k[ii] != int(k[ii]):
             return False
+        if k[ii] < 0:
+            raise ValueError('The series is not regular in %s' % x)
     return True
 
 def rs_puiseux(f, p, x, prec):
@@ -125,25 +140,17 @@ def rs_puiseux(f, p, x, prec):
         p1 = pow_xin(p, ii, n)
         r = f(p1, x, prec*n)
         n1 = QQ(1, n)
-        r = pow_xin(r, ii, n1)
+        if isinstance(r, tuple):
+            r = tuple([pow_xin(rx, ii, n1) for rx in r])
+        else:
+            r = pow_xin(r, ii, n1)
     else:
         r = f(p, x, prec)
     return r
 
 def rs_puiseux2(f, p, q, x, prec):
     """
-    Return the puiseux series for `f(p, x, prec)` when `f` is implemented only for regular series
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> R, x = ring('x', QQ)
-    >>> p = x**QQ(2,5) + x**QQ(2,3) + x
-    >>> rs_puiseux(rs_exp,p, x, 1)
-    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
+    Return the puiseux series for `f(p, q, x, prec)` when `f` is implemented only for regular series
 
     """
     ii = p.ring.gens.index(x)
@@ -165,41 +172,6 @@ def rs_puiseux2(f, p, q, x, prec):
         r = f(p, q, x, prec)
     return r
 
-
-def rs_puiseux3(f, p, x, prec):
-    """
-    Return the puiseux series for `f(p, x, prec)` when `f` is implemented only for regular series
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> R, x = ring('x', QQ)
-    >>> p = x**QQ(2,5) + x**QQ(2,3) + x
-    >>> rs_puiseux(rs_exp,p, x, 1)
-    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
-
-    """
-    ii = p.ring.gens.index(x)
-    n = 1
-    for k in p:
-        power = k[ii]
-        if isinstance(power, Rational):
-            num, den = power.as_numer_denom()
-            n = n*den // igcd(n, den)
-        elif power != int(power):
-            num, den = power.numerator, power.denominator
-            n = n*den // igcd(n, den)
-    if n != 1:
-        p1 = pow_xin(p, ii, n)
-        r = f(p1, x, prec*n)
-        n1 = QQ(1, n)
-        r = [pow_xin(rx, ii, n1) for rx in r]
-    else:
-        r = f(p, x, prec)
-    return r
 
 def rs_mul(p1, p2, x, prec):
     """
@@ -582,6 +554,9 @@ def rs_series_reversion(p, x, n, y):
     >>> rs_trunc(p.compose(x, p1), y, 3)
     y
     """
+    reg = rs_is_regular(p, x)
+    if not reg:
+        raise NotImplementedError
     ring = p.ring
     nx = ring.gens.index(x)
     y = ring(y)
@@ -1469,7 +1444,7 @@ def rs_cos_sin(p, iv, prec):
     """
     reg = rs_is_regular(p, iv)
     if not reg:
-        return rs_puiseux3(rs_cos_sin, p, iv, prec)
+        return rs_puiseux(rs_cos_sin, p, iv, prec)
     t = rs_tan(p/2, iv, prec)
     t2 = rs_square(t, iv, prec)
     p1 = rs_series_inversion(1 + t2, iv, prec)
