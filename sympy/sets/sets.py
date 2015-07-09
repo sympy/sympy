@@ -1439,7 +1439,10 @@ class Intersection(Set):
                 unk = [x for x in s
                        if any(other.contains(x) not in (True, False) for other in other_args)]
                 if unk:
-                    res += Intersection(*([s.func(*unk)] + other_args), evaluate=False)
+                    other_sets = Intersection(*other_args)
+                    if other_sets.is_EmptySet:
+                        return EmptySet()
+                    res += Intersection(s.func(*unk), other_sets, evaluate=False)
                 return res
 
         # If any of the sets are unions, return a Union of Intersections

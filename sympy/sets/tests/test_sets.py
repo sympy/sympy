@@ -253,6 +253,7 @@ def test_intersect():
     assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
         Union(Interval(1, 1), Interval(2, 2))
 
+
 def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1, 2, 3), Interval(2, 5), evaluate=False)
@@ -280,6 +281,16 @@ def test_intersection():
                         S.Reals, evaluate=False) == \
             Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
 
+
+def test_issue_9623():
+    n = Symbol('n')
+
+    a = S.Reals
+    b = Interval(0, oo)
+    c = FiniteSet(n)
+
+    assert Intersection(a, b, c) == Intersection(b, c)
+    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet()
 
 
 def test_is_disjoint():
