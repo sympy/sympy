@@ -890,3 +890,11 @@ def test_issue_9611():
 
     assert solveset(Eq(x - x + a, a), x) == S.Reals
     assert solveset(Eq(y - y + a, a), y) == S.Complex
+
+
+def test_issue_9557():
+    x = Symbol('x', real=True)
+    a = Symbol('a')
+
+    assert solveset(x**2 + a, x) == Intersection(S.Reals,
+        FiniteSet(-sqrt(-a), sqrt(-a)))
