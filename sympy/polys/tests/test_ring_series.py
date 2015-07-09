@@ -5,7 +5,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_regular)
+    rs_LambertW, rs_series_reversion, rs_is_puiseux)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
@@ -444,14 +444,14 @@ def test_RR():
 def test_is_regular():
     R, x, y = ring('x, y', QQ)
     p = 1 + 2*x + x**2 + 3*x**3
-    assert rs_is_regular(p, x)
+    assert not rs_is_puiseux(p, x)
 
     p = x + x**QQ(1,5)*y
-    assert not rs_is_regular(p, x)
-    assert rs_is_regular(p, y)
+    assert rs_is_puiseux(p, x)
+    assert not rs_is_puiseux(p, y)
 
     p = x + x**2*y**QQ(1,5)*y
-    assert rs_is_regular(p, x)
+    assert not rs_is_puiseux(p, x)
 
 def test_puiseux():
     R, x, y = ring('x, y', QQ)
