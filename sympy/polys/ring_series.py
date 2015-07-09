@@ -917,19 +917,23 @@ def rs_nth_root(p, n, x, prec):
     if _has_constant_term(p - 1, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             const = c_expr**QQ(1, n)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 const = R(c_expr**(QQ(1, n)))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:                             # RealElement doesn't support
+                const = R(c**Rational(1, n)) # exponentiation with mpq object
+            except ValueError:               # as exponent
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
-        res = rs_nth_root(p/c_expr, n, x, prec)*const
+        res = rs_nth_root(p/c, n, x, prec)*const
         return res
 
     res = _nth_root1(p, n, x, prec)
@@ -983,7 +987,10 @@ def rs_log(p, x, prec):
                     raise DomainError("The given series can't be expanded in this "
                         "domain.")
             else:
-                raise DomainError("The given series can't be expanded in this "
+                try:
+                    const = R(log(c))
+                except ValueError:
+                    raise DomainError("The given series can't be expanded in this "
                     "domain")
 
         dlog = p.diff(x)
@@ -1066,17 +1073,21 @@ def rs_exp(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             const = exp(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 const = R(exp(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                const = R(exp(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
         p1 = p - c
 
@@ -1140,17 +1151,21 @@ def rs_atan(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             const = atan(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                const = R(atan(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
@@ -1259,19 +1274,22 @@ def rs_tan(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             const = tan(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 const = R(tan(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                const = R(tan(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
-            raise NotImplementedError
         p1 = p - c
 
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
@@ -1357,19 +1375,22 @@ def rs_sin(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             t1, t2 = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                t1, t2 = R(sin(c)), R(cos(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
-            raise NotImplementedError
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
@@ -1421,19 +1442,22 @@ def rs_cos(p, iv, prec):
     if _has_constant_term(p, iv):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             t1, t2 = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                t1, t2 = R(sin(c)), R(cos(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
-            raise NotImplementedError
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
@@ -1510,17 +1534,21 @@ def rs_atanh(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             const = atanh(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 const = R(atanh(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                const = R(atanh(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
@@ -1640,19 +1668,22 @@ def rs_tanh(p, x, prec):
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
-        c_expr = c.as_expr()
         if R.domain is EX:
+            c_expr = c.as_expr()
             const = tanh(c_expr)
         elif isinstance(c, PolyElement):
             try:
+                c_expr = c.as_expr()
                 const = R(tanh(c_expr))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
                     "domain.")
         else:
-            raise DomainError("The given series can't be expanded in this "
+            try:
+                const = R(tanh(c))
+            except ValueError:
+                raise DomainError("The given series can't be expanded in this "
                 "domain")
-            raise NotImplementedError
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)
         t = rs_series_inversion(1 + const*t1, x, prec)

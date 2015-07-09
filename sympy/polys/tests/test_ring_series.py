@@ -1,4 +1,4 @@
-from sympy.polys.domains import QQ, EX
+from sympy.polys.domains import QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
@@ -9,7 +9,12 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import sin, cos, exp, tan, atan, atanh, tanh, log, sqrt
+from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
+    tanh, log, sqrt)
+
+def is_close(a, b):
+    tol = 10**(-10)
+    assert abs(a - b) < tol
 
 def test_ring_series1():
     R, x = ring('x', QQ)
@@ -421,6 +426,20 @@ def test_tanh():
     p = rs_tanh(x + x**2*y + a, x, 4)
     assert (p.compose(x, 10)).compose(y, 5) == EX(-1000*tanh(a)**4 + \
         10100*tanh(a)**3 + 2470*tanh(a)**2/3 - 10099*tanh(a) + QQ(530, 3))
+
+def test_RR():
+    rs_funcs = [rs_sin, rs_cos, rs_tan, rs_cot, rs_atan, rs_tanh]
+    sympy_funcs = [sin, cos, tan, cot, atan, tanh]
+    R, x, y = ring('x, y', RR)
+    a = symbols('a')
+    for rs_func, sympy_func in zip(rs_funcs, sympy_funcs):
+        p = rs_func(2 + x, x, 5).compose(x, 5)
+        q = sympy_func(2 + a).series(a, 0, 5).removeO()
+        is_close(p.as_expr(), q.subs(a, 5).n())
+
+    p = rs_nth_root(2 + x, 5, x, 5).compose(x, 5)
+    q = ((2 + a)**QQ(1, 5)).series(a, 0, 5).removeO()
+    is_close(p.as_expr(), q.subs(a, 5).n())
 
 def test_is_regular():
     R, x, y = ring('x, y', QQ)
