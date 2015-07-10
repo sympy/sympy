@@ -41,9 +41,9 @@ def test_invert_real():
     x = Dummy(real=True)
     n = Symbol('n')
 
-    # minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
-    # plus_n = Intersection(Interval(0, oo), FiniteSet(n))
-    # assert solveset(abs(x) - n, x) == Union(minus_n, plus_n)
+    minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
+    plus_n = Intersection(Interval(0, oo), FiniteSet(n))
+    assert solveset(abs(x) - n, x) == Union(minus_n, plus_n)
 
     n = Symbol('n', real=True)
     assert invert_real(x + 3, y, x) == (x, FiniteSet(y - 3))

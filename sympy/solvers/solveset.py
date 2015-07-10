@@ -76,7 +76,6 @@ def _invert_real(f, g_ys, symbol):
                             imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, Abs):
-
         return _invert_real(f.args[0],
                             Union(imageset(Lambda(n, n), g_ys).intersect(Interval(0, oo)),
                                   imageset(Lambda(n, -n), g_ys).intersect(Interval(-oo, 0))),
