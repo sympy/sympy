@@ -1329,7 +1329,7 @@ def _rs_sin(p, x, prec):
     sin
     """
     if rs_is_puiseux(p, x):
-        return rs_puiseux(rs_sin, p, x, prec)
+        return rs_puiseux(_rs_sin, p, x, prec)
     R = x.ring
     if not p:
         return R(0)
@@ -1358,7 +1358,7 @@ def _rs_sin(p, x, prec):
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
+        return _rs_sin(p1, x, prec)*t2 + _rs_cos(p1, x, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1399,7 +1399,7 @@ def _rs_cos(p, x, prec):
     cos
     """
     if rs_is_puiseux(p, x):
-        return rs_puiseux(rs_cos, p, x, prec)
+        return rs_puiseux(_rs_cos, p, x, prec)
     R = p.ring
     if _has_constant_term(p, x):
         zm = R.zero_monom
@@ -1424,7 +1424,7 @@ def _rs_cos(p, x, prec):
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        return rs_cos(p1, x, prec)*t2 - rs_sin(p1, x, prec)*t1
+        return _rs_cos(p1, x, prec)*t2 - _rs_sin(p1, x, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
