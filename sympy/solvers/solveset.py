@@ -76,20 +76,11 @@ def _invert_real(f, g_ys, symbol):
                             imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, Abs):
-        g_ys = g_ys - FiniteSet(*[g_y for g_y in g_ys if g_y.is_negative])
-
-        _a = []
-        from sympy.functions.elementary.complexes import sign
-        for g_y in g_ys:
-            if g_y.is_Mul and (g_y.args[0] == -1):
-                _a.append(FiniteSet(g_y).intersect(Interval(-oo, 0)))
-            else:
-                _a.append(FiniteSet(g_y).intersect(Interval(0, oo)))
-
-        g_ys = Union(*[element for element in _a if element.args])
 
         return _invert_real(f.args[0],
-                            Union(g_ys, imageset(Lambda(n, -n), g_ys)), symbol)
+                            Union(imageset(Lambda(n, n), g_ys).intersect(Interval(0, oo)),
+                                  imageset(Lambda(n, -n), g_ys).intersect(Interval(-oo, 0))),
+                            symbol)
 
     if f.is_Add:
         # f = g + h
