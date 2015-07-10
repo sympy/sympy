@@ -428,8 +428,16 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         sol.append((res, Eq(k % c, j % m)))
 
     sol.append((S.Zero, True))
+    sol = Piecewise(*sol)
+    s = k_max + 1 + shift + m
 
-    return (Piecewise(*sol), ind, k_max + m + 1 + shift)
+    #  save all the terms of
+    #  form 1/x**k in ind
+    if s < 0:
+        ind += sum(sequence(sol * x**k, (k, s, -1)))
+        s = S.Zero
+
+    return (sol, ind, s)
 
 
 def solve_de(f, x, DE, g, k):

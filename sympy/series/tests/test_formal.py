@@ -249,10 +249,6 @@ def test_fps__hyper():
     f = x*exp(x)*sin(2*x)  # TODO: solved using rsolve, improve simpleDE
     assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
 
-    f = x**2*atan(x)
-    assert fps(f, x, rational=False).truncate() == \
-        x**3 - x**5/3 + O(x**6)
-
     f = airyai(x**2)
     assert fps(f, x).truncate() == \
         (3**Rational(5, 6)*gamma(Rational(1, 3))/(6*pi) -
@@ -260,6 +256,16 @@ def test_fps__hyper():
 
     f = exp(x)*sin(x)
     assert fps(f, x).truncate() == x + x**2 + x**3/3 - x**5/30 + O(x**6)
+
+
+def test_fps_shift():
+    f = x**-5*sin(x)
+    assert fps(f, x).truncate() == \
+        1/x**4 - 1/(6*x**2) + S.One/120 - x**2/5040 + x**4/362880 + O(x**6)
+
+    f = x**2*atan(x)
+    assert fps(f, x, rational=False).truncate() == \
+        x**3 - x**5/3 + O(x**6)
 
 
 def test_fps__Add_expr():
@@ -289,6 +295,3 @@ def test_xfail_fps__hyper():
 
     f = exp(x)*sin(x)/x
     assert fps(f, x).truncate() == 1 + x + x**2/3 - x**4/30 - x**5/90 + O(x**6)
-
-    f = x**-5*sin(x)
-    assert fps(f, x).truncate() == 1/x**4 - 1/(x*6) + 1/120 + O(x**6)
