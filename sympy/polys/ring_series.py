@@ -101,12 +101,12 @@ def rs_is_puiseux(p, x):
     >>> rs_is_puiseux(p, x)
     True
     """
-    ii = p.ring.gens.index(x)
+    index = p.ring.gens.index(x)
     n = 1
     for k in p:
-        if k[ii] != int(k[ii]):
+        if k[index] != int(k[index]):
             return True
-        if k[ii] < 0:
+        if k[index] < 0:
             raise ValueError('The series is not regular in %s' % x)
     return False
 
@@ -126,10 +126,10 @@ def rs_puiseux(f, p, x, prec):
     1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
 
     """
-    ii = p.ring.gens.index(x)
+    index = p.ring.gens.index(x)
     n = 1
     for k in p:
-        power = k[ii]
+        power = k[index]
         if isinstance(power, Rational):
             num, den = power.as_numer_denom()
             n = n*den // igcd(n, den)
@@ -137,13 +137,13 @@ def rs_puiseux(f, p, x, prec):
             num, den = power.numerator, power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
-        p1 = pow_xin(p, ii, n)
+        p1 = pow_xin(p, index, n)
         r = f(p1, x, prec*n)
         n1 = QQ(1, n)
         if isinstance(r, tuple):
-            r = tuple([pow_xin(rx, ii, n1) for rx in r])
+            r = tuple([pow_xin(rx, index, n1) for rx in r])
         else:
-            r = pow_xin(r, ii, n1)
+            r = pow_xin(r, index, n1)
     else:
         r = f(p, x, prec)
     return r
@@ -153,10 +153,10 @@ def rs_puiseux2(f, p, q, x, prec):
     Return the puiseux series for `f(p, q, x, prec)` when `f` is implemented only for regular series
 
     """
-    ii = p.ring.gens.index(x)
+    index = p.ring.gens.index(x)
     n = 1
     for k in p:
-        power = k[ii]
+        power = k[index]
         if isinstance(power, Rational):
             num, den = power.as_numer_denom()
             n = n*den // igcd(n, den)
@@ -164,10 +164,10 @@ def rs_puiseux2(f, p, q, x, prec):
             num, den = power.numerator, power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
-        p1 = pow_xin(p, ii, n)
+        p1 = pow_xin(p, index, n)
         r = f(p1, q, x, prec*n)
         n1 = QQ(1, n)
-        r = pow_xin(r, ii, n1)
+        r = pow_xin(r, index, n1)
     else:
         r = f(p, q, x, prec)
     return r
@@ -351,7 +351,7 @@ def rs_subs(p, rules, x, prec):
     R = p.ring
     ngens = R.ngens
     d = R(0)
-    for i in range(R.ngens):
+    for i in range(ngens):
         d[(i, 1)] = R.gens[i]
     for var in rules:
         d[(R.index(var), 1)] = rules[var]
@@ -402,12 +402,12 @@ def _has_constant_term(p, x):
             return True
     return False
 
-def _check_series_var(p, iv, name):
-    ii = p.ring.gens.index(iv)
-    m = min(p, key=lambda k: k[ii])[ii]
+def _check_series_var(p, x, name):
+    index = p.ring.gens.index(x)
+    m = min(p, key=lambda k: k[index])[index]
     if m < 0:
         raise PoleError('Asymptotic expansion of %s around [oo] not implemented.' % name)
-    return ii, m
+    return index, m
 
 def _series_inversion1(p, x, prec):
     """
@@ -439,7 +439,7 @@ def _series_inversion1(p, x, prec):
         prec = int(prec)
 
     if zm not in p:
-        raise ValueError('no constant term in series')
+        raise ValueError('No constant term in series')
     if _has_constant_term(p - c, x):
         raise ValueError('p cannot contain a constant term depending on '
             'parameters')
@@ -477,19 +477,19 @@ def rs_series_inversion(p, x, prec):
     """
     R = p.ring
     zm = R.zero_monom
-    ii = R.gens.index(x)
-    m = min(p, key=lambda k: k[ii])[ii]
+    index = R.gens.index(x)
+    m = min(p, key=lambda k: k[index])[index]
     if m:
-        p = mul_xin(p, ii, -m)
+        p = mul_xin(p, index, -m)
         prec = prec + m
     if zm not in p:
-        raise NotImplementedError('no constant term in series')
+        raise NotImplementedError('No constant term in series')
 
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError('p - p[0] must not have a constant term in the series variables')
     r = _series_inversion1(p, x, prec)
     if m != 0:
-        r = mul_xin(r, ii, -m)
+        r = mul_xin(r, index, -m)
     return r
 
 
@@ -498,11 +498,11 @@ def _coefficient_t(p, t):
     Coefficient of `x_i**j` in p, where t = (i, j)
     """
     i, j = t
-    ring = p.ring
-    expv1 = [0]*ring.ngens
+    R = p.ring
+    expv1 = [0]*R.ngens
     expv1[i] = j
     expv1 = tuple(expv1)
-    p1 = ring(0)
+    p1 = R(0)
     for expv in p:
         if expv[i] == j:
             p1[monomial_div(expv, expv1)] = p[expv]
@@ -789,8 +789,8 @@ def pow_xin(p, i, n):
     >>> from sympy.polys.ring_series import pow_xin
     >>> R, x, y = ring('x, y', QQ)
     >>> p = x**QQ(2,5) + x + x**QQ(2,3)
-    >>> ii = p.ring.gens.index(x)
-    >>> pow_xin(p, ii, 15)
+    >>> index = p.ring.gens.index(x)
+    >>> pow_xin(p, index, 15)
     x**15 + x**10 + x**6
     """
     ring = p.ring
@@ -819,7 +819,7 @@ def _nth_root1(p, n, x, prec):
     ring = p.ring
     zm = ring.zero_monom
     if zm not in p:
-        raise NotImplementedError('no constant term in series')
+        raise NotImplementedError('No constant term in series')
     n = as_int(n)
     assert p[zm] == 1
     p1 = ring(1)
@@ -904,7 +904,7 @@ def rs_nth_root(p, n, x, prec):
                 const = R(c**Rational(1, n)) # exponentiation with mpq object
             except ValueError:               # as exponent
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
         res = rs_nth_root(p/c, n, x, prec)*const
         return res
 
@@ -962,7 +962,7 @@ def rs_log(p, x, prec):
                     const = R(log(c))
                 except ValueError:
                     raise DomainError("The given series can't be expanded in this "
-                    "domain")
+                        "domain")
 
         dlog = p.diff(x)
         dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
@@ -1057,7 +1057,7 @@ def rs_exp(p, x, prec):
                 const = R(exp(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                   "domain")
         p1 = p - c
 
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
@@ -1078,9 +1078,12 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
-# TODO
-# Needs to be benchmarked before use in rs_atan
-def _atan_series(p, iv, prec):
+def _atan(p, iv, prec):
+    """
+    Expansion using formula
+
+    Faster on very small and univariate series.
+    """
     R = p.ring
     mo = R(-1)
     c = [-mo]
@@ -1134,7 +1137,7 @@ def rs_atan(p, x, prec):
                 const = R(atan(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1255,7 +1258,7 @@ def rs_tan(p, x, prec):
                 const = R(tan(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
         p1 = p - c
 
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
@@ -1333,8 +1336,6 @@ def rs_sin(p, x, prec):
     R = x.ring
     if not p:
         return R(0)
-    # Support for constant term can be extended on the lines of rs_cos
-    # XXX Do we always need to truncate?
     if _has_constant_term(p, x):
         zm = R.zero_monom
         c = p[zm]
@@ -1353,7 +1354,7 @@ def rs_sin(p, x, prec):
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
@@ -1361,7 +1362,7 @@ def rs_sin(p, x, prec):
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
-    if len(p) > 20 and p.ngens == 1:
+    if len(p) > 20 and R.ngens == 1:
         t = rs_tan(p/2, x, prec)
         t2 = rs_square(t, x, prec)
         p1 = rs_series_inversion(1 + t2, x, prec)
@@ -1419,7 +1420,7 @@ def rs_cos(p, x, prec):
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
@@ -1453,9 +1454,12 @@ def rs_cos_sin(p, x, prec):
     p1 = rs_series_inversion(1 + t2, x, prec)
     return (rs_mul(p1, 1 - t2, x, prec), rs_mul(p1, 2*t, x, prec))
 
-# TODO
-# Needs to be benchmarked before use in rs_atanh
 def _atanh(p, x, prec):
+    """
+    Expansion using formula
+
+    Faster for very small and univariate series
+    """
     R = p.ring
     one = R(1)
     c = [one]
@@ -1509,7 +1513,7 @@ def rs_atanh(p, x, prec):
                 const = R(atanh(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
     # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1638,7 +1642,7 @@ def rs_tanh(p, x, prec):
                 const = R(tanh(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in this "
-                "domain")
+                    "domain")
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)
         t = rs_series_inversion(1 + const*t1, x, prec)
