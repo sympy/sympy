@@ -1,5 +1,7 @@
 """
-This module contains functions to solve a single equation for a single variable.
+This module contains functions to:
+    1) solve a single equation for a single real or complex variable,
+    2) solve a system of linear equation with N variables, M equations
 """
 from __future__ import print_function, division
 
