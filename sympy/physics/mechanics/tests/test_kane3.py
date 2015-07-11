@@ -1,3 +1,5 @@
+import warnings
+
 from sympy.core.compatibility import range
 from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
@@ -253,7 +255,9 @@ def test_bicycle():
     # many rows as *total* coordinates and speeds, but only as many columns as
     # independent coordinates and speeds.
 
-    forcing_lin = KM.linearize()[0]
+    with warnings.catch_warnings():
+        warnings.filterwarnings('always')
+        forcing_lin = KM.linearize()[0]
 
     # As mentioned above, the size of the linearized forcing terms is expanded
     # to include both q's and u's, so the mass matrix must have this done as
