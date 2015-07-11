@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma)
+                   airyai, acos, acosh, gamma, erf)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -202,10 +202,6 @@ def test_fps__rational():
         (atan(2) - Rational(2, 5) - 2*(-x + 2)**2/25 - 11*(-x + 2)**3/375
          - 6*(-x + 2)**4/625 - 41*(-x + 2)**5/15625 + x/5 + O((x - 2)**6,
                                                               (x, 2)))
-    assert fps(f, x, oo, full=True).truncate() == \
-        -1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2 + O(1/x**6, (x, oo))
-    assert fps(f, x, -oo, full=True).truncate() == \
-        -1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2 + O(1/x**6, (x, oo))
 
     f = x*atan(x) - log(1 + x**2) / 2
     assert fps(f, x, full=True).truncate() == x**2/2 - x**4/12 + O(x**6)
@@ -279,11 +275,24 @@ def test_fps__Add_expr():
     assert fps(f, x).truncate() == 1/x + x - x**3/6 + x**5/120 + O(x**6)
 
 
-@XFAIL
-def test_xfail_fps__hyper():
+def test_fps__asymptotic():
     f = exp(x)
+    assert fps(f, x, oo) == f
     assert fps(f, x, -oo).truncate() == O(1/x**6, (x, oo))
 
+    f = erf(x)
+    assert fps(f, x, oo).truncate() == 1 + O(1/x**6, (x, oo))
+    assert fps(f, x, -oo).truncate() == -1 + O(1/x**6, (x, oo))
+
+    f = atan(x)
+    assert fps(f, x, oo, full=True).truncate() == \
+        -1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2 + O(1/x**6, (x, oo))
+    assert fps(f, x, -oo, full=True).truncate() == \
+        -1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2 + O(1/x**6, (x, oo))
+
+
+@XFAIL
+def test_xfail_fps__hyper():
     f = sin(sqrt(x)) / x
     assert fps(f, x).truncate() == \
         (1/sqrt(x) - sqrt(x)/6 + x**Rational(3, 2)/120 - x**Rational(5, 2)/5040

@@ -378,7 +378,10 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
     # transformation - a
     qroots = roots(Q, k)
-    k_min = Min(*qroots.keys())
+    if qroots:
+        k_min = Min(*qroots.keys())
+    else:
+        k_min = S.Zero
     shift = k_min + m
     f *= x**(-shift)
     P = P.subs(k, k + shift)
@@ -388,7 +391,10 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         return None
 
     qroots = roots(Q, k)
-    k_max = Max(*qroots.keys())
+    if qroots:
+        k_max = Max(*qroots.keys())
+    else:
+        k_max = S.Zero
     ind = S.Zero
     for i in range(k_max + m + 1):
         r = f.diff(x, i).limit(x, 0) / factorial(i)
