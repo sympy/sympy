@@ -16,7 +16,7 @@ try:
     import mpmath
 except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
-    "You can install mpmath with 'pip install mpmath'.")
+    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 from sympy.release import __version__
 

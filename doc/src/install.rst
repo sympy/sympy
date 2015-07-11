@@ -75,6 +75,19 @@ From here, execute some simple SymPy statements like the ones below::
 
 For a starter guide on using SymPy effectively, refer to the :ref:`tutorial`.
 
+Mpmath
+======
+
+Versions of SymPy prior to 0.7.7 included `mpmath`_, but it now depends on it as
+an external dependency.  If you installed SymPy with Anaconda, it will already
+include mpmath. Use::
+
+  conda install mpmath
+
+to ensure that it is installed.
+
+If you do not wish to use Anaconda, you can use ``pip install mpmath``.
+
 Questions
 =========
 
