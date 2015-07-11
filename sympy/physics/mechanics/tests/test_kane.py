@@ -39,7 +39,7 @@ def test_one_dof():
     # The old linearizer raises a deprecation warning, so catch it here so
     # it doesn't cause py.test to fail.
     with warnings.catch_warnings():
-        warnings.filterwarnings('always')
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         F_A_old, F_B_old, r_old = KM.linearize()
     M_new, F_A_new, F_B_new, r_new = KM.linearize(new_method=True)
     assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
