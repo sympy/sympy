@@ -246,8 +246,7 @@ class ImageSet(Set):
                 if soln in self.base_set:
                     return S.true
             except TypeError:
-                if soln.evalf() in self.base_set:
-                    return S.true
+                return self.base_set.contains(soln.evalf())
         return S.false
 
     @property
