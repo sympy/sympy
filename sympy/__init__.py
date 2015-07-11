@@ -27,8 +27,6 @@ else:  # Python 3
     pass
     # Here we can also check for specific Python 3 versions, if needed
 
-sys.modules['sympy.mpmath'] = mpmath
-
 del sys
 
 

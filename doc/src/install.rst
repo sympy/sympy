@@ -88,6 +88,17 @@ to ensure that it is installed.
 
 If you do not wish to use Anaconda, you can use ``pip install mpmath``.
 
+If you use mpmath via ``sympy.mpmath`` in your code, you will need to change
+this to use just ``mpmath``. If you depend on code that does this that you
+cannot easily change, you can work around it by doing::
+
+    import sys
+    import mpmath
+    sys.modules['sympy.mpmath'] = mpmath
+
+before the code that imports ``sympy.mpmath``. It is recommended to change
+code that uses ``sympy.mpmath`` to use ``mpmath`` directly wherever possible.
+
 Questions
 =========
 
