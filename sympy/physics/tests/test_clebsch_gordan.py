@@ -1,5 +1,6 @@
-from sympy import S, sqrt, pi
-from sympy.physics.wigner import clebsch_gordan, wigner_9j, wigner_6j, gaunt, racah
+from sympy import S, sqrt, pi, Dummy, Sum, Ynm, symbols
+from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
+        racah, dot_rot_grad_Ynm, Wigner3j)
 from sympy.core.numbers import Rational
 
 # Todo: more tests should be added from:
@@ -127,3 +128,24 @@ def test_racah():
     assert racah(7,8,7,1,7,7, prec=4).is_Float
     assert racah(5.5,7.5,9.5,6.5,8,9) == -719*sqrt(598)/1158924
     assert abs(racah(5.5,7.5,9.5,6.5,8,9, prec=4) - (-0.01517)) < S('1e-4')
+
+
+def test_dot_rota_grad_SH():
+    theta, phi = symbols("theta phi")
+    assert dot_rot_grad_Ynm(1, 1, 1, 1, 1, 0) !=  \
+        sqrt(30)*Ynm(2, 2, 1, 0)/(10*sqrt(pi))
+    assert dot_rot_grad_Ynm(1, 1, 1, 1, 1, 0).doit() ==  \
+        sqrt(30)*Ynm(2, 2, 1, 0)/(10*sqrt(pi))
+    assert dot_rot_grad_Ynm(1, 5, 1, 1, 1, 2) !=  \
+        0
+    assert dot_rot_grad_Ynm(1, 5, 1, 1, 1, 2).doit() ==  \
+        0
+    assert dot_rot_grad_Ynm(3,3,3,3,theta,phi).doit() ==  \
+        15*sqrt(3003)*Ynm(6, 6, theta, phi)/(143*sqrt(pi))
+    assert dot_rot_grad_Ynm(3,3,1,1,theta,phi).doit() ==  \
+        sqrt(3)*Ynm(4, 4, theta, phi)/sqrt(pi)
+    assert dot_rot_grad_Ynm(3,2,2,0,theta,phi).doit() ==  \
+        3*sqrt(55)*Ynm(5, 2, theta, phi)/(11*sqrt(pi))
+    assert dot_rot_grad_Ynm(3,2,3,2,theta,phi).doit() ==  \
+        -sqrt(70)*Ynm(4, 4, theta, phi)/(11*sqrt(pi)) + \
+        45*sqrt(182)*Ynm(6, 4, theta, phi)/(143*sqrt(pi))
