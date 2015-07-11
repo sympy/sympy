@@ -154,7 +154,7 @@ class FourierSeries(SeriesBase):
             return self
 
     def truncate(self, n=3):
-        """"returns the first n terms(non-zero) of the series.
+        """returns the first n terms(non-zero) of the series.
 
         if n is ``None`` returns an iterator.
         """
@@ -359,8 +359,8 @@ def fourier_series(f, limits=None):
     computed fourier series rather than computing
     again.
 
-    eg. If Fourier series of ``x**2`` is known
-    fourier series of ``x**2 - 1`` can be found by shifting by ``-1``.
+    e.g. if the Fourier series of ``x**2`` is known
+    the Fourier series of ``x**2 - 1`` can be found by shifting by ``-1``.
 
     See Also
     ========
