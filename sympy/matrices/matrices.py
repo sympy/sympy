@@ -3089,7 +3089,7 @@ class MatrixBase(object):
 
         This function returns the list of triples (eigenval, multiplicity,
         basis) for the left eigenvectors. Options are the same as for
-        eigenvects(), i.e. the **flags arguments gets passed directly to
+        eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
         eigenvects().
 
         Examples
