@@ -3084,6 +3084,20 @@ class MatrixBase(object):
                 out.append((r, k, [mat._new(b) for b in basis]))
         return out
 
+    def left_eigenvects(self, **flags):
+        """Return list of triples (eigenval, multiplicity, basis).
+           for the left eigenvectors.  Options are the same as
+           for eigenvects()
+        """
+        mat = self
+        left_transpose = mat.transpose().eigenvects(**flags)
+
+        left = []
+        for (ev, mult, ltmp) in left_transpose:
+            left.append( (ev, mult, [l.transpose() for l in ltmp]) )
+
+        return left
+
     def singular_values(self):
         """Compute the singular values of a Matrix
 
