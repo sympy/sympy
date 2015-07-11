@@ -2,14 +2,11 @@
 """
 from __future__ import print_function, division
 
-import difflib
-
-from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple, Symbol
+from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
 from sympy.core.singleton import S
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
-from sympy.core.compatibility import iterable, xrange
+from sympy.core.compatibility import iterable, range
 from sympy.utilities.iterables import filter_symbols, \
     numbered_symbols, sift, topological_sort, ordered
 
@@ -52,8 +49,8 @@ def reps_toposort(r):
     >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
     ...     print(Eq(l, r))
     ...
-    y == 2
-    x == y + 1
+    Eq(y, 2)
+    Eq(x, y + 1)
 
     """
     r = sympify(r)
@@ -133,8 +130,6 @@ def postprocess_for_cse(expr, optimizations):
     expr : sympy expression
         The transformed expression.
     """
-    if optimizations is None:
-        optimizations = cse_optimizations
     for pre, post in reversed(optimizations):
         if post is not None:
             expr = post(expr)
@@ -159,15 +154,14 @@ def opt_cse(exprs, order='canonical'):
         The expression substitutions which can be useful to optimize CSE.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.simplify.cse_main import opt_cse
     >>> from sympy.abc import x
     >>> opt_subs = opt_cse([x**-2])
     >>> print(opt_subs)
     {x**(-2): 1/(x**2)}
     """
-    from sympy.matrices import Matrix
-
     opt_subs = dict()
 
     adds = set()
@@ -221,8 +215,8 @@ def opt_cse(exprs, order='canonical'):
             funcs = sorted(funcs, key=lambda x: len(x.args))
 
         func_args = [set(e.args) for e in funcs]
-        for i in xrange(len(func_args)):
-            for j in xrange(i + 1, len(func_args)):
+        for i in range(len(func_args)):
+            for j in range(i + 1, len(func_args)):
                 com_args = func_args[i].intersection(func_args[j])
                 if len(com_args) > 1:
                     com_func = Func(*com_args)
@@ -241,7 +235,7 @@ def opt_cse(exprs, order='canonical'):
                     opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
                                               evaluate=False)
 
-                    for k in xrange(j + 1, len(func_args)):
+                    for k in range(j + 1, len(func_args)):
                         if not com_args.difference(func_args[k]):
                             diff_k = func_args[k].difference(com_args)
                             func_args[k] = diff_k | set([com_func])
@@ -282,8 +276,6 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         The order by which Mul and Add arguments are processed. For large
         expressions where speed is a concern, use the setting order='none'.
     """
-    from sympy.matrices import Matrix
-
     if opt_subs is None:
         opt_subs = dict()
 
@@ -326,7 +318,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
 
     def _rebuild(expr):
 
-        if expr.is_Atom:
+        if not expr.args:
             return expr
 
         if iterable(expr):
@@ -422,12 +414,51 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         list.
     reduced_exprs : list of sympy expressions
         The reduced expressions with all of the replacements above.
+
+    Examples
+    ========
+
+    >>> from sympy import cse, SparseMatrix
+    >>> from sympy.abc import x, y, z, w
+    >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
+    ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
+
+    Note that currently, y + z will not get substituted if -y - z is used.
+
+     >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
+     ([(x0, w + x)], [(w - y - z)*(x0 + y + z)/x0**3])
+
+    List of expressions with recursive substitutions:
+
+    >>> m = SparseMatrix([x + y, x + y + z])
+    >>> cse([(x+y)**2, x + y + z, y + z, x + z + y, m])
+    ([(x0, x + y), (x1, x0 + z)], [x0**2, x1, y + z, x1, Matrix([
+    [x0],
+    [x1]])])
+
+    Note: the type and mutability of input matrices is retained.
+
+    >>> isinstance(_[1][-1], SparseMatrix)
+    True
     """
-    from sympy.matrices import Matrix
+    from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
+                                SparseMatrix, ImmutableSparseMatrix)
 
     # Handle the case if just one expression was passed.
-    if isinstance(exprs, Basic):
+    if isinstance(exprs, (Basic, MatrixBase)):
         exprs = [exprs]
+
+    copy = exprs
+    temp = []
+    for e in exprs:
+        if isinstance(e, (Matrix, ImmutableMatrix)):
+            temp.append(Tuple(*e._mat))
+        elif isinstance(e, (SparseMatrix, ImmutableSparseMatrix)):
+            temp.append(Tuple(*e._smat.items()))
+        else:
+            temp.append(e)
+    exprs = temp
+    del temp
 
     if optimizations is None:
         optimizations = list()
@@ -437,7 +468,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
 
-    excluded_symbols = set.union(*[expr.atoms(Symbol)
+    excluded_symbols = set().union(*[expr.atoms(Symbol)
                                    for expr in reduced_exprs])
 
     if symbols is None:
@@ -457,14 +488,28 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
                                            order)
 
     # Postprocess the expressions to return the expressions to canonical form.
+    exprs = copy
     for i, (sym, subtree) in enumerate(replacements):
         subtree = postprocess_for_cse(subtree, optimizations)
         replacements[i] = (sym, subtree)
     reduced_exprs = [postprocess_for_cse(e, optimizations)
                      for e in reduced_exprs]
 
-    if isinstance(exprs, Matrix):
-        reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
+    # Get the matrices back
+    for i, e in enumerate(exprs):
+        if isinstance(e, (Matrix, ImmutableMatrix)):
+            reduced_exprs[i] = Matrix(e.rows, e.cols, reduced_exprs[i])
+            if isinstance(e, ImmutableMatrix):
+                reduced_exprs[i] = reduced_exprs[i].as_immutable()
+        elif isinstance(e, (SparseMatrix, ImmutableSparseMatrix)):
+            m = SparseMatrix(e.rows, e.cols, {})
+            for k, v in reduced_exprs[i]:
+                m[k] = v
+            if isinstance(e, ImmutableSparseMatrix):
+                m = m.as_immutable()
+            reduced_exprs[i] = m
+
     if postprocess is None:
         return replacements, reduced_exprs
+
     return postprocess(replacements, reduced_exprs)

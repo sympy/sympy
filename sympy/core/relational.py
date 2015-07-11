@@ -40,7 +40,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
-    y == x**2 + x
+    Eq(y, x**2 + x)
 
     """
     __slots__ = []
@@ -82,9 +82,9 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> from sympy import Eq
         >>> from sympy.abc import x
         >>> Eq(x, 1)
-        x == 1
+        Eq(x, 1)
         >>> _.reversed
-        1 == x
+        Eq(1, x)
         >>> x < 1
         x < 1
         >>> _.reversed
@@ -103,9 +103,10 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         The rules for the canonical form, in order of decreasing priority are:
             1) Number on right if left is not a Number;
-            2) Gt/Ge changed to Lt/Le;
-            3) Lt/Le are unchanged;
-            4) Eq and Ne get ordered args.
+            2) Symbol on the left;
+            3) Gt/Ge changed to Lt/Le;
+            4) Lt/Le are unchanged;
+            5) Eq and Ne get ordered args.
         """
         r = self
         if r.func in (Ge, Gt):
@@ -117,6 +118,8 @@ class Relational(Boolean, Expr, EvalfMixin):
         else:
             raise NotImplemented
         if r.lhs.is_Number and not r.rhs.is_Number:
+            r = r.reversed
+        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
             r = r.reversed
         if _coeff_isneg(r.lhs):
             r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
@@ -249,15 +252,15 @@ class Equality(Relational):
     >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
     >>> Eq(y, x + x**2)
-    y == x**2 + x
+    Eq(y, x**2 + x)
     >>> Eq(2, 5)
     False
     >>> Eq(2, 5, evaluate=False)
-    2 == 5
+    Eq(2, 5)
     >>> _.doit()
     False
     >>> Eq(exp(x), exp(x).rewrite(cos))
-    exp(x) == sinh(x) + cosh(x)
+    Eq(exp(x), sinh(x) + cosh(x))
     >>> simplify(_)
     True
 
@@ -337,7 +340,7 @@ class Unequality(Relational):
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
-    y != x**2 + x
+    Ne(y, x**2 + x)
 
     See Also
     ========

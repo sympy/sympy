@@ -8,19 +8,19 @@ Special - gamma, zeta,spherical harmonics...
 from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial, subfactorial)
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas, harmonic,
-        bernoulli, bell, euler, catalan)
+        bernoulli, bell, euler, catalan, genocchi)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
-        principal_branch, transpose, adjoint)
+        principal_branch, transpose, adjoint, polarify, unpolarify)
 from sympy.functions.elementary.trigonometric import (sin, cos, tan,
-        sec, csc, cot, asin, acos, atan, asec, acsc, acot, atan2)
+        sec, csc, cot, sinc, asin, acos, atan, asec, acsc, acot, atan2)
 from sympy.functions.elementary.exponential import (exp_polar, exp, log,
         LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
-        asinh, acosh, atanh, acoth)
-from sympy.functions.elementary.integers import floor, ceiling
+        sech, csch, asinh, acosh, atanh, acoth, asech)
+from sympy.functions.elementary.integers import floor, ceiling, frac
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
@@ -28,7 +28,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
-        lerchphi, polylog)
+        lerchphi, polylog, stieltjes)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside

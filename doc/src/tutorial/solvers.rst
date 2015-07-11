@@ -80,8 +80,7 @@ list of variables to solve for.
     >>> solve([x - y + 2, x + y - 3], [x, y])
     {x: 1/2, y: 5/2}
     >>> solve([x*y - 7, x + y - 6], [x, y])
-    ⎡⎛    ___        ___    ⎞  ⎛  ___          ___    ⎞⎤
-    ⎣⎝- ╲╱ 2  + 3, ╲╱ 2  + 3⎠, ⎝╲╱ 2  + 3, - ╲╱ 2  + 3⎠⎦
+    [(-√2 + 3, √2 + 3), (√2 + 3, -√2 + 3)]
 
 .. note::
 
@@ -92,9 +91,7 @@ list of variables to solve for.
    >>> solve([x - y + 2, x + y - 3], [x, y], dict=True)
    [{x: 1/2, y: 5/2}]
    >>> solve([x*y - 7, x + y - 6], [x, y], dict=True)
-   ⎡⎧       ___           ___    ⎫  ⎧     ___             ___    ⎫⎤
-   ⎢⎨x: - ╲╱ 2  + 3, y: ╲╱ 2  + 3⎬, ⎨x: ╲╱ 2  + 3, y: - ╲╱ 2  + 3⎬⎥
-   ⎣⎩                            ⎭  ⎩                            ⎭⎦
+   [{x: -√2 + 3, y: √2 + 3}, {x: √2 + 3, y: -√2 + 3}]
 
 .. _tutorial-roots:
 

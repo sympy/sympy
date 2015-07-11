@@ -292,8 +292,6 @@ CNOT   \n\
     assert upretty(g3) == ucode_str
     assert latex(g3) == r'CNOT_{1,0}'
     sT(g3, "CNotGate(Integer(1),Integer(0))")
-    # str(g4) Fails
-    #assert str(g4) == ''
     ascii_str = \
 """\
 U \n\
@@ -304,6 +302,12 @@ u("""\
 U \n\
  0\
 """)
+    assert str(g4) == \
+"""\
+U((0,),Matrix([\n\
+[a, b],\n\
+[c, d]]))\
+"""
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
     assert latex(g4) == r'U_{0}'
@@ -879,5 +883,5 @@ u("""\
 
 def _test_sho1d():
     ad = RaisingOp('a')
-    assert pretty(ad) == u(' \u2020\na ')
+    assert pretty(ad) == u(' \N{DAGGER}\na ')
     assert latex(ad) == 'a^{\\dag}'

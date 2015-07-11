@@ -4,6 +4,7 @@ from random import randrange, choice
 from math import log
 
 from sympy.core import Basic
+from sympy.core.compatibility import range
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
     _af_rmul, _af_rmuln, _af_pow, Cycle)
@@ -1281,7 +1282,6 @@ class PermutationGroup(Basic):
         while 1:
             # backtrack when finished iterating over coset
             if pos[h] >= posmax[h]:
-                #count_b += 1
                 if h == 0:
                     raise StopIteration
                 pos[h] = 0
@@ -1729,8 +1729,8 @@ class PermutationGroup(Basic):
         >>> G2 = PermutationGroup([a, c])
         >>> G2.is_transitive()
         True
-        >>> d = Permutation([1,0,2,3])
-        >>> e = Permutation([0,1,3,2])
+        >>> d = Permutation([1, 0, 2, 3])
+        >>> e = Permutation([0, 1, 3, 2])
         >>> G3 = PermutationGroup([d, e])
         >>> G3.is_transitive() or G3.is_transitive(strict=False)
         False
@@ -1831,7 +1831,7 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> G = PermutationGroup([Permutation([0,2,1,3])])
+        >>> G = PermutationGroup([Permutation([0, 2, 1, 3])])
         >>> G.max_div
         2
 
@@ -1887,9 +1887,9 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
-        >>> D.minimal_block([0,5])
+        >>> D.minimal_block([0, 5])
         [0, 6, 2, 8, 4, 0, 6, 2, 8, 4]
-        >>> D.minimal_block([0,1])
+        >>> D.minimal_block([0, 1])
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         See Also
@@ -2055,11 +2055,11 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,2,0,4,5,6,3])
+        >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
         set([0, 1, 2])
-        >>> G.orbit([0,4], 'union')
+        >>> G.orbit([0, 4], 'union')
         set([0, 1, 2, 3, 4, 5, 6])
 
         See Also
@@ -2153,8 +2153,8 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation(1,5)(2,3)(4,0,6)
-        >>> b = Permutation(1,5)(3,4)(2,6,0)
+        >>> a = Permutation(1, 5)(2, 3)(4, 0, 6)
+        >>> b = Permutation(1, 5)(3, 4)(2, 6, 0)
         >>> G = PermutationGroup([a, b])
         >>> G.orbits()
         [set([0, 2, 3, 4, 6]), set([1, 5])]
@@ -2574,11 +2574,7 @@ class PermutationGroup(Basic):
                 continue
             i -= 1
         # build the strong generating set
-        strong_gens = []
-        for gens in strong_gens_distr:
-            for gen in gens:
-                if gen not in strong_gens:
-                    strong_gens.append(gen)
+        strong_gens = list(uniq(i for gens in strong_gens_distr for i in gens))
         return _base, strong_gens
 
     def schreier_sims_random(self, base=None, gens=None, consec_succ=10,
@@ -2729,9 +2725,9 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> a = Permutation([2,4,6,3,1,5,0])
-        >>> b = Permutation([0,1,3,5,4,6,2])
-        >>> G = PermutationGroup([a,b])
+        >>> a = Permutation([2, 4, 6, 3, 1, 5, 0])
+        >>> b = Permutation([0, 1, 3, 5, 4, 6, 2])
+        >>> G = PermutationGroup([a, b])
         >>> G.schreier_vector(0)
         [-1, None, 0, 1, None, 1, 0]
 
@@ -3089,7 +3085,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([1, 2, 0])
         >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a,b])
+        >>> G = PermutationGroup([a, b])
         >>> G.transitivity_degree
         3
 
@@ -3227,7 +3223,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
 
     'union' - computes the union of the orbits of the points in the list
     'tuples' - computes the orbit of the list interpreted as an ordered
-    tuple under the group action ( i.e., g((1,2,3)) = (g(1), g(2), g(3)) )
+    tuple under the group action ( i.e., g((1, 2, 3)) = (g(1), g(2), g(3)) )
     'sets' - computes the orbit of the list interpreted as a sets
 
     Examples
@@ -3235,7 +3231,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
 
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.perm_groups import PermutationGroup, _orbit
-    >>> a = Permutation([1,2,0,4,5,6,3])
+    >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
     >>> G = PermutationGroup([a])
     >>> _orbit(G.degree, G.generators, 0)
     set([0, 1, 2])

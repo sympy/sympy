@@ -1,7 +1,7 @@
 """Tests of monomial orderings. """
 
 from sympy.polys.orderings import (
-    monomial_key, lex, grlex, grevlex, ilex, igrlex, igrevlex,
+    monomial_key, lex, grlex, grevlex, ilex, igrlex,
     LexOrder, InverseOrder, ProductOrder, build_product_order,
 )
 

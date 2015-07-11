@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, range
 from .basic import Basic
-from .core import C
 from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
@@ -58,13 +57,12 @@ class Symbol(AtomicExpr, Boolean):
         """Remove None, covert values to bool, check commutativity *in place*.
         """
 
-        # be strict about commutativity
+        # be strict about commutativity: cannot be None
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
             whose = '%s ' % obj.__name__ if obj else ''
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
-        assumptions['commutative'] = is_commutative
 
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
@@ -107,7 +105,22 @@ class Symbol(AtomicExpr, Boolean):
 
         obj = Expr.__new__(cls)
         obj.name = name
+
+        # TODO: Issue #8873: Forcing the commutative assumption here means
+        # later code such as ``srepr()`` cannot tell whether the user
+        # specified ``commutative=True`` or omitted it.  To workaround this,
+        # we keep a copy of the assumptions dict, then create the StdFactKB,
+        # and finally overwrite its ``._generator`` with the dict copy.  This
+        # is a bit of a hack because we assume StdFactKB merely copies the
+        # given dict as ``._generator``, but future modification might, e.g.,
+        # compute a minimal equivalent assumption set.
+        tmp_asm_copy = assumptions.copy()
+
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
     __xnew__ = staticmethod(
@@ -122,6 +135,7 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
+        # Note: user-specified assumptions not hashed, just derived ones
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
@@ -135,17 +149,18 @@ class Symbol(AtomicExpr, Boolean):
 
     def as_dummy(self):
         """Return a Dummy having the same name and same assumptions as self."""
-        return Dummy(self.name, **self.assumptions0)
+        return Dummy(self.name, **self._assumptions.generator)
 
     def __call__(self, *args):
         from .function import Function
         return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import im, re
         if hints.get('ignore') == self:
             return None
         else:
-            return (C.re(self), C.im(self))
+            return (re(self), im(self))
 
     def _sage_(self):
         import sage.all as sage

@@ -1,8 +1,10 @@
 from __future__ import division
 import warnings
 
-from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sin, sqrt, symbols, tan, Derivative, asin, acos)
+from sympy import (Abs, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
+                   simplify, sin, sqrt, symbols, Derivative, asin, acos)
+from sympy.core.compatibility import range
+from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection,
@@ -11,6 +13,8 @@ from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.geometry.util import idiff, are_coplanar
+from sympy.integrals.integrals import Integral
+from sympy.matrices import Matrix
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import verify_numerically
@@ -167,6 +171,11 @@ def test_point():
     assert p.translate(y=1) == Point(1, 2)
     assert p.translate(*p.args) == Point(2, 2)
 
+    # Check invalid input for transform
+    raises(ValueError, lambda: p3.transform(p3))
+    raises(ValueError, lambda: p.transform(Matrix([[1, 0], [0, 1]])))
+
+
 def test_point3D():
     p1 = Point3D(x1, x2, x3)
     p2 = Point3D(y1, y2, y3)
@@ -196,7 +205,10 @@ def test_point3D():
     p1_1 = Point3D(x1, x1, x1)
     p1_2 = Point3D(y2, y2, y2)
     p1_3 = Point3D(x1 + 1, x1, x1)
-    assert Point3D.are_collinear(p3) is False
+    # according to the description in the docs, points are collinear
+    # if they like on a single line.  Thus a single point should always
+    # be collinear
+    assert Point3D.are_collinear(p3)
     assert Point3D.are_collinear(p3, p4)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_2)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_3) is False
@@ -227,6 +239,60 @@ def test_point3D():
     assert p.translate(1) == Point3D(2, 1, 1)
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
+
+    # Test __new__
+    assert Point3D(Point3D(1, 2, 3), 4, 5, evaluate=False) ==  Point3D(1, 2, 3)
+
+
+    # Test length property returns correctly
+    assert p.length == 0
+    assert p1_1.length == 0
+    assert p1_2.length == 0
+
+    # Test are_colinear type error
+    raises(TypeError, lambda: Point3D.are_collinear(p, x))
+
+    # Test are_coplanar
+    planar2 = Point3D(1, -1, 1)
+    planar3 = Point3D(-1, 1, 1)
+    assert Point3D.are_coplanar(p, planar2, planar3) == True
+    assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
+    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2))
+    planar2 = Point3D(1, 1, 2)
+    planar3 = Point3D(1, 1, 3)
+    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2, planar3))
+
+    # Test Intersection
+    assert planar2.intersection(Line3D(p, planar3)) == [Point3D(1, 1, 2)]
+
+    # Test Scale
+    assert planar2.scale(1, 1, 1) == planar2
+    assert planar2.scale(2, 2, 2, planar3) == Point3D(1, 1, 1)
+    assert planar2.scale(1, 1, 1, p3) == planar2
+
+    # Test Transform
+    identity = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    assert p.transform(identity) == p
+    trans = Matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]])
+    assert p.transform(trans) == Point3D(2, 2, 2)
+    raises(ValueError, lambda: p.transform(p))
+    raises(ValueError, lambda: p.transform(Matrix([[1, 0], [0, 1]])))
+
+    # Test Equals
+    assert p.equals(x1) == False
+
+    # Test __sub__
+    p_2d = Point(0, 0)
+    raises(ValueError, lambda: (p - p_2d))
+
+
+def test_issue_9214():
+    p1 = Point3D(4, -2, 6)
+    p2 = Point3D(1, 2, 3)
+    p3 = Point3D(7, 2, 3)
+
+    assert Point3D.are_collinear(p1, p2, p3) is False
+
 
 def test_line_geom():
     p1 = Point(0, 0)
@@ -284,6 +350,7 @@ def test_line_geom():
     # Orthogonality
     p1_1 = Point(-x1, x1)
     l1_1 = Line(p1, p1_1)
+    assert l1.perpendicular_line(p1.args) == Line(Point(0, 0), Point(1, -1))
     assert l1.perpendicular_line(p1) == Line(Point(0, 0), Point(1, -1))
     assert Line.is_perpendicular(l1, l1_1)
     assert Line.is_perpendicular(l1, l2) is False
@@ -293,6 +360,7 @@ def test_line_geom():
     # Parallelity
     l2_1 = Line(p3, p5)
     assert l2.parallel_line(p1_1) == Line(Point(-x1, x1), Point(-y1, 2*x1 - y1))
+    assert l2_1.parallel_line(p1.args) == Line(Point(0, 0), Point(0, -1))
     assert l2_1.parallel_line(p1) == Line(Point(0, 0), Point(0, -1))
     assert Line.is_parallel(l1, l2)
     assert Line.is_parallel(l2, l3) is False
@@ -335,8 +403,10 @@ def test_line_geom():
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=4.05*pi) == Ray(Point(1, 1),
-               Point(2, 1 + C.tan(4.05*pi)))
-    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
+               Point(2, -sqrt(5)*sqrt(2*sqrt(5) + 10)/4 - sqrt(2*sqrt(5) + 10)/4 + 2 + sqrt(5)))
+    assert Ray((1, 1), angle=4.02*pi) == Ray(Point(1, 1),
+               Point(2, 1 + tan(4.02*pi)))
+    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 
     # issue 7963
@@ -369,7 +439,8 @@ def test_line_geom():
     assert s1.midpoint == Point(Rational(1, 2), Rational(1, 2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
-    assert s1.perpendicular_bisector() == Line(Point(1/2, 1/2), Point(3/2, -1/2))
+    assert s1.perpendicular_bisector() == \
+        Line(Point(1/2, 1/2), Point(3/2, -1/2))
     # intersections
     assert s1.intersection(Line(p6, p9)) == []
     s3 = Segment(Point(0.25, 0.25), Point(0.5, 0.5))
@@ -543,17 +614,22 @@ def test_line3d():
     l7 = Line3D(p2, p9)
     raises(ValueError, lambda: Line3D(Point3D(0, 0, 0), Point3D(0, 0, 0)))
 
-    assert Line3D((1, 1, 1), direction_ratio=[2, 3, 4]) == Line3D(Point3D(1, 1, 1), Point3D(3, 4, 5))
-    assert Line3D((1, 1, 1), direction_ratio=[1, 5, 7 ]) == Line3D(Point3D(1, 1, 1), Point3D(2, 6, 8))
-    assert Line3D((1, 1, 1), direction_ratio=[1, 2, 3]) == Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
+    assert Line3D((1, 1, 1), direction_ratio=[2, 3, 4]) == \
+        Line3D(Point3D(1, 1, 1), Point3D(3, 4, 5))
+    assert Line3D((1, 1, 1), direction_ratio=[1, 5, 7 ]) == \
+        Line3D(Point3D(1, 1, 1), Point3D(2, 6, 8))
+    assert Line3D((1, 1, 1), direction_ratio=[1, 2, 3]) == \
+        Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
     raises(TypeError, lambda: Line3D((1, 1), 1))
     assert Line3D(p1, p2) != Line3D(p2, p1)
-    assert l1 != l2
     assert l1 != l3
+    assert l1.is_parallel(l1)  # same as in 2D
+    assert l1 != l2
     assert l1.direction_ratio == [1, 1, 1]
     assert l1.length == oo
     assert l1.equation() == (x, y, z, k)
-    assert l2.equation() == ((x - x1)/(-x1 + y1), (-x1 + y)/(-x1 + y1), (-x1 + z)/(-x1 + y1), k)
+    assert l2.equation() == \
+        ((x - x1)/(-x1 + y1), (-x1 + y)/(-x1 + y1), (-x1 + z)/(-x1 + y1), k)
     assert p1 in l1
     assert p1 not in l3
 
@@ -565,13 +641,40 @@ def test_line3d():
     raises(NotImplementedError , lambda: l1.perpendicular_segment(p))
 
     # Parallelity
-    assert l1.parallel_line(p1_1) == Line3D(Point3D(x1, x1, x1), Point3D(x1 + 1, x1 + 1, x1 + 1))
+    assert l1.parallel_line(p1_1) == Line3D(Point3D(x1, x1, x1),
+        Point3D(x1 + 1, x1 + 1, x1 + 1))
+    assert l1.parallel_line(p1_1.args) == \
+        Line3D(Point3D(x1, x1, x1), Point3D(x1 + 1, x1 + 1, x1 + 1))
 
     # Intersection
     assert intersection(l1, p1) == [p1]
     assert intersection(l1, p5) == []
-    assert intersection(l1, l1.parallel_line(p1)) == [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))]
-
+    assert intersection(l1, l1.parallel_line(p1)) == [
+        Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))]
+    # issue 8517
+    line3 = Line3D(Point3D(4, 0, 1), Point3D(0, 4, 1))
+    line4 = Line3D(Point3D(0, 0, 1), Point3D(4, 4, 1))
+    assert line3.intersection(line4) == [Point3D(2, 2, 1)]
+    assert line3.is_parallel(line4) is False
+    assert Line3D((0, 1, 2), (0, 2, 3)).intersection(
+        Line3D((0, 1, 2), (0, 1, 1))) == []
+    ray0 = Ray3D((0, 0), (3, 0))
+    ray1 = Ray3D((1, 0), (3, 0))
+    assert ray0.intersection(ray1) == [ray1]
+    assert ray1.intersection(ray0) == [ray1]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((1, 0), (2, 0))) == [Segment3D((1, 0), (2, 0))]
+    assert Segment3D((1, 0), (2, 0)).intersection(
+        Segment3D((0, 0), (3, 0))) == [Segment3D((1, 0), (2, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((3, 0), (4, 0))) == [Point3D((3, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((2, 0), (5, 0))) == [Segment3D((3, 0), (2, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((-2, 0), (1, 0))) == [Segment3D((0, 0), (1, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((-2, 0), (0, 0))) == [Point3D(0, 0, 0)]
+    # issue 7757
     p = Ray3D(Point3D(1, 0, 0), Point3D(-1, 0, 0))
     q = Ray3D(Point3D(0, 1, 0), Point3D(0, -1, 0))
     assert intersection(p, q) == [Point3D(0, 0, 0)]
@@ -580,23 +683,31 @@ def test_line3d():
     assert Line3D.are_concurrent(l1) is False
     assert Line3D.are_concurrent(l1, l2)
     assert Line3D.are_concurrent(l1, l1_1, l3) is False
+    parallel_1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+    parallel_2 = Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))
+    assert Line3D.are_concurrent(parallel_1, parallel_2) == False
 
     # Finding angles
     l1_1 = Line3D(p1, Point3D(5, 0, 0))
     assert Line3D.angle_between(l1, l1_1), acos(sqrt(3)/3)
 
     # Testing Rays and Segments (very similar to Lines)
-    assert Ray3D((1, 1, 1), direction_ratio=[4, 4, 4]) == Ray3D(Point3D(1, 1, 1), Point3D(5, 5, 5))
-    assert Ray3D((1, 1, 1), direction_ratio=[1, 2, 3]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
-    assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
+    assert Ray3D((1, 1, 1), direction_ratio=[4, 4, 4]) == \
+        Ray3D(Point3D(1, 1, 1), Point3D(5, 5, 5))
+    assert Ray3D((1, 1, 1), direction_ratio=[1, 2, 3]) == \
+        Ray3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
+    assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == \
+        Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
 
     r1 = Ray3D(p1, Point3D(-1, 5, 0))
     r2 = Ray3D(p1, Point3D(-1, 1, 1))
     r3 = Ray3D(p1, p2)
     r4 = Ray3D(p2, p1)
     r5 = Ray3D(Point3D(0, 1, 1), Point3D(1, 2, 0))
-    assert l1.projection(r1) == [Ray3D(Point3D(0, 0, 0), Point3D(4/3, 4/3, 4/3))]
-    assert l1.projection(r2) == [Ray3D(Point3D(0, 0, 0), Point3D(1/3, 1/3, 1/3))]
+    assert l1.projection(r1) == [
+        Ray3D(Point3D(0, 0, 0), Point3D(4/3, 4/3, 4/3))]
+    assert l1.projection(r2) == [
+        Ray3D(Point3D(0, 0, 0), Point3D(1/3, 1/3, 1/3))]
     assert r3 != r1
     t = Symbol('t', real=True)
     assert Ray3D((1, 1, 1), direction_ratio=[1, 2, 3]).arbitrary_point() == \
@@ -607,9 +718,11 @@ def test_line3d():
 
     s1 = Segment3D(p1, p2)
     s2 = Segment3D(p3, p4)
-    assert s1.midpoint == Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
+    assert s1.midpoint == \
+        Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
     assert s2.length == sqrt(3)*sqrt((x1 - y1)**2)
-    assert Segment3D((1, 1, 1), (2, 3, 4)).arbitrary_point() == Point3D(t + 1, 2*t + 1, 3*t + 1)
+    assert Segment3D((1, 1, 1), (2, 3, 4)).arbitrary_point() == \
+        Point3D(t + 1, 2*t + 1, 3*t + 1)
 
     # Segment contains
     s = Segment3D((0, 1, 0), (0, 1, 0))
@@ -645,7 +758,8 @@ def test_line3d():
     assert r.distance(Point3D(1, 1, 1)) == 0
     assert r.distance((-1, -1, -1)) == sqrt(3)
     assert r.distance((1, 1, 1)) == 0
-    assert Ray3D((1, 1, 1), (2, 2, 2)).distance(Point3D(1.5, 3, 1)) == sqrt(17)/2
+    assert Ray3D((1, 1, 1), (2, 2, 2)).distance(Point3D(1.5, 3, 1)) == \
+        sqrt(17)/2
 
 
     # Special cases of projection and intersection
@@ -654,7 +768,8 @@ def test_line3d():
     r3 = Ray3D(Point3D(1, 1, 1), Point3D(-1, -1, -1))
     r4 = Ray3D(Point3D(0, 4, 2), Point3D(-1, -5, -1))
     r5 = Ray3D(Point3D(2, 2, 2), Point3D(3, 3, 3))
-    assert intersection(r1, r2) == [Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))]
+    assert intersection(r1, r2) == \
+        [Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))]
     assert intersection(r1, r3) == [Point3D(1, 1, 1)]
 
     r5 = Ray3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
@@ -664,7 +779,8 @@ def test_line3d():
 
     s1 = Segment3D(Point3D(0, 0, 0), Point3D(2, 2, 2))
     s2 = Segment3D(Point3D(-1, 5, 2), Point3D(-5, -10, 0))
-    assert intersection(r1, s1) == [Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))]
+    assert intersection(r1, s1) == [
+        Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))]
 
     l1 = Line3D(Point3D(0, 0, 0), Point3D(3, 4, 0))
     r1 = Ray3D(Point3D(0, 0, 0), Point3D(3, 4, 0))
@@ -674,6 +790,75 @@ def test_line3d():
     assert intersection(r1, l1) == [r1]
     assert intersection(s1, r1) == [s1]
 
+    # check that temporary symbol is Dummy
+    assert Line3D((0, 0), (t, t)).perpendicular_line((0, 1)) == \
+        Line3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0))
+    assert Line3D((0, 0), (t, t)).perpendicular_segment((0, 1)) == \
+        Segment3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0))
+    assert Line3D((0, 0), (t, t)).intersection(Line3D((0, 1), (t, t))) == \
+        [Point3D(t, t, 0)]
+    assert Line3D((0, 0, 0), (x, y, z)).contains((2*x, 2*y, 2*z))
+
+    # Test is_perpendicular
+    perp_1 = Line3D(p1, Point3D(0, 1, 0))
+    assert Line3D.is_perpendicular(parallel_1, perp_1) is True
+    assert Line3D.is_perpendicular(parallel_1, parallel_2) is False
+
+    # Test projection
+    assert parallel_1.projection(Point3D(5, 5, 0)) == Point3D(5, 0, 0)
+    assert parallel_1.projection(parallel_2) == [parallel_1]
+    raises(GeometryError, lambda: parallel_1.projection(Plane(p1, p2, p6)))
+
+    # Test __new__
+    assert Line3D(perp_1) == perp_1
+    raises(ValueError, lambda: Line3D(p1))
+
+    # Test contains
+    pt2d = Point(1.0, 1.0)
+    assert perp_1.contains(pt2d) is False
+
+    # Test equals
+    assert perp_1.equals(pt2d) is False
+    col1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+    col2 = Line3D(Point3D(-5, 0, 0), Point3D(-1, 0, 0))
+    assert col1.equals(col2) is True
+    assert col1.equals(perp_1) is False
+
+    # Begin ray
+    # Test __new__
+    assert Ray3D(col1) == Ray3D(p1, Point3D(1, 0, 0))
+    raises(ValueError, lambda: Ray3D(pt2d))
+
+    # Test zdirection
+    negz = Ray3D(p1, Point3D(0, 0, -1))
+    assert negz.zdirection == S.NegativeInfinity
+
+    # Test contains
+    assert negz.contains(Segment3D(p1, Point3D(0, 0, -10))) is True
+    assert negz.contains(Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))) is False
+    posy = Ray3D(p1, Point3D(0, 1, 0))
+    posz = Ray3D(p1, Point3D(0, 0, 1))
+    assert posy.contains(p1) is True
+    assert posz.contains(p1) is True
+    assert posz.contains(pt2d) is False
+    ray1 = Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0))
+    raises(TypeError, lambda: ray1.contains([]))
+
+    # Test equals
+    assert negz.equals(pt2d) is False
+    assert negz.equals(negz) is True
+
+    assert ray1.is_similar(Line3D(Point3D(1, 1, 1), Point3D(1, 0, 0))) is True
+    assert ray1.is_similar(perp_1) is False
+    raises(NotImplementedError, lambda: ray1.is_similar(ray1))
+
+    # Begin Segment
+    seg1 = Segment3D(p1, Point3D(1, 0, 0))
+    raises(TypeError, lambda: seg1.contains([]))
+    seg2= Segment3D(Point3D(2, 2, 2), Point3D(3, 2, 2))
+    assert seg1.contains(seg2) is False
+
+@slow
 def test_plane():
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
@@ -681,11 +866,9 @@ def test_plane():
     p4 = Point3D(x, x, x)
     p5 = Point3D(y, y, y)
 
-    raises(NotImplementedError, lambda: Plane(p1, p2, p4))
-    raises(NotImplementedError, lambda: Plane(p1, p2, p5))
-    raises(ValueError, lambda: Plane(p1, p2))
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
+    pl4b = Plane(p1, p2)
     pl5 = Plane(p3, normal_vector=(1, 2, 3))
     pl6 = Plane(Point3D(2, 3, 7), normal_vector=(2, 2, 2))
     pl7 = Plane(Point3D(1, -5, -6), normal_vector=(1, -2, 1))
@@ -698,6 +881,7 @@ def test_plane():
     assert Plane(p1, p2, p3).is_coplanar(Plane(p1, p3, p2))
     assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=(1, -2, 1))
     assert pl3 != pl4
+    assert pl4 == pl4b
     assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=(1, 2, 3))
 
     assert pl5.equation(x, y, z) == x + 2*y + 3*z - 14
@@ -734,6 +918,7 @@ def test_plane():
                Segment3D(Point3D(5/6, 1/3, -1/6), Point3D(7/6, 2/3, 1/6))
     assert pl6.projection_line(Ray(Point(1, 0), Point(1, 1))) == \
                Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
+    assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)
 
 
     assert pl3.is_parallel(pl6) is False
@@ -756,16 +941,21 @@ def test_plane():
     assert pl6.angle_between(pl3) == pi/2
     assert pl6.angle_between(pl6) == 0
     assert pl6.angle_between(pl4) == 0
-    assert pl7.angle_between(Line3D(Point3D(2, 3, 5), Point3D(2, 4, 6))) == -asin(sqrt(3)/6)
-    assert pl6.angle_between(Ray3D(Point3D(2, 4, 1), Point3D(6, 5, 3))) == asin(sqrt(7)/3)
-    assert pl7.angle_between(Segment3D(Point3D(5, 6, 1), Point3D(1, 2, 4))) == -asin(7*sqrt(246)/246)
+    assert pl7.angle_between(Line3D(Point3D(2, 3, 5), Point3D(2, 4, 6))) == \
+        -asin(sqrt(3)/6)
+    assert pl6.angle_between(Ray3D(Point3D(2, 4, 1), Point3D(6, 5, 3))) == \
+        asin(sqrt(7)/3)
+    assert pl7.angle_between(Segment3D(Point3D(5, 6, 1), Point3D(1, 2, 4))) == \
+        -asin(7*sqrt(246)/246)
 
     assert are_coplanar(l1, l2, l3) is False
     assert are_coplanar(l1) is False
-    assert are_coplanar(Point3D(2, 7, 2), Point3D(0, 0, 2), Point3D(1, 1, 2), Point3D(1, 2, 2))
+    assert are_coplanar(Point3D(2, 7, 2), Point3D(0, 0, 2),
+        Point3D(1, 1, 2), Point3D(1, 2, 2))
     assert are_coplanar(Plane(p1, p2, p3), Plane(p1, p3, p2))
     assert Plane.are_concurrent(pl3, pl4, pl5) is False
     assert Plane.are_concurrent(pl6) is False
+    raises(ValueError, lambda: Plane.are_concurrent(Point3D(0, 0, 0)))
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))
@@ -775,9 +965,11 @@ def test_plane():
     # default
     assert p.perpendicular_plane() == Plane(Point3D(0, 0, 0), (0, 1, 0))
     # 1 pt
-    assert p.perpendicular_plane(Point3D(1, 0, 1)) == Plane(Point3D(1, 0, 1), (0, 1, 0))
+    assert p.perpendicular_plane(Point3D(1, 0, 1)) == \
+        Plane(Point3D(1, 0, 1), (0, 1, 0))
     # pts as tuples
-    assert p.perpendicular_plane((1, 0, 1), (1, 1, 1)) == Plane(Point3D(1, 0, 1), (0, 0, -1))
+    assert p.perpendicular_plane((1, 0, 1), (1, 1, 1)) == \
+        Plane(Point3D(1, 0, 1), (0, 0, -1))
 
     a, b = Point3D(0, 0, 0), Point3D(0, 1, 0)
     Z = (0, 0, 1)
@@ -788,11 +980,14 @@ def test_plane():
     # case 1
     assert p.perpendicular_plane(a, n) == Plane(a, (-1, 0, 0))
     # case 2
-    assert Plane(a, normal_vector=b.args).perpendicular_plane(a, a + b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
+    assert Plane(a, normal_vector=b.args).perpendicular_plane(a, a + b) == \
+        Plane(Point3D(0, 0, 0), (1, 0, 0))
     # case 1&3
-    assert Plane(b, normal_vector=Z).perpendicular_plane(b, b + n) == Plane(Point3D(0, 1, 0), (-1, 0, 0))
+    assert Plane(b, normal_vector=Z).perpendicular_plane(b, b + n) == \
+        Plane(Point3D(0, 1, 0), (-1, 0, 0))
     # case 2&3
-    assert Plane(b, normal_vector=b.args).perpendicular_plane(n, n + b) == Plane(Point3D(0, 0, 1), (1, 0, 0))
+    assert Plane(b, normal_vector=b.args).perpendicular_plane(n, n + b) == \
+        Plane(Point3D(0, 0, 1), (1, 0, 0))
 
     assert pl6.intersection(pl6) == [pl6]
     assert pl4.intersection(pl4.p1) == [pl4.p1]
@@ -800,8 +995,8 @@ def test_plane():
         Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
     assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [
         Point3D(2, 8/3, 10/3)]
-    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == [
-        Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
+    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))
+        ) == [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
     assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
         Point3D(-1, 3, 10)]
     assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
@@ -814,6 +1009,25 @@ def test_plane():
 
     assert pl3.random_point() in pl3
 
+    # issue 8570
+    l2 = Line3D(Point3D(S(50000004459633)/5000000000000,
+                        -S(891926590718643)/1000000000000000,
+                        S(231800966893633)/100000000000000),
+                Point3D(S(50000004459633)/50000000000000,
+                        -S(222981647679771)/250000000000000,
+                        S(231800966893633)/100000000000000))
+
+    p2 = Plane(Point3D(S(402775636372767)/100000000000000,
+                       -S(97224357654973)/100000000000000,
+                       S(216793600814789)/100000000000000),
+               (-S('9.00000087501922'), -S('4.81170658872543e-13'),
+                S('0.0')))
+
+    assert str([i.n(2) for i in p2.intersection(l2)]) == \
+           '[Point3D(4.0, -0.89, 2.3)]'
+
+
+@slow
 def test_ellipse_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
@@ -878,7 +1092,7 @@ def test_ellipse_geom():
     m = Symbol('m')
     c = Ellipse(p1, M, m).circumference
     _x = c.atoms(Dummy).pop()
-    assert c == 4*M*C.Integral(
+    assert c == 4*M*Integral(
         sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
 
     assert e2.arbitrary_point() in e2
@@ -928,20 +1142,25 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(1, 0))]
     assert e.normal_lines((0, 1)) == \
         [Line(Point(0, 0), Point(0, 1))]
-    assert e.normal_lines(Point(1, 1), 1) == \
-        [Line(Point(-2, -1/5), Point(-1, 1/5)),
-         Line(Point(1, -9/10), Point(2, -43/11))]
+    assert e.normal_lines(Point(1, 1), 2) == [
+        Line(Point(-51/26, -1/5), Point(-25/26, 17/83)),
+        Line(Point(28/29, -7/8), Point(57/29, -9/2))]
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
-    assert e.normal_lines(p, 1) == \
-        [Line(Point(7/4, 1/2), Point(11/4, 3/2)),
-        Line(Point(-2, -26/337), Point(-1, 1/8))]
+    assert e.normal_lines(p, 2) == [
+        Line(Point(-341/171, -1/13), Point(-170/171, 5/64)),
+        Line(Point(26/15, -1/2), Point(41/15, -43/26))]
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
-    assert e.normal_lines((1, 1), 1) == \
-        [Line(Point(-2, -1/3), Point(-1, 1/6)),
+    assert e.normal_lines((1, 1), 2) == [
+        Line(Point(-64/33, -20/71), Point(-31/33, 2/13)),
         Line(Point(1, -1), Point(2, -4))]
+    # general ellipse fails except under certain conditions
+    e = Ellipse((0, 0), x, 1)
+    assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
+    raises(NotImplementedError, lambda: e.normal_lines((x + 1, 1)))
+
 
     # Properties
     major = 3
@@ -1444,7 +1663,7 @@ def test_util():
 
 
 def test_repr():
-    assert repr(Circle((0, 1), 2)) == 'Circle(Point(0, 1), 2)'
+    assert repr(Circle((0, 1), 2)) == 'Circle(Point2D(0, 1), 2)'
 
 
 def test_transform():
@@ -1562,9 +1781,9 @@ def test_reflect():
     poly_pent = Polygon(*pent.vertices)
     assert rpent.center == pent.center.reflect(l)
     assert str([w.n(3) for w in rpent.vertices]) == (
-        '[Point(-0.586, 4.27), Point(-1.69, 4.66), '
-        'Point(-2.41, 3.73), Point(-1.74, 2.76), '
-        'Point(-0.616, 3.10)]')
+        '[Point2D(-0.586, 4.27), Point2D(-1.69, 4.66), '
+        'Point2D(-2.41, 3.73), Point2D(-1.74, 2.76), '
+        'Point2D(-0.616, 3.10)]')
     assert pent.area.equals(-rpent.area)
 
 
@@ -1576,18 +1795,17 @@ def test_idiff():
     assert ans == idiff(circ, [y], x, 3).simplify()
     assert idiff(circ, y, x, 3).simplify() == ans
     explicit  = 12*x/sqrt(-x**2 + 4)**5
-    assert ans.subs(y, solve(circ, y)[0]).simplify() == \
-        explicit
-    assert explicit in [sol.diff(x, 3).simplify() for sol in solve(circ, y)]
+    assert ans.subs(y, solve(circ, y)[0]).equals(explicit)
+    assert True in [sol.diff(x, 3).equals(explicit) for sol in solve(circ, y)]
     assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1
 
 
 def test_issue_2941():
     def _check():
         for f, g in cartes(*[(Line, Ray, Segment)]*2):
-          l1 = f(a, b)
-          l2 = g(c, d)
-          assert l1.intersection(l2) == l2.intersection(l1)
+            l1 = f(a, b)
+            l2 = g(c, d)
+            assert l1.intersection(l2) == l2.intersection(l1)
     # intersect at end point
     c, d = (-2, -2), (-2, 0)
     a, b = (0, 0), (1, 1)
@@ -1598,7 +1816,6 @@ def test_issue_2941():
     _check()
 
 
-@slow
 def test_symbolic_intersect():
     # Issue 7814.
     circle = Circle(Point(x, 0), y)

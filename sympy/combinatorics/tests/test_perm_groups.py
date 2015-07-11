@@ -1,7 +1,8 @@
+from sympy.core.compatibility import range
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
-from sympy.combinatorics.permutations import Permutation, _af_rmuln
+from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
@@ -12,7 +13,6 @@ rmul = Permutation.rmul
 
 
 def test_has():
-    # return p in self.generators
     a = Permutation([1, 0])
     G = PermutationGroup([a])
     assert G.is_abelian
@@ -165,6 +165,7 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
+
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
@@ -179,6 +180,7 @@ def test_coset_rank():
     assert G.coset_unrank(48) == None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
+
 def test_coset_factor():
     a = Permutation([0, 2, 1])
     G = PermutationGroup([a])
@@ -186,14 +188,14 @@ def test_coset_factor():
     assert not G.coset_factor(c)
     assert G.coset_rank(c) is None
 
-    a = Permutation([2,0,1,3,4,5])
-    b = Permutation([2,1,3,4,5,0])
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    d = Permutation([1,0,2,3,4,5])
+    d = Permutation([1, 0, 2, 3, 4, 5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
-    c = Permutation([1,0,2,3,5,4])
+    c = Permutation([1, 0, 2, 3, 5, 4])
     v = g.coset_factor(c, True)
     tr = g.basic_transversals
     p = Permutation.rmul(*[tr[i][v[i]] for i in range(len(g.base))])
@@ -202,9 +204,10 @@ def test_coset_factor():
     p = Permutation.rmul(*v)
     assert p == c
     assert g.contains(c)
-    G = PermutationGroup([Permutation([2,1,0])])
-    p = Permutation([1,0,2])
+    G = PermutationGroup([Permutation([2, 1, 0])])
+    p = Permutation([1, 0, 2])
     assert G.coset_factor(p) == []
+
 
 def test_orbits():
     a = Permutation([2, 0, 1])
@@ -318,6 +321,7 @@ def test_rubik1():
 
     G = RubikGroup(2)
     assert G.order() == 3674160
+
 
 @XFAIL
 def test_rubik():
@@ -470,6 +474,7 @@ def test_schreier_sims_random():
                   Permutation([0, 2, 1])]
     assert D.schreier_sims_random([], D.generators, 2,
            _random_prec=_random_prec) == (base, strong_gens)
+
 
 def test_baseswap():
     S = SymmetricGroup(4)

@@ -6,7 +6,7 @@ import sys
 import warnings
 unicode_warnings = ''
 
-from sympy.core.compatibility import u, unicode
+from sympy.core.compatibility import u, unicode, range
 
 # first, setup unicodedate environment
 try:
@@ -52,6 +52,15 @@ def pretty_use_unicode(flag=None):
     global unicode_warnings
     if flag is None:
         return _use_unicode
+
+    # we know that some letters are not supported in Python 2.X so
+    # ignore those warnings. Remove this when 2.X support is dropped.
+    if unicode_warnings:
+        known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
+        unicode_warnings = '\n'.join([
+            l for l in unicode_warnings.splitlines() if not any(
+            i in l for i in known)])
+    # ------------ end of 2.X warning filtering
 
     if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
@@ -118,7 +127,7 @@ greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u('\u03c2')
+greek_unicode['varsigma'] = u('\N{GREEK SMALL LETTER FINAL SIGMA}')
 
 digit_2txt = {
     '0':    'ZERO',
@@ -164,7 +173,7 @@ sub = {}    # symb -> subscript symbol
 sup = {}    # symb -> superscript symbol
 
 # latin subscripts
-for l in 'aeioruvx':
+for l in 'aeioruvxhklmnpst':
     sub[l] = LSUB(l)
 
 for l in 'in':
@@ -186,21 +195,21 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u('\u030A'),
-    'ddddot': lambda s: s+u('\u0308\u0308'),
-    'dddot': lambda s: s+u('\u0308\u0307'),
-    'ddot': lambda s: s+u('\u0308'),
-    'dot': lambda s: s+u('\u0307'),
-    'check': lambda s: s+u('\u030C'),
-    'breve': lambda s: s+u('\u0306'),
-    'acute': lambda s: s+u('\u0301'),
-    'grave': lambda s: s+u('\u0300'),
-    'tilde': lambda s: s+u('\u0303'),
-    'hat': lambda s: s+u('\u0302'),
-    'bar': lambda s: s+u('\u0305'),
-    'vec': lambda s: s+u('\u20D7'),
-    'prime': lambda s: s+u(' \u030D'),
-    'prm': lambda s: s+u(' \u030D'),
+    'mathring': lambda s: s+u('\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}'),
+    'dddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}'),
+    'ddot': lambda s: s+u('\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: s+u('\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: s+u('\N{COMBINING CARON}'),
+    'breve': lambda s: s+u('\N{COMBINING BREVE}'),
+    'acute': lambda s: s+u('\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: s+u('\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: s+u('\N{COMBINING TILDE}'),
+    'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
+    'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
+    'prime': lambda s: s+u('\N{PRIME}'),
+    'prm': lambda s: s+u('\N{PRIME}'),
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -208,10 +217,10 @@ modifier_dict = {
     # 'scr': lambda s: s,
     # 'frak': lambda s: s,
     # Brackets
-    'norm': lambda s: u('\u2016')+s+u('\u2016'),
-    'avg': lambda s: u('\u27E8')+s+u('\u27E9'),
-    'abs': lambda s: u('\u007C')+s+u('\u007C'),
-    'mag': lambda s: u('\u007C')+s+u('\u007C'),
+    'norm': lambda s: u('\N{DOUBLE VERTICAL LINE}')+s+u('\N{DOUBLE VERTICAL LINE}'),
+    'avg': lambda s: u('\N{MATHEMATICAL LEFT ANGLE BRACKET}')+s+u('\N{MATHEMATICAL RIGHT ANGLE BRACKET}'),
+    'abs': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
+    'mag': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
 }
 
 # VERTICAL OBJECTS
@@ -449,21 +458,23 @@ def xsym(sym):
 # SYMBOLS
 
 atoms_table = {
-    # class             how-to-display
-    'Exp1':             U('SCRIPT SMALL E'),
-    'Pi':               U('GREEK SMALL LETTER PI'),
-    'Infinity':         U('INFINITY'),
-    'NegativeInfinity': U('INFINITY') and ('-' + U('INFINITY')),  # XXX what to do here
-    #'ImaginaryUnit':    U('GREEK SMALL LETTER IOTA'),
-    #'ImaginaryUnit':    U('MATHEMATICAL ITALIC SMALL I'),
-    'ImaginaryUnit':    U('DOUBLE-STRUCK ITALIC SMALL I'),
-    'EmptySet':         U('EMPTY SET'),
-    'Naturals':         U('DOUBLE-STRUCK CAPITAL N'),
-    'Integers':         U('DOUBLE-STRUCK CAPITAL Z'),
-    'Reals':            U('DOUBLE-STRUCK CAPITAL R'),
-    'Union':            U('UNION'),
-    'Intersection':     U('INTERSECTION'),
-    'Ring':             U('RING OPERATOR')
+    # class                    how-to-display
+    'Exp1':                    U('SCRIPT SMALL E'),
+    'Pi':                      U('GREEK SMALL LETTER PI'),
+    'Infinity':                U('INFINITY'),
+    'NegativeInfinity':        U('INFINITY') and ('-' + U('INFINITY')),  # XXX what to do here
+    #'ImaginaryUnit':          U('GREEK SMALL LETTER IOTA'),
+    #'ImaginaryUnit':          U('MATHEMATICAL ITALIC SMALL I'),
+    'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'EmptySet':                U('EMPTY SET'),
+    'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
+    'Complex':                 U('DOUBLE-STRUCK CAPITAL C'),
+    'Union':                   U('UNION'),
+    'SymmetricDifference':     U('INCREMENT'),
+    'Intersection':            U('INTERSECTION'),
+    'Ring':                    U('RING OPERATOR')
 }
 
 
@@ -509,7 +520,7 @@ def pretty_symbol(symb_name):
             if pretty is None:
                 try:  # match by separate characters
                     pretty = ''.join([mapping[c] for c in s])
-                except KeyError:
+                except (TypeError, KeyError):
                     return None
             result.append(pretty)
         return result
@@ -544,9 +555,13 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u('\u250c\u2500\n\u251c\u2500\n\u2575')),
+        'F': (2, 0, 2, 0, u('\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                            '\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                            '\N{BOX DRAWINGS LIGHT UP}')),
         'G': (3, 0, 3, 1,
-              u('\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f'))
+              u('\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
+                '\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
+                '\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}'))
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),

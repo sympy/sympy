@@ -1,6 +1,6 @@
 from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
                    ImmutableMatrix as Matrix)
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
@@ -261,6 +261,8 @@ class Vector(object):
                 ar = e.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
+                settings = printer._settings if printer else {}
+                vp = printer if printer else VectorPrettyPrinter(settings)
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
@@ -274,10 +276,10 @@ class Vector(object):
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
                             if isinstance(ar[i][0][j], Add):
-                                arg_str = VectorPrettyPrinter()._print(
+                                arg_str = vp._print(
                                     ar[i][0][j]).parens()[0]
                             else:
-                                arg_str = (VectorPrettyPrinter().doprint(
+                                arg_str = (vp.doprint(
                                     ar[i][0][j]))
 
                             if arg_str[0] == u("-"):
@@ -568,7 +570,7 @@ class Vector(object):
             The matrix that gives the 1D vector.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
@@ -653,6 +655,16 @@ class Vector(object):
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""
         return Vector(self.args + []) / self.magnitude()
+
+    def applyfunc(self, f):
+        """Apply a function to each component of a vector."""
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        ov = Vector(0)
+        for v in self.args:
+            ov += Vector([(v[0].applyfunc(f), v[1])])
+        return ov
 
 
 class VectorTypeError(TypeError):

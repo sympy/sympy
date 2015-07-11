@@ -210,10 +210,9 @@ class LagrangesMethod(object):
         if self.forcelist:
             N = self.inertial
             self._term4 = zeros(n, 1)
-            flist = zip(*_f_list_parser(self.forcelist, N))
             for i, qd in enumerate(qds):
-                for obj, force in self.forcelist:
-                    self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+                flist = zip(*_f_list_parser(self.forcelist, N))
+                self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
 

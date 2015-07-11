@@ -13,20 +13,21 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
-    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
+    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
     ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, AlgebraicNumber)
+    residue, Derivative, logcombine, Symbol, Intersection, Union)
 
+import mpmath
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
-from sympy.mpmath import mpi, mpc
+from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
@@ -47,6 +48,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
+from sympy.core.compatibility import range
 from itertools import islice, takewhile
 
 
@@ -68,8 +70,13 @@ def test_B1():
 
 
 def test_B2():
+    a, b, c = FiniteSet(j), FiniteSet(m), FiniteSet(j, k)
+    d, e = FiniteSet(i), FiniteSet(j, k, l)
+
     assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
-            FiniteSet(j, m, j)) == FiniteSet(j)
+            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, e))))
+    # {j} U Intersection({m}, {j, k} U Intersection({i}, {j, k, l}))
+
 
 
 def test_B3():
@@ -479,7 +486,6 @@ def test_H16():
         + x**5 + 1)*(x**40 - x**30 + x**20 - x**10 + 1))
 
 
-@slow
 def test_H17():
     assert simplify(factor(expand(p1 * p2)) - p1*p2) == 0
 
@@ -526,7 +532,6 @@ def test_H24():
         (x - phi)*(x + 1 - phi)*(x - 1 + phi)*(x + phi)
 
 
-@slow
 def test_H25():
     e = (x - 2*y**2 + 3*z**3) ** 20
     assert factor(expand(e)) == e
@@ -633,9 +638,11 @@ def test_I9():
 def test_I10():
     assert trigsimp((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1)) == nan
 
-#@XFAIL
-#def test_I11():
-#    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
+
+@SKIP("hangs")
+@XFAIL
+def test_I11():
+    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
 
 
 @XFAIL
@@ -846,10 +853,10 @@ def test_M1():
 
 
 def test_M2():
-    # The roots of this equation should all be real. Note that this doesn't test
-    # that they are correct.
+    # The roots of this equation should all be real. Note that this
+    # doesn't test that they are correct.
     sol = solve(3*x**3 - 18*x**2 + 33*x - 19, x)
-    assert all(expand(x, complex=True).is_real for x in sol)
+    assert all(s.expand(complex=True).is_real for s in sol)
 
 
 @XFAIL
@@ -858,22 +865,26 @@ def test_M5():
 
 
 def test_M6():
-    assert set(solve(x**7 - 1, x)) == set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
-    # The paper asks for exp terms, but sin's and cos's may be acceptable
+    assert set(solve(x**7 - 1, x)) == \
+        set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
+    # The paper asks for exp terms, but sin's and cos's may be acceptable;
+    # if the results are simplified, exp terms appear for all but
+    # -sin(pi/14) - I*cos(pi/14) and -sin(pi/14) + I*cos(pi/14) which
+    # will simplify if you apply the transformation foo.rewrite(exp).expand()
 
 
 def test_M7():
-    assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)) == set([
-        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
-        ])
+    sol = solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+        226*x**2 - 140*x + 46, x)
+    assert [s.simplify() for s in sol] == [
+        1 - sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 + 2*I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 + 2*I*sqrt(3 + 4*sqrt (3)))/2,
+        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2]
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -926,7 +937,7 @@ def test_M15():
 
 
 def test_M16():
-    assert solve(sin(x) - tan(x), x) == [0, 2*pi]
+    assert solve(sin(x) - tan(x), x) == [0, -pi, pi, 2*pi]
 
 
 @XFAIL
@@ -951,7 +962,6 @@ def test_M21():
     assert solve(x + sqrt(x) - 2) == [1]
 
 
-@slow
 def test_M22():
     assert solve(2*sqrt(x) + 3*x**R(1, 4) - 2) == [R(1, 16)]
 
@@ -960,9 +970,7 @@ def test_M23():
     x = symbols('x', complex=True)
 
     assert solve(x - 1/sqrt(1 + x**2)) == [
-        simplify(-I*sqrt((sqrt(5) + 1)/2)),
-        simplify(   sqrt((sqrt(5) - 1)/2)),
-    ]
+        -I*sqrt(S.Half + sqrt(5)/2), sqrt(-S.Half + sqrt(5)/2)]
 
 
 def test_M24():
@@ -1040,7 +1048,6 @@ def test_M37():
     assert solve([x + y + z - 6, 2*x + y + 2*z - 10, x + 3*y + z - 10 ]) == {x: -z + 4, y: 2}
 
 
-@slow
 def test_M38():
     variabes = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
     system = [
@@ -1889,7 +1896,6 @@ def test_R14():
     assert T.simplify() == sin(n*x)**2/sin(x)
 
 
-@slow
 @XFAIL
 def test_R15():
     n, k = symbols('n k', integer=True, positive=True)
@@ -2356,8 +2362,7 @@ def test_V13():
 @XFAIL
 def test_V14():
     r1 = integrate(log(abs(x**2 - y**2)), x)
-    # I.simplify() raises AttributeError
-    # https://github.com/sympy/sympy/issues/7158
+    # Piecewise result does not simplify to the desired result.
     assert (r1.simplify() == x*log(abs(x**2  - y**2))
                             + y*log(x + y) - y*log(x - y) - 2*x)
 
@@ -2867,7 +2872,7 @@ def test_Y2():
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*abs(w - 1))
+    assert f == cos(t*w - t)
 
 
 @slow

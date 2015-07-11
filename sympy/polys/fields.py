@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.orderings import lex
-from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.fractionfield import FractionField
@@ -501,7 +501,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Computes partial derivative in ``x``.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.polys.fields import field
         >>> from sympy.polys.domains import ZZ
 

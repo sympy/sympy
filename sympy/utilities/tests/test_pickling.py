@@ -1,15 +1,14 @@
 import copy
 import pickle
 import warnings
-import sys
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta, BasicType, ClassRegistry
+from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer, Number,
-        NumberSymbol, Rational, Float)
+from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
+        Rational, Float)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
         StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.add import Add
@@ -19,8 +18,6 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
     WildFunction
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
-from sympy.functions import exp
-#from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 from sympy.core.compatibility import HAS_GMPY, PY3
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -45,7 +42,7 @@ def check(a, exclude=[], check_attr=True):
             continue
 
         if callable(protocol):
-            if isinstance(a, BasicType):
+            if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
                 return
             b = protocol(a)
@@ -82,8 +79,6 @@ def test_core_basic():
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
-              # BasicType, BasicType("test", (), {}),
-              ClassRegistry, ClassRegistry(),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 

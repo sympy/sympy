@@ -45,7 +45,7 @@ REPORT_DIR = "covhtml"
 REFRESH = False
 
 omit_dir_patterns = ['.*tests', 'benchmark', 'examples',
-                    'mpmath', 'pyglet', 'test_external']
+                     'pyglet', 'test_external']
 omit_dir_re = re.compile(r'|'.join(omit_dir_patterns))
 source_re = re.compile(r'.*\.py$')
 
@@ -80,7 +80,7 @@ def make_report(source_dir, report_dir, use_cache=False):
         cov.start()
         import sympy
         sympy.test(source_dir, subprocess=False)
-        #sympy.doctest()        #coverage doesn't play well with doctests
+        #sympy.doctest()  # coverage doesn't play well with doctests
         cov.stop()
         cov.save()
 

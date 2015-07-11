@@ -65,7 +65,7 @@ def go(path, write, report):
         ".rst",
     ]
     for root, dirs, files in os.walk(path):
-        for b in [".git", "mpmath"]:
+        for b in [".git"]:
             if b in dirs:
                 dirs.remove(b)
         for file in files:

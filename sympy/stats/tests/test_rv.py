@@ -6,6 +6,7 @@ from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         random_symbols, sample)
 from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import range
 
 
 def test_where():

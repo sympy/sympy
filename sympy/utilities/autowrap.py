@@ -77,7 +77,7 @@ from subprocess import STDOUT, CalledProcessError
 from string import Template
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import check_output
+from sympy.core.compatibility import check_output, range
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
@@ -93,7 +93,7 @@ class CodeWrapError(Exception):
     pass
 
 
-class CodeWrapper:
+class CodeWrapper(object):
     """Base Class for code wrappers"""
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
@@ -211,30 +211,35 @@ class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
     setup_template = (
-            "from distutils.core import setup\n"
-            "from distutils.extension import Extension\n"
-            "from Cython.Distutils import build_ext\n"
-            "\n"
-            "setup(\n"
-            "    cmdclass = {{'build_ext': build_ext}},\n"
-            "    ext_modules = [Extension({ext_args}, extra_compile_args=['-std=c99'])]\n"
-            "        )")
+        "from distutils.core import setup\n"
+        "from distutils.extension import Extension\n"
+        "from Cython.Distutils import build_ext\n"
+        "{np_import}"
+        "\n"
+        "setup(\n"
+        "    cmdclass = {{'build_ext': build_ext}},\n"
+        "    ext_modules = [Extension({ext_args},\n"
+        "                             extra_compile_args=['-std=c99'])],\n"
+        "{np_includes}"
+        "        )")
 
     pyx_imports = (
-            "import numpy as np\n"
-            "cimport numpy as np\n\n")
+        "import numpy as np\n"
+        "cimport numpy as np\n\n")
 
     pyx_header = (
-            "cdef extern from '{header_file}.h':\n"
-            "    {prototype}\n\n")
+        "cdef extern from '{header_file}.h':\n"
+        "    {prototype}\n\n")
 
     pyx_func = (
-            "def {name}_c({arg_string}):\n"
-            "\n"
-            "{declarations}"
-            "{body}")
+        "def {name}_c({arg_string}):\n"
+        "\n"
+        "{declarations}"
+        "{body}")
 
-    _need_numpy = False
+    def __init__(self, *args, **kwargs):
+        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        self._need_numpy = False
 
     @property
     def command(self):
@@ -251,8 +256,16 @@ class CythonCodeWrapper(CodeWrapper):
 
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
+        if self._need_numpy:
+            np_import = 'import numpy as np\n'
+            np_includes = '    include_dirs = [np.get_include()],\n'
+        else:
+            np_import = ''
+            np_includes = ''
         with open('setup.py', 'w') as f:
-            f.write(self.setup_template.format(ext_args=", ".join(ext_args)))
+            f.write(self.setup_template.format(ext_args=", ".join(ext_args),
+                                               np_import=np_import,
+                                               np_includes=np_includes))
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
@@ -428,7 +441,7 @@ def _validate_backend_language(backend, language):
     if not langs:
         raise ValueError("Unrecognized backend: " + backend)
     if language.upper() not in langs:
-        raise ValueError(("Backend {0} and language {1} are"
+        raise ValueError(("Backend {0} and language {1} are "
                           "incompatible").format(backend, language))
 
 
@@ -811,7 +824,8 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     Examples
-    --------
+    ========
+
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y
     >>> import numpy as np

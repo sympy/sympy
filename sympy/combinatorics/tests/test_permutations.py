@@ -1,5 +1,6 @@
 from itertools import permutations
 
+from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
 from sympy.utilities.pytest import raises

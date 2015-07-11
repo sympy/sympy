@@ -81,3 +81,13 @@ ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
    :members:
+
+Range
+^^^^^
+.. autoclass:: Range
+   :members:
+
+ComplexPlane
+^^^^^^^^^^^^
+.. autoclass:: ComplexPlane
+   :members:

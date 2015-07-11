@@ -1,9 +1,9 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
+    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, \
     factorial as fac, pi, GoldenRatio as phi, sqrt
-from sympy.core.numbers import Integer, igcd, Rational
-from sympy.core.compatibility import long
+from sympy.core.numbers import Integer, Rational
+from sympy.core.compatibility import long, range
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -15,7 +15,8 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p, \
-    antidivisors, antidivisor_count
+    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma, \
+    udivisor_count
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
@@ -26,8 +27,6 @@ from sympy.ntheory.continued_fraction import \
      continued_fraction_convergents as cf_c,
      continued_fraction_reduce as cf_r)
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
-
-from fractions import Fraction
 
 from sympy.core.add import Add
 
@@ -66,6 +65,8 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
+    raises(ValueError, lambda: multiplicity(2, 0))
+    raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
     assert multiplicity(10, Rational(30, 7)) == 0
@@ -357,6 +358,7 @@ def test_factorint():
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
 
+
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
@@ -377,9 +379,33 @@ def test_divisors_and_divisor_count():
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
 
+
+def test_udivisors_and_udivisor_count():
+    assert udivisors(-1) == [1]
+    assert udivisors(0) == []
+    assert udivisors(1) == [1]
+    assert udivisors(2) == [1, 2]
+    assert udivisors(3) == [1, 3]
+    assert udivisors(17) == [1, 17]
+    assert udivisors(10) == [1, 2, 5, 10]
+    assert udivisors(100) == [1, 4, 25, 100]
+    assert udivisors(101) == [1, 101]
+    assert udivisors(1000) == [1, 8, 125, 1000]
+
+    assert udivisor_count(0) == 0
+    assert udivisor_count(-1) == 1
+    assert udivisor_count(1) == 1
+    assert udivisor_count(6) == 4
+    assert udivisor_count(12) == 4
+
+    assert udivisor_count(180) == 8
+    assert udivisor_count(2*3*5*7) == 16
+
+
 def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == set([1,2,4])
+
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
@@ -393,6 +419,9 @@ def test_totient():
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
     assert summation(totient(m), (m, 1, 11)) == 42
+
+    n = Symbol("n", integer=True, positive=True)
+    assert totient(n).is_integer
 
 
 def test_divisor_sigma():
@@ -413,6 +442,26 @@ def test_divisor_sigma():
     assert divisor_sigma(m).subs(m, 3**10) == 88573
     assert divisor_sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
     assert summation(divisor_sigma(m), (m, 1, 11)) == 99
+
+
+def test_udivisor_sigma():
+    assert [udivisor_sigma(k) for k in range(1, 12)] == \
+        [1, 3, 4, 5, 6, 12, 8, 9, 10, 18, 12]
+    assert [udivisor_sigma(k, 3) for k in range(1, 12)] == \
+        [1, 9, 28, 65, 126, 252, 344, 513, 730, 1134, 1332]
+    assert udivisor_sigma(23450) == 42432
+    assert udivisor_sigma(23450, 0) == 16
+    assert udivisor_sigma(23450, 1) == 42432
+    assert udivisor_sigma(23450, 2) == 702685000
+    assert udivisor_sigma(23450, 4) == 321426961814978248
+
+    m = Symbol("m", integer=True)
+    k = Symbol("k", integer=True)
+    assert udivisor_sigma(m)
+    assert udivisor_sigma(m, k)
+    assert udivisor_sigma(m).subs(m, 4**9) == 262145
+    assert udivisor_sigma(m, k).subs([(m, 4**9), (k, 2)]) == 68719476737
+    assert summation(udivisor_sigma(m), (m, 2, 15)) == 169
 
 
 def test_partitions():
@@ -878,3 +927,25 @@ def test_egyptian_fraction():
                                                      10, 11, 12, 27, 744, 893588,
                                                      1251493536607,
                                                      20361068938197002344405230]
+
+
+def test_core():
+    assert core(35**13, 10) == 42875
+    assert core(210**2) == 1
+    assert core(7776, 3) == 36
+    assert core(10**27, 22) == 10**5
+    assert core(537824) == 14
+    assert core(1, 6) == 1
+
+
+def test_digits():
+    assert all([digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
+                for n in range(20)])
+    assert all([digits(n, 8)[1:] == [int(d) for d in format(n, 'o')]
+                for n in range(20)])
+    assert all([digits(n, 16)[1:] == [int(d, 16) for d in format(n, 'x')]
+                for n in range(20)])
+    assert digits(2345, 34) == [34, 2, 0, 33]
+    assert digits(384753, 71) == [71, 1, 5, 23, 4]
+    assert digits(93409) == [10, 9, 3, 4, 0, 9]
+    assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]

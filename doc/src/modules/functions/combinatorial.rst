@@ -41,6 +41,12 @@ factorial
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial
    :members:
 
+subfactorial
+------------
+
+.. autoclass:: sympy.functions.combinatorial.factorials.subfactorial
+   :members:
+
 factorial2 / double factorial
 -----------------------------
 

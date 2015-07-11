@@ -1,5 +1,6 @@
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
+from sympy.core.compatibility import range
 
 theano = import_module('theano')
 if theano:
@@ -14,7 +15,7 @@ else:
 import sympy
 from sympy import S
 sy = sympy
-from sympy.abc import x, y, z, a, b, c
+from sympy.abc import x, y, z
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
 
@@ -260,6 +261,13 @@ def test_Piecewise():
     expr = sy.Piecewise((x, x < 0))
     result = theano_code(expr)
     expected = tt.switch(xt < 0, xt, np.nan)
+    assert theq(result, expected)
+
+    expr = sy.Piecewise((0, sy.And(x>0, x<2)), \
+        (x, sy.Or(x>2, x<0)))
+    result = theano_code(expr)
+    expected = tt.switch(tt.and_(xt>0,xt<2), 0, \
+        tt.switch(tt.or_(xt>2, xt<0), xt, np.nan))
     assert theq(result, expected)
 
 def test_Relationals():

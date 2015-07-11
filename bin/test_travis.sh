@@ -16,6 +16,16 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
 elif [[ "${TEST_SAGE}" == "true" ]]; then
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
+elif [[ "${TEST_ASCII}" == "true" ]]; then
+    export LANG=c
+    mkdir empty
+    cd empty
+    cat <<EOF | python
+import sympy
+sympy.test('print')
+EOF
+    cd ..
+    bin/doctest
 else
     # We change directories to make sure that we test the installed version of
     # sympy.

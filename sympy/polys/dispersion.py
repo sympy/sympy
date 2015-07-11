@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.polys import Poly
-from sympy.polys.polytools import factor_list
 
 
 def dispersionset(p, q=None, *gens, **args):
