@@ -38,11 +38,11 @@ def fourier_sin_seq(func, limits, n):
 
 def _process_limits(func, limits):
     """
-    limits should be of the form (x, start, stop)
-    x should be a symbol. Both start and stop should be bounded
+    limits should be of the form (x, start, stop).
+    x should be a symbol. Both start and stop should be bounded.
 
-    * If x is not given, x is determined from func
-    * if limits is None. limit of the form (x, -pi, pi) is returned
+    * If x is not given, x is determined from func.
+    * if limits is None. limit of the form (x, -pi, pi) is returned.
 
     Examples
     ========
@@ -91,7 +91,7 @@ def _process_limits(func, limits):
 
 
 class FourierSeries(SeriesBase):
-    r"""Represents fourier sine/cosine series
+    r"""Represents fourier sine/cosine series.
 
     This class only represents a fourier series.
     No computation is performed.
@@ -154,8 +154,10 @@ class FourierSeries(SeriesBase):
             return self
 
     def truncate(self, n=3):
-        """"returns the first n terms(non-zero) of the series
-        if n is none returns an iterator"""
+        """"returns the first n terms(non-zero) of the series.
+
+        if n is ``None`` returns an iterator.
+        """
         if n is None:
             return iter(self)
 
@@ -169,9 +171,7 @@ class FourierSeries(SeriesBase):
         return Add(*terms)
 
     def shift(self, s):
-        """
-        Shift the function by a
-        term independent of x
+        """Shift the function by a term independent of x.
 
         f(x) -> f(x) + s
 
@@ -198,9 +198,7 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
     def shiftx(self, s):
-        """
-        Shift x by a
-        term independent of x
+        """Shift x by a term independent of x.
 
         f(x) -> f(x + s)
 
@@ -228,9 +226,7 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def scale(self, s):
-        """
-        Scale function by a
-        term independent of x
+        """Scale function by a term independent of x.
 
         f(x) -> s * f(x)
 
@@ -259,9 +255,7 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, an, bn))
 
     def scalex(self, s):
-        """
-        Scale x by a
-        term independent of x
+        """Scale x by a term independent of x.
 
         f(x) -> f(s*x)
 
@@ -325,9 +319,9 @@ class FourierSeries(SeriesBase):
 
 
 def fourier_series(f, limits=None):
-    """Computes fourier sine/cosine series expansion
+    """Computes fourier sine/cosine series expansion.
 
-    returns a ``FourierSeries`` object
+    returns a :class:`FourierSeries` object.
 
     Examples
     ========
@@ -365,8 +359,8 @@ def fourier_series(f, limits=None):
     computed fourier series rather than computing
     again.
 
-    eg. If Fourier series of x**2 is known
-    fourier series of x**2 - 1 can be found by shifting by -1
+    eg. If Fourier series of ``x**2`` is known
+    fourier series of ``x**2 - 1`` can be found by shifting by ``-1``.
 
     See Also
     ========

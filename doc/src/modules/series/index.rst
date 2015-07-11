@@ -15,3 +15,4 @@ Contents
 
     series.rst
     sequences.rst
+    fourier.rst
