@@ -183,7 +183,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         workdir = tempfile.mkdtemp()
 
-        with open(join(workdir, 'texput.tex'), 'w') as fh:
+        with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             fh.write(latex_main % latex_string)
 
         if outputTexFile is not None:
