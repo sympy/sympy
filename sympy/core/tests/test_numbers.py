@@ -67,6 +67,14 @@ def test_mod():
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
 
+    p = Symbol('p', infinite=True)
+
+    assert zoo % 0 == nan
+    assert oo % oo == nan
+    assert zoo % oo == nan
+    assert 5 % oo == nan
+    assert p % 5 == nan
+
     # In these two tests, if the precision of m does
     # not match the precision of the ans, then it is
     # likely that the change made now gives an answer
