@@ -1175,23 +1175,28 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
+        from sympy import sqrt
         is_integer = self.is_integer
 
         if is_integer:
             r, acc = True, 1
-            for t in self.args:
-                if not t.is_integer:
+            for t1, t2 in enumerate(self.args):
+                if not t2.is_integer:
+                    if t2.is_Rational:
+                        other = self.args[t1 ^ 1]  # get 0 if 1 or 1 if 0
+                        if t2.as_numer_denom()[1].is_even and sqrt(other).is_even:
+                            return False
                     return None
-                elif t.is_even:
+                elif t2.is_even:
                     r = False
-                elif t.is_integer:
+                elif t2.is_integer:
                     if r is False:
                         pass
-                    elif acc != 1 and (acc + t).is_odd:
+                    elif acc != 1 and (acc + t2).is_odd:
                         r = False
-                    elif t.is_odd is None:
+                    elif t2.is_odd is None:
                         r = None
-                acc = t
+                acc = t2
             return r
 
         # !integer -> !odd

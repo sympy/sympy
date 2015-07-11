@@ -965,3 +965,8 @@ def test_issue_9165():
     assert 0/z == S.NaN
     assert 0*(1/z) == S.NaN
     assert 0*f == S.NaN
+
+
+def test_issue_8648():
+    n = Symbol('n', integer=True, even=True)
+    assert (n**2/2).is_even is True
