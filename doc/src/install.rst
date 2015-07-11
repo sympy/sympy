@@ -15,13 +15,13 @@ SymPy officially supports Python 2.6, 2.7, 3.2, 3.3, 3.4, and PyPy.
 Anaconda
 ========
 
-`Anaconda <http://continuum.io/downloads>`_ is a free Python a free Python
-distribution from Continuum Analytics that includes SymPy, Matplotlib,
-IPython, NumPy, and many more useful packages for scientific computing. This
-is recommended because many nice features of SymPy are only enabled when
-certain libraries are installed.  For example, without Matplotlib, only simple
-text-based plotting is enabled.  With the IPython notebook or qtconsole, you
-can get nicer `\LaTeX` printing by running ``init_printing()``.
+`Anaconda <http://continuum.io/downloads>`_ is a free Python distribution from
+Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and many
+more useful packages for scientific computing. This is recommended because
+many nice features of SymPy are only enabled when certain libraries are
+installed.  For example, without Matplotlib, only simple text-based plotting
+is enabled.  With the IPython notebook or qtconsole, you can get nicer
+`\LaTeX` printing by running ``init_printing()``.
 
 If you already have Anaconda and want to update SymPy to the latest version,
 use::
