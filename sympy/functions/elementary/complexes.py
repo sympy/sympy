@@ -495,10 +495,10 @@ class Abs(Function):
             return self.args[0].is_integer
 
     def _eval_is_nonzero(self):
-        return self._args[0].is_nonzero
+        return fuzzy_not(self._args[0].is_zero)
 
     def _eval_is_zero(self):
-            return self._args[0].is_zero
+        return self._args[0].is_zero
 
     def _eval_is_positive(self):
         is_z = self.is_zero
