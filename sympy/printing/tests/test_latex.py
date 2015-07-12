@@ -1146,6 +1146,11 @@ def test_Hadamard():
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
 
+def test_ZeroMatrix():
+    from sympy import ZeroMatrix
+    assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
+
+
 def test_boolean_args_order():
     syms = symbols('a:f')
 
