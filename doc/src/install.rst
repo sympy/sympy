@@ -79,6 +79,14 @@ a free Python distribution from Continuum Analytics that includes SymPy,
 Matplotlib, IPython, NumPy, and many more useful packages for scientific
 computing.
 
+Pyzo
+====
+
+If you want to use SymPy exclusively with Python 3 (including other
+libraries such as NumPy, SciPy, Pandas and others), you may also find
+`Pyzo <http://www.pyzo.org/>`__ interesting. You may find this
+especially useful for working on Microsoft Windows.
+
 Other Methods
 =============
 
