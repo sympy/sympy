@@ -1,5 +1,4 @@
 from __future__ import division
-import warnings
 
 from sympy import (Abs, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, Derivative, asin, acos)
@@ -10,15 +9,9 @@ from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             are_similar, convex_hull, intersection,
                             Point3D, Line3D, Ray3D, Segment3D, Plane, centroid)
 from sympy.geometry.line import Undecidable
-from sympy.geometry.entity import rotate, scale, translate
-from sympy.geometry.polygon import _asa as asa, rad, deg
-from sympy.geometry.util import idiff, are_coplanar
-from sympy.integrals.integrals import Integral
-from sympy.matrices import Matrix
-from sympy.solvers.solvers import solve
+from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.randtest import verify_numerically
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
