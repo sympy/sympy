@@ -3673,3 +3673,7 @@ def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
     assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+
+def test_sympy__physics__wigner__Wigner3j():
+    from sympy.physics.wigner import Wigner3j
+    assert _test_args(Wigner3j(0,0,0,0))
