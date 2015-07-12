@@ -415,6 +415,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Isuru Fernando: Use docker for travis testing
 #. Shivam Tyagi solveset_complex(0, x) now returns S.Complex
 #. Rich LaSota Removed redundant doctest in polys
+#. Anton Akhmerov fixed the zero matrix printing
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
