@@ -99,7 +99,7 @@ class NumPyPrinter(LambdaPrinter):
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
-        return 'select({0}, {1})'.format(conds, exprs)
+        return 'select({0}, {1}, default=nan)'.format(conds, exprs)
 
     def _print_And(self, expr):
         "Logical And printer"
