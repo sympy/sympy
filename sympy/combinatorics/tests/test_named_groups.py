@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.combinatorics.named_groups import (SymmetricGroup, CyclicGroup,
 DihedralGroup, AlternatingGroup, AbelianGroup)
 

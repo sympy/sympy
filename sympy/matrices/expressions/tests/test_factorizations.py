@@ -1,5 +1,8 @@
+from __future__ import division, print_function
+
 from sympy.matrices.expressions.factorizations import lu, LofCholesky, qr, svd
 from sympy import Symbol, MatrixSymbol, ask, Q
+
 
 n = Symbol('n')
 X = MatrixSymbol('X', n, n)

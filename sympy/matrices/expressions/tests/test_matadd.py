@@ -1,9 +1,13 @@
+from __future__ import division, print_function
+
 from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
 from sympy.matrices import eye, ImmutableMatrix
 from sympy import Basic
 
+
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)
+
 
 def test_sort_key():
     assert MatAdd(Y, X).doit().args == (X, Y)

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor, zoo, sqrt, Rational, simplify, Function)

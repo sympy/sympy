@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.integrals.transforms import (mellin_transform,
     inverse_mellin_transform, laplace_transform, inverse_laplace_transform,
     fourier_transform, inverse_fourier_transform,

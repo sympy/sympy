@@ -8,7 +8,7 @@ operation.  The default precedence used (high to low) is <,>, and | have
 an have the highest precedence, then comes ^, and finally *.
 """
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 import re as regrep
 from sympy.core.compatibility import range

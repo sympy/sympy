@@ -1,5 +1,7 @@
 """ A module which handles Matrix Expressions """
 
+from __future__ import division, print_function
+
 from .slice import MatrixSlice
 from .blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse, blockcut
 from .funcmatrix import FunctionMatrix

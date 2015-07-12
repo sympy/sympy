@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import S, symbols
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (

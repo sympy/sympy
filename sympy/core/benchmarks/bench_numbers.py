@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.numbers import Integer, Rational, integer_nthroot, igcd
 from sympy import S, pi, oo

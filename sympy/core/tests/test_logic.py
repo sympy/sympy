@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
     fuzzy_or, _fuzzy_group)
 from sympy.utilities.pytest import raises

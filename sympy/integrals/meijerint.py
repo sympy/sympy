@@ -25,7 +25,8 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core import oo, S, pi, Expr
 from sympy.core.exprtools import factor_terms

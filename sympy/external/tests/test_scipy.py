@@ -5,6 +5,8 @@
 # Python (without scipy). Here we test everything, that a user may need when
 # using SymPy with SciPy
 
+from __future__ import division, print_function
+
 from sympy.external import import_module
 
 scipy = import_module('scipy')

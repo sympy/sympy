@@ -21,7 +21,7 @@ For more information on the details of geometric algebra please look
 at the documentation for the module.
 """
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 from sympy.core.compatibility import reduce
 from itertools import combinations

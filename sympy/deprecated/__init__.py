@@ -9,4 +9,6 @@ Since no modules in SymPy ever depend on deprecated code, SymPy always imports
 this last, after all other modules have been imported.
 """
 
+from __future__ import division, print_function
+
 from sympy.deprecated.class_registry import C, ClassRegistry

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.combinatorics.prufer import Prufer
 from sympy.utilities.pytest import raises
 

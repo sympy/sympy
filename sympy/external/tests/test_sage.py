@@ -15,6 +15,8 @@
 # Python (without Sage). Here we test everything, that a user may need when
 # using SymPy with Sage.
 
+from __future__ import division, print_function
+
 import os
 import re
 import sys

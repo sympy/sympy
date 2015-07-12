@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
                    fibonacci, floor, Function, GoldenRatio, I, Integral,
                    integrate, log, Mul, N, oo, pi, Pow, product, Product,

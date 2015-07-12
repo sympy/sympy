@@ -15,7 +15,7 @@ versions of the code will allow manifolds defined purely in terms of
 a metric.
 """
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 from itertools import combinations
 from os import system

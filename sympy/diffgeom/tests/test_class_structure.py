@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
 from sympy import symbols, Function
 

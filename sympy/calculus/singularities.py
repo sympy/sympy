@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.solvers import solve
 from sympy.simplify import simplify
 

@@ -5,6 +5,8 @@
 Demonstrates how to create symbols and print some algebra operations.
 """
 
+from __future__ import division, print_function
+
 import sympy
 from sympy import pprint
 

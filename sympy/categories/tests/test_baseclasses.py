@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.categories import (Object, Morphism, IdentityMorphism,
                               NamedMorphism, CompositeMorphism,
                               Diagram, Category)

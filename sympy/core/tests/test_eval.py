@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Symbol, Function, exp, sqrt, Rational, I, cos, tan
 from sympy.utilities.pytest import XFAIL
 

@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, Add

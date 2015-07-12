@@ -16,7 +16,8 @@ match, add the key and call to the antiderivative function to integral_steps.
 To enable simple substitutions, add the match to find_substitutions.
 
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from collections import namedtuple
 

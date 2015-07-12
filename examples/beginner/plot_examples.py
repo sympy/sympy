@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # Check the plot docstring
 
+from __future__ import division, print_function
+
 from sympy import Symbol, exp, sin, cos
 from sympy.plotting import (plot, plot_parametric,
                             plot3d_parametric_surface, plot3d_parametric_line,

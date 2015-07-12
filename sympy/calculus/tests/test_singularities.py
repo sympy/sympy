@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Symbol, exp, log
 from sympy.calculus.singularities import singularities
 

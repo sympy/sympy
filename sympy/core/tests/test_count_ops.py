@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
     count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
     Equivalent, MatrixSymbol, Symbol, ITE

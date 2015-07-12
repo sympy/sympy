@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (
     Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
     cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,

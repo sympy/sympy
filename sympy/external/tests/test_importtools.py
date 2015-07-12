@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.external import import_module
 
 # fixes issue that arose in addressing issue 6533

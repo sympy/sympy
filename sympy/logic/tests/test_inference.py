@@ -1,5 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
+from __future__ import division, print_function
+
 from sympy import symbols, Q
 from sympy.core.compatibility import range
 from sympy.logic.boolalg import And, Implies, Equivalent, true, false

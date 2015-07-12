@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Integer, S
 from sympy.core.operations import LatticeOp
 from sympy.utilities.pytest import raises

@@ -6,6 +6,7 @@ Plotting Examples
 Suggested Usage:    python -i plotting.py
 """
 
+from __future__ import division, print_function
 
 from sympy import symbols
 from sympy.plotting.pygletplot import PygletPlot

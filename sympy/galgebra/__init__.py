@@ -2,6 +2,9 @@
 A module for geometric algebra
 
 """
+
+from __future__ import division, print_function
+
 from sympy.galgebra.ga import MV, Com, DD, Format, Nga, ReciprocalFrame, ScalarFunction, \
     cross, dual, ga_print_off, ga_print_on, inv, proj, refl, rot, rotor
 

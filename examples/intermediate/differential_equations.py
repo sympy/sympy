@@ -6,6 +6,8 @@ Demonstrates solving 1st and 2nd degree linear ordinary differential
 equations.
 """
 
+from __future__ import division, print_function
+
 from sympy import dsolve, Eq, Function, sin, Symbol
 
 

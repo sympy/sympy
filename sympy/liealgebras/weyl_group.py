@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division, print_function
+
 from sympy.core import Basic, Rational
 from sympy.core.compatibility import range
 from sympy.core.numbers import igcd

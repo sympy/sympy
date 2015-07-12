@@ -5,6 +5,8 @@
 Demonstrates plotting with matplotlib.
 """
 
+from __future__ import division, print_function
+
 import sys
 
 from sample import sample

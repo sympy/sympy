@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+from __future__ import division, print_function
+
 from .cartan_type import CartanType
 from sympy.core import Basic
 from sympy.core.compatibility import range

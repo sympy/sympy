@@ -13,6 +13,8 @@ something is not clear, like what the Ricci tensor is, etc.
 
 """
 
+from __future__ import division, print_function
+
 from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
                   Matrix, Eq, pprint, Pow, classify_ode, solve)
 

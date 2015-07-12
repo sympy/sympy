@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
     atanh, hyper, meijerg, O)
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,

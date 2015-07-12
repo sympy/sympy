@@ -3,6 +3,9 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
+
+from __future__ import division, print_function
+
 from .matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
     MatrixBase)
 

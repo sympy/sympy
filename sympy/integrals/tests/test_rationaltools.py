@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify, integrate
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan

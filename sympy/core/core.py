@@ -1,5 +1,6 @@
 """ The core's core. """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:

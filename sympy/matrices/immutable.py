@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Basic, Integer, Tuple, Dict, S, sympify
 from sympy.core.sympify import converter as sympify_converter
@@ -12,6 +12,7 @@ from sympy.matrices.expressions import MatrixExpr
 def sympify_matrix(arg):
     return arg.as_immutable()
 sympify_converter[MatrixBase] = sympify_matrix
+
 
 class ImmutableMatrix(MatrixExpr, DenseMatrix):
     """Create an immutable version of a matrix.

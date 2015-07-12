@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.matrices.sparsetools import _doktocsr, _csrtodok
 from sympy import SparseMatrix
 

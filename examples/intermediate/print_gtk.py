@@ -5,6 +5,8 @@
 Demonstrates printing with gtkmathview using mathml
 """
 
+from __future__ import division, print_function
+
 from sympy import Integral, Limit, print_gtk, sin, Symbol
 
 

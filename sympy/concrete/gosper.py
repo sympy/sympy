@@ -1,5 +1,6 @@
 """Gosper's algorithm for hypergeometric summation. """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core import S, Dummy, symbols
 from sympy.core.compatibility import is_sequence, range

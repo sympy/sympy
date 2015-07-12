@@ -1,6 +1,9 @@
+from __future__ import division, print_function
+
 from sympy import S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
 from sympy.utilities.pytest import raises
+
 
 def test_sparse_matrix():
     def sparse_eye(n):

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Number, Pow,
     Basic, I, nan, pi, symbols, oo, zoo)

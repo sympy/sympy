@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 from sympy import symbols, sin, cos, factor_terms, simplify
 from sympy.galgebra import enhance_print

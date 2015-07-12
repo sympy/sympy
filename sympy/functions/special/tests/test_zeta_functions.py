@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
                    exp_polar, polar_lift, O, stieltjes)

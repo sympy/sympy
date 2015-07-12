@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key, range

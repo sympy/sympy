@@ -1,4 +1,5 @@
-from __future__ import division
+from __future__ import division, print_function
+
 import warnings
 
 from sympy import (Abs, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,

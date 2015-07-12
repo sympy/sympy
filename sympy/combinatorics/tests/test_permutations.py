@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from itertools import permutations
 
 from sympy.core.compatibility import range

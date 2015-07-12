@@ -5,6 +5,8 @@ See examples\mplot2d.py and examples\mplot3d.py for usable 2d and 3d
 graphing functions using matplotlib.
 """
 
+from __future__ import division, print_function
+
 from sympy.core.sympify import sympify, SympifyError
 from sympy.external import import_module
 np = import_module('numpy')

@@ -8,7 +8,7 @@ Point3D
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.compatibility import iterable, range

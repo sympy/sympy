@@ -5,7 +5,7 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from functools import wraps
 from .sympify import SympifyError, sympify

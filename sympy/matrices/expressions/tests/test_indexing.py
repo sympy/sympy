@@ -1,6 +1,9 @@
+from __future__ import division, print_function
+
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
 from sympy.utilities.pytest import raises
+
 
 k, l, m, n = symbols('k l m n', integer=True)
 i, j = symbols('i j', integer=True)

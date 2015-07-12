@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.combinatorics.generators import symmetric, cyclic, alternating, dihedral
 from sympy.combinatorics.permutations import Permutation
 

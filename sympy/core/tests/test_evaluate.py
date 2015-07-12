@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.abc import x, y
 from sympy.core.evaluate import evaluate
 from sympy.core import Mul, Add

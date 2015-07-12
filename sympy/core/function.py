@@ -29,7 +29,8 @@ There are three types of functions implemented in SymPy:
     (x,)
 
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from .add import Add
 from .assumptions import ManagedProperties

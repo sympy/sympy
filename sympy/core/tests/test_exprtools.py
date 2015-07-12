@@ -1,5 +1,7 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
+from __future__ import division, print_function
+
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
                    root, exp, cos, sin, oo, Dummy, log)

@@ -5,7 +5,7 @@
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
 
-from __future__ import division
+from __future__ import division, print_function
 
 from sympy.external import import_module
 

@@ -1,7 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.matrices.expressions import MatrixExpr
 from sympy import Q
+
 
 class Factorization(MatrixExpr):
     arg = property(lambda self: self.args[0])

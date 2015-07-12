@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import Lambda, S, symbols
 from sympy.concrete import Sum
 from sympy.functions import adjoint, conjugate, transpose
@@ -7,6 +9,7 @@ from sympy.matrices.expressions import (
     ZeroMatrix, trace, MatPow, MatAdd, MatMul
 )
 from sympy.utilities.pytest import raises, XFAIL
+
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)

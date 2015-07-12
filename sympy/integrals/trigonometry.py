@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild

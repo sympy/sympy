@@ -4,6 +4,8 @@ The dense matrix is stored as a list of lists
 
 """
 
+from __future__ import division, print_function
+
 from sympy.core.compatibility import range
 
 

@@ -5,6 +5,8 @@
 Demonstrates limits.
 """
 
+from __future__ import division, print_function
+
 from sympy import exp, log, Symbol, Rational, sin, limit, sqrt, oo
 
 

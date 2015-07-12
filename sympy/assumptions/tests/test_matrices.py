@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Q, ask, Symbol
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)

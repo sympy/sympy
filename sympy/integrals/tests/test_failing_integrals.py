@@ -1,6 +1,6 @@
 # A collection of failing integrals from the issues.
 
-from __future__ import division
+from __future__ import division, print_function
 
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,

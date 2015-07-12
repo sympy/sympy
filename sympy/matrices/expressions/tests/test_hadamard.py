@@ -1,8 +1,11 @@
+from __future__ import division, print_function
+
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import HadamardProduct, hadamard_product
+
 
 n, m, k = symbols('n,m,k')
 Z = MatrixSymbol('Z', n, n)

@@ -1,5 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core import sympify
 from sympy.core.cache import cacheit
@@ -166,7 +167,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # See if there's a straight-forward conclusion we can make for the inference
     if local_facts.is_Atom:
-        if key in known_facts_dict[local_facts]:
+        if key in known_facts_dict[local_facts]:from __future__ import print_function, division
+
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
@@ -270,6 +272,8 @@ def compute_known_facts(known_facts, known_facts_keys):
     Do NOT manually edit this file.
     Instead, run ./bin/ask_update.py.
     """
+
+    from __future__ import division, print_function
 
     from sympy.core.cache import cacheit
     from sympy.logic.boolalg import And, Not, Or

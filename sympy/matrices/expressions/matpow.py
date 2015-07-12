@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from .matexpr import MatrixExpr, ShapeError, Identity
 from sympy.core.sympify import _sympify

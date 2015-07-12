@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.logic import _fuzzy_group
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask

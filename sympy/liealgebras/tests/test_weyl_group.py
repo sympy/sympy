@@ -1,5 +1,8 @@
+from __future__ import division, print_function
+
 from sympy.liealgebras.weyl_group import WeylGroup
 from sympy.matrices import Matrix
+
 
 def test_weyl_group():
     c = WeylGroup("A3")

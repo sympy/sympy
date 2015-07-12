@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Expr, Symbol
 from sympy.core.decorators import call_highest_priority
 

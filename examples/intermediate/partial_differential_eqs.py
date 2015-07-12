@@ -5,6 +5,8 @@
 Demonstrates various ways to solve partial differential equations
 """
 
+from __future__ import division, print_function
+
 from sympy import symbols, Eq, Function, pde_separate, pprint, sin, cos, latex
 from sympy import Derivative as D
 

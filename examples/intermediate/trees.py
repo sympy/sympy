@@ -12,6 +12,8 @@ and paste in the sequence returned by this script:
 and it will shows you the A000055
 """
 
+from __future__ import division, print_function
+
 from sympy import Symbol, Poly
 
 

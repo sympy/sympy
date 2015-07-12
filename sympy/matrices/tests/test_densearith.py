@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.matrices.densetools import eye
 from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
 from sympy import ZZ

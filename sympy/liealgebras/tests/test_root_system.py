@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.liealgebras.root_system import RootSystem
 from sympy.liealgebras.type_a import TypeA
 from sympy.matrices import Matrix

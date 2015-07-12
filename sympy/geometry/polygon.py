@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Expr, S, sympify, oo, pi, Symbol
 from sympy.core.compatibility import as_int, range

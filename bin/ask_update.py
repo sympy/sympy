@@ -9,6 +9,8 @@ Should be run from sympy root directory
 $ python bin/ask_update.py
 """
 
+from __future__ import division, print_function
+
 # hook in-tree SymPy into Python path, if possible
 import os
 import sys

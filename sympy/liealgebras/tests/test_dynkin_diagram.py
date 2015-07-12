@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.liealgebras.dynkin_diagram import DynkinDiagram
 
 def test_DynkinDiagram():

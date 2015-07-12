@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
     coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
     Integer, O, exp, sech, sec, csch, asech, acos, expand_mul

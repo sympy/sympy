@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, symbols,

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import Eq, Rational, Symbol
 from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate

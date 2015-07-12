@@ -2,6 +2,8 @@
 
 """Demonstration of quantum dense coding."""
 
+from __future__ import division, print_function
+
 from sympy import sqrt, pprint
 from sympy.physics.quantum import qapply
 from sympy.physics.quantum.gate import H, X, Z, CNOT

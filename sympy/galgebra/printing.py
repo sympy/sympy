@@ -26,7 +26,7 @@ multivector functions, and multivector derivatives to print out
 in different colors on ansi terminals.
 """
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 import os
 import sys

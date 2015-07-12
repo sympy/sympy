@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import symbols, Matrix, Tuple
 from sympy.core.trace import Tr
 from sympy.utilities.pytest import raises

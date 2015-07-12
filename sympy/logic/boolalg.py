@@ -1,7 +1,8 @@
 """
 Boolean algebra module for SymPy
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from collections import defaultdict
 from itertools import combinations, product

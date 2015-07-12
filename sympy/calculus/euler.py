@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
 from sympy.core.compatibility import (
     combinations_with_replacement, iterable, range)

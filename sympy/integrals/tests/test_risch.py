@@ -1,4 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
+
+from __future__ import division, print_function
+
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
     Symbol, Lambda, sin, Eq, Piecewise, factor)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,

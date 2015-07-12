@@ -1,6 +1,6 @@
 """This module implements tools for integrating rational functions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy

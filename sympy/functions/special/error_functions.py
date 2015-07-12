@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Add, S, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError

@@ -6,6 +6,8 @@ Example shows arbitrary precision using mpmath with the
 computation of the digits of pi.
 """
 
+from __future__ import division, print_function
+
 from mpmath import libmp, pi
 from mpmath import functions as mpf_funs
 

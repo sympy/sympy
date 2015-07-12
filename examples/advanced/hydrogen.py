@@ -4,6 +4,8 @@
 This example shows how to work with the Hydrogen radial wavefunctions.
 """
 
+from __future__ import division, print_function
+
 from sympy import Eq, Integral, oo, pprint, symbols
 from sympy.physics.hydrogen import R_nl
 

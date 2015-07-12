@@ -6,6 +6,8 @@ See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
 
+from __future__ import division, print_function
+
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     product, binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,

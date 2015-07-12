@@ -1,5 +1,7 @@
 # Tests for var are in their own file, because var pollutes global namespace.
 
+from __future__ import division, print_function
+
 from sympy import Symbol, var, Function, FunctionClass
 from sympy.utilities.pytest import raises
 

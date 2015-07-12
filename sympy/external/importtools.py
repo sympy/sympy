@@ -1,6 +1,6 @@
 """Tools to assist importing optional external modules."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import sys
 

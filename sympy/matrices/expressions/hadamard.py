@@ -1,9 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Mul, sympify
 from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+
 
 def hadamard_product(*matrices):
     """
@@ -68,6 +69,7 @@ class HadamardProduct(MatrixExpr):
     def doit(self, **ignored):
         return canonicalize(self)
 
+
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
@@ -76,8 +78,10 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
+
 rules = (unpack,
          flatten)
+
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
                                  do_one(*rules)))

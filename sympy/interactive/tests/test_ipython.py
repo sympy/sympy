@@ -1,5 +1,7 @@
 """Tests of tools for setting up interactive IPython sessions. """
 
+from __future__ import division, print_function
+
 from sympy.interactive.session import (init_ipython_session,
     enable_automatic_symbols, enable_automatic_int_sympification)
 

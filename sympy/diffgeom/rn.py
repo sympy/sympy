@@ -8,7 +8,7 @@ as attributes of the coordinate systems (eg `R2_r.x` and `R2_p.theta`), or by
 using the usual `coord_sys.coord_function(index, name)` interface.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from .diffgeom import Manifold, Patch, CoordSystem
 from sympy import sqrt, atan2, acos, sin, cos, Dummy

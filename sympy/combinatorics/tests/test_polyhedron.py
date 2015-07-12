@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.compatibility import range
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,

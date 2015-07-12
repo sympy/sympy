@@ -2,6 +2,8 @@
 
 """Grover's quantum search algorithm example."""
 
+from __future__ import division, print_function
+
 from sympy import pprint
 from sympy.physics.quantum import qapply
 from sympy.physics.quantum.qubit import IntQubit

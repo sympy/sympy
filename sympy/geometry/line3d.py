@@ -8,7 +8,8 @@ Ray3D
 Segment3D
 
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core import S, Dummy, nan
 from sympy.functions.elementary.trigonometric import acos

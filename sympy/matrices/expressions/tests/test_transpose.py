@@ -1,8 +1,11 @@
+from __future__ import division, print_function
+
 from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
 from sympy.matrices import eye, Matrix
 from sympy import symbols, S
 from sympy import refine, Q
+
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 A = MatrixSymbol('A', n, m)

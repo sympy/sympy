@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,

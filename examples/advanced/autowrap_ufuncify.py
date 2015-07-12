@@ -17,6 +17,8 @@ working fortran compiler.
 http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
 """
 
+from __future__ import division, print_function
+
 import sys
 
 from sympy.external import import_module

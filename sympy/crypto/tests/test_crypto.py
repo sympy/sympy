@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import symbols
 from sympy.core.compatibility import range
 from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,

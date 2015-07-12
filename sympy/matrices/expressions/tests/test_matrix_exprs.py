@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
@@ -5,6 +7,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         Transpose, Adjoint)
 from sympy.utilities.pytest import raises
+
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')

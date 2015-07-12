@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.decorators import deprecated
 from sympy.core.core import BasicMeta, Registry, all_classes
 

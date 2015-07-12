@@ -6,6 +6,8 @@ input to vector and multivector class function to arrays of SymPy
 symbols.
 """
 
+from __future__ import division, print_function
+
 import operator
 
 from sympy.core.compatibility import reduce

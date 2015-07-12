@@ -15,6 +15,8 @@ SymPy, but that's a long journey.
 
 """
 
+from __future__ import division, print_function
+
 from sympy import Basic, exp, Symbol, sin, Rational, I, Mul, Matrix, \
     ones, sqrt, pprint, simplify, Eq, sympify
 

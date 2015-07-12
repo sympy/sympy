@@ -16,6 +16,9 @@ Examples
 ========
 
 """
+
+from __future__ import division, print_function
+
 from sympy.geometry.point import Point, Point2D, Point3D
 from sympy.geometry.line import Line, Ray, Segment
 from sympy.geometry.line3d import Line3D, Segment3D, Ray3D

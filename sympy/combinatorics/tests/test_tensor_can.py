@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Permutation, Perm
 from sympy.combinatorics.tensor_can import (perm_af_direct_product, dummy_sgs,

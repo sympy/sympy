@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 from sympy import symbols, log, simplify, diff, cos, sin
 from sympy.galgebra import MV, ReciprocalFrame, Format

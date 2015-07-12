@@ -1,6 +1,8 @@
 """Core module. Provides the basic operations needed in sympy.
 """
 
+from __future__ import division, print_function
+
 from .sympify import sympify, SympifyError
 from .cache import cacheit
 from .basic import Basic, Atom, preorder_traversal

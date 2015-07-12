@@ -15,6 +15,8 @@ $ python fem.py
 
 """
 
+from __future__ import division, print_function
+
 from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
     integrate, diff, pprint, reduced
 

@@ -4,7 +4,7 @@
 Classical ciphers and LFSRs
 """
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 from random import randrange
 

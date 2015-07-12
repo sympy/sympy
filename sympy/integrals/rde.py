@@ -20,7 +20,8 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from operator import mul
 

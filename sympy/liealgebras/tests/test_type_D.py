@@ -1,6 +1,7 @@
+from __future__ import division, print_function
+
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
-
 
 
 def test_type_D():

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
         bc_transpose, blockcut, reblock_2x2, deblock)

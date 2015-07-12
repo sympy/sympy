@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core import S
 from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
                                         gauss_hermite, gauss_gen_laguerre,

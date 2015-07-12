@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
 from sympy.core.singleton import S

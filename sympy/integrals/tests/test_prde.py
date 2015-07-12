@@ -1,4 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
+
+from __future__ import division, print_function
+
 from sympy import Poly, Matrix, S, symbols
 from sympy.integrals.risch import DifferentialExtension
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,

@@ -4,7 +4,10 @@ as a list of lists.
 
 """
 
+from __future__ import division, print_function
+
 from sympy.core.compatibility import range
+
 
 def add(matlist1, matlist2, K):
     """
@@ -35,6 +38,7 @@ def add(matlist1, matlist2, K):
     addrow
     """
     return [addrow(row1, row2, K) for row1, row2 in zip(matlist1, matlist2)]
+
 
 def addrow(row1, row2, K):
     """

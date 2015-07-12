@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.compatibility import default_sort_key, as_int, ordered, iterable
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises

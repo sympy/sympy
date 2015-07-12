@@ -5,6 +5,8 @@
 Demonstrates SymPy's arbitrary integer precision abilities
 """
 
+from __future__ import division, print_function
+
 import sympy
 from sympy import Mul, Pow, S
 

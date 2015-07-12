@@ -47,7 +47,8 @@ http://en.wikipedia.org/wiki/Propositional_formula
 http://en.wikipedia.org/wiki/Inference_rule
 http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from collections import defaultdict
 

@@ -5,6 +5,8 @@
 Demonstrates pretty printing.
 """
 
+from __future__ import division, print_function
+
 from sympy import Symbol, pprint, sin, cos, exp, sqrt
 
 

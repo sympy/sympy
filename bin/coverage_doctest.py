@@ -17,7 +17,7 @@ or
 If no arguments are given, all files in sympy/ are checked.
 """
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 import os
 import sys

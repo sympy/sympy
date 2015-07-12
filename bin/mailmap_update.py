@@ -7,8 +7,8 @@ A tool to help keep .mailmap and AUTHORS up-to-date.
 # - Check doc/src/aboutus.rst
 # - Make it easier to update .mailmap or AUTHORS with the correct entries.
 
+from __future__ import division, print_function
 from __future__ import unicode_literals
-from __future__ import print_function
 
 import os
 import sys

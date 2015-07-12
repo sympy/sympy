@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,

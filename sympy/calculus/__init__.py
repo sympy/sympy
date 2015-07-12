@@ -2,6 +2,8 @@
 SymPy modules tree.
 """
 
+from __future__ import division, print_function
+
 from .euler import euler_equations
 from .singularities import singularities
 from .finite_diff import finite_diff_weights, apply_finite_diff, as_finite_diff

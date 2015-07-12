@@ -29,6 +29,8 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
+from __future__ import division, print_function
+
 import sys
 import subprocess
 import os

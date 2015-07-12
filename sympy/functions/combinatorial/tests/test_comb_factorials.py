@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product)

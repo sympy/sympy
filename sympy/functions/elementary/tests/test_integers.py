@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
     Float, I, sin, exp, log, factorial, frac
 

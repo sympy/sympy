@@ -8,7 +8,8 @@ Ray
 Segment
 
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core import S, sympify, Dummy
 from sympy.core.exprtools import factor_terms

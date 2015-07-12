@@ -13,6 +13,8 @@ See:
  * http://en.wikipedia.org/wiki/Gibbs_phenomena
 """
 
+from __future__ import division, print_function
+
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
     sin, cos, sign, lambdify, Integral, S
 

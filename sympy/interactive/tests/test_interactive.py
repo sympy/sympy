@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 import sys
 
 from sympy.interactive.session import int_to_Integer

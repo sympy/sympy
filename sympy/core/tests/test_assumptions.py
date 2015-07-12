@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import I, sqrt, log, exp, sin, asin, factorial
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions

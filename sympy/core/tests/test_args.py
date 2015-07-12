@@ -1,5 +1,7 @@
 """Test whether all elements of cls.args are instances of Basic. """
 
+from __future__ import division, print_function
+
 # NOTE: keep tests sorted by (module, class name) key. If a class can't
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).

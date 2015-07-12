@@ -1,9 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Basic
 from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
+
 
 class Transpose(MatrixExpr):
     """
@@ -69,6 +70,7 @@ class Transpose(MatrixExpr):
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import det
         return det(self.arg)
+
 
 def transpose(expr):
     """ Matrix transpose """

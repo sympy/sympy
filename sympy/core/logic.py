@@ -6,7 +6,8 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core.compatibility import range
 

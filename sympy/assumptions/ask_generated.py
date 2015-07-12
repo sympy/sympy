@@ -6,6 +6,8 @@ Do NOT manually edit this file.
 Instead, run ./bin/ask_update.py.
 """
 
+from __future__ import division, print_function
+
 from sympy.core.cache import cacheit
 from sympy.logic.boolalg import And, Not, Or
 from sympy.assumptions.ask import Q

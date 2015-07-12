@@ -1,6 +1,8 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
 
+from __future__ import division, print_function
+
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols

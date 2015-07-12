@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate,

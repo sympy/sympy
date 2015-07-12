@@ -9,6 +9,8 @@ and calculates all kinds of interesting properties, like Jacobian, metric
 tensor, Laplace operator, ...
 """
 
+from __future__ import division, print_function
+
 from sympy import var, sin, cos, pprint, Matrix, eye, trigsimp, Eq, \
     Function, simplify, sinh, cosh, expand, symbols
 

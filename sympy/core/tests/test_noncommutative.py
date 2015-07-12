@@ -1,5 +1,7 @@
 """Tests for noncommutative symbols and expressions."""
 
+from __future__ import division, print_function
+
 from sympy import (
     adjoint,
     cancel,

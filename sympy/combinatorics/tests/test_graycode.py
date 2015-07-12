@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
     random_bitstring, get_subset_from_bitstring, graycode_subsets)
 

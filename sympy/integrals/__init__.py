@@ -10,6 +10,9 @@
     >>> integrate(sin(x),x)
     -cos(x)
 """
+
+from __future__ import division, print_function
+
 from .integrals import integrate, Integral, line_integrate
 from .transforms import (mellin_transform, inverse_mellin_transform,
                         MellinTransform, InverseMellinTransform,

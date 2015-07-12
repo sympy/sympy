@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import division, print_function
 
 from timeit import default_timer as clock
 from get_sympy import path_hack

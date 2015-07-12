@@ -1,7 +1,8 @@
 """
 Handlers for keys related to number theory: prime, even, odd, etc.
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler

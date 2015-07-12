@@ -6,6 +6,8 @@ Demonstrates matrix computations using the Vandermonde matrix.
   * http://en.wikipedia.org/wiki/Vandermonde_matrix
 """
 
+from __future__ import division, print_function
+
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
 from sympy.core.compatibility import range
 

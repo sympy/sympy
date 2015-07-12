@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
 )

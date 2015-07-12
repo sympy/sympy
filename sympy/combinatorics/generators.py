@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.functions import bspline_basis_set
 from sympy.core.compatibility import range
 from sympy import Piecewise, Interval

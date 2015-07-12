@@ -15,4 +15,6 @@ import_module() for more information.
 
 """
 
+from __future__ import division, print_function
+
 from sympy.external.importtools import import_module

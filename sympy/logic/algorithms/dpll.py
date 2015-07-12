@@ -7,7 +7,8 @@ References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
   - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core.compatibility import range
 from sympy import default_sort_key

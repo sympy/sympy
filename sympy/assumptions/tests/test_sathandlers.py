@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 
 from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,

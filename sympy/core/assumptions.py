@@ -148,7 +148,8 @@ References
 .. [11] http://en.wikipedia.org/wiki/Algebraic_number
 
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta

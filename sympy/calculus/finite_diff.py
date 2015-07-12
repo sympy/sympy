@@ -17,6 +17,8 @@ for:
 
 """
 
+from __future__ import division, print_function
+
 from sympy import S
 from sympy.core.compatibility import iterable, range
 

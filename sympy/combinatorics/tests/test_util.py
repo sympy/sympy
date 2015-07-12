@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.compatibility import range
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
     AlternatingGroup

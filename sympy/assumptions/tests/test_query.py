@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)

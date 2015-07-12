@@ -3,7 +3,8 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
-from __future__ import print_function, division
+
+from __future__ import division, print_function
 
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import range

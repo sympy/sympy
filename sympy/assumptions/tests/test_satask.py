@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.assumptions.satask import satask
 
 from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
     Derivative, Expr, symbols, pi, I, S
 from sympy.utilities.pytest import raises

@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import symbols, Eq
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx

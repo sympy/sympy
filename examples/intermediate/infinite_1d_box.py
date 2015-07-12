@@ -6,6 +6,8 @@ of the infinite 1D box of width ``a`` with a perturbation
 which is linear in ``x``, up to second order in perturbation
 """
 
+from __future__ import division, print_function
+
 from sympy.core import pi
 from sympy import Integral, var, S
 from sympy.functions import sin, sqrt

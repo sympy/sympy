@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 import collections
 
 from sympy import (
@@ -17,6 +19,7 @@ from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
 
 from sympy.abc import a, b, c, d, x, y, z
+
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)

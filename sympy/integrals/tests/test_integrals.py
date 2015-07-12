@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (
     Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos, sinh, cosh, tanh,
     Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,

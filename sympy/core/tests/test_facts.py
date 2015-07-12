@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy.core.facts import (deduce_alpha_implications,
         apply_beta_to_alpha_route, rules_2prereq, FactRules, FactKB)
 from sympy.core.logic import And, Not

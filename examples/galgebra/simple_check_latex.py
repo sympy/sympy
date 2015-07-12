@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 from sympy.galgebra import MV, Format

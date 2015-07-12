@@ -17,6 +17,8 @@ from
 
 """
 
+from __future__ import division, print_function
+
 from .baseclasses import (Object, Morphism, IdentityMorphism,
                          NamedMorphism, CompositeMorphism, Category,
                          Diagram)

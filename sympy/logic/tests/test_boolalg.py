@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from sympy import (symbols, Dummy, simplify, Equality, S, Interval,
                    oo, EmptySet, Q)
 from sympy.logic.boolalg import (
