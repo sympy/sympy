@@ -109,6 +109,16 @@ class Limit(Expr):
         obj._args = (e, z, z0, dir)
         return obj
 
+
+    @property
+    def free_symbols(self):
+        e = self.args[0]
+        isyms = e.free_symbols
+        isyms.difference_update(self.args[1].free_symbols)
+        isyms.update(self.args[2].free_symbols)
+        return isyms
+
+
     def doit(self, **hints):
         """Evaluates limit"""
         e, z, z0, dir = self.args
