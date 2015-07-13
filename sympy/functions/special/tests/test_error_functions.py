@@ -351,7 +351,7 @@ def test_expint():
     assert expint(-4, x) == exp(-x)/x + 4*exp(-x)/x**2 + 12*exp(-x)/x**3 \
         + 24*exp(-x)/x**4 + 24*exp(-x)/x**5
     assert expint(-S(3)/2, x) == \
-        exp(-x)/x + 3*exp(-x)/(2*x**2) - 3*sqrt(pi)*erfc(sqrt(x))/(4*x**S('5/2'))
+        exp(-x)/x + 3*exp(-x)/(2*x**2) + 3*sqrt(pi)*erfc(sqrt(x))/(4*x**S('5/2'))
 
     assert tn_branch(expint, 1)
     assert tn_branch(expint, 2)
