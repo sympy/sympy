@@ -84,10 +84,6 @@ class AskIntegerHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Float(expr, assumptions):
-        return int(expr) == expr
-
-    @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
 
