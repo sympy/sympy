@@ -470,7 +470,7 @@ atoms_table = {
     'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
-    'Complex':                 U('DOUBLE-STRUCK CAPITAL C'),
+    'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),
