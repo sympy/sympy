@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy.core.numbers import nan
 from .function import Function
 
 
@@ -32,9 +33,11 @@ class Mod(Function):
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known
-            to be less than q.
+            to be less than or equal q.
             """
 
+            if p.is_infinite or q.is_infinite:
+                return nan
             if (p == q or p == -q or
                     p.is_Pow and p.exp.is_Integer and p.base == q or
                     p.is_integer and q == 1):
@@ -62,7 +65,7 @@ class Mod(Function):
                         rv += q
                     return rv
 
-            # by differencec
+            # by difference
             d = p - q
             if d.is_negative:
                 if q.is_negative:
@@ -138,9 +141,9 @@ class Mod(Function):
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
 
     def _eval_is_integer(self):
-        from sympy.core.logic import fuzzy_and
+        from sympy.core.logic import fuzzy_and, fuzzy_not
         p, q = self.args
-        return fuzzy_and([p.is_integer, q.is_integer, q.is_nonzero])
+        return fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)])
 
     def _eval_is_nonnegative(self):
         if self.args[1].is_positive:

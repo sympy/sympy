@@ -3,7 +3,7 @@ from itertools import product as cartes
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I,
-    tan, cot, integrate, Sum, sign, Function, subfactorial)
+    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -433,3 +433,11 @@ def test_issue_4503():
 
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) == oo
+
+
+def test_issue_9205():
+    x, y, a = symbols('x, y, a')
+    assert Limit(x, x, a).free_symbols == set([a])
+    assert Limit(x, x, a, '-').free_symbols == set([a])
+    assert Limit(x + y, x + y, a).free_symbols == set([a])
+    assert Limit(-x**2 + y, x**2, a).free_symbols == set([y, a])

@@ -201,9 +201,9 @@ def test_sign():
     assert conjugate(sign(x)) == sign(x)
 
     x = Symbol('x', nonzero=True)
-    assert sign(x).is_imaginary is None
-    assert sign(x).is_integer is None
-    assert sign(x).is_real is None
+    assert sign(x).is_imaginary is False
+    assert sign(x).is_integer is True
+    assert sign(x).is_real is True
     assert sign(x).is_zero is False
     assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1

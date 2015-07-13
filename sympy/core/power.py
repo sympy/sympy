@@ -9,7 +9,7 @@ from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
-from .logic import fuzzy_bool
+from .logic import fuzzy_bool, fuzzy_not
 from .compatibility import as_int, range
 from .evaluate import global_evaluate
 
@@ -261,7 +261,7 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif re(b).is_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
-                elif im(b).is_nonzero and (abs(e) == 2) == True:
+                elif fuzzy_not(im(b).is_zero) and (abs(e) == 2) == True:
                     s = 1  # floor = 0
                 elif _half(other):
                     s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
@@ -344,7 +344,7 @@ class Pow(Expr):
                 return True
             elif self.exp.is_nonpositive:
                 return False
-        elif self.base.is_nonzero:
+        elif self.base.is_zero is False:
             if self.exp.is_finite:
                 return False
             elif self.exp.is_infinite:
@@ -352,6 +352,9 @@ class Pow(Expr):
                     return self.exp.is_positive
                 elif (1 - abs(self.base)).is_negative:
                     return self.exp.is_negative
+        else:
+            # when self.base.is_zero is None
+            return None
 
     def _eval_is_integer(self):
         b, e = self.args
@@ -364,7 +367,7 @@ class Pow(Expr):
             if e.is_nonnegative or e.is_positive:
                 return True
         if b.is_integer and e.is_negative and (e.is_finite or e.is_integer):
-            if (b - 1).is_nonzero and (b + 1).is_nonzero:
+            if fuzzy_not((b - 1).is_zero) and fuzzy_not((b + 1).is_zero):
                 return False
         if b.is_Number and e.is_Number:
             check = self.func(*self.args)
@@ -484,7 +487,7 @@ class Pow(Expr):
         if c2 is None:
             return
         if c1 and c2:
-            if self.exp.is_nonnegative or self.base.is_nonzero:
+            if self.exp.is_nonnegative or fuzzy_not(self.base.is_zero):
                 return True
 
     def _eval_is_prime(self):
@@ -986,7 +989,7 @@ class Pow(Expr):
             return False
         if e.is_integer:
             if b.is_rational:
-                if b.is_nonzero or e.is_nonnegative:
+                if fuzzy_not(b.is_zero) or e.is_nonnegative:
                     return True
                 if b == e:  # always rational, even for 0**0
                     return True
@@ -999,7 +1002,8 @@ class Pow(Expr):
         elif self.exp.is_rational:
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
-            if ((self.base.is_nonzero and (self.base - 1).is_nonzero)
+            if ((fuzzy_not(self.base.is_zero)
+                and fuzzy_not((self.base - 1).is_zero))
                 or self.base.is_integer is False
                 or self.base.is_irrational):
                 return self.exp.is_rational

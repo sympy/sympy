@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core.function import Function
 from sympy.core import S, Integer
 from sympy.core.mul import prod
+from sympy.core.logic import fuzzy_not
 from sympy.utilities.iterables import (has_dups, default_sort_key)
 from sympy.core.compatibility import range
 from sympy.functions.elementary.complexes import Abs
@@ -158,7 +159,7 @@ class KroneckerDelta(Function):
         diff = i - j
         if diff.is_zero:
             return S.One
-        elif diff.is_nonzero:
+        elif fuzzy_not(diff.is_zero):
             return S.Zero
 
         if i.assumptions0.get("below_fermi") and \
