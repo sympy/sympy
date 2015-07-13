@@ -6,7 +6,7 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
-from sympy.core import S
+from sympy.core import S, Float
 
 
 class AskPrimeHandler(CommonHandler):
@@ -30,7 +30,7 @@ class AskPrimeHandler(CommonHandler):
                 raise TypeError
         except TypeError:
             return False
-        return isprime(i)
+        return isprime(expr)
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -120,6 +120,8 @@ class AskEvenHandler(CommonHandler):
                 raise TypeError
         except TypeError:
             return False
+        if isinstance(expr, (float, Float)):
+            return False
         return i % 2 == 0
 
     @staticmethod
@@ -206,10 +208,6 @@ class AskEvenHandler(CommonHandler):
         return not bool(expr.p & 1)
 
     Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
-
-    @staticmethod
-    def Float(expr, assumptions):
-        return expr % 2 == 0
 
     @staticmethod
     def NumberSymbol(expr, assumptions):
