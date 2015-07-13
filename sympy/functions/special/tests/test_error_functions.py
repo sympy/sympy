@@ -48,7 +48,7 @@ def test_erf():
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
-    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
     assert erf(z).rewrite('erfi') == -I*erfi(I*z)
     assert erf(z).rewrite('fresnels') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
@@ -125,7 +125,7 @@ def test_erfc():
         I*fresnels(z*(1 - I)/sqrt(pi)))
     assert erfc(z).rewrite('hyper') == 1 - 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
     assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
-    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     assert erfc(x).as_real_imag() == \
@@ -351,8 +351,7 @@ def test_expint():
     assert expint(-4, x) == exp(-x)/x + 4*exp(-x)/x**2 + 12*exp(-x)/x**3 \
         + 24*exp(-x)/x**4 + 24*exp(-x)/x**5
     assert expint(-S(3)/2, x) == \
-        exp(-x)/x + 3*exp(-x)/(2*x**2) - 3*sqrt(pi)*erf(sqrt(x))/(4*x**S('5/2')) \
-        + 3*sqrt(pi)/(4*x**S('5/2'))
+        exp(-x)/x + 3*exp(-x)/(2*x**2) - 3*sqrt(pi)*erfc(sqrt(x))/(4*x**S('5/2'))
 
     assert tn_branch(expint, 1)
     assert tn_branch(expint, 2)

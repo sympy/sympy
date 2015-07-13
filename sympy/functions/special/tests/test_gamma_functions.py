@@ -147,7 +147,7 @@ def test_uppergamma():
         uppergamma(x, y)*log(y) + meijerg([], [1, 1], [0, 0, x], [], y)
     assert td(uppergamma(x, randcplx()), x)
 
-    assert uppergamma(S.Half, x) == sqrt(pi)*(1 - erf(sqrt(x)))
+    assert uppergamma(S.Half, x) == sqrt(pi)*erfc(sqrt(x))
     assert not uppergamma(S.Half - 3, x).has(uppergamma)
     assert not uppergamma(S.Half + 3, x).has(uppergamma)
     assert uppergamma(S.Half, x, evaluate=False).has(uppergamma)
