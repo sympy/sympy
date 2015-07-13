@@ -141,9 +141,9 @@ class Mod(Function):
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
 
     def _eval_is_integer(self):
-        from sympy.core.logic import fuzzy_and
+        from sympy.core.logic import fuzzy_and, fuzzy_not
         p, q = self.args
-        return fuzzy_and([p.is_integer, q.is_integer, q.is_nonzero])
+        return fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)])
 
     def _eval_is_nonnegative(self):
         if self.args[1].is_positive:
