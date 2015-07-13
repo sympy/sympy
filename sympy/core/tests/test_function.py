@@ -696,3 +696,7 @@ def test_issue_8469():
     ws = symbols(['w%i'%i for i in range(N)])
     import functools
     expr = functools.reduce(g,ws)
+
+def test_should_evalf():
+    # This should not take forever to run (see #8506)
+    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
