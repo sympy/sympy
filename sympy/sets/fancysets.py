@@ -893,7 +893,7 @@ class ComplexPlane(Set):
         return None
 
 
-class Complex(with_metaclass(Singleton, ComplexPlane)):
+class Complexes(with_metaclass(Singleton, ComplexPlane)):
 
     def __new__(cls):
         return ComplexPlane.__new__(cls, S.Reals*S.Reals)

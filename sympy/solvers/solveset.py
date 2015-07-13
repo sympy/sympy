@@ -726,7 +726,7 @@ def solveset_complex(f, symbol):
         f = expand(f)
 
     if f.is_zero:
-        return S.Complex
+        return S.Complexes
     elif not f.has(symbol):
         result = EmptySet()
     elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
@@ -863,7 +863,7 @@ def solveset(f, symbol=None):
         if real:
             return S.Reals
         else:
-            return S.Complex
+            return S.Complexes
 
     if isinstance(f, Eq):
         from sympy.core import Add
