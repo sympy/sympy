@@ -197,6 +197,7 @@ def test_Complex():
     assert sqrt(-1) in S.Complex
     assert S.Complex.intersect(S.Reals) == S.Reals
     assert S.Complex.union(S.Reals) == S.Complex
+    assert S.Complex == ComplexPlane(S.Reals*S.Reals)
 
 
 def take(n, iterable):
