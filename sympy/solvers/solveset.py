@@ -1140,7 +1140,12 @@ def linsolve(system, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    if not type(symbols[0]) == Symbol:
+    try:
+        sym = symbols[0].is_Symbol
+    except AttributeError:
+        sym = False
+
+    if not sym:
         raise ValueError('Symbols or iterable of symbols must be given as '
                          'second argument, not type %s: %s' % (type(symbols[0]), symbols[0]))
 

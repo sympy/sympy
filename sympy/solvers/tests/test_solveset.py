@@ -846,17 +846,17 @@ def test_linsolve():
     # Test for different input forms
 
     M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
-    system = A, b = M[:, :-1], M[:, -1]
+    system1 = A, b = M[:, :-1], M[:, -1]
     Eqns = [x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
             2*x1 + 4*x2 + 6*x4 - 4]
 
     sol = FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
     assert linsolve(M, (x1, x2, x3, x4)) == sol
     assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
-    assert linsolve(system, (x1, x2, x3, x4)) == sol
+    assert linsolve(system1, (x1, x2, x3, x4)) == sol
 
     # raise ValueError if no symbols are given
-    raises(ValueError, lambda: linsolve(system))
+    raises(ValueError, lambda: linsolve(system1))
 
     # raise ValueError if, A & b is not given as tuple
     raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
@@ -868,10 +868,18 @@ def test_linsolve():
     a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     A = Matrix([[a, b], [c, d]])
     B = Matrix([[e], [f]])
-    system = (A, B)
+    system2 = (A, B)
     sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
                     (f - c*e/a)/(d - b*c/a)))
-    assert linsolve(system, [x, y]) == sol
+    assert linsolve(system2, [x, y]) == sol
+
+    # Test for Dummy Symbols issue #9667
+    x1 = Dummy('x1')
+    x2 = Dummy('x2')
+    x3 = Dummy('x3')
+    x4 = Dummy('x4')
+
+    assert linsolve(system1, x1, x2, x3, x4) == FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
 
 
 def test_issue_9556():
