@@ -1305,7 +1305,7 @@ def rs_cot(p, x, prec):
     res = rs_trunc(res, x, prec)
     return res
 
-def _rs_sin(p, x, prec):
+def rs_sin(p, x, prec):
     """
     Sine of a series
 
@@ -1329,7 +1329,7 @@ def _rs_sin(p, x, prec):
     sin
     """
     if rs_is_puiseux(p, x):
-        return rs_puiseux(_rs_sin, p, x, prec)
+        return rs_puiseux(rs_sin, p, x, prec)
     R = x.ring
     if not p:
         return R(0)
@@ -1358,7 +1358,7 @@ def _rs_sin(p, x, prec):
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        return _rs_sin(p1, x, prec)*t2 + _rs_cos(p1, x, prec)*t1
+        return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1375,7 +1375,7 @@ def _rs_sin(p, x, prec):
         n *= -k*(k + 1)
     return rs_series_from_list(p, c, x, prec)
 
-def _rs_cos(p, x, prec):
+def rs_cos(p, x, prec):
     """
     Cosine of a series
 
@@ -1399,7 +1399,7 @@ def _rs_cos(p, x, prec):
     cos
     """
     if rs_is_puiseux(p, x):
-        return rs_puiseux(_rs_cos, p, x, prec)
+        return rs_puiseux(rs_cos, p, x, prec)
     R = p.ring
     if _has_constant_term(p, x):
         zm = R.zero_monom
@@ -1424,7 +1424,7 @@ def _rs_cos(p, x, prec):
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the cos/sin
     # of the constant term.
-        return _rs_cos(p1, x, prec)*t2 - _rs_sin(p1, x, prec)*t1
+        return rs_cos(p1, x, prec)*t2 - rs_sin(p1, x, prec)*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1762,8 +1762,7 @@ class RingSeries(RingSeriesBase):
     def __init__(self, series, degree=None):
         self.series = series
         self.ring = series.ring
-        if degree:
-            self.degree = degree
+        self.degree = degree
 
     def __repr__(self):
         return "%s(%s, %s, %s)" % (self.__class__.__name__, self.series,
@@ -1799,27 +1798,28 @@ class RingSeries(RingSeriesBase):
             self.degree = self.series.degree()
             return self.degree
 
-class rs_sin(RingSeriesBase):
+
+class RingSin(RingSeriesBase):
     def __init__(self, ring_series):
         self.ring_series = ring_series
-        self.series = ring_series.series
 
     def __repr__(self):
-        return "rs_sin(%s)" % self.ring_series
+        return "RingSin(%s)" % self.ring_series
 
     def _eval(self, x, prec):
-        return _rs_sin(self.series, x, prec)
+        return rs_sin(self.ring_series.series, x, prec)
 
-class rs_cos(RingSeriesBase):
+
+class RingCos(RingSeriesBase):
     def __init__(self, ring_series):
         self.ring_series = ring_series
-        self.series = ring_series.series
 
     def __repr__(self):
-        return "rs_cos(%s)" % self.ring_series
+        return "RingCos(%s)" % self.ring_series
 
     def _eval(self, x, prec):
-        return _rs_cos(self.series, x, prec)
+        return rs_cos(self.ring_series.series, x, prec)
+
 
 def taylor_series(series, x, prec=5, x0=0):
     if isinstance(series, RingSeriesBase):
