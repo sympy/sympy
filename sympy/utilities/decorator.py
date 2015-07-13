@@ -6,6 +6,8 @@ import sys
 import types
 import inspect
 
+from functools import update_wrapper
+
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
 
@@ -193,37 +195,13 @@ def public(obj):
     return obj
 
 
-class ClassPropertyDescriptor(object):
-    """
-    Helper class for ``classproperty`` decorator.
-    """
-    def __init__(self, fget):
-        self.fget = fget
-
-    def __get__(self, obj, klass=None):
-        if klass is None:
-            klass = type(obj)
-
-        return self.fget.__get__(obj, klass)()
-
-
-def classproperty(func):
-    """
-    This decorator can be used to define a property of a class
-    which is intended to be accessed using class and objects both.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.decorator import classproperty
-    >>> class Q(object):
-    ...     @classproperty
-    ...     def a_property(self):
-    ...         return 2
-    >>> Q.a_property
-    2
-    """
-    if not isinstance(func, (classmethod, staticmethod)):
-        func = classmethod(func)
-
-    return ClassPropertyDescriptor(func)
+def memoize_property(storage):
+    """Create a property, where the lookup is stored in ``storage``"""
+    def decorator(method):
+        name = method.__name__
+        def wrapper(self):
+            if name not in storage:
+                storage[name] = method(self)
+            return storage[name]
+        return property(update_wrapper(wrapper, method))
+    return decorator
