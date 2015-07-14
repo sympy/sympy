@@ -2131,12 +2131,6 @@ def test_issue_7246():
     assert ask(Q.positive(acot(x)), Q.real(x)) is True
     assert ask(Q.positive(acot(x)), Q.imaginary(x)) is False
     assert ask(Q.positive(acot(x))) is None
-
-
-@XFAIL
-def test_issue_7246_failing():
-    #Move this test to test_issue_7246 once
-    #the new assumptions module is improved.
     assert ask(Q.positive(acos(x)), Q.zero(x)) is True
 
 

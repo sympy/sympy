@@ -134,6 +134,21 @@ class AskNonNegativeHandler(CommonHandler):
                 return ask(Q.real(expr), assumptions)
             else:
                 return notnegative
+        if expr.is_Add:
+            eval_args = [
+                    fuzzy_and(
+                        [
+                            ask(Q.real(arg), assumptions),
+                            fuzzy_or(
+                                [
+                                    ask(Q.positive(arg), assumptions),
+                                    ask(Q.zero(arg), assumptions)
+                                ]
+                            )
+                        ]
+                    ) for arg in expr.args
+                ]
+            return fuzzy_and(eval_args)
 
 
 class AskNonZeroHandler(CommonHandler):
@@ -213,6 +228,22 @@ class AskNonPositiveHandler(CommonHandler):
                 return ask(Q.real(expr), assumptions)
             else:
                 return notpositive
+        if expr.is_Add:
+            eval_args = [
+                    fuzzy_and(
+                        [
+                            ask(Q.real(arg), assumptions),
+                            fuzzy_or(
+                                [
+                                    ask(Q.negative(arg), assumptions),
+                                    ask(Q.zero(arg), assumptions)
+                                ]
+                            )
+                        ]
+                    ) for arg in expr.args
+                ]
+            return fuzzy_and(eval_args)
+
 
 class AskPositiveHandler(CommonHandler):
     """
