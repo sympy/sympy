@@ -31,7 +31,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Looks for derivative of a function upto 4'th order(by default).
     This can be overrided using order option.
 
-    returns a Tuple of (formula, series independent terms, order) if successful
+    Returns a Tuple of (formula, series independent terms, order) if successful
     otherwise None.
 
     Examples
@@ -71,6 +71,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     """
 
     from sympy.polys import RootSum, apart
+    from sympy.integrals import integrate
 
     diff = f
     ds = [] # list of diff
@@ -110,8 +111,9 @@ def rational_algorithm(f, x, k, order=4, full=False):
                     a /= -xc
                     num /= xc**j
 
-                    ak = ((-1)**j * num * binomial(j + k - 1, k)
-                          .rewrite(factorial) / a**(j + k))
+                    ak = ((-1)**j * num *
+                          binomial(j + k - 1, k).rewrite(factorial)
+                          / a**(j + k))
                     coeff += ak
 
             # Hacky, better way?
@@ -120,7 +122,6 @@ def rational_algorithm(f, x, k, order=4, full=False):
             if coeff.has(x) or coeff.has(zoo) or coeff.has(oo) or coeff.has(nan):
                 return None
 
-            from sympy.integrals import integrate
             for j in range(i):
                 coeff = (coeff / (k + j + 1))
                 sep = integrate(sep, x)
@@ -139,7 +140,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     """Computes the formula for Formal Power Series of a function
 
-    returns (sequence of coefficients, sequence of x, independent terms)
+    Returns (sequence of coefficients, sequence of x, independent terms)
 
     Tries to compute the formula by applying the following techniques
     (in order)
@@ -173,7 +174,7 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True, full=Fals
     sympy.series.rational_algorithm
     """
     if x0 in [S.Infinity, -S.Infinity]:
-        dir = {S.Infinity: S.One, S.NegativeInfinity: -S.One}[x0]
+        dir = S.One if x0 is S.Infinity else -S.One
         temp = f.subs(x, 1/x)
         result = compute_fps(temp, x, 0, dir, hyper, order, rational, full)
         if result is None:
@@ -276,7 +277,7 @@ class FormalPowerSeries(SeriesBase):
 
     @property
     def infinite(self):
-        """returns an infinite representation of the series"""
+        """Returns an infinite representation of the series"""
         from sympy.concrete import Sum
 
         ak, xk = self.ak, self.xk
@@ -285,9 +286,9 @@ class FormalPowerSeries(SeriesBase):
         return self.ind + Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
     def polynomial(self, n=6):
-        """truncated series as polynomial.
+        """Truncated series as polynomial.
 
-        returns series sexpansion of f upto order ``O(x**n)``
+        Returns series sexpansion of f upto order ``O(x**n)``
         as a polynomial (without ``O`` term)
         """
         terms = []
@@ -300,12 +301,12 @@ class FormalPowerSeries(SeriesBase):
         return Add(*terms)
 
     def truncate(self, n=6):
-        """truncated series.
+        """Truncated series.
 
-        returns truncated series expansion of f upto
-        order ``O(x**n)``
+        Returns truncated series expansion of f up to
+        order ``O(x**n)``.
 
-        if n is ``None``, returns an infinite iterator
+        If n is ``None``, returns an infinite iterator.
         """
         if n is None:
             return iter(self)
@@ -359,10 +360,10 @@ class FormalPowerSeries(SeriesBase):
 
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
-    """Generates Formal Power Series of f
+    """Generates Formal Power Series of f.
 
-    returns the formal series expansion of ``f`` around ``x = x0``
-    with respect to ``x`` in the form of a ``FormalPowerSeries`` object
+    Returns the formal series expansion of ``f`` around ``x = x0``
+    with respect to ``x`` in the form of a ``FormalPowerSeries`` object.
 
     Formal Power Series is represented using an explicit formula
     computed using different algorithms.
@@ -413,7 +414,7 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     sympy.series.formal.FormalPowerSeries
     sympy.series.formal.compute_fps
     """
-    f= sympify(f)
+    f = sympify(f)
 
     if x is None:
         free = f.free_symbols
