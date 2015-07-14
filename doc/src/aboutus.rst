@@ -187,7 +187,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Swapnil Agarwal: added See Also documentation to ntheory, functions
 #. Kendhia: Add XFAIL tests
 #. jerryma1121: See Also documentation for geometry
-#. Joachim Durchholz: corrected spacing issues identified by PyDev
+#. Joachim Durchholz: Improvements to the software infrastructure
 #. Martin Povišer: fix problem with rationaltools
 #. Siddhant Jain: See Also documentation for functions/special
 #. Kevin Hunter: Improvements to the inequality classes
