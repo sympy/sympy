@@ -686,3 +686,17 @@ def test_mexpand():
     assert _mexpand(None) is None
     assert _mexpand(1) is S.One
     assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+
+def test_issue_8469():
+    # This should not take forever to run
+    N = 40
+    def g(w, theta):
+        return 1/(1+exp(w-theta))
+
+    ws = symbols(['w%i'%i for i in range(N)])
+    import functools
+    expr = functools.reduce(g,ws)
+
+def test_should_evalf():
+    # This should not take forever to run (see #8506)
+    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
