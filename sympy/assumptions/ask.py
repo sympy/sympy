@@ -15,7 +15,8 @@ from sympy.utilities.decorator import memoize_property
 # Deprecated predicates should be added to this list
 deprecated_predicates = [
     'bounded',
-    'infinity'
+    'infinity',
+    'infinitesimal'
 ]
 
 # Memoization storage for predicates
@@ -383,11 +384,12 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
+    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="0.7.7")
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
         """
-        return Predicate('infinitesimal')
+        return Predicate('zero')
 
     @predicate_memo
     def positive(self):
@@ -1424,7 +1426,6 @@ _handlers = [
     ("extended_real",     "sets.AskExtendedRealHandler"),
     ("hermitian",         "sets.AskHermitianHandler"),
     ("imaginary",         "sets.AskImaginaryHandler"),
-    ("infinitesimal",     "calculus.AskInfinitesimalHandler"),
     ("integer",           "sets.AskIntegerHandler"),
     ("irrational",        "sets.AskIrrationalHandler"),
     ("rational",          "sets.AskRationalHandler"),
