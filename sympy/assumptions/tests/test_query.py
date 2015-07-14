@@ -35,7 +35,6 @@ def test_int_1():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is True
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -56,7 +55,6 @@ def test_int_11():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is True
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is True
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -77,7 +75,6 @@ def test_int_12():
     assert ask(Q.even(z)) is True
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is True
     assert ask(Q.hermitian(z)) is True
@@ -98,7 +95,6 @@ def test_float_1():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is True
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -117,7 +113,6 @@ def test_float_1():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -139,7 +134,6 @@ def test_zero_0():
     assert ask(Q.even(z)) is True
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is True
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -162,7 +156,6 @@ def test_negativeone():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is True
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -184,7 +177,6 @@ def test_infinity():
     assert ask(Q.even(oo)) is False
     assert ask(Q.odd(oo)) is False
     assert ask(Q.finite(oo)) is False
-    assert ask(Q.infinitesimal(oo)) is False
     assert ask(Q.prime(oo)) is False
     assert ask(Q.composite(oo)) is False
     assert ask(Q.hermitian(oo)) is False
@@ -207,7 +199,6 @@ def test_neg_infinity():
     assert ask(Q.even(mm)) is False
     assert ask(Q.odd(mm)) is False
     assert ask(Q.finite(mm)) is False
-    assert ask(Q.infinitesimal(mm)) is False
     assert ask(Q.prime(mm)) is False
     assert ask(Q.composite(mm)) is False
     assert ask(Q.hermitian(mm)) is False
@@ -231,7 +222,6 @@ def test_nan():
     assert ask(Q.even(nan)) is False
     assert ask(Q.odd(nan)) is False
     assert ask(Q.finite(nan)) is False
-    assert ask(Q.infinitesimal(nan)) is False
     assert ask(Q.prime(nan)) is False
     assert ask(Q.composite(nan)) is False
     assert ask(Q.hermitian(nan)) is False
@@ -252,7 +242,6 @@ def test_Rational_number():
     assert ask(Q.even(r)) is False
     assert ask(Q.odd(r)) is False
     assert ask(Q.finite(r)) is True
-    assert ask(Q.infinitesimal(r)) is False
     assert ask(Q.prime(r)) is False
     assert ask(Q.composite(r)) is False
     assert ask(Q.hermitian(r)) is True
@@ -301,7 +290,6 @@ def test_sqrt_2():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -323,7 +311,6 @@ def test_pi():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -343,7 +330,6 @@ def test_pi():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -363,7 +349,6 @@ def test_pi():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -383,7 +368,6 @@ def test_pi():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -403,7 +387,6 @@ def test_pi():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -425,7 +408,6 @@ def test_E():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -447,7 +429,6 @@ def test_GoldenRatio():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
@@ -469,7 +450,6 @@ def test_I():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is False
@@ -489,7 +469,6 @@ def test_I():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is False
@@ -509,7 +488,6 @@ def test_I():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
-    assert ask(Q.infinitesimal(z)) is False
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is False
@@ -1498,19 +1476,6 @@ def test_imaginary():
     assert ask(Q.imaginary(Pow(x, S.One/4)), Q.real(x) & Q.negative(x)) is False
 
 
-def test_infinitesimal():
-    assert ask(Q.infinitesimal(x)) is None
-    assert ask(Q.infinitesimal(x), Q.infinitesimal(x)) is True
-
-    assert ask(Q.infinitesimal(2*x), Q.infinitesimal(x)) is True
-    assert ask(Q.infinitesimal(x*y), Q.infinitesimal(x)) is None
-    assert ask(
-        Q.infinitesimal(x*y), Q.infinitesimal(x) & Q.infinitesimal(y)) is True
-    assert ask(Q.infinitesimal(x*y), Q.infinitesimal(x) & Q.finite(y)) is True
-
-    assert ask(Q.infinitesimal(x**2), Q.infinitesimal(x)) is True
-
-
 def test_integer():
     assert ask(Q.integer(x)) is None
     assert ask(Q.integer(x), Q.integer(x)) is True
@@ -2205,7 +2170,6 @@ def test_check_old_assumption():
     assert ask(Q.zero(x)) is False
 
     x = symbols('x', zero=True)
-    assert ask(Q.infinitesimal(x)) is True
     assert ask(Q.zero(x)) is True
 
     x = symbols('x', integer=True)
