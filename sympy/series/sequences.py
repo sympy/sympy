@@ -14,6 +14,7 @@ from sympy.core.evaluate import global_evaluate
 from sympy.polys import lcm
 from sympy.sets.sets import Interval, Intersection
 from sympy.utilities.iterables import flatten
+from sympy.tensor.indexed import Idx
 
 
 ###############################################################################
@@ -92,11 +93,8 @@ class SeqBase(Basic):
         >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
         set([m])
         """
-        fsyms = set().union(*[a.free_symbols for a in self.args])
-        for d in self.variables:
-            if d in fsyms:
-                fsyms.remove(d)
-        return fsyms
+        return (set(j for i in self.args for j in i.free_symbols
+                   .difference(self.variables)))
 
     @cacheit
     def coeff(self, pt):
@@ -450,7 +448,7 @@ class SeqPer(SeqExpr):
                 x = _find_x(periodical)
                 start, stop = limits
 
-        if not isinstance(x, Symbol) or start is None or stop is None:
+        if not isinstance(x, (Symbol, Idx)) or start is None or stop is None:
             raise ValueError('Invalid limits given: %s' % str(limits))
 
         if start is S.NegativeInfinity and stop is S.Infinity:
@@ -592,7 +590,7 @@ class SeqFormula(SeqExpr):
                 x = _find_x(formula)
                 start, stop = limits
 
-        if not isinstance(x, Symbol) or start is None or stop is None:
+        if not isinstance(x, (Symbol, Idx)) or start is None or stop is None:
             raise ValueError('Invalid limits given: %s' % str(limits))
 
         if start is S.NegativeInfinity and stop is S.Infinity:

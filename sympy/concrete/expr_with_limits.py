@@ -14,6 +14,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 from sympy.matrices import Matrix
+from sympy.tensor.indexed import Idx
 
 
 def _process_limits(*symbols):
@@ -25,12 +26,12 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, Symbol):
+        if isinstance(V, (Symbol, Idx)):
             limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
-            if V[0].is_Symbol:
+            if isinstance(V[0], (Symbol, Idx)):
                 newsymbol = V[0]
                 if len(V) == 2 and isinstance(V[1], Interval):
                     V[1:] = [V[1].start, V[1].end]

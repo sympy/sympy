@@ -177,6 +177,7 @@ def test_complex_indices():
     assert A.rank == 2
     assert A.indices == (i, i + j)
 
+
 def test_not_interable():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, i + j)
