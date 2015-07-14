@@ -521,11 +521,11 @@ class AssumptionKeys(object):
         False
         >>> ask(Q.nonzero(0))
         False
-        >>> ask(Q.nonzero(I)) # doctest: +SKIP
+        >>> ask(Q.nonzero(I))
         False
         >>> ask(~Q.zero(I))
         True
-        >>> ask(Q.nonzero(oo)) # doctest: +SKIP
+        >>> ask(Q.nonzero(oo))
         False
 
         """
