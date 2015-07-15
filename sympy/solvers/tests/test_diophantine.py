@@ -23,24 +23,18 @@ def test_univariate():
 
 def test_linear():
 
-    assert diop_solve(2*x + 3*y - 5) == (3*t - 5, -2*t + 5)
-    assert diop_solve(3*y + 2*x - 5) == (3*t - 5, -2*t + 5)
-    assert diop_solve(2*x - 3*y - 5) == (-3*t - 5, -2*t - 5)
-    assert diop_solve(-2*x - 3*y - 5) == (-3*t + 5, 2*t - 5)
-    assert diop_solve(7*x + 5*y) == (5*t, -7*t)
-    assert diop_solve(2*x + 4*y) == (2*t, -t)
-    assert diop_solve(4*x + 6*y - 4) == (3*t - 2, -2*t + 2)
-    assert diop_solve(4*x + 6*y - 3) == (None, None)
-    assert diop_solve(4*x + 3*y -4*z + 5) == \
-           (3*t + 4*z - 5, -4*t - 4*z + 5, z)
-    assert diop_solve(4*x + 2*y + 8*z - 5) == (None, None, None)
-    assert diop_solve(5*x + 7*y - 2*z - 6) == \
-           (7*t + 6*z + 18, -5*t - 4*z - 12, z)
-    assert diop_solve(3*x - 6*y + 12*z - 9) == \
-           (-2*t - 4*z + 3, -t, z)
-    assert diop_solve(x + 3*y - 4*z + w - 6) == \
-           (t, -t - 3*y + 4*z + 6, y, z)
-
+    assert str(diop_solve(3*y + 2*x - 5)) == str((3*t - 5, -2*t + 5))
+    assert str(diop_solve(2*x - 3*y - 5)) == str((-3*t - 5, -2*t - 5))
+    assert str(diop_solve(-2*x - 3*y - 5)) == str((-3*t + 5, 2*t - 5))
+    assert str(diop_solve(7*x + 5*y)) == str((5*t, -7*t))
+    assert str(diop_solve(2*x + 4*y)) == str((2*t, -t))
+    assert str(diop_solve(4*x + 6*y - 4)) == str((3*t - 2, -2*t + 2))
+    assert str(diop_solve(4*x + 6*y - 3)) == str((None, None))
+    assert str(diop_solve(4*x + 3*y -4*z + 5)) == str((0, -4*t + 5, -3*t + 5))
+    assert str(diop_solve(4*x + 2*y + 8*z - 5)) == str((None, None, None))
+    assert str(diop_solve(5*x + 7*y - 2*z - 6)) == str((0, -2*t + 6, -7*t + 18))
+    assert str(diop_solve(3*x - 6*y + 12*z - 9)) == str((3, 2*t, t))
+    assert str(diop_solve(x + 3*y - 4*z + w - 6)) == str((0, 0, -4*t - 6, -3*t - 6))
 
 def test_quadratic_simple_hyperbolic_case():
 

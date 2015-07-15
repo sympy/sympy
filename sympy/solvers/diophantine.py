@@ -381,46 +381,66 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
 
 def _diop_linear(var, coeff, param):
-
-    x, y = var[:2]
-    a = coeff[x]
-    b = coeff[y]
+    if len(var) < 2:
+        raise ValueError("Fewer than two elements provided in 'var' at _diop_linear()")
 
     if len(var) == len(coeff):
-        c = 0
+        base_c = 0
     else:
-        c = -coeff[Integer(1)]
+        base_c = -coeff[Integer(1)]
 
-    if len(var) == 2:
-        sol_x, sol_y = base_solution_linear(c, a, b, param)
-        return (sol_x, sol_y)
+    """
+    Break down the multivariate equation into multiple
+    bivariate equations of the form:
 
-    elif len(var) > 2:
-        X = []
-        Y = []
+    ax + by == d
 
-        for v in var[2:]:
-            sol_x, sol_y  = base_solution_linear(-coeff[v], a, b)
-            X.append(sol_x*v)
-            Y.append(sol_y*v)
+    which can then be solved using base_solution_linear().
 
-        sol_x, sol_y = base_solution_linear(c, a, b, param)
-        X.append(sol_x)
-        Y.append(sol_y)
+    Example:
 
-        l = []
-        if None not in X and None not in Y:
-            l.append(Add(*X))
-            l.append(Add(*Y))
+    a_0*x_0 + a_1*x_1 + a_2*x_2 == c becomes:
 
-            for v in var[2:]:
-                l.append(v)
-        else:
-            for v in var:
-                l.append(None)
+    a_0*x_0 + g_0*y_0 == c 
 
-        return tuple(l)
+    where g_0 == gcd(a_1, a_2) and
+          
+          y == a_1*x_1 + a_2*x_2
+               ---       ---
+               g_0       g_0
 
+    Then we can solve for x_0, y_0 with base_solution_linear().
+
+    x_0 is appended to our return value, while y_0 is used to 
+    solve for x_1 and x_2 using base_solution_linear() again.
+    """
+
+    coeffs = [coeff[v] for v in var]
+    next_c = base_c
+    solutions = []
+    if len(coeffs) > 2:
+        gcds = []
+        gcds.append(igcd(coeffs[-2], coeffs[-1]))
+        coeffs[-2] = coeffs[-2] // gcds[0]
+        coeffs[-1] = coeffs[-1] // gcds[0]
+        for i in range(len(coeffs) - 3, 0, -1):
+            gcd = igcd(gcds[0], coeffs[i])
+            gcds[0]   = gcds[0]   // gcd
+            coeffs[i] = coeffs[i] // gcd
+            gcds.insert(0, gcd)
+
+        for i in range(0, len(gcds)):
+            sol_x, sol_y = base_solution_linear(next_c, coeffs[i], gcds[i])
+            if sol_x is None or sol_y is None:
+                return tuple([None] * len(var)) # No solution possible
+            solutions.append(sol_x)
+            next_c = sol_y
+
+    sol_x, sol_y = base_solution_linear(next_c, coeffs[-2], coeffs[-1], param)
+    solutions.append(sol_x)
+    solutions.append(sol_y)
+
+    return tuple(solutions)
 
 def base_solution_linear(c, a, b, t=None):
     """
