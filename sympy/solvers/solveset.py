@@ -33,20 +33,32 @@ def invert_real(f_x, y, x):
     functions ``{h_1(y), h_2(y), ..., h_n(y)}``.
     Here, ``y`` is not necessarily a symbol.
 
+    The ``set_h`` contains the functions along with the information about their
+    domain in which they are valid, through set operations. For instance, if
+    ``y = Abs(x) - n``, is inverted, then, the ``set_h`` doesn't simply
+    return `{-n, n}`, as it doesn't explicitly mentions about the nature of
+    `n` rather it will return:
+    `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`
+
+
     Examples
     ========
 
     >>> from sympy.solvers.solveset import invert_real
     >>> from sympy import tan, Abs, exp
     >>> from sympy.abc import x, y, n
-    >>> invert_real(exp(Abs(x)), y, x)
-    (x, Intersection([0, oo), {log(y)}) U Intersection((-oo, 0], {-log(y)}))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
-    >>> invert_real(Abs(x**31 + x), y, x)
-    (x**31 + x, Intersection([0, oo), {y}) U Intersection((-oo, 0], {-y}))
     >>> invert_real(tan(x), y, x)
     (x, ImageSet(Lambda(_n, _n*pi + atan(y)), Integers()))
+
+
+    * ``set_h`` containing information about the domain
+
+    >>> invert_real(Abs(x**31 + x), y, x)
+    (x**31 + x, Intersection([0, oo), {y}) U Intersection((-oo, 0], {-y}))
+    >>> invert_real(exp(Abs(x)), y, x)
+    (x, Intersection([0, oo), {log(y)}) U Intersection((-oo, 0], {-log(y)}))
 
     See Also
     ========

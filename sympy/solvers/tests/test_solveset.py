@@ -98,6 +98,25 @@ def test_invert_real():
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
 
+    # Test for ``set_h`` containing information about the domain
+
+    n = Dummy('n')
+    x = Symbol('x')
+
+    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
+
+    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(0, oo)))
+
+    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
+
+    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
+
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2, h3, h4))
+
 
 def test_invert_complex():
     assert invert_complex(x + 3, y, x) == (x, FiniteSet(y - 3))
