@@ -1738,23 +1738,25 @@ class FiniteSet(Set, EvalfMixin):
         return self.__class__(el for el in self if el in other)
 
     def _complement(self, other):
-        if other is S.Reals:
+        if isinstance(other, Interval):
             nums = sorted(m for m in self.args if m.is_number)
-            syms = [m for m in self.args if m.is_Symbol]
-            # Reals cannot contain elements other than numbers and symbols.
+            if other is S.Reals and nums != []:
+                syms = [m for m in self.args if m.is_Symbol]
+                # Reals cannot contain elements other than numbers and symbols.
 
-            intervals = []  # Build up a list of intervals between the elements
-            if nums != []:
+                intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
                 for a, b in zip(nums[:-1], nums[1:]):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
-            if syms != []:
-                return Complement(Union(intervals, evaluate=False),
-                    FiniteSet(*syms), evaluate=False)
-            else:
-                return Union(intervals, evaluate=False)
+                if syms != []:
+                    return Complement(Union(intervals, evaluate=False),
+                            FiniteSet(*syms), evaluate=False)
+                else:
+                    return Union(intervals, evaluate=False)
+            elif nums == []:
+                return None
 
         return Set._complement(self, other)
 
