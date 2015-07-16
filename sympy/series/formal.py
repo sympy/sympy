@@ -29,15 +29,16 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Applicable when f(x) or some derivative of f(x)
     is a rational function in x.
 
-    ``rational_algorithm`` uses :func:`apart` function for partial fraction
-    decomposition. ``apart`` by default uses 'undetermined coefficients method'.
-    By setting full=True, 'Bronstein's algorithm' can be used instead.
+    :func:`rational_algorithm` uses :func:`apart` function for partial fraction
+    decomposition. :func`apart` by default uses 'undetermined coefficients
+    method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
+    instead.
 
     Looks for derivative of a function upto 4'th order(by default).
     This can be overrided using order option.
 
-    returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise None.
+    Returns a Tuple of (formula, series independent terms, order) if successful
+    otherwise ``None``.
 
     Examples
     ========
@@ -57,11 +58,11 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Notes
     =====
 
-    By setting full=True, range of admissible functions increases.
-    This option should be used carefully as it can signifcantly
-    slow down the computation as ``doit`` is performed on the :class:`RootSum`
-    object returned by the ``apart`` function. Use full=False whenever
-    possible.
+    By setting full=True, range of admissible functions to be solved using
+    rational_algorithm can be increased. This option should be used carefully
+    as it can signifcantly slow down the computation as ``doit`` is performed
+    on the :class:`RootSum` object returned by the ``apart`` function.
+    Use full=False whenever possible.
 
     See Also
     ========
@@ -143,7 +144,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
 
 def rational_independent(terms, x):
-    """returns a list of all the rationally independent terms
+    """Returns a list of all the rationally independent terms.
 
     Examples
     ========
@@ -178,8 +179,9 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    """
-    Computes a simple DE of the form
+    """Computes a simple DE.
+
+    DE is of the form
 
     .. math::
         f^k(x) + \sum\limits\_{j=0}^{k-1} A_j f^j(x) = 0
@@ -221,21 +223,17 @@ def simpleDE(f, x, g, order=4):
         if len(ind) == k:
             sol = solve(ind, a, dict=True)
             if sol:
-                for k, v in sol[0].items():
-                    DE = DE.subs(k, v)
+                DE = DE.subs(sol[0])
                 DE = DE.as_numer_denom()[0]
                 DE = DE.factor().as_coeff_mul(Derivative)[1][0]
                 return DE.collect(Derivative(g(x)))
 
 
 def exp_re(DE, r, k):
-    """
-    Converts a DE with constant coefficients (explike)
-    into a RE
+    """Converts a DE with constant coefficients (explike) into a RE.
 
-    substitutes :math:`f^j(x) \to r(k + j)`
-
-    Normalises so that lowest term is always r(k).
+    Substitutes :math:`f^j(x) \to r(k + j)`. Normalises the terms
+    so that lowest order of a term is always r(k).
 
     Examples
     ========
@@ -263,7 +261,7 @@ def exp_re(DE, r, k):
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
         if isinstance(d, Derivative):
-            j = len(d.args[1:])
+            j = len(d.args) - 1
         else:
             j = 0
         if mini is None or j < mini:
@@ -275,12 +273,10 @@ def exp_re(DE, r, k):
 
 
 def hyper_re(DE, r, k):
-    """
-    Converts a DE into a RE
+    """Converts a DE into a RE.
 
-    substitutes :math:`x^l f^j(x) \to (k + 1 - l)_j . a_{k + j - l}`
-
-    Normalises so that lowest term is always r(k).
+    Substitutes :math:`x^l f^j(x) \to (k + 1 - l)_j . a_{k + j - l}`.
+    Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
     ========
@@ -325,23 +321,24 @@ def hyper_re(DE, r, k):
 
 
 def rsolve_hypergeometric(f, x, P, Q, k, m):
-    """
+    """Solves RE of hypergeometric type.
+
     Attempts to solve RE of the form
 
     Q(k)*a(k + m) - P(k)*a(k)
 
     Transformations that preserve Hypergeometric type:
+
         a. x**n*f(x): b(k + m) = R(k - n)*b(k)
         b. f(A*x): b(k + m) = A**m*R(k)*b(k)
         c. f(x**n): b(k + n*m) = R(k/n)*b(k)
         d. f(x**(1/m)): b(k + 1) = R(k*m)*b(k)
         e. f'(x): b(k + m) = ((k + m + 1)/(k + 1))*R(k + 1)*b(k)
 
-    Some of these transformations have been used to solve
-    the RE
+    Some of these transformations have been used to solve the RE.
 
-    returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise None.
+    Returns a Tuple of (formula, series independent terms, order) if successful
+    otherwise ``None``.
 
     Examples
     ========
@@ -456,20 +453,20 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
 
 def solve_de(f, x, DE, g, k):
-    """Solves the DE
+    """Solves the DE.
 
-    First converts the DE into a RE using :func:`hyper_re`
+    First converts the DE into a RE using :func:`hyper_re`.
 
-    If The RE is of the form Q(k)*a(k + m) - P(k)*a(k),
-    uses :func:`rsolve_hypergeometric` to solve
+    If the RE is of the form Q(k)*a(k + m) - P(k)*a(k),
+    uses :func:`rsolve_hypergeometric` to solve.
 
     Checks if DE is explike, if yes again forms RE
     using :func:`exp_re`.
 
-    Tries to solve RE using :func:`rsolve`
+    Tries to solve RE using :func:`rsolve`.
 
-    returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise None.
+    Returns a Tuple of (formula, series independent terms, order) if successful
+    otherwise ``None``.
 
     Examples
     ========
@@ -535,12 +532,12 @@ def solve_de(f, x, DE, g, k):
 
 
 def hyper_algorithm(f, x, k, order=4):
-    """Hypergeometric algorithm
+    """Hypergeometric algorithm for computing Formal Power Series.
 
     Steps:
         * Compute a simpleDE
         * Convert the DE into RE
-        * Solves The RE
+        * Solves the RE
 
     Examples
     ========
@@ -579,46 +576,12 @@ def hyper_algorithm(f, x, k, order=4):
     return sol
 
 
-def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
-                full=False):
-    """Computes the formula for Formal Power Series of a function
+def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
+    """Recursive wrapper to compute fps.
 
-    returns (sequence of coefficients, sequence of x, independent terms)
-
-    Tries to compute the formula by applying the following techniques
-    (in order)
-
-    * rational_algorithm
-    * Hypergeomitric algorithm (TODO)
-
-    Arguments
-    =========
-
-    * x0 = series expansion around ``x = x0``(Default = 0).
-
-    * dir = For ``dir=1`` (default) the series is calculated from the right and
-    for ``dir=-1`` the series from the left. For smooth functions this
-    flag will not alter the results.
-
-    * hyper = set hyper=False, for not using hypergeometric algorithm.
-
-    * order = Order of the derivative of f, till which algorithms
-    are run.
-
-    * rational = set rational=False to skip rational algorithm
-
-    * full = full by default is False. Try setting full to True
-    to increase the range of rational algorithm. See :func:`rational_algorithm`
-    for details.
-
-    See Also
-    ========
-
-    sympy.series.rational_algorithm
+    See :func:`compute_fps` for details.
     """
-    if not f.has(x):
-        return None
-    elif x0 in [S.Infinity, -S.Infinity]:
+    if x0 in [S.Infinity, -S.Infinity]:
         dir = {S.Infinity: S.One, S.NegativeInfinity: -S.One}[x0]
         temp = f.subs(x, 1/x)
         result = compute_fps(temp, x, 0, dir, hyper, order, rational, full)
@@ -693,11 +656,70 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     return ak, xk, ind
 
 
-class FormalPowerSeries(SeriesBase):
-    """Represents Formal Power Series
+def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
+                full=False):
+    """Computes the formula for Formal Power Series of a function.
 
-    No computation is performed.
-    This class should only to be used to represent
+    Returns (sequence of coefficients, sequence of x, independent terms).
+
+    Tries to compute the formula by applying the following techniques
+    (in order)
+
+    * rational_algorithm
+    * Hypergeomitric algorithm
+
+    Parameters
+    ==========
+
+    * x : if ``x=None`` and ``f`` is univariate, the univariate
+    symbols will be supplied, otherwise an error will be raised.
+
+    * x0 : series expansion around ``x = x0``(Default = 0).
+
+    * dir : For ``dir=1`` (default) the series is calculated from the right and
+    for ``dir=-1`` the series from the left. For smooth functions this
+    flag will not alter the results.
+
+    * hyper : set hyper=False, for not using hypergeometric algorithm.
+
+    * order : Order of the derivative of f, till which algorithms
+    are run.
+
+    * rational : set rational=False to skip rational algorithm
+
+    * full : full by default is False. Try setting full to True
+    to increase the range of rational algorithm. See :func:`rational_algorithm`
+    for details.
+
+    See Also
+    ========
+
+    sympy.series.rational_algorithm
+    """
+    f = sympify(f)
+    x = sympify(x)
+
+    if not f.has(x):
+        return None
+
+    x0 = sympify(x0)
+
+    if dir == '+':
+        dir = S.One
+    elif dir == '-':
+        dir = -S.One
+    elif dir not in [S.One, -S.One]:
+        raise ValueError("Dir must be '+' or '-'")
+    else:
+        dir = sympify(dir)
+
+    return _compute_fps(f, x, x0, dir, hyper, order, rational, full)
+
+
+class FormalPowerSeries(SeriesBase):
+    """Represents Formal Power Series of a function.
+
+    No computation is performed. This class should only to be used to represent
     a series. No checks are performed.
 
     For computing a series use :func:`fps`.
@@ -754,7 +776,7 @@ class FormalPowerSeries(SeriesBase):
 
     @property
     def infinite(self):
-        """returns an infinite representation of the series"""
+        """Returns an infinite representation of the series"""
         from sympy.concrete import Sum
 
         ak, xk = self.ak, self.xk
@@ -763,10 +785,10 @@ class FormalPowerSeries(SeriesBase):
         return self.ind + Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
     def polynomial(self, n=6):
-        """truncated series as polynomial.
+        """Truncated series as polynomial.
 
-        returns series sexpansion of f upto order ``O(x**n)``
-        as a polynomial (without ``O`` term)
+        Returns series sexpansion of ``f`` upto order ``O(x**n)``
+        as a polynomial(without ``O`` term).
         """
         terms = []
         for i, t in enumerate(self):
@@ -778,12 +800,12 @@ class FormalPowerSeries(SeriesBase):
         return Add(*terms)
 
     def truncate(self, n=6):
-        """truncated series.
+        """Truncated series.
 
-        returns truncated series expansion of f upto
-        order ``O(x**n)``
+        Returns truncated series expansion of f upto
+        order ``O(x**n)``.
 
-        if n is ``None``, returns an infinite iterator
+        If n is ``None``, returns an infinite iterator.
         """
         if n is None:
             return iter(self)
@@ -837,10 +859,10 @@ class FormalPowerSeries(SeriesBase):
 
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
-    """Generates Formal Power Series of f
+    """Generates Formal Power Series of f.
 
-    returns the formal series expansion of ``f`` around ``x = x0``
-    with respect to ``x`` in the form of a ``FormalPowerSeries`` object
+    Returns the formal series expansion of ``f`` around ``x = x0``
+    with respect to ``x`` in the form of a ``FormalPowerSeries`` object.
 
     Formal Power Series is represented using an explicit formula
     computed using different algorithms.
@@ -848,26 +870,26 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     See :func:`compute_fps` for the more details regarding the computation
     of formula.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    * x = if ``x=None`` and ``f`` is univariate, the univariate
+    * x : if ``x=None`` and ``f`` is univariate, the univariate
     symbols will be supplied, otherwise an error will be raised.
 
-    * x0 = series expansion around ``x = x0``(Default = 0).
+    * x0 : series expansion around ``x = x0``(Default = 0).
 
-    * dir = For ``dir=1`` (default) the series is calculated from the right and
+    * dir : For ``dir=1`` (default) the series is calculated from the right and
     for ``dir=-1`` the series from the left. For smooth functions this
     flag will not alter the results.
 
-    * hyper = set hyper=False, for not using hypergeometric algorithm.
+    * hyper : set hyper=False, for not using hypergeometric algorithm.
 
-    * order = Order of the derivative of f, till which algorithms
+    * order : Order of the derivative of f, till which algorithms
     are run.
 
-    * rational = set rational=False to skip rational algorithm
+    * rational : set rational=False to skip rational algorithm
 
-    * full = full by default is False. Try setting full to True
+    * full : full by default is False. Try setting full to True
     to increase the range of rational algorithm. See :func:`rational_algorithm`
     for details.
 
@@ -901,19 +923,6 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
             return f
         else:
             raise NotImplementedError("multivariate formal power series")
-    else:
-        x = sympify(x)
-
-    x0 = sympify(x0)
-
-    if dir == '+':
-        dir = S.One
-    elif dir == '-':
-        dir = -S.One
-    elif dir not in [S.One, -S.One]:
-        raise ValueError("Dir must be '+' or '-'")
-    else:
-        dir = sympify(dir)
 
     result = compute_fps(f, x, x0, dir, hyper, order, rational, full)
 
