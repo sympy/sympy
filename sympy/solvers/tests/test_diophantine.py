@@ -3,7 +3,7 @@ from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, 
     ldescent, diophantine, transformation_to_normal, sum_of_four_squares, sum_of_three_squares,
     prime_as_sum_of_two_squares, partition, power_representation)
 
-from sympy import symbols, Integer, Matrix, simplify, Subs, S, factor_list
+from sympy import symbols, Integer, Matrix, simplify, Subs, S, factor_list, igcd, Symbol, Add
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import sin
@@ -23,18 +23,51 @@ def test_univariate():
 
 def test_linear():
 
-    assert str(diop_solve(3*y + 2*x - 5)) == str((3*t - 5, -2*t + 5))
-    assert str(diop_solve(2*x - 3*y - 5)) == str((-3*t - 5, -2*t - 5))
-    assert str(diop_solve(-2*x - 3*y - 5)) == str((-3*t + 5, 2*t - 5))
-    assert str(diop_solve(7*x + 5*y)) == str((5*t, -7*t))
-    assert str(diop_solve(2*x + 4*y)) == str((2*t, -t))
-    assert str(diop_solve(4*x + 6*y - 4)) == str((3*t - 2, -2*t + 2))
-    assert str(diop_solve(4*x + 6*y - 3)) == str((None, None))
-    assert str(diop_solve(4*x + 3*y -4*z + 5)) == str((0, -4*t + 5, -3*t + 5))
-    assert str(diop_solve(4*x + 2*y + 8*z - 5)) == str((None, None, None))
-    assert str(diop_solve(5*x + 7*y - 2*z - 6)) == str((0, -2*t + 6, -7*t + 18))
-    assert str(diop_solve(3*x - 6*y + 12*z - 9)) == str((3, 2*t, t))
-    assert str(diop_solve(x + 3*y - 4*z + w - 6)) == str((0, 0, -4*t - 6, -3*t - 6))
+    def verify(eq):
+        eq = eq.expand(force=True)
+        var = list(eq.free_symbols)
+        var = sorted(var, key=Symbol.sort_key)
+        coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
+        solutions = diop_solve(eq)
+
+        if len(var) < len(coeff):
+            c = -coeff[Integer(1)]
+        else:
+            c = 0
+
+        gcd = 0
+        for v in var:
+            gcd = igcd(gcd, coeff[v])
+
+        # The equation
+        # a_0*x_0 + ... + a_n*x_n == c
+        # has no solutions if and only if gcd(a_0, ..., a_n) does not divide c.
+        if not c % gcd == 0:
+            for solution in solutions:
+                assert solution == None
+
+        # and has infinitely many solutions otherwise.
+        else:
+            assert c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
+
+    verify(y + x)
+    verify(y + x + 0)
+    verify(y + x - 0)
+    verify(3*y + 2*x - 5)
+    verify(2*x - 3*y - 5)
+    verify(-2*x - 3*y - 5)
+    verify(7*x + 5*y)
+    verify(2*x + 4*y)
+    verify(4*x + 6*y - 4)
+    verify(4*x + 6*y - 3)
+    verify(4*x + 3*y -4*z + 5)
+    verify(4*x + 2*y + 8*z - 5)
+    verify(5*x + 7*y - 2*z - 6)
+    verify(3*x - 6*y + 12*z - 9)
+    verify(x + 3*y - 4*z + w - 6)
+    verify(2*w + 3*x + 5*y + 7*z + 11*t + 13*X + 17*Y + 19*Z - 23)
+    verify(2*w + 4*x + 6*y + 8*z + 10*t + 12*X + 14*Y + 16*Z - 1)
+
 
 def test_quadratic_simple_hyperbolic_case():
 

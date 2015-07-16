@@ -382,12 +382,14 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
 def _diop_linear(var, coeff, param):
     if len(var) < 2:
-        raise ValueError("Fewer than two elements provided in 'var' at _diop_linear()")
+        raise ValueError("Fewer than two elements provided for 'var' at _diop_linear()")
 
     if len(var) == len(coeff):
-        base_c = 0
+        c = 0
     else:
-        base_c = -coeff[Integer(1)]
+        #coeff[] is negated because input is of the form: ax + by - c == 0
+        #                                 but is used as: ax + by     == c
+        c = -coeff[Integer(1)]
 
     """
     Break down the multivariate equation into multiple
@@ -415,32 +417,66 @@ def _diop_linear(var, coeff, param):
     solve for x_1 and x_2 using base_solution_linear() again.
     """
 
-    coeffs = [coeff[v] for v in var]
-    next_c = base_c
+    A = [coeff[v] for v in var]
+    B = []
+    if len(var) > 2:
+        B.append(igcd(A[-2], A[-1]))
+        A[-2] = A[-2] // B[0]
+        A[-1] = A[-1] // B[0]
+        for i in range(len(A) - 3, 0, -1):
+            gcd = igcd(B[0], A[i])
+            B[0] = B[0] // gcd
+            A[i] = A[i] // gcd
+            B.insert(0, gcd)
+    B.append(A[-1])
+
     solutions = []
-    if len(coeffs) > 2:
-        gcds = []
-        gcds.append(igcd(coeffs[-2], coeffs[-1]))
-        coeffs[-2] = coeffs[-2] // gcds[0]
-        coeffs[-1] = coeffs[-1] // gcds[0]
-        for i in range(len(coeffs) - 3, 0, -1):
-            gcd = igcd(gcds[0], coeffs[i])
-            gcds[0]   = gcds[0]   // gcd
-            coeffs[i] = coeffs[i] // gcd
-            gcds.insert(0, gcd)
+    no_solution = tuple([None] * len(var))
+    for i in range(0, len(B)):
+        if type(c) is Add: # example: 5 - 3*t
+            if type(c.args[1]) is Mul:
+                k = Mul.coeff(c.args[1], param)
+            else: # type(c.args[1]) is Symbol
+                k = 1
+            
+            sol_x0, sol_y0 = base_solution_linear(k, A[i], B[i])
+            if sol_x0 is None or sol_y0 is None:
+                sol_x0, sol_y0 = 0, 0
 
-        for i in range(0, len(gcds)):
-            sol_x, sol_y = base_solution_linear(next_c, coeffs[i], gcds[i])
+            sol_x1, sol_y1 = base_solution_linear(c.args[0], A[i], B[i], param)
+            if sol_x1 is None or sol_y1 is None:
+                sol_x1, sol_y1 = 0, 0
+            
+            sol_x = sol_x0*param + sol_x1
+            sol_y = sol_y0*param + sol_y1
+
+        elif type(c) is Mul: # example: -3*t
+            k = Mul.coeff(c, param)
+            
+            sol_x, sol_y = base_solution_linear(k, A[i], B[i])
             if sol_x is None or sol_y is None:
-                return tuple([None] * len(var)) # No solution possible
-            solutions.append(sol_x)
-            next_c = sol_y
+                sol_x, sol_y = 0, 0
+            
+            sol_x = sol_x*param
+            sol_y = sol_y*param
+        
+        elif type(c) is Symbol: # example: t
+            sol_x, sol_y = base_solution_linear(1, A[i], B[i])
+            sol_x = sol_x*param
+            sol_y = sol_y*param    
+        
+        else: # c is an integer
+            sol_x, sol_y = base_solution_linear(c, A[i], B[i], param)
+            if sol_x is None or sol_y is None:
+                return no_solution
 
-    sol_x, sol_y = base_solution_linear(next_c, coeffs[-2], coeffs[-1], param)
-    solutions.append(sol_x)
+        solutions.append(sol_x)
+        c = sol_y
+
     solutions.append(sol_y)
-
+    
     return tuple(solutions)
+
 
 def base_solution_linear(c, a, b, t=None):
     """
