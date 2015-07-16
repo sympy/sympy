@@ -393,6 +393,16 @@ def solveset_real(f, symbol):
         raise ValueError(" %s is not a symbol" % (symbol))
 
     f = sympify(f)
+    if isinstance(f, Eq):
+        from sympy.core import Add
+        f = Add(f.lhs, - f.rhs, evaluate=False)
+
+    if f is S.true:
+        return S.Reals
+
+    if f is S.false:
+        return EmptySet()
+
     if not isinstance(f, (Expr, Number)):
         raise ValueError(" %s is not a valid sympy expression" % (f))
 

@@ -898,3 +898,10 @@ def test_issue_9557():
 
     assert solveset(x**2 + a, x) == Intersection(S.Reals,
         FiniteSet(-sqrt(-a), sqrt(-a)))
+
+
+def test_issue_9686():
+    x = Symbol('x')
+    assert solveset_real(Eq(x, 1), x) == FiniteSet(1)
+    assert solveset_real(Eq(1, 1), x) == S.Reals
+    assert solveset_real(Eq(2, 1), x) == S.EmptySet
