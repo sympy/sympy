@@ -1755,7 +1755,7 @@ class FiniteSet(Set, EvalfMixin):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
-                if not syms == []:
+                if not syms:
                     return Complement(Union(intervals, evaluate=False),
                             FiniteSet(*syms), evaluate=False)
                 else:
