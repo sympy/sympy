@@ -916,6 +916,11 @@ class Interval(Set, EvalfMixin):
             b = Interval(self.end, S.Infinity, not self.right_open, True)
             return Union(a, b)
 
+        if isinstance(other, FiniteSet):
+            nums = [m for m in other.args if m.is_number]
+            if nums == []:
+                return None
+
         return Set._complement(self, other)
 
 
@@ -1750,7 +1755,7 @@ class FiniteSet(Set, EvalfMixin):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
-                if syms != []:
+                if not syms == []:
                     return Complement(Union(intervals, evaluate=False),
                             FiniteSet(*syms), evaluate=False)
                 else:
