@@ -116,6 +116,8 @@ matrix:
       env:
         - SPLIT="4/4"
 before_install:
+  - pip install --upgrade pip
+
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
