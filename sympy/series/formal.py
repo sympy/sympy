@@ -11,6 +11,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.relational import Eq
+from sympy.core.numbers import Rational
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.piecewise import Piecewise
@@ -395,15 +396,19 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         k_max = Max(*qroots.keys())
     else:
         k_max = S.Zero
-    ind = S.Zero
+
+    ind, mp = S.Zero, -oo
     for i in range(k_max + m + 1):
         r = f.diff(x, i).limit(x, 0) / factorial(i)
-        ind += r*x**(i + shift)
+        if r:
+            ind += r*x**(i + shift)
+            if Rational((i + shift), scale) > mp:
+                mp = Rational(i + shift, scale)
     ind = ind.subs(x, x**(1/scale))
-    s, e = k_max + 1, m + k_max + 1
+    st, e = k_max + 1, m + k_max + 1
 
     sol = []
-    for i in range(s, e):
+    for i in range(st, e):
         res = S.One
 
         r = f.diff(x, i).limit(x, 0) / factorial(i)
@@ -431,11 +436,15 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
         res = res.subs(k, (k - j) / c)
 
-        sol.append((res, Eq(k % c, j % m)))
+        sol.append((res, Eq(k % c, j % c)))
 
     sol.append((S.Zero, True))
     sol = Piecewise(*sol)
-    s = k_max + 1 + shift + m
+
+    if mp is -oo:
+        s = S.Zero
+    else:
+        s = mp + 1
 
     #  save all the terms of
     #  form 1/x**k in ind
@@ -531,7 +540,7 @@ def hyper_algorithm(f, x, k, order=4):
     Steps:
         * Compute a simpleDE
         * Convert the DE into RE
-        * Solve The RE
+        * Solves The RE
 
     Examples
     ========

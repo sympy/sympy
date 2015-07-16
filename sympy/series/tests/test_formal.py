@@ -263,6 +263,14 @@ def test_fps_shift():
     assert fps(f, x, rational=False).truncate() == \
         x**3 - x**5/3 + O(x**6)
 
+    f = cos(sqrt(x))*x
+    assert fps(f, x).truncate() == \
+        x - x**2/2 + x**3/24 - x**4/720 + x**5/40320 + O(x**6)
+
+    f = x**2*cos(sqrt(x))
+    assert fps(f, x).truncate() == \
+        x**2 - x**3/2 + x**4/24 - x**5/720 + O(x**6)
+
 
 def test_fps__Add_expr():
     f = x*atan(x) - log(1 + x**2) / 2
