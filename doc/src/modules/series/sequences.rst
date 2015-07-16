@@ -5,6 +5,12 @@ A sequence is a finite or infinite lazily evaluated list.
 
 .. autofunction:: sympy.series.sequences.sequence
 
+Sequences Base
+---------------
+
+.. autoclass:: sympy.series.sequences.SeqBase
+   :members:
+
 Elementary Sequences
 --------------------
 
