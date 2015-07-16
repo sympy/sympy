@@ -569,21 +569,29 @@ def partial_velocity(vel_list, u_list, frame):
     return list_of_pvlists
 
 
-def dynamicsymbols(names, level=0):
-    """Uses symbols and Function for functions of time.
+def dynamicsymbols(names, level=0, real=True, **kwargs):
+    """Returns a tuple of functions of time or their derivatives. This is a
+    convenience function that is analogous to ``symbols()``. It allows the
+    user to avoid typing::
 
-    Creates a SymPy UndefinedFunction, which is then initialized as a function
-    of a variable, the default being Symbol('t').
+        >>> t = symbols('t', real=True)
+        >>> F = symbols('F', real=True, cls=Function)(t)
+
+    and simply type::
+
+        >>> F = dynamicsymbols('F')
 
     Parameters
     ==========
-
     names : str
-        Names of the dynamic symbols you want to create; works the same way as
-        inputs to symbols
+        Names of the dynamic symbols you want to create. This works the same
+        way as inputs to ``symbols()``.
     level : int
-        Level of differentiation of the returned function; d/dt once of t,
-        twice of t, etc.
+        Order of differentiation of the returned function(s).
+    real : boolean, optional
+        By default the functions are assumed to be real.
+    kwargs : key value pairs
+        Any options that can be passed to ``symbols()`` except for ``cls``.
 
     Examples
     ========
@@ -593,19 +601,35 @@ def dynamicsymbols(names, level=0):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
-    >>> diff(q1, Symbol('t'))
+    >>> diff(q1, Symbol('t', real=True))
     Derivative(q1(t), t)
+    >>> q1d = dynamicsymbols('q1', level=1)
+    Derivative(q1(t), t)
+
+    Notes
+    =====
+
+    The default time symbol is stored on the function, i.e.::
+
+        >>> dynamicsymbols._t
+        t
+
+    It can be changed by simply overriding the attribute::
+
+        >>> dynamicsymbols._t = symbols('T', real=False)
 
     """
 
-    esses = symbols(names, cls=Function)
+    kwargs.pop('cls', None)
+
+    syms = symbols(names, cls=Function, real=real, **kwargs)
+
     t = dynamicsymbols._t
-    if iterable(esses):
-        esses = [reduce(diff, [t] * level, e(t)) for e in esses]
-        return esses
+
+    if iterable(syms):
+        return tuple([reduce(diff, [t] * level, s(t)) for s in syms])
     else:
-        return reduce(diff, [t] * level, esses(t))
+        return reduce(diff, [t] * level, syms(t))
 
-
-dynamicsymbols._t = Symbol('t')
+dynamicsymbols._t = Symbol('t', real=True)
 dynamicsymbols._str = '\''
