@@ -1326,8 +1326,8 @@ def register_handler(key, handler):
         ...     # Mersenne numbers are in the form 2**n + 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
-        ...         import math
-        ...         return ask(Q.integer(math.log(expr + 1, 2)))
+        ...         from sympy import log
+        ...         return ask(Q.integer(log(expr + 1, 2)))
         >>> register_handler('mersenne', MersenneHandler)
         >>> ask(Q.mersenne(7))
         True

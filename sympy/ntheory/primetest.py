@@ -204,6 +204,9 @@ def isprime(n):
     sympy.ntheory.generate.prime : Return the nth prime
 
     """
+    from sympy.core.numbers import Float
+    if isinstance(n, (Float, float)):
+        return False
     n = int(n)
     if n < 2:
         return False

@@ -84,7 +84,7 @@ def test_int_12():
 def test_float_1():
     z = 1.0
     assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is True
+    assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is True
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
@@ -93,7 +93,7 @@ def test_float_1():
     assert ask(Q.positive(z)) is True
     assert ask(Q.negative(z)) is False
     assert ask(Q.even(z)) is False
-    assert ask(Q.odd(z)) is True
+    assert ask(Q.odd(z)) is False
     assert ask(Q.finite(z)) is True
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
@@ -2182,3 +2182,11 @@ def test_check_old_assumption():
     x = symbols('x', irrational=True)
     assert ask(Q.irrational(x)) is True
     assert ask(Q.rational(x)) is False
+
+
+def test_issue_9636():
+    assert ask(Q.integer(1.0)) is False
+    assert ask(Q.prime(3.0)) is False
+    assert ask(Q.composite(4.0)) is False
+    assert ask(Q.even(2.0)) is False
+    assert ask(Q.odd(3.0)) is False
