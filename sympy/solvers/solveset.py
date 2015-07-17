@@ -5,7 +5,7 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
-from sympy.core.numbers import I, Number, Rational
+from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import fraction, trigsimp
@@ -13,7 +13,7 @@ from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.sets import FiniteSet, EmptySet, imageset, Union
+from sympy.sets import FiniteSet, EmptySet, imageset, Interval, Union
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -33,20 +33,32 @@ def invert_real(f_x, y, x):
     functions ``{h_1(y), h_2(y), ..., h_n(y)}``.
     Here, ``y`` is not necessarily a symbol.
 
+    The ``set_h`` contains the functions along with the information about their
+    domain in which they are valid, through set operations. For instance, if
+    ``y = Abs(x) - n``, is inverted, then, the ``set_h`` doesn't simply
+    return `{-n, n}`, as it doesn't explicitly mentions about the nature of
+    `n` rather it will return:
+    `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`
+
+
     Examples
     ========
 
     >>> from sympy.solvers.solveset import invert_real
     >>> from sympy import tan, Abs, exp
     >>> from sympy.abc import x, y, n
-    >>> invert_real(exp(Abs(x)), y, x)
-    (x, {-log(y), log(y)})
     >>> invert_real(exp(x), 1, x)
     (x, {0})
-    >>> invert_real(Abs(x**31 + x), y, x)
-    (x**31 + x, {-y, y})
     >>> invert_real(tan(x), y, x)
     (x, ImageSet(Lambda(_n, _n*pi + atan(y)), Integers()))
+
+
+    * ``set_h`` containing information about the domain
+
+    >>> invert_real(Abs(x**31 + x), y, x)
+    (x**31 + x, Intersection([0, oo), {y}) U Intersection((-oo, 0], {-y}))
+    >>> invert_real(exp(Abs(x)), y, x)
+    (x, Intersection([0, oo), {log(y)}) U Intersection((-oo, 0], {-log(y)}))
 
     See Also
     ========
@@ -76,9 +88,10 @@ def _invert_real(f, g_ys, symbol):
                             imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, Abs):
-        g_ys = g_ys - FiniteSet(*[g_y for g_y in g_ys if g_y.is_negative])
         return _invert_real(f.args[0],
-                            Union(g_ys, imageset(Lambda(n, -n), g_ys)), symbol)
+                            Union(imageset(Lambda(n, n), g_ys).intersect(Interval(0, oo)),
+                                  imageset(Lambda(n, -n), g_ys).intersect(Interval(-oo, 0))),
+                            symbol)
 
     if f.is_Add:
         # f = g + h

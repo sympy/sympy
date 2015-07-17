@@ -40,7 +40,10 @@ n = Symbol('n', real=True)
 def test_invert_real():
     x = Dummy(real=True)
     n = Symbol('n')
-    assert solveset(abs(x) - n, x) == Intersection(S.Reals, FiniteSet(-n, n))
+
+    minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
+    plus_n = Intersection(Interval(0, oo), FiniteSet(n))
+    assert solveset(abs(x) - n, x) == Union(minus_n, plus_n)
 
     n = Symbol('n', real=True)
     assert invert_real(x + 3, y, x) == (x, FiniteSet(y - 3))
@@ -57,7 +60,9 @@ def test_invert_real():
     assert invert_real(log(3*x), y, x) == (x, FiniteSet(exp(y) / 3))
     assert invert_real(log(x + 3), y, x) == (x, FiniteSet(exp(y) - 3))
 
-    assert invert_real(Abs(x), y, x) == (x, FiniteSet(-y, y))
+    minus_y = Intersection(Interval(-oo, 0), FiniteSet(-y))
+    plus_y = Intersection(Interval(0, oo), FiniteSet(y))
+    assert invert_real(Abs(x), y, x) == (x, Union(minus_y, plus_y))
 
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
     assert invert_real(2**exp(x), y, x) == (x, FiniteSet(log(log(y)/log(2))))
@@ -71,8 +76,10 @@ def test_invert_real():
 
     assert invert_real(x**31 + x, y, x) == (x**31 + x, FiniteSet(y))
 
+    y_1 = Intersection(Interval(-1, oo), FiniteSet(y - 1))
+    y_2 = Intersection(Interval(-oo, -1), FiniteSet(-y - 1))
     assert invert_real(Abs(x**31 + x + 1), y, x) == (x**31 + x,
-                                                     FiniteSet(-y - 1, y - 1))
+                                                     Union(y_1, y_2))
 
     assert invert_real(tan(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
@@ -90,6 +97,25 @@ def test_invert_real():
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
+
+    # Test for ``set_h`` containing information about the domain
+
+    n = Dummy('n')
+    x = Symbol('x')
+
+    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
+
+    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(0, oo)))
+
+    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
+
+    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
+
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2, h3, h4))
 
 
 def test_invert_complex():
