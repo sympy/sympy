@@ -584,7 +584,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     if x0 in [S.Infinity, -S.Infinity]:
         dir = {S.Infinity: S.One, S.NegativeInfinity: -S.One}[x0]
         temp = f.subs(x, 1/x)
-        result = compute_fps(temp, x, 0, dir, hyper, order, rational, full)
+        result = _compute_fps(temp, x, 0, dir, hyper, order, rational, full)
         if result is None:
             return None
         return result[0], result[1].subs(x, 1/x), result[2].subs(x, 1/x)
@@ -598,7 +598,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             rep2 = x
             rep2b = -x0
         temp = f.subs(x, rep)
-        result = compute_fps(temp, x, 0, S.One, hyper, order, rational, full)
+        result = _compute_fps(temp, x, 0, S.One, hyper, order, rational, full)
         if result is None:
             return None
         return (result[0], result[1].subs(x, rep2 + rep2b),
@@ -616,7 +616,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         ak = sequence(S.Zero, (0, oo))
         ind, xk = S.Zero, None
         for t in Add.make_args(f):
-            res = compute_fps(t, x, 0, S.One, hyper, order, rational, full)
+            res = _compute_fps(t, x, 0, S.One, hyper, order, rational, full)
             if res:
                 if not result:
                     result = True
