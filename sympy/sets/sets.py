@@ -1438,7 +1438,8 @@ class Intersection(Set):
                              if all(other.contains(x) == True for other in other_args)])
                 unk = [x for x in s
                        if any(other.contains(x) not in (True, False) for other in other_args)]
-                other_args = [elm - FiniteSet(*unk) if elm.is_FiniteSet else elm for elm in other_args]
+                other_args = [elm - FiniteSet(*unk) if elm.is_FiniteSet and
+                                not FiniteSet(*unk).is_EmptySet else elm for elm in other_args]
                 if unk:
                     other_sets = Intersection(*other_args)
                     if other_sets.is_EmptySet:
