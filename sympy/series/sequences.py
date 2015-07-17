@@ -193,7 +193,6 @@ class SeqBase(Basic):
         =====
 
         '*' defines multiplication of sequences with sequences only.
-        For multiplying sequences use ``mul`` method.
         """
         return Mul(self, other)
 

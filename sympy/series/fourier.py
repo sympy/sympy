@@ -17,7 +17,7 @@ from sympy.series.sequences import SeqFormula
 
 
 def fourier_cos_seq(func, limits, n):
-    """Returns the cos sequence in a fourier series"""
+    """Returns the cos sequence in a Fourier series"""
     from sympy.integrals import integrate
     x, L = limits[0], limits[2] - limits[1]
     cos_term = cos(2*n*pi*x / L)
@@ -28,7 +28,7 @@ def fourier_cos_seq(func, limits, n):
 
 
 def fourier_sin_seq(func, limits, n):
-    """Returns the sin sequence in a fourier series"""
+    """Returns the sin sequence in a Fourier series"""
     from sympy.integrals import integrate
     x, L = limits[0], limits[2] - limits[1]
     sin_term = sin(2*n*pi*x / L)
@@ -38,11 +38,11 @@ def fourier_sin_seq(func, limits, n):
 
 def _process_limits(func, limits):
     """
-    limits should be of the form (x, start, stop)
-    x should be a symbol. Both start and stop should be bounded
+    Limits should be of the form (x, start, stop).
+    x should be a symbol. Both start and stop should be bounded.
 
-    * If x is not given, x is determined from func
-    * if limits is None. limit of the form (x, -pi, pi) is returned
+    * If x is not given, x is determined from func.
+    * If limits is None. Limit of the form (x, -pi, pi) is returned.
 
     Examples
     ========
@@ -91,7 +91,7 @@ def _process_limits(func, limits):
 
 
 class FourierSeries(SeriesBase):
-    r"""Represents fourier sine/cosine series
+    r"""Represents Fourier sine/cosine series.
 
     This class only represents a fourier series.
     No computation is performed.
@@ -154,8 +154,10 @@ class FourierSeries(SeriesBase):
             return self
 
     def truncate(self, n=3):
-        """"returns the first n terms(non-zero) of the series
-        if n is none returns an iterator"""
+        """Returns the first n (non-zero)terms of the series.
+
+        If n is ``None`` returns an iterator.
+        """
         if n is None:
             return iter(self)
 
@@ -169,13 +171,11 @@ class FourierSeries(SeriesBase):
         return Add(*terms)
 
     def shift(self, s):
-        """
-        Shift the function by a
-        term independent of x
+        """Shift the function by a term independent of x.
 
         f(x) -> f(x) + s
 
-        This is fast, if fourier series of f(x) is already
+        This is fast, if Fourier series of f(x) is already
         computed.
 
         Examples
@@ -198,13 +198,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
     def shiftx(self, s):
-        """
-        Shift x by a
-        term independent of x
+        """Shift x by a term independent of x.
 
         f(x) -> f(x + s)
 
-        This is fast, if fourier series of f(x) is already
+        This is fast, if Fourier series of f(x) is already
         computed.
 
         Examples
@@ -228,13 +226,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def scale(self, s):
-        """
-        Scale function by a
-        term independent of x
+        """Scale the function by a term independent of x.
 
         f(x) -> s * f(x)
 
-        This is fast, if fourier series of f(x) is already
+        This is fast, if Fourier series of f(x) is already
         computed.
 
         Examples
@@ -259,13 +255,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, an, bn))
 
     def scalex(self, s):
-        """
-        Scale x by a
-        term independent of x
+        """Scale x by a term independent of x.
 
         f(x) -> f(s*x)
 
-        This is fast, if fourier series of f(x) is already
+        This is fast, if Fourier series of f(x) is already
         computed.
 
         Examples
@@ -325,9 +319,9 @@ class FourierSeries(SeriesBase):
 
 
 def fourier_series(f, limits=None):
-    """Computes fourier sine/cosine series expansion
+    """Computes Fourier sine/cosine series expansion.
 
-    returns a ``FourierSeries`` object
+    Returns a :class:`FourierSeries` object.
 
     Examples
     ========
@@ -356,17 +350,17 @@ def fourier_series(f, limits=None):
     Notes
     =====
 
-    Computing a fourier series can be slow
+    Computing Fourier series can be slow
     due to the integration required in computing
     an, bn.
 
-    It is faster to compute fourier series of a function
+    It is faster to compute Fourier series of a function
     by using shifting and scaling on an already
-    computed fourier series rather than computing
+    computed Fourier series rather than computing
     again.
 
-    eg. If Fourier series of x**2 is known
-    fourier series of x**2 - 1 can be found by shifting by -1
+    e.g. If the Fourier series of ``x**2`` is known
+    the Fourier series of ``x**2 - 1`` can be found by shifting by ``-1``.
 
     See Also
     ========
