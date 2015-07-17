@@ -687,6 +687,8 @@ def trig_substitution_rule(integral):
     if matches:
         for expr in matches:
             match = expr.match(a + b*symbol**2)
+            if not match:
+                continue
             a = match[a]
             b = match[b]
 

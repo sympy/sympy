@@ -261,3 +261,7 @@ def test_issue_2850():
 
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
+
+def test_issue_9687():
+    assert manualintegrate(1/((x**2+4)*sqrt(4*x**2+1)), x) == \
+        Integral(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x)
