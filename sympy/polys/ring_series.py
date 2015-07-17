@@ -1744,6 +1744,14 @@ class RingSeriesBase(object):
     def new(self, *args, **kwargs):
         return self.__class__(*args, **kwargs)
 
+    def __mul__(self, other):
+        return RingMul(self, other)
+
+
+class RingMul(RingSeriesBase):
+    def __init__(self, *args):
+        self.args = [a for a in args]
+
 
 class RingSeries(RingSeriesBase):
     """Sparse Multivariate Ring Series"""
@@ -1786,11 +1794,11 @@ class RingSeries(RingSeriesBase):
             self.degree = self.series.degree()
             return self.degree
 
-
-class RingSin(RingSeriesBase):
+class RingFunction(RingSeriesBase):
     def __init__(self, ring_series):
         self.ring_series = ring_series
 
+class RingSin(RingFunction):
     def __repr__(self):
         return "RingSin(%s)" % self.ring_series
 
@@ -1798,10 +1806,7 @@ class RingSin(RingSeriesBase):
         return rs_sin(self.ring_series.series, x, prec)
 
 
-class RingCos(RingSeriesBase):
-    def __init__(self, ring_series):
-        self.ring_series = ring_series
-
+class RingCos(RingFunction):
     def __repr__(self):
         return "RingCos(%s)" % self.ring_series
 
@@ -1809,18 +1814,42 @@ class RingCos(RingSeriesBase):
         return rs_cos(self.ring_series.series, x, prec)
 
 
+def min_pow(func, x):
+    p = func.ring_series
+    i = p.ring.index(x)
+    series = 0
+    n = 2
+    while series == 0:
+        series = func._eval(x, n)
+        n *= 2
+    return min(series, key=lambda x: x[i])[i]
+
+
 def taylor_series(series, x, prec=5, x0=0):
+    print(isinstance(series, RingSeriesBase))
     if isinstance(series, RingSeriesBase):
-        if hasattr(series, "_eval"):
+        if isinstance(series, RingFunction):
             if isinstance(series.ring_series, RingSeries):
                 return RingSeries(series._eval(x, prec))
-            elif isinstance(series.ring_series, RingSeriesBase):
+            elif isinstance(series.ring_series, RingFunction):
                 series_inner = taylor_series(series.ring_series, x, prec + 1)
                 return RingSeries(series.new(series_inner)._eval(x, prec))
             else:
                 raise TypeError("The series should be a RingSeries")
+        elif isinstance(series, RingMul):
+            args = series.args
+            min_pows = map(min_pow, args, [x]*len(args))
+            sum_pows = sum(min_pows)
+            p = 1
+            for arg, expv in zip(args, min_pows):
+                p *= (arg._eval(x, prec - sum_pows + expv)/x**expv)
+            return RingSeries(p)
         else:
             return series
     else:
         raise TypeError("The series should be a RingSeries")
 
+#def rs_series(expr, a, prec=5, x0=0):
+#    R, x = ring('x', EX)
+#    expr = expr.subs(a, 'x')
+#    series = R(expr)
