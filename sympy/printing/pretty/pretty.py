@@ -94,7 +94,7 @@ class PrettyPrinter(Printer):
     _print_Naturals = _print_Atom
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
-    _print_Complex = _print_Atom
+    _print_Complexes = _print_Atom
 
     def _print_subfactorial(self, e):
         x = e.args[0]

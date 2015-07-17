@@ -189,14 +189,15 @@ def test_Reals():
 
 
 def test_Complex():
-    assert 5 in S.Complex
-    assert 5 + 4*I in S.Complex
-    assert S.Pi in S.Complex
-    assert -sqrt(2) in S.Complex
-    assert -I in S.Complex
-    assert sqrt(-1) in S.Complex
-    assert S.Complex.intersect(S.Reals) == S.Reals
-    assert S.Complex.union(S.Reals) == S.Complex
+    assert 5 in S.Complexes
+    assert 5 + 4*I in S.Complexes
+    assert S.Pi in S.Complexes
+    assert -sqrt(2) in S.Complexes
+    assert -I in S.Complexes
+    assert sqrt(-1) in S.Complexes
+    assert S.Complexes.intersect(S.Reals) == S.Reals
+    assert S.Complexes.union(S.Reals) == S.Complexes
+    assert S.Complexes == ComplexPlane(S.Reals*S.Reals)
 
 
 def take(n, iterable):
@@ -411,4 +412,4 @@ def test_normalize_theta_set():
         FiniteSet(pi/2)
 
     # ValueError for non-real sets
-    raises(ValueError, lambda: normalize_theta_set(S.Complex))
+    raises(ValueError, lambda: normalize_theta_set(S.Complexes))

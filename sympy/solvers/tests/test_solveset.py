@@ -587,7 +587,7 @@ def test_solveset_complex_polynomial():
 
 
 def test_sol_zero_complex():
-    assert solveset_complex(0, x) == S.Complex
+    assert solveset_complex(0, x) == S.Complexes
 
 
 def test_solveset_complex_rational():
@@ -889,7 +889,7 @@ def test_issue_9611():
     y = Symbol('y')
 
     assert solveset(Eq(x - x + a, a), x) == S.Reals
-    assert solveset(Eq(y - y + a, a), y) == S.Complex
+    assert solveset(Eq(y - y + a, a), y) == S.Complexes
 
 
 def test_issue_9557():
