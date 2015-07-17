@@ -381,16 +381,6 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
 
 def _diop_linear(var, coeff, param):
-    if len(var) < 2:
-        raise ValueError("Fewer than two elements provided for 'var' at _diop_linear()")
-
-    if len(var) == len(coeff):
-        c = 0
-    else:
-        #coeff[] is negated because input is of the form: ax + by - c == 0
-        #                                 but is used as: ax + by     == c
-        c = -coeff[Integer(1)]
-
     """
     Break down the multivariate equation into multiple
     bivariate equations of the form:
@@ -416,6 +406,16 @@ def _diop_linear(var, coeff, param):
     x_0 is appended to our return value, while y_0 is used to 
     solve for x_1 and x_2 using base_solution_linear() again.
     """
+    
+    if len(var) < 2:
+        raise ValueError("Fewer than two elements provided for 'var' at _diop_linear()")
+
+    if len(var) == len(coeff):
+        c = 0
+    else:
+        #coeff[] is negated because input is of the form: ax + by - c == 0
+        #                                 but is used as: ax + by     == c
+        c = -coeff[Integer(1)]
 
     A = [coeff[v] for v in var]
     B = []
@@ -430,51 +430,63 @@ def _diop_linear(var, coeff, param):
             B.insert(0, gcd)
     B.append(A[-1])
 
+    # Some solutions will have multiple free variables in their solutions.
+    params = [symbols(str(param) + "_" + str(i)) for i in range(0, len(var))]
+
     solutions = []
     no_solution = tuple([None] * len(var))
     for i in range(0, len(B)):
-        if type(c) is Add: # example: 5 - 3*t
-            if type(c.args[1]) is Mul:
-                k = Mul.coeff(c.args[1], param)
-            else: # type(c.args[1]) is Symbol
+        tot_x, tot_y = 0, 0
+
+        if type(c) is Add: 
+            # example: 5 + t_0 + 3*t_1
+            args = c.args
+        else: # c is a Mul, a Symbol, or an Integer
+            args = [c]
+
+        for j in range(0, len(args)):
+            arg_type = type(args[j])
+            if arg_type is Mul:
+                # example: 3*t_1 -> k = 3
+                k = args[j].as_two_terms()[0]
+                param_index = params.index(args[j].as_two_terms()[1]) + 1
+            elif arg_type is Symbol: 
+                # example: t_0 -> k = 1
                 k = 1
-            
-            sol_x0, sol_y0 = base_solution_linear(k, A[i], B[i])
-            if sol_x0 is None or sol_y0 is None:
-                sol_x0, sol_y0 = 0, 0
+                param_index = params.index(args[j]) + 1
+            else: #arg_type is Integer
+                # example: 5 -> k = 5
+                k = args[j]
+                param_index = 0
 
-            sol_x1, sol_y1 = base_solution_linear(c.args[0], A[i], B[i], param)
-            if sol_x1 is None or sol_y1 is None:
-                sol_x1, sol_y1 = 0, 0
+            sol_x, sol_y = base_solution_linear(k, A[i], B[i], params[param_index])
+            if arg_type is Mul or arg_type is Symbol:
+                if sol_x is None:
+                    sol_x = 0
+                elif type(sol_x) is Add:
+                    sol_x = sol_x.args[0]*params[param_index - 1] + sol_x.args[1]
+                elif type(sol_x) is Integer:
+                    sol_x = sol_x*params[param_index - 1]
+                
+                if sol_y is None:
+                    sol_y = 0
+                elif type(sol_y) is Add:
+                    sol_y = sol_y.args[0]*params[param_index - 1] + sol_y.args[1]
+                elif type(sol_y) is Integer:
+                    sol_y = sol_y*params[param_index - 1]
             
-            sol_x = sol_x0*param + sol_x1
-            sol_y = sol_y0*param + sol_y1
-
-        elif type(c) is Mul: # example: -3*t
-            k = Mul.coeff(c, param)
+            else:
+                if sol_x is None or sol_y is None:
+                    return no_solution
             
-            sol_x, sol_y = base_solution_linear(k, A[i], B[i])
-            if sol_x is None or sol_y is None:
-                sol_x, sol_y = 0, 0
-            
-            sol_x = sol_x*param
-            sol_y = sol_y*param
-        
-        elif type(c) is Symbol: # example: t
-            sol_x, sol_y = base_solution_linear(1, A[i], B[i])
-            sol_x = sol_x*param
-            sol_y = sol_y*param    
-        
-        else: # c is an integer
-            sol_x, sol_y = base_solution_linear(c, A[i], B[i], param)
-            if sol_x is None or sol_y is None:
-                return no_solution
+            tot_x += sol_x
+            tot_y += sol_y
 
-        solutions.append(sol_x)
-        c = sol_y
+        solutions.append(tot_x)
+        c = tot_y
 
-    solutions.append(sol_y)
-    
+    solutions.append(tot_y)
+
     return tuple(solutions)
 
 

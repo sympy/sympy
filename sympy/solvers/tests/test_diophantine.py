@@ -23,12 +23,12 @@ def test_univariate():
 
 def test_linear():
 
-    def verify(eq):
+    def verify(eq, param=symbols("t", Integer=True)):
         eq = eq.expand(force=True)
         var = list(eq.free_symbols)
         var = sorted(var, key=Symbol.sort_key)
         coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-        solutions = diop_solve(eq)
+        solutions = diop_solve(eq, param)
 
         if len(var) < len(coeff):
             c = -coeff[Integer(1)]
