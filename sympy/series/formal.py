@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from collections import defaultdict
+
 from sympy import oo, zoo, nan
 from sympy.core.expr import Expr
 from sympy.core.add import Add
@@ -15,6 +17,7 @@ from sympy.core.numbers import Rational
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
@@ -399,12 +402,13 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r:
             ind += r*x**(i + shift)
-            if Rational((i + shift), scale) > mp:
-                mp = Rational(i + shift, scale)
+            pow_x = Rational((i + shift), scale)
+            if pow_x > mp:
+                mp = pow_x  # maximum power of x
     ind = ind.subs(x, x**(1/scale))
     st, e = k_max + 1, m + k_max + 1
 
-    sol = []
+    sol_dict = defaultdict(lambda: S.Zero)
     for i in range(st, e):
         res = S.One
 
@@ -431,15 +435,25 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         j, mk = t_p.as_coeff_Add()
         c = mk.coeff(k)
 
+        if j.is_integer is False:
+            res *= x**frac(j)
+            j = floor(j)
+
         res = res.subs(k, (k - j) / c)
+        cond = Eq(k % c, j % c)
 
-        sol.append((res, Eq(k % c, j % c)))
+        sol_dict[cond] += res
 
+    sol = []
+    for cond, res in sol_dict.items():
+        sol.append((res, cond))
     sol.append((S.Zero, True))
     sol = Piecewise(*sol)
 
     if mp is -oo:
         s = S.Zero
+    elif mp.is_integer is False:
+        s = ceiling(mp)
     else:
         s = mp + 1
 
@@ -784,6 +798,13 @@ class FormalPowerSeries(SeriesBase):
 
         return self.ind + Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
+    def _get_pow_x(self, term):
+        """Returns the power of x in a term."""
+        xterm, pow_x = term.as_independent(self.x)[1].as_base_exp()
+        if not xterm.has(self.x):
+            return S.Zero
+        return pow_x
+
     def polynomial(self, n=6):
         """Truncated series as polynomial.
 
@@ -792,9 +813,12 @@ class FormalPowerSeries(SeriesBase):
         """
         terms = []
         for i, t in enumerate(self):
-            if i >= n:
+            xp = self._get_pow_x(t)
+            if xp >= n:
                 break
-            if t is not S.Zero:
+            elif xp.is_integer is True and i == n + 1:
+                break
+            elif t is not S.Zero:
                 terms.append(t)
 
         return Add(*terms)
@@ -820,30 +844,22 @@ class FormalPowerSeries(SeriesBase):
     def _eval_term(self, pt):
         pt_xk = self.xk.coeff(pt)
 
-        def _get_xterm(t):
-            if self.x0 in [S.Infinity, -S.Infinity]:
-                t = t.as_numer_denom()[1]
-            else:
-                t = t.as_numer_denom()[0]
-            return t.as_independent(self.x)[1]
-
-        ind = S.Zero
-        if self.ind:
-            for t in Add.make_args(self.ind):
-                xterm = _get_xterm(t)
-                if pt_xk == 1 and xterm == 1:
-                    ind += t
-                elif xterm != 1 and pt_xk != 1:
-                    j = xterm.as_base_exp()[1]
-                    if j == pt:
-                        ind += t
-
         try:
             pt_ak = self.ak.coeff(pt).simplify()  # TODO: Thoughts?
         except IndexError:
             pt_ak = S.Zero
 
-        term = (pt_ak * pt_xk) + ind
+        term = (pt_ak * pt_xk)
+
+        if self.ind:
+            ind = S.Zero
+            for t in Add.make_args(self.ind):
+                pow_x = self._get_pow_x(t)
+                if pt == 0 and pow_x < 1:
+                    ind += t
+                elif pow_x >= pt and pow_x < pt + 1:
+                    ind += t
+            term += ind
 
         return term.collect(self.x)
 
