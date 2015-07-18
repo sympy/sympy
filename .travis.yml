@@ -15,6 +15,9 @@ python:
   - 3.2
   - 3.3
   - 3.4
+cache:
+  directories:
+    - $HOME/.cache/pip
 matrix:
   include:
     - python: 2.7
