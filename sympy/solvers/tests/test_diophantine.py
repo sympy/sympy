@@ -639,7 +639,6 @@ def check_linear(eq, param=symbols("t", Integer=True)):
 
     # and has infinitely many solutions otherwise.
     else:
-        print(Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))]))
         return c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
 
 

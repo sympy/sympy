@@ -592,7 +592,7 @@ def divisible(a, b):
     """
     Returns `True` if ``a`` is divisible by ``b`` and `False` otherwise.
     """
-    return a == 0 or igcd(int(a), int(b)) == abs(int(b))
+    return igcd(int(a), int(b)) == abs(int(b))
 
 
 def diop_quadratic(eq, param=symbols("t", integer=True)):
