@@ -171,7 +171,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     """
     var, coeff, eq_type = classify_diop(eq)
 
-    if eq_type == "linear":
+    if eq_type in ["linear", "univariate"]:
         return _diop_linear(var, coeff, param)
 
     elif eq_type == "binary_quadratic":
@@ -183,15 +183,6 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
-
-    elif eq_type == "univariate":
-        l = solve(eq)
-        s = set([])
-
-        for soln in l:
-            if isinstance(soln, Integer):
-                s.add((soln,))
-        return s
 
     elif eq_type == "general_sum_of_squares":
         return _diop_general_sum_of_squares(var, coeff)
@@ -232,15 +223,28 @@ def classify_diop(eq):
     ([x, y], {1: 5, x: 1, x**2: 1, y: 0, y**2: 1, x*y: -1}, 'binary_quadratic')
     """
     eq = eq.expand(force=True)
-    var = list(eq.free_symbols)
-    var.sort(key=default_sort_key)
 
+    var = []
     coeff = {}
     diop_type = None
 
-    coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-    for v in coeff:
-        if not isinstance(coeff[v], Integer):
+    if type(eq) is Add:
+        var = list(eq.free_symbols)
+        var.sort(key=default_sort_key)
+        coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
+
+    elif type(eq) is Mul:
+        var.append(eq.as_two_terms()[1])
+        coeff = {}
+        coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
+
+    elif type(eq) is Symbol:
+        var.append(eq)
+        coeff = {}
+        coeff[eq] = Integer(1)
+
+    for c in coeff:
+        if not isinstance(coeff[c], Integer):
             raise TypeError("Coefficients should be Integers")
 
     if len(var) == 1:
@@ -376,7 +380,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type == "linear":
+    if diop_type in ["linear", "univariate"]:
         return _diop_linear(var, coeff, param)
 
 
@@ -406,16 +410,25 @@ def _diop_linear(var, coeff, param):
     x_0 is appended to our return value, while y_0 is used to 
     solve for x_1 and x_2 using base_solution_linear() again.
     """
-    
-    if len(var) < 2:
-        raise ValueError("Fewer than two elements provided for 'var' at _diop_linear()")
 
-    if len(var) == len(coeff):
-        c = 0
-    else:
+    if len(var) == 0:
+        return None
+
+    if Integer(1) in coeff:
         #coeff[] is negated because input is of the form: ax + by - c == 0
         #                                 but is used as: ax + by     == c
         c = -coeff[Integer(1)]
+    else:
+        c = 0
+
+    # Some solutions will have multiple free variables in their solutions.
+    params = [symbols(str(param) + "_" + str(i)) for i in range(0, len(var))]
+
+    if len(var) == 1:
+        if divisible(c, coeff[var[0]]):
+            return tuple([c/coeff[var[0]]])
+        else:
+            return tuple([None])
 
     A = [coeff[v] for v in var]
     B = []
@@ -429,9 +442,6 @@ def _diop_linear(var, coeff, param):
             A[i] = A[i] // gcd
             B.insert(0, gcd)
     B.append(A[-1])
-
-    # Some solutions will have multiple free variables in their solutions.
-    params = [symbols(str(param) + "_" + str(i)) for i in range(0, len(var))]
 
     solutions = []
     no_solution = tuple([None] * len(var))
@@ -582,7 +592,7 @@ def divisible(a, b):
     """
     Returns `True` if ``a`` is divisible by ``b`` and `False` otherwise.
     """
-    return igcd(int(a), int(b)) == abs(int(b))
+    return a == 0 or igcd(int(a), int(b)) == abs(int(b))
 
 
 def diop_quadratic(eq, param=symbols("t", integer=True)):

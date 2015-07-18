@@ -1,9 +1,35 @@
-from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
-    square_factor, pairwise_prime, descent,
-    ldescent, diophantine, transformation_to_normal, sum_of_four_squares, sum_of_three_squares,
-    prime_as_sum_of_two_squares, partition, power_representation)
+from sympy.solvers.diophantine import (descent,
+                                       diop_bf_DN,
+                                       diop_DN,
+                                       diop_solve,
+                                       diophantine,
+                                       divisible,
+                                       equivalent,
+                                       find_DN,
+                                       ldescent,
+                                       length,
+                                       pairwise_prime,
+                                       partition,
+                                       power_representation,
+                                       prime_as_sum_of_two_squares,
+                                       square_factor,
+                                       sum_of_four_squares,
+                                       sum_of_three_squares,
+                                       transformation_to_DN,
+                                       transformation_to_normal)
 
-from sympy import symbols, Integer, Matrix, simplify, Subs, S, factor_list, igcd, Symbol, Add
+from sympy import (Add,
+                   factor_list,
+                   igcd,
+                   Integer,
+                   Matrix,
+                   Mul,
+                   S,
+                   simplify,
+                   Subs,
+                   Symbol,
+                   symbols)
+
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import sin
@@ -16,61 +42,38 @@ def test_input_format():
     raises(TypeError, lambda: diophantine(sin(x)))
 
 def test_univariate():
-
     assert diop_solve((x - 1)*(x - 2)**2) == set([(Integer(1),), (Integer(2),)])
     assert diop_solve((x - 1)*(x - 2)) == set([(Integer(1),), (Integer(2),)])
 
 
 def test_linear():
-
-    def verify(eq, param=symbols("t", Integer=True)):
-        eq = eq.expand(force=True)
-        var = list(eq.free_symbols)
-        var = sorted(var, key=Symbol.sort_key)
-        coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-        solutions = diop_solve(eq, param)
-
-        if len(var) < len(coeff):
-            c = -coeff[Integer(1)]
-        else:
-            c = 0
-
-        gcd = 0
-        for v in var:
-            gcd = igcd(gcd, coeff[v])
-
-        # The equation
-        # a_0*x_0 + ... + a_n*x_n == c
-        # has no solutions if and only if gcd(a_0, ..., a_n) does not divide c.
-        if not c % gcd == 0:
-            for solution in solutions:
-                assert solution == None
-
-        # and has infinitely many solutions otherwise.
-        else:
-            assert c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
-
-    verify(y + x)
-    verify(y + x + 0)
-    verify(y + x - 0)
-    verify(3*y + 2*x - 5)
-    verify(2*x - 3*y - 5)
-    verify(-2*x - 3*y - 5)
-    verify(7*x + 5*y)
-    verify(2*x + 4*y)
-    verify(4*x + 6*y - 4)
-    verify(4*x + 6*y - 3)
-    verify(4*x + 3*y -4*z + 5)
-    verify(4*x + 2*y + 8*z - 5)
-    verify(5*x + 7*y - 2*z - 6)
-    verify(3*x - 6*y + 12*z - 9)
-    verify(x + 3*y - 4*z + w - 6)
-    verify(2*w + 3*x + 5*y + 7*z + 11*t + 13*X + 17*Y + 19*Z - 23)
-    verify(2*w + 4*x + 6*y + 8*z + 10*t + 12*X + 14*Y + 16*Z - 1)
+    assert check_linear(x)
+    assert check_linear(1*x)
+    assert check_linear(3*x)
+    assert check_linear(x + 1)
+    assert check_linear(2*x + 1)
+    assert check_linear(y + x)
+    assert check_linear(y + x + 0)
+    assert check_linear(y + x - 0)
+    assert check_linear(0*x - y - 5)
+    assert check_linear(3*y + 2*x - 5)
+    assert check_linear(2*x - 3*y - 5)
+    assert check_linear(-2*x - 3*y - 5)
+    assert check_linear(7*x + 5*y)
+    assert check_linear(2*x + 4*y)
+    assert check_linear(4*x + 6*y - 4)
+    assert check_linear(4*x + 6*y - 3)
+    assert check_linear(0*x + 3*y - 4*z + 5)
+    assert check_linear(4*x + 3*y - 4*z + 5)
+    assert check_linear(4*x + 2*y + 8*z - 5)
+    assert check_linear(5*x + 7*y - 2*z - 6)
+    assert check_linear(3*x - 6*y + 12*z - 9)
+    assert check_linear(x + 3*y - 4*z + w - 6)
+    assert check_linear(2*w + 3*x + 5*y + 7*z + 11*t + 13*X + 17*Y + 19*Z - 23)
+    assert check_linear(2*w + 4*x + 6*y + 8*z + 10*t + 12*X + 14*Y + 16*Z - 1)
 
 
 def test_quadratic_simple_hyperbolic_case():
-
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
         set([(-Integer(133), -Integer(11)), (Integer(5), -Integer(57))])
@@ -87,7 +90,6 @@ def test_quadratic_simple_hyperbolic_case():
 
 
 def test_quadratic_elliptical_case():
-
     # Elliptical case: B**2 - 4AC < 0
     # Two test cases highlighted require lot of memory due to quadratic_congruence() method.
     # This above method should be replaced by Pernici's square_mod() method when his PR gets merged.
@@ -101,7 +103,6 @@ def test_quadratic_elliptical_case():
 
 
 def test_quadratic_parabolic_case():
-
     # Parabolic case: B**2 - 4AC = 0
     assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
         set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
@@ -115,7 +116,6 @@ def test_quadratic_parabolic_case():
 
 
 def test_quadratic_perfect_square():
-
     # B**2 - 4*A*C > 0
     # B**2 - 4*A*C is a perfect square
     assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
@@ -136,7 +136,6 @@ def test_quadratic_perfect_square():
 
 
 def test_quadratic_non_perfect_square():
-
     # B**2 - 4*A*C is not a perfect square
     # Used check_solutions() since the solutions are complex expressions involving
     # square roots and exponents
@@ -145,12 +144,13 @@ def test_quadratic_non_perfect_square():
     assert check_solutions(x**2 - x*y - y**2 - 3*y)
     assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
 
+
 def test_issue_9106():
     assert check_integrality(-48 - 2*x*(3*x - 1) + y*(3*y - 1))
 
+
 @slow
 def test_quadratic_non_perfect_slow():
-
     assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23)
     # This leads to very large numbers.
     # assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15)
@@ -160,7 +160,6 @@ def test_quadratic_non_perfect_slow():
 
 
 def test_DN():
-
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
     # http://www.jpr2718.org/pell.pdf
@@ -233,7 +232,6 @@ def test_DN():
 
 
 def test_bf_pell():
-
     assert diop_bf_DN(13, -4) == [(3, 1), (-3, 1), (36, 10)]
     assert diop_bf_DN(13, 27) == [(12, 3), (-12, 3), (40, 11), (-40, 11)]
     assert diop_bf_DN(167, -2) == []
@@ -244,7 +242,6 @@ def test_bf_pell():
 
 
 def test_length():
-
     assert length(-2, 4, 5) == 3
     assert length(-5, 4, 17) == 4
     assert length(0, 4, 13) == 6
@@ -283,7 +280,6 @@ def is_pell_transformation_ok(eq):
 
 
 def test_transformation_to_pell():
-
     assert is_pell_transformation_ok(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y - 14)
     assert is_pell_transformation_ok(-17*x**2 + 19*x*y - 7*y**2 - 5*x - 13*y - 23)
     assert is_pell_transformation_ok(x**2 - y**2 + 17)
@@ -295,7 +291,6 @@ def test_transformation_to_pell():
 
 
 def test_find_DN():
-
     assert find_DN(x**2 - 2*x - y**2) == (1, 1)
     assert find_DN(x**2 - 3*y**2 - 5) == (3, 5)
     assert find_DN(x**2 - 2*x*y - 4*y**2 - 7) == (5, 7)
@@ -306,7 +301,6 @@ def test_find_DN():
 
 
 def test_ldescent():
-
     # Equations which have solutions
     u = ([(13, 23), (3, -11), (41, -113), (4, -7), (-7, 4), (91, -3), (1, 1), (1, -1),
         (4, 32), (17, 13), (123689, 1), (19, -570)])
@@ -316,7 +310,6 @@ def test_ldescent():
 
 
 def test_diop_ternary_quadratic_normal():
-
     assert check_solutions(234*x**2 - 65601*y**2 - z**2)
     assert check_solutions(23*x**2 + 616*y**2 - z**2)
     assert check_solutions(5*x**2 + 4*y**2 - z**2)
@@ -332,7 +325,6 @@ def test_diop_ternary_quadratic_normal():
 
 
 def is_normal_transformation_ok(eq):
-
     A = transformation_to_normal(eq)
     X, Y, Z = A*Matrix([x, y, z])
     simplified = _mexpand(Subs(eq, (x, y, z), (X, Y, Z)).doit())
@@ -346,7 +338,6 @@ def is_normal_transformation_ok(eq):
 
 
 def test_transformation_to_normal():
-
     assert is_normal_transformation_ok(x**2 + 3*y**2 + z**2 - 13*x*y - 16*y*z + 12*x*z)
     assert is_normal_transformation_ok(x**2 + 3*y**2 - 100*z**2)
     assert is_normal_transformation_ok(x**2 + 23*y*z)
@@ -378,7 +369,6 @@ def test_diop_ternary_quadratic():
 
 
 def test_pairwise_prime():
-
     assert pairwise_prime(6, 10, 15) == (5, 3, 2)
     assert pairwise_prime(2, 3, 5) == (2, 3, 5)
     assert pairwise_prime(1, 4, 7) == (1, 4, 7)
@@ -389,7 +379,6 @@ def test_pairwise_prime():
 
 
 def test_square_factor():
-
     assert square_factor(1) == square_factor(-1) == 1
     assert square_factor(0) == 1
     assert square_factor(5) == square_factor(-5) == 1
@@ -403,7 +392,6 @@ def test_square_factor():
 
 
 def test_parametrize_ternary_quadratic():
-
     assert check_solutions(x**2 + y**2 - z**2)
     assert check_solutions(x**2 + 2*x*y + z**2)
     assert check_solutions(234*x**2 - 65601*y**2 - z**2)
@@ -459,7 +447,6 @@ def test_diophantine():
 
 
 def test_general_pythagorean():
-
     from sympy.abc import a, b, c, d, e
 
     assert check_solutions(a**2 + b**2 + c**2 - d**2)
@@ -472,7 +459,6 @@ def test_general_pythagorean():
 
 
 def test_diop_general_sum_of_squares():
-
     from sympy.abc import a, b, c, d, e, f, g, h, i
 
     assert check_solutions(a**2 + b**2 + c**2 - 5)
@@ -489,7 +475,6 @@ def test_diop_general_sum_of_squares():
 
 
 def test_partition():
-
     tests = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     for test in tests:
@@ -515,14 +500,12 @@ def test_partition():
 
 
 def test_prime_as_sum_of_two_squares():
-
     for i in [5, 13, 17, 29, 37, 41, 2341, 3557, 34841, 64601]:
         a, b = prime_as_sum_of_two_squares(i)
         assert a**2 + b**2 == i
 
 
 def test_sum_of_three_squares():
-
     for i in [0, 1, 2, 34, 123, 34304595905, 34304595905394941, 343045959052344,
               800, 801, 802, 803, 804, 805, 806]:
         a, b, c = sum_of_three_squares(i)
@@ -533,7 +516,6 @@ def test_sum_of_three_squares():
 
 
 def test_sum_of_four_squares():
-
     from random import randint
 
     for i in range(10):
@@ -543,7 +525,6 @@ def test_sum_of_four_squares():
 
 
 def test_power_representation():
-
     tests = [(1729, 3, 2), (234, 2, 4), (2, 1, 2), (3, 1, 3), (5, 2, 2), (12352, 2, 4),
              (32760, 2, 3)]
 
@@ -580,7 +561,6 @@ def test_assumptions():
     assert diof == set([(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)])
 
 
-
 def check_solutions(eq):
     """
     Determines whether solutions returned by diophantine() satisfy the original
@@ -609,6 +589,59 @@ def check_solutions(eq):
                 break
 
     return okay
+
+
+def check_linear(eq, param=symbols("t", Integer=True)):
+    """
+    Determines whether solutions returned by diop_solve() satisfy the
+    original equation.
+    """
+
+    eq = eq.expand(force=True)
+
+    var = []
+    coeff = {}
+    diop_type = None
+
+    if type(eq) is Add:
+        var = list(eq.free_symbols)
+        var.sort(key=default_sort_key)
+        coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
+
+    elif type(eq) is Mul:
+        var.append(eq.as_two_terms()[1])
+        coeff = {}
+        coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
+
+    elif type(eq) is Symbol:
+        var.append(eq)
+        coeff = {}
+        coeff[eq] = Integer(1)
+        
+    solutions = diop_solve(eq, param)
+
+    if len(var) == 0:
+        return solutions == None
+
+    if Integer(1) in coeff:
+        c = -coeff[Integer(1)]
+    else:
+        c = 0
+    # The equation
+    # a_0*x_0 + ... + a_n*x_n == c
+    # has no integer solutions if and only if gcd(a_0, ..., a_n) does not divide c.
+    gcd = 0
+    for v in var:
+        gcd = igcd(gcd, coeff[v])
+
+    if not divisible(c, gcd):
+        return all(solution == None for solution in solutions)
+
+    # and has infinitely many solutions otherwise.
+    else:
+        print(Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))]))
+        return c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
+
 
 def check_integrality(eq):
     """
