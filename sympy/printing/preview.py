@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 from os.path import join
 import tempfile
 import shutil
-from io import BytesIO
+from io import BytesIO, open
 
 try:
     from subprocess import STDOUT, CalledProcessError
