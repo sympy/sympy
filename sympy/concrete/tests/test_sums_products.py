@@ -3,7 +3,7 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le, Indexed,
-    Idx)
+    Idx, IndexedBase)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -833,7 +833,11 @@ def test_matrix_sum():
     assert Sum(A,(n,0,3)).doit() == Matrix([[0, 4], [6, 0]])
 
 
-def test_issue_9594():
+def test_indexed_idx_sum():
     i = symbols('i', cls=Idx)
     r = Indexed('r', i)
     Sum(r, (i, 0, 3)).doit() == [r.subs(i, j) for j in range(4)]
+
+    k = Idx('k', range=(1, 3))
+    A = IndexedBase('A')
+    Sum(A[k], k).doit() == [A[j] for j in range(1, 4)]

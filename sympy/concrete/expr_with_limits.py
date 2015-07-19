@@ -26,8 +26,14 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, (Symbol, Idx)):
+        if isinstance(V, Symbol):
             limits.append(Tuple(V))
+            continue
+        elif isinstance(V, Idx):
+            if V.lower is None or V.upper is None:
+                limits.append(Tuple(V))
+            else:
+                limits.append(Tuple(V, V.lower, V.upper))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
