@@ -1747,11 +1747,48 @@ class RingSeriesBase(object):
     def __mul__(self, other):
         return RingMul(self, other)
 
+    def __rmul__(self, other):
+        return RingMul(other, self)
+
+    def __add__(self, other):
+        return RingAdd(self, other)
+
+    def __radd__(self, other):
+        return RingAdd(other, self)
+
 
 class RingMul(RingSeriesBase):
     def __init__(self, *args):
-        self.args = [a for a in args]
+        self.args = []
+        for a in args:
+            if isinstance(a, RingMul):
+                self.args += a.args
+            else:
+                self.args.append(a)
 
+    def __repr__(self):
+        smul = "("
+        for a in self.args[:-1]:
+            smul += "%s * " % a;
+        smul += "%s)" % self.args[-1]
+        return smul
+
+
+class RingAdd(RingSeriesBase):
+    def __init__(self, *args):
+        self.args = []
+        for a in args:
+            if isinstance(a, RingAdd):
+                self.args += a.args
+            else:
+                self.args.append(a)
+
+    def __repr__(self):
+        smul = "("
+        for a in self.args[:-1]:
+            smul += "%s + " % a;
+        smul += "%s)" % self.args[-1]
+        return smul
 
 class RingSeries(RingSeriesBase):
     """Sparse Multivariate Ring Series"""
@@ -1761,8 +1798,7 @@ class RingSeries(RingSeriesBase):
         self.degree = degree
 
     def __repr__(self):
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, self.series,
-            self.ring.domain, self.ring.gens)
+        return "%s(%s)" % (self.__class__.__name__, self.series)
 
     def __pos__(self):
         return self
@@ -1774,14 +1810,14 @@ class RingSeries(RingSeriesBase):
         if self.ring == other.ring:
             return self.new(self.series + other.series, self.ring)
         else:
-            raise DomainError("Both the series should be defined on the same"
+            raise DomainError("Both the series should be defined on the same "
                 "ring")
 
     def __mul__(self, other):
         if self.ring == other.ring:
             return self.new(self.series * other.series, self.ring)
         else:
-            raise DomainError("Both the series should be defined on the same"
+            raise DomainError("Both the series should be defined on the same "
                 "ring")
 
     def __sub__(self, other):
@@ -1822,11 +1858,10 @@ def min_pow(func, x):
     while series == 0:
         series = func._eval(x, n)
         n *= 2
-    return min(series, key=lambda x: x[i])[i]
+    return min(series, key=lambda x: x[i])[i] + 1
 
 
 def taylor_series(series, x, prec=5, x0=0):
-    print(isinstance(series, RingSeriesBase))
     if isinstance(series, RingSeriesBase):
         if isinstance(series, RingFunction):
             if isinstance(series.ring_series, RingSeries):
@@ -1842,8 +1877,19 @@ def taylor_series(series, x, prec=5, x0=0):
             sum_pows = sum(min_pows)
             p = 1
             for arg, expv in zip(args, min_pows):
-                p *= (arg._eval(x, prec - sum_pows + expv)/x**expv)
+                p *= (arg._eval(x, prec - sum_pows + expv))
+            p = rs_trunc(p, x, prec)
             return RingSeries(p)
+        elif isinstance(series, RingAdd):
+            args = series.args
+            for i in range(1, 5):
+                p = 0
+                _prec = prec*i
+                for a in args:
+                    p += a._eval(x, _prec)
+                if p.degree() >= prec - 1:
+                    break
+            return RingSeries(rs_trunc(p, x, prec))
         else:
             return series
     else:
