@@ -836,8 +836,8 @@ def test_matrix_sum():
 def test_indexed_idx_sum():
     i = symbols('i', cls=Idx)
     r = Indexed('r', i)
-    assert Sum(r, (i, 0, 3)).doit() == [r.subs(i, j) for j in range(4)]
+    assert Sum(r, (i, 0, 3)).doit() == sum([Indexed('r', Idx(j)) for j in range(4)])
 
     k = Idx('k', range=(1, 3))
     A = IndexedBase('A')
-    assert Sum(A[k], k).doit() == [A[j] for j in range(1, 4)]
+    assert Sum(A[k], k).doit() == sum([A[Idx(j, (1, 3))] for j in range(1, 4)])
