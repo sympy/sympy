@@ -650,12 +650,17 @@ class ComplexPlane(Set):
         # Polar Form
         elif polar is True:
             new_sets = []
+
+            # sets is Union of ProductSets
             if not sets.is_ProductSet:
                 for k in sets.args:
                     new_sets.append(k)
+
+            # sets is ProductSets
             else:
                 new_sets.append(sets)
 
+            # Normalize input theta
             for k, v in enumerate(new_sets):
                 from sympy.sets import ProductSet
                 new_sets[k] = ProductSet(v.args[0],
