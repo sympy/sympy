@@ -11,6 +11,7 @@ from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import u, range
+from sympy.core.add import Add
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -546,6 +547,8 @@ class PrettyPrinter(Printer):
         e, z, z0, dir = l.args
 
         E = self._print(e)
+        if isinstance(e, Add):
+            E = prettyForm(*E.parens('(', ')'))
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
