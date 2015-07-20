@@ -3101,6 +3101,14 @@ def test_pretty_sets():
     assert upretty(Range(-2, -oo, -1)) == ucode_str
 
 
+def test_pretty_CondSet():
+    from sympy import CondSet
+    ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
+    ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
+    assert pretty(CondSet(Lambda(x, Eq(sin(x), 0)), S.Reals)) == ascii_str
+    assert upretty(CondSet(Lambda(x, Eq(sin(x), 0)), S.Reals)) == ucode_str
+
+
 def test_ProductSet_paranthesis():
     from sympy import Interval, Union, FiniteSet
     ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')

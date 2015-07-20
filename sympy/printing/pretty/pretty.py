@@ -1510,6 +1510,23 @@ class PrettyPrinter(Printer):
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
+    def _print_CondSet(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+            # using _and because and is a keyword and it is bad practice to
+            # overwrite them
+            _and = u("\N{LOGICAL AND}")
+        else:
+            inn = 'in'
+            _and = 'and'
+        variables = self._print_seq(ts.lamda.variables)
+        cond = self._print(ts.lamda.expr)
+        bar = self._print("|")
+        base = self._print(ts.base_set)
+
+        return self._print_seq((variables, bar, variables, inn,
+                                base, _and, cond), "{", "}", ' ')
+
     def _print_Contains(self, e):
         var, set = e.args
         if self._use_unicode:
