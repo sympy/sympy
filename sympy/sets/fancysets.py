@@ -635,14 +635,16 @@ class ComplexPlane(Set):
         # Rectangular Form
         if polar is False:
 
-            if all(_a.is_FiniteSet and len(_a) == 1 for _a in sets.args) and \
-                  (len(sets.args) == 2):
+            if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
 
-                # ** Single Element in the Complex Plane. **
-                # For Cases like ComplexPlane({2}*{3}), which
-                # should return {2 + 3*I}
-                complex_num = sets.args[0].args[0] + I*sets.args[1].args[0]
-                obj = FiniteSet(complex_num)
+                # ** ProductSet of FiniteSets in the Complex Plane. **
+                # For Cases like ComplexPlane({2, 4}*{3}), It
+                # would return {2 + 3*I, 4 + 3*I}
+                complex_num = []
+                for x in sets.args[0]:
+                    for y in sets.args[1]:
+                        complex_num.append(x + I*y)
+                obj = FiniteSet(*complex_num)
 
             else:
                 obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
