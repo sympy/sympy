@@ -28,7 +28,7 @@ class CondSet(Set):
     def __new__(cls, lamda, base_set):
         return Basic.__new__(cls, lamda, base_set)
 
-    cond = property(lambda self: self.args[0])
+    lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
 
     def _is_multivariate(self):
