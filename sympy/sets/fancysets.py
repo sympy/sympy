@@ -634,7 +634,18 @@ class ComplexPlane(Set):
 
         # Rectangular Form
         if polar is False:
-            obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
+
+            if all(_a.is_FiniteSet and len(_a) == 1 for _a in sets.args) and \
+                  (len(sets.args) == 2):
+
+                # ** Single Element in the Complex Plane. **
+                # For Cases like ComplexPlane({2}*{3}), which
+                # should return {2 + 3*I}
+                complex_num = sets.args[0].args[0] + I*sets.args[1].args[0]
+                obj = FiniteSet(complex_num)
+
+            else:
+                obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
 
         # Polar Form
         elif polar is True:
