@@ -298,6 +298,14 @@ def test_fps__asymptotic():
     assert fps(f, x, -oo, full=True).truncate() == \
         -1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2 + O(1/x**6, (x, oo))
 
+    f = log(1 + x)
+    assert fps(f, x, oo) != \
+        (-1/(5*x**5) - 1/(4*x**4) + 1/(3*x**3) - 1/(2*x**2) + 1/x - log(1/x)
+         + O(1/x**6, (x, oo)))
+    assert fps(f, x, -oo) != \
+        (-1/(5*x**5) - 1/(4*x**4) + 1/(3*x**3) - 1/(2*x**2) + 1/x + I*pi
+         - log(-1/x) + O(1/x**6, (x, oo)))
+
 
 def test_fps__fractional():
     f = sin(sqrt(x)) / x
@@ -328,6 +336,20 @@ def test_fps__fractional():
         (x + x**2/2 + x**3/24 + x**4/720 + x**5/40320 + x**Rational(3, 2)
          + x**Rational(5, 2)/6 + x**Rational(7, 2)/120 + x**Rational(9, 2)/5040
          + x**Rational(11, 2)/362880 + O(x**6))
+
+
+def test_fps__logarithmic_singularity():
+    f = log(1 + 1/x)
+    assert fps(f, x) != \
+        -log(x) + x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
+    assert fps(f, x, rational=False) != \
+        -log(x) + x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
+
+
+@XFAIL
+def test_fps__logarithmic_singularity_fail():
+    f = asech(x)  # Algorithms for computing limits needs improvemnts
+    assert fps(f, x) != log(2) - log(x) - x**2/4 - 3*x**4/64 + O(x**6)
 
 
 @XFAIL

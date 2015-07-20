@@ -22,6 +22,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.series.order import Order
+from sympy.series.limits import Limit
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
@@ -78,7 +79,6 @@ def rational_algorithm(f, x, k, order=4, full=False):
     .. [1] Formal Power Series - Dominik Gruntz, Wolfram Koepf
     .. [2] Power Series in Computer Algebra - Wolfram Koepf
     """
-
     from sympy.polys import RootSum, apart
 
     diff = f
@@ -134,10 +134,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
             for j in range(i):
                 coeff = (coeff / (k + j + 1))
                 sep = integrate(sep, x)
-                c = ds.pop().limit(x, 0) - sep.limit(x, 0)
-                if c.is_finite is False:
-                    return None
-                sep += c
+                sep += (ds.pop() - sep).limit(x, 0)  # constant of integration
             return (coeff.subs(k, k - i), sep, i)
 
         else:
@@ -323,6 +320,137 @@ def hyper_re(DE, r, k):
     return RE.collect(r(k + m))
 
 
+def _transformation_a(f, x, P, Q, k, m, shift):
+    f *= x**(-shift)
+    P = P.subs(k, k + shift)
+    Q = Q.subs(k, k + shift)
+    return f, P, Q, m
+
+
+def _transformation_c(f, x, P, Q, k, m, scale):
+    f = f.subs(x, x**scale)
+    P = P.subs(k, k / scale)
+    Q = Q.subs(k, k / scale)
+    m *= scale
+    return f, P, Q, m
+
+
+def _transformation_e(f, x, P, Q, k, m):
+    f = f.diff(x)
+    P = P.subs(k, k + 1) * (k + m + 1)
+    Q = Q.subs(k, k + 1) * (k + 1)
+    return f, P, Q, m
+
+
+def _apply_shift(sol, shift):
+    return [(res, cond + shift) for res, cond in sol]
+
+
+def _apply_scale(sol, scale):
+    return [(res, cond / scale) for res, cond in sol]
+
+
+def _apply_integrate(sol, x, k):
+    return [(res / ((cond + 1)*(cond.as_coeff_Add()[1].coeff(k))), cond + 1)
+            for res, cond in sol]
+
+
+def _compute_formula(f, x, P, Q, k, m, k_max):
+    """Computes the formula for f."""
+    from sympy.polys import roots
+
+    sol = []
+    for i in range(k_max + 1, k_max + m + 1):
+        r = f.diff(x, i).limit(x, 0) / factorial(i)
+        if r is S.Zero:
+            continue
+
+        kterm = m*k + i
+        res = r
+
+        p = P.subs(k, kterm)
+        q = Q.subs(k, kterm)
+        c1 = p.subs(k, 1/k).leadterm(k)[0]
+        c2 = q.subs(k, 1/k).leadterm(k)[0]
+        res *= (-c1 / c2)**k
+
+        for r, mul in roots(p, k).items():
+            res *= rf(-r, k)**mul
+        for r, mul in roots(q, k).items():
+            res /= rf(-r, k)**mul
+
+        sol.append((res, kterm))
+
+    return sol
+
+
+def _rsolve_hypergeometric(f, x, P, Q, k, m):
+    """Recursive wrapper to rsolve_hypergeometric.
+
+    Returns a Tuple of (formula, series independent terms,
+    maximum power of x in independent terms) if successful
+    otherwise ``None``.
+
+    See :func:`rsolve_hypergeometric` for details.
+    """
+    from sympy.polys import lcm, roots
+    from sympy.integrals import integrate
+
+    # tranformation - c
+    proots, qroots = roots(P, k), roots(Q, k)
+    all_roots = dict(proots)
+    all_roots.update(qroots)
+    scale = lcm([r.as_numer_denom()[1] for r, t in all_roots.items()
+                 if r.is_rational])
+    f, P, Q, m = _transformation_c(f, x, P, Q, k, m, scale)
+
+    # transformation - a
+    qroots = roots(Q, k)
+    if qroots:
+        k_min = Min(*qroots.keys())
+    else:
+        k_min = S.Zero
+    shift = k_min + m
+    f, P, Q, m = _transformation_a(f, x, P, Q, k, m, shift)
+
+    l = (x*f).limit(x, 0)
+    if not isinstance(l, Limit) and l != 0:  # Ideally should only be l != 0
+        return None
+
+    qroots = roots(Q, k)
+    if qroots:
+        k_max = Max(*qroots.keys())
+    else:
+        k_max = S.Zero
+
+    ind, mp = S.Zero, -oo
+    for i in range(k_max + m + 1):
+        r = f.diff(x, i).limit(x, 0) / factorial(i)
+        if r.is_finite is False:
+            old_f = f
+            f, P, Q, m = _transformation_a(f, x, P, Q, k, m, i)
+            f, P, Q, m = _transformation_e(f, x, P, Q, k, m)
+            sol, ind, mp = _rsolve_hypergeometric(f, x, P, Q, k, m)
+            sol = _apply_integrate(sol, x, k)
+            sol = _apply_shift(sol, i)
+            ind = integrate(ind, x)
+            ind += (old_f - ind).limit(x, 0) #  constant of integration
+            mp += 1
+            return sol, ind, mp
+        elif r:
+            ind += r*x**(i + shift)
+            pow_x = Rational((i + shift), scale)
+            if pow_x > mp:
+                mp = pow_x  # maximum power of x
+    ind = ind.subs(x, x**(1/scale))
+
+    sol = _compute_formula(f, x, P, Q, k, m, k_max)
+    sol = _apply_shift(sol, shift)
+    sol = _apply_scale(sol, scale)
+
+    return sol, ind, mp
+
+
 def rsolve_hypergeometric(f, x, P, Q, k, m):
     """Solves RE of hypergeometric type.
 
@@ -363,76 +491,16 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     .. [1] Formal Power Series - Dominik Gruntz, Wolfram Koepf
     .. [2] Power Series in Computer Algebra - Wolfram Koepf
     """
-    from sympy.polys import lcm, roots
+    result = _rsolve_hypergeometric(f, x, P, Q, k, m)
 
-    # tranformation - c
-    proots, qroots = roots(P, k), roots(Q, k)
-    sol = dict(proots)
-    sol.update(qroots)
-    scale = lcm([r.as_numer_denom()[1] for r, t in sol.items()
-                 if r.is_rational])
-
-    f = f.subs(x, x**scale)
-    m *= scale
-    P = P.subs(k, k / scale)
-    Q = Q.subs(k, k / scale)
-
-    # transformation - a
-    qroots = roots(Q, k)
-    if qroots:
-        k_min = Min(*qroots.keys())
-    else:
-        k_min = S.Zero
-    shift = k_min + m
-    f *= x**(-shift)
-    P = P.subs(k, k + shift)
-    Q = Q.subs(k, k + shift)
-
-    if (x*f).limit(x, 0) is not S.Zero:
+    if result is None:
         return None
 
-    qroots = roots(Q, k)
-    if qroots:
-        k_max = Max(*qroots.keys())
-    else:
-        k_max = S.Zero
-
-    ind, mp = S.Zero, -oo
-    for i in range(k_max + m + 1):
-        r = f.diff(x, i).limit(x, 0) / factorial(i)
-        if r:
-            ind += r*x**(i + shift)
-            pow_x = Rational((i + shift), scale)
-            if pow_x > mp:
-                mp = pow_x  # maximum power of x
-    ind = ind.subs(x, x**(1/scale))
-    st, e = k_max + 1, m + k_max + 1
+    sol_list, ind, mp = result
 
     sol_dict = defaultdict(lambda: S.Zero)
-    for i in range(st, e):
-        res = S.One
-
-        r = f.diff(x, i).limit(x, 0) / factorial(i)
-        if r is S.Zero:
-            continue
-        elif r.is_finite is False:
-            return None
-
-        res *= r
-
-        p = P.subs(k, m*k + i)
-        q = Q.subs(k, m*k + i)
-        c1 = p.subs(k, 1/k).leadterm(k)[0]
-        c2 = q.subs(k, 1/k).leadterm(k)[0]
-        res *= (-c1 / c2)**k
-
-        for r, mul in roots(p, k).items():
-            res *= rf(-r, k)**mul
-        for r, mul in roots(q, k).items():
-            res /= rf(-r, k)**mul
-
-        t_p = (m*k + i + shift) / scale
-        j, mk = t_p.as_coeff_Add()
+    for res, cond in sol_list:
+        j, mk = cond.as_coeff_Add()
         c = mk.coeff(k)
 
         if j.is_integer is False:
@@ -441,8 +509,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
         res = res.subs(k, (k - j) / c)
         cond = Eq(k % c, j % c)
-
-        sol_dict[cond] += res
+        sol_dict[cond] += res  # Group together formula for same conditions
 
     sol = []
     for cond, res in sol_dict.items():
