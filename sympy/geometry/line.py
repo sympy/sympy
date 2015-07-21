@@ -18,6 +18,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence
 from sympy.core.decorators import deprecated
@@ -1145,10 +1146,10 @@ class Line(LinearEntity):
             x, y = Dummy(), Dummy()
             eq = self.equation(x, y)
             if not eq.has(y):
-                return (solve(eq, x)[0] - o.x).equals(0)
+                return (list(solveset(eq, x))[0] - o.x).equals(0)
             if not eq.has(x):
-                return (solve(eq, y)[0] - o.y).equals(0)
-            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
+                return (list(solveset(eq, y))[0] - o.y).equals(0)
+            return (list(solveset(eq.subs(x, o.x), y))[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
@@ -1820,9 +1821,9 @@ class Segment(LinearEntity):
                 t = Dummy('t')
                 x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
-                    ti = solve(x - other.x, t)[0]
+                    ti = list(solveset(x - other.x, t))[0]
                 else:
-                    ti = solve(y - other.y, t)[0]
+                    ti = list(solveset(y - other.y, t))[0]
                 if ti.is_number:
                     return 0 <= ti <= 1
                 return None
