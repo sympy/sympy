@@ -17,7 +17,7 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, DiracDelta)
 from sympy.solvers.solveset import solveset
-from sympy.sets.sets import FiniteSet, ProductSet
+from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.abc import x
 
 
@@ -503,7 +503,11 @@ def given(expr, condition=None, **kwargs):
     if (isinstance(condition, Equality) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
-        results = list(solveset(condition, rv))
+
+        results = solveset(condition, rv)
+        if isinstance(results, Intersection) and results.args[0] == S.Reals:
+            results = list(results.args[1])
+
         return sum(expr.subs(rv, res) for res in results)
 
     # Get full probability space of both the expression and the condition
