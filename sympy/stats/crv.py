@@ -183,7 +183,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         # Invert CDF
         try:
             inverse_cdf = solveset(self.cdf(x) - z, x)
-            if isinstance(inverse_cdf, Intersection) and inverse_cdf.args[0] == S.Reals:
+            if isinstance(inverse_cdf, Intersection) and S.Reals in inverse_cdf.args:
                 inverse_cdf = list(inverse_cdf.args[1])
         except NotImplementedError:
             inverse_cdf = None
@@ -390,7 +390,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         gs = solveset(expr - y, self.value)
 
-        if isinstance(gs, Intersection) and gs.args[0] == S.Reals:
+        if isinstance(gs, Intersection) and S.Reals in gs.args:
             gs = list(gs.args[1])
 
         if not gs:

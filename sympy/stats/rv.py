@@ -505,7 +505,7 @@ def given(expr, condition=None, **kwargs):
         rv = tuple(condsymbols)[0]
 
         results = solveset(condition, rv)
-        if isinstance(results, Intersection) and results.args[0] == S.Reals:
+        if isinstance(results, Intersection) and S.Reals in results.args[0]:
             results = list(results.args[1])
 
         return sum(expr.subs(rv, res) for res in results)
