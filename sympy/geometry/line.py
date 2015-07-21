@@ -17,7 +17,6 @@ from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, aco
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence

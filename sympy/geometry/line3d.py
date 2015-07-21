@@ -13,7 +13,6 @@ from __future__ import division, print_function
 from sympy.core import Dummy, S, nan
 from sympy.functions.elementary.trigonometric import acos
 from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
 from sympy.solvers.solveset import solveset, linsolve
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence, range
