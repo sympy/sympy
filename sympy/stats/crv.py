@@ -15,7 +15,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
-        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
+        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities

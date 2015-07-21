@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, solve, Sum)
+        Piecewise, S, cacheit, Sum)
 from sympy.solvers.solveset import solveset
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
