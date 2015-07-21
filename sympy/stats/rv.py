@@ -16,6 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, solve, Lambda, DiracDelta)
+from sympy.solvers.solveset import solveset
 from sympy.sets.sets import FiniteSet, ProductSet
 from sympy.abc import x
 
@@ -502,7 +503,7 @@ def given(expr, condition=None, **kwargs):
     if (isinstance(condition, Equality) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
-        results = solve(condition, rv)
+        results = list(solveset(condition, rv))
         return sum(expr.subs(rv, res) for res in results)
 
     # Get full probability space of both the expression and the condition
