@@ -21,24 +21,28 @@ from sympy import S
 from sympy.core.compatibility import iterable, range
 
 
-def finite_diff_weights(order, x_list, x0):
+def finite_diff_weights(order, x_list, x0=0.):
     """
     Calculates the finite difference weights for an arbitrarily
     spaced one-dimensional grid (x_list) for derivatives at 'x0'
     of order 0, 1, ..., up to 'order' using a recursive formula.
+    Order of accuracy is at least len(x_list) - order, if x_list
+    is defined accurately.
+    
 
     Parameters
     ==========
 
-    order : int
+    order: int
         Up to what derivative order weights should be calculated.
         0 corresponds to interpolation.
     x_list: sequence
-        Strictly monotonically increasing sequence of values for
-        the independent variable.
+        Sequence of (unique) values for the independent variable.
+        It is usefull (but not necessary) to order x_list from
+        nearest to farest from x0; see examples below.
     x0: Number or Symbol
-        At what value of the independent variable the finite difference
-        weights should be generated.
+        Root or value of the independent variable for which the finite
+        difference weights should be generated. Defaults to 0.0
 
     Returns
     =======
@@ -46,45 +50,63 @@ def finite_diff_weights(order, x_list, x0):
     list
         A list of sublists, each corresponding to coefficients for
         increasing derivative order, and each containing lists of
-        coefficients for increasing accuracy.
+        coefficients for increasing subsets of x_list.
 
     Examples
     ========
 
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
-    >>> finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
+    >>> res = finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
     [[[1, 0, 0, 0],
-    [1/2, 1/2, 0, 0],
-    [3/8, 3/4, -1/8, 0],
-    [5/16, 15/16, -5/16, 1/16]],
-    [[0, 0, 0, 0], [-1, 1, 0, 0], [-1, 1, 0, 0], [-23/24, 7/8, 1/8, -1/24]]]
+      [1/2, 1/2, 0, 0],
+      [3/8, 3/4, -1/8, 0],
+      [5/16, 15/16, -5/16, 1/16]],
+     [[0, 0, 0, 0],
+      [-1, 1, 0, 0],
+      [-1, 1, 0, 0],
+      [-23/24, 7/8, 1/8, -1/24]]]
+    >>> res[0][-1]  # FD weights for 0th derivative, using full x_list
+    >>> res[1][-1]  # FD weights for 1st derivative
+    >>> res[1][-2]  # FD weights for 1st derivative, using x_list[:-1]
+    >>> res[1][-1][0]  # FD weight for 1st deriv. for x_list[0]
+    >>> res[1][-1][1]  # FD weight for 1st deriv. for x_list[1], etc.
 
-    the result is two subslists, the first is for the 0:th derivative
-    (interpolation) and the second for the first derivative (we gave
-    1 as the parameter of order so this is why we get no list for
-    a higher order derivative). Each sublist contains the most accurate
-    formula in the end (all points used).
-
-    Beware of the offset in the lower accuracy formulae when looking at a
-    centered difference:
+    Each sublist contains the most accurate formula at the end.
+    Note, that in the above example res[1][1] is the same as res[1][2].
+    Since res[1][2] has an order of accuracy of
+    len(x_list[:3]) - order = 3 - 1 = 2, the same is true for res[1][1]!
 
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
-    >>> finite_diff_weights(1, [-S(5)/2, -S(3)/2, -S(1)/2, S(1)/2,
-    ...    S(3)/2, S(5)/2], 0) #doctest: +NORMALIZE_WHITESPACE
-    [[[1, 0, 0, 0, 0, 0],
-      [-3/2, 5/2, 0, 0, 0, 0],
-      [3/8, -5/4, 15/8, 0, 0, 0],
-      [1/16, -5/16, 15/16, 5/16, 0, 0],
-      [3/128, -5/32, 45/64, 15/32, -5/128, 0],
-      [3/256, -25/256, 75/128, 75/128, -25/256, 3/256]],
-     [[0, 0, 0, 0, 0, 0],
-      [-1, 1, 0, 0, 0, 0],
-      [1, -3, 2, 0, 0, 0],
-      [1/24, -1/8, -7/8, 23/24, 0, 0],
-      [0, 1/24, -9/8, 9/8, -1/24, 0],
-      [-3/640, 25/384, -75/64, 75/64, -25/384, 3/640]]]
+    >>> res = finite_diff_weights(1, [S(0), S(1), -S(1), S(2), -S(2)], 0)[1]
+    [[0, 0, 0, 0, 0],
+     [-1, 1, 0, 0, 0],
+     [0, 1/2, -1/2, 0, 0],
+     [-1/2, 1, -1/3, -1/6, 0],
+     [0, 2/3, -2/3, -1/12, 1/12]]
+     >>> res[0]  # no approximation possible, using x_list[0] only
+     >>> res[1]  # classic forward step approximation
+     >>> res[2]  # classic centered approximation
+     >>> res[3:]  # higher order approximations
+
+    Let us compare this to a differently defined x_list. Pay attention to
+    foo[i][k] corresponding to the gridpoint defined by x_list[k].
+
+    >>> from sympy import S
+    >>> from sympy.calculus import finite_diff_weights
+    >>> foo = finite_diff_weights(1, [-S(2), -S(1), S(0), S(1), S(2)], 0)[1]
+    [[0, 0, 0, 0, 0],
+     [-1, 1, 0, 0, 0],
+     [1/2, -2, 3/2, 0, 0],
+     [1/6, -1, 1/2, 1/3, 0],
+     [1/12, -2/3, 0, 2/3, -1/12]]
+     >>> foo[1]  # not the same and of lower accuracy as res[1]!
+     >>> foo[2]  # classic double backward step approximation
+     >>> foo[4]  # the same as res[4]
+     
+     Note that, unless you plan on using approximations based on subsets of x_list,
+     the order of gridpoints does not matter.
 
 
     The capability to generate weights at arbitrary points can be
@@ -107,11 +129,13 @@ def finite_diff_weights(order, x_list, x0):
     Notes
     =====
 
-    If weights for a finite difference approximation
-    of the 3rd order derivative is wanted, weights for 0th, 1st
-    and 2nd order are calculated "for free", so are formulae using
-    fewer and fewer of the parameters. This is something one can
-    take advantage of to save computational cost.
+    If weights for a finite difference approximation of 3rd order
+    derivative is wanted, weights for 0th, 1st and 2nd order are
+    calculated "for free", so are formulae using subsets of x_list.
+    This is something one can take advantage of to save computational cost.
+    Be aware that one should define x_list from nearest to farest from
+    x_list. If not, subsets of x_list will yield poorer approximations, 
+    which might not grand an order of accuracy of len(x_list) - order.
 
     See also
     ========
@@ -156,7 +180,7 @@ def finite_diff_weights(order, x_list, x0):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0):
+def apply_finite_diff(order, x_list, y_list, x0=0.):
     """
     Calculates the finite difference approximation of
     the derivative of requested order at x0 from points
@@ -168,14 +192,13 @@ def apply_finite_diff(order, x_list, y_list, x0):
     order: int
         order of derivative to approximate. 0 corresponds to interpolation.
     x_list: sequence
-        Strictly monotonically increasing sequence of values for
-        the independent variable.
+        Sequence of (unique) values for the independent variable.
     y_list: sequence
         The function value at corresponding values for the independent
         variable in x_list.
     x0: Number or Symbol
         At what value of the independent variable the derivative should be
-        evaluated.
+        evaluated. Defaults to 0.0.
 
     Returns
     =======
