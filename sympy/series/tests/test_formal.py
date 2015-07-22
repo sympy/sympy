@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf)
+                   airyai, acos, acosh, gamma, erf, asech)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -164,13 +164,13 @@ def test_fps__rational():
 
     f = 1 / ((x - 1)**2 * (x - 2))
     assert fps(f, x).truncate() == \
-        (-Rational(1, 2) - 5*x/4 - 17*x**2/8 - 49*x**3/16 - 129*x**4/32
-         - 321*x**5/64 + O(x**6))
+        (-Rational(1, 2) - 5*x/4 - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
+         321*x**5/64 + O(x**6))
 
     f = (1 + x + x**2 + x**3) / ((x - 1) * (x - 2))
     assert fps(f, x).truncate() == \
-        (Rational(1, 2) + 5*x/4 + 17*x**2/8 + 49*x**3/16 + 113*x**4/32
-         + 241*x**5/64 + O(x**6))
+        (Rational(1, 2) + 5*x/4 + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
+         241*x**5/64 + O(x**6))
 
     f = x / (1 - x - x**2)
     assert fps(f, x, full=True).truncate() == \
@@ -185,23 +185,22 @@ def test_fps__rational():
         x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
     assert fps(f, x, dir=1).truncate() == fps(f, x, dir=-1).truncate()
     assert fps(f, x, 2).truncate() == \
-        (log(3) - Rational(2, 3) - (x - 2)**2/18 + (x - 2)**3/81
-         - (x - 2)**4/324 + (x - 2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
+        (log(3) - Rational(2, 3) - (x - 2)**2/18 + (x - 2)**3/81 -
+         (x - 2)**4/324 + (x - 2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
     assert fps(f, x, 2, dir=-1).truncate() == \
-        (log(3) - Rational(2, 3) - (-x + 2)**2/18 - (-x + 2)**3/81
-         - (-x + 2)**4/324 - (-x + 2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
+        (log(3) - Rational(2, 3) - (-x + 2)**2/18 - (-x + 2)**3/81 -
+         (-x + 2)**4/324 - (-x + 2)**5/1215 + x/3 + O((x - 2)**6, (x, 2)))
 
     f = atan(x)
     assert fps(f, x, full=True).truncate() == x - x**3/3 + x**5/5 + O(x**6)
     assert fps(f, x, full=True, dir=1).truncate() == \
         fps(f, x, full=True, dir=-1).truncate()
     assert fps(f, x, 2, full=True).truncate() == \
-        (atan(2) - Rational(2, 5) - 2*(x - 2)**2/25 + 11*(x - 2)**3/375
-         - 6*(x - 2)**4/625 + 41*(x - 2)**5/15625 + x/5 + O((x - 2)**6, (x, 2)))
+        (atan(2) - Rational(2, 5) - 2*(x - 2)**2/25 + 11*(x - 2)**3/375 -
+         6*(x - 2)**4/625 + 41*(x - 2)**5/15625 + x/5 + O((x - 2)**6, (x, 2)))
     assert fps(f, x, 2, full=True, dir=-1).truncate() == \
-        (atan(2) - Rational(2, 5) - 2*(-x + 2)**2/25 - 11*(-x + 2)**3/375
-         - 6*(-x + 2)**4/625 - 41*(-x + 2)**5/15625 + x/5 + O((x - 2)**6,
-                                                              (x, 2)))
+        (atan(2) - Rational(2, 5) - 2*(-x + 2)**2/25 - 11*(-x + 2)**3/375 -
+         6*(-x + 2)**4/625 - 41*(-x + 2)**5/15625 + x/5 + O((x - 2)**6, (x, 2)))
 
     f = x*atan(x) - log(1 + x**2) / 2
     assert fps(f, x, full=True).truncate() == x**2/2 - x**4/12 + O(x**6)
@@ -300,42 +299,42 @@ def test_fps__asymptotic():
 
     f = log(1 + x)
     assert fps(f, x, oo) != \
-        (-1/(5*x**5) - 1/(4*x**4) + 1/(3*x**3) - 1/(2*x**2) + 1/x - log(1/x)
-         + O(1/x**6, (x, oo)))
+        (-1/(5*x**5) - 1/(4*x**4) + 1/(3*x**3) - 1/(2*x**2) + 1/x - log(1/x) +
+         O(1/x**6, (x, oo)))
     assert fps(f, x, -oo) != \
-        (-1/(5*x**5) - 1/(4*x**4) + 1/(3*x**3) - 1/(2*x**2) + 1/x + I*pi
-         - log(-1/x) + O(1/x**6, (x, oo)))
+        (-1/(5*x**5) - 1/(4*x**4) + 1/(3*x**3) - 1/(2*x**2) + 1/x + I*pi -
+         log(-1/x) + O(1/x**6, (x, oo)))
 
 
 def test_fps__fractional():
     f = sin(sqrt(x)) / x
     assert fps(f, x).truncate() == \
-        (1/sqrt(x) - sqrt(x)/6 + x**Rational(3, 2)/120 - x**Rational(5, 2)/5040
-         + x**Rational(7, 2)/362880 - x**Rational(9, 2)/39916800
-         + x**Rational(11, 2)/6227020800 + O(x**6))
+        (1/sqrt(x) - sqrt(x)/6 + x**Rational(3, 2)/120 -
+         x**Rational(5, 2)/5040 + x**Rational(7, 2)/362880 -
+         x**Rational(9, 2)/39916800 + x**Rational(11, 2)/6227020800 + O(x**6))
 
     f = sin(sqrt(x)) * x
     assert fps(f, x).truncate() == \
-        (x**Rational(3, 2) - x**Rational(5, 2)/6 + x**Rational(7, 2)/120
-         - x**Rational(9, 2)/5040 + x**Rational(11, 2)/362880 + O(x**6))
+        (x**Rational(3, 2) - x**Rational(5, 2)/6 + x**Rational(7, 2)/120 -
+         x**Rational(9, 2)/5040 + x**Rational(11, 2)/362880 + O(x**6))
 
     f = atan(sqrt(x)) / x**2
     assert fps(f, x).truncate() == \
-        (x**Rational(-3, 2) - x**Rational(-1, 2)/3 + x**Rational(1, 2)/5
-         - x**Rational(3, 2)/7 + x**Rational(5, 2)/9 - x**Rational(7, 2)/11
-         + x**Rational(9, 2)/13 - x**Rational(11, 2)/15 + O(x**6))
+        (x**Rational(-3, 2) - x**Rational(-1, 2)/3 + x**Rational(1, 2)/5 -
+         x**Rational(3, 2)/7 + x**Rational(5, 2)/9 - x**Rational(7, 2)/11 +
+         x**Rational(9, 2)/13 - x**Rational(11, 2)/15 + O(x**6))
 
     f = exp(sqrt(x))
     assert fps(f, x).truncate().expand() == \
-        (1 + x/2 + x**2/24 + x**3/720 + x**4/40320 + x**5/3628800 + sqrt(x)
-         + x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + x**Rational(7, 2)/5040
-         + x**Rational(9, 2)/362880 + x**Rational(11, 2)/39916800 + O(x**6))
+        (1 + x/2 + x**2/24 + x**3/720 + x**4/40320 + x**5/3628800 + sqrt(x) +
+         x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + x**Rational(7, 2)/5040 +
+         x**Rational(9, 2)/362880 + x**Rational(11, 2)/39916800 + O(x**6))
 
     f = exp(sqrt(x))*x
     assert fps(f, x).truncate().expand() == \
-        (x + x**2/2 + x**3/24 + x**4/720 + x**5/40320 + x**Rational(3, 2)
-         + x**Rational(5, 2)/6 + x**Rational(7, 2)/120 + x**Rational(9, 2)/5040
-         + x**Rational(11, 2)/362880 + O(x**6))
+        (x + x**2/2 + x**3/24 + x**4/720 + x**5/40320 + x**Rational(3, 2) +
+         x**Rational(5, 2)/6 + x**Rational(7, 2)/120 + x**Rational(9, 2)/5040 +
+         x**Rational(11, 2)/362880 + O(x**6))
 
 
 def test_fps__logarithmic_singularity():
@@ -348,14 +347,41 @@ def test_fps__logarithmic_singularity():
 
 @XFAIL
 def test_fps__logarithmic_singularity_fail():
-    f = asech(x)  # Algorithms for computing limits needs improvemnts
-    assert fps(f, x) != log(2) - log(x) - x**2/4 - 3*x**4/64 + O(x**6)
+    f = asech(x)  # Algorithms for computing limits probably needs improvemnts
+    assert fps(f, x) == log(2) - log(x) - x**2/4 - 3*x**4/64 + O(x**6)
 
 
-@XFAIL
 def test_fps__symbolic():
     f = x**n*sin(x**2)
-    assert fps(f, x).truncate() == x**n*(x**2 + O(x**6))
+    assert fps(f, x).truncate(8) == x**2*x**n - x**6*x**n/6 + O(x**(n + 8), x)
+
+    f = x**(n - 2)*cos(x)
+    assert fps(f, x).truncate() == \
+        (x**n*(-S(1)/2 + x**(-2)) + x**2*x**n/24 - x**4*x**n/720 +
+         O(x**(n + 6), x))
+
+    f = x**n*log(1 + x)
+    fp = fps(f, x)
+    k = fp.ak.variables[0]
+    assert fp.infinite == \
+        Sum((-(-1)**(-k)*x**k*x**n)/k, (k, 1, oo))
+
+    f = x**(n - 2)*sin(x) + x**n*exp(x)
+    assert fps(f, x).truncate() == \
+        (x**n*(1 + 1/x) + 5*x*x**n/6 + x**2*x**n/2 + 7*x**3*x**n/40 +
+         x**4*x**n/24 + 41*x**5*x**n/5040 + O(x**(n + 6), x))
+
+    f = (x - 2)**n*log(1 + x)
+    assert fps(f, x, 2).truncate() == \
+        ((x - 2)**n*log(3) - (x - 2)**2*(x - 2)**n/18 +
+         (x - 2)**3*(x - 2)**n/81 - (x - 2)**4*(x - 2)**n/324 +
+         (x - 2)**5*(x - 2)**n/1215 + (x/3 - S(2)/3)*(x - 2)**n +
+         O((x - 2)**(n + 6), (x, 2)))
+
+    f = x**n*atan(x)
+    assert fps(f, x, oo).truncate() == \
+        (-x**n/(5*x**5) + x**n/(3*x**3) + x**n*(pi/2 - 1/x) +
+         O(x**(n - 6), (x, oo)))
 
 
 @XFAIL
