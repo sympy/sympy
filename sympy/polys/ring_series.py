@@ -1769,7 +1769,7 @@ class RingMul(RingSeriesBase):
     def __repr__(self):
         smul = "("
         for a in self.args[:-1]:
-            smul += "%s * " % a;
+            smul += "%s * " % a
         smul += "%s)" % self.args[-1]
         return smul
 
@@ -1895,7 +1895,39 @@ def taylor_series(series, x, prec=5, x0=0):
     else:
         raise TypeError("The series should be a RingSeries")
 
-#def rs_series(expr, a, prec=5, x0=0):
-#    R, x = ring('x', EX)
-#    expr = expr.subs(a, 'x')
-#    series = R(expr)
+_convert_func = {
+        'cos': 'rs_cos',
+        'sin': 'rs_sin'
+        }
+
+def rs_min_pow(func, p, x):
+    i = p.ring.index(x)
+    series = 0
+    n = 2
+    while series == 0:
+        series = eval(func)(p, x, n)
+        n *= 2
+    return min(series, key=lambda x: x[i])[i]
+
+def rs_series(expr, a, prec):
+    args = expr.args
+    if expr.is_Mul:
+        if all([arg.is_Function for arg in args]):
+            R, a = ring('%s' % a, EX)
+            rs_funcs = [_convert_func[str(arg.func)] for arg in args]
+            rs_args = [R(arg.args[0]) for arg in args]
+            min_pows = map(rs_min_pow, rs_funcs, rs_args, [a]*len(args))
+            sum_pows = sum(min_pows)
+            p = 1
+            for func, arg, expv in zip(rs_funcs, rs_args, min_pows):
+                p *= (eval(func)(arg, a, prec - sum_pows + expv))
+            p = rs_trunc(p, a, prec)
+            return p
+    if expr.is_Add:
+        if all([arg.is_Function for arg in args]):
+            R, a = ring('%s' % a, EX)
+            series = R(0)
+            for arg in args:
+                series += eval(_convert_func[str(arg.func)])(R(arg.args[0]),
+                    a, prec)
+            return series
