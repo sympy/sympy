@@ -21,7 +21,7 @@ from sympy import S
 from sympy.core.compatibility import iterable, range
 
 
-def finite_diff_weights(order, x_list, x0=0.):
+def finite_diff_weights(order, x_list, x0=S(0)):
     """
     Calculates the finite difference weights for an arbitrarily
     spaced one-dimensional grid (x_list) for derivatives at 'x0'
@@ -180,7 +180,7 @@ def finite_diff_weights(order, x_list, x0=0.):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=0.):
+def apply_finite_diff(order, x_list, y_list, x0=S(0)):
     """
     Calculates the finite difference approximation of
     the derivative of requested order at x0 from points
