@@ -42,7 +42,7 @@ def finite_diff_weights(order, x_list, x0=S(0)):
         nearest to farest from x0; see examples below.
     x0: Number or Symbol
         Root or value of the independent variable for which the finite
-        difference weights should be generated. Defaults to 0.0
+        difference weights should be generated. Defaults to S(0).
 
     Returns
     =======
@@ -201,7 +201,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S(0)):
         variable in x_list.
     x0: Number or Symbol
         At what value of the independent variable the derivative should be
-        evaluated. Defaults to 0.0.
+        evaluated. Defaults to S(0).
 
     Returns
     =======
