@@ -28,7 +28,7 @@ def finite_diff_weights(order, x_list, x0=S(0)):
     of order 0, 1, ..., up to 'order' using a recursive formula.
     Order of accuracy is at least len(x_list) - order, if x_list
     is defined accurately.
-    
+
 
     Parameters
     ==========
@@ -58,6 +58,7 @@ def finite_diff_weights(order, x_list, x0=S(0)):
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
     >>> res = finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
+    >>> res
     [[[1, 0, 0, 0],
       [1/2, 1/2, 0, 0],
       [3/8, 3/4, -1/8, 0],
@@ -80,15 +81,16 @@ def finite_diff_weights(order, x_list, x0=S(0)):
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
     >>> res = finite_diff_weights(1, [S(0), S(1), -S(1), S(2), -S(2)], 0)[1]
+    >>> res
     [[0, 0, 0, 0, 0],
      [-1, 1, 0, 0, 0],
      [0, 1/2, -1/2, 0, 0],
      [-1/2, 1, -1/3, -1/6, 0],
      [0, 2/3, -2/3, -1/12, 1/12]]
-     >>> res[0]  # no approximation possible, using x_list[0] only
-     >>> res[1]  # classic forward step approximation
-     >>> res[2]  # classic centered approximation
-     >>> res[3:]  # higher order approximations
+    >>> res[0]  # no approximation possible, using x_list[0] only
+    >>> res[1]  # classic forward step approximation
+    >>> res[2]  # classic centered approximation
+    >>> res[3:]  # higher order approximations
 
     Let us compare this to a differently defined x_list. Pay attention to
     foo[i][k] corresponding to the gridpoint defined by x_list[k].
@@ -96,17 +98,18 @@ def finite_diff_weights(order, x_list, x0=S(0)):
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
     >>> foo = finite_diff_weights(1, [-S(2), -S(1), S(0), S(1), S(2)], 0)[1]
+    >>> foo
     [[0, 0, 0, 0, 0],
      [-1, 1, 0, 0, 0],
      [1/2, -2, 3/2, 0, 0],
      [1/6, -1, 1/2, 1/3, 0],
      [1/12, -2/3, 0, 2/3, -1/12]]
-     >>> foo[1]  # not the same and of lower accuracy as res[1]!
-     >>> foo[2]  # classic double backward step approximation
-     >>> foo[4]  # the same as res[4]
-     
-     Note that, unless you plan on using approximations based on subsets of x_list,
-     the order of gridpoints does not matter.
+    >>> foo[1]  # not the same and of lower accuracy as res[1]!
+    >>> foo[2]  # classic double backward step approximation
+    >>> foo[4]  # the same as res[4]
+
+    Note that, unless you plan on using approximations based on subsets of
+    x_list, the order of gridpoints does not matter.
 
 
     The capability to generate weights at arbitrary points can be
@@ -134,7 +137,7 @@ def finite_diff_weights(order, x_list, x0=S(0)):
     calculated "for free", so are formulae using subsets of x_list.
     This is something one can take advantage of to save computational cost.
     Be aware that one should define x_list from nearest to farest from
-    x_list. If not, subsets of x_list will yield poorer approximations, 
+    x_list. If not, subsets of x_list will yield poorer approximations,
     which might not grand an order of accuracy of len(x_list) - order.
 
     See also
