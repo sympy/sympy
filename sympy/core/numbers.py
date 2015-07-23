@@ -1619,6 +1619,12 @@ class Integer(Rational):
                 'Integer can only work with integer expressions.')
         # We only work with well-behaved integer types. This converts, for
         # example, numpy.int32 instances.
+        if ival == 1:
+            return S.One
+        if ival == -1:
+            return S.NegativeOne
+        if ival == 0:
+            return S.Zero
         obj = Expr.__new__(cls)
         obj.p = ival
         return obj
