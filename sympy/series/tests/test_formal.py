@@ -7,7 +7,7 @@ from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
 from sympy.utilities.pytest import raises, XFAIL
 
 x, y, z = symbols('x y z')
-n, m, k = symbols('n m k')
+n, m, k = symbols('n m k', integer=True)
 f, r = Function('f'), Function('r')
 
 
