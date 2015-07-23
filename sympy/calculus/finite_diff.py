@@ -68,10 +68,15 @@ def finite_diff_weights(order, x_list, x0=S(0)):
       [-1, 1, 0, 0],
       [-23/24, 7/8, 1/8, -1/24]]]
     >>> res[0][-1]  # FD weights for 0th derivative, using full x_list
+    [5/16, 15/16, -5/16, 1/16]
     >>> res[1][-1]  # FD weights for 1st derivative
+    [-23/24, 7/8, 1/8, -1/24]
     >>> res[1][-2]  # FD weights for 1st derivative, using x_list[:-1]
+    [-1, 1, 0, 0]
     >>> res[1][-1][0]  # FD weight for 1st deriv. for x_list[0]
+    -23/24
     >>> res[1][-1][1]  # FD weight for 1st deriv. for x_list[1], etc.
+    7/8
 
     Each sublist contains the most accurate formula at the end.
     Note, that in the above example res[1][1] is the same as res[1][2].
@@ -88,9 +93,13 @@ def finite_diff_weights(order, x_list, x0=S(0)):
      [-1/2, 1, -1/3, -1/6, 0],
      [0, 2/3, -2/3, -1/12, 1/12]]
     >>> res[0]  # no approximation possible, using x_list[0] only
+    [0, 0, 0, 0, 0]
     >>> res[1]  # classic forward step approximation
+    [-1, 1, 0, 0, 0]
     >>> res[2]  # classic centered approximation
+    [0, 1/2, -1/2, 0, 0]
     >>> res[3:]  # higher order approximations
+    [[-1/2, 1, -1/3, -1/6, 0], [0, 2/3, -2/3, -1/12, 1/12]]
 
     Let us compare this to a differently defined x_list. Pay attention to
     foo[i][k] corresponding to the gridpoint defined by x_list[k].
@@ -105,8 +114,11 @@ def finite_diff_weights(order, x_list, x0=S(0)):
      [1/6, -1, 1/2, 1/3, 0],
      [1/12, -2/3, 0, 2/3, -1/12]]
     >>> foo[1]  # not the same and of lower accuracy as res[1]!
+    [-1, 1, 0, 0, 0]
     >>> foo[2]  # classic double backward step approximation
+    [1/2, -2, 3/2, 0, 0]
     >>> foo[4]  # the same as res[4]
+    [1/12, -2/3, 0, 2/3, -1/12]
 
     Note that, unless you plan on using approximations based on subsets of
     x_list, the order of gridpoints does not matter.
