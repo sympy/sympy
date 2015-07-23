@@ -743,6 +743,8 @@ class Ellipse(GeometrySet):
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
+
+            # TODO: Replace solve with solveset, when this line is tested
             tangent_points = solve([slope - dydx, eq], [x, y])
 
             # handle horizontal and vertical tangent lines
@@ -873,6 +875,8 @@ class Ellipse(GeometrySet):
         norm = -1/dydx
         slope = Line(p, (x, y)).slope
         seq = slope - norm
+
+        # TODO: Replace solve with solveset, when this line is tested
         yis = solve(seq, y)[0]
         xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
         if len(xeq.free_symbols) == 1:
@@ -880,6 +884,7 @@ class Ellipse(GeometrySet):
                 # this is so much faster, it's worth a try
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
+                # TODO: Replace solve with solveset, when these lines are tested
                 xsol = _nsort(solve(xeq, x), separated=True)[0]
             points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
         else:
@@ -1124,6 +1129,8 @@ class Ellipse(GeometrySet):
         y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
+
+        # TODO: Replace solve with solveset, when this line is tested
         result = solve([seq, oeq], [x, y])
         return [Point(*r) for r in list(uniq(result))]
 
