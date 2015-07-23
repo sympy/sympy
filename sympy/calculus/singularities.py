@@ -1,4 +1,5 @@
 from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
 
 
@@ -30,4 +31,4 @@ def singularities(expr, sym):
                                   " non rational functions are not yet"
                                   " implemented")
     else:
-        return tuple(sorted(solve(simplify(1/expr), sym)))
+        return tuple(sorted(solveset(simplify(1/expr), sym)))
