@@ -42,6 +42,7 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
+    is_ComplexPlane = False
 
     @staticmethod
     def _infimum_key(expr):
@@ -517,7 +518,7 @@ class Set(Basic):
         return bool(symb)
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return None
 
@@ -654,7 +655,7 @@ class ProductSet(Set):
 
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.sets)
 
@@ -724,7 +725,7 @@ class Interval(Set, EvalfMixin):
     is_Interval = True
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return True
 
@@ -980,7 +981,7 @@ class Interval(Set, EvalfMixin):
 
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
-        from sympy.solvers import solve
+        from sympy.solvers.solveset import solveset
         from sympy.core.function import diff
         from sympy.series import limit
         from sympy.calculus.singularities import singularities
@@ -1012,7 +1013,7 @@ class Interval(Set, EvalfMixin):
             _end = f(self.end)
 
         if len(sing) == 0:
-            solns = solve(diff(expr, var), var)
+            solns = list(solveset(diff(expr, var), var))
 
             extr = [_start, _end] + [f(x) for x in solns
                                      if x.is_real and x in self]
@@ -1320,7 +1321,7 @@ class Union(Set, EvalfMixin):
             raise TypeError("Not all constituent sets are iterable")
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(set.is_real for set in self.args)
 
@@ -1373,11 +1374,13 @@ class Intersection(Set):
         if len(args) == 0:
             raise TypeError("Intersection expected at least one argument")
 
+        # args can't be ordered for Partition see issue #9608
+        if 'Partition' not in [type(a).__name__ for a in args]:
+            args = list(ordered(args, Set._infimum_key))
+
         # Reduce sets using known rules
         if evaluate:
             return Intersection.reduce(args)
-
-        args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
 
@@ -1430,8 +1433,17 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.func(*[x for x in s
-                    if all(other.contains(x) == True for other in args)])
+                other_args = [a for a in args if a != s]
+                res = FiniteSet(*[x for x in s
+                             if all(other.contains(x) == True for other in other_args)])
+                unk = [x for x in s
+                       if any(other.contains(x) not in (True, False) for other in other_args)]
+                if unk:
+                    other_sets = Intersection(*other_args)
+                    if other_sets.is_EmptySet:
+                        return EmptySet()
+                    res += Intersection(s.func(*unk), other_sets, evaluate=False)
+                return res
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1672,6 +1684,10 @@ class FiniteSet(Set, EvalfMixin):
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
+    >>> members = [1, 2, 3, 4]
+    >>> FiniteSet(*members)
+    {1, 2, 3, 4}
+
     References
     ==========
 
@@ -1819,7 +1835,7 @@ class FiniteSet(Set, EvalfMixin):
         return Or(*[Eq(symbol, elem) for elem in self])
 
     @property
-    @deprecated(useinstead="is_subset(Reals)", issue=6212, deprecated_since_version="0.7.6")
+    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
     def is_real(self):
         return all(el.is_real for el in self)
 

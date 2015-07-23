@@ -33,7 +33,8 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from __future__ import print_function, division
 
-from sympy import Integer, pi, sqrt, sympify
+from sympy import (Integer, pi, sqrt, sympify, Expr, Dummy, S, Sum, Ynm,
+        Function)
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
@@ -687,3 +688,56 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     if prec is not None:
         res = res.n(prec)
     return res
+
+
+
+class Wigner3j(Function):
+
+    def doit(self, **hints):
+        if all(obj.is_number for obj in self.args):
+            return wigner_3j(*self.args)
+        else:
+            return self
+
+def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
+    r"""
+    Returns dot product of rotational gradients of spherical harmonics.
+
+    This function returns the right hand side of the following expression:
+
+    .. math ::
+        \vec{R}Y{_j^{p}} \cdot \vec{R}Y{_l^{m}} = (-1)^{m+p}
+        \sum\limits_{k=|l-j|}^{l+j}Y{_k^{m+p}}  * \alpha_{l,m,j,p,k} *
+        \frac{1}{2} (k^2-j^2-l^2+k-j-l)
+
+
+    Arguments
+    =========
+
+    j, p, l, m .... indices in spherical harmonics (expressions or integers)
+    theta, phi .... angle arguments in spherical harmonics
+
+    Example
+    =======
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.wigner import dot_rot_grad_Ynm
+    >>> theta, phi = symbols("theta phi")
+    >>> dot_rot_grad_Ynm(3, 2, 2, 0, theta, phi).doit()
+    3*sqrt(55)*Ynm(5, 2, theta, phi)/(11*sqrt(pi))
+
+    """
+    j = sympify(j)
+    p = sympify(p)
+    l = sympify(l)
+    m = sympify(m)
+    theta = sympify(theta)
+    phi = sympify(phi)
+    k = Dummy("k")
+
+    def alpha(l,m,j,p,k):
+        return sqrt((2*l+1)*(2*j+1)*(2*k+1)/(4*pi)) * \
+                Wigner3j(j, l, k, S(0), S(0), S(0)) * Wigner3j(j, l, k, p, m, -m-p)
+
+    return (-S(1))**(m+p) * Sum(Ynm(k, m+p, theta, phi) * alpha(l,m,j,p,k) / 2 \
+        *(k**2-j**2-l**2+k-j-l), (k, abs(l-j), l+j))

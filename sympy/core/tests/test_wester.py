@@ -19,7 +19,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol)
+    residue, Derivative, logcombine, Symbol, Intersection, Union)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -70,8 +70,13 @@ def test_B1():
 
 
 def test_B2():
+    a, b, c = FiniteSet(j), FiniteSet(m), FiniteSet(j, k)
+    d, e = FiniteSet(i), FiniteSet(j, k, l)
+
     assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
-            FiniteSet(j, m, j)) == FiniteSet(j)
+            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, e))))
+    # {j} U Intersection({m}, {j, k} U Intersection({i}, {j, k, l}))
+
 
 
 def test_B3():

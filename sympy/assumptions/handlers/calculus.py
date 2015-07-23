@@ -9,52 +9,6 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
 
-class AskInfinitesimalHandler(CommonHandler):
-    """
-    Handler for key 'infinitesimal'
-    Test that a given expression is equivalent to an infinitesimal
-    number
-    """
-
-    @staticmethod
-    def _number(expr, assumptions):
-        # helper method
-        return expr.evalf() == 0
-
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskInfinitesimalHandler._number(expr, assumptions)
-
-    @staticmethod
-    def Mul(expr, assumptions):
-        """
-        Infinitesimal*Bounded -> Infinitesimal
-        """
-        if expr.is_number:
-            return AskInfinitesimalHandler._number(expr, assumptions)
-        result = False
-        for arg in expr.args:
-            if ask(Q.infinitesimal(arg), assumptions):
-                result = True
-            elif ask(Q.finite(arg), assumptions):
-                continue
-            else:
-                break
-        else:
-            return result
-
-    Add, Pow = [Mul]*2
-
-    @staticmethod
-    def Number(expr, assumptions):
-        return expr == 0
-
-    NumberSymbol = Number
-
-    ImaginaryUnit = staticmethod(CommonHandler.AlwaysFalse)
-
-
 class AskFiniteHandler(CommonHandler):
     """
     Handler for key 'finite'.
@@ -92,6 +46,8 @@ class AskFiniteHandler(CommonHandler):
         True
 
         """
+        if expr.is_finite is not None:
+            return expr.is_finite
         if Q.finite(expr) in conjuncts(assumptions):
             return True
         return None

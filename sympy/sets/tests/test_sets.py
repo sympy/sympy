@@ -113,7 +113,8 @@ def test_union():
     assert X.is_iterable is False
 
     # issue 7843
-    assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == FiniteSet(-sqrt(-I), sqrt(-I))
+    assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == \
+        FiniteSet(-sqrt(-I), sqrt(-I))
 
 
 def test_difference():
@@ -237,7 +238,13 @@ def test_intersect():
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
-        FiniteSet(2, 3, 4, 5)
+        Union(FiniteSet(2, 3, 4, 5), Intersection(FiniteSet(6), Union(Interval(0, 5), FiniteSet('ham'))))
+
+    # issue 8217
+    assert Intersection(FiniteSet(x), FiniteSet(y)) == \
+        Intersection(FiniteSet(x), FiniteSet(y), evaluate=False)
+    assert FiniteSet(x).intersect(S.Reals) == \
+        Intersection(S.Reals, FiniteSet(x), evaluate=False)
 
     # tests for the intersection alias
     assert Interval(0, 5).intersection(FiniteSet(1, 3)) == FiniteSet(1, 3)
@@ -245,6 +252,7 @@ def test_intersect():
 
     assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
         Union(Interval(1, 1), Interval(2, 2))
+
 
 def test_intersection():
     # iterable
@@ -273,6 +281,16 @@ def test_intersection():
                         S.Reals, evaluate=False) == \
             Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
 
+
+def test_issue_9623():
+    n = Symbol('n')
+
+    a = S.Reals
+    b = Interval(0, oo)
+    c = FiniteSet(n)
+
+    assert Intersection(a, b, c) == Intersection(b, c)
+    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet()
 
 
 def test_is_disjoint():
@@ -845,3 +863,9 @@ def test_SymmetricDifference():
           Set(2, 3, 4) - Set(1, 2, 3))
    assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
           Interval(2, 5), Interval(2, 5) - Interval(0, 4))
+
+
+def test_issue_9536():
+    from sympy.functions.elementary.exponential import log
+    a = Symbol('a', real=True)
+    assert FiniteSet(log(a)).intersect(S.Reals) == Intersection(S.Reals, FiniteSet(log(a)))

@@ -5,6 +5,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     mpf_norm, comp)
 from mpmath import mpf
@@ -44,6 +45,14 @@ def test_mod():
     assert (a % .2) == 0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
+
+    p = Symbol('p', infinite=True)
+
+    assert zoo % 0 == nan
+    assert oo % oo == nan
+    assert zoo % oo == nan
+    assert 5 % oo == nan
+    assert p % 5 == nan
 
     # In these two tests, if the precision of m does
     # not match the precision of the ans, then it is
@@ -1267,7 +1276,7 @@ def test_zoo():
             assert (zoo + i) is S.NaN
             assert (zoo - i) is S.NaN
 
-        if i.is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not(i.is_zero) and (i.is_real or i.is_imaginary):
             assert i*zoo is zoo
             assert zoo*i is zoo
         elif i.is_zero:
@@ -1277,7 +1286,7 @@ def test_zoo():
             assert (i*zoo).is_Mul
             assert (zoo*i).is_Mul
 
-        if (1/i).is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not((1/i).is_zero) and (i.is_real or i.is_imaginary):
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN

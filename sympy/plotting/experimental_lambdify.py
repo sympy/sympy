@@ -281,6 +281,7 @@ class Lambdifier(object):
         # and sympy_expression_namespace can not catch it.
         from sympy import sqrt
         namespace.update({'sqrt': sqrt})
+        namespace.update({'Eq': lambda x, y: x == y})
         # End workaround.
         if use_python_math:
             namespace.update({'math': __import__('math')})

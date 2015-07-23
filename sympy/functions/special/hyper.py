@@ -40,7 +40,7 @@ def _prep_tuple(v):
     >>> _prep_tuple((7, 8, 9))
     (7, 8, 9)
     """
-    from sympy.simplify.simplify import unpolarify
+    from sympy import unpolarify
     return TupleArg(*[unpolarify(x) for x in v])
 
 

@@ -1,10 +1,11 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
-    LambertW, Piecewise, Poly, Rational, S, Symbol,
+    LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
     tan, tanh, atan2, arg,
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, oo)
+    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
+    oo)
 
 from sympy.core.function import nfloat
 from sympy.functions.elementary.complexes import im, re
@@ -21,8 +22,9 @@ from sympy.physics.units import cm
 
 
 from sympy.solvers.solveset import (
-    solveset_real, domain_check, solveset_complex,
-    _is_function_class_equation, invert_real, invert_complex, solveset)
+    solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
+    linsolve, _is_function_class_equation, invert_real, invert_complex,
+    solveset)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -36,11 +38,12 @@ n = Symbol('n', real=True)
 
 
 def test_invert_real():
-    x = Symbol('x', real=True)
     x = Dummy(real=True)
     n = Symbol('n')
-    d = Dummy()
-    assert solveset(abs(x) - n, x) == solveset(abs(x) - d, x) == EmptySet()
+
+    minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
+    plus_n = Intersection(Interval(0, oo), FiniteSet(n))
+    assert solveset(abs(x) - n, x) == Union(minus_n, plus_n)
 
     n = Symbol('n', real=True)
     assert invert_real(x + 3, y, x) == (x, FiniteSet(y - 3))
@@ -57,7 +60,9 @@ def test_invert_real():
     assert invert_real(log(3*x), y, x) == (x, FiniteSet(exp(y) / 3))
     assert invert_real(log(x + 3), y, x) == (x, FiniteSet(exp(y) - 3))
 
-    assert invert_real(Abs(x), y, x) == (x, FiniteSet(-y, y))
+    minus_y = Intersection(Interval(-oo, 0), FiniteSet(-y))
+    plus_y = Intersection(Interval(0, oo), FiniteSet(y))
+    assert invert_real(Abs(x), y, x) == (x, Union(minus_y, plus_y))
 
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
     assert invert_real(2**exp(x), y, x) == (x, FiniteSet(log(log(y)/log(2))))
@@ -71,8 +76,10 @@ def test_invert_real():
 
     assert invert_real(x**31 + x, y, x) == (x**31 + x, FiniteSet(y))
 
+    y_1 = Intersection(Interval(-1, oo), FiniteSet(y - 1))
+    y_2 = Intersection(Interval(-oo, -1), FiniteSet(-y - 1))
     assert invert_real(Abs(x**31 + x + 1), y, x) == (x**31 + x,
-                                                     FiniteSet(-y - 1, y - 1))
+                                                     Union(y_1, y_2))
 
     assert invert_real(tan(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
@@ -90,6 +97,25 @@ def test_invert_real():
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
+
+    # Test for ``set_h`` containing information about the domain
+
+    n = Dummy('n')
+    x = Symbol('x')
+
+    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
+
+    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(0, oo)))
+
+    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
+
+    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
+
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2, h3, h4))
 
 
 def test_invert_complex():
@@ -587,8 +613,7 @@ def test_solveset_complex_polynomial():
 
 
 def test_sol_zero_complex():
-    # This should return the complex set after it is implemented
-    raises(NotImplementedError, lambda: solveset_complex(0, x))
+    assert solveset_complex(0, x) == S.Complexes
 
 
 def test_solveset_complex_rational():
@@ -805,3 +830,105 @@ def test_improve_coverage():
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
+
+
+def test_issue_9522():
+    x = Symbol('x', real=True)
+    expr1 = Eq(1/(x**2 - 4) + x, 1/(x**2 - 4) + 2)
+    expr2 = Eq(1/x + x, 1/x)
+
+    assert solveset(expr1, x) == EmptySet()
+    assert solveset(expr2, x) == EmptySet()
+
+
+def test_linear_eq_to_matrix():
+    x, y, z = symbols('x, y, z')
+    eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
+    eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
+
+    A, b = linear_eq_to_matrix(eqns1, x, y, z)
+    assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
+    assert b == Matrix([[3], [0], [12]])
+
+    A, b = linear_eq_to_matrix(eqns2, x, y, z)
+    assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
+    assert b == Matrix([[1], [-2], [0]])
+
+    # Pure symbolic coefficients
+    from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
+    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    A, B = linear_eq_to_matrix(eqns3, x, y, z)
+    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
+    assert B == Matrix([[d], [h], [l]])
+
+    # raise ValueError if no symbols are given
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+
+
+def test_linsolve():
+    x, y, z, u, v, w = symbols("x, y, z, u, v, w")
+    x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
+
+    # Test for different input forms
+
+    M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
+    system1 = A, b = M[:, :-1], M[:, -1]
+    Eqns = [x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
+            2*x1 + 4*x2 + 6*x4 - 4]
+
+    sol = FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+    assert linsolve(M, (x1, x2, x3, x4)) == sol
+    assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
+    assert linsolve(system1, (x1, x2, x3, x4)) == sol
+
+    # raise ValueError if no symbols are given
+    raises(ValueError, lambda: linsolve(system1))
+
+    # raise ValueError if, A & b is not given as tuple
+    raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
+
+    # raise ValueError for garbage value
+    raises(ValueError, lambda: linsolve(Eqns[0], x1, x2, x3, x4))
+
+    # Fully symbolic test
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    A = Matrix([[a, b], [c, d]])
+    B = Matrix([[e], [f]])
+    system2 = (A, B)
+    sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
+                    (f - c*e/a)/(d - b*c/a)))
+    assert linsolve(system2, [x, y]) == sol
+
+    # Test for Dummy Symbols issue #9667
+    x1 = Dummy('x1')
+    x2 = Dummy('x2')
+    x3 = Dummy('x3')
+    x4 = Dummy('x4')
+
+    assert linsolve(system1, x1, x2, x3, x4) == FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
+
+
+def test_issue_9556():
+    x = Symbol('x', real=True)
+    b = Symbol('b', positive=True)
+
+    assert solveset(Abs(x) + 1, x) == EmptySet()
+    assert solveset(Abs(x) + b, x) == EmptySet()
+    assert solveset(Eq(b, -1), b) == EmptySet()
+
+
+def test_issue_9611():
+    x = Symbol('x', real=True)
+    a = Symbol('a', real=True)
+    y = Symbol('y')
+
+    assert solveset(Eq(x - x + a, a), x) == S.Reals
+    assert solveset(Eq(y - y + a, a), y) == S.Complexes
+
+
+def test_issue_9557():
+    x = Symbol('x', real=True)
+    a = Symbol('a')
+
+    assert solveset(x**2 + a, x) == Intersection(S.Reals,
+        FiniteSet(-sqrt(-a), sqrt(-a)))

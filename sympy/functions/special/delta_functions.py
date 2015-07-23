@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
+from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -232,7 +233,7 @@ class Heaviside(Function):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
-        elif im(arg).is_nonzero:
+        elif fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
         elif arg.is_negative:
             return S.Zero

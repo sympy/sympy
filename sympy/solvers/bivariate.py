@@ -10,7 +10,8 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
-from sympy.simplify.simplify import (collect, separatevars)
+from sympy.simplify.simplify import separatevars
+from sympy.simplify.radsimp import collect
 from sympy.solvers.solvers import solve, _invert
 
 

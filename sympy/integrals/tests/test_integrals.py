@@ -928,7 +928,7 @@ def test_atom_bug():
 
 
 def test_limit_bug():
-    z = Symbol('z', nonzero=True)
+    z = Symbol('z', zero=False)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
         (log(z**2) + 2*EulerGamma + 2*log(pi))/(2*z) - \
         (-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z + log(pi)/z
@@ -1111,3 +1111,12 @@ def test_issue_7130():
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
+
+
+def test_issue_4950():
+    assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
+        -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_issue_4968():
+    assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5

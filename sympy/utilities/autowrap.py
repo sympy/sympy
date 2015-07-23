@@ -148,7 +148,11 @@ class CodeWrapper(object):
             CodeWrapper._module_counter += 1
             os.chdir(oldwork)
             if not self.filepath:
-                shutil.rmtree(workdir)
+                try:
+                    shutil.rmtree(workdir)
+                except OSError:
+                    # Could be some issues on Windows
+                    pass
 
         return self._get_wrapped_function(mod, routine.name)
 

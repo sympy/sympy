@@ -9,6 +9,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
+from sympy.core.logic import fuzzy_not
 
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -92,7 +93,7 @@ class ExpBase(Function):
         if s.func == self.func:
             if s.exp is S.Zero:
                 return True
-            elif s.exp.is_rational and s.exp.is_nonzero:
+            elif s.exp.is_rational and fuzzy_not(s.exp.is_zero):
                 return False
         else:
             return s.is_rational
@@ -361,7 +362,7 @@ class exp(ExpBase):
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if self.exp.is_nonzero:
+            if fuzzy_not(self.exp.is_zero):
                 if self.exp.is_algebraic:
                     return False
                 elif (self.exp/S.Pi).is_rational:
@@ -650,7 +651,7 @@ class log(Function):
         if s.func == self.func:
             if (self.args[0] - 1).is_zero:
                 return True
-            if s.args[0].is_rational and (self.args[0] - 1).is_nonzero:
+            if s.args[0].is_rational and fuzzy_not((self.args[0] - 1).is_zero):
                 return False
         else:
             return s.is_rational
@@ -660,7 +661,7 @@ class log(Function):
         if s.func == self.func:
             if (self.args[0] - 1).is_zero:
                 return True
-            elif (self.args[0] - 1).is_nonzero:
+            elif fuzzy_not((self.args[0] - 1).is_zero):
                 if self.args[0].is_algebraic:
                     return False
         else:
@@ -775,7 +776,7 @@ class LambertW(Function):
             if x is S.Infinity:
                 return S.Infinity
 
-        if k.is_nonzero:
+        if fuzzy_not(k.is_zero):
             if x is S.Zero:
                 return S.NegativeInfinity
         if k is S.NegativeOne:
@@ -818,14 +819,14 @@ class LambertW(Function):
                 return True
             elif x.is_nonpositive or (x + 1/S.Exp1).is_nonnegative:
                 return False
-        elif k.is_nonzero and (k + 1).is_nonzero:
+        elif fuzzy_not(k.is_zero) and fuzzy_not((k + 1).is_zero):
             if x.is_real:
                 return False
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if self.args[0].is_nonzero and self.args[0].is_algebraic:
+            if fuzzy_not(self.args[0].is_zero) and self.args[0].is_algebraic:
                 return False
         else:
             return s.is_algebraic

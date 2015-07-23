@@ -25,6 +25,7 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge
+from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
@@ -277,7 +278,7 @@ def checksol(f, symbol, sol=None, **flags):
             if flags.get('force', True):
                 # don't do a zero check with the positive assumptions in place
                 val = val.subs(reps)
-            nz = val.is_nonzero
+            nz = fuzzy_not(val.is_zero)
             if nz is not None:
                 # issue 5673: nz may be True even when False
                 # so these are just hacks to keep a false positive

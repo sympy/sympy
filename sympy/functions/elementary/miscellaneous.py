@@ -14,7 +14,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And
 
@@ -560,6 +560,15 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_is_positive(self):
+        return fuzzy_or(a.is_positive for a in self.args)
+
+    def _eval_is_nonnegative(self):
+        return fuzzy_or(a.is_nonnegative for a in self.args)
+
+    def _eval_is_negative(self):
+        return fuzzy_and(a.is_negative for a in self.args)
+
 
 class Min(MinMaxBase, Application):
     """
@@ -610,3 +619,12 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_is_positive(self):
+        return fuzzy_and(a.is_positive for a in self.args)
+
+    def _eval_is_nonnegative(self):
+        return fuzzy_and(a.is_nonnegative for a in self.args)
+
+    def _eval_is_negative(self):
+        return fuzzy_or(a.is_negative for a in self.args)

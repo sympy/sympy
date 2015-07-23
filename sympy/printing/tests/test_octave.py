@@ -129,13 +129,13 @@ def test_constants_other():
 
 
 def test_boolean():
-    assert mcode(x & y) == "x && y"
-    assert mcode(x | y) == "x || y"
+    assert mcode(x & y) == "x & y"
+    assert mcode(x | y) == "x | y"
     assert mcode(~x) == "~x"
-    assert mcode(x & y & z) == "x && y && z"
-    assert mcode(x | y | z) == "x || y || z"
-    assert mcode((x & y) | z) == "z || x && y"
-    assert mcode((x | y) & z) == "z && (x || y)"
+    assert mcode(x & y & z) == "x & y & z"
+    assert mcode(x | y | z) == "x | y | z"
+    assert mcode((x & y) | z) == "z | x & y"
+    assert mcode((x | y) & z) == "z & (x | y)"
 
 
 def test_Matrices():

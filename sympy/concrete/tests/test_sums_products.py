@@ -2,8 +2,8 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le
-)
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le, Indexed,
+    Idx)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -831,3 +831,9 @@ def test_issue_4668():
 def test_matrix_sum():
     A = Matrix([[0,1],[n,0]])
     assert Sum(A,(n,0,3)).doit() == Matrix([[0, 4], [6, 0]])
+
+
+def test_issue_9594():
+    i = symbols('i', cls=Idx)
+    r = Indexed('r', i)
+    Sum(r, (i, 0, 3)).doit() == [r.subs(i, j) for j in range(4)]
