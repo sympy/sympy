@@ -61,7 +61,21 @@ def range_func(func, set_value):
 
     # all the singularities of the function
     sing = singularities(func, symbol)
-    sing = Intersection(FiniteSet(*sing), set_value.closure)
+
+    # this block of code can be replaced by
+    # sing = Intersection(FiniteSet(*sing), set_value.closure)
+    # after the issue #9706 has been fixed
+    if set_value.has(Interval):
+        if not oo in set_value.boundary:
+            if not S.NegativeInfinity in set_value.boundary:
+                sing = Intersection(FiniteSet(*sing), set_value.closure)
+            else:
+                sing = Intersection(FiniteSet(*sing), Union(set_value, FiniteSet(set_value.end)))
+        else:
+            if not S.NegativeInfinity in set_value.boundary:
+                sing = Intersection(FiniteSet(*sing), Union(set_value, FiniteSet(set_value.start)))
+            else:
+                sing = Intersection(FiniteSet(*sing), set_value)
 
     def in_intrvl(f, set_val):
         val1 = (set_val.start, set_val.args[2])
@@ -70,7 +84,8 @@ def range_func(func, set_value):
         expr1 = g1 > 0
         expr2 = g1 < 0
         der_zero = solveset_real(g1, symbol)
-        der_zero = Intersection(der_zero, set_val.closure)
+        if not (FiniteSet(val1[0], val2[0]).contains(-oo) or FiniteSet(val1[0], val2[0]).contains(oo)):
+            der_zero = Intersection(der_zero, set_val.closure)
         g2 = simplify(diff(g1, symbol))
         maxi = set()
         mini = set()
@@ -78,25 +93,13 @@ def range_func(func, set_value):
         ans1 = limit(f, symbol, val1[0])
         ans2 = limit(f, symbol, val2[0], '-')
         singl = solveset_real(1/f, symbol)
+
+        # this too can be closed after fixing #9706
+
         for i in singl:
             if i in sing and not i in set_val.boundary:
-                valm1 = limit(f, symbol, i)
-                valm2 = limit(f, symbol, i, '-')
-                if valm1 != valm2:
-                    return Complement(Interval(-oo, oo), FiniteSet(*singl))
-                else:
-                    if valm1 == oo:
-                        if ans1 > ans2:
-                            return Complement(Interval(ans2, oo, val2[1], True), FiniteSet(*singl))
-                        elif ans1 < ans2:
-                            return Complement(Interval(ans1, oo, val1[1], True), FiniteSet(*singl))
-                        return Complement(Interval(ans1, oo, val1[1] and val2[1], True), FiniteSet(*singl))
-                    else:
-                        if ans1 > ans2:
-                            return Complement(Interval(-oo, ans1, True, val1[1]), FiniteSet(*singl))
-                        elif ans1 < ans2:
-                            return Complement(Interval(-oo, ans2, True, val2[1]), FiniteSet(*singl))
-                        return Complement(Interval(-oo, ans1, True, val1[1] and val2[1]), FiniteSet(*singl))
+                return Union(range_func(f, Interval(val1[0], i, val1[1], True)),
+                            range_func(f, Interval(i, val2[0], True, val2[1])))
         if ans1 is S.Infinity or ans2 is S.Infinity:
             maxi = set([(oo, True)])
         elif ans1 is S.NegativeInfinity or ans2 is S.NegativeInfinity:
@@ -158,4 +161,3 @@ def range_func(func, set_value):
     if isinstance(set_value, FiniteSet):
         set_value = Complement(set_value, FiniteSet(*sing))
         return FiniteSet(*[limit(func, symbol, i) if not i in sing else func.subs({symbol: i}) for i in set_value])
-
