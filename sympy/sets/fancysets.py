@@ -234,13 +234,13 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
-        from sympy.solvers import solve
+        from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = solve([expr - val for val, expr in zip(other, L.expr)],
-                    L.variables)
+            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
+                         L.variables).args[0])
         else:
-            solns = solve(L.expr - other, L.variables[0])
+            solns = list(solveset(L.expr - other, L.variables[0]))
 
         for soln in solns:
             try:

@@ -981,7 +981,7 @@ class Interval(Set, EvalfMixin):
 
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
-        from sympy.solvers import solve
+        from sympy.solvers.solveset import solveset
         from sympy.core.function import diff
         from sympy.series import limit
         from sympy.calculus.singularities import singularities
@@ -1013,7 +1013,7 @@ class Interval(Set, EvalfMixin):
             _end = f(self.end)
 
         if len(sing) == 0:
-            solns = solve(diff(expr, var), var)
+            solns = list(solveset(diff(expr, var), var))
 
             extr = [_start, _end] + [f(x) for x in solns
                                      if x.is_real and x in self]
