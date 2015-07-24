@@ -5,7 +5,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux)
+    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
@@ -411,7 +411,7 @@ def test_cosh():
 def test_tanh():
     R, x, y = ring('x, y', QQ)
     assert rs_tanh(x, x, 9) == -17*x**7/315 + 2*x**5/15 - x**3/3 + x
-    assert rs_tanh(x*y + x**2*y**3 , x, 9) == 4*x**8*y**11/3 - \
+    assert rs_tanh(x*y + x**2*y**3, x, 9) == 4*x**8*y**11/3 - \
         17*x**8*y**9/45 + 4*x**7*y**9/3 - 17*x**7*y**7/315 - x**6*y**9/3 + \
         2*x**6*y**7/3 - x**5*y**7 + 2*x**5*y**5/15 - x**4*y**5 - \
         x**3*y**3/3 + x**2*y**3 + x*y
@@ -419,12 +419,12 @@ def test_tanh():
     # Constant term in series
     a = symbols('a')
     R, x, y = ring('x, y', EX)
-    assert rs_tanh(x + a, x, 5) == EX(tanh(a)**5 - 5*tanh(a)**3/3 + \
+    assert rs_tanh(x + a, x, 5) == EX(tanh(a)**5 - 5*tanh(a)**3/3 +
         2*tanh(a)/3)*x**4 + EX(-tanh(a)**4 + 4*tanh(a)**2/3 - QQ(1, 3))*x**3 + \
         EX(tanh(a)**3 - tanh(a))*x**2 + EX(-tanh(a)**2 + 1)*x + EX(tanh(a))
 
     p = rs_tanh(x + x**2*y + a, x, 4)
-    assert (p.compose(x, 10)).compose(y, 5) == EX(-1000*tanh(a)**4 + \
+    assert (p.compose(x, 10)).compose(y, 5) == EX(-1000*tanh(a)**4 +
         10100*tanh(a)**3 + 2470*tanh(a)**2/3 - 10099*tanh(a) + QQ(530, 3))
 
 def test_RR():
@@ -567,3 +567,15 @@ def test_puiseux2():
     assert r == (y**13/13 + y**8 + 2*y**3)*x**QQ(13,5) - (y**11/11 + y**6 +
         y)*x**QQ(11,5) + (y**9/9 + y**4)*x**QQ(9,5) - (y**7/7 +
         y**2)*x**QQ(7,5) + (y**5/5 + 1)*x - y**3*x**QQ(3,5)/3 + y*x**QQ(1,5)
+
+def test_series():
+    a, b = symbols('a, b')
+
+    p = (sin(a**2) + cos(a + a*b))*exp(a*b)*tan(a)
+    assert rs_series(p, a, 10).as_expr() == p.series(a, 0, 10).removeO()
+
+    p = sin(exp(cos(a) - a**2 + 5))
+    assert rs_series(p, a, 10).as_expr() == p.series(a, 0, 10).removeO()
+
+    p = exp(exp(a) - a*sin(a) + cos(a))
+    assert rs_series(p, a, 10).as_expr() == p.series(a, 0, 10).removeO()

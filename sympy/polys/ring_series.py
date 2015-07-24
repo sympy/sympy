@@ -5,6 +5,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError
+from sympy.core.function import Function
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
@@ -1897,7 +1898,9 @@ def taylor_series(series, x, prec=5, x0=0):
 
 _convert_func = {
         'cos': 'rs_cos',
-        'sin': 'rs_sin'
+        'sin': 'rs_sin',
+        'exp': 'rs_exp',
+        'tan': 'rs_tan'
         }
 
 def rs_min_pow(expr, a):
@@ -1910,27 +1913,17 @@ def rs_min_pow(expr, a):
 
 def _rs_series(expr, a, prec):
     args = expr.args
-    if all([not arg.is_Function for arg in args]) and not expr.is_Function:
-        print("expr", expr)
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
         R, a = ring('%s' % a, EX)
         return R(expr)
     elif expr.is_Function:
-        print("Function", expr)
         R, a = ring('%s' % a, EX)
         arg = args[0]
-        #if any(xarg.is_Function for xarg in arg.args) or arg.is_Function:
-        #print("function_function", expr)
         series_inner = _rs_series(arg, a, prec)
         series = eval(_convert_func[str(expr.func)])(series_inner,
             a, prec)
-        #else:
-        #    print("function_expr", expr)
-        #    series = eval(_convert_func[str(expr.func)])(R(arg),
-        #        a, prec)
         return series
     elif expr.is_Mul:
-        #if all([arg.is_Function for arg in args]):
-        print("MUL", expr)
         R, a = ring('%s' % a, EX)
         n = len(args)
         min_pows = map(rs_min_pow, args, [a]*len(args))
@@ -1941,8 +1934,6 @@ def _rs_series(expr, a, prec):
         series = rs_trunc(series, a, prec)
         return series
     elif expr.is_Add:
-        #and all([arg.is_Function for arg in args]):
-        print("add", expr)
         R, a = ring('%s' % a, EX)
         n = len(args)
         series = 0
@@ -1958,7 +1949,7 @@ def rs_series(expr, a, prec):
     prec_got = series.degree() + 1
     if prec_got >= prec:
         return rs_trunc(series, gen, prec)
-    elif prec_got < prec:
+    else:
         # increase the requested number of terms to get the desired
         # number keep increasing (up to 9) until the received order
         # is different than the original order and then predict how
