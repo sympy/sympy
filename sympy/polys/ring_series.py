@@ -1900,34 +1900,177 @@ _convert_func = {
         'sin': 'rs_sin'
         }
 
-def rs_min_pow(func, p, x):
-    i = p.ring.index(x)
+def rs_min_pow(expr, a):
     series = 0
     n = 2
     while series == 0:
-        series = eval(func)(p, x, n)
+        series = _rs_series(expr, a, n)
         n *= 2
-    return min(series, key=lambda x: x[i])[i]
+    return min(series, key=lambda a: a[0])[0]
+
+def _rs_series(expr, a, prec):
+    args = expr.args
+    if all([not arg.is_Function for arg in args]) and not expr.is_Function:
+        print("expr", expr)
+        R, a = ring('%s' % a, EX)
+        return R(expr)
+    elif expr.is_Function:
+        print("Function", expr)
+        R, a = ring('%s' % a, EX)
+        arg = args[0]
+        #if any(xarg.is_Function for xarg in arg.args) or arg.is_Function:
+        #print("function_function", expr)
+        series_inner = _rs_series(arg, a, prec)
+        series = eval(_convert_func[str(expr.func)])(series_inner,
+            a, prec)
+        #else:
+        #    print("function_expr", expr)
+        #    series = eval(_convert_func[str(expr.func)])(R(arg),
+        #        a, prec)
+        return series
+    elif expr.is_Mul:
+        #if all([arg.is_Function for arg in args]):
+        print("MUL", expr)
+        R, a = ring('%s' % a, EX)
+        n = len(args)
+        min_pows = map(rs_min_pow, args, [a]*len(args))
+        sum_pows = sum(min_pows)
+        p = 1
+        for func, arg, expv in zip(rs_funcs, rs_args, min_pows):
+            p *= (eval(func)(arg, a, prec - sum_pows + expv))
+        p = rs_trunc(p, a, prec)
+        return p
+    elif expr.is_Add and all([arg.is_Function for arg in args]):
+        print("add", expr)
+        R, a = ring('%s' % a, EX)
+        series = R(0)
+        for arg in args:
+            series += eval(_convert_func[str(arg.func)])(R(arg.args[0]),
+                a, prec)
+        return series
+    else:
+        print("else", expr)
+        R, a = ring('%s' % a, EX)
+        if (expr.func).is_Mul:
+            p = 1
+            for arg in args:
+                p *= _rs_series(arg, a, prec)
+        elif (expr.func).is_Add:
+            p = 0
+            for arg in args:
+                p += _rs_series(arg, a, prec)
+        else:
+            raise NotImplementedError
+        return p
 
 def rs_series(expr, a, prec):
-    args = expr.args
-    if expr.is_Mul:
-        if all([arg.is_Function for arg in args]):
-            R, a = ring('%s' % a, EX)
-            rs_funcs = [_convert_func[str(arg.func)] for arg in args]
-            rs_args = [R(arg.args[0]) for arg in args]
-            min_pows = map(rs_min_pow, rs_funcs, rs_args, [a]*len(args))
-            sum_pows = sum(min_pows)
-            p = 1
-            for func, arg, expv in zip(rs_funcs, rs_args, min_pows):
-                p *= (eval(func)(arg, a, prec - sum_pows + expv))
-            p = rs_trunc(p, a, prec)
-            return p
-    if expr.is_Add:
-        if all([arg.is_Function for arg in args]):
-            R, a = ring('%s' % a, EX)
-            series = R(0)
-            for arg in args:
-                series += eval(_convert_func[str(arg.func)])(R(arg.args[0]),
-                    a, prec)
-            return series
+    series = _rs_series(expr, a, prec)
+    gen = series.ring.gens[0]
+    prec_got = series.degree() + 1
+    if prec_got >= prec:
+        return rs_trunc(series, gen, prec)
+    elif prec_got < prec:
+        # increase the requested number of terms to get the desired
+        # number keep increasing (up to 9) until the received order
+        # is different than the original order and then predict how
+        # many additional terms are needed
+        for more in range(1, 9):
+            p1 = _rs_series(expr, gen, prec=prec + more)
+            new_prec = p1.degree()
+            if new_prec != prec_got:
+                prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
+                p1 = _rs_series(expr, gen, prec=prec_do)
+                while p1.degree() < prec:
+                    p1 = _rs_series(expr, gen, prec=prec_do)
+                    prec_do += 1
+                break
+        else:
+            raise ValueError('Could not calculate %s terms for %s'
+                             % (str(prec), expr))
+        return rs_trunc(p1, gen, prec)
+
+
+"""
+def rs_nseries(self, x, n, logx = 'logx'):
+    from sympy.sets.sets import FiniteSet
+    args = self.args
+    args0 = [t.limit(x, 0) for t in args]
+    if any(t.is_finite is False for t in args0):
+        from sympy import oo, zoo, nan
+        # XXX could use t.as_leading_term(x) here but it's a little
+        # slower
+        a = [t.compute_leading_term(x, logx=logx) for t in args]
+        a0 = [t.limit(x, 0) for t in a]
+        if any([t.has(oo, -oo, zoo, nan) for t in a0]):
+            return self._eval_aseries(n, args0, x, logx)
+        # Careful: the argument goes to oo, but only logarithmically so. We
+        # are supposed to do a power series expansion "around the
+        # logarithmic term". e.g.
+        #      f(1+x+log(x))
+        #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
+        # where 'logx' is given in the argument
+        a = [t._eval_nseries(x, n, logx) for t in args]
+        z = [r - r0 for (r, r0) in zip(a, a0)]
+        p = [Dummy() for t in z]
+        q = []
+        v = None
+        for ai, zi, pi in zip(a0, z, p):
+            if zi.has(x):
+                if v is not None:
+                    raise NotImplementedError
+                q.append(ai + pi)
+                v = pi
+            else:
+                q.append(ai)
+        e1 = self.func(*q)
+        if v is None:
+            return e1
+        s = e1._eval_nseries(v, n, logx)
+        o = s.getO()
+        s = s.removeO()
+        s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
+        return s
+    if (self.func.nargs is S.Naturals0
+            or (self.func.nargs == FiniteSet(1) and args0[0])
+            or any(c > 1 for c in self.func.nargs)):
+        e = self
+        e1 = e.expand()
+        if e == e1:
+            #for example when e = sin(x+1) or e = sin(cos(x))
+            #let's try the general algorithm
+            term = e.subs(x, S.Zero)
+            if term.is_finite is False or term is S.NaN:
+                raise PoleError("Cannot expand %s around 0" % (self))
+            series = term
+            fact = S.One
+            _x = Dummy('x')
+            e = e.subs(x, _x)
+            for i in range(n - 1):
+                i += 1
+                fact *= Rational(i)
+                e = e.diff(_x)
+                subs = e.subs(_x, S.Zero)
+                if subs is S.NaN:
+                    # try to evaluate a limit if we have to
+                    subs = e.limit(_x, S.Zero)
+                if subs.is_finite is False:
+                    raise PoleError("Cannot expand %s around 0" % (self))
+                term = subs*(x**i)/fact
+                term = term.expand()
+                series += term
+            return series + Order(x**n, x)
+        return e1.nseries(x, n=n, logx=logx)
+    arg = self.args[0]
+    l = []
+    g = None
+    # try to predict a number of terms needed
+    nterms = n + 2
+    cf = Order(arg.as_leading_term(x), x).getn()
+    if cf != 0:
+        nterms = int(nterms / cf)
+    for i in range(nterms):
+        g = self.taylor_term(i, arg, g)
+        g = g.nseries(x, n=n, logx=logx)
+        l.append(g)
+    return Add(*l) + Order(x**n, x)
+"""
