@@ -1,10 +1,10 @@
-from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set
 from sympy import sympify, diff, limit, S, oo
 from sympy.core import Expr
 from sympy.core.numbers import Number
+from sympy.calculus.singularities import singularities
+from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set
 from sympy.simplify import simplify
 from sympy.solvers.solveset import solveset_real
-from sympy.calculus.singularities import singularities
 
 
 def range_func(func, set_value):
@@ -59,27 +59,32 @@ def range_func(func, set_value):
     elif len(free_symbol) == 0:
         return FiniteSet(func)
     else:
-        raise NotImplementedError("more than one variables involved")
+        raise NotImplementedError("more than one variables %s not handeled" % (free_symbol))
+
+    if not func.is_rational_function(symbol):
+        raise NotImplementedError("Algorithms finding range for non-rational functions"
+                                    "are not yet implemented")
+
+    # this block of code can be replaced by
+    # sing = Intersection(FiniteSet(*sing), set_val.closure)
+    # after the issue #9706 has been fixed
+    def closure_handle(set_val, sing):
+        if set_value.has(Interval):
+            if not oo in set_value.boundary:
+                if not S.NegativeInfinity in set_value.boundary:
+                    return Intersection(FiniteSet(*sing), set_value.closure)
+                return Intersection(FiniteSet(*sing), Union(set_value,
+                                    FiniteSet(max(set_value.boundary))))
+            else:
+                if not S.NegativeInfinity in set_value.boundary:
+                    return Intersection(FiniteSet(*sing), Union(set_value,
+                                        FiniteSet(min(set_value.boundary))))
+                return Intersection(FiniteSet(*sing), set_value)
+        return Intersection(FiniteSet(*sing), set_value)
 
     # all the singularities of the function
     sing = singularities(func, symbol)
-
-    # this block of code can be replaced by
-    # sing = Intersection(FiniteSet(*sing), set_value.closure)
-    # after the issue #9706 has been fixed
-    if set_value.has(Interval):
-        if not oo in set_value.boundary:
-            if not S.NegativeInfinity in set_value.boundary:
-                sing = Intersection(FiniteSet(*sing), set_value.closure)
-            else:
-                sing = Intersection(FiniteSet(*sing), Union(set_value,
-                                FiniteSet(max(set_value.boundary))))
-        else:
-            if not S.NegativeInfinity in set_value.boundary:
-                sing = Intersection(FiniteSet(*sing), Union(set_value,
-                                    FiniteSet(min(set_value.boundary))))
-            else:
-                sing = Intersection(FiniteSet(*sing), set_value)
+    sing = closure_handle(set_value, sing)
 
     def in_intrvl(f, set_val):
         val1 = (set_val.start, set_val.args[2])
@@ -88,9 +93,7 @@ def range_func(func, set_value):
         g2 = simplify(diff(g1, symbol))
         expr1 = g1 > 0
         der_zero = solveset_real(g1, symbol)
-        if not (FiniteSet(val1[0], val2[0]).contains(-oo) or
-                FiniteSet(val1[0], val2[0]).contains(oo)):
-            der_zero = Intersection(der_zero, set_val.closure)
+        der_zero = closure_handle(set_val, der_zero)
 
         maxi = set()
         mini = set()
@@ -98,7 +101,6 @@ def range_func(func, set_value):
         ans2 = limit(f, symbol, val2[0], '-')
         singl = solveset_real(1/f, symbol)
 
-        # this block of code too can be deleted after fixing #9706
         for i in singl:
             if i in sing and not i in set_val.boundary:
                 return Union(range_func(f, Interval(val1[0], i, val1[1], True)),
@@ -109,7 +111,6 @@ def range_func(func, set_value):
         elif ans1 is S.NegativeInfinity or ans2 is S.NegativeInfinity:
             mini = set([(-oo, True)])
         if maxi == set():
-            more = max(ans1, ans2)
             if ans1 > ans2:
                 maxi = set([(ans1, val1[1])])
             elif ans1 < ans2:
@@ -165,5 +166,5 @@ def range_func(func, set_value):
 
     if isinstance(set_value, FiniteSet):
         set_value = Complement(set_value, FiniteSet(*sing))
-        return FiniteSet(*[limit(func, symbol, i) if not i in sing
-                        else func.subs({symbol: i}) for i in set_value])
+        return FiniteSet(*[limit(func, symbol, i) if i in FiniteSet(-oo, oo)
+                            else func.subs({symbol: i}) for i in set_value])

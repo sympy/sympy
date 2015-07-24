@@ -19,6 +19,7 @@ def test_range_func():
     assert range_func(x, FiniteSet(1, -1, 3, 5)) == FiniteSet(-1, 1, 3, 5)
     assert range_func(x**2 - x, FiniteSet(1, -1, 3, 5, -oo)) == FiniteSet(0, 2, 6, 20, oo)
     assert range_func(x**2/(x - 4), FiniteSet(4)) == S.EmptySet
+    assert range_func(x**2 - x, FiniteSet(S(1)/2, -oo, oo, 2)) == FiniteSet(S(-1)/4, 2, oo)
 
     assert range_func(x**2, Interval(-1, 1, True, True)) == Interval(0, 1, False, True)
     assert range_func(x**2, Interval(-1, 1, False, True)) == Interval(0, 1)
@@ -39,3 +40,4 @@ def test_range_func():
     assert range_func(x**2, Union(Interval(1, 2), FiniteSet(3))) == Union(Interval(1, 4), FiniteSet(9))
     assert range_func(x/(x**2 - 4), Union(Interval(-oo, 1), Interval(0, oo))) == S.Reals
     assert range_func(x, Union(Interval(-1, 1), FiniteSet(-oo))) == Union(Interval(-1, 1), FiniteSet(-oo))
+    assert range_func(x**2 - x, Interval(1, oo)) == Interval(0, oo)
