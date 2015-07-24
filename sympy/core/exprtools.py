@@ -1250,7 +1250,7 @@ def _mask_nc(eq, name=None):
             i += 1
 
     names = numbered_names()
-    
+
     def Dummy(*args, **kwargs):
         from sympy import Dummy
         return Dummy(next(names), *args, **kwargs)
