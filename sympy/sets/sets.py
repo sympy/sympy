@@ -910,7 +910,7 @@ class Interval(Set, EvalfMixin):
 
 
     def _complement(self, other):
-        if other is S.Reals:
+        if other == S.Reals:
             a = Interval(S.NegativeInfinity, self.start,
                          True, not self.left_open)
             b = Interval(self.end, S.Infinity, not self.right_open, True)
@@ -1745,7 +1745,7 @@ class FiniteSet(Set, EvalfMixin):
     def _complement(self, other):
         if isinstance(other, Interval):
             nums = sorted(m for m in self.args if m.is_number)
-            if other is S.Reals and nums != []:
+            if other == S.Reals and nums != []:
                 syms = [m for m in self.args if m.is_Symbol]
                 # Reals cannot contain elements other than numbers and symbols.
 
