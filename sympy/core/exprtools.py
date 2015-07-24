@@ -1242,12 +1242,15 @@ def _mask_nc(eq, name=None):
     """
     name = name or 'mask'
     # Make Dummy() append sequential numbers to the name
+
     def numbered_names():
         i = 0
         while True:
             yield name + str(i)
             i += 1
+
     names = numbered_names()
+    
     def Dummy(*args, **kwargs):
         from sympy import Dummy
         return Dummy(next(names), *args, **kwargs)
