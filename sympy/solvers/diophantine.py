@@ -1722,7 +1722,7 @@ def check_param(x, y, a, t):
         eq = S(m - x_param[q])/x_param[p] - S(n - y_param[q])/y_param[p]
 
         lcm_denom, junk = Poly(eq).clear_denoms()
-        eq = eq * lcm_denom;
+        eq = eq * lcm_denom
 
         return diop_solve(eq, t)[0], diop_solve(eq, t)[1]
     else:
