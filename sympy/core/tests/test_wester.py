@@ -19,7 +19,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, Intersection, Union, EmptySet)
+    residue, Derivative, logcombine, Symbol, Intersection, Union, EmptySet, Interval)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -1135,8 +1135,11 @@ def test_M38():
     }
     assert solve_lin_sys(system, variabes) == solution
 
+
 def test_M39():
     x, y, z = symbols('x y z', complex=True)
+    # TODO: Replace solve with solveset, as of now
+    # solveset doesn't supports non-linear multivariate
     assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) ==\
             [{y: 1, z: 1, x: -1}, {y: 1, z: 1, x: 1},\
              {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: -sqrt(-1 - sqrt(2)*I)},\
@@ -1196,55 +1199,55 @@ def test_N8():
 
 def test_N9():
     x = Symbol('x', real=True)
-    assert solve(abs(x - 1) > 2) == Or(And(Lt(-oo, x), Lt(x, -1)),
-                                           And(Lt(3, x), Lt(x, oo)))
+    assert solveset(abs(x - 1) > 2) == Union(Interval(-oo, -1, False, True),
+                                             Interval(3, oo, True))
 
 
 def test_N10():
     x = Symbol('x', real=True)
     p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solve(expand(p) < 0) == Or(
-        And(Lt(-oo, x), Lt(x, 1)), And(Lt(2, x), Lt(x, 3)),
-        And(Lt(4, x), Lt(x, 5)))
+    assert solveset(expand(p) < 0) == Union(Interval(-oo, 1, True, True),
+                                            Interval(2, 3, True, True),
+                                            Interval(4, 5, True, True))
 
 
 def test_N11():
     x = Symbol('x', real=True)
-    assert solve(6/(x - 3) <= 3) == \
-        Or(And(Le(5, x), Lt(x, oo)), And(Lt(-oo, x), Lt(x, 3)))
+    assert solveset(6/(x - 3) <= 3) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
 
 
 @XFAIL
 def test_N12():
     x = Symbol('x', real=True)
-    assert solve(sqrt(x) < 2) == And(Le(0, x), Lt(x, 4))
+    assert solveset(sqrt(x) < 2) == Interval(0, 4, False, True)
 
 
 @XFAIL
 def test_N13():
     # raises NotImplementedError: can't reduce [sin(x) < 2]
     x = Symbol('x', real=True)
-    assert solve(sin(x) < 2) == [] # S.Reals not found
+    assert solveset(sin(x) < 2) == S.Reals
 
 
 @XFAIL
 def test_N14():
     # raises NotImplementedError: can't reduce [sin(x) < 1]
     x = Symbol('x', real=True)
-    assert (solve(sin(x) < 1) == Ne(x, pi/2))
+    assert solveset(sin(x) < 1) == Union(Interval(-oo, pi/2, True, True),
+                                         Interval(pi/2, oo, True, True))
 
 
 @XFAIL
 def test_N15():
     r, t = symbols('r t', real=True)
     # raises NotImplementedError: only univariate inequalities are supported
-    solve(abs(2*r*(cos(t) - 1) + 1) <= 1, r)
+    solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r)
 
 
 @XFAIL
 def test_N16():
     r, t = symbols('r t', real=True)
-    solve((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r)
+    solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r)
 
 
 @XFAIL
