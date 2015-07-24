@@ -68,19 +68,19 @@ def range_func(func, set_value):
     # this block of code can be replaced by
     # sing = Intersection(FiniteSet(*sing), set_val.closure)
     # after the issue #9706 has been fixed
-    def closure_handle(set_val, sing):
-        if set_value.has(Interval):
-            if not oo in set_value.boundary:
-                if not S.NegativeInfinity in set_value.boundary:
-                    return Intersection(FiniteSet(*sing), set_value.closure)
-                return Intersection(FiniteSet(*sing), Union(set_value,
-                                    FiniteSet(max(set_value.boundary))))
+    def closure_handle(set_im, singul):
+        if set_im.has(Interval):
+            if not oo in set_im.boundary:
+                if not S.NegativeInfinity in set_im.boundary:
+                    return Intersection(FiniteSet(*singul), set_im.closure)
+                return Intersection(FiniteSet(*singul), Union(set_im,
+                                    FiniteSet(max(set_im.boundary))))
             else:
-                if not S.NegativeInfinity in set_value.boundary:
-                    return Intersection(FiniteSet(*sing), Union(set_value,
-                                        FiniteSet(min(set_value.boundary))))
-                return Intersection(FiniteSet(*sing), set_value)
-        return Intersection(FiniteSet(*sing), set_value)
+                if not S.NegativeInfinity in set_im.boundary:
+                    return Intersection(FiniteSet(*singul), Union(set_im,
+                                        FiniteSet(min(set_im.boundary))))
+                return Intersection(FiniteSet(*singul), set_im)
+        return Intersection(FiniteSet(*singul), set_im)
 
     # all the singularities of the function
     sing = singularities(func, symbol)
