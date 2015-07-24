@@ -944,14 +944,14 @@ def test_M14():
 @XFAIL
 def test_M15():
     n = Dummy('n')
-    assert solve(sin(x) - S.Half) == Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+    assert solveset(sin(x) - S.Half) == Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
                                            ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers))
 
 
 @XFAIL
 def test_M16():
     n = Dummy('n')
-    assert solve(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), Integers())
+    assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), Integers())
 
 
 @XFAIL
@@ -1224,7 +1224,6 @@ def test_N12():
 
 @XFAIL
 def test_N13():
-    # raises NotImplementedError: can't reduce [sin(x) < 2]
     x = Symbol('x', real=True)
     assert solveset(sin(x) < 2) == S.Reals
 
@@ -1252,8 +1251,8 @@ def test_N16():
 
 @XFAIL
 def test_N17():
-    # raises NotImplementedError: only univariate inequalities are supported
-    assert solve((x + y > 0, x - y < 0)) == (abs(x) < y)
+    # currently only univariate inequalities are supported
+    assert solveset((x + y > 0, x - y < 0), (x, y)) == (abs(x) < y)
 
 
 def test_O1():
@@ -1806,8 +1805,8 @@ def test_R2():
     f = Sum((yn[i, 0] - m*xn[i, 0] - b)**2, (i, 0, n - 1))
     f1 = diff(f, m)
     f2 = diff(f, b)
-    # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
-    solve((f1, f2), m, b)
+    # raises TypeError: solveset() takes at most 2 arguments (3 given)
+    solveset((f1, f2), m, b)
 
 
 @XFAIL
@@ -2219,6 +2218,7 @@ def test_U8():
     eq = cos(x*y) + x
     eq = eq.subs(y, f(x))
     #  If SymPy had implicit_diff() function this hack could be avoided
+    # TODO: Replace solve with solveset, current test fails for solveset
     assert (solve((f(x) - eq).diff(x), f(x).diff(x))[0].subs(f(x), y) ==
             (-y*sin(x*y) + 1)/(x*sin(x*y) + 1))
 
@@ -3069,6 +3069,7 @@ def test_Z5():
     f0 = Lambda(x, sol.rhs)
     assert f0(x) == C2*sin(2*x) + (C1 - x/4)*cos(2*x)
     f1 = Lambda(x, diff(f0(x), x))
+    # TODO: Replace solve with solveset, when it works for solveset
     const_dict = solve((f0(0), f1(0)))
     result = f0(x).subs(C1, const_dict[C1]).subs(C2, const_dict[C2])
     assert result == -x*cos(2*x)/4 + sin(2*x)/8
