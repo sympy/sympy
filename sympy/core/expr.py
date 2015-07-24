@@ -595,6 +595,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.simplify.simplify import nsimplify, simplify
         from sympy.solvers.solvers import solve
+        from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -651,7 +652,10 @@ class Expr(Basic, EvalfMixin):
                         # we will handle the checking ourselves using nsimplify
                         # to see if we are in the right ballpark or not and if so
                         # *then* the simplification will be attempted.
-                        sol = solve(diff, s, check=False, simplify=False)
+                        if s.is_Symbol:
+                            sol = list(solveset(diff, s))
+                        else:
+                            sol = [s]
                         if sol:
                             if s in sol:
                                 return True
