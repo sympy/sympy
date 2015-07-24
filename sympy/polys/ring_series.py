@@ -1935,33 +1935,22 @@ def _rs_series(expr, a, prec):
         n = len(args)
         min_pows = map(rs_min_pow, args, [a]*len(args))
         sum_pows = sum(min_pows)
-        p = 1
-        for func, arg, expv in zip(rs_funcs, rs_args, min_pows):
-            p *= (eval(func)(arg, a, prec - sum_pows + expv))
-        p = rs_trunc(p, a, prec)
-        return p
-    elif expr.is_Add and all([arg.is_Function for arg in args]):
+        series = 1
+        for i in range(n):
+            series *= _rs_series(args[i], a, prec - sum_pows + min_pows[i])
+        series = rs_trunc(series, a, prec)
+        return series
+    elif expr.is_Add:
+        #and all([arg.is_Function for arg in args]):
         print("add", expr)
         R, a = ring('%s' % a, EX)
-        series = R(0)
-        for arg in args:
-            series += eval(_convert_func[str(arg.func)])(R(arg.args[0]),
-                a, prec)
+        n = len(args)
+        series = 0
+        for i in range(n):
+            series += _rs_series(args[i], a, prec)
         return series
     else:
-        print("else", expr)
-        R, a = ring('%s' % a, EX)
-        if (expr.func).is_Mul:
-            p = 1
-            for arg in args:
-                p *= _rs_series(arg, a, prec)
-        elif (expr.func).is_Add:
-            p = 0
-            for arg in args:
-                p += _rs_series(arg, a, prec)
-        else:
-            raise NotImplementedError
-        return p
+        raise NotImplementedError
 
 def rs_series(expr, a, prec):
     series = _rs_series(expr, a, prec)
@@ -1988,89 +1977,3 @@ def rs_series(expr, a, prec):
             raise ValueError('Could not calculate %s terms for %s'
                              % (str(prec), expr))
         return rs_trunc(p1, gen, prec)
-
-
-"""
-def rs_nseries(self, x, n, logx = 'logx'):
-    from sympy.sets.sets import FiniteSet
-    args = self.args
-    args0 = [t.limit(x, 0) for t in args]
-    if any(t.is_finite is False for t in args0):
-        from sympy import oo, zoo, nan
-        # XXX could use t.as_leading_term(x) here but it's a little
-        # slower
-        a = [t.compute_leading_term(x, logx=logx) for t in args]
-        a0 = [t.limit(x, 0) for t in a]
-        if any([t.has(oo, -oo, zoo, nan) for t in a0]):
-            return self._eval_aseries(n, args0, x, logx)
-        # Careful: the argument goes to oo, but only logarithmically so. We
-        # are supposed to do a power series expansion "around the
-        # logarithmic term". e.g.
-        #      f(1+x+log(x))
-        #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
-        # where 'logx' is given in the argument
-        a = [t._eval_nseries(x, n, logx) for t in args]
-        z = [r - r0 for (r, r0) in zip(a, a0)]
-        p = [Dummy() for t in z]
-        q = []
-        v = None
-        for ai, zi, pi in zip(a0, z, p):
-            if zi.has(x):
-                if v is not None:
-                    raise NotImplementedError
-                q.append(ai + pi)
-                v = pi
-            else:
-                q.append(ai)
-        e1 = self.func(*q)
-        if v is None:
-            return e1
-        s = e1._eval_nseries(v, n, logx)
-        o = s.getO()
-        s = s.removeO()
-        s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
-        return s
-    if (self.func.nargs is S.Naturals0
-            or (self.func.nargs == FiniteSet(1) and args0[0])
-            or any(c > 1 for c in self.func.nargs)):
-        e = self
-        e1 = e.expand()
-        if e == e1:
-            #for example when e = sin(x+1) or e = sin(cos(x))
-            #let's try the general algorithm
-            term = e.subs(x, S.Zero)
-            if term.is_finite is False or term is S.NaN:
-                raise PoleError("Cannot expand %s around 0" % (self))
-            series = term
-            fact = S.One
-            _x = Dummy('x')
-            e = e.subs(x, _x)
-            for i in range(n - 1):
-                i += 1
-                fact *= Rational(i)
-                e = e.diff(_x)
-                subs = e.subs(_x, S.Zero)
-                if subs is S.NaN:
-                    # try to evaluate a limit if we have to
-                    subs = e.limit(_x, S.Zero)
-                if subs.is_finite is False:
-                    raise PoleError("Cannot expand %s around 0" % (self))
-                term = subs*(x**i)/fact
-                term = term.expand()
-                series += term
-            return series + Order(x**n, x)
-        return e1.nseries(x, n=n, logx=logx)
-    arg = self.args[0]
-    l = []
-    g = None
-    # try to predict a number of terms needed
-    nterms = n + 2
-    cf = Order(arg.as_leading_term(x), x).getn()
-    if cf != 0:
-        nterms = int(nterms / cf)
-    for i in range(nterms):
-        g = self.taylor_term(i, arg, g)
-        g = g.nseries(x, n=n, logx=logx)
-        l.append(g)
-    return Add(*l) + Order(x**n, x)
-"""
