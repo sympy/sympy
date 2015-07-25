@@ -1,8 +1,3 @@
-import sys
-
-sympy_path = "/home/gadal/git/sympy"
-sys.path.insert(1, sympy_path)
-
 from sympy.solvers.diophantine import (descent,
                                        diop_bf_DN,
                                        diop_DN,
@@ -666,5 +661,3 @@ def check_integrality(eq):
                 return False
 
     return True
-
-test_linear()
