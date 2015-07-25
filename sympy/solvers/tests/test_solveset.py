@@ -907,6 +907,11 @@ def test_linsolve():
 
     assert linsolve(system1, x1, x2, x3, x4) == FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
 
+    # No solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 1])
+    assert linsolve((A, b), (x, y, z)) == EmptySet()
+
 
 def test_issue_9556():
     x = Symbol('x', real=True)
