@@ -118,21 +118,16 @@ def test_quadratic_parabolic_case():
 def test_quadratic_perfect_square():
     # B**2 - 4*A*C > 0
     # B**2 - 4*A*C is a perfect square
-    assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
-    assert diop_solve(4*x**2 - 5*x*y + y**2 + 2) == \
-        set([(-Integer(1), -Integer(3)),(-Integer(1), -Integer(2)),(Integer(1), Integer(2)),(Integer(1), Integer(3))])
-    assert diop_solve(-2*x**2 - 3*x*y + 2*y**2 -2*x - 17*y + 25) == set([(Integer(4), Integer(15))])
-    assert diop_solve(12*x**2 + 13*x*y + 3*y**2 - 2*x + 3*y - 12) == \
-        set([(-Integer(6), Integer(9)), (-Integer(2), Integer(5)), (Integer(4), -Integer(4)), (-Integer(6), Integer(16))])
-    assert diop_solve(8*x**2 + 10*x*y + 2*y**2 - 32*x - 13*y - 23) == \
-        set([(-Integer(44), Integer(47)), (Integer(22), -Integer(85))])
-    assert diop_solve(4*x**2 - 4*x*y - 3*y- 8*x - 3) == \
-        set([(-Integer(1), -Integer(9)), (-Integer(6), -Integer(9)), (Integer(0), -Integer(1)), (Integer(1), -Integer(1))])
-    assert diop_solve(- 4*x*y - 4*y**2 - 3*y- 5*x - 10) == \
-        set([(-Integer(2), Integer(0)), (-Integer(11), -Integer(1)), (-Integer(5), Integer(5))])
-    assert diop_solve(x**2 - y**2 - 2*x - 2*y) == set([(t, -t), (-t, -t - 2)])
-    assert diop_solve(x**2 - 9*y**2 - 2*x - 6*y) == set([(-3*t + 2, -t), (3*t, -t)])
-    assert diop_solve(4*x**2 - 9*y**2 - 4*x - 12*y - 3) == set([(-3*t - 3, -2*t - 3), (3*t + 1, -2*t - 1)])
+    assert check_solutions(48*x*y)
+    assert check_solutions(4*x**2 - 5*x*y + y**2 + 2)
+    assert check_solutions(-2*x**2 - 3*x*y + 2*y**2 -2*x - 17*y + 25)
+    assert check_solutions(12*x**2 + 13*x*y + 3*y**2 - 2*x + 3*y - 12)
+    assert check_solutions(8*x**2 + 10*x*y + 2*y**2 - 32*x - 13*y - 23)
+    assert check_solutions(4*x**2 - 4*x*y - 3*y- 8*x - 3)
+    assert check_solutions(- 4*x*y - 4*y**2 - 3*y- 5*x - 10)
+    assert check_solutions(x**2 - y**2 - 2*x - 2*y)
+    assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
+    assert check_solutions(4*x**2 - 9*y**2 - 4*x - 12*y - 3)
 
 
 def test_quadratic_non_perfect_square():
@@ -578,6 +573,7 @@ def check_solutions(eq):
 
     while len(s) and okay:
         solution = s.pop()
+        print("HERE")
 
         okay = False
 

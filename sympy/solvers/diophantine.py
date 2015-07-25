@@ -274,20 +274,16 @@ def classify_diop(eq):
     coeff = {}
     diop_type = None
 
-    if type(eq) is Add:
+    if type(eq) is Symbol:
+        var.append(eq)
+        coeff[eq] = Integer(1)
+    elif type(eq) is Mul and Poly(eq).total_degree() == 1:
+    	var.append(eq.as_two_terms()[1])
+        coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
+    else:
         var = list(eq.free_symbols)
         var.sort(key=default_sort_key)
         coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-
-    elif type(eq) is Mul:
-        var.append(eq.as_two_terms()[1])
-        coeff = {}
-        coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
-
-    elif type(eq) is Symbol:
-        var.append(eq)
-        coeff = {}
-        coeff[eq] = Integer(1)
 
     for c in coeff:
         if not isinstance(coeff[c], Integer):
@@ -454,7 +450,12 @@ def _diop_linear(var, coeff, param):
     params = [symbols(p, integer=True) for p in params]
 
     if len(var) == 1:
-        if divisible(c, coeff[var[0]]):
+        if coeff[var[0]] == 0:
+            if c == 0:
+                return tuple([params[0]])
+            else:
+                return tuple([None])
+        elif divisible(c, coeff[var[0]]):
             return tuple([c/coeff[var[0]]])
         else:
             return tuple([None])
