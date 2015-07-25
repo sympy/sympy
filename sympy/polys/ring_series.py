@@ -274,7 +274,7 @@ def rs_pow(p1, n, x, prec):
     """
     R = p1.ring
     p = R.zero
-    if isinstance(n, Rational):
+    if n != int(n):
         raise NotImplementedError('to be implemented')
 
     n = as_int(n)
@@ -1874,7 +1874,7 @@ def taylor_series(series, x, prec=5, x0=0):
                 raise TypeError("The series should be a RingSeries")
         elif isinstance(series, RingMul):
             args = series.args
-            min_pows = map(min_pow, args, [x]*len(args))
+            min_pows = list(map(min_pow, args, [x]*len(args)))
             sum_pows = sum(min_pows)
             p = 1
             for arg, expv in zip(args, min_pows):
@@ -1926,7 +1926,7 @@ def _rs_series(expr, a, prec):
     elif expr.is_Mul:
         R, a = ring('%s' % a, EX)
         n = len(args)
-        min_pows = map(rs_min_pow, args, [a]*len(args))
+        min_pows = list(map(rs_min_pow, args, [a]*len(args)))
         sum_pows = sum(min_pows)
         series = 1
         for i in range(n):
@@ -1940,11 +1940,19 @@ def _rs_series(expr, a, prec):
         for i in range(n):
             series += _rs_series(args[i], a, prec)
         return series
+    elif expr.is_Pow:
+        R, a = ring('%s' % a, EX)
+        series_inner = _rs_series(expr.base, a, prec)
+        return rs_pow(series_inner, expr.exp, a, prec)
     else:
         raise NotImplementedError
 
 def rs_series(expr, a, prec):
     series = _rs_series(expr, a, prec)
+    args = expr.args
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+        R, a = ring('%s' % a, EX)
+        return series
     gen = series.ring.gens[0]
     prec_got = series.degree() + 1
     if prec_got >= prec:
