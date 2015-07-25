@@ -1,9 +1,9 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sqrt, symbols,
-    tan, tanh, atan2, arg,
+    asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
+    exp, log, pi, sin, sinh, sec, sqrt, symbols,
+    tan, tanh, cosh, atan2, arg, asinh, acosh,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
 
@@ -81,6 +81,34 @@ def test_invert_real():
     assert invert_real(Abs(x**31 + x + 1), y, x) == (x**31 + x,
                                                      Union(y_1, y_2))
 
+    assert invert_real(sin(x), y, x) == \
+        (x, imageset(Lambda(n, n*pi + (-1)**n*asin(y)), S.Integers))
+
+    assert invert_real(sin(exp(x)), y, x) == \
+        (x, imageset(Lambda(n, log((-1)**n*asin(y) + n*pi)), S.Integers))
+
+    assert invert_real(csc(x), y, x) == \
+        (x, imageset(Lambda(n, n*pi + (-1)**n*acsc(y)), S.Integers))
+
+    assert invert_real(csc(exp(x)), y, x) == \
+        (x, imageset(Lambda(n, log((-1)**n*acsc(y) + n*pi)), S.Integers))
+
+    assert invert_real(cos(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*pi + acos(y)), S.Integers), \
+                imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers)))
+
+    assert invert_real(cos(exp(x)), y, x) == \
+        (x, Union(imageset(Lambda(n, log(2*n*pi + acos(y))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))
+
+    assert invert_real(sec(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
+                imageset(Lambda(n, 2*n*pi - asec(y)), S.Integers)))
+
+    assert invert_real(sec(exp(x)), y, x) == \
+        (x, Union(imageset(Lambda(n, log(2*n*pi + asec(y))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi - asec(y))), S.Integers)))
+
     assert invert_real(tan(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
 
@@ -89,11 +117,34 @@ def test_invert_real():
 
     assert invert_real(cot(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + acot(y)), S.Integers))
+
     assert invert_real(cot(exp(x)), y, x) == \
         (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
         (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers))
+
+    assert invert_real(sinh(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*I*pi + asinh(y)), S.Integers), \
+                imageset(Lambda(n, I*pi*(2*n + 1) - asinh(y)), S.Integers)))
+
+    assert invert_real(sinh(sinh(x)), y, x) == \
+        (sinh(x), Union(imageset(Lambda(n, 2*n*I*pi + asinh(y)), S.Integers), \
+                    imageset(Lambda(n, I*pi*(2*n + 1) - asinh(y)), S.Integers)))
+
+    assert invert_real(cosh(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*I*pi + acosh(y)), S.Integers), \
+                imageset(Lambda(n, 2*n*I*pi - acosh(y)), S.Integers)))
+
+    assert invert_real(cosh(cosh(x)), y, x) == \
+        (cosh(x), Union(imageset(Lambda(n, 2*n*I*pi + acosh(y)), S.Integers), \
+            imageset(Lambda(n, 2*n*I*pi - acosh(y)), S.Integers)))
+
+    assert invert_real(tanh(x), y, x) == \
+        (x, imageset(Lambda(n, n*I*pi + atanh(y)), S.Integers))
+
+    assert invert_real(tanh(tanh(x)), y, x) == \
+        (tanh(x), imageset(Lambda(n, n*I*pi + atanh(y)), S.Integers))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -670,6 +721,20 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers)
 
 
+def test_solveset_complex_hyper():
+    from sympy.abc import n
+    assert solveset_complex(sinh(x), x) == \
+        Union(imageset(Lambda(n, 2*n*I*pi), S.Integers), \
+            imageset(Lambda(n, (2*n + 1)*pi*I), S.Integers))
+
+    assert solveset_complex(cosh(x) - I, x) == \
+        Union(imageset(Lambda(n, 2*n*I*pi + log(I*(1 + sqrt(2)))), S.Integers), \
+            imageset(Lambda(n, 2*n*I*pi - log(I*(1 + sqrt(2)))), S.Integers))
+
+    assert solveset_complex(tanh(x) - 2, x) == \
+        imageset(Lambda(n, n*I*pi + atanh(2)), S.Integers)
+
+
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -696,8 +761,9 @@ def test_solve_invalid_sol():
 
 
 def test_solve_complex_unsolvable():
-    raises(NotImplementedError, lambda: solveset_complex(cos(x) - S.Half, x))
-
+    assert solveset_complex(cos(x) - S.Half, x) == \
+            Union(imageset(Lambda(n, 2*n*pi - pi/3), S.Integers), \
+                imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
 
 @XFAIL
 def test_solve_trig_simplified():
