@@ -208,7 +208,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     """
     var, coeff, eq_type = classify_diop(eq)
 
-    if eq_type in ["linear", "univariate"]:
+    if eq_type == "linear":
         return _diop_linear(var, coeff, param)
 
     elif eq_type == "binary_quadratic":
@@ -220,6 +220,15 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
+
+    elif eq_type == "univariate":
+        l = solve(eq)
+        s = set([])
+
+        for soln in l:
+            if isinstance(soln, Integer):
+                s.add((soln,))
+        return s
 
     elif eq_type == "general_sum_of_squares":
         return _diop_general_sum_of_squares(var, coeff)
@@ -284,10 +293,10 @@ def classify_diop(eq):
         if not isinstance(coeff[c], Integer):
             raise TypeError("Coefficients should be Integers")
 
-    if len(var) == 1:
-        diop_type = "univariate"
-    elif Poly(eq).total_degree() == 1:
+    if Poly(eq).total_degree() == 1:
         diop_type = "linear"
+    elif len(var) == 1:
+        diop_type = "univariate"
     elif Poly(eq).total_degree() == 2 and len(var) == 2:
         diop_type = "binary_quadratic"
         x, y = var[:2]
@@ -404,7 +413,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     >>> diop_linear(2*x - 3*y - 5) #solves equation 2*x - 3*y -5 = 0
     (-3*t_0 - 5, -2*t_0 - 5)
 
-    Here x = -3*t - 5 and y = -2*t - 5
+    Here x = -3*t_0 - 5 and y = -2*t_0 - 5
 
     >>> diop_linear(2*x - 3*y - 4*z -3)
     (t_0, -6*t_0 - 4*t_1 + 3, 5*t_0 + 3*t_1 - 3)
@@ -417,7 +426,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type in ["linear", "univariate"]:
+    if diop_type == "linear":
         return _diop_linear(var, coeff, param)
 
 
@@ -445,9 +454,7 @@ def _diop_linear(var, coeff, param):
     params = [symbols(p, integer=True) for p in params]
 
     if len(var) == 1:
-        if c == 0:
-            return tuple([params[0]])
-        elif divisible(c, coeff[var[0]]):
+        if divisible(c, coeff[var[0]]):
             return tuple([c/coeff[var[0]]])
         else:
             return tuple([None])
