@@ -31,8 +31,7 @@ def codomain(func, domain, *syms):
     Examples
     ========
 
-    >>> from sympy.calculus.codomain import codomain
-    >>> from sympy import Symbol, S, Interval, Union, FiniteSet
+    >>> from sympy import Symbol, S, Interval, Union, FiniteSet, codomain
     >>> x = Symbol('x', real=True)
     >>> codomain(x**2, Interval(-1, 1), x)
     [0, 1]
@@ -44,7 +43,7 @@ def codomain(func, domain, *syms):
 
     func = sympify(func)
     if not isinstance(domain, Set):
-        raise ValueError('A Set must be given, not type %s: %s' % (type(domain), domain))
+        raise ValueError('A Set must be given, not %s: %s' % (type(domain), domain))
 
     if len(syms) == 0:
         raise ValueError("A Symbol or a tuple of symbols must be given: not %s" % (type(syms)))
@@ -92,8 +91,8 @@ def codomain(func, domain, *syms):
         der_zero = solveset_real(df1, symb)
         der_zero_in_dom = closure_handle(set_val, der_zero)
 
-        maxi = set()
-        mini = set()
+        local_maxima = set()
+        local_minima = set()
         start_val = limit(f, symb, set_val.start)
         end_val = limit(f, symb, set_val.end, '-')
 
@@ -103,56 +102,55 @@ def codomain(func, domain, *syms):
                             codomain(f, Interval(i, set_val.end, True, set_val.right_open), symb))
 
         if start_val is S.Infinity or end_val is S.Infinity:
-            maxi = set([(oo, True)])
+            local_maxima = set([(oo, True)])
         elif start_val is S.NegativeInfinity or end_val is S.NegativeInfinity:
-            mini = set([(-oo, True)])
-        if maxi == set():
-            if start_val > end_val:
-                maxi = set([(start_val, set_val.left_open)])
-            elif start_val < end_val:
-                maxi = set([(end_val, set_val.right_open)])
-            else:
-                maxi = set([(start_val, set_val.left_open and set_val.right_open)])
-        if mini == set():
-            if start_val < end_val:
-                mini = set([(start_val, set_val.left_open)])
-            elif start_val > end_val:
-                mini = set([(end_val, set_val.right_open)])
-            else:
-                mini = set([(start_val, set_val.left_open and set_val.right_open)])
+            local_minima = set([(-oo, True)])
 
-        unk = set()
+        if local_maxima == set():
+            if start_val > end_val:
+                local_maxima = set([(start_val, set_val.left_open)])
+            elif start_val < end_val:
+                local_maxima = set([(end_val, set_val.right_open)])
+            else:
+                local_maxima = set([(start_val, set_val.left_open and set_val.right_open)])
+
+        if local_minima == set():
+            if start_val < end_val:
+                local_minima = set([(start_val, set_val.left_open)])
+            elif start_val > end_val:
+                local_minima = set([(end_val, set_val.right_open)])
+            else:
+                local_minima = set([(start_val, set_val.left_open and set_val.right_open)])
 
         for i in der_zero_in_dom:
             exist = not i in set_val
             if df2.subs({symb: i}) < 0:
                 if not i in sing_in_domain:
-                    maxi.add((f.subs({symb: i}), exist))
+                    local_maxima.add((f.subs({symb: i}), exist))
                 else:
-                    maxi.add((oo, True))
+                    local_maxima.add((oo, True))
             elif df2.subs({symb: i}) > 0:
                 if not i in sing_in_domain:
-                    mini.add((f.subs({symb: i}), exist))
+                    local_minima.add((f.subs({symb: i}), exist))
                 else:
-                    mini.add((-oo, True))
-            else:
-                unk.add(f.subs({symb: i}))
+                    local_minima.add((-oo, True))
 
-        ma = (-oo, True)
-        mi = (oo, True)
-        for i in maxi:
-            if i[0] > ma[0]:
-                ma = i
-            elif i[0] == ma[0]:
-                ma = (ma[0], i[1] and ma[1])
+        maximum = (-oo, True)
+        minimum = (oo, True)
 
-        for i in mini:
-            if i[0] < mi[0]:
-                mi = i
-            elif i[0] == mi[0]:
-                mi = (mi[0], i[1] and mi[1])
+        for i in local_maxima:
+            if i[0] > maximum[0]:
+                maximum = i
+            elif i[0] == maximum[0]:
+                maximum = (maximum[0], i[1] and maximum[1])
 
-        return Union(Interval(mi[0], ma[0], mi[1], ma[1]), FiniteSet(*unk))
+        for i in local_minima:
+            if i[0] < minimum[0]:
+                minimum = i
+            elif i[0] == minimum[0]:
+                minimum = (minimum[0], i[1] and minimum[1])
+
+        return Union(Interval(minimum[0], maximum[0], minimum[1], maximum[1]))
 
     if isinstance(domain, Union):
         return Union(*[codomain(func, intrvl_or_finset, symbol) for intrvl_or_finset in domain.args])
