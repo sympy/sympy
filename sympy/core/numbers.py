@@ -2261,10 +2261,6 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
         return S.One
 
     def _eval_power(self, expt):
-        if expt.is_odd:
-            return S.NegativeOne
-        if expt.is_even:
-            return S.One
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return Float(-1.0)**expt
