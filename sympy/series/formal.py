@@ -610,7 +610,11 @@ def _transform_DE_RE(DE, g, k, order, syms):
         m = Wild('m')
         RE = RE.subs(sol[0])
         RE = RE.factor().as_numer_denom()[0].collect(g(k + m))
-        RE = RE.as_coeff_mul()[1][0]
+        RE = RE.as_coeff_mul(g)[1][0]
+        for i in range(order):  # smallest order should be g(k)
+            if RE.coeff(g(k + i)) and i:
+                RE = RE.subs(k, k - i)
+                break
     return RE
 
 

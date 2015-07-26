@@ -264,6 +264,9 @@ def test_fps__hyper():
     f = exp(x)*sin(x)/x
     assert fps(f, x).truncate() == 1 + x + x**2/3 - x**4/30 - x**5/90 + O(x**6)
 
+    f = sin(x) * cos(x)
+    assert fps(f, x).truncate() == x - 2*x**3/3 + 2*x**5/15 + O(x**6)
+
 
 def test_fps_shift():
     f = x**-5*sin(x)
