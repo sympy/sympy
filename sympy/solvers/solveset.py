@@ -1070,12 +1070,13 @@ def linsolve(system, *symbols):
     the fact it is just used to maintain a consistent output
     format throughout the solveset.
 
+    Returns EmptySet(), if the linear system is inconsistent.
+
     Raises
     ======
 
     ValueError
         The input is not valid.
-        The linear system has no solution.
         The symbols are not given.
 
     Examples
@@ -1180,7 +1181,11 @@ def linsolve(system, *symbols):
         raise ValueError("Invalid arguments")
 
     # Solve using Gauss-Jordan elimination
-    sol, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
+    try:
+        sol, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
+    except ValueError:
+        # No solution
+        return EmptySet()
 
     # Replace free parameters with free symbols
     solution = []
