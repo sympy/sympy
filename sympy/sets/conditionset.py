@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
+from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
 from sympy.core.singleton import Singleton, S
@@ -34,7 +35,5 @@ class ConditionSet(Set):
     def _is_multivariate(self):
         return len(self.lamda.variables) > 1
 
-    def _contains(self, other):
-        # XXX: probably we should check if self.cond is returning only true or
-        # false
-        return self.condition(other)
+    def contains(self, other):
+        return And(self.condition(other), self.base_set.contains(other))

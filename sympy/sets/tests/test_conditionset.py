@@ -1,9 +1,12 @@
 from sympy.sets import ConditionSet
-from sympy import (Symbol, Eq, S, sin, pi, Lambda)
+from sympy import (Symbol, Eq, S, sin, pi, Lambda, Interval)
 
 x = Symbol('x')
 
 
 def test_CondSet():
-    sin_sols = ConditionSet(Lambda(x, Eq(sin(x), 0)), S.Reals)
-    assert 2*pi in sin_sols
+    sin_sols_principal = ConditionSet(Lambda(x, Eq(sin(x), 0)),
+                                      Interval(0, 2*pi, False, True))
+    assert pi in sin_sols_principal
+    assert pi/2 not in sin_sols_principal
+    assert 3*pi not in sin_sols_principal
