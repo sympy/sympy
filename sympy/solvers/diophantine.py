@@ -278,7 +278,7 @@ def classify_diop(eq):
         var.append(eq)
         coeff[eq] = Integer(1)
     elif type(eq) is Mul and Poly(eq).total_degree() == 1:
-    	var.append(eq.as_two_terms()[1])
+        var.append(eq.as_two_terms()[1])
         coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
     else:
         var = list(eq.free_symbols)
