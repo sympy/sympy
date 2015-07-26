@@ -179,7 +179,7 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    """Computes a simple DE.
+    """Generates simple DE.
 
     DE is of the form
 
@@ -188,9 +188,11 @@ def simpleDE(f, x, g, order=4):
 
     where :math:`A_j` should be rational function in x.
 
-    By default DE is tried uptill order 4. If it is not
-    found ``None`` is returned. By increasing order, higher
-    order DE's can be found.
+    Generates DE's upto order 4 (default). DE's can also have free parameters.
+
+    By increasing order, higher order DE's can be found.
+
+    Yields a tuple of (DE, order).
 
     Examples
     ========
@@ -215,18 +217,20 @@ def simpleDE(f, x, g, order=4):
 
     eq, DE = _makeDE(order)
 
+    found = False
     for k in range(1, order + 1):
         eq, DE = _makeDE(k)
         eq = eq.expand()
         terms = eq.as_ordered_terms()
         ind = rational_independent(terms, x)
-        if len(ind) == k:
+        if found or len(ind) == k:
             sol = solve(ind, a, dict=True)
             if sol:
+                found = True
                 DE = DE.subs(sol[0])
-                DE = DE.as_numer_denom()[0]
-                DE = DE.factor().as_coeff_mul(Derivative)[1][0]
-                return DE.collect(Derivative(g(x)))
+            DE = DE.as_numer_denom()[0]
+            DE = DE.factor().as_coeff_mul(Derivative)[1][0]
+            yield DE.collect(Derivative(g(x))), k
 
 
 def exp_re(DE, r, k):
@@ -533,18 +537,101 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     return (sol, ind, s)
 
 
-def solve_de(f, x, DE, g, k):
+def _solve_hyper_RE(f, x, RE, g, k):
+    """See docstring of :func:`rsolve_hypergeometric` for details."""
+    terms = Add.make_args(RE)
+
+    if len(terms) == 2:
+        gs = list(RE.atoms(Function))
+        P, Q = map(RE.coeff, gs)
+        m = gs[1].args[0] - gs[0].args[0]
+        if m < 0:
+            P, Q = Q, P
+            m = abs(m)
+        return rsolve_hypergeometric(f, x, P, Q, k, m)
+
+
+def _solve_explike_DE(f, x, DE, g, k):
+    """Solves DE with constant coefficients."""
+    for t in Add.make_args(DE):
+        coeff, d = t.as_independent(g)
+        if coeff.free_symbols:
+            return
+
+    RE = exp_re(DE, g, k)
+
+    init = {}
+    for i in range(len(Add.make_args(RE))):
+        if i:
+            f = f.diff(x)
+        init[g(k).subs(k, i)] = f.limit(x, 0)
+
+    from sympy.solvers import rsolve
+    sol = rsolve(RE, g(k), init)
+
+    if sol:
+        return (sol / factorial(k), S.Zero, S.Zero)
+
+
+def _solve_simple(f, x, DE, g, k):
+    """Converts DE into RE and solves using :func:`rsolve`."""
+    RE = hyper_re(DE, g, k)
+
+    init = {}
+    for i in range(len(Add.make_args(RE))):
+        if i:
+            f = f.diff(x)
+        init[g(k).subs(k, i)] = f.limit(x, 0) / factorial(i)
+
+    from sympy.solvers import rsolve
+    sol = rsolve(RE, g(k), init)
+
+    if sol:
+        return (sol, S.Zero, S.Zero)
+
+
+def _transform_explike_DE(DE, g, x, order, syms):
+    """Converts DE with free parameters into DE with constant coefficients."""
+    from sympy.solvers import solve
+    eq = []
+    highest_coeff = DE.coeff(Derivative(g(x), x, order))
+    for i in range(order):
+        coeff = DE.coeff(Derivative(g(x), x, i))
+        coeff = (coeff / highest_coeff).expand().collect(x)
+        for t in Add.make_args(coeff):
+            if t.has(x):
+                eq.append(t)
+    sol = solve(eq, syms, dict=True)
+    if sol:
+        DE = DE.subs(sol[0])
+        DE = DE.factor().as_coeff_mul(Derivative)[1][0]
+        DE = DE.collect(Derivative(g(x)))
+    return DE
+
+
+def _transform_DE_RE(DE, g, k, order, syms):
+    """Converts DE with free parameters into RE of hypergeometric type."""
+    from sympy.solvers import solve
+    RE = hyper_re(DE, g, k)
+
+    eq = []
+    for i in range(1, order):
+        coeff = RE.coeff(g(k + i))
+        eq.append(coeff)
+    sol = solve(eq, syms, dict=True)
+    if sol:
+        m = Wild('m')
+        RE = RE.subs(sol[0])
+        RE = RE.factor().as_numer_denom()[0].collect(g(k + m))
+        RE = RE.as_coeff_mul()[1][0]
+    return RE
+
+
+def solve_de(f, x, DE, order, g, k):
     """Solves the DE.
 
-    First converts the DE into a RE using :func:`hyper_re`.
-
-    If the RE is of the form Q(k)*a(k + m) - P(k)*a(k),
-    uses :func:`rsolve_hypergeometric` to solve.
-
-    Checks if DE is explike, if yes again forms RE
-    using :func:`exp_re`.
-
-    Tries to solve RE using :func:`rsolve`.
+    Tries to solve DE by either converting into a RE containing two terms or
+    converting into a DE having constant coefficients.
 
     Returns a Tuple of (formula, series independent terms, order) if successful
     otherwise ``None``.
@@ -572,51 +659,33 @@ def solve_de(f, x, DE, g, k):
     sympy.series.formal.rsolve_hypergeometric
     sympy.solvers.recurr.rsolve
     """
-    RE = hyper_re(DE, g, k)
-    terms = Add.make_args(RE)
+    sol = None
+    syms = DE.free_symbols.difference(set([g, x]))
 
-    if len(terms) == 2:
-        gs = list(RE.atoms(Function))
-        P, Q = map(RE.coeff, gs)
-        m = gs[1].args[0] - gs[0].args[0]
-        if m < 0:
-            P, Q = Q, P
-            m = abs(m)
-        return rsolve_hypergeometric(f, x, P, Q, k, m)
+    if syms:
+        RE = _transform_DE_RE(DE, g, k, order, syms)
+    else:
+        RE = hyper_re(DE, g, k)
+    if not RE.free_symbols.difference(set([k])):
+        sol = _solve_hyper_RE(f, x, RE, g, k)
 
-    explike = True
-    for t in Add.make_args(DE):
-        coeff, d = t.as_independent(g)
-        if coeff.free_symbols:
-            explike = False
-            break
-
-    if explike:
-        RE = exp_re(DE, g, k)
-
-    init = {}
-    for i in range(len(terms)):
-        if i:
-            f = f.diff(x)
-        if explike:
-            init[g(k).subs(k, i)] = f.subs(x, 0)
-        else:
-            init[g(k).subs(k, i)] = f.subs(x, 0) / factorial(i)
-
-    from sympy.solvers import rsolve
-    sol = rsolve(RE, g(k), init)
-
-    if explike:
-        sol /= factorial(k)
     if sol:
-        return (sol, S.Zero, S.Zero)
+        return sol
+
+    if syms:
+        DE = _transform_explike_DE(DE, g, x, order, syms)
+    if not DE.free_symbols.difference(set([x])):
+        sol = _solve_explike_DE(f, x, DE, g, k)
+
+    if sol:
+        return sol
 
 
 def hyper_algorithm(f, x, k, order=4):
     """Hypergeometric algorithm for computing Formal Power Series.
 
     Steps:
-        * Compute a simpleDE
+        * Generates DE
         * Convert the DE into RE
         * Solves the RE
 
@@ -644,17 +713,22 @@ def hyper_algorithm(f, x, k, order=4):
     """
     g = Function('g')
 
-    DE = simpleDE(f, x, g, order)
+    des = []  # list of DE's
+    sol = None
+    for DE, i in simpleDE(f, x, g, order):
+        if DE is not None:
+            sol = solve_de(f, x, DE, i, g, k)
+        if sol:
+            return sol
+        if not DE.free_symbols.difference(set([x])):
+            des.append(DE)
 
-    if DE is None:
-        return None
-
-    sol = solve_de(f, x, DE, g, k)
-
-    if sol is None:
-        return None
-
-    return sol
+    # If nothing works
+    # Try plain rsolve
+    for DE in des:
+        sol = _solve_simple(f, x, DE, g, k)
+        if sol:
+            return sol
 
 
 def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):

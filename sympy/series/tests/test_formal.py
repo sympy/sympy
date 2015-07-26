@@ -4,7 +4,7 @@ from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 x, y, z = symbols('x y z')
 n, m, k = symbols('n m k', integer=True)
@@ -72,17 +72,29 @@ def test_rational_independent():
 
 
 def test_simpleDE():
-    assert simpleDE(exp(x), x, f) == -f(x) + Derivative(f(x), x)
-    assert simpleDE(sin(x), x, f) == f(x) + Derivative(f(x), x, x)
-    assert simpleDE(log(1 + x), x, f) == \
-        (x + 1)*Derivative(f(x), x, 2) + Derivative(f(x), x)
-    assert simpleDE(asin(x), x, f) == \
-        x*Derivative(f(x), x) + (x**2 - 1)*Derivative(f(x), x, x)
-    assert simpleDE(exp(x)*sin(x), x, f) == \
-        2*f(x) - 2*Derivative(f(x)) + Derivative(f(x), x, x)
-    assert simpleDE(((1 + x)/(1 - x))**n, x, f) == \
-        2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
-    assert simpleDE(airyai(x), x, f) == -x*f(x) + Derivative(f(x), x, x)
+    # Tests just the first valid DE
+    for DE in simpleDE(exp(x), x, f):
+        assert DE == (-f(x) + Derivative(f(x), x), 1)
+        break
+    for DE in simpleDE(sin(x), x, f):
+        assert DE == (f(x) + Derivative(f(x), x, x), 2)
+        break
+    for DE in simpleDE(log(1 + x), x, f):
+        assert DE == ((x + 1)*Derivative(f(x), x, 2) + Derivative(f(x), x), 2)
+        break
+    for DE in simpleDE(asin(x), x, f):
+        assert DE == (x*Derivative(f(x), x) + (x**2 - 1)*Derivative(f(x), x, x),
+                      2)
+        break
+    for DE in simpleDE(exp(x)*sin(x), x, f):
+        assert DE == (2*f(x) - 2*Derivative(f(x)) + Derivative(f(x), x, x), 2)
+        break
+    for DE in simpleDE(((1 + x)/(1 - x))**n, x, f):
+        assert DE == (2*n*f(x) + (x**2 - 1)*Derivative(f(x), x), 1)
+        break
+    for DE in simpleDE(airyai(x), x, f):
+        assert DE == (-x*f(x) + Derivative(f(x), x, x), 2)
+        break
 
 
 def test_exp_re():
@@ -241,9 +253,6 @@ def test_fps__hyper():
     assert fps(f, x, rational=False).truncate() == \
         x - x**2/2 + x**3/3 - x**4/4 + x**5/5 + O(x**6)
 
-    f = x*exp(x)*sin(2*x)  # TODO: solved using rsolve, improve simpleDE
-    assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
-
     f = airyai(x**2)
     assert fps(f, x).truncate() == \
         (3**Rational(5, 6)*gamma(Rational(1, 3))/(6*pi) -
@@ -251,6 +260,9 @@ def test_fps__hyper():
 
     f = exp(x)*sin(x)
     assert fps(f, x).truncate() == x + x**2 + x**3/3 - x**5/30 + O(x**6)
+
+    f = exp(x)*sin(x)/x
+    assert fps(f, x).truncate() == 1 + x + x**2/3 - x**4/30 - x**5/90 + O(x**6)
 
 
 def test_fps_shift():
@@ -384,7 +396,7 @@ def test_fps__symbolic():
          O(x**(n - 6), (x, oo)))
 
 
-@XFAIL
-def test_xfail_fps__simpleDE():
-    f = exp(x)*sin(x)/x
-    assert fps(f, x).truncate() == 1 + x + x**2/3 - x**4/30 - x**5/90 + O(x**6)
+@slow
+def test_fps__slow():
+    f = x*exp(x)*sin(2*x)  # TODO: rsolve needs improvement
+    assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
