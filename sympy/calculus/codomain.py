@@ -1,6 +1,6 @@
 from sympy import S, sympify, diff, limit, oo
 from sympy.calculus.singularities import singularities
-from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set
+from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
 from sympy.solvers.solveset import solveset_real
 
 
@@ -57,9 +57,6 @@ def codomain(func, domain, *syms):
         raise NotImplementedError("Algorithms finding range for non-rational functions"
                                     "are not yet implemented")
 
-    if domain.is_EmptySet:
-        return EmptySet()
-
     if not func.has(symbol):
         return FiniteSet(func)
 
@@ -83,6 +80,10 @@ def codomain(func, domain, *syms):
     # all the singularities of the function
     sing = singularities(func, symbol)
     sing_in_domain = closure_handle(domain, sing)
+    domain = Complement(domain, sing_in_domain)
+
+    if domain.is_EmptySet:
+        return EmptySet()
 
     def codomain_interval(f, set_val, *sym):
         symb = sym[0]
@@ -95,11 +96,6 @@ def codomain(func, domain, *syms):
         local_minima = set()
         start_val = limit(f, symb, set_val.start)
         end_val = limit(f, symb, set_val.end, '-')
-
-        for i in sing_in_domain:
-            if not i in set_val.boundary:
-                return Union(codomain(f, Interval(set_val.start, i, set_val.left_open, True), symb),
-                            codomain(f, Interval(i, set_val.end, True, set_val.right_open), symb))
 
         if start_val is S.Infinity or end_val is S.Infinity:
             local_maxima = set([(oo, True)])
@@ -159,6 +155,5 @@ def codomain(func, domain, *syms):
         return codomain_interval(func, domain, symbol)
 
     if isinstance(domain, FiniteSet):
-        domain = Complement(domain, FiniteSet(*sing_in_domain))
         return FiniteSet(*[limit(func, symbol, i) if i in FiniteSet(-oo, oo)
                             else func.subs({symbol: i}) for i in domain])
