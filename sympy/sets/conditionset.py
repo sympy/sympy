@@ -32,8 +32,5 @@ class ConditionSet(Set):
     condition = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
 
-    def _is_multivariate(self):
-        return len(self.lamda.variables) > 1
-
     def contains(self, other):
         return And(self.condition(other), self.base_set.contains(other))
