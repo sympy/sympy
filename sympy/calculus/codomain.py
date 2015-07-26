@@ -46,15 +46,15 @@ def codomain(func, domain, *syms):
         raise ValueError('A Set must be given, not %s: %s' % (type(domain), domain))
 
     if len(syms) == 0:
-        raise ValueError("A Symbol or a tuple of symbols must be given: not %s" % (type(syms)))
+        raise ValueError("A Symbol or a tuple of symbols must be given: not %s" % (syms,))
 
     if len(syms) == 1:
         symbol = syms[0]
     else:
-        raise NotImplementedError("more than one variables %s not handeled" % (syms))
+        raise NotImplementedError("more than one variables %s not handled" % (syms,))
 
     if not func.is_rational_function(symbol):
-        raise NotImplementedError("Algorithms finding range for non-rational functions"
+        raise NotImplementedError("Algorithms finding range for non-rational functions "
                                     "are not yet implemented")
 
     if not func.has(symbol):
