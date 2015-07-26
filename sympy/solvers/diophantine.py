@@ -474,14 +474,14 @@ def _diop_linear(var, coeff, param):
 
     which can be re-written as:
 
-    a_0*x_0 + g_0*y_0 == c 
+    a_0*x_0 + g_0*y_0 == c
 
     where
 
-    g_0 == gcd(a_1, a_2) 
+    g_0 == gcd(a_1, a_2)
 
     and
-          
+
     y == (a_1*x_1)/g_0 + (a_2*x_2)/g_0
 
     This leaves us with two binary linear diophantine equations.
@@ -493,7 +493,7 @@ def _diop_linear(var, coeff, param):
 
     For the second:
 
-    a == a_1/g_0 
+    a == a_1/g_0
     b == a_2/g_0
     c == the solution we find for y_0 in the first equation.
 
@@ -519,7 +519,7 @@ def _diop_linear(var, coeff, param):
 
     4*x_0 + 6*x_1 + 3*x_2 == 2
 
-    This can be re-written as: 
+    This can be re-written as:
 
     4*x_0 + 3*y_0 == 2
 
@@ -553,7 +553,7 @@ def _diop_linear(var, coeff, param):
     ==>
 
     x_1 == t_0 + t_1
-    x_2 == -2 - 6*t_0 - 2*t_1 
+    x_2 == -2 - 6*t_0 - 2*t_1
 
     where 't_0' and 't_1' are any integers.
 
@@ -572,7 +572,7 @@ def _diop_linear(var, coeff, param):
     for i in range(len(B)):
         tot_x, tot_y = 0, 0
 
-        if type(c) is Add: 
+        if type(c) is Add:
             # example: 5 + t_0 + 3*t_1
             args = c.args
         else: # c is a Mul, a Symbol, or an Integer
@@ -584,7 +584,7 @@ def _diop_linear(var, coeff, param):
                 # example: 3*t_1 -> k = 3
                 k = args[j].as_two_terms()[0]
                 param_index = params.index(args[j].as_two_terms()[1]) + 1
-            elif arg_type is Symbol: 
+            elif arg_type is Symbol:
                 # example: t_0 -> k = 1
                 k = 1
                 param_index = params.index(args[j]) + 1
@@ -601,18 +601,18 @@ def _diop_linear(var, coeff, param):
                     sol_x = sol_x.args[0]*params[param_index - 1] + sol_x.args[1]
                 elif type(sol_x) is Integer:
                     sol_x = sol_x*params[param_index - 1]
-                
+
                 if sol_y is None:
                     sol_y = 0
                 elif type(sol_y) is Add:
                     sol_y = sol_y.args[0]*params[param_index - 1] + sol_y.args[1]
                 elif type(sol_y) is Integer:
                     sol_y = sol_y*params[param_index - 1]
-            
+
             else:
                 if sol_x is None or sol_y is None:
                     return no_solution
-            
+
             tot_x += sol_x
             tot_y += sol_y
 
@@ -622,7 +622,7 @@ def _diop_linear(var, coeff, param):
     solutions.append(tot_y)
 
     return tuple(solutions)
-    
+
 
 def base_solution_linear(c, a, b, t=None):
     """
