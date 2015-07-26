@@ -653,4 +653,3 @@ def check_integrality(eq):
                 return False
 
     return True
-    
