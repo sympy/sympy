@@ -609,7 +609,7 @@ def check_linear(eq, param=symbols("t", Integer=True)):
         var.append(eq)
         coeff = {}
         coeff[eq] = Integer(1)
-        
+
     solutions = diop_solve(eq, param)
 
     if len(var) == 0:
