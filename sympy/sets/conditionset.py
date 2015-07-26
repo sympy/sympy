@@ -31,8 +31,8 @@ class ConditionSet(Set):
     >>> 5 in ConditionSet(Lambda(x, x**2 > 4), S.Reals)
     True
     """
-    def __new__(cls, lamda, base_set):
-        return Basic.__new__(cls, lamda, base_set)
+    def __new__(cls, condition, base_set):
+        return Basic.__new__(cls, condition, base_set)
 
     condition = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
