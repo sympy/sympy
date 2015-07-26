@@ -193,19 +193,6 @@ def simpleDE(f, x, g, order=4):
     By increasing order, higher order DE's can be found.
 
     Yields a tuple of (DE, order).
-
-    Examples
-    ========
-
-    >>> from sympy import Function, exp, ln
-    >>> from sympy.series.formal import simpleDE
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-
-    >>> simpleDE(exp(x), x, f)
-    -f(x) + Derivative(f(x), x)
-    >>> simpleDE(ln(1 + x), x, f)
-    (x + 1)*Derivative(f(x), x, x) + Derivative(f(x), x)
     """
     from sympy.solvers import solve
     a = symbols('a:%d' % (order))
@@ -644,10 +631,10 @@ def solve_de(f, x, DE, order, g, k):
     >>> from sympy.series.formal import solve_de
     >>> from sympy.abc import x, k, f
 
-    >>> solve_de(exp(x), x, D(f(x), x) - f(x), f, k)
+    >>> solve_de(exp(x), x, D(f(x), x) - f(x), 1, f, k)
     (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
-    >>> solve_de(ln(1 + x), x, (x + 1)*D(f(x), x, 2) + D(f(x)), f, k)
+    >>> solve_de(ln(1 + x), x, (x + 1)*D(f(x), x, 2) + D(f(x)), 2, f, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
      Eq(Mod(k, 1), 0)), (0, True)), x, 2)
 
@@ -766,7 +753,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
 
     #  extract x**n from f(x)
     mul = S.One
-    if extract:
+    if extract and f.free_symbols.difference(set([x])):
         m = Wild('m')
         n = Wild('n', exclude=[m])
         f = f.factor().powsimp()
@@ -775,7 +762,10 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
             for t in Add.make_args(s[n]):
                 if t.has(Symbol):
                     mul *= (x)**t
-        f = (f / mul).expand()
+        if mul is not S.One:
+            f = (f / mul)
+
+    f = f.expand()
 
     #  Break instances of Add
     #  this allows application of different

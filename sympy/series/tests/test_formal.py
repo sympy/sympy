@@ -293,6 +293,10 @@ def test_fps__Add_expr():
     f = 1/x + sin(x)
     assert fps(f, x).truncate() == 1/x + x - x**3/6 + x**5/120 + O(x**6)
 
+    f = sin(x) - cos(x) + 1/(x - 1)
+    assert fps(f, x).truncate() == \
+        -2 - x**2/2 - 7*x**3/6 - 25*x**4/24 - 119*x**5/120 + O(x**6)
+
 
 def test_fps__asymptotic():
     f = exp(x)
