@@ -10,6 +10,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.sympify import _sympify
 from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
+from sympy.core.numbers import nan
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -215,6 +216,8 @@ class ImageSet(Set):
     16
     """
     def __new__(cls, lamda, base_set):
+        if lamda.args[1] is nan:
+            return EmptySet()
         return Basic.__new__(cls, lamda, base_set)
 
     lamda = property(lambda self: self.args[0])

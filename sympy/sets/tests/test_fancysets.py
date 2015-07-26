@@ -4,7 +4,7 @@ from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
 from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, Abs, I)
+                   Rational, sqrt, tan, log, Abs, I, nan)
 from sympy.utilities.pytest import XFAIL, raises
 import itertools
 
@@ -177,6 +177,7 @@ def test_range_interval_intersection():
 def test_fun():
     assert (FiniteSet(*ImageSet(Lambda(x, sin(pi*x/4)),
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+    assert ImageSet(Lambda(x, nan), S.Integers) == S.EmptySet
 
 
 def test_Reals():

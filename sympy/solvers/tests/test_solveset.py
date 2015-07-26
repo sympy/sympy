@@ -937,3 +937,9 @@ def test_issue_9557():
 
     assert solveset(x**2 + a, x) == Intersection(S.Reals,
         FiniteSet(-sqrt(-a), sqrt(-a)))
+
+
+def test_issue_9733():
+    x = Symbol('x')
+    n = Dummy('n')
+    assert solveset(sinh(x).rewrite(exp), x) == imageset(Lambda(n, n*I*pi), S.Integers)
