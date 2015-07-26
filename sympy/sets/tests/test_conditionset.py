@@ -10,3 +10,5 @@ def test_CondSet():
     assert pi in sin_sols_principal
     assert pi/2 not in sin_sols_principal
     assert 3*pi not in sin_sols_principal
+    assert 5 in ConditionSet(Lambda(x, x**2 > 4), S.Reals)
+    assert 1 not in ConditionSet(Lambda(x, x**2 > 4), S.Reals)
