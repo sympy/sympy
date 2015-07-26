@@ -42,6 +42,9 @@ def test_codomain():
             Complement(S.Reals, Interval(0, 16, True, True))
     assert codomain(x**2/(x - 4), Interval(3, 4), x) == Interval(-oo, -9)
     assert codomain(-x**2/(x - 4), Interval(3, 4), x) == Interval(9, oo)
+    assert codomain((x**2 - x)/(x**3 - 1), S.Reals, x) == Interval(-1, S(1)/3, False, True)
+    assert codomain(-x**2 + 1/x, S.Reals, x) == S.Reals
+    assert codomain(x**2 - 1/x, S.Reals, x) == S.Reals
 
     assert codomain(x**2, Union(Interval(1, 2), FiniteSet(3)), x) == \
             Union(Interval(1, 4), FiniteSet(9))

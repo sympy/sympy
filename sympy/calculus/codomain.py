@@ -78,7 +78,7 @@ def codomain(func, domain, *syms):
         return Intersection(FiniteSet(*singul), set_im)
 
     # all the singularities of the function
-    sing = singularities(func, symbol)
+    sing = solveset_real(func.as_numer_denom()[1], symbol)
     sing_in_domain = closure_handle(domain, sing)
     domain = Complement(domain, sing_in_domain)
 
@@ -121,15 +121,9 @@ def codomain(func, domain, *syms):
         for i in der_zero_in_dom:
             exist = not i in set_val
             if df2.subs({symb: i}) < 0:
-                if not i in sing_in_domain:
-                    local_maxima.add((f.subs({symb: i}), exist))
-                else:
-                    local_maxima.add((oo, True))
+                local_maxima.add((f.subs({symb: i}), exist))
             elif df2.subs({symb: i}) > 0:
-                if not i in sing_in_domain:
-                    local_minima.add((f.subs({symb: i}), exist))
-                else:
-                    local_minima.add((-oo, True))
+                local_minima.add((f.subs({symb: i}), exist))
 
         maximum = (-oo, True)
         minimum = (oo, True)
