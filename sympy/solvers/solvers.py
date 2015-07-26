@@ -1113,10 +1113,16 @@ def solve(f, *symbols, **flags):
         no_False = []  # solutions for which no symbols gave False
         if type(solution) is tuple:
             # this has already been checked and is in as_set form
-            return solution
+            if S.Infinity in solution or S.NegativeInfinity in solution:
+                return ()
+            else:
+                return solution
         elif type(solution) is list:
             if type(solution[0]) is tuple:
                 for sol in solution:
+                    if S.Infinity in sol or S.NegativeInfinity in sol:
+                        solution.remove(sol)
+                        continue
                     for symb, val in zip(symbols, sol):
                         test = check_assumptions(val, **symb.assumptions0)
                         if test is False:
@@ -1129,6 +1135,9 @@ def solve(f, *symbols, **flags):
                 for sol in solution:
                     a_None = False
                     for symb, val in sol.items():
+                        if val == S.Infinity or val == S.NegativeInfinity:
+                            solution.remove(sol)
+                            continue
                         test = check_assumptions(val, **symb.assumptions0)
                         if test:
                             continue
@@ -1141,6 +1150,9 @@ def solve(f, *symbols, **flags):
                             got_None.append(sol)
             else:  # list of expressions
                 for sol in solution:
+                    if sol == S.Infinity or sol == S.NegativeInfinity:
+                        solution = []
+                        break
                     test = check_assumptions(sol, **symbols[0].assumptions0)
                     if test is False:
                         continue
@@ -1151,6 +1163,9 @@ def solve(f, *symbols, **flags):
         elif type(solution) is dict:
             a_None = False
             for symb, val in solution.items():
+                if val == S.Infinity or val == S.NegativeInfinity:
+                    solution = dict()
+                    break
                 test = check_assumptions(val, **symb.assumptions0)
                 if test:
                     continue
