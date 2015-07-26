@@ -433,7 +433,6 @@ def _diop_linear(var, coeff, param):
     a_0*x_0 + a_1*x_1 + ... + a_n*x_n == c
 
     Note that no solution exists if gcd(a_0, ..., a_n) doesn't divide c.
-    
     """
     if len(var) == 0:
         return None

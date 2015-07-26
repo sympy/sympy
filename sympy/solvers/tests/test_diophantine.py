@@ -104,14 +104,11 @@ def test_quadratic_elliptical_case():
 
 def test_quadratic_parabolic_case():
     # Parabolic case: B**2 - 4AC = 0
-    assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
-        set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
-    assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 6*x + 12*y - 6) == \
-        set([(-63*t**2 + 12*t, -42*t**2 + 15*t -1), (-63*t**2 + 30*t - 3, -42*t**2 + 27*t - 4)])
-    assert diop_solve(8*x**2 + 24*x*y + 18*y**2 + 4*x + 6*y - 7) == set([])
-    assert diop_solve(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1) == set([(t,-t - 1)])
-    assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
-        set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
+    assert check_solutions(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16)
+    assert check_solutions(8*x**2 - 24*x*y + 18*y**2 + 6*x + 12*y - 6)
+    assert check_solutions(8*x**2 + 24*x*y + 18*y**2 + 4*x + 6*y - 7)
+    assert check_solutions(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1)
+    assert check_solutions(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1)
     assert check_solutions(y**2 - 41*x + 40)
 
 
@@ -573,7 +570,6 @@ def check_solutions(eq):
 
     while len(s) and okay:
         solution = s.pop()
-        print("HERE")
 
         okay = False
 
