@@ -9,16 +9,16 @@ from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
 
 
-class CondSet(Set):
+class ConditionSet(Set):
     """
     Set of elements which satisfies a given condition.
 
-    {x | cond(x) is True for x in S}
+    {x | condition(x) is True for x in S}
 
     Examples
     ========
 
-    >>> from sympy import Symbol, S, CondSet, FiniteSet, Lambda, pi
+    >>> from sympy import Symbol, S, CondSet, Lambda, pi, Eq, sin
 
     >>> x = Symbol('x')
     >>> sin_sols = CondSet(Lambda(x, Eq(sin(x), 0)), S.Reals)
@@ -28,7 +28,7 @@ class CondSet(Set):
     def __new__(cls, lamda, base_set):
         return Basic.__new__(cls, lamda, base_set)
 
-    lamda = property(lambda self: self.args[0])
+    condition = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
 
     def _is_multivariate(self):
@@ -37,4 +37,4 @@ class CondSet(Set):
     def _contains(self, other):
         # XXX: probably we should check if self.cond is returning only true or
         # false
-        return self.cond(other)
+        return self.condition(other)
