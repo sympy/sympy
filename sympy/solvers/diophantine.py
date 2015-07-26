@@ -270,21 +270,22 @@ def classify_diop(eq):
     """
     eq = eq.expand(force=True)
 
-    var = []
-    coeff = {}
+    coeff = coeff = eq.as_coefficients_dict()
+    var = [x for x in coeff.keys() if x is not Integer(1)]
     diop_type = None
 
-    if type(eq) is Symbol:
+    '''
+    if isinstance(eq, Symbol):
         var.append(eq)
         coeff[eq] = Integer(1)
-    elif type(eq) is Mul and Poly(eq).total_degree() == 1:
+    elif isinstance(eq, Mul) and Poly(eq).total_degree() == 1:
         var.append(eq.as_two_terms()[1])
         coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
     else:
         var = list(eq.free_symbols)
         var.sort(key=default_sort_key)
         coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-
+    '''
     for c in coeff:
         if not isinstance(coeff[c], Integer):
             raise TypeError("Coefficients should be Integers")
@@ -423,7 +424,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "linear":
-        return _diop_linear(var, coeff, param)
+        return _diop_linear(var, coeff, param, test)
 
 
 def _diop_linear(var, coeff, param):
@@ -572,41 +573,36 @@ def _diop_linear(var, coeff, param):
     for i in range(len(B)):
         tot_x, tot_y = 0, 0
 
-        if type(c) is Add:
+        if isinstance(c, Add):
             # example: 5 + t_0 + 3*t_1
             args = c.args
         else: # c is a Mul, a Symbol, or an Integer
             args = [c]
 
         for j in range(len(args)):
-            arg_type = type(args[j])
-            if arg_type is Mul:
+            if isinstance(args[j], Mul):
                 # example: 3*t_1 -> k = 3
                 k = args[j].as_two_terms()[0]
                 param_index = params.index(args[j].as_two_terms()[1]) + 1
-            elif arg_type is Symbol:
+            elif isinstance(args[j], Symbol):
                 # example: t_0 -> k = 1
                 k = 1
                 param_index = params.index(args[j]) + 1
-            else: #arg_type is Integer
+            else: #args[j] is an Integer
                 # example: 5 -> k = 5
                 k = args[j]
                 param_index = 0
 
             sol_x, sol_y = base_solution_linear(k, A[i], B[i], params[param_index])
-            if arg_type is Mul or arg_type is Symbol:
-                if sol_x is None:
-                    sol_x = 0
-                elif type(sol_x) is Add:
+            if isinstance(args[j], Mul) or isinstance(args[j], Symbol):
+                if isinstance(sol_x, Add):
                     sol_x = sol_x.args[0]*params[param_index - 1] + sol_x.args[1]
-                elif type(sol_x) is Integer:
+                elif isinstance(sol_x, Integer):
                     sol_x = sol_x*params[param_index - 1]
 
-                if sol_y is None:
-                    sol_y = 0
-                elif type(sol_y) is Add:
+                if isinstance(sol_y, Add):
                     sol_y = sol_y.args[0]*params[param_index - 1] + sol_y.args[1]
-                elif type(sol_y) is Integer:
+                elif isinstance(sol_y, Integer):
                     sol_y = sol_y*params[param_index - 1]
 
             else:

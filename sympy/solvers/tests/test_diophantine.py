@@ -52,6 +52,7 @@ def test_linear():
     assert check_linear(3*x)
     assert check_linear(x + 1)
     assert check_linear(2*x + 1)
+    assert check_linear(2*x + 4)
     assert check_linear(y + x)
     assert check_linear(y + x + 0)
     assert check_linear(y + x - 0)
@@ -583,33 +584,15 @@ def check_solutions(eq):
     return okay
 
 
-def check_linear(eq, param=symbols("t", Integer=True)):
+def check_linear(eq, param=symbols("t", integer=True)):
     """
     Determines whether solutions returned by diop_solve() satisfy the
     original equation.
     """
 
-    eq = eq.expand(force=True)
-
-    var = []
-    coeff = {}
-    diop_type = None
-
-    if type(eq) is Add:
-        var = list(eq.free_symbols)
-        var.sort(key=default_sort_key)
-        coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-
-    elif type(eq) is Mul:
-        var.append(eq.as_two_terms()[1])
-        coeff = {}
-        coeff[eq.as_two_terms()[1]] = Integer(eq.as_two_terms()[0])
-
-    elif type(eq) is Symbol:
-        var.append(eq)
-        coeff = {}
-        coeff[eq] = Integer(1)
-
+    eq = eq.expand()
+    coeff = eq.as_coefficients_dict()
+    var = [x for x in coeff.keys() if x is not Integer(1)]
     solutions = diop_solve(eq, param)
 
     if len(var) == 0:
@@ -619,6 +602,7 @@ def check_linear(eq, param=symbols("t", Integer=True)):
         c = -coeff[Integer(1)]
     else:
         c = 0
+
     # The equation
     # a_0*x_0 + ... + a_n*x_n == c
     # has no integer solutions if and only if gcd(a_0, ..., a_n) does not divide c.
