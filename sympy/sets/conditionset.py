@@ -19,11 +19,16 @@ class ConditionSet(Set):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, CondSet, Lambda, pi, Eq, sin
+    >>> from sympy import Symbol, S, ConditionSet, Lambda, pi, Eq, sin
 
     >>> x = Symbol('x')
-    >>> sin_sols = CondSet(Lambda(x, Eq(sin(x), 0)), S.Reals)
+    >>> sin_sols = ConditionSet(Lambda(x, Eq(sin(x), 0)), Interval(0, 2*pi))
     >>> 2*pi in sin_sols
+    True
+    >>> pi/2 in sin_sols
+    False
+    >>> 3*pi in sin_sols
+    >>> 5 in ConditionSet(Lambda(x, x**2 > 4), S.Reals)
     True
     """
     def __new__(cls, lamda, base_set):
