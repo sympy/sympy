@@ -221,7 +221,7 @@ def _invert_complex(f, g_ys, symbol):
         if isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
-                               for g_y in g_ys])
+                               for g_y in g_ys if g_y != S.Zero])
             return _invert_complex(f.args[0], exp_invs, symbol)
     return (f, g_ys)
 
