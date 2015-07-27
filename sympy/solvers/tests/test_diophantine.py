@@ -592,8 +592,14 @@ def check_linear(eq, param=symbols("t", integer=True)):
 
     eq = eq.expand()
     coeff = eq.as_coefficients_dict()
-    var = [x for x in coeff.keys() if x is not Integer(1)]
     solutions = diop_solve(eq, param)
+
+    if isinstance(eq, Add):
+        var = sorted(list(eq.free_symbols), key=default_sort_key)
+    elif isinstance(eq, Mul):
+        var = [eq.as_two_terms()[1]]
+    else:
+        var = [eq]
 
     if len(var) == 0:
         return solutions == None
