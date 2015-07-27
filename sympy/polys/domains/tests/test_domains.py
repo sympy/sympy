@@ -66,6 +66,7 @@ def test_Domain_unify():
     assert unify(RR, ZZ[x]) == RR[x]
     assert unify(RR, ZZ.frac_field(x)) == RR.frac_field(x)
     assert unify(RR, EX) == EX
+    assert RR[x].unify(ZZ.frac_field(y)) == RR.frac_field(x, y)
 
     assert unify(CC, F3) == CC
     assert unify(CC, ZZ) == CC
@@ -430,7 +431,8 @@ def test_Domain_get_ring():
 
     assert EX.get_ring() == EX
 
-    raises(DomainError, lambda: RR.get_ring())
+    assert RR.get_ring() == RR
+    # XXX: This should also be like RR
     raises(DomainError, lambda: ALG.get_ring())
 
 
