@@ -284,7 +284,7 @@ def classify_diop(eq):
         var = list(eq.free_symbols)
         var.sort(key=default_sort_key)
         coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-    
+
     for c in coeff:
         if not isinstance(coeff[c], Integer):
             raise TypeError("Coefficients should be Integers")
