@@ -564,11 +564,11 @@ def test_sympy__sets__fancysets__Range():
     assert _test_args(Range(1, 5, 1))
 
 
-def test_sympy__sets__condset__CondSet():
-    from sympy.sets.condset import CondSet
+def test_sympy__sets__condset__ConditionSet():
+    from sympy.sets.conditionset import ConditionSet
     from sympy import S, Symbol
     x = Symbol('x')
-    assert _test_args(CondSet(Lambda(x, Eq(x**2, 1)), S.Reals))
+    assert _test_args(ConditionSet(Lambda(x, Eq(x**2, 1)), S.Reals))
 
 
 def test_sympy__sets__contains__Contains():
