@@ -1510,7 +1510,7 @@ class PrettyPrinter(Printer):
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
-    def _print_CondSet(self, ts):
+    def _print_ConditionSet(self, ts):
         if self._use_unicode:
             inn = u("\N{SMALL ELEMENT OF}")
             # using _and because and is a keyword and it is bad practice to

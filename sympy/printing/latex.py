@@ -1567,7 +1567,7 @@ class LatexPrinter(Printer):
             ', '.join([self._print(var) for var in s.lamda.variables]),
             self._print(s.base_set))
 
-    def _print_CondSet(self, s):
+    def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in s.lamda.variables])
         return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
             vars_print,
