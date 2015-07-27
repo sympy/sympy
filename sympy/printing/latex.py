@@ -1568,12 +1568,12 @@ class LatexPrinter(Printer):
             self._print(s.base_set))
 
     def _print_ConditionSet(self, s):
-        vars_print = ', '.join([self._print(var) for var in s.lamda.variables])
+        vars_print = ', '.join([self._print(var) for var in s.condition.variables])
         return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
-            self._print(s.lamda.expr))
+            self._print(s.condition.expr))
 
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)

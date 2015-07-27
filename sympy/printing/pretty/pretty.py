@@ -1519,8 +1519,8 @@ class PrettyPrinter(Printer):
         else:
             inn = 'in'
             _and = 'and'
-        variables = self._print_seq(ts.lamda.variables)
-        cond = self._print(ts.lamda.expr)
+        variables = self._print_seq(ts.condition.variables)
+        cond = self._print(ts.condition.expr)
         bar = self._print("|")
         base = self._print(ts.base_set)
 
