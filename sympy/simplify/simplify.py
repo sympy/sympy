@@ -750,7 +750,7 @@ def _nthroot_solve(p, n, prec):
      It denests ``p**Rational(1, n)`` using its minimal polynomial
     """
     from sympy.polys.numberfields import _minimal_polynomial_sq
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import solveset
     while n % 2 == 0:
         p = sqrtdenest(sqrt(p))
         n = n // 2
@@ -761,7 +761,7 @@ def _nthroot_solve(p, n, prec):
     f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
-    sols = solve(f, x)
+    sols = solveset(f, x)
     for sol in sols:
         if abs(sol - pn).n() < 1./10**prec:
             sol = sqrtdenest(sol)

@@ -5,7 +5,8 @@ from sympy import (
     gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
     logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
     posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo, Sum, Lt)
+    sin, sinh, sqrt, Symbol, symbols, sympify, tan, tanh, zoo, Sum, Lt)
+from sympy.solvers.solveset import linsolve
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot
 from sympy.utilities.pytest import XFAIL, slow
@@ -89,7 +90,8 @@ def test_issue_3557():
     f_2 = x*d + y*e + z*f - 1
     f_3 = x*g + y*h + z*i - 1
 
-    solutions = solve([f_1, f_2, f_3], x, y, z, simplify=False)
+    solutions = zip((x, y, z), linsolve([f_1, f_2, f_3], x, y, z).args[0])
+    solutions = dict(solutions)
 
     assert simplify(solutions[y]) == \
         (a*i + c*d + f*g - a*f - c*g - d*i)/ \
