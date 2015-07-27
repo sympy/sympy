@@ -647,6 +647,9 @@ def test_solveset_complex_exp():
         imageset(Lambda(n, I*2*n*pi), S.Integers)
     assert solveset_complex(exp(x) - I, x) == \
         imageset(Lambda(n, I*(2*n*pi + pi/2)), S.Integers)
+    assert solveset_complex(1/exp(x), x) == S.EmptySet
+    assert solveset_complex(sinh(x).rewrite(exp), x) == \
+        imageset(Lambda(n, n*pi*I), S.Integers)
 
 
 def test_solve_complex_log():
