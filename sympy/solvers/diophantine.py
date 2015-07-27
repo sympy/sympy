@@ -423,7 +423,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "linear":
-        return _diop_linear(var, coeff, param, test)
+        return _diop_linear(var, coeff, param)
 
 
 def _diop_linear(var, coeff, param):
