@@ -468,7 +468,7 @@ def test_rounding_numerical_components():
     return
 
 def test_noneuclidian_distance_calculation():
-    from sympy import sqrt
+    from sympy import solve, sqrt
     from sympy.solvers.solveset import solveset
     with GA_Printer():
         metric = '0 # #,# 0 #,# # 1'
@@ -557,8 +557,10 @@ def test_noneuclidian_distance_calculation():
         assert str(c) == '(X.Y)**2 - 2*(X.Y)*(X.e)*(Y.e) + (X.e)**2*(Y.e)**2'
 
         x = Symbol('x')
-        C = solveset(a*x**2 + b*x + c, x).args[0]
-        assert str(expand(simplify(expand(C)))) == '-(X.Y)/((X.e)*(Y.e)) + 1'
+        C1 = solve(a*x**2 + b*x + c, x)[0]
+        C2 = solveset(a*x**2 + b*x + c, x).args[0]
+        assert str(expand(simplify(expand(C1)))) == '-(X.Y)/((X.e)*(Y.e)) + 1'
+        assert str(expand(simplify(expand(C2)))) == '-(X.Y)/((X.e)*(Y.e)) + 1'
 
     return
 
