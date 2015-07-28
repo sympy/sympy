@@ -9,6 +9,7 @@ def test_singularities():
 
     assert singularities(x**2, x) == ()
     assert singularities(x/(x**2 + 3*x + 2), x) == (-2, -1)
+    assert singularities((x**2 - 1)/(x**3 - 1), x) == (1,)
 
 
 @XFAIL
