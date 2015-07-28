@@ -91,11 +91,9 @@ class NumPyPrinter(LambdaPrinter):
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
-        # Print tuples here instead of lists because numba may add support
-        #     for select in nopython mode; see numba#1313 on github.
-        exprs = '({0},)'.format(','.join(self._print(arg.expr) for arg in expr.args))
-        conds = '({0},)'.format(','.join(self._print(arg.cond) for arg in expr.args))
-        # If (default_value, True) is a (expr, cond) tuple in a Piecewise object
+        exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
+        conds = '[{0}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
+        # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
