@@ -247,6 +247,8 @@ class CoordSystem(Basic):
         # format instead of wondering dict/tuple/whatever.
         # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
+
+        # TODO: Replace solve with solveset, when this line is tested.
         inv_to = solve(
             [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
         if isinstance(inv_to, dict):
