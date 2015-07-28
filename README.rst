@@ -37,8 +37,8 @@ to ask us anything there. We have a very welcoming and helpful community.
 
 For professional services, go to
 
-.. |Supported Source| image:: https://s3-us-west-2.amazonaws.com/supportedsourceassets/buttons/supportandservices1.png
-   :target: http://supportedsource.org/consulting-services-and-support/SymPy
+.. image:: image:: https://s3-us-west-2.amazonaws.com/supportedsourceassets/buttons/supportandservices1.png
+    :target: http://supportedsource.org/consulting-services-and-support/SymPy
 
 Download
 --------
