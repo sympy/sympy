@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
@@ -3104,7 +3105,7 @@ def test_pretty_sets():
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
-    ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
+    ucode_str = u('{x | x ∊ ℝ ∧ sin(x) = 0}')
     assert pretty(ConditionSet(Lambda(x, Eq(sin(x), 0)), S.Reals)) == ascii_str
     assert upretty(ConditionSet(Lambda(x, Eq(sin(x), 0)), S.Reals)) == ucode_str
 
