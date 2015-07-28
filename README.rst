@@ -5,14 +5,23 @@ A Python library for symbolic mathematics.
 
 http://sympy.org/
 
+License
+-------
+
+License: New BSD License (see the LICENSE file for details) covers all files
+in the sympy repository unless stated otherwise.
+
+Authors
+-------
+
 See the AUTHORS file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs, helped
 organize SymPy's participation in the Google Summer of Code, the Google Highly
 Open Participation Contest, Google Code-In, wrote and blogged about SymPy...
 
-License: New BSD License (see the LICENSE file for details) covers all files
-in the sympy repository unless stated otherwise.
+Help, Discussion Lists, Support, Etc.
+-------------------------------------
 
 Our mailing list is at
 https://groups.google.com/forum/?fromgroups#!forum/sympy.
@@ -26,6 +35,10 @@ to ask us anything there. We have a very welcoming and helpful community.
    :alt: Join the chat at https://gitter.im/sympy/sympy
    :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
+For professional services, go to
+
+.. |Supported Source| image:: https://s3-us-west-2.amazonaws.com/supportedsourceassets/buttons/supportandservices1.png
+   :target: http://supportedsource.org/consulting-services-and-support/SymPy
 
 Download
 --------
