@@ -642,7 +642,8 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     if int(m_1) != m_1 or int(m_2) != m_2 or int(m_3) != m_3:
         raise ValueError("m values must be integer")
 
-    bigL = (l_1 + l_2 + l_3) // 2
+    sumL = l_1 + l_2 + l_3
+    bigL = sumL // 2
     a1 = l_1 + l_2 - l_3
     if a1 < 0:
         return 0
@@ -652,7 +653,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     a3 = -l_1 + l_2 + l_3
     if a3 < 0:
         return 0
-    if (2 * bigL) % 2 != 0:
+    if sumL % 2:
         return 0
     if (m_1 + m_2 + m_3) != 0:
         return 0
