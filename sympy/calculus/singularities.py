@@ -31,4 +31,4 @@ def singularities(expr, sym):
                                   " non rational functions are not yet"
                                   " implemented")
     else:
-        return tuple(sorted(solveset(simplify(1/expr), sym)))
+        return tuple(sorted(solveset(simplify(expr).as_numer_denom()[1], sym)))
