@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
-    tan, tanh, atan2, arg,
+    tan, tanh, atan2, arg, cosh,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
 
@@ -648,8 +648,16 @@ def test_solveset_complex_exp():
     assert solveset_complex(exp(x) - I, x) == \
         imageset(Lambda(n, I*(2*n*pi + pi/2)), S.Integers)
     assert solveset_complex(1/exp(x), x) == S.EmptySet
-    assert solveset_complex(sinh(x).rewrite(exp), x) == \
-        imageset(Lambda(n, n*pi*I), S.Integers)
+
+
+def test_solveset_complex_hyperbolic():
+    from sympy.abc import x, n
+    assert solveset_complex(sinh(x), x) == \
+            imageset(Lambda(n, n*I*pi), S.Integers)
+    assert solveset_complex(cosh(x) - 2, x) == \
+        Union(imageset(Lambda(n, 2*n*I*pi + log(sqrt(3) + 2)), S.Integers),
+            imageset(Lambda(n, 2*n*I*pi + log(-sqrt(3) + 2)), S.Integers))
+    assert solveset_complex(sinh(x) + cosh(x), x) == S.EmptySet
 
 
 def test_solve_complex_log():

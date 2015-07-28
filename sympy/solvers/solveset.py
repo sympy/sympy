@@ -744,6 +744,8 @@ def solveset_complex(f, symbol):
         result = EmptySet()
     elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
         result = Union(*[solveset_complex(m, symbol) for m in f.args])
+    elif _is_function_class_equation(HyperbolicFunction, f, symbol):
+        result =  _solve_complex_hyperbolic(f, symbol)
     else:
         lhs, rhs_s = invert_complex(f, 0, symbol)
         if lhs == symbol:
@@ -774,6 +776,12 @@ def solveset_complex(f, symbol):
         return FiniteSet(*result)
     else:
         return result
+
+
+def _solve_complex_hyperbolic(f, symbol):
+    """ Helper to solve hyperbolic equations """
+    f = f.rewrite(exp)
+    return solveset_complex(f, symbol)
 
 
 def solveset(f, symbol=None):
