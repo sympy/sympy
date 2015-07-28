@@ -1,7 +1,7 @@
 from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
+    Piecewise, piecewise_fold, Rational, symbols, transpose,
     cos, exp, Abs, Not, Symbol, S, FiniteSet, Union
 )
 from sympy.printing import srepr
