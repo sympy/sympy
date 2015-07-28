@@ -2,10 +2,11 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S
+    cos, exp, Abs, Not, Symbol, S, FiniteSet, Union
 )
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.solvers.solveset import solveset
 
 x, y = symbols('x y')
 z = symbols('z', nonzero=True)
@@ -276,41 +277,43 @@ def test_piecewise_simplify():
         Piecewise((1 + 1/x**2, Eq(x, 0)), ((-1)**(x + 1), True))
 
 
-def test_piecewise_solve():
+def test_piecewise_solveset():
+    x = Symbol('x', real=True)
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
-    assert solve(f, x) == [2]
-    assert solve(f - 1, x) == [1, 3]
+    assert solveset(f, x) == FiniteSet(2)
+    assert solveset(f - 1, x) == FiniteSet(1, 3)
 
     f = Piecewise(((x - 2)**2, x >= 0), (1, True))
-    assert solve(f, x) == [2]
+    assert solveset(f, x) == FiniteSet(2)
 
     g = Piecewise(((x - 5)**5, x >= 4), (f, True))
-    assert solve(g, x) == [2, 5]
+    assert solveset(g, x) == FiniteSet(2, 5)
 
     g = Piecewise(((x - 5)**5, x >= 4), (f, x < 4))
-    assert solve(g, x) == [2, 5]
+    assert solveset(g, x) == FiniteSet(2, 5)
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, x < 2))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == FiniteSet(5)
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == FiniteSet(5)
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == FiniteSet(5)
 
     g = Piecewise(((x - 5)**5, x >= 2),
                   (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == FiniteSet(5)
 
 # See issue 4352 (enhance the solver to handle inequalities).
 
 
 @XFAIL
 def test_piecewise_solve2():
+    # issue 9742
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
-    assert solve(f, x) == [2, Interval(0, oo, True, True)]
+    assert solveset(f, x) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
 
 def test_piecewise_fold():
@@ -401,7 +404,7 @@ def test_piecewise_collapse():
     p1 = Piecewise((Piecewise((x, x < 0), (1, True)), True))
     assert p1 == Piecewise((Piecewise((x, x < 0), (1, True)), True))
 
-
+@XFAIL
 def test_piecewise_lambdify():
     p = Piecewise(
         (x**2, x < 0),
