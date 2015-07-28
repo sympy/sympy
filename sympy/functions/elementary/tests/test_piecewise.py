@@ -404,7 +404,7 @@ def test_piecewise_collapse():
     p1 = Piecewise((Piecewise((x, x < 0), (1, True)), True))
     assert p1 == Piecewise((Piecewise((x, x < 0), (1, True)), True))
 
-@XFAIL
+
 def test_piecewise_lambdify():
     p = Piecewise(
         (x**2, x < 0),
