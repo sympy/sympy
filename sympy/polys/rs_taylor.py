@@ -49,7 +49,7 @@ def _is_monomial(p, var):
     Examples
     ========
 
-    >>> from sympy.polys.ltaylor import _is_monomial
+    >>> from sympy.polys.rs_taylor import _is_monomial
     >>> from sympy import Symbol, log, S
     >>> x = Symbol('x')
     >>> _is_monomial(-x, x)
@@ -72,7 +72,7 @@ def monomial_as_expr(monom, *gens):
     Examples
     ========
 
-    >>> from sympy.polys.lpoly import monomial_as_expr
+    >>> from sympy.polys.rs_taylor import monomial_as_expr
     >>> from sympy import symbols
     >>> x, y = symbols('x, y')
     >>> monomial_as_expr((2, 1), x, y)
@@ -230,21 +230,19 @@ def _factor_var(q, var):
     return (pwn, num)
 
 def _as_expr(num, tev, typn):
-    """convert lpoly polynomial num to SymPy expression
+    """convert lpolynomial num to SymPy expression
     tev list of TaylorEval objects
     typn index ot tev
 
     Examples
     ========
 
-    >>> from sympy.polys.ltaylor import TaylorEval, _as_expr
-    >>> from sympy.polys.lpoly import LPoly
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.lpoly import lgens
-    >>> from sympy import Symbol, sympify, cos
+    >>> from sympy.polys.rings import ring, xring
+    >>> from sympy.polys.domains import QQ, EX
+    >>> from sympy.polys.rs_taylor import TaylorEval, _as_expr
+    >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
-    >>> lpq = LPoly('X', QQ)
-    >>> lps = LPoly('X', sympify)
+    >>> lpq, lps = xring('X0', QQ)[0], xring('X0', EX)[0]
     >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
     >>> X = lpq.gens[0]
     >>> _as_expr(X**2 + X + 1, tev, 0)
@@ -269,6 +267,31 @@ def _as_expr(num, tev, typn):
 
 _PWMAX = [8, 4]
 def _taylor_decompose(p, var, tev, typ, rdeco):
+    """decompose p(x) in x**pw*pr(x)/x**n0
+    where pr is a regular taylor expandible function with tev[typ1],
+    and pr**n/x**n0 has constant limit different from 0 for x -> 0;
+    return None if the decomposition fails.
+
+    Output: pr, typ1, pw, n0
+
+    Examples
+    ========
+
+    >>> from sympy.polys.rings import ring, xring
+    >>> from sympy.polys.domains import QQ, EX
+    >>> from sympy.polys.rs_taylor import TaylorEval, _taylor_decompose
+    >>> from sympy import Symbol, S, sin, cos
+    >>> x = Symbol('x')
+    >>> lpq, lps = xring('X0', QQ)[0], xring('X0', EX)[0]
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> _taylor_decompose(1 + sin(x)/x**2, x, tev, 0, 1)
+    (x**2 + sin(x), 0, -1, 1)
+    >>> _taylor_decompose(x + sin(x)/x, x, tev, 0, 1)
+    (x + sin(x)/x, 0, 0, 0)
+    >>> _taylor_decompose(x**2 + sin(x), x, tev, 0, 1)
+    (x**2 + sin(x), 0, 1, 1)
+
+    """
     pw = 0
     s2 = 0
     prec1 = _PWMAX[typ]*rdeco
@@ -299,6 +322,91 @@ def _taylor_decompose(p, var, tev, typ, rdeco):
     return pr, typ2, pw, n0
 
 def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1):
+    """taylor series expansion of p
+
+    uses the same arguments as series, with the addition
+    of three default arguments
+
+      var      series variable
+      start    var=start point of expansion
+      prec     precision of the series
+      dir      direction from which the series is calculated
+      pol_pars polynomial parameters
+      analytic use the series method for the series expansion of a function
+               for which there is no taylor expansion avalable in lpoly;
+               only for regular functions.
+      rdeco    ratio parameter to determine the precision used
+               in _taylor_decompose
+
+    ALGORITHM  separate p in c_1*p_1 + .. + c_n*p_n
+    where p_1, .., p_n are product of terms depending on var,
+    c1, .., cn are coefficients independent of var
+
+    Try to compute p_i using polynomials; if if fails, compute it with
+    the series method.
+
+    The basic case which can be computed with polynomials is
+    p_i = n_1*..*nh/(d_1*...*d_k), where n_i and d_j have a regular taylor
+    expansion and d_j has constant limit for var -> 0;
+    taylor(p_i,var,0,prec) = product taylor(n_i,var,0,prec)*
+    product inversion series(d_j,var,0,prec); these can be done fast
+    using polynomials; taylor has a very dumb interpreter transforming
+    Mul, Pow, and the elementary functions in the corresponding operations
+    in polynomials on a ring; it starts with the QQ ring; if the computation
+    fails, it passes to the symbolic ring (SR) consisting of the SymPy
+    expressions not having `var` and pol_pars in its atoms;
+    if also that fails, it passes it to the series method.
+    Finally convert the polynomial to a SymPy expression.
+
+    This procedure can be extended to some other cases, e.g. when
+    p_i = n_1*..*nh/(d_1*...*d_k) and
+    d_i = var**pw_i*dr_i/var**n0_i, where dr_i/var**n0_i
+    has regular taylor expansion with constant limit for var -> 0
+    (computed by using taylor expansion at order PWMAX; if pw_k >= PWMAX
+    fall back to the series method), and similarly but a bit simpler for n_i;
+    then using lpoly do the taylor expansion of
+    nr_1*..*nr_h/((dr_1/var**n0_1)*...*(dr_k/var**n0_k)) with precision
+    depending on the factored power of `var`.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.functions.elementary.trigonometric import (sin, tan, atan)
+    >>> from sympy.functions.elementary.exponential import (exp, log)
+    >>> from sympy.functions.elementary.miscellaneous import sqrt
+    >>> from sympy.polys.rs_taylor import taylor
+    >>> from sympy import pi
+    >>> from sympy.functions.special.error_functions import erf
+    >>> x, y = symbols('x, y')
+    >>> taylor(sin(x*tan(x)), x, 0, 10)
+    x**2 + x**4/3 - x**6/30 - 71*x**8/630 + O(x**10)
+
+    >>> p = x*exp(x)/(sin(x)*tan(2*x))
+    >>> taylor(p, x, 0, 5)
+    1/(2*x) + 1/2 - x/3 - x**2/2 - 11*x**3/20 - 67*x**4/180 + O(x**5)
+
+    >>> taylor(sqrt(1 + x*sin(pi*x)), x, 0, 6)
+    1 + pi*x**2/2 + x**4*(-pi**3/12 - pi**2/8) + O(x**6)
+
+    >>> taylor(exp(x*log(x)), x, 0, 3)
+    1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
+
+    In these examples y is first treated internally
+    as a SymPy symbol, then as a polynomial parameter;
+    the latter version is faster
+
+    >>> taylor(atan(x*y + x**2), x, 0, 5)
+    x*y + x**2 - x**3*y**3/3 - x**4*y**2 + O(x**5)
+    >>> taylor(atan(x*y + x**2), x, 0, 5, pol_pars=[y])
+    x*y + x**2 - x**3*y**3/3 - x**4*y**2 + O(x**5)
+
+    example with `analytic=True`; the taylor expansion of erf is done
+    using the series method
+    >>> taylor(log(sin(2*x)*erf(x)*sqrt(pi)), x, 0, 10, analytic=True)
+    log(4) + 2*log(x) - x**2 - 2*x**4/45 - 8*x**6/315 - 4*x**8/567 + O(x**10)
+
+    """
     prec = n
     start = x0
     p = sympify(p)
@@ -565,12 +673,12 @@ def _taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[], rdec
     Examples
     ========
 
-    >>> from sympy.polys.ltaylor import TaylorEval, _taylor_term
-    >>> from sympy.polys.lpoly import LPoly
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy import Symbol, sympify, cos, sin
+    >>> from sympy.polys.rings import xring
+    >>> from sympy.polys.domains import QQ, EX
+    >>> from sympy.polys.rs_taylor import TaylorEval, _taylor_term
+    >>> from sympy import Symbol, cos, sin
     >>> x = Symbol('x')
-    >>> lpq, lps = LPoly('X0', QQ), LPoly('X0', sympify)
+    >>> lpq, lps = xring('X0', QQ)[0], xring('X0', EX)[0]
     >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
     >>> p = sin(x)*cos(x)/x
     >>> _taylor_term(p, x, tev, 0, 0, 6)
@@ -591,6 +699,41 @@ def _taylor_term(p, var, tev, typ=0, start=0, prec=6, dir="+", pol_pars=[], rdec
     return p2, O(var**prec)
 
 def _taylor_term1(p, var, tev, typ, prec, rdeco):
+    """taylor expansion of a single term p
+
+      tev = (TaylorEval(gens, lpq), TaylorEval(gens, lps))
+        where lpq, lps have first variable name 'X0'
+      typ index of tev selected
+
+    Output: c, p2, pw, typ2
+
+      p2 LPolyElement
+      typ2 computed with tev[typ2]
+
+    The taylor expansion is _as_expr(p2, tev, typ2)*c*var**pw
+
+    If the taylor expansion fails it returns None
+
+    Examples
+    ========
+
+    >>> from sympy.polys.rings import xring
+    >>> from sympy.polys.domains import QQ, EX
+    >>> from sympy.polys.rs_taylor import TaylorEval, _taylor_term1, _as_expr
+    >>> from sympy import Symbol, cos, sin, expand
+    >>> x = Symbol('x')
+    >>> lpq, lps = xring('X0', QQ)[0], xring('X0', EX)[0]
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> p = (1/x + x**2)**2
+    >>> _taylor_term1(p, x, tev, 0, 6, 1)
+    (1, X0**6 + 2*X0**3 + 1, -2, 0)
+    >>> p = (1/x + cos(x))**2
+    >>> c, p2, pw, typ2 = _taylor_term1(p, x, tev, 0, 4, 1); c, p2, pw, typ2
+    (1, 1/12*X0**5 - X0**4 - X0**3 + X0**2 + 2*X0 + 1, -2, 0)
+    >>> expand(p.series(x,0,4) - _as_expr(p2, tev, typ2)*c*x**pw)
+    O(x**4)
+    """
+
     if p.is_Pow:
         # x**a, where a is not real number, e.g. x**I, x**x, x**y
         n = p.args[1]
@@ -765,6 +908,41 @@ def _taylor_term1(p, var, tev, typ, prec, rdeco):
     return 1, s1, 0, typ1
 
 def _taylor_eval(p, prec, tev, typ):
+    """taylor expansion attempted with lpoly
+
+    p SymPy expression
+    tev tuple of TaylorEval objects of the form
+    tev = (TaylorEval(gens, lpq, prec), TaylorEval(gens, lps, prec))
+      lpq LPoly on QQ, lps LPoly on SR
+    typ = 0 try first the taylor expansion on QQ
+          1 try the evaluation on SR
+
+    output: (res, typ)
+      res LPoly.LPolyElement object if successful, else None
+      typ = 0 evaluation done in QQ
+            1 evaluation done in SR
+            2 evaluation failed
+
+    try the taylor expansion first on [QQ, sympify][typ];
+    if it fails try it in SR (if typ=0)
+    if it succeeds, it returns (res, typ), where res
+    is a lpoly polynomial on lpq it typ=0, on lps if typ=1
+    if it fails with SR, return (None, 2)
+
+    Examples
+    ========
+
+    >>> from sympy.polys.rings import xring
+    >>> from sympy.polys.domains import QQ, EX
+    >>> from sympy.polys.rs_taylor import TaylorEval, _taylor_eval
+    >>> from sympy import Symbol, sympify, cos
+    >>> x = Symbol('x')
+    >>> lpq, lps = xring('X0', QQ)[0], xring('X0', EX)[0]
+    >>> tev = (TaylorEval([x], lpq), TaylorEval([x], lps))
+    >>> _taylor_eval(cos(x + 1), 3, tev, 0)
+    (-EX(cos(1)/2)*X0**2 - EX(sin(1))*X0 + EX(cos(1)), 1)
+    """
+
     typ1 = typ
     for _ in range(typ, 2):
         te = tev[typ1]
@@ -779,7 +957,38 @@ def _taylor_eval(p, prec, tev, typ):
             return (None, 2)
 
 class TaylorEval:
+    """evaluation of SymPy expressions as lpoly polynomials
+    """
     def __init__(self, gens, lp, analytic=False):
+        """
+        prec  precision
+        gens polynomial variables in SymPy (the series variable
+             and the variables in pol_pars
+        var = gens[0] is the series variable in SymPy
+        ngens number of polynomial variables
+        lp LPoly on which the computation is done
+          lp can be on the ring QQ or on SR
+          SR is the ring of the expressions in SymPy which
+          do not contain the gens variables
+        lvname = 'X0'
+        lgens polynomial variables in lpoly
+        lvar = X0 is the series variable in lpoly
+        dgens dictionary to do from SymPy to lpoly variabled
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import xring
+        >>> from sympy.polys.domains import QQ, EX
+        >>> from sympy.polys.rs_taylor import TaylorEval
+        >>> from sympy import Symbol, cos
+        >>> lp = xring('X0', QQ)[0]
+        >>> x = Symbol('x')
+        >>> te = TaylorEval([x], lp)
+        >>> te(cos(x), 6)
+        1/24*X0**4 - 1/2*X0**2 + 1
+        """
+
         self.gens = gens
         self.var = gens[0]
         self.ngens = len(gens)
