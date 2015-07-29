@@ -645,14 +645,6 @@ def solve_de(f, x, DE, order, g, k):
     >>> solve_de(ln(1 + x), x, (x + 1)*D(f(x), x, 2) + D(f(x)), 2, f, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
      Eq(Mod(k, 1), 0)), (0, True)), x, 2)
-
-    See Also
-    ========
-
-    sympy.series.formal.hyper_re
-    sympy.series.formal.exp_re
-    sympy.series.formal.rsolve_hypergeometric
-    sympy.solvers.recurr.rsolve
     """
     sol = None
     syms = DE.free_symbols.difference(set([g, x]))
@@ -703,7 +695,6 @@ def hyper_algorithm(f, x, k, order=4):
     ========
 
     sympy.series.formal.simpleDE
-    sympy.series.formal.hyper_re
     sympy.series.formal.solve_de
     """
     g = Function('g')
@@ -841,30 +832,40 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     Parameters
     ==========
 
-    * x : if ``x=None`` and ``f`` is univariate, the univariate
-    symbols will be supplied, otherwise an error will be raised.
+    * x : Symbol, optional
+        If x is None and ``f`` is univariate, the univariate symbols will be
+        supplied, otherwise an error will be raised.
 
-    * x0 : series expansion around ``x = x0``(Default = 0).
+    * x0 : numbers, optional
+        Point to perform series expansion about. Default is 0.
 
-    * dir : For ``dir=1`` (default) the series is calculated from the right and
-    for ``dir=-1`` the series from the left. For smooth functions this
-    flag will not alter the results.
+    * dir : {1, -1, '+', '-'}, optional
+        If dir is 1 or '+' the series is calculated from the right and
+        for -1 or '-' the series is calculated from the left. For smooth
+        functions this flag will not alter the results. Default is 1.
 
-    * hyper : set ``hyper=False``, for not using hypergeometric algorithm.
+    * hyper : {True, False}, optional
+        Set hyper to False to skip the hypergeometric algorithm.
+        By default it is set to False.
 
-    * order : Order of the derivative of ``f``, till which algorithms
-    are run.
+    * order : int, optional
+        Order of the derivative of ``f``, till which algorithms are run.
+        Default is 4.
 
-    * rational : set ``rational=False`` to skip rational algorithm.
+    * rational : {True, False}, optional
+        Set rational to False to skip rational algorithm. By default it is set
+        to True.
 
-    * full : ``full`` by default is ``False``. Try setting ``full`` to ``True``
-    to increase the range of rational algorithm. See :func:`rational_algorithm`
-    for details.
+    * full : {True, False}, optional
+        Set full to True to increase the range of rational algorithm.
+        See :func:`rational_algorithm` for details. By default it is set to
+        False.
 
     See Also
     ========
 
     sympy.series.rational_algorithm
+    sympy.series.hyper_algorithm
     """
     f = sympify(f)
     x = sympify(x)
@@ -898,7 +899,6 @@ class FormalPowerSeries(SeriesBase):
     ========
 
     sympy.series.formal.fps
-    sympy.series.formal.compute_fps
     """
     def __new__(cls, *args):
         args = map(sympify, args)
@@ -1051,25 +1051,34 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     Parameters
     ==========
 
-    * x : if ``x=None`` and ``f`` is univariate, the univariate
-    symbols will be supplied, otherwise an error will be raised.
+    * x : Symbol, optional
+        If x is None and ``f`` is univariate, the univariate symbols will be
+        supplied, otherwise an error will be raised.
 
-    * x0 : series expansion around ``x = x0``(Default = 0).
+    * x0 : numbers, optional
+        Point to perform series expansion about. Default is 0.
 
-    * dir : For ``dir=1`` (default) the series is calculated from the right and
-    for ``dir=-1`` the series from the left. For smooth functions this
-    flag will not alter the results.
+    * dir : {1, -1, '+', '-'}, optional
+        If dir is 1 or '+' the series is calculated from the right and
+        for -1 or '-' the series is calculated from the left. For smooth
+        functions this flag will not alter the results. Default is 1.
 
-    * hyper : set ``hyper=False``, for not using hypergeometric algorithm.
+    * hyper : {True, False}, optional
+        Set hyper to False to skip the hypergeometric algorithm.
+        By default it is set to False.
 
-    * order : Order of the derivative of ``f``, till which algorithms
-    are run.
+    * order : int, optional
+        Order of the derivative of ``f``, till which algorithms are run.
+        Default is 4.
 
-    * rational : set ``rational=False`` to skip rational algorithm.
+    * rational : {True, False}, optional
+        Set rational to False to skip rational algorithm. By default it is set
+        to True.
 
-    * full : ``full`` by default is ``False``. Try setting ``full`` to ``True``
-    to increase the range of rational algorithm. See :func:`rational_algorithm`
-    for details.
+    * full : {True, False}, optional
+        Set full to True to increase the range of rational algorithm.
+        See :func:`rational_algorithm` for details. By default it is set to
+        False.
 
     Examples
     ========
