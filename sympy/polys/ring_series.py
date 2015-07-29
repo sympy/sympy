@@ -933,9 +933,9 @@ def rs_log(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_log, p, x, prec)
-    if p == 1:
-        return 0
     R = p.ring
+    if p == 1:
+        return R.zero
     if _has_constant_term(p, x):
         const = 0
         zm = R.zero_monom
