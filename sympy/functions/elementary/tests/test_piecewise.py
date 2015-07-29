@@ -324,6 +324,7 @@ def test_piecewise_solveset():
 def test_piecewise_solve2():
     # issue 9742
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
+    assert solve(f, x) == [2, Interval(-oo, 0, True, True))
     assert solveset(f, x) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
 
