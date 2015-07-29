@@ -1,13 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.logic.boolalg import And, Or, Not, true, false
+from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
-from sympy.core.singleton import Singleton, S
-from sympy.core.sympify import _sympify
-from sympy.core.decorators import deprecated
-from sympy.core.function import Lambda
 
 
 class ConditionSet(Set):
