@@ -91,3 +91,5 @@ ComplexPlane
 ^^^^^^^^^^^^
 .. autoclass:: ComplexPlane
    :members:
+
+.. autofunction:: normalize_theta_set

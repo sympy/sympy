@@ -6,7 +6,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
 from sympy.sets.sets import FiniteSet
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
@@ -615,7 +615,7 @@ def test_nfloat():
 
     # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
-    assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
+    assert not any(a.free_symbols for a in solveset(f.subs(x, -0.139)))
 
     # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \

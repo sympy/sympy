@@ -412,9 +412,10 @@ class Order(Expr):
                     # E.g.  O(y).subs(y, sin(x))
                     point = new.subs(var, self.point[i])
                     if point != self.point[i]:
-                        from sympy.solvers import solve
+                        from sympy.solvers.solveset import solveset
                         d = Dummy()
-                        res = solve(old - new.subs(var, d), d, dict=True)
+                        sol = solveset(old - new.subs(var, d), d)
+                        res = [dict(zip((d, ), sol))]
                         point = d.subs(res[0]).limit(old, self.point[i])
                     newvars[i] = var
                     newpt[i] = point

@@ -47,21 +47,21 @@ def test_Idx_bounds():
 
 
 def test_Idx_fixed_bounds():
-    i, a, b = symbols('i a b', integer=True)
-    assert Idx(2).lower is None
-    assert Idx(2).upper is None
-    assert Idx(2, a).lower == 0
-    assert Idx(2, a).upper == a - 1
-    assert Idx(2, 5).lower == 0
-    assert Idx(2, 5).upper == 4
-    assert Idx(2, oo).lower == 0
-    assert Idx(2, oo).upper == oo
-    assert Idx(2, (a, b)).lower == a
-    assert Idx(2, (a, b)).upper == b
-    assert Idx(2, (1, 5)).lower == 1
-    assert Idx(2, (1, 5)).upper == 5
-    assert Idx(2, (-oo, oo)).lower == -oo
-    assert Idx(2, (-oo, oo)).upper == oo
+    i, a, b, x = symbols('i a b x', integer=True)
+    assert Idx(x).lower is None
+    assert Idx(x).upper is None
+    assert Idx(x, a).lower == 0
+    assert Idx(x, a).upper == a - 1
+    assert Idx(x, 5).lower == 0
+    assert Idx(x, 5).upper == 4
+    assert Idx(x, oo).lower == 0
+    assert Idx(x, oo).upper == oo
+    assert Idx(x, (a, b)).lower == a
+    assert Idx(x, (a, b)).upper == b
+    assert Idx(x, (1, 5)).lower == 1
+    assert Idx(x, (1, 5)).upper == 5
+    assert Idx(x, (-oo, oo)).lower == -oo
+    assert Idx(x, (-oo, oo)).upper == oo
 
 
 def test_Idx_func_args():

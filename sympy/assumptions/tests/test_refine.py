@@ -1,5 +1,5 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2)
+                   atan, atan2, nan)
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -116,6 +116,10 @@ def test_atan2():
     assert refine(atan2(y, x), Q.negative(y) & Q.positive(x)) == atan(y/x)
     assert refine(atan2(y, x), Q.negative(y) & Q.negative(x)) == atan(y/x) - pi
     assert refine(atan2(y, x), Q.positive(y) & Q.negative(x)) == atan(y/x) + pi
+    assert refine(atan2(y, x), Q.zero(y) & Q.negative(x)) == pi
+    assert refine(atan2(y, x), Q.positive(y) & Q.zero(x)) == pi/2
+    assert refine(atan2(y, x), Q.negative(y) & Q.zero(x)) == -pi/2
+    assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
 
 
 def test_func_args():

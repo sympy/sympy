@@ -447,7 +447,7 @@ class Idx(Expr):
     Examples
     ========
 
-    >>> from sympy.tensor import IndexedBase, Idx
+    >>> from sympy.tensor import Idx
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 
@@ -476,13 +476,6 @@ class Idx(Expr):
     >>> idx = Idx(i, oo); idx.lower, idx.upper
     (0, oo)
 
-    The label can be a literal integer instead of a string/Symbol:
-
-    >>> idx = Idx(2, n); idx.lower, idx.upper
-    (0, n - 1)
-    >>> idx.label
-    2
-
     """
 
     is_integer = True
@@ -493,6 +486,11 @@ class Idx(Expr):
         if isinstance(label, string_types):
             label = Symbol(label, integer=True)
         label, range = list(map(sympify, (label, range)))
+
+        if label.is_Number:
+            if not label.is_integer:
+                raise TypeError("Index is not an integer number.")
+            return label
 
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label.")
@@ -527,8 +525,9 @@ class Idx(Expr):
         ========
 
         >>> from sympy import Idx, Symbol
-        >>> Idx(2).label
-        2
+        >>> x = Symbol('x', integer=True)
+        >>> Idx(x).label
+        x
         >>> j = Symbol('j', integer=True)
         >>> Idx(j).label
         j
