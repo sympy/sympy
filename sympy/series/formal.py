@@ -38,8 +38,8 @@ def rational_algorithm(f, x, k, order=4, full=False):
     method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
     instead.
 
-    Looks for derivative of a function upto 4'th order(by default).
-    This can be overrided using order option.
+    Looks for derivative of a function up to 4'th order (by default).
+    This can be overriden using order option.
 
     Returns a Tuple of (formula, series independent terms, order) if successful
     otherwise ``None``.
@@ -832,31 +832,22 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     Parameters
     ==========
 
-    * x : Symbol, optional
-        If x is None and ``f`` is univariate, the univariate symbols will be
-        supplied, otherwise an error will be raised.
-
-    * x0 : numbers, optional
+    x : Symbol
+    x0 : number, optional
         Point to perform series expansion about. Default is 0.
-
-    * dir : {1, -1, '+', '-'}, optional
+    dir : {1, -1, '+', '-'}, optional
         If dir is 1 or '+' the series is calculated from the right and
         for -1 or '-' the series is calculated from the left. For smooth
         functions this flag will not alter the results. Default is 1.
-
-    * hyper : {True, False}, optional
+    hyper : {True, False}, optional
         Set hyper to False to skip the hypergeometric algorithm.
         By default it is set to False.
-
-    * order : int, optional
-        Order of the derivative of ``f``, till which algorithms are run.
-        Default is 4.
-
-    * rational : {True, False}, optional
+    order : int, optional
+        Order of the derivative of ``f``, Default is 4.
+    rational : {True, False}, optional
         Set rational to False to skip rational algorithm. By default it is set
         to True.
-
-    * full : {True, False}, optional
+    full : {True, False}, optional
         Set full to True to increase the range of rational algorithm.
         See :func:`rational_algorithm` for details. By default it is set to
         False.
@@ -1051,31 +1042,24 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     Parameters
     ==========
 
-    * x : Symbol, optional
+    x : Symbol, optional
         If x is None and ``f`` is univariate, the univariate symbols will be
         supplied, otherwise an error will be raised.
-
-    * x0 : numbers, optional
+    x0 : number, optional
         Point to perform series expansion about. Default is 0.
-
-    * dir : {1, -1, '+', '-'}, optional
+    dir : {1, -1, '+', '-'}, optional
         If dir is 1 or '+' the series is calculated from the right and
         for -1 or '-' the series is calculated from the left. For smooth
         functions this flag will not alter the results. Default is 1.
-
-    * hyper : {True, False}, optional
+    hyper : {True, False}, optional
         Set hyper to False to skip the hypergeometric algorithm.
         By default it is set to False.
-
-    * order : int, optional
-        Order of the derivative of ``f``, till which algorithms are run.
-        Default is 4.
-
-    * rational : {True, False}, optional
+    order : int, optional
+        Order of the derivative of ``f``, Default is 4.
+    rational : {True, False}, optional
         Set rational to False to skip rational algorithm. By default it is set
         to True.
-
-    * full : {True, False}, optional
+    full : {True, False}, optional
         Set full to True to increase the range of rational algorithm.
         See :func:`rational_algorithm` for details. By default it is set to
         False.
