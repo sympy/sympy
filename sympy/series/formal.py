@@ -80,6 +80,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     .. [2] Power Series in Computer Algebra - Wolfram Koepf
     """
     from sympy.polys import RootSum, apart
+    from sympy.integrals import integrate
 
     diff = f
     ds = []  # list of diff
@@ -119,8 +120,9 @@ def rational_algorithm(f, x, k, order=4, full=False):
                     a /= -xc
                     num /= xc**j
 
-                    ak = ((-1)**j * num * binomial(j + k - 1, k)
-                          .rewrite(factorial) / a**(j + k))
+                    ak = ((-1)**j * num *
+                          binomial(j + k - 1, k).rewrite(factorial) /
+                          a**(j + k))
                     coeff += ak
 
             # Hacky, better way?
@@ -130,7 +132,6 @@ def rational_algorithm(f, x, k, order=4, full=False):
                     coeff.has(nan)):
                 return None
 
-            from sympy.integrals import integrate
             for j in range(i):
                 coeff = (coeff / (k + j + 1))
                 sep = integrate(sep, x)
@@ -164,16 +165,14 @@ def rational_independent(terms, x):
     ind = terms[0:1]
 
     for t in terms[1:]:
-        dep = False
         n = t.as_independent(x)[1]
-        for i in range(len(ind)):
-            d = ind[i].as_independent(x)[1]
+        for i, term in enumerate(ind):
+            d = term.as_independent(x)[1]
             q = (n / d).cancel()
             if q.is_rational_function(x):
                 ind[i] += t
-                dep = True
                 break
-        if not dep:
+        else:
             ind.append(t)
     return ind
 
@@ -195,6 +194,7 @@ def simpleDE(f, x, g, order=4):
     Yields a tuple of (DE, order).
     """
     from sympy.solvers import solve
+
     a = symbols('a:%d' % (order))
 
     def _makeDE(k):
@@ -540,6 +540,8 @@ def _solve_hyper_RE(f, x, RE, g, k):
 
 def _solve_explike_DE(f, x, DE, g, k):
     """Solves DE with constant coefficients."""
+    from sympy.solvers import rsolve
+
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
         if coeff.free_symbols:
@@ -553,7 +555,6 @@ def _solve_explike_DE(f, x, DE, g, k):
             f = f.diff(x)
         init[g(k).subs(k, i)] = f.limit(x, 0)
 
-    from sympy.solvers import rsolve
     sol = rsolve(RE, g(k), init)
 
     if sol:
@@ -562,6 +563,8 @@ def _solve_explike_DE(f, x, DE, g, k):
 
 def _solve_simple(f, x, DE, g, k):
     """Converts DE into RE and solves using :func:`rsolve`."""
+    from sympy.solvers import rsolve
+
     RE = hyper_re(DE, g, k)
 
     init = {}
@@ -570,7 +573,6 @@ def _solve_simple(f, x, DE, g, k):
             f = f.diff(x)
         init[g(k).subs(k, i)] = f.limit(x, 0) / factorial(i)
 
-    from sympy.solvers import rsolve
     sol = rsolve(RE, g(k), init)
 
     if sol:
@@ -580,6 +582,7 @@ def _solve_simple(f, x, DE, g, k):
 def _transform_explike_DE(DE, g, x, order, syms):
     """Converts DE with free parameters into DE with constant coefficients."""
     from sympy.solvers import solve
+
     eq = []
     highest_coeff = DE.coeff(Derivative(g(x), x, order))
     for i in range(order):
@@ -599,6 +602,7 @@ def _transform_explike_DE(DE, g, x, order, syms):
 def _transform_DE_RE(DE, g, k, order, syms):
     """Converts DE with free parameters into RE of hypergeometric type."""
     from sympy.solvers import solve
+
     RE = hyper_re(DE, g, k)
 
     eq = []
@@ -728,7 +732,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
     See :func:`compute_fps` for details.
     """
     if x0 in [S.Infinity, -S.Infinity]:
-        dir = {S.Infinity: S.One, S.NegativeInfinity: -S.One}[x0]
+        dir = S.One if x0 is S.Infinity else -S.One
         temp = f.subs(x, 1/x)
         result = _compute_fps(temp, x, 0, dir, hyper, order, rational, full)
         if result is None:
@@ -846,14 +850,14 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     for ``dir=-1`` the series from the left. For smooth functions this
     flag will not alter the results.
 
-    * hyper : set hyper=False, for not using hypergeometric algorithm.
+    * hyper : set ``hyper=False``, for not using hypergeometric algorithm.
 
-    * order : Order of the derivative of f, till which algorithms
+    * order : Order of the derivative of ``f``, till which algorithms
     are run.
 
-    * rational : set rational=False to skip rational algorithm
+    * rational : set ``rational=False`` to skip rational algorithm.
 
-    * full : full by default is False. Try setting full to True
+    * full : ``full`` by default is ``False``. Try setting ``full`` to ``True``
     to increase the range of rational algorithm. See :func:`rational_algorithm`
     for details.
 
@@ -948,7 +952,6 @@ class FormalPowerSeries(SeriesBase):
     def infinite(self):
         """Returns an infinite representation of the series"""
         from sympy.concrete import Sum
-
         ak, xk = self.ak, self.xk
         k = ak.variables[0]
         ind = (self.ind * self.mul).expand()
@@ -1004,7 +1007,7 @@ class FormalPowerSeries(SeriesBase):
         pt_xk = self.xk.coeff(pt)
 
         try:
-            pt_ak = self.ak.coeff(pt).simplify()  # TODO: Thoughts?
+            pt_ak = self.ak.coeff(pt).simplify()  # Simplify the coefficients
         except IndexError:
             pt_ak = S.Zero
 
@@ -1057,14 +1060,14 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     for ``dir=-1`` the series from the left. For smooth functions this
     flag will not alter the results.
 
-    * hyper : set hyper=False, for not using hypergeometric algorithm.
+    * hyper : set ``hyper=False``, for not using hypergeometric algorithm.
 
-    * order : Order of the derivative of f, till which algorithms
+    * order : Order of the derivative of ``f``, till which algorithms
     are run.
 
-    * rational : set rational=False to skip rational algorithm
+    * rational : set ``rational=False`` to skip rational algorithm.
 
-    * full : full by default is False. Try setting full to True
+    * full : ``full`` by default is ``False``. Try setting ``full`` to ``True``
     to increase the range of rational algorithm. See :func:`rational_algorithm`
     for details.
 
