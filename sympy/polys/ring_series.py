@@ -2,7 +2,7 @@ from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
-                                   monomial_ldiv)
+                                   monomial_ldiv, monomial_pow)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError
 from sympy.core.numbers import Rational, igcd
@@ -10,6 +10,25 @@ from sympy.core.compatibility import as_int, range
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
 from mpmath.libmp.libintmath import giant_steps
 import math
+
+class TaylorEvalError(TypeError):
+    """Exception used in ltaylor.taylor
+    """
+    pass
+
+def toEX(p, lp1):
+    """convert coefficients to EX
+    """
+    assert lp1.domain is EX
+    lp = p.ring
+    if lp == lp1:
+        return p
+    p1 = lp1(0)
+    for expv, c in p.items():
+        c1 = EX(c)
+        p1[expv] = EX(c)
+    return p1
+
 
 
 def _invert_monoms(p1):
@@ -284,7 +303,10 @@ def rs_pow(p1, n, x, prec):
             res = rs_pow(p1, np, x, prec)
         return res
 
-    n = as_int(n)
+    n1 = int(n)
+    if n1 != n:
+        raise TaylorEvalError
+    n = n1
     if n == 0:
         if p1:
             return R(1)
@@ -406,7 +428,7 @@ def _check_series_var(p, x, name):
     index = p.ring.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
     if m < 0:
-        raise PoleError("Asymptotic expansion of %s around [oo] not "
+        raise TaylorEvalError("Asymptotic expansion of %s around [oo] not "
                         "implemented." % name)
     return index, m
 
@@ -439,9 +461,9 @@ def _series_inversion1(p, x, prec):
         prec = int(prec)
 
     if zm not in p:
-        raise ValueError("No constant term in series")
+        raise TaylorEvalError("No constant term in series")
     if _has_constant_term(p - c, x):
-        raise ValueError("p cannot contain a constant term depending on "
+        raise TaylorEvalError("p cannot contain a constant term depending on "
                          "parameters")
     one = R(1)
     if R.domain is EX:
@@ -482,10 +504,10 @@ def rs_series_inversion(p, x, prec):
         p = mul_xin(p, index, -m)
         prec = prec + m
     if zm not in p:
-        raise NotImplementedError("No constant term in series")
+        raise TaylorEvalError("No constant term in series")
 
     if _has_constant_term(p - p[zm], x):
-        raise NotImplementedError("p - p[0] must not have a constant term in "
+        raise TaylorEvalError("p - p[0] must not have a constant term in "
                                   "the series variables")
     r = _series_inversion1(p, x, prec)
     if m != 0:
@@ -557,7 +579,7 @@ def rs_series_reversion(p, x, n, y):
     y = R(y)
     ny = R.gens.index(y)
     if _has_constant_term(p, x):
-        raise ValueError("p must not contain a constant term in the series "
+        raise TaylorEvalError("p must not contain a constant term in the series "
                          "variable")
     a = _coefficient_t(p, (nx, 1))
     zm = R.zero_monom
@@ -814,7 +836,7 @@ def _nth_root1(p, n, x, prec):
     R = p.ring
     zm = R.zero_monom
     if zm not in p:
-        raise NotImplementedError('No constant term in series')
+        raise TaylorEvalError('No constant term in series')
     n = as_int(n)
     assert p[zm] == 1
     p1 = R(1)
@@ -894,13 +916,13 @@ def rs_nth_root(p, n, x, prec):
                 c_expr = c.as_expr()
                 const = R(c_expr**(QQ(1, n)))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:                              # RealElement doesn't support
                 const = R(c**Rational(1, n))  # exponentiation with mpq object
             except ValueError:                # as exponent
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         res = rs_nth_root(p/c, n, x, prec)*const
     else:
@@ -933,9 +955,9 @@ def rs_log(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_log, p, x, prec)
-    if p == 1:
-        return 0
     R = p.ring
+    if p == 1:
+        return R.zero
     if _has_constant_term(p, x):
         const = 0
         zm = R.zero_monom
@@ -943,20 +965,23 @@ def rs_log(p, x, prec):
         if c == 1:
             pass
         else:
-            c_expr = c.as_expr()
+            try:
+                c_expr = c.as_expr()
+            except:
+                raise TaylorEvalError
             if R.domain is EX:
                 const = log(c_expr)
             elif isinstance(c, PolyElement):
                 try:
                     const = R(log(c_expr))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
             else:
                 try:
                     const = R(log(c))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
 
         dlog = p.diff(x)
@@ -990,7 +1015,7 @@ def rs_LambertW(p, x, prec):
     R = p.ring
     p1 = R(0)
     if _has_constant_term(p, x):
-        raise NotImplementedError("Polynomial must not have constant term in "
+        raise TaylorEvalError("Polynomial must not have constant term in "
                                   "the series variables")
     if x in R.gens:
         for precx in _giant_steps(prec):
@@ -1042,13 +1067,13 @@ def rs_exp(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(exp(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 const = R(exp(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         p1 = p - c
 
@@ -1122,13 +1147,13 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 const = R(atan(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
@@ -1164,7 +1189,7 @@ def rs_asin(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_asin, p, x, prec)
     if _has_constant_term(p, x):
-        raise NotImplementedError("Polynomial must not have constant term in "
+        raise TaylorEvalError("Polynomial must not have constant term in "
                                   "series variables")
     R = p.ring
     if x in R.gens:
@@ -1183,7 +1208,7 @@ def rs_asin(p, x, prec):
         return rs_series_from_list(p, c, x, prec)
 
     else:
-        raise NotImplementedError
+        raise TaylorEvalError
 
 def _tan1(p, x, prec):
     """
@@ -1243,13 +1268,13 @@ def rs_tan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tan(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 const = R(tan(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         p1 = p - c
 
@@ -1339,13 +1364,13 @@ def rs_sin(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         p1 = p - c
 
@@ -1405,13 +1430,13 @@ def rs_cos(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         p1 = p - c
 
@@ -1498,13 +1523,13 @@ def rs_atanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atanh(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 const = R(atanh(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
@@ -1627,13 +1652,13 @@ def rs_tanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tanh(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         else:
             try:
                 const = R(tanh(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise TaylorEvalError("The given series can't be expanded in "
                                       "this domain.")
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)
