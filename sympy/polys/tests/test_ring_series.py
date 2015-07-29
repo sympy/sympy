@@ -11,6 +11,7 @@ from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
     tanh, log, sqrt)
+from sympy.core.numbers import Rational
 
 def is_close(a, b):
     tol = 10**(-10)
@@ -79,6 +80,7 @@ def test_pow_trunc():
     assert rs_pow(p, -2, x, 2) == 1 - 2*x
     p = x + y
     assert rs_pow(p, 3, y, 3) == x**3 + 3*x**2*y + 3*x*y**2
+    assert rs_pow(1 + x, Rational(2, 3), x, 4) == 4*x**3/81 - x**2/9 + 2*x/3 + 1
 
 def test_has_constant_term():
     R, x, y, z = ring('x, y, z', QQ)
@@ -232,6 +234,10 @@ def test_nth_root():
     assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -x**4*y**6/9 + \
         5*x**4*y**5/27 - 10*x**4*y**4/243 - 2*x**3*y**4/9 + 5*x**3*y**3/81 + \
         x**2*y**3/3 - x**2*y**2/9 + x*y/3 + 1
+    assert rs_nth_root(8*x, 3, x, 3) == 2*x**QQ(1, 3)
+    assert rs_nth_root(8*x + x**2 + x**3, 3, x, 3) == x**QQ(4,3)/12 + 2*x**QQ(1,3)
+    r = rs_nth_root(8*x + x**2*y + x**3, 3, x, 4)
+    assert r == -x**QQ(7,3)*y**2/288 + x**QQ(7,3)/12 + x**QQ(4,3)*y/12 + 2*x**QQ(1,3)
 
     # Constant term in series
     a = symbols('a')

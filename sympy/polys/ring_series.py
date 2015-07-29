@@ -274,7 +274,15 @@ def rs_pow(p1, n, x, prec):
     R = p1.ring
     p = R.zero
     if isinstance(n, Rational):
-        raise NotImplementedError('to be implemented')
+        np = int(n.p)
+        nq = int(n.q)
+        if nq != 1:
+            res = rs_nth_root(p1, nq, x, prec)
+            if np != 1:
+                res = rs_pow(res, np, x, prec)
+        else:
+            res = rs_pow(p1, np, x, prec)
+        return res
 
     n = as_int(n)
     if n == 0:
@@ -859,6 +867,8 @@ def rs_nth_root(p, n, x, prec):
     >>> rs_nth_root(3 + x + x*y, 3, x, 2)
     0.160249952256379*x*y + 0.160249952256379*x + 1.44224957030741
     """
+    p0 = p
+    n0 = n
     if n == 0:
         if p == 0:
             raise ValueError('0**0 expression')
@@ -893,12 +903,10 @@ def rs_nth_root(p, n, x, prec):
                     raise DomainError("The given series can't be expanded in "
                                       "this domain.")
         res = rs_nth_root(p/c, n, x, prec)*const
-        return res
-
-    res = _nth_root1(p, n, x, prec)
+    else:
+        res = _nth_root1(p, n, x, prec)
     if m:
-        if m != int(m):
-            m = QQ(m, n)
+        m = QQ(m, n)
         res = mul_xin(res, index, m)
     return res
 
