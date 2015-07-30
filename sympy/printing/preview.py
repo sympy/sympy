@@ -1,9 +1,9 @@
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function, division
 
 from os.path import join
 import tempfile
 import shutil
-from io import BytesIO, open
+from io import BytesIO
 
 try:
     from subprocess import STDOUT, CalledProcessError
@@ -183,8 +183,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         workdir = tempfile.mkdtemp()
 
-        with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
-            fh.write(latex_main % latex_string)
+        try:
+            with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
+                fh.write(latex_main % latex_string)
+        except TypeError:  # Python 2's open() does not support encoding
+            with open(join(workdir, 'texput.tex'), 'w') as fh:
+                fh.write(latex_main % latex_string)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
