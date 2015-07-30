@@ -108,6 +108,11 @@ def test_inversion():
     def test2(p):
         p1 = rs_series_inversion(p, x, 4)
     raises(NotImplementedError, lambda: test2(p))
+    p = R.zero
+    def test3(p):
+        p1 = rs_series_inversion(p, x, 3)
+    raises(ZeroDivisionError, lambda: test3(p))
+
 
 def test_series_reversion():
     R, x, y = ring('x, y', QQ)

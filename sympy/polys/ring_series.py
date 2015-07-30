@@ -475,6 +475,8 @@ def rs_series_inversion(p, x, prec):
     x**3 - x**2 + x - 1 + x**-1
     """
     R = p.ring
+    if p == R.zero:
+        raise ZeroDivisionError
     zm = R.zero_monom
     index = R.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
