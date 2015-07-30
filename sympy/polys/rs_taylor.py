@@ -21,12 +21,12 @@ from sympy.core.sympify import sympify
 from sympy.polys.polyutils import basic_from_dict
 from sympy.utilities.iterables import sift
 
-_verbose = 0
-def _print_message(p, a, _verbose):
+_verbose = 1
+def _print_message(p, a, _verbose, mess=''):
     if _verbose:
         for x in a:
             if x == 's':
-                print('series used in', p)
+                print('series used in %s %s' %(p, mess))
 
 def rational2EX(c):
     if hasattr(c, 'p'):
@@ -413,7 +413,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
     # TODO deal with some of these cases within taylor
     if var == None or not prec or start != 0 or dir != "+" or \
         prec in [S.Infinity, S.NegativeInfinity]:
-        _print_message(p, ['s'], _verbose)
+        _print_message(p, ['s'], _verbose, '1')
         return p.series(var, start, prec, dir)
 
     prec = int(prec)
@@ -457,13 +457,13 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
 
         if not non_pol_part:
             p1 = Add(*(pol_part + orders))
-            _print_message(p1, ['s'], _verbose)
+            _print_message(p1, ['s'], _verbose, '2')
             res += Add(*(pol_part + orders)).series(var, 0, prec)
             return res
 
         if pol_part:
             pol_part = Add(*pol_part)
-            _print_message(pol_part, ['s'], _verbose)
+            _print_message(pol_part, ['s'], _verbose, '3')
             res += pol_part.series(var, 0, prec)
 
         for p1 in non_pol_part:
@@ -472,7 +472,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                 c = 0
             tres = _taylor_term(p1, var, tev, 0, start, prec, dir, pol_pars, rdeco)
             if not tres:
-                _print_message(p1, ['s'], _verbose)
+                _print_message(p1, ['s'], _verbose, '4')
                 ts = p1.series(var, 0, prec)
                 p2, ord2 = ts.removeO(), ts.getO()
             else:
@@ -500,7 +500,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
             return log(rq[1]) + rq[0]*log(var)
         rx = _taylor_decompose(q, var, tev, 0, rdeco)
         if not rx:
-            _print_message(p, ['s'], _verbose)
+            _print_message(p, ['s'], _verbose, '5')
             p1 = p.series(var, start, prec, dir)
             return p1
 
@@ -542,7 +542,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                 else:
                     rx = _taylor_decompose(qarg, var, tev, 0, rdeco)
                     if not rx:
-                        _print_message(p, ['s'], _verbose)
+                        _print_message(p, ['s'], _verbose, '6')
                         p1 = p.series(var, start, prec, dir)
                         return p1
 
@@ -595,7 +595,7 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                 if n.is_positive:
                     ps += c*px*logi
                 else:
-                    _print_message(p, ['s'], _verbose)
+                    _print_message(p, ['s'], _verbose, '7')
                     return p.series(var, start, prec, dir)
             continue
         else:
@@ -630,13 +630,13 @@ def taylor(p, var=None, x0=0, n=6, dir="+", pol_pars=[], analytic=False, rdeco=1
                             ps += expand_mul(c*pxp*logi)
                         else:
                             pm1 = c*px*logi
-                            _print_message(pm1, ['s'], _verbose)
+                            _print_message(pm1, ['s'], _verbose, '8')
                             ps += pm1.series(var, 0, prec)
                 else:
                     prec1 = prec if i == 0 else prec + 1
                     tres =  _taylor_term(px, var, tev, 0, start, prec1, dir, pol_pars, rdeco)
                     if not tres:
-                        _print_message(px, ['s'], _verbose)
+                        _print_message(px, ['s'], _verbose, '9')
                         ts = px.series(var, 0, prec1)
                         p1, ord1 = ts.removeO(), ts.getO()
                     else:
@@ -1199,7 +1199,7 @@ class TaylorEval:
         q1a = self(f.args[0], prec)
         if min(q1a)[0] <= 0:
             raise NotImplementedError
-        _print_message(g, ['s'], _verbose)
+        _print_message(g, ['s'], _verbose, '10')
         f1 = g.series(self.var, 0, prec)
         f1 = f1.removeO()
         # expansion of g = erf(var); `a` list of coefficients of its series
