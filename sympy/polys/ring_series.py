@@ -5,6 +5,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError
+from sympy.core.function import Function
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
@@ -273,7 +274,7 @@ def rs_pow(p1, n, x, prec):
     """
     R = p1.ring
     p = R.zero
-    if isinstance(n, Rational):
+    if n != int(n):
         raise NotImplementedError('to be implemented')
 
     n = as_int(n)
@@ -1738,3 +1739,240 @@ def rs_compose_add(p1, p2):
     if dp:
         q = q*x**dp
     return q
+
+
+class RingSeriesBase(object):
+    def new(self, *args, **kwargs):
+        return self.__class__(*args, **kwargs)
+
+    def __mul__(self, other):
+        return RingMul(self, other)
+
+    def __rmul__(self, other):
+        return RingMul(other, self)
+
+    def __add__(self, other):
+        return RingAdd(self, other)
+
+    def __radd__(self, other):
+        return RingAdd(other, self)
+
+
+class RingMul(RingSeriesBase):
+    def __init__(self, *args):
+        self.args = []
+        for a in args:
+            if isinstance(a, RingMul):
+                self.args += a.args
+            else:
+                self.args.append(a)
+
+    def __repr__(self):
+        smul = "("
+        for a in self.args[:-1]:
+            smul += "%s * " % a
+        smul += "%s)" % self.args[-1]
+        return smul
+
+
+class RingAdd(RingSeriesBase):
+    def __init__(self, *args):
+        self.args = []
+        for a in args:
+            if isinstance(a, RingAdd):
+                self.args += a.args
+            else:
+                self.args.append(a)
+
+    def __repr__(self):
+        smul = "("
+        for a in self.args[:-1]:
+            smul += "%s + " % a;
+        smul += "%s)" % self.args[-1]
+        return smul
+
+class RingSeries(RingSeriesBase):
+    """Sparse Multivariate Ring Series"""
+    def __init__(self, series, degree=None):
+        self.series = series
+        self.ring = series.ring
+        self.degree = degree
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, self.series)
+
+    def __pos__(self):
+        return self
+
+    def __neg__(self):
+        return self.new(-self.series, self.ring)
+
+    def __add__(self, other):
+        if self.ring == other.ring:
+            return self.new(self.series + other.series, self.ring)
+        else:
+            raise DomainError("Both the series should be defined on the same "
+                "ring")
+
+    def __mul__(self, other):
+        if self.ring == other.ring:
+            return self.new(self.series * other.series, self.ring)
+        else:
+            raise DomainError("Both the series should be defined on the same "
+                "ring")
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def get_degree(self):
+        if self.degree:
+            return self.degree
+        else:
+            self.degree = self.series.degree()
+            return self.degree
+
+class RingFunction(RingSeriesBase):
+    def __init__(self, ring_series):
+        self.ring_series = ring_series
+
+class RingSin(RingFunction):
+    def __repr__(self):
+        return "RingSin(%s)" % self.ring_series
+
+    def _eval(self, x, prec):
+        return rs_sin(self.ring_series.series, x, prec)
+
+
+class RingCos(RingFunction):
+    def __repr__(self):
+        return "RingCos(%s)" % self.ring_series
+
+    def _eval(self, x, prec):
+        return rs_cos(self.ring_series.series, x, prec)
+
+
+def min_pow(func, x):
+    p = func.ring_series
+    i = p.ring.index(x)
+    series = 0
+    n = 2
+    while series == 0:
+        series = func._eval(x, n)
+        n *= 2
+    return min(series, key=lambda x: x[i])[i] + 1
+
+
+def taylor_series(series, x, prec=5, x0=0):
+    if isinstance(series, RingSeriesBase):
+        if isinstance(series, RingFunction):
+            if isinstance(series.ring_series, RingSeries):
+                return RingSeries(series._eval(x, prec))
+            elif isinstance(series.ring_series, RingFunction):
+                series_inner = taylor_series(series.ring_series, x, prec + 1)
+                return RingSeries(series.new(series_inner)._eval(x, prec))
+            else:
+                raise TypeError("The series should be a RingSeries")
+        elif isinstance(series, RingMul):
+            args = series.args
+            min_pows = list(map(min_pow, args, [x]*len(args)))
+            sum_pows = sum(min_pows)
+            p = 1
+            for arg, expv in zip(args, min_pows):
+                p *= (arg._eval(x, prec - sum_pows + expv))
+            p = rs_trunc(p, x, prec)
+            return RingSeries(p)
+        elif isinstance(series, RingAdd):
+            args = series.args
+            for i in range(1, 5):
+                p = 0
+                _prec = prec*i
+                for a in args:
+                    p += a._eval(x, _prec)
+                if p.degree() >= prec - 1:
+                    break
+            return RingSeries(rs_trunc(p, x, prec))
+        else:
+            return series
+    else:
+        raise TypeError("The series should be a RingSeries")
+
+_convert_func = {
+        'cos': 'rs_cos',
+        'sin': 'rs_sin',
+        'exp': 'rs_exp',
+        'tan': 'rs_tan'
+        }
+
+def rs_min_pow(expr, a):
+    series = 0
+    n = 2
+    while series == 0:
+        series = _rs_series(expr, a, n)
+        n *= 2
+    return min(series, key=lambda a: a[0])[0]
+
+def _rs_series(expr, a, prec):
+    args = expr.args
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+        R, a = ring('%s' % a, EX)
+        return R(expr)
+    elif expr.is_Function:
+        R, a = ring('%s' % a, EX)
+        arg = args[0]
+        series_inner = _rs_series(arg, a, prec)
+        series = eval(_convert_func[str(expr.func)])(series_inner,
+            a, prec)
+        return series
+    elif expr.is_Mul:
+        R, a = ring('%s' % a, EX)
+        n = len(args)
+        min_pows = list(map(rs_min_pow, args, [a]*len(args)))
+        sum_pows = sum(min_pows)
+        series = 1
+        for i in range(n):
+            series *= _rs_series(args[i], a, prec - sum_pows + min_pows[i])
+        series = rs_trunc(series, a, prec)
+        return series
+    elif expr.is_Add:
+        R, a = ring('%s' % a, EX)
+        n = len(args)
+        series = 0
+        for i in range(n):
+            series += _rs_series(args[i], a, prec)
+        return series
+    elif expr.is_Pow:
+        R, a = ring('%s' % a, EX)
+        series_inner = _rs_series(expr.base, a, prec)
+        return rs_pow(series_inner, expr.exp, a, prec)
+    else:
+        raise NotImplementedError
+
+def rs_series(expr, a, prec):
+    series = _rs_series(expr, a, prec)
+    args = expr.args
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+        R, a = ring('%s' % a, EX)
+        return series
+    gen = series.ring.gens[0]
+    prec_got = series.degree() + 1
+    if prec_got >= prec:
+        return rs_trunc(series, gen, prec)
+    else:
+        # increase the requested number of terms to get the desired
+        # number keep increasing (up to 9) until the received order
+        # is different than the original order and then predict how
+        # many additional terms are needed
+        for more in range(1, 9):
+            p1 = _rs_series(expr, gen, prec=prec + more)
+            new_prec = p1.degree()
+            if new_prec != prec_got:
+                prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
+                p1 = _rs_series(expr, gen, prec=prec_do)
+                while p1.degree() < prec:
+                    p1 = _rs_series(expr, gen, prec=prec_do)
+                    prec_do += 1
+                break
+        else:
+            raise ValueError('Could not calculate %s terms for %s'
+                             % (str(prec), expr))
+        return rs_trunc(p1, gen, prec)
