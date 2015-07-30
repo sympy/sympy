@@ -6,7 +6,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -3217,6 +3217,29 @@ u("""\
     assert upretty(f) == ucode_str
 
 
+def test_pretty_FormalPowerSeries():
+    f = fps(log(1 + x))
+
+    ascii_str = \
+"""\
+     2    3    4    5        \n\
+    x    x    x    x     / 6\\\n\
+x - -- + -- - -- + -- + O\\x /\n\
+    2    3    4    5         \
+"""
+
+    ucode_str = \
+u("""\
+     2    3    4    5        \n\
+    x    x    x    x     ⎛ 6⎞\n\
+x - ── + ── - ── + ── + O⎝x ⎠\n\
+    2    3    4    5         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
+
+
 def test_pretty_limits():
     expr = Limit(x, x, oo)
     ascii_str = \
@@ -3296,6 +3319,19 @@ x─→0⁻  x   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Limit(x + sin(x), x, 0)
+    ascii_str = \
+"""\
+ lim (x + sin(x))\n\
+x->0+            \
+"""
+    ucode_str = \
+u("""\
+ lim (x + sin(x))\n\
+x─→0⁺            \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_RootOf():
     expr = RootOf(x**5 + 11*x - 2, 0)

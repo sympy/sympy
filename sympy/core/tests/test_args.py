@@ -10,7 +10,8 @@ import warnings
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq)
+                   Eq, log)
+
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -3127,6 +3128,11 @@ def test_sympy__series__series_class__SeriesBase():
 def test_sympy__series__fourier__FourierSeries():
     from sympy.series.fourier import fourier_series
     assert _test_args(fourier_series(x, (x, -pi, pi)))
+
+
+def test_sympy__series__formal__FormalPowerSeries():
+    from sympy.series.formal import fps
+    assert _test_args(fps(log(1 + x), x))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():

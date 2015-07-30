@@ -413,3 +413,13 @@ def test_normalize_theta_set():
 
     # ValueError for non-real sets
     raises(ValueError, lambda: normalize_theta_set(S.Complexes))
+
+
+def test_ComplexPlane_FiniteSet():
+    x, y, z, a, b, c = symbols('x y z a b c')
+
+    # Issue #9669
+    assert ComplexPlane(FiniteSet(a, b, c)*FiniteSet(x, y, z)) == \
+        FiniteSet(a + I*x, a + I*y, a + I*z, b + I*x, b + I*y,
+                  b + I*z, c + I*x, c + I*y, c + I*z)
+    assert ComplexPlane(FiniteSet(2)*FiniteSet(3)) == FiniteSet(2 + 3*I)

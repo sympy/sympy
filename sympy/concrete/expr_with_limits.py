@@ -26,8 +26,14 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, (Symbol, Idx)):
+        if isinstance(V, Symbol):
             limits.append(Tuple(V))
+            continue
+        elif isinstance(V, Idx):
+            if V.lower is None or V.upper is None:
+                limits.append(Tuple(V))
+            else:
+                limits.append(Tuple(V, V.lower, V.upper))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
@@ -47,6 +53,11 @@ def _process_limits(*symbols):
                     else:
                         nlim = V[1:]
                     limits.append(Tuple(newsymbol, *nlim))
+                    if isinstance(V[0], Idx):
+                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                            raise ValueError("Summation exceeds Idx lower range.")
+                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                            raise ValueError("Summation exceeds Idx upper range.")
                     continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))

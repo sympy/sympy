@@ -234,13 +234,13 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
-        from sympy.solvers import solve
+        from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = solve([expr - val for val, expr in zip(other, L.expr)],
-                    L.variables)
+            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
+                         L.variables).args[0])
         else:
-            solns = solve(L.expr - other, L.variables[0])
+            solns = list(solveset(L.expr - other, L.variables[0]))
 
         for soln in solns:
             try:
@@ -634,17 +634,35 @@ class ComplexPlane(Set):
 
         # Rectangular Form
         if polar is False:
-            obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
+
+            if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
+
+                # ** ProductSet of FiniteSets in the Complex Plane. **
+                # For Cases like ComplexPlane({2, 4}*{3}), It
+                # would return {2 + 3*I, 4 + 3*I}
+                complex_num = []
+                for x in sets.args[0]:
+                    for y in sets.args[1]:
+                        complex_num.append(x + I*y)
+                obj = FiniteSet(*complex_num)
+
+            else:
+                obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
 
         # Polar Form
         elif polar is True:
             new_sets = []
+
+            # sets is Union of ProductSets
             if not sets.is_ProductSet:
                 for k in sets.args:
                     new_sets.append(k)
+
+            # sets is ProductSets
             else:
                 new_sets.append(sets)
 
+            # Normalize input theta
             for k, v in enumerate(new_sets):
                 from sympy.sets import ProductSet
                 new_sets[k] = ProductSet(v.args[0],

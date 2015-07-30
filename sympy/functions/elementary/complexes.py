@@ -88,7 +88,7 @@ class re(Function):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        Returns the real number with a zero complex part.
+        Returns the real number with a zero imaginary part.
         """
         return (self, S.Zero)
 
