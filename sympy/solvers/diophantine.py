@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Add, ceiling, divisors, factor_list, factorint, floor, igcd,
-    ilcm, Integer, integer_nthroot, isprime, Matrix, Mul, nextprime, 
+    ilcm, Integer, integer_nthroot, isprime, Matrix, Mul, nextprime,
     perfect_power, Poly, S, sign, solve, sqrt, Subs, Symbol, symbols, sympify,
     Wild)
 

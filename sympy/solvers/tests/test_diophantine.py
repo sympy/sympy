@@ -1,5 +1,5 @@
 from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
-    diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length, 
+    diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
     pairwise_prime, partition, power_representation,
     prime_as_sum_of_two_squares, square_factor, sum_of_four_squares,
     sum_of_three_squares, transformation_to_DN, transformation_to_normal)
