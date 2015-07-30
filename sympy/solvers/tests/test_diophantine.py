@@ -1,34 +1,11 @@
-from sympy.solvers.diophantine import (descent,
-                                       diop_bf_DN,
-                                       diop_DN,
-                                       diop_solve,
-                                       diophantine,
-                                       divisible,
-                                       equivalent,
-                                       find_DN,
-                                       ldescent,
-                                       length,
-                                       pairwise_prime,
-                                       partition,
-                                       power_representation,
-                                       prime_as_sum_of_two_squares,
-                                       square_factor,
-                                       sum_of_four_squares,
-                                       sum_of_three_squares,
-                                       transformation_to_DN,
-                                       transformation_to_normal)
+from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
+    diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length, 
+    pairwise_prime, partition, power_representation,
+    prime_as_sum_of_two_squares, square_factor, sum_of_four_squares,
+    sum_of_three_squares, transformation_to_DN, transformation_to_normal)
 
-from sympy import (Add,
-                   factor_list,
-                   igcd,
-                   Integer,
-                   Matrix,
-                   Mul,
-                   S,
-                   simplify,
-                   Subs,
-                   Symbol,
-                   symbols)
+from sympy import (Add, factor_list, igcd, Integer, Matrix, Mul, S, simplify,
+    Subs, Symbol, symbols)
 
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range

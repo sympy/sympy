@@ -1,30 +1,9 @@
 from __future__ import print_function, division
 
-from sympy import (Add,
-                   ceiling,
-                   divisors,
-                   factor_list,
-                   factorint,
-                   floor,
-                   igcd,
-                   ilcm,
-                   Integer,
-                   integer_nthroot,
-                   isprime,
-                   Matrix,
-                   Mul,
-                   nextprime,
-                   perfect_power,
-                   Poly,
-                   S,
-                   sign,
-                   solve,
-                   sqrt,
-                   Subs,
-                   Symbol,
-                   symbols,
-                   sympify,
-                   Wild)
+from sympy import (Add, ceiling, divisors, factor_list, factorint, floor, igcd,
+    ilcm, Integer, integer_nthroot, isprime, Matrix, Mul, nextprime, 
+    perfect_power, Poly, S, sign, solve, sqrt, Subs, Symbol, symbols, sympify,
+    Wild)
 
 from sympy.core.function import _mexpand
 from sympy.simplify.radsimp import rad_rationalize
@@ -35,26 +14,12 @@ from sympy.core.compatibility import range
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import check_assumptions
 
-__all__ = ['base_solution_linear',
-           'classify_diop',
-           'cornacchia',
-           'descent',
-           'diop_bf_DN',
-           'diop_DN',
-           'diop_general_pythagorean',
-           'diop_general_sum_of_squares',
-           'diop_linear',
-           'diop_quadratic',
-           'diop_solve',
-           'diop_ternary_quadratic',
-           'diophantine',
-           'find_DN',
-           'partition',
-           'square_factor',
-           'sum_of_four_squares',
-           'sum_of_three_squares',
-           'transformation_to_DN']
-
+__all__ = ['base_solution_linear', 'classify_diop', 'cornacchia', 'descent',
+           'diop_bf_DN', 'diop_DN', 'diop_general_pythagorean',
+           'diop_general_sum_of_squares', 'diop_linear', 'diop_quadratic',
+           'diop_solve', 'diop_ternary_quadratic', 'diophantine', 'find_DN',
+           'partition', 'square_factor', 'sum_of_four_squares',
+           'sum_of_three_squares', 'transformation_to_DN']
 
 def diophantine(eq, param=symbols("t", integer=True)):
     """
