@@ -15,7 +15,8 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, fourier_series, pi, fps)
+    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, fps)
+
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -600,6 +601,12 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+
+
+def test_latex_ConditionSet():
+    x = Symbol('x')
+    assert latex(ConditionSet(Lambda(x, Eq(x**2, 1)), S.Reals)) == \
+        r"\left\{x\; |\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
 
 
 def test_latex_Contains():
