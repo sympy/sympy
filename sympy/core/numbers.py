@@ -2260,6 +2260,12 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     def __neg__():
         return S.One
 
+    def _eval_refine(self, expt):
+        if expt.is_odd:
+            return S.NegativeOne
+        if expt.is_even:
+            return S.One
+
     def _eval_power(self, expt):
         if isinstance(expt, Number):
             if isinstance(expt, Float):
