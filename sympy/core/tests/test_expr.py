@@ -1469,7 +1469,6 @@ def test_is_constant():
     p = symbols('p', positive=True)
     assert Pow(x, S(0), evaluate=False).is_constant() is True  # == 1
     assert Pow(S(0), x, evaluate=False).is_constant() is False  # == 0 or 1
-    assert Pow(S(0), p, evaluate=False).is_constant() is True  # == 1
     assert (2**x).is_constant() is False
     assert Pow(S(2), S(3), evaluate=False).is_constant() is True
 

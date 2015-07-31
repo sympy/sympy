@@ -2150,13 +2150,15 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     def __neg__():
         return S.Zero
 
-    def _eval_power(self, expt):
+    def _eval_refine(self, expt):
         if expt.is_positive:
             return self
         if expt.is_negative:
             return S.ComplexInfinity
         if expt.is_real is False:
             return S.NaN
+
+    def _eval_power(self, expt):
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
         # exponent
