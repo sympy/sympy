@@ -1,11 +1,10 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sqrt, symbols,
-    tan, tanh, atan2, arg, root
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
-    oo)
+    acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv, exp,
+    log, pi, sin, sinh, sqrt, symbols, tan, tanh, atan2, tan,
+    arg, root, Lambda, imageset, cot, acot, I, EmptySet, Union,
+    E, Interval, Intersection, oo)
 
 from sympy.core.function import nfloat
 from sympy.functions.elementary.complexes import im, re
