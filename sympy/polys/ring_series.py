@@ -1779,14 +1779,19 @@ def rs_compose_add(p1, p2):
     return q
 
 
+_convert_func = {
+        'sin': 'rs_sin',
+        'cos': 'rs_cos',
+        'exp': 'rs_exp'
+        }
+
 def series_fast(expr, x, prec):
-    R, series = sring(expr, domain=QQ)
-    gens = list(R.gens)
-    try:
-        R(a)
-    except ValueError:
-            gens = 3
-    x = R(x)
     if expr.is_Function:
-        return eval(_convert_func[str(expr.func)])(R(expr.args),
+        R, series = sring(expr.args[0], domain=QQ)
+        syms = set(R.symbols)
+        syms = syms.union(set((x,)))
+        R = R.clone(symbols=list(syms))
+        series = series.set_ring(R)
+        x = R(x)
+        return eval(_convert_func[str(expr.func)])(series,
             x, prec)
