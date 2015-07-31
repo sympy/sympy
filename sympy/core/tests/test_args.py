@@ -1570,6 +1570,30 @@ def test_sympy__functions__special__beta_functions__beta():
     assert _test_args(beta(x, x))
 
 
+def test_sympy__functions__special__mathieu_functions__MathieuBase():
+    pass
+
+
+def test_sympy__functions__special__mathieu_functions__mathieus():
+    from sympy.functions.special.mathieu_functions import mathieus
+    assert _test_args(mathieus(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieuc():
+    from sympy.functions.special.mathieu_functions import mathieuc
+    assert _test_args(mathieuc(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieusprime():
+    from sympy.functions.special.mathieu_functions import mathieusprime
+    assert _test_args(mathieusprime(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieucprime():
+    from sympy.functions.special.mathieu_functions import mathieucprime
+    assert _test_args(mathieucprime(1, 1, 1))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
     pass
