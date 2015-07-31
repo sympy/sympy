@@ -1,5 +1,5 @@
 from sympy.polys.domains import QQ, EX
-from sympy.polys.rings import PolyElement, ring
+from sympy.polys.rings import PolyElement, ring, sring
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
@@ -1330,9 +1330,18 @@ def rs_sin(p, x, prec):
     R = x.ring
     if not p:
         return R(0)
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    zm = R.zero_monom
+    i = R.gens.index(x)
+    zm = R.zero_monom
+    a = [0]*R.ngens
+    a[i] = 1
+    miv = tuple(a)
+    c = 0
+    for expv in p:
+        if monomial_min(expv, miv) == zm:
+            c = R({expv: p[expv]})
+            break
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             t1, t2 = sin(c_expr), cos(c_expr)
@@ -1341,8 +1350,14 @@ def rs_sin(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                symbols = set(R.symbols).union(set((sin(c_expr), cos(c_expr))))
+                R = R.clone(symbols=list(symbols))
+                gens = list(R.gens).remove(x.set_ring(R))
+                R.drop_to_ground(gens)
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
@@ -1396,9 +1411,17 @@ def rs_cos(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos, p, x, prec)
     R = p.ring
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    i = R.gens.index(x)
+    zm = R.zero_monom
+    a = [0]*R.ngens
+    a[i] = 1
+    miv = tuple(a)
+    c = 0
+    for expv in p:
+        if monomial_min(expv, miv) == zm:
+            c = R({expv: p[expv]})
+            break
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             t1, t2 = sin(c_expr), cos(c_expr)
@@ -1407,8 +1430,14 @@ def rs_cos(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                symbols = set(R.symbols).union(set((sin(c_expr), cos(c_expr))))
+                R = R.clone(symbols=list(symbols))
+                gens = list(R.gens).remove(x.set_ring(R))
+                R.drop_to_ground(gens)
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
@@ -1748,3 +1777,16 @@ def rs_compose_add(p1, p2):
     if dp:
         q = q*x**dp
     return q
+
+
+def series_fast(expr, x, prec):
+    R, series = sring(expr, domain=QQ)
+    gens = list(R.gens)
+    try:
+        R(a)
+    except ValueError:
+            gens = 3
+    x = R(x)
+    if expr.is_Function:
+        return eval(_convert_func[str(expr.func)])(R(expr.args),
+            x, prec)
