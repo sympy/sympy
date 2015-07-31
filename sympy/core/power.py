@@ -169,10 +169,6 @@ class Pow(Expr):
                     return -Pow(-b, e)
             if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
-            elif b is S.One:
-                if abs(e).is_infinite:
-                    return S.NaN
-                return S.One
             else:
                 # recognize base as E
                 if not e.is_Atom and b is not S.Exp1 and b.func is not exp_polar:
@@ -205,6 +201,30 @@ class Pow(Expr):
     @classmethod
     def class_key(cls):
         return 3, 2, cls.__name__
+
+    def _eval_refine(self):
+        b, e = self.as_base_exp()
+        if b == -1:
+            if e.is_odd:
+                return S.NegativeOne
+            if e.is_even:
+                return S.One
+        if b.is_zero:
+            if e.is_positive:
+                return S.Zero
+            if e.is_negative:
+                return S.ComplexInfinity
+            if e.is_real is False:
+                return S.NaN
+        if b is S.One:
+            if abs(e).is_infinite:
+                return S.NaN
+            return S.One
+        if e.is_integer and _coeff_isneg(b):
+            if e.is_even:
+                b = -b
+            elif e.is_odd:
+                return -Pow(-b, e)
 
     def _eval_power(self, other):
         from sympy import Abs, arg, exp, floor, im, log, re, sign

@@ -2151,12 +2151,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         return S.Zero
 
     def _eval_power(self, expt):
-        if expt.is_positive:
-            return self
-        if expt.is_negative:
-            return S.ComplexInfinity
-        if expt.is_real is False:
-            return S.NaN
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
         # exponent
@@ -2261,10 +2255,6 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
         return S.One
 
     def _eval_power(self, expt):
-        if expt.is_odd:
-            return S.NegativeOne
-        if expt.is_even:
-            return S.One
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return Float(-1.0)**expt

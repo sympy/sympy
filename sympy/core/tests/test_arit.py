@@ -117,8 +117,6 @@ def test_pow():
     assert e == Rational(0)
     e = a**(b - b)
     assert e == Rational(1)
-    e = (a - a)**b
-    assert e == Rational(0)
     e = (a + Rational(1) - a)**b
     assert e == Rational(1)
 
