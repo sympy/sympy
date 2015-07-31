@@ -30,6 +30,8 @@ def refine(expr, assumptions=True):
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
         expr = expr.func(*args)
+    if hasattr(expr, '_eval_refine'):
+        return expr._eval_refine()
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
     if handler is None:
