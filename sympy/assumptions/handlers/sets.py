@@ -3,7 +3,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 from __future__ import print_function, division
 
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q, ask, refine
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
 from sympy.functions.elementary.exponential import exp, log
@@ -430,6 +430,7 @@ class AskImaginaryHandler(CommonHandler):
     def _number(expr, assumptions):
         # let as_real_imag() work first since the expression may
         # be simpler to evaluate
+        expr = refine(expr)  # Evaluate unevaluated numbers
         r = expr.as_real_imag()[0].evalf(2)
         if r._prec != 1:
             return not r
