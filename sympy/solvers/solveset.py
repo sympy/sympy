@@ -872,10 +872,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         return EmptySet()
 
     if f is S.true:
-        if domain is S.Reals:
-            return S.Reals
-        else:
-            return S.Complexes
+        return domain
 
     if isinstance(f, Eq):
         from sympy.core import Add
