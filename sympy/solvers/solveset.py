@@ -866,15 +866,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
     elif not symbol.is_Symbol:
         raise ValueError('A Symbol must be given, not type %s: %s' % (type(symbol), symbol))
 
-    real = (symbol.is_real is True)
-
     f = sympify(f)
 
     if f is S.false:
         return EmptySet()
 
     if f is S.true:
-        if real:
+        if domain is S.Reals:
             return S.Reals
         else:
             return S.Complexes
@@ -884,7 +882,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         f = Add(f.lhs, - f.rhs, evaluate=False)
 
     if f.is_Relational:
-        if real is False:
+        if not domain.is_subset(S.Reals):
             warnings.warn(filldedent('''
                 The variable you are solving for is complex
                 but will assumed to be real since solving complex
@@ -893,7 +891,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         return solve_univariate_inequality(f, symbol, relational=False)
 
     if isinstance(f, (Expr, Number)):
-        if domain is S.Reals or real:
+        if domain is S.Reals:
             return solveset_real(f, symbol)
         elif domain is S.Complexes:
             return solveset_complex(f, symbol)
