@@ -2,7 +2,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference)
+    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -734,6 +734,13 @@ def test_image_interval():
 
     assert imageset(Lambda(x, sin(cos(x))), Interval(0, 1)) == \
             ImageSet(Lambda(x, sin(cos(x))), Interval(0, 1))
+
+
+def test_image_piecewise():
+    f = Piecewise((x, x <= -1), (1/x**2, x <= 5), (x**3, True))
+    f1 = Piecewise((0, x <= 1), (1, x <= 2), (2, True))
+    assert imageset(x, f, Interval(-5, 5)) == Union(Interval(-5, -1), Interval(S(1)/25, oo))
+    assert imageset(x, f1, Interval(1, 2)) == FiniteSet(0, 1)
 
 
 @XFAIL  # See: https://github.com/sympy/sympy/pull/2723#discussion_r8659826
