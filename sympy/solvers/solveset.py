@@ -825,7 +825,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy import exp, Symbol, Eq, pprint
+    >>> from sympy import exp, Symbol, Eq, pprint, S
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy.abc import x
 
@@ -839,16 +839,16 @@ def solveset(f, symbol=None, domain=S.Complexes):
       interface, then specify the variable to real. Alternatively use
       `solveset\_real`.
 
-    >>> x = Symbol('x', real=True)
-    >>> solveset(exp(x) - 1, x)
+    >>> x = Symbol('x')
+    >>> solveset(exp(x) - 1, x, S.Reals)
     {0}
-    >>> solveset(Eq(exp(x), 1), x)
+    >>> solveset(Eq(exp(x), 1), x, S.Reals)
     {0}
 
     * Inequalities are always solved in the real domain irrespective of
       the assumption on the variable for which the inequality is solved.
 
-    >>> solveset(exp(x) > 1, x)
+    >>> solveset(exp(x) > 1, x, S.Reals)
     (0, oo)
 
     """
