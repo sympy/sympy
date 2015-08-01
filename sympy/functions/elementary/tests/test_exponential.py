@@ -1,6 +1,6 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-    LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
+    LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
 
 
@@ -20,19 +20,19 @@ def test_exp_values():
     assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
     assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
-    assert exp(pi*I/2) == I
-    assert exp(pi*I) == -1
-    assert exp(3*pi*I/2) == -I
-    assert exp(2*pi*I) == 1
+    assert refine(exp(pi*I/2)) == I
+    assert refine(exp(pi*I)) == -1
+    assert refine(exp(3*pi*I/2)) == -I
+    assert refine(exp(2*pi*I)) == 1
 
-    assert exp(pi*I*2*k) == 1
-    assert exp(pi*I*2*(k + Rational(1, 2))) == -1
-    assert exp(pi*I*2*(k + Rational(1, 4))) == I
-    assert exp(pi*I*2*(k + Rational(3, 4))) == -I
+    assert refine(exp(pi*I*2*k)) == 1
+    assert refine(exp(pi*I*2*(k + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(k + Rational(1, 4)))) == I
+    assert refine(exp(pi*I*2*(k + Rational(3, 4)))) == -I
 
     assert exp(log(x)) == x
-    assert exp(2*log(x)) == x**2
-    assert exp(pi*log(x)) == x**pi
+    assert refine(exp(2*log(x))) == x**2
+    assert refine(exp(pi*log(x))) == x**pi
 
     assert exp(17*log(x) + E*log(y)) == x**17 * y**E
 
@@ -86,8 +86,8 @@ def test_exp__as_base_exp():
 def test_exp_infinity():
     y = Symbol('y')
     assert exp(I*y) != nan
-    assert exp(I*oo) == nan
-    assert exp(-I*oo) == nan
+    assert refine(exp(I*oo)) == nan
+    assert refine(exp(-I*oo)) == nan
     assert exp(y*I*oo) != nan
 
 
