@@ -880,12 +880,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if f.is_Relational:
         if not domain.is_subset(S.Reals):
-            warnings.warn(filldedent('''
-                The variable you are solving for is complex
-                but will assumed to be real since solving complex
-                inequalities is not supported.
-            '''))
-        return solve_univariate_inequality(f, symbol, relational=False)
+            raise NotImplementedError("Inequalities in the complex domain are "
+                                      "not supported. Try the real domain by"
+                                      "setting domain=S.Reals")
+        d = Dummy(real=True)
+        f = f.subs(symbol, d)
+        return solve_univariate_inequality(
+            f, d, relational=False).intersection(domain)
 
     if isinstance(f, (Expr, Number)):
         if domain is S.Reals:
