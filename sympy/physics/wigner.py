@@ -72,7 +72,7 @@ def _calc_factlist(nn):
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
-    Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`.
+    Calculate the Wigner 3j symbol `\operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)`.
 
     INPUT:
 
@@ -112,19 +112,21 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
       .. math::
 
-         Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)
-          =Wigner3j(j_3,j_1,j_2,m_3,m_1,m_2)
-          =Wigner3j(j_2,j_3,j_1,m_2,m_3,m_1)
-          =(-1)^J Wigner3j(j_3,j_2,j_1,m_3,m_2,m_1)
-          =(-1)^J Wigner3j(j_1,j_3,j_2,m_1,m_3,m_2)
-          =(-1)^J Wigner3j(j_2,j_1,j_3,m_2,m_1,m_3)
+         \begin{aligned}
+         \operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)
+          &=\operatorname{Wigner3j}(j_3,j_1,j_2,m_3,m_1,m_2) \\
+          &=\operatorname{Wigner3j}(j_2,j_3,j_1,m_2,m_3,m_1) \\
+          &=(-1)^J \operatorname{Wigner3j}(j_3,j_2,j_1,m_3,m_2,m_1) \\
+          &=(-1)^J \operatorname{Wigner3j}(j_1,j_3,j_2,m_1,m_3,m_2) \\
+          &=(-1)^J \operatorname{Wigner3j}(j_2,j_1,j_3,m_2,m_1,m_3)
+         \end{aligned}
 
     - invariant under space inflection, i.e.
 
       .. math::
 
-         Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)
-         =(-1)^J Wigner3j(j_1,j_2,j_3,-m_1,-m_2,-m_3)
+         \operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)
+         =(-1)^J \operatorname{Wigner3j}(j_1,j_2,j_3,-m_1,-m_2,-m_3)
 
     - symmetric with respect to the 72 additional symmetries based on
       the work by [Regge58]_
@@ -247,8 +249,8 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     .. math::
 
         \langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle
-        =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1} \;
-        Wigner3j(j_1,j_2,j_3,m_1,m_2,-m_3)
+        =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1}
+        \operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,-m_3)
 
     See also the documentation on Wigner 3j symbols which exhibit much
     higher symmetry relations than the Clebsch-Gordan coefficient.
@@ -345,7 +347,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
 
     .. math::
 
-       Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
+       \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
        =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)
 
     Please see the 6j symbol for its much richer symmetries and for
@@ -393,7 +395,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
 
 def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     r"""
-    Calculate the Wigner 6j symbol `Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)`.
+    Calculate the Wigner 6j symbol `\operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)`.
 
     INPUT:
 
@@ -435,7 +437,7 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
     .. math::
 
-       Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
+       \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
         =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)
 
     The Wigner 6j symbol obeys the following symmetry rules:
@@ -445,22 +447,24 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
       .. math::
 
-         Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
-          =Wigner6j(j_3,j_1,j_2,j_6,j_4,j_5)
-          =Wigner6j(j_2,j_3,j_1,j_5,j_6,j_4)
-          =Wigner6j(j_3,j_2,j_1,j_6,j_5,j_4)
-          =Wigner6j(j_1,j_3,j_2,j_4,j_6,j_5)
-          =Wigner6j(j_2,j_1,j_3,j_5,j_4,j_6)
+         \begin{aligned}
+         \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
+          &=\operatorname{Wigner6j}(j_3,j_1,j_2,j_6,j_4,j_5) \\
+          &=\operatorname{Wigner6j}(j_2,j_3,j_1,j_5,j_6,j_4) \\
+          &=\operatorname{Wigner6j}(j_3,j_2,j_1,j_6,j_5,j_4) \\
+          &=\operatorname{Wigner6j}(j_1,j_3,j_2,j_4,j_6,j_5) \\
+          &=\operatorname{Wigner6j}(j_2,j_1,j_3,j_5,j_4,j_6)
+         \end{aligned}
 
     - They are invariant under the exchange of the upper and lower
       arguments in each of any two columns, i.e.
 
       .. math::
 
-         Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)
-          =Wigner6j(j_1,j_5,j_6,j_4,j_2,j_3)
-          =Wigner6j(j_4,j_2,j_6,j_1,j_5,j_3)
-          =Wigner6j(j_4,j_5,j_3,j_1,j_2,j_6)
+         \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
+          =\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)
+          =\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)
+          =\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
 
     - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries
       in total
@@ -488,7 +492,7 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     r"""
     Calculate the Wigner 9j symbol
-    `Wigner9j(j_1,j_2,j_3,j_4,j_5,j_6,j_7,j_8,j_9)`.
+    `\operatorname{Wigner9j}(j_1,j_2,j_3,j_4,j_5,j_6,j_7,j_8,j_9)`.
 
     INPUT:
 
@@ -550,11 +554,14 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     .. math::
 
-        Y(j_1,j_2,j_3,m_1,m_2,m_3)
-        =\int Y_{l_1,m_1}(\Omega)
-         Y_{l_2,m_2}(\Omega) Y_{l_3,m_3}(\Omega) d\Omega
-        =\sqrt{(2l_1+1)(2l_2+1)(2l_3+1)/(4\pi)}
-         \; Y(j_1,j_2,j_3,0,0,0) \; Y(j_1,j_2,j_3,m_1,m_2,m_3)
+        \begin{aligned}
+        \operatorname{Gaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
+        &=\int Y_{l_1,m_1}(\Omega)
+         Y_{l_2,m_2}(\Omega) Y_{l_3,m_3}(\Omega) \,d\Omega \\
+        &=\sqrt{\frac{(2l_1+1)(2l_2+1)(2l_3+1)}{4\pi}}
+         \operatorname{Wigner3j}(l_1,l_2,l_3,0,0,0)
+         \operatorname{Wigner3j}(l_1,l_2,l_3,m_1,m_2,m_3)
+        \end{aligned}
 
     INPUT:
 
@@ -595,18 +602,20 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     - invariant under any permutation of the columns
 
       .. math::
-          Y(j_1,j_2,j_3,m_1,m_2,m_3)
-          =Y(j_3,j_1,j_2,m_3,m_1,m_2)
-          =Y(j_2,j_3,j_1,m_2,m_3,m_1)
-          =Y(j_3,j_2,j_1,m_3,m_2,m_1)
-          =Y(j_1,j_3,j_2,m_1,m_3,m_2)
-          =Y(j_2,j_1,j_3,m_2,m_1,m_3)
+        \begin{aligned}
+          Y(l_1,l_2,l_3,m_1,m_2,m_3)
+          &=Y(l_3,l_1,l_2,m_3,m_1,m_2) \\
+          &=Y(l_2,l_3,l_1,m_2,m_3,m_1) \\
+          &=Y(l_3,l_2,l_1,m_3,m_2,m_1) \\
+          &=Y(l_1,l_3,l_2,m_1,m_3,m_2) \\
+          &=Y(l_2,l_1,l_3,m_2,m_1,m_3)
+        \end{aligned}
 
     - invariant under space inflection, i.e.
 
       .. math::
-          Y(j_1,j_2,j_3,m_1,m_2,m_3)
-          =Y(j_1,j_2,j_3,-m_1,-m_2,-m_3)
+          Y(l_1,l_2,l_3,m_1,m_2,m_3)
+          =Y(l_1,l_2,l_3,-m_1,-m_2,-m_3)
 
     - symmetric with respect to the 72 Regge symmetries as inherited
       for the `3j` symbols [Regge58]_
@@ -617,7 +626,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
       `l_2 \ge |m_2|`, `l_3 \ge |m_3|`
 
     - non-zero only for an even sum of the `l_i`, i.e.
-      `J = l_1 + l_2 + l_3 = 2n` for `n` in `\mathbb{N}`
+      `L = l_1 + l_2 + l_3 = 2n` for `n` in `\mathbb{N}`
 
     ALGORITHM:
 
