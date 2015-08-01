@@ -4,7 +4,7 @@ This module contains functions to solve a single equation for a single variable.
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
@@ -13,8 +13,9 @@ from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.sets import FiniteSet, EmptySet, imageset, Interval, Union
-from sympy.matrices import Matrix, zeros
+from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
+                        Union)
+from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
@@ -776,7 +777,7 @@ def solveset_complex(f, symbol):
         return result
 
 
-def solveset(f, symbol=None):
+def solveset(f, symbol=None, domain=S.Complexes):
     """Solves a given inequality or equation with set as output
 
     Parameters
@@ -892,10 +893,14 @@ def solveset(f, symbol=None):
         return solve_univariate_inequality(f, symbol, relational=False)
 
     if isinstance(f, (Expr, Number)):
-        if real is True:
+        if domain is S.Reals or real:
             return solveset_real(f, symbol)
-        else:
+        elif domain is S.Complexes:
             return solveset_complex(f, symbol)
+        elif domain.is_subset(S.Reals):
+            return Intersection(solveset_real(f, symbol), domain)
+        else:
+            return Intersection(solveset_complex(f, symbol), domain)
 
 
 ###############################################################################
