@@ -140,3 +140,13 @@ def test_func_args():
     x = MyClass()
     x.my_member = "A very important value"
     assert x.my_member == refine(x).my_member
+
+
+def test_eval_refine():
+    from sympy.core.expr import Expr
+    class MockExpr(Expr):
+        def _eval_refine(self):
+            return True
+
+    mock_obj = MockExpr()
+    assert refine(mock_obj)
