@@ -825,6 +825,14 @@ def test_solveset():
                                                   S.Integers)
 
 
+def test_solveset_domain():
+    x = Symbol('x')
+
+    assert solveset(exp(x) - 1, x, domain=S.Reals) == FiniteSet(0)
+    assert solveset(x**2 - 1, x, domain=Interval(0, oo)) == FiniteSet(1)
+    assert solveset(x**4 - 16, x, domain=Interval(0, 10)) == FiniteSet(2)
+
+
 def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x', real=True)
