@@ -17,7 +17,7 @@ class AskIntegerHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_integer
 
     @staticmethod
@@ -102,7 +102,7 @@ class AskRationalHandler(CommonHandler):
 
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_rational
 
     @staticmethod
@@ -164,7 +164,7 @@ class AskIrrationalHandler(CommonHandler):
 
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_irrational
 
     @staticmethod
@@ -186,7 +186,7 @@ class AskRealHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_real
 
     @staticmethod
@@ -394,7 +394,7 @@ class AskComplexHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_complex
 
     @staticmethod
@@ -423,7 +423,7 @@ class AskImaginaryHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_imaginary
 
     @staticmethod
