@@ -508,7 +508,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product
+    from sympy import Sum, Product, refine
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -547,6 +547,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     expr = hyperexpand(expr)
 
     expr = piecewise_fold(expr)
+
+    expr = refine(expr)
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)
