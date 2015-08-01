@@ -2,7 +2,7 @@ from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral)
+    Interval, comp, Integral, refine)
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -214,9 +214,9 @@ def test_sign():
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is False
-    assert sign(x).doit() == x / Abs(x)
+    assert sign(x).doit() == x / refine(Abs(x))
     assert sign(Abs(x)) == 1
-    assert Abs(sign(x)) == 1
+    assert refine(Abs(sign(x))) == 1
 
     x = 0
     assert sign(x).is_imaginary is False
@@ -225,7 +225,7 @@ def test_sign():
     assert sign(x).is_zero is True
     assert sign(x).doit() == 0
     assert sign(Abs(x)) == 0
-    assert Abs(sign(x)) == 0
+    assert refine(Abs(sign(x))) == 0
 
     nz = Symbol('nz', nonzero=True, integer=True)
     assert sign(nz).is_imaginary is False
@@ -289,7 +289,7 @@ def test_as_real_imag():
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)
-    assert sqrt(i**2).as_real_imag() == (0, abs(i))
+    assert refine(sqrt(i**2).as_real_imag()) == (0, Abs(-i))
 
 
 @XFAIL
@@ -311,29 +311,29 @@ def test_Abs():
     x, y = symbols('x,y')
     assert sign(sign(x)) == sign(x)
     assert sign(x*y).func is sign
-    assert Abs(0) == 0
-    assert Abs(1) == 1
-    assert Abs(-1) == 1
-    assert Abs(I) == 1
-    assert Abs(-I) == 1
-    assert Abs(nan) == nan
-    assert Abs(I * pi) == pi
-    assert Abs(-I * pi) == pi
-    assert Abs(I * x) == Abs(x)
-    assert Abs(-I * x) == Abs(x)
-    assert Abs(-2*x) == 2*Abs(x)
-    assert Abs(-2.0*x) == 2.0*Abs(x)
-    assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)
-    assert Abs(conjugate(x)) == Abs(x)
+    assert refine(Abs(0)) == 0
+    assert refine(Abs(1)) == 1
+    assert refine(Abs(-1)) == 1
+    assert refine(Abs(I)) == 1
+    assert refine(Abs(-I)) == 1
+    assert refine(Abs(nan)) == nan
+    assert refine(Abs(I*pi)) == pi
+    assert refine(Abs(-I*pi)) == pi
+    assert Abs(I*x) == Abs(x)
+    assert refine(Abs(-I*x)) == Abs(x)
+    assert refine(Abs(-2*x)) == 2*Abs(x)
+    assert refine(Abs(-2.0*x)) == 2.0*Abs(x)
+    assert refine(Abs(2*pi*x*y)) == 2*pi*Abs(x*y)
+    assert refine(Abs(conjugate(x))) == Abs(x)
     assert conjugate(Abs(x)) == Abs(x)
 
     a = Symbol('a', positive=True)
-    assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
-    assert Abs(2*pi*I*x*a) == 2*pi*a*Abs(x)
+    assert refine(Abs(2*pi*x*a)) == 2*pi*a*Abs(x)
+    assert refine(Abs(2*pi*I*x*a)) == 2*pi*a*Abs(x)
 
     x = Symbol('x', real=True)
     n = Symbol('n', integer=True)
-    assert Abs((-1)**n) == 1
+    assert refine(Abs((-1)**n)) == 1
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
     assert abs(x) == Abs(x)  # Python built-in
@@ -406,8 +406,8 @@ def test_Abs_real():
     # if the symbol is zero, the following will still apply
     nn = Symbol('nn', nonnegative=True, real=True)
     np = Symbol('np', nonpositive=True, real=True)
-    assert Abs(nn) == nn
-    assert Abs(np) == -np
+    assert refine(Abs(nn)) == nn
+    assert refine(Abs(np)) == -np
 
 
 def test_Abs_properties():
@@ -692,7 +692,7 @@ def test_issue_4035():
 
 def test_issue_3206():
     x = Symbol('x')
-    assert Abs(Abs(x)) == Abs(x)
+    assert refine(Abs(Abs(x))) == Abs(x)
 
 
 def test_issue_4754_derivative_conjugate():

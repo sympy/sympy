@@ -427,6 +427,27 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_refine(self, val=None):
+        from sympy.assumptions import Q, ask
+        arg = self.args[0]
+        if val is not None:
+            arg = val
+        if arg.is_Mul:
+            prod = 1
+            for term in arg.args:
+                ref_term = self._eval_refine(val=term)
+                if ref_term is not None:
+                    prod *= ref_term
+                else:
+                    prod *= term
+            return Abs(prod)
+        if ask(Q.zero(arg)):
+            return S.Zero
+        if ask(Q.nonnegative(arg)):
+            return arg
+        if ask(Q.nonpositive(arg)):
+            return -arg
+
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
@@ -468,12 +489,6 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_zero:  # it may be an Expr that is zero
-            return S.Zero
-        if arg.is_nonnegative:
-            return arg
-        if arg.is_nonpositive:
-            return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
