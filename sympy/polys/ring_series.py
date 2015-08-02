@@ -4,7 +4,7 @@ from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
-from sympy.core import PoleError
+from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
@@ -1785,7 +1785,16 @@ _convert_func = {
         'exp': 'rs_exp'
         }
 
-def series_fast(expr, x, prec):
+def rs_min_pow(expr, rs_series, a):
+    series=0
+    n = 2
+    #R, series = sring(rs_series, domain=QQ)
+    while series == 0:
+        series = _series_fast(expr, rs_series, a, n)
+        n *= 2
+    return min(series, key=lambda a: a[0])[0]
+
+def series_fast_old(expr, x, prec):
     if expr.is_Function:
         R, series = sring(expr.args[0], domain=QQ)
         syms = set(R.symbols)
@@ -1795,3 +1804,94 @@ def series_fast(expr, x, prec):
         x = R(x)
         return eval(_convert_func[str(expr.func)])(series,
             x, prec)
+
+
+def _series_fast(expr, rs_series, a, prec):
+    args = expr.args
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+        if isinstance(rs_series, Expr):
+            R, series = sring(expr, domain=QQ)
+            return series
+        else:
+            return rs_series
+    elif expr.is_Function:
+        arg = args[0]
+        R, series = sring(arg, domain=QQ)
+        syms = set(R.symbols)
+        series_inner = _series_fast(arg, series, a, prec)
+        syms = syms.union(set((series_inner.ring.symbols))).union(set(rs_series.ring.symbols))
+        R = R.clone(symbols=list(syms))
+        series_inner = series_inner.set_ring(R)
+        a = R(a)
+        series = eval(_convert_func[str(expr.func)])(series_inner,
+            a, prec)
+        return series
+    elif expr.is_Mul:
+        n = len(args)
+        R = rs_series.ring
+        min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args], [a]*len(args)))
+        sum_pows = sum(min_pows)
+        series = R(1)
+        for i in range(n):
+            _series = _series_fast(args[i], R(args[i]), a, prec - sum_pows +
+                min_pows[i])
+            if _series.ring.symbols != R.symbols:
+                syms = set(R.symbols)
+                syms = syms.union(set((_series.ring.symbols)))
+                R = R.clone(symbols=list(syms))
+                _series = _series.set_ring(R)
+                series = series.set_ring(R)
+            series += _series
+        series = rs_trunc(series, R(a), prec)
+        return series
+    elif expr.is_Add:
+        n = len(args)
+        R = rs_series.ring
+        series = R(0)
+        for i in range(n):
+            _series = _series_fast(args[i], R(args[i]), a, prec)
+            if _series.ring.symbols != R.symbols:  #Check if it should be series.ring.symbols
+                syms = set(R.symbols)
+                syms = syms.union(set((_series.ring.symbols)))
+                R = R.clone(symbols=list(syms))
+                _series = _series.set_ring(R)
+                series = series.set_ring(R)
+            series += _series
+        return series
+    elif expr.is_Pow:
+        series_inner = _series_fast(expr.base, a, prec)
+        return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
+    else:
+        raise NotImplementedError
+
+def series_fast(expr, a, prec):
+    R, series = sring(expr, domain=QQ)
+    series = _series_fast(expr, series, a, prec)
+    return series
+    args = expr.args
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+        R, a = ring('%s' % a, EX)
+        return series
+    gen = series.ring.gens[0]
+    prec_got = series.degree() + 1
+    if prec_got >= prec:
+        return rs_trunc(series, gen, prec)
+    else:
+        # increase the requested number of terms to get the desired
+        # number keep increasing (up to 9) until the received order
+        # is different than the original order and then predict how
+        # many additional terms are needed
+        for more in range(1, 9):
+            p1 = _series_fast(expr, gen, prec=prec + more)
+            new_prec = p1.degree()
+            if new_prec != prec_got:
+                prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
+                p1 = _series_fast(expr, gen, prec=prec_do)
+                while p1.degree() < prec:
+                    p1 = _series_fast(expr, gen, prec=prec_do)
+                    prec_do += 1
+                break
+        else:
+            raise ValueError('Could not calculate %s terms for %s'
+                             % (str(prec), expr))
+        return rs_trunc(p1, gen, prec)
