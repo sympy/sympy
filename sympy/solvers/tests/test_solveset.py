@@ -524,6 +524,7 @@ def test_solve_abs():
         FiniteSet(-1, Rational(1, 3))
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
+    assert solveset_real(Abs((x - 1)/(x - 3)) - 1, x) == FiniteSet(2)
 
 
 @XFAIL

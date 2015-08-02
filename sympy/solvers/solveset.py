@@ -456,7 +456,7 @@ def solveset_real(f, symbol):
                         result += _solve_radical(equation,
                                                  symbol,
                                                  solveset_real)
-                    elif equation.has(Abs):
+                    elif equation.has(Abs) and not equation.as_numer_denom()[1].has(symbol):
                         result += _solve_abs(f, symbol)
                     else:
                         result += _solve_as_rational(equation, symbol,
