@@ -1814,6 +1814,9 @@ def _series_fast(expr, rs_series, a, prec):
             return series
         else:
             return rs_series
+    elif isinstance(expr, Expr):
+        if expr.is_constant:
+            return sring(expr, domain=QQ)[1]
     elif expr.is_Function:
         arg = args[0]
         R, series = sring(arg, domain=QQ)
@@ -1829,6 +1832,11 @@ def _series_fast(expr, rs_series, a, prec):
     elif expr.is_Mul:
         n = len(args)
         R = rs_series.ring
+        #syms = set(R.symbols)
+        #for arg in args:
+        #    R1, _ = sring(arg)
+        #    syms = syms.union(set(R1.symbols))
+        #R = R.clone(symbols=list(syms))
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args], [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
@@ -1841,7 +1849,7 @@ def _series_fast(expr, rs_series, a, prec):
                 R = R.clone(symbols=list(syms))
                 _series = _series.set_ring(R)
                 series = series.set_ring(R)
-            series += _series
+            series *= _series
         series = rs_trunc(series, R(a), prec)
         return series
     elif expr.is_Add:
