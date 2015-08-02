@@ -37,8 +37,8 @@ issues
 
 TODO
 
-Why Solveset
-============
+Why Solveset?
+=============
 
 * `solveset` has a cleaner input and output interface: `solveset` returns a set
   object and a set object take care of all the types of the output. For cases
@@ -59,7 +59,67 @@ Why Solveset
 * `solveset` returns a solution only when it can guarantee that it is returning
   all the solutions.
 
-TODO
+
+
+Why do we use Sets as an output type?
+=====================================
+
+The main reason for using sets as output to solvers is that it can consistently
+represent many types of solutions. For single variable case it can represent:
+
+  * No solution (by null set)
+
+  * Finitely many solutions (by FiniteSet)
+
+  * Infinitely many solutions, both countably and uncountably infinite solutions
+  (using the ImageSet module) Interval
+
+  * There can also be bizarre solutions to equations like set of all rational number.
+
+  No other programmer's object (list, dictionary, python sets) provides the
+  flexibility of mathematical sets which our sets module try to emulate. The
+  second reason to use sets is that they are close to the entities which
+  mathematician's deals with and it makes it easier to reason about them.
+  Another advantage of using objects closer to mathematical entities is that the
+  user won't have to "learn" our representation and she can have her expectations
+  transferred from her mathematical experience.
+
+  For multivariate case we are representing solutions as a set of points in a n
+  dimensional space and a point is represented by a FiniteSet of ordered tuple.
+  Please Note that, the General FiniteSet is unordered, but a FiniteSet with
+  a tuple as it's first argument is ordered. For example:
+
+  - FiniteSet(1, 2, 3) : {1, 2, 3}    # Unordered
+  - FiniteSet((1, 2, 3)) {(1, 2, 3)}  # Ordered
+
+  Why not use Dictionary as Output?
+  =================================
+
+  Dictionary are easy to deal with programatically but mathematically they are not
+  very precise and use of them can quickly lead to inconsistency and a lot of
+  confusion. For example addition of two solutions is a fairly valid operations
+  but dictionaries by themselves have no add operation. Since we are representing
+  solutions as dictionary we can define a custom add operation where value of x
+  variable is added with value of other x variable and value of y variable
+  with the value of other y variable. But what if the user tries to add solution
+  of two equations which have different sets of variables? Say one has x and y
+  as variables and other has u and v? We cannot allow this addition because
+  the keys of dictionaries are unordered but this behavior will be inconsistent
+  with the one variable case because it will be absurd to not to allow addition of
+  two numbers, say one obtained by solution of x = 1 and other by solving y = 2.
+
+
+What are some really cool stuff that solveset can do?
+=====================================================
+
+ TODO
+
+
+What is this domain argument about?
+===================================
+
+ TODO
+
 
 Design Decision
 ===============
@@ -71,11 +131,19 @@ Design Decision
 
 * TODO
 
+
+What will you do with the old solve?
+====================================
+
+ TODO
+
+
 References
 ==========
 
  * https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
  * https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
+ * https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
 
 
 TODO: Remove the line below
