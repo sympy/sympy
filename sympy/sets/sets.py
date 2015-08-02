@@ -996,18 +996,17 @@ class Interval(Set, EvalfMixin):
         if expr.is_Piecewise:
             result = S.EmptySet
             domain_set = self
-            for i in expr.args:
-                func = i[0]
-                if i[1] is S.true:
+            for (p_expr, p_cond) in expr.args:
+                if p_cond is S.true:
                     intrvl = domain_set
                 else:
-                    intrvl = i[1].as_set()
+                    intrvl = p_cond.as_set()
                     intrvl = Intersection(domain_set, intrvl)
 
-                if func.is_Number:
-                    image = FiniteSet(func)
+                if p_expr.is_Number:
+                    image = FiniteSet(p_expr)
                 else:
-                    image = imageset(Lambda(var, func), intrvl)
+                    image = imageset(Lambda(var, p_expr), intrvl)
                 result = Union(result, image)
 
                 # remove the part which has been `imaged`
