@@ -691,6 +691,9 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    assert solveset_real(sin(x) - 1, x) == \
+        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
+
 
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
@@ -706,13 +709,10 @@ def test_solve_complex_unsolvable():
 @XFAIL
 def test_solve_trig_simplified():
     from sympy.abc import n
-    
+
     assert solveset_real(sin(x) + cos(x), x) == \
         Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
               imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
-
-    assert solveset_real(sin(x) - 1, x) == \
-        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
     assert solveset_real(cos(x) + sin(x), x) == \
         imageset(Lambda(n, n*pi - pi/4), S.Integers)

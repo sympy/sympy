@@ -520,12 +520,13 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             gen = poly.gen
             deg = poly.degree()
             poly = Poly(poly.as_expr(), poly.gen, composite=True)
-            poly_solns = FiniteSet(*roots(poly, cubics=True, quartics=True,
-                                          quintics=True).keys())
-
-            if len(poly_solns) < deg:
+            solns = roots(poly, cubics=True, quartics=True,
+                                    quintics=True)
+            num_roots = sum(solns.values())
+            if num_roots < deg:
                 raise NotImplementedError("Couldn't find all the roots of "
                                           "the equation %s" % f)
+            poly_solns = FiniteSet(*solns)
 
             if gen != symbol:
                 y = Dummy('y')
