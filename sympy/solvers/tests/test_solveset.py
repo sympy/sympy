@@ -684,19 +684,10 @@ def test_solveset_complex_tan():
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
-
-    assert solveset_real(sin(x) - 1, x) == \
-        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
+        imageset(Lambda(n, pi*n), S.Integers)
 
     assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
-
-    assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
+        imageset(Lambda(n, pi*n + pi/2), S.Integers)
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
@@ -707,17 +698,21 @@ def test_solve_invalid_sol():
 
 
 def test_solve_complex_unsolvable():
-    raises(NotImplementedError, lambda: solveset_complex(cos(x) - S.Half, x))
+    assert solveset_complex(cos(x) - S.Half, x) == \
+        Union(imageset(Lambda(n, 2*n*pi - pi/3), S.Integers),
+            imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
 
 
 @XFAIL
 def test_solve_trig_simplified():
     from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
-        imageset(Lambda(n, n*pi), S.Integers)
+    
+    assert solveset_real(sin(x) + cos(x), x) == \
+        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
+              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
 
-    assert solveset_real(cos(x), x) == \
-        imageset(Lambda(n, n*pi + pi/2), S.Integers)
+    assert solveset_real(sin(x) - 1, x) == \
+        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
     assert solveset_real(cos(x) + sin(x), x) == \
         imageset(Lambda(n, n*pi - pi/4), S.Integers)
