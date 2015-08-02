@@ -412,7 +412,6 @@ def solveset_real(f, symbol):
         raise ValueError(" %s is not a valid sympy expression" % (f))
 
     original_eq = f
-    f = together(f)
 
     if f.has(Piecewise):
         f = piecewise_fold(f)
