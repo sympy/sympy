@@ -17,3 +17,28 @@ def test_singularities_non_rational():
 
     assert singularities(exp(1/x), x) == (0)
     assert singularities(log((x - 2)**2), x) == (2)
+
+
+@XFAIL
+def test_is_increasing():
+    pass
+
+
+@XFAIL
+def test_is_strictly_increasing():
+    pass
+
+
+@XFAIL
+def test_is_decreasing():
+    pass
+
+
+@XFAIL
+def test_is_strictly_decreasing():
+    pass
+
+
+@XFAIL
+def is_monotonic():
+    pass
