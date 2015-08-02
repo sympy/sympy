@@ -787,6 +787,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
         The target equation or inequality
     symbol : Symbol
         The variable for which the equation is solved
+    domain : Interval
+        The domain over which the equation is solved
 
     Returns
     =======
@@ -883,8 +885,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError("Inequalities in the complex domain are "
                                       "not supported. Try the real domain by"
                                       "setting domain=S.Reals")
-        d = Dummy(real=True)
-        f = f.subs(symbol, d)
         return solve_univariate_inequality(
             f, d, relational=False).intersection(domain)
 
