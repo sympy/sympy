@@ -762,12 +762,6 @@ def solveset_complex(f, symbol):
         return result
 
 
-def _solve_complex_hyperbolic(f, symbol):
-    """ Helper to solve hyperbolic equations """
-    f = f.rewrite(exp)
-    return solveset_complex(f, symbol)
-
-
 def solveset(f, symbol=None):
     """Solves a given inequality or equation with set as output
 
