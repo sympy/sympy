@@ -691,3 +691,11 @@ def test_make_perm():
         Permutation([4, 7, 6, 5, 0, 3, 2, 1])
     assert cube.pgroup.make_perm(7, seed=list(range(7))) == \
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])
+
+
+def test_issue_7127():
+    a = Permutation(1, 2)
+    b = Permutation(0, 1)
+    G = PermutationGroup([Permutation(1, 2), Permutation(2)(0, 1)])
+    assert a*G == [Permutation(2), Permutation(0, 1, 2)]
+    assert G*a == [Permutation(2), Permutation(0, 2, 1)]

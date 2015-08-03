@@ -1244,8 +1244,11 @@ class Permutation(Basic):
         Cycle(1, 3, 2)
 
         """
+        from sympy.combinatorics.perm_groups import PermutationGroup
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
+        if isinstance(other, PermutationGroup):
+            return [a*i for i in other.generators]
         b = other.array_form
         if not b:
             perm = a

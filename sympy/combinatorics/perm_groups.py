@@ -218,6 +218,8 @@ class PermutationGroup(Basic):
 
         """
         gens1 = [perm._array_form for perm in self.generators]
+        if isinstance(other, Permutation) or isinstance(other, Cycle):
+            return [perm._array_form*other for perm in self.generators]
         gens2 = [perm._array_form for perm in other.generators]
         n1 = self._degree
         n2 = other._degree
