@@ -606,7 +606,7 @@ def check_linear(eq, param=symbols("t", integer=True)):
         free_variable_count = len(set([x for solution in solutions for x in solution.free_symbols]))
         complete = len(solutions) - 1 == free_variable_count
 
-        return (correct and complete) 
+        return (correct and complete)
 
 
 def check_integrality(eq):
