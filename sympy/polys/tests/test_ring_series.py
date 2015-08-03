@@ -5,13 +5,15 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux)
+    rs_LambertW, rs_series_reversion, rs_is_puiseux, series_fast)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational
+from sympy.core import expand
+
 
 def is_close(a, b):
     tol = 10**(-10)
@@ -578,3 +580,10 @@ def test_puiseux2():
     assert r == (y**13/13 + y**8 + 2*y**3)*x**QQ(13,5) - (y**11/11 + y**6 +
         y)*x**QQ(11,5) + (y**9/9 + y**4)*x**QQ(9,5) - (y**7/7 +
         y**2)*x**QQ(7,5) + (y**5/5 + 1)*x - y**3*x**QQ(3,5)/3 + y*x**QQ(1,5)
+
+def test_series_fast():
+    x, a = symbols('x, a')
+
+    p = sin(x**2 + a)*(cos(x**3 - 1) - a - a**2)
+    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
+        10).removeO())

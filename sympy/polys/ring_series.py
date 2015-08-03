@@ -1350,10 +1350,9 @@ def rs_sin(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                symbols = set(R.symbols).union(set((sin(c_expr), cos(c_expr))))
-                R = R.clone(symbols=list(symbols))
-                gens = list(R.gens).remove(x.set_ring(R))
-                R.drop_to_ground(gens)
+                R = R.add_gens([sin(c_expr), cos(c_expr)])
+                #gens = list(R.gens).remove(x.set_ring(R))
+                #R.drop_to_ground(gens)
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
@@ -1430,14 +1429,12 @@ def rs_cos(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                symbols = set(R.symbols).union(set((sin(c_expr), cos(c_expr))))
-                R = R.clone(symbols=list(symbols))
-                gens = list(R.gens).remove(x.set_ring(R))
-                R.drop_to_ground(gens)
+                R = R.add_gens([sin(c_expr), cos(c_expr)])
+                #gens = list(R.gens).remove(x.set_ring(R))
+                #R.drop_to_ground(gens)
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
@@ -1448,7 +1445,13 @@ def rs_cos(p, x, prec):
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the
     # cos/sin of the constant term.
-        return rs_cos(p1, x, prec)*t2 - rs_sin(p1, x, prec)*t1
+        p_cos = rs_cos(p1, x, prec)
+        p_sin = rs_sin(p1, x, prec)
+        R = (R.compose(p_cos.ring)).compose(p_sin.ring)
+        p_cos.set_ring(R)
+        p_sin.set_ring(R)
+        t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        return p_cos*t2 - p_sin*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1808,22 +1811,22 @@ def series_fast_old(expr, x, prec):
 
 def _series_fast(expr, rs_series, a, prec):
     args = expr.args
+    R = rs_series.ring
     if not any(arg.has(Function) for arg in args) and not expr.is_Function:
         if isinstance(rs_series, Expr):
             R, series = sring(expr, domain=QQ)
             return series
         else:
             return rs_series
-    elif isinstance(expr, Expr):
-        if expr.is_constant:
-            return sring(expr, domain=QQ)[1]
+    if isinstance(expr, Expr) and expr.is_constant():
+        return sring(expr, domain=QQ)[1]
+    if not expr.has(a):
+        return rs_series
     elif expr.is_Function:
         arg = args[0]
         R, series = sring(arg, domain=QQ)
-        syms = set(R.symbols)
         series_inner = _series_fast(arg, series, a, prec)
-        syms = syms.union(set((series_inner.ring.symbols))).union(set(rs_series.ring.symbols))
-        R = R.clone(symbols=list(syms))
+        R = (R.compose(series_inner.ring)).compose(rs_series.ring)
         series_inner = series_inner.set_ring(R)
         a = R(a)
         series = eval(_convert_func[str(expr.func)])(series_inner,
@@ -1831,12 +1834,11 @@ def _series_fast(expr, rs_series, a, prec):
         return series
     elif expr.is_Mul:
         n = len(args)
-        R = rs_series.ring
-        #syms = set(R.symbols)
-        #for arg in args:
-        #    R1, _ = sring(arg)
-        #    syms = syms.union(set(R1.symbols))
-        #R = R.clone(symbols=list(syms))
+        syms = set(R.symbols)
+        for arg in args:    # XXX Looks redundant
+            R1, _ = sring(arg)
+            syms = syms.union(set(R1.symbols))
+        R = R.clone(symbols=list(syms))
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args], [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
@@ -1854,33 +1856,35 @@ def _series_fast(expr, rs_series, a, prec):
         return series
     elif expr.is_Add:
         n = len(args)
-        R = rs_series.ring
         series = R(0)
         for i in range(n):
             _series = _series_fast(args[i], R(args[i]), a, prec)
-            if _series.ring.symbols != R.symbols:  #Check if it should be series.ring.symbols
-                syms = set(R.symbols)
-                syms = syms.union(set((_series.ring.symbols)))
-                R = R.clone(symbols=list(syms))
-                _series = _series.set_ring(R)
-                series = series.set_ring(R)
+            R = R.compose(_series.ring)
+            _series = _series.set_ring(R)
+            series = series.set_ring(R)
             series += _series
         return series
     elif expr.is_Pow:
-        series_inner = _series_fast(expr.base, a, prec)
+        R1, _ = sring(expr.base, domain=QQ)
+        R = R.compse(R1)
+        rs_series = rs_series.set_ring(R)
+        series_inner = _series_fast(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
     else:
         raise NotImplementedError
 
 def series_fast(expr, a, prec):
     R, series = sring(expr, domain=QQ)
+    syms = R.symbols
+    if not a in syms:
+        syms = [a, ]
+    R = R.add_gens(syms)
+    series = series.set_ring(R)
     series = _series_fast(expr, series, a, prec)
-    return series
-    args = expr.args
-    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
-        R, a = ring('%s' % a, EX)
-        return series
-    gen = series.ring.gens[0]
+    #if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+    #    R, a = ring('%s' % a, EX)
+    #    return series
+    gen = R(a)
     prec_got = series.degree() + 1
     if prec_got >= prec:
         return rs_trunc(series, gen, prec)
@@ -1890,14 +1894,18 @@ def series_fast(expr, a, prec):
         # is different than the original order and then predict how
         # many additional terms are needed
         for more in range(1, 9):
-            p1 = _series_fast(expr, gen, prec=prec + more)
-            new_prec = p1.degree()
+            p1 = _series_fast(expr, series, a, prec=prec + more)
+            new_prec = p1.degree() + 1
+            gen = gen.set_ring(p1.ring)
             if new_prec != prec_got:
                 prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
-                p1 = _series_fast(expr, gen, prec=prec_do)
-                while p1.degree() < prec:
-                    p1 = _series_fast(expr, gen, prec=prec_do)
-                    prec_do += 1
+                p1 = _series_fast(expr, series, a, prec=prec_do)
+                while p1.degree(gen) + 1 < prec:
+                    p1 = _series_fast(expr, series, a, prec=prec_do)
+                    gen = gen.set_ring(p1.ring)
+                    prec_do *= 2
+                break
+            else:
                 break
         else:
             raise ValueError('Could not calculate %s terms for %s'
