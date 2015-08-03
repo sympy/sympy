@@ -410,7 +410,7 @@ def test_fps__slow():
     assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
 
 
-def test_fps__add():
+def test_fps__operations():
     f1, f2 = fps(sin(x)), fps(cos(x))
 
     fsum = f1 + f2
@@ -430,3 +430,23 @@ def test_fps__add():
 
     raises(ValueError, lambda: f1 + fps(exp(x), dir=-1))
     raises(ValueError, lambda: f1 + fps(exp(x), x0=1))
+
+    fd = f1.diff()
+    assert fd.function == cos(x)
+    assert fd.truncate() == 1 - x**2/2 + x**4/24 + O(x**6)
+
+    fd = f2.diff()
+    assert fd.function == -sin(x)
+    assert fd.truncate() == -x + x**3/6 - x**5/120 + O(x**6)
+
+    fd = f2.diff().diff()
+    assert fd.function == -cos(x)
+    assert fd.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
+
+    f3 = fps(exp(sqrt(x)))
+    fd = f3.diff()
+    assert fd.truncate().expand() == \
+        (1/(2*sqrt(x)) + S(1)/2 + x/12 + x**2/240 + x**3/10080 + x**4/725760 +
+         x**5/79833600 + sqrt(x)/4 + x**(S(3)/2)/48 + x**(S(5)/2)/1440 +
+         x**(S(7)/2)/80640 + x**(S(9)/2)/7257600 + x**(S(11)/2)/958003200 +
+         O(x**6))

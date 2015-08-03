@@ -974,14 +974,13 @@ class FormalPowerSeries(SeriesBase):
         return self.polynomial(n) + Order(pt_xk, (x, x0))
 
     def _eval_term(self, pt):
-        pt_xk = self.xk.coeff(pt)
-
         try:
+            pt_xk = self.xk.coeff(pt)
             pt_ak = self.ak.coeff(pt).simplify()  # Simplify the coefficients
         except IndexError:
-            pt_ak = S.Zero
-
-        term = (pt_ak * pt_xk)
+            term = S.Zero
+        else:
+            term = (pt_ak * pt_xk)
 
         if self.ind:
             ind = S.Zero
@@ -1004,6 +1003,29 @@ class FormalPowerSeries(SeriesBase):
         for t in self:
             if t is not S.Zero:
                 return t
+
+    def _eval_derivative(self, x):
+        f = self.function.diff(x)
+        ind = self.ind.diff(x)
+
+        pow_xk = self._get_pow_x(self.xk.formula)
+        ak = self.ak
+        k = ak.variables[0]
+        if ak.formula.has(x):
+            form = []
+            for e, c in ak.formula.args:
+                temp = S.Zero
+                for t in Add.make_args(e):
+                    pow_x = self._get_pow_x(t)
+                    temp += t * (pow_xk + pow_x)
+                form.append((temp, c))
+            form = Piecewise(*form)
+            ak = sequence(form.subs(k, k + 1), (k, ak.start - 1, ak.stop))
+        else:
+            ak = sequence((ak.formula * pow_xk).subs(k, k + 1),
+                          (k, ak.start - 1, ak.stop))
+
+        return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def __add__(self, other):
         if isinstance(other, FormalPowerSeries):
