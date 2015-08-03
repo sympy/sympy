@@ -235,7 +235,7 @@ def classify_diop(eq):
     """
     eq = eq.expand(force=True)
 
-    coeff = coeff = eq.as_coefficients_dict()
+    coeff = eq.as_coefficients_dict()
     diop_type = None
 
     var = []
