@@ -4,7 +4,7 @@ This module contains functions to solve a single equation for a single variable.
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
@@ -13,8 +13,9 @@ from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.sets import FiniteSet, EmptySet, imageset, Interval, Union
-from sympy.matrices import Matrix, zeros
+from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
+                        Union)
+from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
@@ -776,7 +777,7 @@ def solveset_complex(f, symbol):
         return result
 
 
-def solveset(f, symbol=None):
+def solveset(f, symbol=None, domain=S.Complexes):
     """Solves a given inequality or equation with set as output
 
     Parameters
@@ -786,6 +787,8 @@ def solveset(f, symbol=None):
         The target equation or inequality
     symbol : Symbol
         The variable for which the equation is solved
+    domain : Set
+        The domain over which the equation is solved
 
     Returns
     =======
@@ -809,10 +812,10 @@ def solveset(f, symbol=None):
 
 
     `solveset` uses two underlying functions `solveset_real` and
-    `solveset_complex` to solve equations. They are
-    the solvers for real and complex domain respectively. The domain of
-    the solver is decided by the assumption on the variable for which the
-    equation is being solved.
+    `solveset_complex` to solve equations. They are the solvers for real and
+    complex domain respectively. `solveset` ignores the assumptions on the
+    variable being solved for and instead, uses the `domain` parameter to
+    decide which solver to use.
 
 
     See Also
@@ -824,30 +827,30 @@ def solveset(f, symbol=None):
     Examples
     ========
 
-    >>> from sympy import exp, Symbol, Eq, pprint
+    >>> from sympy import exp, Symbol, Eq, pprint, S
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy.abc import x
 
-    * Symbols in Sympy are complex by default. A complex variable
-      will lead to the solving of the equation in complex domain.
+    * The default domain is complex. Not specifying a domain will lead to the
+      solving of the equation in the complex domain.
 
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
     * If you want to solve equation in real domain by the `solveset`
-      interface, then specify the variable to real. Alternatively use
+      interface, then specify that the domain is real. Alternatively use
       `solveset\_real`.
 
-    >>> x = Symbol('x', real=True)
-    >>> solveset(exp(x) - 1, x)
+    >>> x = Symbol('x')
+    >>> solveset(exp(x) - 1, x, S.Reals)
     {0}
-    >>> solveset(Eq(exp(x), 1), x)
+    >>> solveset(Eq(exp(x), 1), x, S.Reals)
     {0}
 
-    * Inequalities are always solved in the real domain irrespective of
-      the assumption on the variable for which the inequality is solved.
+    * Inequalities can be solved over the real domain only. Use of a complex
+      domain leads to a NotImplementedError.
 
-    >>> solveset(exp(x) > 1, x)
+    >>> solveset(exp(x) > 1, x, S.Reals)
     (0, oo)
 
     """
@@ -865,37 +868,35 @@ def solveset(f, symbol=None):
     elif not symbol.is_Symbol:
         raise ValueError('A Symbol must be given, not type %s: %s' % (type(symbol), symbol))
 
-    real = (symbol.is_real is True)
-
     f = sympify(f)
 
     if f is S.false:
         return EmptySet()
 
     if f is S.true:
-        if real:
-            return S.Reals
-        else:
-            return S.Complexes
+        return domain
 
     if isinstance(f, Eq):
         from sympy.core import Add
         f = Add(f.lhs, - f.rhs, evaluate=False)
 
     if f.is_Relational:
-        if real is False:
-            warnings.warn(filldedent('''
-                The variable you are solving for is complex
-                but will assumed to be real since solving complex
-                inequalities is not supported.
-            '''))
-        return solve_univariate_inequality(f, symbol, relational=False)
+        if not domain.is_subset(S.Reals):
+            raise NotImplementedError("Inequalities in the complex domain are "
+                                      "not supported. Try the real domain by"
+                                      "setting domain=S.Reals")
+        return solve_univariate_inequality(
+            f, symbol, relational=False).intersection(domain)
 
     if isinstance(f, (Expr, Number)):
-        if real is True:
+        if domain is S.Reals:
             return solveset_real(f, symbol)
-        else:
+        elif domain is S.Complexes:
             return solveset_complex(f, symbol)
+        elif domain.is_subset(S.Reals):
+            return Intersection(solveset_real(f, symbol), domain)
+        else:
+            return Intersection(solveset_complex(f, symbol), domain)
 
 
 ###############################################################################

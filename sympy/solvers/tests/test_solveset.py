@@ -43,7 +43,7 @@ def test_invert_real():
 
     minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
     plus_n = Intersection(Interval(0, oo), FiniteSet(n))
-    assert solveset(abs(x) - n, x) == Union(minus_n, plus_n)
+    assert solveset(abs(x) - n, x, S.Reals) == Union(minus_n, plus_n)
 
     n = Symbol('n', real=True)
     assert invert_real(x + 3, y, x) == (x, FiniteSet(y - 3))
@@ -809,39 +809,46 @@ def test_solve_lambert():
 
 
 def test_solveset():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     raises(ValueError, lambda: solveset(x + y))
 
-    assert solveset(exp(x) - 1) == FiniteSet(0)
-    assert solveset(exp(x) - 1, x) == FiniteSet(0)
-    assert solveset(Eq(exp(x), 1), x) == FiniteSet(0)
+    assert solveset(exp(x) - 1, domain=S.Reals) == FiniteSet(0)
+    assert solveset(exp(x) - 1, x, S.Reals) == FiniteSet(0)
+    assert solveset(Eq(exp(x), 1), x, S.Reals) == FiniteSet(0)
 
-    assert solveset(x - 1 >= 0, x) == Interval(1, oo)
-    assert solveset(exp(x) - 1 >= 0, x) == Interval(0, oo)
+    assert solveset(x - 1 >= 0, x, S.Reals) == Interval(1, oo)
+    assert solveset(exp(x) - 1 >= 0, x, S.Reals) == Interval(0, oo)
 
-    x = Symbol('x')
     assert solveset(exp(x) - 1, x) == imageset(Lambda(n, 2*I*pi*n), S.Integers)
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
 
 
+def test_solveset_domain():
+    x = Symbol('x')
+
+    assert solveset(x**2 - x - 6, x, Interval(0, oo)) == FiniteSet(3)
+    assert solveset(x**2 - 1, x, Interval(0, oo)) == FiniteSet(1)
+    assert solveset(x**4 - 16, x, Interval(0, 10)) == FiniteSet(2)
+
+
 def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     y = exp(x+1/x**2)
-    raises(NotImplementedError, lambda: solveset(y**2+y, x))
+    raises(NotImplementedError, lambda: solveset(y**2+y, x, S.Reals))
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
 
 
 def test_issue_9522():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     expr1 = Eq(1/(x**2 - 4) + x, 1/(x**2 - 4) + 2)
     expr2 = Eq(1/x + x, 1/x)
 
-    assert solveset(expr1, x) == EmptySet()
-    assert solveset(expr2, x) == EmptySet()
+    assert solveset(expr1, x, S.Reals) == EmptySet()
+    assert solveset(expr2, x, S.Reals) == EmptySet()
 
 
 def test_linear_eq_to_matrix():
@@ -917,26 +924,26 @@ def test_linsolve():
 
 
 def test_issue_9556():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     b = Symbol('b', positive=True)
 
-    assert solveset(Abs(x) + 1, x) == EmptySet()
-    assert solveset(Abs(x) + b, x) == EmptySet()
-    assert solveset(Eq(b, -1), b) == EmptySet()
+    assert solveset(Abs(x) + 1, x, S.Reals) == EmptySet()
+    assert solveset(Abs(x) + b, x, S.Reals) == EmptySet()
+    assert solveset(Eq(b, -1), b, S.Reals) == EmptySet()
 
 
 def test_issue_9611():
-    x = Symbol('x', real=True)
-    a = Symbol('a', real=True)
+    x = Symbol('x')
+    a = Symbol('a')
     y = Symbol('y')
 
-    assert solveset(Eq(x - x + a, a), x) == S.Reals
+    assert solveset(Eq(x - x + a, a), x, S.Reals) == S.Reals
     assert solveset(Eq(y - y + a, a), y) == S.Complexes
 
 
 def test_issue_9557():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     a = Symbol('a')
 
-    assert solveset(x**2 + a, x) == Intersection(S.Reals,
+    assert solveset(x**2 + a, x, S.Reals) == Intersection(S.Reals,
         FiniteSet(-sqrt(-a), sqrt(-a)))
