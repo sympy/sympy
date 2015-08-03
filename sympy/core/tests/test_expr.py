@@ -243,12 +243,6 @@ def test_series_expansion_for_uniform_order():
     assert (1/x + y + y*x + x).series(x, 0, 1) == 1/x + y + O(x)
 
 
-def test_fps():
-    f = sin(x).fps(x)
-    assert isinstance(f, FormalPowerSeries)
-    assert f.truncate() == x - x**3/6 + x**5/120 + O(x**6)
-
-
 def test_leadterm():
     assert (3 + 2*x**(log(3)/log(2) - 1)).leadterm(x) == (3, 0)
 
