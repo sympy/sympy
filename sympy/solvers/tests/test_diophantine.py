@@ -47,6 +47,7 @@ def test_linear():
     assert check_linear(5*x + 7*y - 2*z - 6)
     assert check_linear(3*x - 6*y + 12*z - 9)
     assert check_linear(x + 3*y - 4*z + w - 6)
+    assert check_linear(6*w + 9*x + 20*y - z)
     assert check_linear(2*w + 3*x + 5*y + 7*z + 11*t + 13*X + 17*Y + 19*Z - 23)
     assert check_linear(2*w + 4*x + 6*y + 8*z + 10*t + 12*X + 14*Y + 16*Z - 1)
 
