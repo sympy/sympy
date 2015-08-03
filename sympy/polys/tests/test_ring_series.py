@@ -584,6 +584,26 @@ def test_puiseux2():
 def test_series_fast():
     x, a = symbols('x, a')
 
+    assert (series_fast(a, a, 5)).as_expr() == a
+    assert (series_fast(sin(a), a, 5)).as_expr() == (sin(a).series(a, 0,
+        5)).removeO()
+    assert (series_fast(sin(a) + cos(a), a, 5)).as_expr() == ((sin(a) +
+        cos(a)).series(a, 0, 5)).removeO()
+    assert (series_fast(sin(a)*cos(a), a, 5)).as_expr() == ((sin(a)*
+        cos(a)).series(a, 0, 5)).removeO()
+
+    p = (sin(a) - a)*(cos(a**2) + a**4/2)
+    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
+        10).removeO())
+
+    p = sin(a**2 - a + 2)**5*cos(a**3 - a)
+    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
+        10).removeO())
+
+    p = sin(a**2/2 + a/3) + cos(a/5)*sin(a/2)**3
+    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
+        10).removeO())
+
     p = sin(x**2 + a)*(cos(x**3 - 1) - a - a**2)
     assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())

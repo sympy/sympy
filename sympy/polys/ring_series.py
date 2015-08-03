@@ -1789,7 +1789,7 @@ _convert_func = {
         }
 
 def rs_min_pow(expr, rs_series, a):
-    series=0
+    series = 0
     n = 2
     #R, series = sring(rs_series, domain=QQ)
     while series == 0:
@@ -1834,23 +1834,18 @@ def _series_fast(expr, rs_series, a, prec):
         return series
     elif expr.is_Mul:
         n = len(args)
-        syms = set(R.symbols)
         for arg in args:    # XXX Looks redundant
             R1, _ = sring(arg)
-            syms = syms.union(set(R1.symbols))
-        R = R.clone(symbols=list(syms))
+            R = R.compose(R1)
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args], [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
         for i in range(n):
             _series = _series_fast(args[i], R(args[i]), a, prec - sum_pows +
                 min_pows[i])
-            if _series.ring.symbols != R.symbols:
-                syms = set(R.symbols)
-                syms = syms.union(set((_series.ring.symbols)))
-                R = R.clone(symbols=list(syms))
-                _series = _series.set_ring(R)
-                series = series.set_ring(R)
+            R = R.compose(_series.ring)
+            _series = _series.set_ring(R)
+            series = series.set_ring(R)
             series *= _series
         series = rs_trunc(series, R(a), prec)
         return series
@@ -1866,7 +1861,7 @@ def _series_fast(expr, rs_series, a, prec):
         return series
     elif expr.is_Pow:
         R1, _ = sring(expr.base, domain=QQ)
-        R = R.compse(R1)
+        R = R.compose(R1)
         rs_series = rs_series.set_ring(R)
         series_inner = _series_fast(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
@@ -1875,17 +1870,13 @@ def _series_fast(expr, rs_series, a, prec):
 
 def series_fast(expr, a, prec):
     R, series = sring(expr, domain=QQ)
-    syms = R.symbols
-    if not a in syms:
-        syms = [a, ]
-    R = R.add_gens(syms)
+    if a not in R.symbols:
+        R = R.add_gens([a, ])
     series = series.set_ring(R)
     series = _series_fast(expr, series, a, prec)
-    #if not any(arg.has(Function) for arg in args) and not expr.is_Function:
-    #    R, a = ring('%s' % a, EX)
-    #    return series
+    R = series.ring
     gen = R(a)
-    prec_got = series.degree() + 1
+    prec_got = series.degree(gen) + 1
     if prec_got >= prec:
         return rs_trunc(series, gen, prec)
     else:
@@ -1895,7 +1886,7 @@ def series_fast(expr, a, prec):
         # many additional terms are needed
         for more in range(1, 9):
             p1 = _series_fast(expr, series, a, prec=prec + more)
-            new_prec = p1.degree() + 1
+            new_prec = p1.degree(gen) + 1
             gen = gen.set_ring(p1.ring)
             if new_prec != prec_got:
                 prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
