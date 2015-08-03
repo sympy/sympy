@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech)
+                   airyai, acos, acosh, gamma, erf, asech, Add)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -408,3 +408,25 @@ def test_fps__symbolic():
 def test_fps__slow():
     f = x*exp(x)*sin(2*x)  # TODO: rsolve needs improvement
     assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
+
+
+def test_fps__add():
+    f1, f2 = fps(sin(x)), fps(cos(x))
+
+    fsum = f1 + f2
+    assert fsum.function == sin(x) + cos(x)
+    assert fsum.truncate() == \
+        1 + x - x**2/2 - x**3/6 + x**4/24 + x**5/120 + O(x**6)
+
+    assert (f1 + 1) == Add(f1, 1)
+
+    assert -f2.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
+    assert (f1 - f1) == S.Zero
+
+    fsub = f1 - f2
+    assert fsub.function == sin(x) - cos(x)
+    assert fsub.truncate() == \
+        -1 + x + x**2/2 - x**3/6 - x**4/24 + x**5/120 + O(x**6)
+
+    raises(ValueError, lambda: f1 + fps(exp(x), dir=-1))
+    raises(ValueError, lambda: f1 + fps(exp(x), x0=1))

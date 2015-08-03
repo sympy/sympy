@@ -1005,6 +1005,42 @@ class FormalPowerSeries(SeriesBase):
             if t is not S.Zero:
                 return t
 
+    def __add__(self, other):
+        if isinstance(other, FormalPowerSeries):
+            if self.dir != other.dir:
+                raise ValueError("Both series should be calculated from the"
+                                 " same direction.")
+            elif self.x0 != other.x0:
+                raise ValueError("Both series should be calculated about the"
+                                 " same point.")
+
+            x, y = self.x, other.x
+            f = self.function + other.function.subs(y, x)
+
+            if self.x not in f.free_symbols:
+                return f
+
+            ak = self.ak + other.ak
+            if self.ak.start > other.ak.start:
+                seq = other.ak
+                s, e = other.ak.start, self.ak.start
+            else:
+                seq = self.ak
+                s, e = self.ak.start, other.ak.start
+            save = Add(*[z[0]*z[1] for z in zip(seq[0:(e - s)], self.xk[s:e])])
+            ind = self.ind + other.ind + save
+
+            return self.func(f, x, self.x0, self.dir, (ak, self.xk, ind))
+
+        return Add(self, other)
+
+    def __neg__(self):
+        return self.func(-self.function, self.x, self.x0, self.dir,
+                         (-self.ak, self.xk, -self.ind))
+
+    def __sub__(self, other):
+        return self.__add__(-other)
+
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     """Generates Formal Power Series of f.
