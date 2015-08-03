@@ -814,7 +814,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     `solveset` uses two underlying functions `solveset_real` and
     `solveset_complex` to solve equations. They are the solvers for real and
     complex domain respectively. `solveset` ignores the assumptions on the
-    variable being solved for and uses the `domain` parameter instead.
+    variable being solved for and instead, uses the `domain` parameter to
+    decide which solver to use.
 
 
     See Also
