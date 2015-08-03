@@ -1,3 +1,8 @@
+import sys
+
+sympy_path = "/home/gadal/git/sympy"
+sys.path.insert(1, sympy_path)
+
 from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
     pairwise_prime, partition, power_representation,
@@ -599,7 +604,14 @@ def check_linear(eq, param=symbols("t", integer=True)):
 
     # and has infinitely many solutions otherwise.
     else:
-        return c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
+        # Does the solution satisfy the original equation?
+        correct = c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
+
+        # Does the solution have as many free variables as possible?
+        free_variable_count = len(set([x for solution in solutions for x in solution.free_symbols]))
+        complete = len(solutions) - 1 == free_variable_count
+
+        return (correct and complete) 
 
 
 def check_integrality(eq):
@@ -621,3 +633,4 @@ def check_integrality(eq):
                 return False
 
     return True
+test_linear()
