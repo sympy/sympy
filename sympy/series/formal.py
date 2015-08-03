@@ -717,7 +717,7 @@ def hyper_algorithm(f, x, k, order=4):
             return sol
 
 
-def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
+def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     """Recursive wrapper to compute fps.
 
     See :func:`compute_fps` for details.
@@ -728,8 +728,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
         result = _compute_fps(temp, x, 0, dir, hyper, order, rational, full)
         if result is None:
             return None
-        return (result[0], result[1].subs(x, 1/x), result[2].subs(x, 1/x),
-                result[3].subs(x, 1/x))
+        return (result[0], result[1].subs(x, 1/x), result[2].subs(x, 1/x))
     elif x0 or dir == -S.One:
         if dir == -S.One:
             rep = -x + x0
@@ -744,27 +743,10 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
         if result is None:
             return None
         return (result[0], result[1].subs(x, rep2 + rep2b),
-                result[2].subs(x, rep2 + rep2b),
-                result[3].subs(x, rep2 + rep2b))
+                result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
         return None
-
-    #  extract x**n from f(x)
-    mul = S.One
-    if extract and f.free_symbols.difference(set([x])):
-        m = Wild('m')
-        n = Wild('n', exclude=[m])
-        f = f.factor().powsimp()
-        s = f.match(x**n*m)
-        if s[n]:
-            for t in Add.make_args(s[n]):
-                if t.has(Symbol):
-                    mul *= (x)**t
-        if mul is not S.One:
-            f = (f / mul)
-
-    f = f.expand()
 
     #  Break instances of Add
     #  this allows application of different
@@ -775,8 +757,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
         ak = sequence(S.Zero, (0, oo))
         ind, xk = S.Zero, None
         for t in Add.make_args(f):
-            res = _compute_fps(t, x, 0, S.One, hyper, order, rational, full,
-                               False)
+            res = _compute_fps(t, x, 0, S.One, hyper, order, rational, full)
             if res:
                 if not result:
                     result = True
@@ -793,7 +774,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
             else:
                 ind += t
         if result:
-            return ak, xk, ind, mul
+            return ak, xk, ind
         return None
 
     result = None
@@ -813,7 +794,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
     xk = sequence(x**k, (k, 0, oo))
     ind = result[1]
 
-    return ak, xk, ind, mul
+    return ak, xk, ind
 
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
@@ -908,6 +889,10 @@ class FormalPowerSeries(SeriesBase):
         return self.args[2]
 
     @property
+    def dir(self):
+        return self.args[3]
+
+    @property
     def ak(self):
         return self.args[4][0]
 
@@ -918,10 +903,6 @@ class FormalPowerSeries(SeriesBase):
     @property
     def ind(self):
         return self.args[4][2]
-
-    @property
-    def mul(self):
-        return self.args[4][3]
 
     @property
     def interval(self):
@@ -945,11 +926,9 @@ class FormalPowerSeries(SeriesBase):
         from sympy.concrete import Sum
         ak, xk = self.ak, self.xk
         k = ak.variables[0]
-        ind = (self.ind * self.mul).expand()
-        inf_sum = Sum(ak.formula * xk.formula * self.mul,
-                      (k, ak.start, ak.stop))
+        inf_sum = Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
-        return ind + inf_sum
+        return self.ind + inf_sum
 
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
@@ -972,7 +951,7 @@ class FormalPowerSeries(SeriesBase):
             elif xp.is_integer is True and i == n + 1:
                 break
             elif t is not S.Zero:
-                terms.append(t * self.mul)
+                terms.append(t)
 
         return Add(*terms)
 
@@ -992,7 +971,7 @@ class FormalPowerSeries(SeriesBase):
         if x0 is S.NegativeInfinity:
             x0 = S.Infinity
 
-        return self.polynomial(n) + self.mul * Order(pt_xk, (x, x0))
+        return self.polynomial(n) + Order(pt_xk, (x, x0))
 
     def _eval_term(self, pt):
         pt_xk = self.xk.coeff(pt)

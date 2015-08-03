@@ -370,6 +370,7 @@ def test_fps__logarithmic_singularity_fail():
     assert fps(f, x) == log(2) - log(x) - x**2/4 - 3*x**4/64 + O(x**6)
 
 
+@XFAIL
 def test_fps__symbolic():
     f = x**n*sin(x**2)
     assert fps(f, x).truncate(8) == x**2*x**n - x**6*x**n/6 + O(x**(n + 8), x)
