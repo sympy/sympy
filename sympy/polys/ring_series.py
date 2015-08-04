@@ -1254,9 +1254,8 @@ def rs_tan(p, x, prec):
         return r
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = tan(c_expr)
@@ -1265,8 +1264,13 @@ def rs_tan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tan(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                R = R.add_gens([tan(c_expr, )])
+                #gens = list(R.gens).remove(x.set_ring(R))
+                #R.drop_to_ground(gens)
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(tan(c_expr))
         else:
             try:
                 const = R(tan(c))
