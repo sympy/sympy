@@ -134,14 +134,19 @@ Design Decision
   - `solveset_real()`
   - `solveset_complex()`
 
-* TODO
-
 
 What will you do with the old solve?
 ====================================
 
- TODO
+ The `solve` would possibly be deprecated in future versions & we encourage our
+ users to use `solveset`. We may proceeds as follows:
 
+ * Replace all internal instances of solve by solveset by next release.
+ * Raise a deprecation warning with solve calls possibly from next to
+   next release.
+ * Possibly remove the `solve` code in the release after the above release.
+ * The issues pertaining to old `solve` would be addressed by new issues
+   for `solveset`.
 
 References
 ==========
