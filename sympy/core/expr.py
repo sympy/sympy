@@ -2826,6 +2826,16 @@ class Expr(Basic, EvalfMixin):
 
         return fps(self, x, x0, dir, hyper, order, rational, full)
 
+    def fourier_series(self, limits=None):
+        """Compute fourier sine/cosine series of self.
+
+        See the docstring of the :func:`fourier_series` in sympy.series.fourier
+        for more information.
+        """
+        from sympy.series.fourier import fourier_series
+
+        return fourier_series(self, limits)
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
