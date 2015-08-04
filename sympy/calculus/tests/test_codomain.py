@@ -1,6 +1,7 @@
-from sympy import Symbol, S, oo
-from sympy.calculus.codomain import codomain
+from sympy import Symbol, S, oo, sqrt
+from sympy.calculus.codomain import codomain, not_empty_in
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
+from sympy.utilities.pytest import XFAIL
 
 
 def test_codomain():
@@ -52,3 +53,18 @@ def test_codomain():
     assert codomain(x, Union(Interval(-1, 1), FiniteSet(-oo)), x) == \
             Union(Interval(-1, 1), FiniteSet(-oo))
     assert codomain(x**2 - x, Interval(1, oo), x) == Interval(0, oo)
+
+
+def test_not_empty_in():
+    from sympy.abc import x
+    assert not_empty_in(FiniteSet(x, 2*x), Interval(1, 2), x) == Interval(S(1)/2, 2)
+    assert not_empty_in(FiniteSet(x, x**2), Interval(1, 2), x) == \
+        Union(Interval(-sqrt(2), -1), Interval(1, 2))
+    assert not_empty_in(FiniteSet(x**2 + x, 1, 2), Interval(2, 4), x) == \
+        Union(Interval(-sqrt(17)/2 - S(1)/2, -2), Interval(1, -S(1)/2 + sqrt(17)/2), FiniteSet(2))
+
+
+@XFAIL
+def test_failing_not_empty_in():
+    assert not_empty_in(FiniteSet(x/(x**2 - 1)), S.Reals, x) == \
+        Complement(S.Reals, FiniteSet(-1, 1))
