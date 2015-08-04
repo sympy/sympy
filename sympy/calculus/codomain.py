@@ -179,7 +179,7 @@ def not_empty_in(fin_set, intrvl, *syms):
     Examples
     ========
 
-    >>> from sympy import Symbol, codomain, FiniteSet, Interval, not_empty_in, sqrt
+    >>> from sympy import Symbol, codomain, FiniteSet, Interval, not_empty_in, sqrt, oo
     >>> x = Symbol('x')
     >>> not_empty_in(FiniteSet(x/2), Interval(0, 1), x)
     [0, 2]
