@@ -402,6 +402,27 @@ def _has_constant_term(p, x):
             return True
     return False
 
+def _get_constant_term(p, x):
+    """Return constant term in p with respect to x
+
+    Note that it is not simply `p[R.zero_monom]` as there might be multiple
+    generators in the ring R. We want the `x`-free term which can contain other
+    generators.
+    """
+    R = p.ring
+    zm = R.zero_monom
+    i = R.gens.index(x)
+    zm = R.zero_monom
+    a = [0]*R.ngens
+    a[i] = 1
+    miv = tuple(a)
+    c = 0
+    for expv in p:
+        if monomial_min(expv, miv) == zm:
+            c = R({expv: p[expv]})
+            break
+    return c
+
 def _check_series_var(p, x, name):
     index = p.ring.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
@@ -1033,9 +1054,8 @@ def rs_exp(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_exp, p, x, prec)
     R = p.ring
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = exp(c_expr)
@@ -1330,17 +1350,7 @@ def rs_sin(p, x, prec):
     R = x.ring
     if not p:
         return R(0)
-    zm = R.zero_monom
-    i = R.gens.index(x)
-    zm = R.zero_monom
-    a = [0]*R.ngens
-    a[i] = 1
-    miv = tuple(a)
-    c = 0
-    for expv in p:
-        if monomial_min(expv, miv) == zm:
-            c = R({expv: p[expv]})
-            break
+    c = _get_constant_term(p, x)
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
@@ -1410,16 +1420,7 @@ def rs_cos(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos, p, x, prec)
     R = p.ring
-    i = R.gens.index(x)
-    zm = R.zero_monom
-    a = [0]*R.ngens
-    a[i] = 1
-    miv = tuple(a)
-    c = 0
-    for expv in p:
-        if monomial_min(expv, miv) == zm:
-            c = R({expv: p[expv]})
-            break
+    c = _get_constant_term(p, x)
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
@@ -1785,7 +1786,8 @@ def rs_compose_add(p1, p2):
 _convert_func = {
         'sin': 'rs_sin',
         'cos': 'rs_cos',
-        'exp': 'rs_exp'
+        'exp': 'rs_exp',
+        'tan': 'rs_tan'
         }
 
 def rs_min_pow(expr, rs_series, a):
