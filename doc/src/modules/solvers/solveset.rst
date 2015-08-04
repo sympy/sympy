@@ -72,7 +72,7 @@ represent many types of solutions. For single variable case it can represent:
   * Finitely many solutions (by FiniteSet)
 
   * Infinitely many solutions, both countably and uncountably infinite solutions
-  (using the ImageSet module) Interval
+    (using the ImageSet module) Interval
 
   * There can also be bizarre solutions to equations like set of all rational number.
 
@@ -109,16 +109,21 @@ represent many types of solutions. For single variable case it can represent:
   two numbers, say one obtained by solution of x = 1 and other by solving y = 2.
 
 
-What are some really cool stuff that solveset can do?
-=====================================================
-
- TODO
-
-
 What is this domain argument about?
 ===================================
 
- TODO
+ Solveset is designed to be independent of the assumptions on the
+ variable being solved for and instead, uses the `domain` argument to
+ decide the solver to dispatch the equation to, namely `solveset_real`
+ or `solveset_complex`. It's unlike the old `solve` which considers the
+ assumption on the variable.
+
+    >>> from sympy.solvers.solveset import solveset
+    >>> from sympy.abc import x
+    >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
+    {-I, I}
+    >>> solveset(x**2 + 1, x, domain=S.Reals)
+    EmptySet()
 
 
 Design Decision
