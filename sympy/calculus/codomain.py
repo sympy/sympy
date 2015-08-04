@@ -1,4 +1,4 @@
-from sympy import S, sympify, diff, limit, oo, Dummy
+from sympy import S, sympify, diff, limit, oo, Dummy, I
 from sympy.calculus.singularities import singularities
 from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
 from sympy.solvers.solveset import solveset_real
@@ -100,6 +100,10 @@ def codomain(func, domain, *syms):
             local_maxima = set([(oo, True)])
         elif start_val is S.NegativeInfinity or end_val is S.NegativeInfinity:
             local_minima = set([(-oo, True)])
+
+        if start_val.has(I) or end_val.has(I):
+                raise ValueError('Function does not Complement all points of %s '
+                                'as its domain' % (domain))
 
         if local_maxima == set():
             if start_val > end_val:
