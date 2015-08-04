@@ -1,4 +1,4 @@
-from sympy import S, sympify, diff, limit, oo
+from sympy import S, sympify, diff, limit, oo, Dummy
 from sympy.calculus.singularities import singularities
 from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
 from sympy.solvers.solveset import solveset_real
@@ -45,6 +45,9 @@ def codomain(func, domain, *syms):
     if not isinstance(domain, Set):
         raise ValueError('A Set must be given, not %s: %s' % (type(domain), domain))
 
+    # TODO: handle piecewise defined functions
+    # TODO: handle functions with infinitely many solutions (eg, sin, tan)
+    # TODO: handle multivariate functions
     if len(syms) == 0:
         raise ValueError("A Symbol or a tuple of symbols must be given")
 
@@ -52,10 +55,6 @@ def codomain(func, domain, *syms):
         symbol = syms[0]
     else:
         raise NotImplementedError("more than one variables %s not handled" % (syms,))
-
-    if not func.is_rational_function(symbol):
-        raise NotImplementedError("Algorithms finding range for non-rational functions "
-                                    "are not yet implemented")
 
     if not func.has(symbol):
         return FiniteSet(func)
@@ -151,3 +150,73 @@ def codomain(func, domain, *syms):
     if isinstance(domain, FiniteSet):
         return FiniteSet(*[limit(func, symbol, i) if i in FiniteSet(-oo, oo)
                             else func.subs({symbol: i}) for i in domain])
+
+
+def not_empty_in(fin_set, intrvl, *syms):
+    """ Finds the domain in which the Set input is not empty
+
+    Parameters
+    ==========
+
+    fin_set: FiniteSet
+            The FiniteSet  not-empty
+    intrvl: Union of Sets
+            The range of the FiniteSet elements
+    syms: Tuple of symbols
+            Symbol for which domain is to be found
+
+    Raises
+    ======
+
+    NotImplementedError
+        The algorithms to find the non-emptiness of the given FiniteSet are
+        not yet implemented.
+    ValueError
+        The input is not valid.
+    RuntimeError
+        It is a bug, please report to the github issue tracker.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, codomain, FiniteSet, Interval, not_empty_in, sqrt
+    >>> x = Symbol('x')
+    >>> not_empty_in(FiniteSet(x/2), Interval(0, 1), x)
+    [0, 2]
+    >>> not_empty_in(FiniteSet(x, x**2), Interval(1, 2), x)
+    [-sqrt(2), -1] U [1, 2]
+    >>> not_empty_in(FiniteSet(x**2/(x + 2)), Interval(1, oo), x)
+    (-2, -1] U [2, oo)
+    """
+
+    # TODO: handle functions with infinitely many solutions (eg, sin, tan)
+    # TODO: handle multivariate functions
+    if not isinstance(fin_set, FiniteSet):
+        raise ValueError('A FiniteSet must be given, not %s: %s' % (type(fin_set), fin_set))
+    if len(syms) == 1:
+        symbol = syms[0]
+    else:
+        raise NotImplementedError('more than one variables %s not handled' % (syms,))
+
+    y = Dummy('y')
+
+    def elm_domain(expr, *sym):
+        domain_union = S.EmptySet
+        if expr.is_Number:
+            if expr in intrvl:
+                return FiniteSet(expr)
+            return S.EmptySet
+
+        # find the inverse of items in the fin_set
+        invert_expr = solveset_real(expr - y, symbol)
+        if isinstance(invert_expr, Intersection):
+            invert_set = invert_expr.args[1]
+        elif isinstance(invert_expr, Complement):
+            invert_set = invert_expr.args[0].args[1]
+
+        for inverse_val in invert_set:
+            domain = codomain(inverse_val, intrvl, y)
+            domain_union = Union(domain_union, domain)
+        return domain_union
+
+    return Union(*[elm_domain(element, symbol) for element in fin_set])
