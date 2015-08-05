@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add)
+                   airyai, acos, acosh, gamma, erf, asech, Add, Integral)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -450,3 +450,13 @@ def test_fps__operations():
          x**5/79833600 + sqrt(x)/4 + x**(S(3)/2)/48 + x**(S(5)/2)/1440 +
          x**(S(7)/2)/80640 + x**(S(9)/2)/7257600 + x**(S(11)/2)/958003200 +
          O(x**6))
+
+    assert Integral(f1, (x, 0, 1)) == -cos(1) + 1
+
+    fi = Integral(f1, x)
+    assert fi.function == -cos(x)
+    assert fi.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
+
+    fi = Integral(f2, x)
+    assert fi.function == sin(x)
+    assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)

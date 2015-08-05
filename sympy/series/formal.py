@@ -14,6 +14,7 @@ from sympy.core.sympify import sympify
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.relational import Eq
 from sympy.core.numbers import Rational
+from sympy.core.compatibility import iterable
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.piecewise import Piecewise
@@ -1024,6 +1025,35 @@ class FormalPowerSeries(SeriesBase):
         else:
             ak = sequence((ak.formula * pow_xk).subs(k, k + 1),
                           (k, ak.start - 1, ak.stop))
+
+        return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def _eval_Integral(self, x):
+        from sympy.integrals import integrate
+
+        if iterable(x):
+            return integrate(self.function, x)
+
+        f = integrate(self.function, x)
+        ind = integrate(self.ind, x)
+        ind += (f - ind).limit(x, 0)  # constant of integration
+
+        pow_xk = self._get_pow_x(self.xk.formula)
+        ak = self.ak
+        k = ak.variables[0]
+        if ak.formula.has(x):
+            form = []
+            for e, c in ak.formula.args:
+                temp = S.Zero
+                for t in Add.make_args(e):
+                    pow_x = self._get_pow_x(t)
+                    temp += t / (pow_xk + pow_x + 1)
+                form.append((temp, c))
+            form = Piecewise(*form)
+            ak = sequence(form.subs(k, k - 1), (k, ak.start + 1, ak.stop))
+        else:
+            ak = sequence((ak.formula / (pow_xk + 1)).subs(k, k - 1),
+                          (k, ak.start + 1, ak.stop))
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
