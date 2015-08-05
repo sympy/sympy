@@ -3,29 +3,29 @@ Solveset
 
 .. module:: sympy.solvers.solveset
 
-Solveset Documentation
-======================
-
+This is the official documentation of the `solveset` module in solvers.
+It contains the Frequently asked Questions about our new module to solve
+equations.
 
 What's wrong with solve():
-==========================
+--------------------------
 
 SymPy already has a pretty powerful `solve` function. But it has a lot of major
 issues
 
 1. It doesn't have a consistent output for various types of solutions
    It needs to return a lot of types of solutions consistently:
+
    * single solution : ` x == 1`
-   * Multiple solutions: `x**2 == 1`
-   * No Solution: `x**2 + 1 == 0; x is real`
+   * Multiple solutions: `x^2 == 1`
+   * No Solution: `x^2 + 1 == 0` ; x is real
    * Interval of solution: `floor(x) == 0`
    * Infinitely many solutions: `sin(x) == 0`
-   * Multivariate functions with point solutions: `x**2 + y**2 == 0`
-   * Multivariate functions with non point solution: `x**2 + y**2 == 1`
+   * Multivariate functions with point solutions: `x^2 + y^2 == 0`
+   * Multivariate functions with non point solution: `x^2 + y^2 == 1`
    * System of equations: `x + y == 1` and `x - y == 0`
    * Relational: `x > 0`
    * And the most important case "We don't Know"
-
 
 2. The input API is also a mess, there are a lot of parameters. Many of them
    are not needed and they make it hard for the user and the developers to
@@ -35,10 +35,9 @@ issues
    critical points where it is important to know if it has returned all the
    solutions. `solve` does not guarantee this.
 
-TODO
 
 Why Solveset?
-=============
+-------------
 
 * `solveset` has a cleaner input and output interface: `solveset` returns a set
   object and a set object take care of all the types of the output. For cases
@@ -60,40 +59,39 @@ Why Solveset?
   all the solutions.
 
 
-
 Why do we use Sets as an output type?
-=====================================
+-------------------------------------
 
 The main reason for using sets as output to solvers is that it can consistently
 represent many types of solutions. For single variable case it can represent:
 
-  * No solution (by null set)
+ * No solution (by null set)
 
-  * Finitely many solutions (by FiniteSet)
+ * Finitely many solutions (by FiniteSet)
 
-  * Infinitely many solutions, both countably and uncountably infinite solutions
-    (using the ImageSet module) Interval
+ * Infinitely many solutions, both countably and uncountably infinite solutions
+   (using the ImageSet module) Interval
 
-  * There can also be bizarre solutions to equations like set of all rational number.
+ * There can also be bizarre solutions to equations like set of all rational number.
 
-  No other programmer's object (list, dictionary, python sets) provides the
-  flexibility of mathematical sets which our sets module try to emulate. The
-  second reason to use sets is that they are close to the entities which
-  mathematician's deals with and it makes it easier to reason about them.
-  Another advantage of using objects closer to mathematical entities is that the
-  user won't have to "learn" our representation and she can have her expectations
-  transferred from her mathematical experience.
+No other programmer's object (list, dictionary, python sets) provides the
+flexibility of mathematical sets which our sets module try to emulate. The
+second reason to use sets is that they are close to the entities which
+mathematician's deals with and it makes it easier to reason about them.
+Another advantage of using objects closer to mathematical entities is that the
+user won't have to "learn" our representation and she can have her expectations
+transferred from her mathematical experience.
 
-  For multivariate case we are representing solutions as a set of points in a n
-  dimensional space and a point is represented by a FiniteSet of ordered tuple.
-  Please Note that, the General FiniteSet is unordered, but a FiniteSet with
-  a tuple as it's first argument is ordered. For example:
+For multivariate case we are representing solutions as a set of points in a n
+dimensional space and a point is represented by a FiniteSet of ordered tuple.
+Please Note that, the General FiniteSet is unordered, but a FiniteSet with
+a tuple as it's first argument is ordered. For example:
 
-  - FiniteSet(1, 2, 3) : {1, 2, 3}    # Unordered
-  - FiniteSet((1, 2, 3)) {(1, 2, 3)}  # Ordered
+ - FiniteSet(1, 2, 3) : {1, 2, 3}    # Unordered
+ - FiniteSet((1, 2, 3)) {(1, 2, 3)}  # Ordered
 
-  Why not use Dictionary as Output?
-  =================================
+
+Why not use Dictionary as Output?
 
   Dictionary are easy to deal with programatically but mathematically they are not
   very precise and use of them can quickly lead to inconsistency and a lot of
@@ -110,33 +108,25 @@ represent many types of solutions. For single variable case it can represent:
 
 
 What is this domain argument about?
-===================================
+-----------------------------------
 
  Solveset is designed to be independent of the assumptions on the
  variable being solved for and instead, uses the `domain` argument to
- decide the solver to dispatch the equation to, namely `solveset_real`
- or `solveset_complex`. It's unlike the old `solve` which considers the
+ decide the solver to dispatch the equation to, namely `solveset\_real`
+ or `solveset\_complex`. It's unlike the old `solve` which considers the
  assumption on the variable.
 
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy.abc import x
+    >>> from sympy import S
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
     {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
     EmptySet()
 
 
-Design Decision
-===============
-
-* There is a code level and interface level separation between solvers
-  for equations in complex domain and equations in real domain.
-  - `solveset_real()`
-  - `solveset_complex()`
-
-
 What will you do with the old solve?
-====================================
+------------------------------------
 
  The `solve` would possibly be deprecated in future versions & we encourage our
  users to use `solveset`. We may proceeds as follows:
@@ -149,18 +139,19 @@ What will you do with the old solve?
    for `solveset`.
 
 References
-==========
+----------
 
  * https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
  * https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
+ * https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
  * https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
 
 
-TODO: Remove the line below
------------------------------------------------------------------------------
+Solveset Module Reference
+-------------------------
 
 Use :func:`solveset` to solve equations or expressions (assumed to be equal to 0) for a single variable.
-Solving an equation like x**2 == 1 can be done as follows::
+Solving an equation like `x^2 == 1` can be done as follows::
 
     >>> from sympy.solvers.solveset import *
     >>> from sympy import Symbol, Eq
