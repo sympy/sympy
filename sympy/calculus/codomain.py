@@ -102,8 +102,8 @@ def codomain(func, domain, *syms):
             local_minima = set([(-oo, True)])
 
         if start_val.has(I) or end_val.has(I):
-                raise ValueError('Function does not Complement all points of %s '
-                                'as its domain' % (domain))
+            raise ValueError('Function does not contain all points of %s '
+                            'as its domain' % (domain))
 
         if local_maxima == set():
             if start_val > end_val:
@@ -156,15 +156,16 @@ def codomain(func, domain, *syms):
                             else func.subs({symbol: i}) for i in domain])
 
 
-def not_empty_in(fin_set, intrvl, *syms):
-    """ Finds the domain in which the Set input is not empty
+def not_empty_in(finite_set, sets, *syms):
+    """ Finds the domain of the functions in `finite_set` in which the
+    `finite_set` is not-empty
 
     Parameters
     ==========
 
-    fin_set: FiniteSet
+    finite_set: FiniteSet
             The FiniteSet  not-empty
-    intrvl: Union of Sets
+    sets: Union of Sets
             The range of the FiniteSet elements
     syms: Tuple of symbols
             Symbol for which domain is to be found
@@ -195,8 +196,8 @@ def not_empty_in(fin_set, intrvl, *syms):
 
     # TODO: handle functions with infinitely many solutions (eg, sin, tan)
     # TODO: handle multivariate functions
-    if not isinstance(fin_set, FiniteSet):
-        raise ValueError('A FiniteSet must be given, not %s: %s' % (type(fin_set), fin_set))
+    if not isinstance(finite_set, FiniteSet):
+        raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
     if len(syms) == 1:
         symbol = syms[0]
     else:
@@ -205,13 +206,19 @@ def not_empty_in(fin_set, intrvl, *syms):
     y = Dummy('y')
 
     def elm_domain(expr, *sym):
+        """
+        finds the domain of a single element of `finite_set` with `sets`
+        as its range and with given symbol `syms`
+        """
         domain_union = S.EmptySet
+
+        # for a number check whether it is contained in `sets`
         if expr.is_Number:
-            if expr in intrvl:
+            if expr in sets:
                 return FiniteSet(expr)
             return S.EmptySet
 
-        # find the inverse of items in the fin_set
+        # find the inverse of items in the finite_set
         invert_expr = solveset_real(expr - y, symbol)
         if isinstance(invert_expr, Intersection):
             invert_set = invert_expr.args[1]
@@ -219,8 +226,8 @@ def not_empty_in(fin_set, intrvl, *syms):
             invert_set = invert_expr.args[0].args[1]
 
         for inverse_val in invert_set:
-            domain = codomain(inverse_val, intrvl, y)
+            domain = codomain(inverse_val, sets, y)
             domain_union = Union(domain_union, domain)
         return domain_union
 
-    return Union(*[elm_domain(element, symbol) for element in fin_set])
+    return Union(*[elm_domain(element, symbol) for element in finite_set])
