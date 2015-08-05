@@ -125,6 +125,59 @@ What is this domain argument about?
     EmptySet()
 
 
+What are the general methods employed by solveset to solve an equation?
+-----------------------------------------------------------------------
+
+ Solveset uses various methods to solve an equation, here is a brief overview
+ of the methodology:
+
+ * The `domain` argument is first considered to know the domain in which
+   the user is interested to get the solution.
+
+ * If the given function is a relational (`>=`, `<=`, `>`, `<`), and the
+   domain is real, then `solve\_univariate\_inequality` and solutions are
+   returned. Solving for complex inequalities are not supported yet.
+
+ * Based on the `domain`, the equation is dispatched to one the other two
+   functions `solveset\_real` and `solveset\_complex`, which solves the
+   given equation in complex and real domain respectively.
+
+ * If the given function (equation) is a product of two or more functions,
+   like say `f = g*h`, then the solution to the given equation is the Union
+   of the solution of the equations `g = 0` and `h = 0`, if and only if both
+   g and h are finite for a finite input. So, the solution is build up
+   recursively.
+
+ * The function class is now checked if it's Trigonometric or Hyperbolic, then
+   the function `\_solve\_real\_trig` is called.
+
+ * The function is now checked if there is any instance of Piecewise
+   expression, if it is, then it's converted to explict expression and
+   set pairs and then solved recursively.
+
+ * The respective solvers now tries to invert the equation using the routines
+   `invert\_real` and `invert\_complex`.
+
+ * After the invert, the equations are checked for radical or Abs (Modulus),
+   then the methods `\_solve\_radical` and `\_solve\_abs` respectively are
+   used.
+
+ * If none of the above method is successful, then method of polynomial is
+   used as follows:
+
+   - `\_solve\_as\_rational` is called, it's third argument is the
+     `solveset\_solver` which can either be `solveset_real` or
+     `solveset\_complex` based on these respective poly solvers
+     `solve_as_poly_real` and `\_solve\_as\_poly\_complex` is called.
+
+   - The underlying method `\_solve\_as\_poly` solves the equation using
+     polynomial techniques if it already is a polynomial equation or, with
+     a change of variables, can be made so.
+
+ * The Final solution set obtained is taken intersection with the input
+   domain, and the resultant solution is returned.
+
+
 What will you do with the old solve?
 ------------------------------------
 
