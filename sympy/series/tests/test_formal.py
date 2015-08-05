@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Integral)
+                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -430,6 +430,19 @@ def test_fps__operations():
 
     raises(ValueError, lambda: f1 + fps(exp(x), dir=-1))
     raises(ValueError, lambda: f1 + fps(exp(x), x0=1))
+
+    fm = f1 * 3
+
+    assert fm.function == 3*sin(x)
+    assert fm.truncate() == 3*x - x**3/2 + x**5/40 + O(x**6)
+
+    fm = 3 * f2
+
+    assert fm.function == 3*cos(x)
+    assert fm.truncate() == 3 - 3*x**2/2 + x**4/8 + O(x**6)
+
+    assert isinstance((f1 * f2), Mul)
+    assert isinstance((f1 * x), Mul)
 
     fd = f1.diff()
     assert fd.function == cos(x)

@@ -1093,6 +1093,21 @@ class FormalPowerSeries(SeriesBase):
     def __sub__(self, other):
         return self.__add__(-other)
 
+    def __mul__(self, other):
+        other = sympify(other)
+
+        if other.has(self.x):
+            return Mul(self, other)
+
+        f = self.function * other
+        ak = self.ak.coeff_mul(other)
+        ind = self.ind * other
+
+        return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     """Generates Formal Power Series of f.
