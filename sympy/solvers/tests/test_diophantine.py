@@ -14,6 +14,7 @@ from sympy.utilities.pytest import slow, raises
 from sympy.utilities import default_sort_key
 
 x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", integer=True)
+t_0, t_1, t_2, t_3, t_4, t_5, t_6 = symbols("t_0, t_1, t_2, t_3, t_4, t_5, t_6", integer=True)
 
 def test_input_format():
     raises(TypeError, lambda: diophantine(sin(x)))
@@ -24,33 +25,30 @@ def test_univariate():
 
 
 def test_linear():
-    assert check_linear(x)
-    assert check_linear(1*x)
-    assert check_linear(3*x)
-    assert check_linear(x + 1)
-    assert check_linear(2*x + 1)
-    assert check_linear(2*x + 4)
-    assert check_linear(y + x)
-    assert check_linear(y + x + 0)
-    assert check_linear(y + x - 0)
-    assert check_linear(0*x - y - 5)
-    assert check_linear(3*y + 2*x - 5)
-    assert check_linear(2*x - 3*y - 5)
-    assert check_linear(-2*x - 3*y - 5)
-    assert check_linear(7*x + 5*y)
-    assert check_linear(2*x + 4*y)
-    assert check_linear(4*x + 6*y - 4)
-    assert check_linear(4*x + 6*y - 3)
-    assert check_linear(0*x + 3*y - 4*z + 5)
-    assert check_linear(4*x + 3*y - 4*z + 5)
-    assert check_linear(4*x + 2*y + 8*z - 5)
-    assert check_linear(5*x + 7*y - 2*z - 6)
-    assert check_linear(3*x - 6*y + 12*z - 9)
-    assert check_linear(x + 3*y - 4*z + w - 6)
-    assert check_linear(6*w + 9*x + 20*y - z)
-    assert check_linear(2*w + 3*x + 5*y + 7*z + 11*t + 13*X + 17*Y + 19*Z - 23)
-    assert check_linear(2*w + 4*x + 6*y + 8*z + 10*t + 12*X + 14*Y + 16*Z - 1)
-
+    assert diop_solve(x) == (0,)
+    assert diop_solve(1*x) == (0,)
+    assert diop_solve(3*x) == (0,)
+    assert diop_solve(x + 1) == (-1,)
+    assert diop_solve(2*x + 1) == (None,)
+    assert diop_solve(2*x + 4) == (-2,)
+    assert diop_solve(y + x) == (t_0, -t_0)
+    assert diop_solve(y + x + 0) == (t_0, -t_0)
+    assert diop_solve(y + x - 0) == (t_0, -t_0)
+    assert diop_solve(0*x - y - 5) == (-5,)
+    assert diop_solve(3*y + 2*x - 5) == (3*t_0 - 5, -2*t_0 + 5)
+    assert diop_solve(2*x - 3*y - 5) == (-3*t_0 - 5, -2*t_0 - 5)
+    assert diop_solve(-2*x - 3*y - 5) == (-3*t_0 + 5, 2*t_0 - 5)
+    assert diop_solve(7*x + 5*y) == (5*t_0, -7*t_0)
+    assert diop_solve(2*x + 4*y) == (2*t_0, -t_0)
+    assert diop_solve(4*x + 6*y - 4) == (3*t_0 - 2, -2*t_0 + 2)
+    assert diop_solve(4*x + 6*y - 3) == (None, None)
+    assert diop_solve(0*x + 3*y - 4*z + 5) == (-4*t_0 + 5, -3*t_0 + 5)
+    assert diop_solve(4*x + 3*y - 4*z + 5) == (t_0, -4*t_1 + 5, t_0 - 3*t_1 + 5)
+    assert diop_solve(4*x + 2*y + 8*z - 5) == (None, None, None)
+    assert diop_solve(5*x + 7*y - 2*z - 6) == (t_0, -7*t_0 - 2*t_1 + 6, -22*t_0 - 7*t_1 + 18)
+    assert diop_solve(3*x - 6*y + 12*z - 9) == (2*t_0 + 3, t_0 + 2*t_1, t_1)
+    assert diop_solve(6*w + 9*x + 20*y - z) == (t_0, t_1, -t_1 - t_2, 6*t_0 - 11*t_1 - 20*t_2)
+    
 
 def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
@@ -560,53 +558,6 @@ def check_solutions(eq):
                 break
 
     return okay
-
-
-def check_linear(eq, param=symbols("t", integer=True)):
-    """
-    Determines whether solutions returned by diop_solve() satisfy the
-    original equation.
-    """
-
-    eq = eq.expand()
-    coeff = eq.as_coefficients_dict()
-    solutions = diop_solve(eq, param)
-
-    if isinstance(eq, Add):
-        var = sorted(list(eq.free_symbols), key=default_sort_key)
-    elif isinstance(eq, Mul):
-        var = [eq.as_two_terms()[1]]
-    else:
-        var = [eq]
-
-    if len(var) == 0:
-        return solutions == None
-
-    if Integer(1) in coeff:
-        c = -coeff[Integer(1)]
-    else:
-        c = 0
-
-    # The equation
-    # a_0*x_0 + ... + a_n*x_n == c
-    # has no integer solutions if and only if gcd(a_0, ..., a_n) does not divide c.
-    gcd = 0
-    for v in var:
-        gcd = igcd(gcd, coeff[v])
-
-    if not divisible(c, gcd):
-        return all(solution == None for solution in solutions)
-
-    # and has infinitely many solutions otherwise.
-    else:
-        # Does the solution satisfy the original equation?
-        correct = c == Add(*[coeff[var[i]]*solutions[i] for i in range(0, len(var))])
-
-        # Does the solution have as many free variables as possible?
-        free_variable_count = len(set([x for solution in solutions for x in solution.free_symbols]))
-        complete = len(solutions) - 1 == free_variable_count
-
-        return (correct and complete)
 
 
 def check_integrality(eq):
