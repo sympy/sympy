@@ -5,7 +5,7 @@ from sympy import (
     gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
     logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
     posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, sqrt, Symbol, symbols, sympify, tan, tanh, zoo, Sum, Lt)
+    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo, Sum, Lt)
 from sympy.solvers.solveset import linsolve
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot
@@ -90,10 +90,15 @@ def test_issue_3557():
     f_2 = x*d + y*e + z*f - 1
     f_3 = x*g + y*h + z*i - 1
 
-    solutions = zip((x, y, z), linsolve([f_1, f_2, f_3], x, y, z).args[0])
-    solutions = dict(solutions)
+    soln_solve = solve([f_1, f_2, f_3], x, y, z, simplify=False)
+    soln_solveset = zip((x, y, z), linsolve([f_1, f_2, f_3], x, y, z).args[0])
+    soln_solveset = dict(soln_solveset)
 
-    assert simplify(solutions[y]) == \
+    assert simplify(soln_solve[y]) == \
+        (a*i + c*d + f*g - a*f - c*g - d*i)/ \
+        (a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g)
+
+    assert simplify(soln_solveset[y]) == \
         (a*i + c*d + f*g - a*f - c*g - d*i)/ \
         (a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g)
 
