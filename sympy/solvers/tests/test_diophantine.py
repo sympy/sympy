@@ -48,7 +48,7 @@ def test_linear():
     assert diop_solve(5*x + 7*y - 2*z - 6) == (t_0, -7*t_0 - 2*t_1 + 6, -22*t_0 - 7*t_1 + 18)
     assert diop_solve(3*x - 6*y + 12*z - 9) == (2*t_0 + 3, t_0 + 2*t_1, t_1)
     assert diop_solve(6*w + 9*x + 20*y - z) == (t_0, t_1, -t_1 - t_2, 6*t_0 - 11*t_1 - 20*t_2)
-    
+
 
 def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
