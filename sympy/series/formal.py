@@ -1058,6 +1058,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def __add__(self, other):
+        other = sympify(other)
+
         if isinstance(other, FormalPowerSeries):
             if self.dir != other.dir:
                 raise ValueError("Both series should be calculated from the"
@@ -1084,7 +1086,17 @@ class FormalPowerSeries(SeriesBase):
 
             return self.func(f, x, self.x0, self.dir, (ak, self.xk, ind))
 
+        elif not other.has(self.x):
+            f = self.function + other
+            ind = self.ind + other
+
+            return self.func(f, self.x, self.x0, self.dir,
+                             (self.ak, self.xk, ind))
+
         return Add(self, other)
+
+    def __radd__(self, other):
+        return self.__add__(other)
 
     def __neg__(self):
         return self.func(-self.function, self.x, self.x0, self.dir,
@@ -1092,6 +1104,9 @@ class FormalPowerSeries(SeriesBase):
 
     def __sub__(self, other):
         return self.__add__(-other)
+
+    def __rsub__(self, other):
+        return (-self).__add__(other)
 
     def __mul__(self, other):
         other = sympify(other)

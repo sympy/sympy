@@ -418,7 +418,15 @@ def test_fps__operations():
     assert fsum.truncate() == \
         1 + x - x**2/2 - x**3/6 + x**4/24 + x**5/120 + O(x**6)
 
-    assert (f1 + 1) == Add(f1, 1)
+    fsum = f1 + 1
+    assert fsum.function == sin(x) + 1
+    assert fsum.truncate() == 1 + x - x**3/6 + x**5/120 + O(x**6)
+
+    fsum = 1 + f2
+    assert fsum.function == cos(x) + 1
+    assert fsum.truncate() == 2 - x**2/2 + x**4/24 + O(x**6)
+
+    assert (f1 + x) == Add(f1, x)
 
     assert -f2.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
     assert (f1 - f1) == S.Zero
@@ -427,6 +435,14 @@ def test_fps__operations():
     assert fsub.function == sin(x) - cos(x)
     assert fsub.truncate() == \
         -1 + x + x**2/2 - x**3/6 - x**4/24 + x**5/120 + O(x**6)
+
+    fsub = f1 - 1
+    assert fsub.function == sin(x) - 1
+    assert fsub.truncate() == -1 + x - x**3/6 + x**5/120 + O(x**6)
+
+    fsub = 1 - f2
+    assert fsub.function == -cos(x) + 1
+    assert fsub.truncate() == x**2/2 - x**4/24 + O(x**6)
 
     raises(ValueError, lambda: f1 + fps(exp(x), dir=-1))
     raises(ValueError, lambda: f1 + fps(exp(x), x0=1))
@@ -441,8 +457,8 @@ def test_fps__operations():
     assert fm.function == 3*cos(x)
     assert fm.truncate() == 3 - 3*x**2/2 + x**4/8 + O(x**6)
 
-    assert isinstance((f1 * f2), Mul)
-    assert isinstance((f1 * x), Mul)
+    assert (f1 * f2) == Mul(f1, f2)
+    assert (f1 * x) == Mul(f1, x)
 
     fd = f1.diff()
     assert fd.function == cos(x)
