@@ -418,6 +418,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Anton Akhmerov: fixed the zero matrix printing
 #. Richard Otis: Improved lambdify support for numpy
 #. Michael Zingale: add a left_eigenvectors() method
+#. Kumar Krishna Agrawal: UnXFAIL tests in solveset
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
