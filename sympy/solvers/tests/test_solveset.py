@@ -536,20 +536,12 @@ def test_rewrite_trigh():
         2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
 
 
-@XFAIL
-def test_real_imag_splitting1():
-    a, b = symbols('a b', real=True, finite=True)
-    s = solveset_real(sqrt(a**2 + b**2) - 3, a)
-    assert s != S.EmptySet
-    # FiniteSet(-sqrt(-b**2 + 9), sqrt(-b**2 + 9))
-    # fails now because whether it is real or not depends
-    # on the value of b, e.g. b = 4 gives an imaginary value
-
-
 def test_real_imag_splitting():
     a, b = symbols('a b', real=True, finite=True)
     assert solveset_real(sqrt(a**2 - b**2) - 3, a) == \
         FiniteSet(-sqrt(b**2 + 9), sqrt(b**2 + 9))
+    assert solveset_real(sqrt(a**2 + b**2) - 3, a) != \
+        S.EmptySet
 
 
 def test_units():
@@ -559,21 +551,13 @@ def test_units():
 def test_solve_only_exp_1():
     y = Symbol('y', positive=True, finite=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
-
-
-@XFAIL
-def test_only_exp_2():
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
-    # FiniteSet(log(y/2 - sqrt((y - 2)*(y + 2))/2),
-    #           log(y/2 + sqrt((y - 2)*(y + 2))/2))
-    # fails now because whether it is real or not depends
-    # on whether y >= 2
 
 
 @XFAIL
-def test_only_exp_3():
+def test_solve_only_exp_2():
     assert solveset_real(exp(x/y)*exp(-z/y) - 2, y) == \
         FiniteSet((x - z)/log(2))
     assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
