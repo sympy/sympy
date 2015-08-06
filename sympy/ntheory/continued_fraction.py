@@ -135,7 +135,6 @@ def continued_fraction_reduce(cf):
 
     """
     from sympy.core.symbol import Dummy
-    from sympy.solvers import solve
     from sympy.solvers.solveset import solveset
 
     period = []
