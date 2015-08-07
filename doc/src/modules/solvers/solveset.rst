@@ -178,6 +178,41 @@ What are the general methods employed by solveset to solve an equation?
    domain, and the resultant solution is returned.
 
 
+How do we manipulate and return an infinite solution?
+-----------------------------------------------------
+
+ * In Real Domain, we use our `ImageSet` class in the sets module to
+   return infinite solutions. `ImageSet` is an Image of a set under
+   a mathematical function. For example, to represent the solution
+   of the equation `sin(x) == 0`, we can use the ImageSet as:
+
+   `ImageSet(Lambda(n, 2*n*pi), Integers())`
+
+   Where n is a dummy variable. It is basically the image of the
+   Integers set under the function `2*n*pi`.
+
+ * In Complex Domain, we use Complex Sets, which is implemented as
+   `ComplexPlane` class in the sets module, to represent infinite
+   solution in the argand plane. For example to represent the solution
+   of the equation `|z| == 1`, which is a unit circle, we can use
+   the ComplexPlane as:
+
+   `ComplexPlane(FiniteSet(1)*Interval(0, 2*pi), polar=True)`
+
+   Where the FiniteSet in the `ProductSet` is the range of the value of `r`,
+   which is the radius of the circle and the Interval is the range of theta,
+   representing a unit circle in the argand plane.
+
+   Note: We also have non-polar form notation for representing solution
+   in rectangular form. For example, to represent first quadrant in argand
+   plane, we can write the ComplexPlane as:
+
+   `ComplexPlane(Interval(0, oo)*Interval(0, oo))`
+
+   where the Intervals are the range of `x` and `y` for the set of complex
+   number `(x + I*y)`.
+
+
 What will you do with the old solve?
 ------------------------------------
 
@@ -187,7 +222,8 @@ What will you do with the old solve?
  * Replace all internal instances of solve by solveset by next release.
  * Raise a deprecation warning with solve calls possibly from next to
    next release.
- * Possibly remove the `solve` code in the release after the above release.
+ * Possibly rename solve to solve\_old, so that people can easily fix
+   their code.
  * The issues pertaining to old `solve` would be addressed by new issues
    for `solveset`.
 
