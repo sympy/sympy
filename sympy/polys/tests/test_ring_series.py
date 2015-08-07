@@ -607,3 +607,5 @@ def test_series_fast():
     p = sin(x**2 + a)*(cos(x**3 - 1) - a - a**2)
     assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())
+
+    assert series_fast(sin(1/x), x, 5).as_expr() == sin(1/x)

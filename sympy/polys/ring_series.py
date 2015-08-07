@@ -7,7 +7,7 @@ from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
-from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
+from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -1797,7 +1797,6 @@ _convert_func = {
 def rs_min_pow(expr, rs_series, a):
     series = 0
     n = 2
-    #R, series = sring(rs_series, domain=QQ)
     while series == 0:
         series = _series_fast(expr, rs_series, a, n)
         n *= 2
@@ -1830,13 +1829,14 @@ def _series_fast(expr, rs_series, a, prec):
         return rs_series
     elif expr.is_Function:
         arg = args[0]
+        if len(args) > 1:
+            raise NotImplementedError
         R, series = sring(arg, domain=QQ)
         series_inner = _series_fast(arg, series, a, prec)
         R = (R.compose(series_inner.ring)).compose(rs_series.ring)
         series_inner = series_inner.set_ring(R)
-        a = R(a)
         series = eval(_convert_func[str(expr.func)])(series_inner,
-            a, prec)
+            R(a), prec)
         return series
     elif expr.is_Mul:
         n = len(args)
@@ -1896,7 +1896,7 @@ def series_fast(expr, a, prec):
             gen = gen.set_ring(p1.ring)
             if new_prec != prec_got:
                 prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
-                p1 = _series_fast(expr, series, a, prec=prec_do)
+                p1 = _series_fast(expr, series, a, prec=ceiling(prec_do))
                 while p1.degree(gen) + 1 < prec:
                     p1 = _series_fast(expr, series, a, prec=prec_do)
                     gen = gen.set_ring(p1.ring)
