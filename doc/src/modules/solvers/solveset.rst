@@ -230,7 +230,7 @@ How does solveset ensures that it is not returning any wrong solution?
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy import symbols, S
     >>> x, n = symbols('x, n')
-    >>> solveset(abs(x) - n, x)
+    >>> solveset(abs(x) - n, x, domain=S.Reals)
     Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})
 
  Though, there still a lot of work needs to be done in this regard.
