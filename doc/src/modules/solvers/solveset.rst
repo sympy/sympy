@@ -213,11 +213,34 @@ How do we manipulate and return an infinite solution?
    number `(x + I*y)`.
 
 
+How does solveset ensures that it is not returning any wrong solution?
+----------------------------------------------------------------------
+
+ Solvers in a Computer Algebra System are based on heuristics algorithms,
+ so it's usually very hard to ensure cent percent correctness, in every
+ possible case. However there are still a lot of cases where we can ensure
+ correctness. Solveset tries to verify correctness wherever it can for
+ example:
+ 
+ Consider the equation `|x| = n`, a naive method to solve this equation
+ would return {-n, n} as it's solution, which is not correct since {-n, n}
+ can only be it's solution if and only if n is positive. Solveset returns
+ this information as well to ensure correctness.
+
+    >>> from sympy.solvers.solveset import solveset
+    >>> from sympy import symbols, S
+    >>> x, n = symbols('x, n')
+    >>> solveset(abs(x) - n, x)
+    Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})
+
+ Though, there still a lot of work needs to be done in this regard.
+
+
 What will you do with the old solve?
 ------------------------------------
 
- The `solve` would possibly be deprecated in future versions & we encourage our
- users to use `solveset`. We may proceeds as follows:
+ The `solve` would possibly be deprecated in future versions & we encourage
+ our users to use `solveset`. We may proceeds as follows:
 
  * Replace all internal instances of solve by solveset by next release.
  * Raise a deprecation warning with solve calls possibly from next to
@@ -226,6 +249,7 @@ What will you do with the old solve?
    their code.
  * The issues pertaining to old `solve` would be addressed by new issues
    for `solveset`.
+
 
 References
 ----------
