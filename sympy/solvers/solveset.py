@@ -18,7 +18,7 @@ from sympy.functions import (log, Abs, tan, cot, exp,
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union)
+                        Union, ConditionSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -464,7 +464,7 @@ def solveset_real(f, symbol):
                 else:
                     result += solveset_real(equation, symbol)
         else:
-            raise NotImplementedError
+            result = ConditionSet(Lambda(symbol, f), S.Reals)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -497,7 +497,7 @@ def _solve_real_trig(f, symbol):
     g, h = g.expand(), h.expand()
     g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
     if g.has(symbol) or h.has(symbol):
-        raise NotImplementedError
+        return ConditionSet(Lambda(symbol, f), S.Reals)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
 
@@ -507,7 +507,7 @@ def _solve_real_trig(f, symbol):
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        raise NotImplementedError
+        return ConditionSet(Lambda(symbol,f), S.Reals)
 
 
 def _solve_as_poly(f, symbol, solveset_solver, invert_func):
@@ -529,12 +529,11 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             if poly.degree() <= len(solns):
                 result = FiniteSet(*solns)
             else:
-                raise NotImplementedError("Couldn't find all roots "
-                                          "of the equation %s" % f)
+                result = ConditionSet(Lambda(symbol, f), S.Complexes)
     else:
         poly = Poly(f)
         if poly is None:
-            raise NotImplementedError("Could not convert %s to Poly" % f)
+            result = ConditionSet(Lambda(symbol, f), S.Complexes)
         gens = [g for g in poly.gens if g.has(symbol)]
 
         if len(gens) == 1:
@@ -546,8 +545,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                                           quintics=True).keys())
 
             if len(poly_solns) < deg:
-                raise NotImplementedError("Couldn't find all the roots of "
-                                          "the equation %s" % f)
+                result = ConditionSet(Lambda(symbol, f), S.Complexes)
 
             if gen != symbol:
                 y = Dummy('y')
@@ -555,11 +553,9 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 if lhs is symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
-                    raise NotImplementedError(
-                        "inversion of %s not handled" % gen)
+                    result = ConditionSet(Lambda(symbol, f), S.Complexes)
         else:
-            raise NotImplementedError("multiple generators not handled"
-                                      " by solveset")
+            result = ConditionSet(Lambda(symbol,f), S.Complexes)
 
     if result is not None:
         if isinstance(result, FiniteSet):
@@ -573,7 +569,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 result = imageset(Lambda(s, expand_complex(s)), result)
         return result
     else:
-        raise NotImplementedError
+        return ConditionSet(Lambda(symbol, f), S.Complexes)
 
 
 def _solve_as_poly_real(f, symbol):
@@ -672,7 +668,7 @@ def _solve_abs(f, symbol):
                                            symbol).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
-        raise NotImplementedError
+        return ConditionSet(Lambda(symbol, f), S.Complexes)
 
 
 def solveset_complex(f, symbol):
@@ -770,7 +766,7 @@ def solveset_complex(f, symbol):
                 else:
                     result += solveset_complex(equation, symbol)
         else:
-            raise NotImplementedError
+            result = ConditionSet(Lambda(symbol, f), S.Complexes)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -886,9 +882,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if f.is_Relational:
         if not domain.is_subset(S.Reals):
-            raise NotImplementedError("Inequalities in the complex domain are "
-                                      "not supported. Try the real domain by"
-                                      "setting domain=S.Reals")
+            return ConditionSet(Lambda(symbol, f), S.Complexes)
         return solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
 
