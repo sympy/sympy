@@ -589,8 +589,14 @@ def _transform_explike_DE(DE, g, x, order, syms):
         coeff = DE.coeff(Derivative(g(x), x, i))
         coeff = (coeff / highest_coeff).expand().collect(x)
         for t in Add.make_args(coeff):
-            if t.has(x):
-                eq.append(t)
+            eq.append(t)
+    temp = []
+    for e in eq:
+        if e.has(x):
+            break
+        temp.append(e)
+    else:
+        eq = temp
     if eq:
         sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
         if sol:
