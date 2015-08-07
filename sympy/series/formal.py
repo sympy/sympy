@@ -594,7 +594,8 @@ def _transform_explike_DE(DE, g, x, order, syms):
     for e in eq:
         if e.has(x):
             break
-        temp.append(e)
+        elif e.has(Symbol):
+            temp.append(e)
     else:
         eq = temp
     if eq:
