@@ -89,8 +89,6 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
-    assert Eq(x, 0) == Eq(0, x)  # issue 9697
-
 
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do

@@ -302,10 +302,7 @@ class Basic(with_metaclass(ManagedProperties)):
             return True
 
         from .function import AppliedUndef, UndefinedFunction as UndefFunc
-        from .relational import Eq
-        if isinstance(self, Eq) and isinstance(other, Eq):
-            return (((self.lhs == other.lhs) and (self.rhs == other.rhs)) or
-                    ((self.lhs == other.rhs) and (self.rhs == other.lhs)))
+
         if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
             if self.class_key() == other.class_key():
                 return True
