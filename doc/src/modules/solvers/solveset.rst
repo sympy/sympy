@@ -236,6 +236,28 @@ How does solveset ensures that it is not returning any wrong solution?
  Though, there still a lot of work needs to be done in this regard.
 
 
+How do we deal with cases where only some of the solutions are known?
+---------------------------------------------------------------------
+
+ Creating a Universal equation solver, which can solve each and every
+ equation we encounter in mathematics is an ideal case for solvers in
+ a Computer Algebra System. We always have some cases, which are not
+ solved, or solved with incomplete solutions, so it's very important
+ to represent that situation. For this type of situation we use
+ `ConditionSet` class in the sets module, which acts as an unevaluated
+ solveset object.
+
+ ConditionSet is basically a Set of elements which satisfies a given
+ condition. For example, to represent the solutions of the Equation
+ in Real domain:
+
+ .. math::  (x^2 - 4)*(sin(x) + x)
+
+ We can represent it as:
+
+ FiniteSet(-2, 2) U `ConditionSet(Lambda(x, Eq(sin(x) + x, 0)), S.Reals)`
+
+
 What will you do with the old solve?
 ------------------------------------
 
