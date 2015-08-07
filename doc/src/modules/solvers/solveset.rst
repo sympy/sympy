@@ -138,8 +138,8 @@ What are the general methods employed by solveset to solve an equation?
    domain is real, then `solve\_univariate\_inequality` and solutions are
    returned. Solving for complex inequalities are not supported yet.
 
- * Based on the `domain`, the equation is dispatched to one the other two
-   functions `solveset\_real` and `solveset\_complex`, which solves the
+ * Based on the `domain`, the equation is dispatched to one of the two
+   functions `solveset\_real` or `solveset\_complex`, which solves the
    given equation in complex and real domain respectively.
 
  * If the given function (equation) is a product of two or more functions,
@@ -168,7 +168,7 @@ What are the general methods employed by solveset to solve an equation?
    - `\_solve\_as\_rational` is called, it's third argument is the
      `solveset\_solver` which can either be `solveset_real` or
      `solveset\_complex` based on these respective poly solvers
-     `solve_as_poly_real` and `\_solve\_as\_poly\_complex` is called.
+     `\_solve\_as\_poly\_real` and `\_solve\_as\_poly\_complex` is called.
 
    - The underlying method `\_solve\_as\_poly` solves the equation using
      polynomial techniques if it already is a polynomial equation or, with
