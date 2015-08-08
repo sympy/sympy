@@ -867,21 +867,6 @@ def test_eigen():
 
     eps = Symbol('eps', real=True)
 
-    M = Matrix([[abs(eps), I*eps    ],
-                [-I*eps,   abs(eps) ]])
-
-    assert M.eigenvects() == (
-        [
-            ( 0, 1, [Matrix([[-I*eps/abs(eps)], [1]])]),
-            ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)], [1]]) ] ),
-        ])
-
-    assert M.left_eigenvects() == (
-        [
-            (0, 1, [Matrix([[I*eps/Abs(eps), 1]])]),
-            (2*Abs(eps), 1, [Matrix([[-I*eps/Abs(eps), 1]])])
-        ])
-
     M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     M._eigenvects = M.eigenvects(simplify=False)
     assert max(i.q for i in M._eigenvects[0][2][0]) > 1
@@ -923,12 +908,6 @@ def test_subs():
 
 def test_simplify():
     f, n = symbols('f, n')
-
-    m = Matrix([[1, x], [x + 1/x, x - 1]])
-    m = m.row_join(eye(m.cols))
-    raw = m.rref(simplify=lambda x: x)[0]
-    assert raw != m.rref(simplify=True)[0]
-
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
     M.simplify()
@@ -1344,15 +1323,7 @@ def test_inv_block():
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    A = diag(a, b, b)
-    assert A.inv(try_block_diag=True) == diag(a.inv(), b.inv(), b.inv())
-    A = diag(a, b, c)
-    assert A.inv(try_block_diag=True) == diag(a.inv(), b.inv(), c.inv())
-    A = diag(a, c, b)
-    assert A.inv(try_block_diag=True) == diag(a.inv(), c.inv(), b.inv())
     A = diag(a, a, b, a, c, a)
-    assert A.inv(try_block_diag=True) == diag(
-        a.inv(), a.inv(), b.inv(), a.inv(), c.inv(), a.inv())
     assert A.inv(try_block_diag=True, method="ADJ") == diag(
         a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
         a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ"))
@@ -1474,7 +1445,6 @@ def test_diagonalization():
     a, b, c, d = symbols('a b c d')
     m = Matrix(2, 2, [a, c, c, b])
     assert m.is_symmetric()
-    assert m.is_diagonalizable()
 
 
 @XFAIL
@@ -2166,21 +2136,13 @@ def test_invertible_check():
     # the number of rows in a matrix...
     assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
     raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
-    # ... but sometimes it won't, so that is an insufficient test of
-    # whether something is invertible.
     m = Matrix([
         [-1, -1,  0],
         [ x,  1,  1],
         [ 1,  x, -1],
     ])
-    assert len(m.rref()[1]) == m.rows
     # in addition, unless simplify=True in the call to rref, the identity
     # matrix will be returned even though m is not invertible
-    assert m.rref()[0] == eye(3)
-    assert m.rref(simplify=signsimp)[0] != eye(3)
-    raises(ValueError, lambda: m.inv(method="ADJ"))
-    raises(ValueError, lambda: m.inv(method="GE"))
-    raises(ValueError, lambda: m.inv(method="LU"))
 
 
 @XFAIL
@@ -2338,9 +2300,6 @@ def test_simplify_immutable():
                     ImmutableMatrix([[1]])
 
 def test_rank():
-    from sympy.abc import x
-    m = Matrix([[1, 2], [x, 1 - 1/x]])
-    assert m.rank() == 2
     n = Matrix(3, 3, range(1, 10))
     assert n.rank() == 2
     p = zeros(3)
@@ -2626,3 +2585,67 @@ def test_issue_9422():
     assert x*M1 != M1*x
     assert a*M1 == M1*a
     assert y*x*M == Matrix([[y*x, 0], [0, y*x]])
+
+
+@XFAIL
+def test_rref_iszero_is_none():
+
+    # from test_rank()
+    from sympy.abc import x
+    m = Matrix([[1, 2], [x, 1 - 1/x]])
+    assert m.rank() == 2
+
+    # from test_invertible_check()
+    # ... but sometimes it won't, so that is an insufficient test of
+    # whether something is invertible.
+    m = Matrix([
+        [-1, -1,  0],
+        [ x,  1,  1],
+        [ 1,  x, -1],
+    ])
+    assert len(m.rref()[1]) == m.rows
+    # in addition, unless simplify=True in the call to rref, the identity
+    # matrix will be returned even though m is not invertible
+    assert m.rref()[0] == eye(3)
+    assert m.rref(simplify=signsimp)[0] != eye(3)
+    raises(ValueError, lambda: m.inv(method="ADJ"))
+    raises(ValueError, lambda: m.inv(method="GE"))
+    raises(ValueError, lambda: m.inv(method="LU"))
+
+    m = Matrix(2, 2, [a, c, c, b])
+    assert m.is_diagonalizable()
+
+    # from test_inv_block()
+    a = Matrix([[1, 2], [2, 3]])
+    b = Matrix([[3, x], [y, 3]])
+    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
+    A = diag(a, b, b)
+    assert A.inv(try_block_diag=True) == diag(a.inv(), b.inv(), b.inv())
+    A = diag(a, b, c)
+    assert A.inv(try_block_diag=True) == diag(a.inv(), b.inv(), c.inv())
+    A = diag(a, c, b)
+    assert A.inv(try_block_diag=True) == diag(a.inv(), c.inv(), b.inv())
+    A = diag(a, a, b, a, c, a)
+    assert A.inv(try_block_diag=True) == diag(
+        a.inv(), a.inv(), b.inv(), a.inv(), c.inv(), a.inv())
+
+    # from test_simplify()
+    m = Matrix([[1, x], [x + 1/x, x - 1]])
+    m = m.row_join(eye(m.cols))
+    raw = m.rref(simplify=lambda x: x)[0]
+    assert raw != m.rref(simplify=True)[0]
+
+    M = Matrix([[abs(eps), I*eps    ],
+                [-I*eps,   abs(eps) ]])
+
+    assert M.eigenvects() == (
+        [
+            ( 0, 1, [Matrix([[-I*eps/abs(eps)], [1]])]),
+            ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)], [1]]) ] ),
+        ])
+
+    assert M.left_eigenvects() == (
+        [
+            (0, 1, [Matrix([[I*eps/Abs(eps), 1]])]),
+            (2*Abs(eps), 1, [Matrix([[-I*eps/Abs(eps), 1]])])
+        ])
