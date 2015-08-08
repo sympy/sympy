@@ -114,6 +114,7 @@ matrix:
     - python: "pypy"
       env:
         - SPLIT="4/4"
+        - FASTCACHE="false"
   allow_failures:
     - python: 3.3 # Dummy value
       env:
@@ -123,6 +124,7 @@ matrix:
     - python: "pypy"
       env:
         - SPLIT="4/4"
+        - FASTCACHE="false"
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
