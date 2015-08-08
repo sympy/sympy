@@ -164,7 +164,7 @@ def not_empty_in(finite_set, sets, *syms):
     ==========
 
     finite_set: FiniteSet
-            The FiniteSet  not-empty
+            FiniteSet containing real-values functions
     sets: Union of Sets
             The range of the FiniteSet elements
     syms: Tuple of symbols
@@ -224,6 +224,9 @@ def not_empty_in(finite_set, sets, *syms):
             invert_set = invert_expr.args[1]
         elif isinstance(invert_expr, Complement):
             invert_set = invert_expr.args[0].args[1]
+        else:
+            raise NotImplementedError("The algorithm to find the domain for the function %s \
+                                        are not yet implemented." % (expr))
 
         for inverse_val in invert_set:
             domain = codomain(inverse_val, sets, y)
