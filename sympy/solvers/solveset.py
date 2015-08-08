@@ -919,15 +919,17 @@ def linear_eq_to_matrix(equations, *symbols):
     The Matrix form corresponds to the augmented matrix form.
     For example:
 
-    4.x + 2.y + 3.z  = 1
-    3.x +   y +   z  = -6
-    2.x + 4.y + 9.z  = 2
+    .. math:: 4x + 2y + 3z  = 1
+    .. math:: 3x +  y +  z  = -6
+    .. math:: 2x + 4y + 9z  = 2
 
-    This system would return A & b as given below:
+    This system would return `A` & `b` as given below:
 
-    [ 4  2  3 ]     [ 1 ]
-    [ 3  1  1 ]     [-6 ]
-    [ 2  4  9 ]     [ 2 ]
+    ::
+
+         [ 4  2  3 ]          [ 1 ]
+     A = [ 3  1  1 ]   b  =   [-6 ]
+         [ 2  4  9 ]          [ 2 ]
 
     Examples
     ========
@@ -935,7 +937,6 @@ def linear_eq_to_matrix(equations, *symbols):
     >>> from sympy.solvers.solveset import linear_eq_to_matrix
     >>> from sympy import symbols
     >>> x, y, z = symbols('x, y, z')
-
     >>> eqns = [x + 2*y + 3*z - 1, 3*x + y + z + 6, 2*x + 4*y + 9*z - 2]
     >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
     >>> A
@@ -948,7 +949,6 @@ def linear_eq_to_matrix(equations, *symbols):
     [ 1],
     [-6],
     [ 2]])
-
     >>> eqns = [x + z - 1, y + z, x - y]
     >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
     >>> A
@@ -1027,27 +1027,31 @@ def linsolve(system, *symbols):
     For the given set of Equations, the respective input types
     are given below:
 
-    3*x + 2*y -   z = 1
-    2*x - 2*y + 4*z = -2
-    2*x -   y + 2*z = 0
+    .. math:: 3x + 2y -   z = 1
+    .. math:: 2x - 2y + 4z = -2
+    .. math:: 2x -   y + 2z = 0
 
-    * Augmented Matrix Form
+    * Augmented Matrix Form, `system` given below:
 
-                 [3   2  -1  1]
-    system   =   [2  -2   4 -2]  (Matrix)
-                 [2  -1   2  0]
+    ::
+
+              [3   2  -1  1]
+     system = [2  -2   4 -2]
+              [2  -1   2  0]
 
     * List Of Equations Form
 
-    system  =  [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, 2*x - y + 2*z]
+    `system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]`
 
-    * Input A & b Matrix Form (from Ax = b)
+    * Input A & b Matrix Form (from Ax = b) are given as below:
 
-            [3   2  -1 ]          [  1 ]
-    A   =   [2  -2   4 ]    b  =  [ -2 ]
-            [2  -1   2 ]          [  0 ]
+    ::
 
-    system = (A, b)
+         [3   2  -1 ]         [  1 ]
+     A = [2  -2   4 ]    b =  [ -2 ]
+         [2  -1   2 ]         [  0 ]
+
+    `system = (A, b)`
 
     Symbols to solve for should be given as input in all the
     cases either in an iterable or as comma separated arguments.
@@ -1091,7 +1095,6 @@ def linsolve(system, *symbols):
     >>> from sympy import Matrix, S
     >>> from sympy import symbols
     >>> x, y, z = symbols("x, y, z")
-
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
     >>> b = Matrix([3, 6, 9])
     >>> A
@@ -1104,7 +1107,6 @@ def linsolve(system, *symbols):
     [3],
     [6],
     [9]])
-
     >>> linsolve((A, b), [x, y, z])
     {(-1, 2, 0)}
 
