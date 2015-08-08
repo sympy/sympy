@@ -106,6 +106,14 @@ matrix:
     - python: 3.4
       env:
         - TEST_ASCII="true"
+    - python: 3.3 # Dummy value
+      env:
+        - TEST_SAGE="true"
+        - FASTCACHE="false"
+      sudo: true
+    - python: "pypy"
+      env:
+        - SPLIT="4/4"
   allow_failures:
     - python: 3.3 # Dummy value
       env:
