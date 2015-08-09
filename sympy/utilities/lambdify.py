@@ -296,7 +296,22 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     """
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
-
+    invalid_str_expr = False
+    invalid_str_args = False
+    if isinstance(expr, str):
+        if not tuple(expr.replace(',','')) == tuple(expr.split(',')):
+            invalid_str_expr = True
+    if isinstance(args, str):
+        if not tuple(args.replace(',','')) == tuple(args.split(',')):
+            invalid_str_args = True
+    if invalid_str_expr == True :
+        raise ValueError("expr must be a valid sympy expression or "
+                              "a tuple/list/string of comma separated "
+                               "variables/symbols")
+    if invalid_str_args == True:
+        raise ValueError("arg must be a valid sympy expression or "
+                              "a tuple/list/string of comma separated "
+                               "variables/symbols")
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
     if modules is None:
