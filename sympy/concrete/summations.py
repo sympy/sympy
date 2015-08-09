@@ -5,7 +5,8 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.add import Add
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
@@ -233,6 +234,20 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')
+
+    def _eval_differenceDelta(self, n, step):
+        k, _, upper = self.args[-1]
+        new_upper = upper.subs(n, n + step)
+
+        if len(self.args) == 2:
+            f = self.args[0]
+        else:
+            f = self.func(*self.args[:-1])
+
+        if upper + 1 == new_upper:
+            return Sum(f, (k, upper + 1, new_upper)).doit()
+        else:
+            return Sum(f, (k, upper + 1, new_upper))
 
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import sum_simplify
