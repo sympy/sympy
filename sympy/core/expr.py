@@ -2855,9 +2855,9 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy.abc import n
         >>> (n*(n + 1)).differenceDelta(n)
-        -n*(n + 1) + (n + 1)*(n + 2)
+        2*n + 2
         >>> (n*(n + 1)).differenceDelta(n, 2)
-        -n*(n + 1) + (n + 2)*(n + 3)
+        4*n + 6
 
         References
         ==========
