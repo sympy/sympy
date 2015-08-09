@@ -2845,6 +2845,46 @@ class Expr(Basic, EvalfMixin):
         assumptions.setdefault("evaluate", True)
         return Derivative(self, *new_symbols, **assumptions)
 
+    def differenceDelta(self, n=None, step=1):
+        """Difference Operator.
+
+        Discrete analogous to differential operator.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import n
+        >>> (n*(n + 1)).differenceDelta(n)
+        -n*(n + 1) + (n + 1)*(n + 2)
+        >>> (n*(n + 1)).differenceDelta(n, 2)
+        -n*(n + 1) + (n + 2)*(n + 3)
+
+        References
+        ==========
+
+        .. [1] https://reference.wolfram.com/language/ref/DifferenceDelta.html
+        """
+        if n is None:
+            f = self.free_symbols
+            if len(f) == 1:
+                n = f.pop()
+            elif len(f) == 0:
+                return S.Zero
+            else:
+                raise ValueError("Since there is more than one variable in the"
+                                 " expression, a variable must be supplied to"
+                                 " take the difference of %s" % self)
+        step = sympify(step)
+        if step.is_number is False:
+            raise ValueError("Step should be a number.")
+        elif step in [S.Infinity, -S.Infinity]:
+            raise ValueError("Step should be bounded.")
+
+        return self._eval_differenceDelta(n, step)
+
+    def _eval_differenceDelta(self, n, step):
+        return self.subs(n, n + step) - self
+
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
