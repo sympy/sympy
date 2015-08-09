@@ -582,9 +582,10 @@ def test_puiseux2():
         y**2)*x**QQ(7,5) + (y**5/5 + 1)*x - y**3*x**QQ(3,5)/3 + y*x**QQ(1,5)
 
 def test_series_fast():
-    x, a = symbols('x, a')
+    x, a, b, c = symbols('x, a, b, c')
 
     assert (series_fast(a, a, 5)).as_expr() == a
+    assert series_fast(sin(1/a), a, 5).as_expr() == sin(1/a)
     assert (series_fast(sin(a), a, 5)).as_expr() == (sin(a).series(a, 0,
         5)).removeO()
     assert (series_fast(sin(a) + cos(a), a, 5)).as_expr() == ((sin(a) +
@@ -596,16 +597,20 @@ def test_series_fast():
     assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())
 
-    p = sin(a**2 - a + 2)**5*cos(a**3 - a)
-    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
-        10).removeO())
-
     p = sin(a**2/2 + a/3) + cos(a/5)*sin(a/2)**3
-    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
-        10).removeO())
+    assert expand(series_fast(p, a, 5).as_expr()) == expand(p.series(a, 0,
+        5).removeO())
 
     p = sin(x**2 + a)*(cos(x**3 - 1) - a - a**2)
+    assert expand(series_fast(p, a, 5).as_expr()) == expand(p.series(a, 0,
+        5).removeO())
+
+
+    p = sin(a**2 - a/3 + 2)**5*exp(a**3 - a/2)
     assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())
 
-    assert series_fast(sin(1/x), x, 5).as_expr() == sin(1/x)
+    p = sin(a + b + c)
+    assert expand(series_fast(p, a, 5).as_expr()) == expand(p.series(a, 0,
+        5).removeO())
+

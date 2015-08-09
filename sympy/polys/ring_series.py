@@ -419,8 +419,7 @@ def _get_constant_term(p, x):
     c = 0
     for expv in p:
         if monomial_min(expv, miv) == zm:
-            c = R({expv: p[expv]})
-            break
+            c += R({expv: p[expv]})
     return c
 
 def _check_series_var(p, x, name):
@@ -1064,8 +1063,11 @@ def rs_exp(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(exp(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                R = R.add_gens([exp(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(exp(c_expr))
         else:
             try:
                 const = R(exp(c))
@@ -1800,7 +1802,10 @@ def rs_min_pow(expr, rs_series, a):
     while series == 0:
         series = _series_fast(expr, rs_series, a, n)
         n *= 2
-    return min(series, key=lambda a: a[0])[0]
+    R = series.ring
+    a = R(a)
+    i = R.gens.index(a)
+    return min(series, key=lambda t: t[i])[i]
 
 def series_fast_old(expr, x, prec):
     if expr.is_Function:
@@ -1815,35 +1820,37 @@ def series_fast_old(expr, x, prec):
 
 
 def _series_fast(expr, rs_series, a, prec):
+    # XXX Use _parallel_dict_from_expr instead of sring.
+
     args = expr.args
     R = rs_series.ring
     if not any(arg.has(Function) for arg in args) and not expr.is_Function:
         if isinstance(rs_series, Expr):
-            R, series = sring(expr, domain=QQ)
+            R, series = sring(expr, domain=QQ, expand=False)
             return series
         else:
             return rs_series
-    if isinstance(expr, Expr) and expr.is_constant():
-        return sring(expr, domain=QQ)[1]
     if not expr.has(a):
         return rs_series
     elif expr.is_Function:
         arg = args[0]
         if len(args) > 1:
             raise NotImplementedError
-        R, series = sring(arg, domain=QQ)
+        R1, series = sring(arg, domain=QQ, expand=False)
         series_inner = _series_fast(arg, series, a, prec)
-        R = (R.compose(series_inner.ring)).compose(rs_series.ring)
+        R = (R.compose(R1)).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
         series = eval(_convert_func[str(expr.func)])(series_inner,
             R(a), prec)
         return series
     elif expr.is_Mul:
         n = len(args)
+
         for arg in args:    # XXX Looks redundant
-            R1, _ = sring(arg)
+            R1, _ = sring(arg, expand=False)
             R = R.compose(R1)
-        min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args], [a]*len(args)))
+        min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
+            [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
         for i in range(n):
@@ -1866,16 +1873,17 @@ def _series_fast(expr, rs_series, a, prec):
             series += _series
         return series
     elif expr.is_Pow:
-        R1, _ = sring(expr.base, domain=QQ)
+        R1, _ = sring(expr.base, domain=QQ, expand=False)
         R = R.compose(R1)
-        rs_series = rs_series.set_ring(R)
         series_inner = _series_fast(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
+    elif isinstance(expr, Expr) and expr.is_constant():
+        return sring(expr, domain=QQ, expand=False)[1]
     else:
         raise NotImplementedError
 
 def series_fast(expr, a, prec):
-    R, series = sring(expr, domain=QQ)
+    R, series = sring(expr, domain=QQ, expand=False)
     if a not in R.symbols:
         R = R.add_gens([a, ])
     series = series.set_ring(R)
