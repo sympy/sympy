@@ -1885,11 +1885,12 @@ def rs_series(expr, a, prec):
         # many additional terms are needed
         for more in range(1, 9):
             p1 = _rs_series(expr, series, a, prec=prec + more)
-            new_prec = p1.degree(gen) + 1
             gen = gen.set_ring(p1.ring)
+            new_prec = p1.degree(gen) + 1
             if new_prec != prec_got:
-                prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
-                p1 = _rs_series(expr, series, a, prec=ceiling(prec_do))
+                prec_do = ceiling(prec + (prec - prec_got)*more/(new_prec -
+                    prec_got))
+                p1 = _rs_series(expr, series, a, prec=prec_do)
                 while p1.degree(gen) + 1 < prec:
                     p1 = _rs_series(expr, series, a, prec=prec_do)
                     gen = gen.set_ring(p1.ring)

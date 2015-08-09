@@ -605,7 +605,6 @@ def test_rs_series():
     assert expand(rs_series(p, a, 5).as_expr()) == expand(p.series(a, 0,
         5).removeO())
 
-
     p = sin(a**2 - a/3 + 2)**5*exp(a**3 - a/2)
     assert expand(rs_series(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())
@@ -614,3 +613,6 @@ def test_rs_series():
     assert expand(rs_series(p, a, 5).as_expr()) == expand(p.series(a, 0,
         5).removeO())
 
+    p = tan(sin(a**2 + 4) + b + c)
+    assert expand(rs_series(p, a, 6).as_expr()) == expand(p.series(a, 0,
+        6).removeO())
