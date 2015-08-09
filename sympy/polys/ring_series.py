@@ -1796,48 +1796,33 @@ _convert_func = {
         'tan': 'rs_tan'
         }
 
-def rs_min_pow(expr, rs_series, a):
+def rs_min_pow(expr, series_rs, a):
     series = 0
     n = 2
     while series == 0:
-        series = _series_fast(expr, rs_series, a, n)
+        series = _rs_series(expr, series_rs, a, n)
         n *= 2
     R = series.ring
     a = R(a)
     i = R.gens.index(a)
     return min(series, key=lambda t: t[i])[i]
 
-def series_fast_old(expr, x, prec):
-    if expr.is_Function:
-        R, series = sring(expr.args[0], domain=QQ)
-        syms = set(R.symbols)
-        syms = syms.union(set((x,)))
-        R = R.clone(symbols=list(syms))
-        series = series.set_ring(R)
-        x = R(x)
-        return eval(_convert_func[str(expr.func)])(series,
-            x, prec)
 
-
-def _series_fast(expr, rs_series, a, prec):
+def _rs_series(expr, series_rs, a, prec):
     # XXX Use _parallel_dict_from_expr instead of sring.
 
     args = expr.args
-    R = rs_series.ring
+    R = series_rs.ring
     if not any(arg.has(Function) for arg in args) and not expr.is_Function:
-        if isinstance(rs_series, Expr):
-            R, series = sring(expr, domain=QQ, expand=False)
-            return series
-        else:
-            return rs_series
+        return series_rs
     if not expr.has(a):
-        return rs_series
+        return series_rs
     elif expr.is_Function:
         arg = args[0]
         if len(args) > 1:
             raise NotImplementedError
         R1, series = sring(arg, domain=QQ, expand=False)
-        series_inner = _series_fast(arg, series, a, prec)
+        series_inner = _rs_series(arg, series, a, prec)
         R = (R.compose(R1)).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
         series = eval(_convert_func[str(expr.func)])(series_inner,
@@ -1854,7 +1839,7 @@ def _series_fast(expr, rs_series, a, prec):
         sum_pows = sum(min_pows)
         series = R(1)
         for i in range(n):
-            _series = _series_fast(args[i], R(args[i]), a, prec - sum_pows +
+            _series = _rs_series(args[i], R(args[i]), a, prec - sum_pows +
                 min_pows[i])
             R = R.compose(_series.ring)
             _series = _series.set_ring(R)
@@ -1866,7 +1851,7 @@ def _series_fast(expr, rs_series, a, prec):
         n = len(args)
         series = R(0)
         for i in range(n):
-            _series = _series_fast(args[i], R(args[i]), a, prec)
+            _series = _rs_series(args[i], R(args[i]), a, prec)
             R = R.compose(_series.ring)
             _series = _series.set_ring(R)
             series = series.set_ring(R)
@@ -1875,19 +1860,19 @@ def _series_fast(expr, rs_series, a, prec):
     elif expr.is_Pow:
         R1, _ = sring(expr.base, domain=QQ, expand=False)
         R = R.compose(R1)
-        series_inner = _series_fast(expr.base, R(expr.base), a, prec)
+        series_inner = _rs_series(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
     elif isinstance(expr, Expr) and expr.is_constant():
         return sring(expr, domain=QQ, expand=False)[1]
     else:
         raise NotImplementedError
 
-def series_fast(expr, a, prec):
+def rs_series(expr, a, prec):
     R, series = sring(expr, domain=QQ, expand=False)
     if a not in R.symbols:
         R = R.add_gens([a, ])
     series = series.set_ring(R)
-    series = _series_fast(expr, series, a, prec)
+    series = _rs_series(expr, series, a, prec)
     R = series.ring
     gen = R(a)
     prec_got = series.degree(gen) + 1
@@ -1899,14 +1884,14 @@ def series_fast(expr, a, prec):
         # is different than the original order and then predict how
         # many additional terms are needed
         for more in range(1, 9):
-            p1 = _series_fast(expr, series, a, prec=prec + more)
+            p1 = _rs_series(expr, series, a, prec=prec + more)
             new_prec = p1.degree(gen) + 1
             gen = gen.set_ring(p1.ring)
             if new_prec != prec_got:
                 prec_do = prec + (prec - prec_got)*more/(new_prec - prec_got)
-                p1 = _series_fast(expr, series, a, prec=ceiling(prec_do))
+                p1 = _rs_series(expr, series, a, prec=ceiling(prec_do))
                 while p1.degree(gen) + 1 < prec:
-                    p1 = _series_fast(expr, series, a, prec=prec_do)
+                    p1 = _rs_series(expr, series, a, prec=prec_do)
                     gen = gen.set_ring(p1.ring)
                     prec_do *= 2
                 break

@@ -5,7 +5,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, series_fast)
+    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
@@ -581,36 +581,36 @@ def test_puiseux2():
         y)*x**QQ(11,5) + (y**9/9 + y**4)*x**QQ(9,5) - (y**7/7 +
         y**2)*x**QQ(7,5) + (y**5/5 + 1)*x - y**3*x**QQ(3,5)/3 + y*x**QQ(1,5)
 
-def test_series_fast():
+def test_rs_series():
     x, a, b, c = symbols('x, a, b, c')
 
-    assert (series_fast(a, a, 5)).as_expr() == a
-    assert series_fast(sin(1/a), a, 5).as_expr() == sin(1/a)
-    assert (series_fast(sin(a), a, 5)).as_expr() == (sin(a).series(a, 0,
+    assert (rs_series(a, a, 5)).as_expr() == a
+    assert rs_series(sin(1/a), a, 5).as_expr() == sin(1/a)
+    assert (rs_series(sin(a), a, 5)).as_expr() == (sin(a).series(a, 0,
         5)).removeO()
-    assert (series_fast(sin(a) + cos(a), a, 5)).as_expr() == ((sin(a) +
+    assert (rs_series(sin(a) + cos(a), a, 5)).as_expr() == ((sin(a) +
         cos(a)).series(a, 0, 5)).removeO()
-    assert (series_fast(sin(a)*cos(a), a, 5)).as_expr() == ((sin(a)*
+    assert (rs_series(sin(a)*cos(a), a, 5)).as_expr() == ((sin(a)*
         cos(a)).series(a, 0, 5)).removeO()
 
     p = (sin(a) - a)*(cos(a**2) + a**4/2)
-    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
+    assert expand(rs_series(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())
 
     p = sin(a**2/2 + a/3) + cos(a/5)*sin(a/2)**3
-    assert expand(series_fast(p, a, 5).as_expr()) == expand(p.series(a, 0,
+    assert expand(rs_series(p, a, 5).as_expr()) == expand(p.series(a, 0,
         5).removeO())
 
     p = sin(x**2 + a)*(cos(x**3 - 1) - a - a**2)
-    assert expand(series_fast(p, a, 5).as_expr()) == expand(p.series(a, 0,
+    assert expand(rs_series(p, a, 5).as_expr()) == expand(p.series(a, 0,
         5).removeO())
 
 
     p = sin(a**2 - a/3 + 2)**5*exp(a**3 - a/2)
-    assert expand(series_fast(p, a, 10).as_expr()) == expand(p.series(a, 0,
+    assert expand(rs_series(p, a, 10).as_expr()) == expand(p.series(a, 0,
         10).removeO())
 
     p = sin(a + b + c)
-    assert expand(series_fast(p, a, 5).as_expr()) == expand(p.series(a, 0,
+    assert expand(rs_series(p, a, 5).as_expr()) == expand(p.series(a, 0,
         5).removeO())
 
