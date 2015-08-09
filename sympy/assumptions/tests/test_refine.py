@@ -62,21 +62,26 @@ def test_exp():
 def test_Relational():
     assert not refine(x < 0, ~Q.is_true(x < 0))
     assert refine(x < 0, Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(0 > x)) == True
     assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
     assert not refine(x <= 0, ~Q.is_true(x <= 0))
     assert refine(x <= 0,  Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
     assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
     assert not refine(x > 0, ~Q.is_true(x > 0))
     assert refine(x > 0,  Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(0 < x)) == True
     assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
     assert not refine(x >= 0, ~Q.is_true(x >= 0))
     assert refine(x >= 0,  Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
     assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
     assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
     assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
     assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
     assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
     assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
     assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
     assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
 

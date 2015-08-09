@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 from sympy.core import sympify, Eq
 from sympy.core.cache import cacheit
+from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
@@ -1177,19 +1178,18 @@ class AssumptionKeys(object):
 
 Q = AssumptionKeys()
 
-
-def _extract_facts(expr, symbol, check_flipped_eq=True):
+def _extract_facts(expr, symbol, check_reversed_rel=True):
     """
     Helper for ask().
 
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
     """
-    if isinstance(symbol, Eq):
-        if check_flipped_eq:
-            flipped = _extract_facts(expr, Eq(*symbol.args[::-1]), False)
-            if flipped is not None:
-                return flipped
+    if isinstance(symbol, Relational):
+        if check_reversed_rel:
+            rev = _extract_facts(expr, symbol.reversed, False)
+            if rev is not None:
+                return rev
     if isinstance(expr, bool):
         return
     if not expr.has(symbol):
