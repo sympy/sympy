@@ -464,7 +464,7 @@ def solveset_real(f, symbol):
                 else:
                     result += solveset_real(equation, symbol)
         else:
-            result = ConditionSet(Lambda(symbol, f), S.Reals)
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -497,7 +497,7 @@ def _solve_real_trig(f, symbol):
     g, h = g.expand(), h.expand()
     g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
     if g.has(symbol) or h.has(symbol):
-        return ConditionSet(Lambda(symbol, f), S.Reals)
+        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
 
@@ -507,7 +507,7 @@ def _solve_real_trig(f, symbol):
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(Lambda(symbol,f), S.Reals)
+        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
 
 
 def _solve_as_poly(f, symbol, solveset_solver, invert_func):
@@ -529,11 +529,11 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             if poly.degree() <= len(solns):
                 result = FiniteSet(*solns)
             else:
-                result = ConditionSet(Lambda(symbol, f), S.Complexes)
+                result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
     else:
         poly = Poly(f)
         if poly is None:
-            result = ConditionSet(Lambda(symbol, f), S.Complexes)
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
         gens = [g for g in poly.gens if g.has(symbol)]
 
         if len(gens) == 1:
@@ -545,7 +545,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                                           quintics=True).keys())
 
             if len(poly_solns) < deg:
-                result = ConditionSet(Lambda(symbol, f), S.Complexes)
+                result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
             if gen != symbol:
                 y = Dummy('y')
@@ -553,9 +553,9 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 if lhs is symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
-                    result = ConditionSet(Lambda(symbol, f), S.Complexes)
+                    result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
         else:
-            result = ConditionSet(Lambda(symbol,f), S.Complexes)
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
     if result is not None:
         if isinstance(result, FiniteSet):
@@ -569,7 +569,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 result = imageset(Lambda(s, expand_complex(s)), result)
         return result
     else:
-        return ConditionSet(Lambda(symbol, f), S.Complexes)
+        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
 
 def _solve_as_poly_real(f, symbol):
@@ -668,7 +668,7 @@ def _solve_abs(f, symbol):
                                            symbol).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
-        return ConditionSet(Lambda(symbol, f), S.Complexes)
+        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
 
 def solveset_complex(f, symbol):
@@ -766,7 +766,7 @@ def solveset_complex(f, symbol):
                 else:
                     result += solveset_complex(equation, symbol)
         else:
-            result = ConditionSet(Lambda(symbol, f), S.Complexes)
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -882,7 +882,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if f.is_Relational:
         if not domain.is_subset(S.Reals):
-            return ConditionSet(Lambda(symbol, f), S.Complexes)
+            raise NotImplementedError("Inequalities in the complex domain are "
+                                      "not supported. Try the real domain by"
+                                      "setting domain=S.Reals")
         return solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
 

@@ -14,7 +14,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.sets import FiniteSet
+from sympy.sets import (FiniteSet, ConditionSet)
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -409,7 +409,8 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    raises(NotImplementedError, lambda: solveset_real(eq, q))
+    unsolved_object = ConditionSet(Lambda(q, Eq((-2*sqrt(4*q**2*(m - q)**2 + (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2)*Abs(q))/Abs(q), 0)), S.Reals)
+    assert solveset_real(eq, q) == unsolved_object
 
 
 def test_solve_polynomial_symbolic_param():
@@ -683,7 +684,9 @@ def test_solve_invalid_sol():
 
 
 def test_solve_complex_unsolvable():
-    raises(NotImplementedError, lambda: solveset_complex(cos(x) - S.Half, x))
+    unsolved_object = ConditionSet(Lambda(x, Eq(2*cos(x) - 1, 0)), S.Complexes)
+    solution = solveset_complex(cos(x) - S.Half, x)
+    assert solution == unsolved_object
 
 
 @XFAIL
@@ -820,7 +823,9 @@ def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x')
     y = exp(x+1/x**2)
-    raises(NotImplementedError, lambda: solveset(y**2+y, x, S.Reals))
+    solution = solveset(y**2+y, x, S.Reals)
+    unsolved_object = ConditionSet(Lambda(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0)), S.Reals)
+    assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
