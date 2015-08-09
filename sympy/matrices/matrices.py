@@ -1300,19 +1300,108 @@ class MatrixBase(object):
         LUsolve
         """
         combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        L = self.zeros(self.rows)
-        U = self.zeros(self.rows)
-        for i in range(self.rows):
-            for j in range(self.rows):
-                if i > j:
-                    L[i, j] = combined[i, j]
-                else:
-                    if i == j:
-                        L[i, i] = 1
-                    U[i, j] = combined[i, j]
+        L = self.zeros(self.shape[0])
+        U = self.zeros(self.shape[0], self.shape[1])
+        for i in range(self.shape[0]):
+            L[i, i] = 1
+            for j in range(i+1, self.shape[0]):
+                L[j, i] = combined[j, i]
+
+            for j in range(i, self.shape[1]):
+                U[i, j] = combined[i, j]
+
         return L, U, p
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero):
+
+        """Compute an LU decomposition of m x n matrix A, where
+        P*A = L*U
+        L is m x m lower triangular with unit diagonal
+        U is m x n upper triangular
+        P is an m x m permutation matrix
+        Returns an m x n matrix LU, and m element list perm where each element of perm is a two element list of row
+        exchange indices.
+        The factors L and U are encoded in LU.
+        The subdiagonal elements of L are stored in the subdiagonal elements of LU, that is L[i, j]
+        The diagonal of L, which is the identity matrix, is not explicitly stored.
+        U is stored in the upper triangular portion of LU.
+        perm contains the integers in range(0, m), where each integer occurs exactly once.
+
+        See Also
+        ========
+
+        LUdecomposition
+        LUdecompositionFF
+        LUsolve
+        """
+
+        if self.shape[0] == 0 or self.shape[1] == 0:
+            raise ValueError('Matrix must have at least one row and one column to apply LUdecomposition_Simple().')
+
+        pivot_row = 0
+        pivot_col = 0
+
+        LU = self.as_mutable()
+
+        row_swaps = []
+        while pivot_row < self.shape[0]-1 and pivot_col < self.shape[1]:
+
+            pivot_row_cand = pivot_row
+            is_pivot = not iszerofunc(LU[pivot_row_cand, pivot_col])
+            while pivot_col < LU.shape[1] and not is_pivot:
+                while pivot_row_cand < LU.shape[0]-1 and not is_pivot:
+
+                    pivot_row_cand += 1
+                    is_pivot = not iszerofunc(LU[pivot_row_cand, pivot_col])
+
+                # All entries below pivot candidate position are zero
+                # New candidate position is the next column to the right in the same row
+                if not is_pivot:
+                    pivot_row_cand = pivot_row
+                    pivot_col += 1
+
+            if is_pivot:
+
+                if pivot_row != pivot_row_cand:
+                    row_swaps.append([pivot_row, pivot_row_cand])
+
+                    # For each column of L computed so far, swap entries pivot_row and pivot_row_cand
+                    for col in range(0, pivot_row):
+                        # swap
+                        tmp = LU[pivot_row, col]
+                        LU[pivot_row, col] = LU[pivot_row_cand, col]
+                        LU[pivot_row_cand, col] = tmp
+
+                    # Swap candidate pivot row of U with pivot row of U, U[pivot_row, pivot_col] is nonzero
+                    LU[pivot_row, pivot_col] = LU[pivot_row_cand, pivot_col]
+                    LU[pivot_row_cand, pivot_col] = 0
+                    for col in range(pivot_col+1, LU.shape[1]):
+                        tmp = LU[pivot_row, col]
+                        LU[pivot_row, col] = LU[pivot_row_cand, col]
+                        LU[pivot_row_cand, col] = tmp
+
+                # If pivot_col > pivot_row, then subdiagonal factors of L will not be stored below the pivot,
+                # so explicitly zero out the entries below the pivot
+                if pivot_col != pivot_row:
+                    for row in range(pivot_row+1, LU.shape[0]):
+                        LU[row, pivot_col] = 0
+
+                for row in range(pivot_row+1, LU.shape[0]):
+                    # Compute subdiagonal factor of L
+                    LU[row, pivot_row] = LU[row, pivot_col]/LU[pivot_row, pivot_col]
+
+                    # Add multiple of pivot row to row below it
+                    for col in range(pivot_col+1, LU.shape[1]):
+                        LU[row, col] -= LU[row, pivot_row]*LU[pivot_row, col]
+
+                # Next candidate pivot position
+                pivot_row += 1
+                pivot_col += 1
+
+        return LU, row_swaps
+
+
+
         """Returns A comprised of L, U (L's diag entries are 1) and
         p which is the list of the row swaps (in order).
 
@@ -1323,34 +1412,36 @@ class MatrixBase(object):
         LUdecompositionFF
         LUsolve
         """
-        if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
-        n = self.rows
-        A = self.as_mutable()
-        p = []
-        # factorization
-        for j in range(n):
-            for i in range(j):
-                for k in range(i):
-                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
-            pivot = -1
-            for i in range(j, n):
-                for k in range(j):
-                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
-                # find the first non-zero pivot, includes any expression
-                if pivot == -1 and not iszerofunc(A[i, j]):
-                    pivot = i
-            if pivot < 0:
-                # this result is based on iszerofunc's analysis of the possible pivots, so even though
-                # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
-                raise ValueError("No nonzero pivot found; inversion failed.")
-            if pivot != j:  # row must be swapped
-                A.row_swap(pivot, j)
-                p.append([pivot, j])
-            scale = 1 / A[j, j]
-            for i in range(j + 1, n):
-                A[i, j] = A[i, j]*scale
-        return A, p
+
+        # import sys
+        # if not self.is_square:
+        #     raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
+        # n = self.rows
+        # A = self.as_mutable()
+        # p = []
+        # # factorization
+        # for j in range(n):
+        #     for i in range(j):
+        #         for k in range(i):
+        #             A[i, j] = A[i, j] - A[i, k]*A[k, j]
+        #     pivot = -1
+        #     for i in range(j, n):
+        #         for k in range(j):
+        #             A[i, j] = A[i, j] - A[i, k]*A[k, j]
+        #         # find the first non-zero pivot, includes any expression
+        #         if pivot == -1 and not iszerofunc(A[i, j]):
+        #             pivot = i
+        #     if pivot < 0:
+        #         # this result is based on iszerofunc's analysis of the possible pivots, so even though
+        #         # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
+        #         raise ValueError("No nonzero pivot found; inversion failed.")
+        #     if pivot != j:  # row must be swapped
+        #         A.row_swap(pivot, j)
+        #         p.append([pivot, j])
+        #     scale = 1 / A[j, j]
+        #     for i in range(j + 1, n):
+        #         A[i, j] = A[i, j]*scale
+        # return A, p
 
     def LUdecompositionFF(self):
         """Compute a fraction-free LU decomposition.
