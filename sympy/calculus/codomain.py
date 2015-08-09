@@ -46,7 +46,7 @@ def codomain(func, domain, *syms):
         raise ValueError('A Set must be given, not %s: %s' % (type(domain), domain))
 
     # TODO: handle piecewise defined functions
-    # TODO: handle functions with infinitely many solutions (eg, sin, tan)
+    # TODO: handle transcendental functions
     # TODO: handle multivariate functions
     if len(syms) == 0:
         raise ValueError("A Symbol or a tuple of symbols must be given")
@@ -156,17 +156,15 @@ def codomain(func, domain, *syms):
                             else func.subs({symbol: i}) for i in domain])
 
 
-def not_empty_in(finite_set, sets, *syms):
+def not_empty_in(finSet_intersection, *syms):
     """ Finds the domain of the functions in `finite_set` in which the
     `finite_set` is not-empty
 
     Parameters
     ==========
 
-    finite_set: FiniteSet
-            FiniteSet containing real-values functions
-    sets: Union of Sets
-            The range of the FiniteSet elements
+    finSet_intersection: The unevaluated intersection of FiniteSet containing
+                        real-valued functions with Union of Sets
     syms: Tuple of symbols
             Symbol for which domain is to be found
 
@@ -186,16 +184,19 @@ def not_empty_in(finite_set, sets, *syms):
 
     >>> from sympy import Symbol, codomain, FiniteSet, Interval, not_empty_in, sqrt, oo
     >>> x = Symbol('x')
-    >>> not_empty_in(FiniteSet(x/2), Interval(0, 1), x)
+    >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
     [0, 2]
-    >>> not_empty_in(FiniteSet(x, x**2), Interval(1, 2), x)
+    >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
     [-sqrt(2), -1] U [1, 2]
-    >>> not_empty_in(FiniteSet(x**2/(x + 2)), Interval(1, oo), x)
+    >>> not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x)
     (-2, -1] U [2, oo)
     """
 
-    # TODO: handle functions with infinitely many solutions (eg, sin, tan)
+    # TODO: handle piecewise defined functions
+    # TODO: handle transcendental functions
     # TODO: handle multivariate functions
+    finite_set = finSet_intersection.args[1]
+    sets = finSet_intersection.args[0]
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
     if len(syms) == 1:
@@ -211,12 +212,6 @@ def not_empty_in(finite_set, sets, *syms):
         as its range and with given symbol `syms`
         """
         domain_union = S.EmptySet
-
-        # for a number check whether it is contained in `sets`
-        if expr.is_Number:
-            if expr in sets:
-                return FiniteSet(expr)
-            return S.EmptySet
 
         # find the inverse of items in the finite_set
         invert_expr = solveset_real(expr - y, symbol)
