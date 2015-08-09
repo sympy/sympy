@@ -65,8 +65,7 @@ class Body(RigidBody, Particle):
     def __init__(self, name, masscenter=None, mass=None, frame=None,
                  body_inertia=None):
 
-        self.parent = None
-        self.child = None
+        self.name = name
         self.force_list = []
         self._counter = 0
 

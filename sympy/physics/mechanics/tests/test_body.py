@@ -17,9 +17,7 @@ def check_reference_frames(frame1, frame2):
 
 def test_default():
     body = Body('body')
-    assert body._name == 'body'
-    assert body.parent is None
-    assert body.child is None
+    assert body.name == 'body'
     assert body.force_list == []
     point = Point('body_masscenter')
     point.set_vel(body.frame, 0)
@@ -27,7 +25,6 @@ def test_default():
     frame = body.frame
     assert com.vel(frame) == point.vel(frame)
     assert body.mass == Symbol('body_mass')
-    # check_reference_frames(body.frame, ReferenceFrame('body_frame'))
     assert body.inertia == (inertia(body.frame, 1, 1, 1), body.masscenter)
 
 
@@ -46,7 +43,6 @@ def test_custom_rigid_body():
     assert com.pos_from(com) == rigidbody_masscenter.pos_from(com)
 
     assert rigid_body.mass == rigidbody_mass
-    # check_reference_frames(rigid_body.frame, rigidbody_frame)
     assert rigid_body.inertia == (body_inertia, rigidbody_masscenter)
 
 
@@ -64,7 +60,6 @@ def test_particle_body():
     assert com.pos_from(com) == particle_masscenter.pos_from(com)
 
     assert particle_body.mass == particle_mass
-    # check_reference_frames(particle_body.frame, particle_frame)
     assert not hasattr(particle_body, "_inertia")
 
 
