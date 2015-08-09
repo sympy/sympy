@@ -188,7 +188,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             rendered = latex_main % latex_string
-            fh.write(u(rendered.replace(r'\u', r'\\u')))
+            # escape \ before calling u():
+            fh.write(u(rendered.replace('\\', '\\\\')))
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
