@@ -430,6 +430,7 @@ class Abs(Function):
     def _eval_refine(self, val=None):
         from sympy.assumptions import Q, ask
         arg = self.args[0]
+        """
         if val is not None:
             arg = val
         if arg.is_Mul:
@@ -441,16 +442,18 @@ class Abs(Function):
                 else:
                     prod *= term
             return Abs(prod)
-        if ask(Q.zero(arg)):
+        """
+        if arg.is_zero:
             return S.Zero
-        if ask(Q.nonnegative(arg)):
+        if arg.is_nonnegative:
             return arg
-        if ask(Q.nonpositive(arg)):
+        if arg.is_nonpositive:
             return -arg
 
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
+        from sympy.assumptions import refine
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -463,7 +466,7 @@ class Abs(Function):
             known = []
             unk = []
             for t in arg.args:
-                tnew = cls(t)
+                tnew = refine(cls(t))
                 if tnew.func is cls:
                     unk.append(tnew.args[0])
                 else:
@@ -489,6 +492,13 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
+        if arg.is_number:
+            if arg.is_zero:
+                return S.Zero
+            if arg.is_nonnegative:
+                return arg
+            if arg.is_nonpositive:
+                return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:

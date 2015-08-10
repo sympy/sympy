@@ -2520,7 +2520,7 @@ def test_W12():
     p = symbols('p', real=True, positive=True)
     q = symbols('q', real=True)
     r1 = integrate(x*exp(-p*x**2 + 2*q*x), (x, -oo, oo))
-    assert r1.simplify() == sqrt(pi)*q*exp(q**2/p)/p**Rational(3, 2)
+    assert r1.simplify() == sqrt(pi)*q*exp(q**2/abs(p))/abs(p)**Rational(3, 2)
 
 
 @XFAIL

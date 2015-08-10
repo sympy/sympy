@@ -311,14 +311,14 @@ def test_Abs():
     x, y = symbols('x,y')
     assert sign(sign(x)) == sign(x)
     assert sign(x*y).func is sign
-    assert refine(Abs(0)) == 0
-    assert refine(Abs(1)) == 1
-    assert refine(Abs(-1)) == 1
-    assert refine(Abs(I)) == 1
-    assert refine(Abs(-I)) == 1
-    assert refine(Abs(nan)) == nan
-    assert refine(Abs(I*pi)) == pi
-    assert refine(Abs(-I*pi)) == pi
+    assert Abs(0) == 0
+    assert Abs(1) == 1
+    assert Abs(-1) == 1
+    assert Abs(I) == 1
+    assert Abs(-I) == 1
+    assert Abs(nan) == nan
+    assert Abs(I*pi) == pi
+    assert Abs(-I*pi) == pi
     assert Abs(I*x) == Abs(x)
     assert refine(Abs(-I*x)) == Abs(x)
     assert refine(Abs(-2*x)) == 2*Abs(x)
