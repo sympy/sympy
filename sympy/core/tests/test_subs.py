@@ -53,6 +53,7 @@ def test_powers():
     assert (x**Rational(1, 3)).subs(x, -27) == 3*(-1)**Rational(1, 3)
     assert ((-x)**Rational(1, 3)).subs(x, 27) == 3*(-1)**Rational(1, 3)
     n = Symbol('n', negative=True)
+    assert (x**n).subs(x, 0) is S.ComplexInfinity
     assert exp(-1).subs(S.Exp1, 0) is S.ComplexInfinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
     assert (2**(x + 2)).subs(2, 3) == 3**(x + 3)
