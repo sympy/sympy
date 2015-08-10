@@ -156,14 +156,14 @@ def codomain(func, domain, *syms):
                             else func.subs({symbol: i}) for i in domain])
 
 
-def not_empty_in(finSet_intersection, *syms):
+def not_empty_in(finset_intersection, *syms):
     """ Finds the domain of the functions in `finite_set` in which the
     `finite_set` is not-empty
 
     Parameters
     ==========
 
-    finSet_intersection: The unevaluated intersection of FiniteSet containing
+    finset_intersection: The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
     syms: Tuple of symbols
             Symbol for which domain is to be found
@@ -195,8 +195,8 @@ def not_empty_in(finSet_intersection, *syms):
     # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
-    finite_set = finSet_intersection.args[1]
-    sets = finSet_intersection.args[0]
+    finite_set = finset_intersection.args[1]
+    sets = finset_intersection.args[0]
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
     if len(syms) == 1:
