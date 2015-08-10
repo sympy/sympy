@@ -16,11 +16,12 @@ def refine(expr, assumptions=True):
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Q.real(x))
+        >>> from sympy import Symbol, refine, sqrt, Q
+        >>> x = Symbol('x', real=True)
+        >>> refine(sqrt(x**2))
         Abs(x)
-        >>> refine(sqrt(x**2), Q.positive(x))
+        >>> x = Symbol('x', positive=True)
+        >>> refine(sqrt(x**2))
         x
 
     """

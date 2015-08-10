@@ -1,17 +1,20 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan)
+                   atan, atan2, nan, Symbol)
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 
 
 def test_Abs():
-    assert refine(Abs(x), Q.positive(x)) == x
-    assert refine(1 + Abs(x), Q.positive(x)) == 1 + x
+    x = Symbol('x', positive=True)
+    assert refine(Abs(x)) == x
+    assert refine(1 + Abs(x)) == 1 + x
+    x = Symbol('x', negative=True)
     assert refine(Abs(x), Q.negative(x)) == -x
     assert refine(1 + Abs(x), Q.negative(x)) == 1 - x
-
+    x = Symbol('x')
     assert refine(Abs(x**2)) != x**2
+    x = Symbol('x', real=True)
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
 
@@ -24,7 +27,8 @@ def test_pow():
     assert refine(sqrt(x**2)) != Abs(x)
     assert refine(sqrt(x**2), Q.complex(x)) != Abs(x)
     assert refine(sqrt(x**2), Q.real(x)) == Abs(x)
-    assert refine(sqrt(x**2), Q.positive(x)) == x
+    p = Symbol('p', positive=True)
+    assert refine(sqrt(p**2)) == p
     assert refine((x**3)**(S(1)/3)) != x
 
     assert refine((x**3)**(S(1)/3), Q.real(x)) != x

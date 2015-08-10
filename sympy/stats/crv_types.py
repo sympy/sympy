@@ -834,7 +834,7 @@ def Exponential(name, rate):
     1/lambda
 
     >>> variance(X)
-    lambda**(-2)
+    3/(lambda*Abs(lambda)) - 2/lambda**2
 
     >>> skewness(X)
     2
@@ -1138,12 +1138,12 @@ def Gamma(name, k, theta):
     \                      0                        otherwise
 
     >>> E(X)
-    theta*gamma(k + 1)/gamma(k)
+    theta**(-k)*Abs(theta)*Abs(theta)**k*gamma(k + 1)/gamma(k)
 
     >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
-           2
-    k*theta
+           -k + 2 /           k              k          k\
+    k*theta      *\- 2*k*theta  + 2*k*|theta|  + |theta| /
 
 
     References
@@ -2433,10 +2433,10 @@ def Weibull(name, alpha, beta):
     k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda
 
     >>> simplify(E(X))
-    lambda*gamma(1 + 1/k)
+    k*lambda*gamma(1 + 1/k)/Abs(k)
 
     >>> simplify(variance(X))
-    lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))
+    lambda**2*(k*gamma(1 + 1/k)**2 + k*gamma(1 + 2/k) - 2*Abs(k)*gamma(1 + 1/k)**2)/Abs(k)
 
     References
     ==========
