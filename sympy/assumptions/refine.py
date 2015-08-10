@@ -31,7 +31,9 @@ def refine(expr, assumptions=True):
         # TODO: this will probably not work with Integral or Polynomial
         expr = expr.func(*args)
     if hasattr(expr, '_eval_refine'):
-        return expr._eval_refine()
+        ref_expr = expr._eval_refine()
+        if ref_expr is not None:
+            return ref_expr
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
     if handler is None:
