@@ -20,10 +20,10 @@ def test_exp_values():
     assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
     assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
-    assert refine(exp(pi*I/2)) == I
-    assert refine(exp(pi*I)) == -1
-    assert refine(exp(3*pi*I/2)) == -I
-    assert refine(exp(2*pi*I)) == 1
+    assert exp(pi*I/2) == I
+    assert exp(pi*I) == -1
+    assert exp(3*pi*I/2) == -I
+    assert exp(2*pi*I) == 1
 
     assert refine(exp(pi*I*2*k)) == 1
     assert refine(exp(pi*I*2*(k + Rational(1, 2)))) == -1
