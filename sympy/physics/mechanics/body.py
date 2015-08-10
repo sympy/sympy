@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols
+from sympy import Symbol
 from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
                                      inertia)
 from sympy.physics.vector import Point, Vector
@@ -20,13 +20,17 @@ class Body(RigidBody, Particle):
         Defines the name of the body. It is used as the base for defining body
         specific properties.
     masscenter : Point, optional
-        The point which represents the center of mass of the rigid body.
+        A point that represents the center of mass of the body or particle. If no
+        point is given, a point is generated.
     frame : ReferenceFrame (optional)
-        The ReferenceFrame in which the rigid body is fixed.
+        The ReferenceFrame that represents the reference frame of the body. If
+        no frame is given, a frame is generated.
     mass : Sympifyable, optional
-        The body's mass.
-    body_inertia : Dyadic (instance of inertia)
-        The body's inertia about center of mass.
+        A Sympifyable object which represents the mass of the body. if no mass
+        is passed, one is generated.
+    body_inertia : Dyadic
+        Central inertia dyadic of the body. If none is passed while creating
+        RigidBody, a default inertia is generated.
 
     Examples
     --------
@@ -47,7 +51,7 @@ class Body(RigidBody, Particle):
     >>> frame = ReferenceFrame('frame')
     >>> ixx = Symbol('ixx')
     >>> body_inertia = inertia(frame, ixx, 0, 0)
-    >>> body = Body('name_of_body', masscenter, mass, frame, body_inertia)
+    >>> body = Body('name_of_body',masscenter,mass,frame,body_inertia)
 
     3. Creating a Particle. If masscenter and mass are passed, and inertia is
      not then a Particle is created.
@@ -57,53 +61,54 @@ class Body(RigidBody, Particle):
     >>> from sympy.physics.mechanics import Body
     >>> mass = Symbol('mass')
     >>> masscenter = Point('masscenter')
-    >>> body = Body('name_of_body', masscenter, mass)
+    >>> body = Body('name_of_body',masscenter,mass)
 
     Similarly, A frame can also be passed while creating a Particle.
 
     """
     def __init__(self, name, masscenter=None, mass=None, frame=None,
-                 body_inertia=None):
+                 central_inertia=None):
 
         self.name = name
         self.loads = []
 
+        if frame is None:
+            frame = ReferenceFrame(name + '_frame')
+
         if masscenter is None:
-            _masscenter = Point(name + '_masscenter')
+            masscenter = Point(name + '_masscenter')
+
+        if central_inertia is None and mass is None:
+            ixx = Symbol(name + '_ixx')
+            iyy = Symbol(name + '_iyy')
+            izz = Symbol(name + '_izz')
+            izx = Symbol(name + '_izx')
+            ixy = Symbol(name + '_ixy')
+            iyz = Symbol(name + '_iyz')
+            _inertia = (inertia(frame, ixx, iyy, izz, ixy, iyz, izx),
+                        masscenter)
         else:
-            _masscenter = masscenter
+            _inertia = (central_inertia, masscenter)
 
         if mass is None:
             _mass = Symbol(name + '_mass')
         else:
             _mass = mass
 
-        if frame is None:
-            _frame = ReferenceFrame(name + '_frame')
-        else:
-            _frame = frame
-
-        if body_inertia is None and mass is None:
-            ixx, iyy, izz, ixz, ixy, iyz = symbols('ixx iyy izz ixz ixy iyz')
-            _inertia = (inertia(_frame, ixx, iyy, izz, ixz, ixy, iyz),
-                        _masscenter)
-        else:
-            _inertia = (body_inertia, _masscenter)
-
-        _masscenter.set_vel(_frame, 0)
+        masscenter.set_vel(frame, 0)
 
         # If user passes masscenter and mass then a particle is created
         # otherwise a rigidbody. As a result a body may or may not have inertia.
-        if body_inertia is None and mass is not None:
-            self.frame = _frame
-            self.masscenter = _masscenter
-            Particle.__init__(self, name, _masscenter, _mass)
+        if central_inertia is None and mass is not None:
+            self.frame = frame
+            self.masscenter = masscenter
+            Particle.__init__(self, name, masscenter, _mass)
         else:
-            RigidBody.__init__(self, name, _masscenter, _frame, _mass, _inertia)
+            RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
 
     def apply_force(self, vec, point=None):
         """
-        Adds the force to the point (masscenter by default) on the body.
+        Adds the force to the point (center of mass by default) on the body.
 
         Parameters
         ----------
@@ -112,12 +117,12 @@ class Body(RigidBody, Particle):
             combinations of frame.
         point: Point, optional
             Defines the point on which the force must be applied. Default is
-            Body's masscenter.
+            Body's center of mass.
 
         Example
         -------
         To apply a unit force in x direction of body's frame to body's
-        masscenter.
+        center of mass.
 
         >>> from sympy import Symbol
         >>> from sympy.physics.mechanics import Body
@@ -125,7 +130,7 @@ class Body(RigidBody, Particle):
         >>> g = Symbol('g')
         >>> body.apply_force(body.mass * g * body.frame.x)
 
-        To apply force to any other point than masscenter, pass that point
+        To apply force to any other point than center of mass, pass that point
         as well.
 
         >>> from sympy import Symbol

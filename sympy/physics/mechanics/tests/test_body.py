@@ -13,8 +13,9 @@ def test_default():
     frame = body.frame
     assert com.vel(frame) == point.vel(frame)
     assert body.mass == Symbol('body_mass')
-    ixx, iyy, izz, ixz, ixy, iyz = symbols('ixx iyy izz ixz ixy iyz')
-    assert body.inertia == (inertia(body.frame, ixx, iyy, izz, ixz, ixy, iyz),
+    ixx, iyy, izz = symbols('body_ixx body_iyy body_izz')
+    ixy, iyz, izx = symbols('body_ixy body_iyz body_izx')
+    assert body.inertia == (inertia(body.frame, ixx, iyy, izz, ixy, iyz, izx),
                             body.masscenter)
 
 
@@ -25,7 +26,7 @@ def test_custom_rigid_body():
     rigidbody_frame = ReferenceFrame('rigidbody_frame')
     body_inertia = inertia(rigidbody_frame, 1, 0, 0)
     rigid_body = Body('rigidbody_body', rigidbody_masscenter, rigidbody_mass,
-               rigidbody_frame, body_inertia)
+                      rigidbody_frame, body_inertia)
     com = rigid_body.masscenter
     frame = rigid_body.frame
     rigidbody_masscenter.set_vel(rigidbody_frame, 0)
@@ -67,7 +68,7 @@ def test_particle_body_add_force():
     particle_mass = Symbol('particle_mass')
     particle_frame = ReferenceFrame('particle_frame')
     particle_body = Body('particle_body', particle_masscenter, particle_mass,
-                  particle_frame)
+                         particle_frame)
 
     a = Symbol('a')
     force_vector = a * particle_body.frame.x
@@ -92,7 +93,7 @@ def test_body_add_force():
     rigidbody_frame = ReferenceFrame('rigidbody_frame')
     body_inertia = inertia(rigidbody_frame, 1, 0, 0)
     rigid_body = Body('rigidbody_body', rigidbody_masscenter, rigidbody_mass,
-               rigidbody_frame, body_inertia)
+                      rigidbody_frame, body_inertia)
 
     l = Symbol('l')
     Fa = Symbol('Fa')
