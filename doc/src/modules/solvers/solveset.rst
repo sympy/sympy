@@ -39,24 +39,22 @@ issues
 Why Solveset?
 -------------
 
-* `solveset` has a cleaner input and output interface: `solveset` returns a set
-  object and a set object take care of all the types of the output. For cases
-  where it doesn't "know" all the solutions a `NotImplementedError` is raised.
-  For input only takes the equation and the variables for which the equations
-  has to be solved.
+* `solveset` has a cleaner input and output interface: `solveset` returns
+  a set object and a set object takes care of all types of output. For
+  cases where it doesn't "know" all the solutions a `ConditionSet` with partial
+  solution is returned. For input it only takes the equation, the variables
+  to solve for & the optional argument `domain` in which the equations has to
+  be solved.
 
 * `solveset` can return infinitely many solutions. For example solving for
-  `sin(x) = 0` returns {2⋅n⋅π | n ∊ ℤ} ∪ {2⋅n⋅π + π | n ∊ ℤ} Whereas `solve`
-  only returns [0, π]
+  `sin(x) = 0` returns {2⋅n⋅π | n ∊ ℤ} ∪ {2⋅n⋅π + π | n ∊ ℤ}, whereas `solve`
+  only returns [0, π].
 
 * There is a clear code level and interface level separation between solvers
   for equations in complex domain and equations in real domain. For example
-  solving `exp(x) = 1` when x is complex returns the set of all solutions that
-  is {2⋅n⋅ⅈ⋅π | n ∊ ℤ} . Whereas if x is a real symbol then only {0} is
-  returned.
-
-* `solveset` returns a solution only when it can guarantee that it is returning
-  all the solutions.
+  solving `exp(x) == 1` when `x` is to be solved in complex `domain`, returns
+  the set of all solutions that is {2⋅n⋅ⅈ⋅π | n ∊ ℤ}, whereas if x is to be
+  solved in the Real `domain` then only {0} is returned.
 
 
 Why do we use Sets as an output type?
@@ -82,8 +80,8 @@ Another advantage of using objects closer to mathematical entities is that the
 user won't have to "learn" our representation and she can have her expectations
 transferred from her mathematical experience.
 
-For multivariate case we are representing solutions as a set of points in a n
-dimensional space and a point is represented by a FiniteSet of ordered tuple.
+For multivariate case we are representing solutions as a set of points in a
+n-dimensional space and a point is represented by a FiniteSet of ordered tuple.
 Please Note that, the General FiniteSet is unordered, but a FiniteSet with
 a tuple as it's first argument is ordered. For example:
 
@@ -95,7 +93,7 @@ Why not use Dictionary as Output?
 
   Dictionary are easy to deal with programatically but mathematically they are not
   very precise and use of them can quickly lead to inconsistency and a lot of
-  confusion. For example addition of two solutions is a fairly valid operations
+  confusion. For example addition of two solutions is a fairly valid operation
   but dictionaries by themselves have no add operation. Since we are representing
   solutions as dictionary we can define a custom add operation where value of x
   variable is added with value of other x variable and value of y variable
