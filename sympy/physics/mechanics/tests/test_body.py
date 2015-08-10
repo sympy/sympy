@@ -1,31 +1,21 @@
-from sympy import Symbol
+from sympy import Symbol, symbols
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
-
-
-# To test if two frames were created the same way.
-def check_reference_frames(frame1, frame2):
-    assert frame1.name == frame2.name
-    assert frame1.str_vecs == frame2.str_vecs
-    assert frame1.indices == frame2.indices
-    assert frame1.varlist == frame2.varlist
-    assert frame1._dlist == frame2._dlist
-    assert frame1._ang_vel_dict == frame2._ang_vel_dict
-    assert frame1._ang_acc_dict == frame2._ang_acc_dict
-    assert frame1._dcm_dict == frame2._dcm_dict
 
 
 def test_default():
     body = Body('body')
     assert body.name == 'body'
-    assert body.force_list == []
+    assert body.loads == []
     point = Point('body_masscenter')
     point.set_vel(body.frame, 0)
     com = body.masscenter
     frame = body.frame
     assert com.vel(frame) == point.vel(frame)
     assert body.mass == Symbol('body_mass')
-    assert body.inertia == (inertia(body.frame, 1, 1, 1), body.masscenter)
+    ixx, iyy, izz, ixz, ixy, iyz = symbols('ixx iyy izz ixz ixy iyz')
+    assert body.inertia == (inertia(body.frame, ixx, iyy, izz, ixz, ixy, iyz),
+                            body.masscenter)
 
 
 def test_custom_rigid_body():
@@ -45,6 +35,11 @@ def test_custom_rigid_body():
     assert rigid_body.mass == rigidbody_mass
     assert rigid_body.inertia == (body_inertia, rigidbody_masscenter)
 
+    assert hasattr(rigid_body, 'masscenter')
+    assert hasattr(rigid_body, 'mass')
+    assert hasattr(rigid_body, 'frame')
+    assert hasattr(rigid_body, 'inertia')
+
 
 def test_particle_body():
     #  Body with Particle
@@ -52,7 +47,7 @@ def test_particle_body():
     particle_mass = Symbol('particle_mass')
     particle_frame = ReferenceFrame('particle_frame')
     particle_body = Body('particle_body', particle_masscenter, particle_mass,
-                  particle_frame)
+                         particle_frame)
     com = particle_body.masscenter
     frame = particle_body.frame
     particle_masscenter.set_vel(particle_frame, 0)
@@ -61,6 +56,9 @@ def test_particle_body():
 
     assert particle_body.mass == particle_mass
     assert not hasattr(particle_body, "_inertia")
+    assert hasattr(particle_body, 'frame')
+    assert hasattr(particle_body, 'masscenter')
+    assert hasattr(particle_body, 'mass')
 
 
 def test_particle_body_add_force():
@@ -72,19 +70,19 @@ def test_particle_body_add_force():
                   particle_frame)
 
     a = Symbol('a')
-    particle_body.add_force((a, 0, 0), particle_body.masscenter)
-    assert len(particle_body.force_list) == 1
+    force_vector = a * particle_body.frame.x
+    particle_body.apply_force(force_vector, particle_body.masscenter)
+    assert len(particle_body.loads) == 1
     point = particle_body.masscenter.locatenew(
         particle_body._name + '_point0', 0)
     point.set_vel(particle_body.frame, 0)
-    force_vector = a * particle_body.frame.x
-    force_point = particle_body.force_list[0][0]
+    force_point = particle_body.loads[0][0]
 
     frame = particle_body.frame
     assert force_point.vel(frame) == point.vel(frame)
     assert force_point.pos_from(force_point) == point.pos_from(force_point)
 
-    assert particle_body.force_list[0][1] == force_vector
+    assert particle_body.loads[0][1] == force_vector
 
 
 def test_body_add_force():
@@ -102,12 +100,20 @@ def test_body_add_force():
         'rigidbody_body_point0',
         l * rigid_body.frame.x)
     point.set_vel(rigid_body.frame, 0)
-    rigid_body.add_force((0, 0, Fa), point)
-    assert len(rigid_body.force_list) == 1
     force_vector = Fa * rigid_body.frame.z
-    force_point = rigid_body.force_list[0][0]
+    rigid_body.apply_force(force_vector, point)
+    assert len(rigid_body.loads) == 1
+    force_point = rigid_body.loads[0][0]
     frame = rigid_body.frame
     assert force_point.vel(frame) == point.vel(frame)
     assert force_point.pos_from(force_point) == point.pos_from(force_point)
+    assert rigid_body.loads[0][1] == force_vector
 
-    assert rigid_body.force_list[0][1] == force_vector
+
+def test_body_add_torque():
+    body = Body('body')
+    torque_vector = body.frame.x
+    body.apply_torque(torque_vector)
+
+    assert len(body.loads) == 1
+    assert body.loads[0] == (body.frame, torque_vector)
