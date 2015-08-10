@@ -273,6 +273,30 @@ What will you do with the old solve?
    for `solveset`.
 
 
+How are symbolic parameters handled in solveset?
+------------------------------------------------
+
+ Solveset is in it's initial phase of development as of now, so the
+ symbolic parameters aren't handled well for all the cases, but some
+ work has been done in this regard to depict our ideology towards
+ symbolic parameters. As an instance the solving of `|x| = n` for `x`
+ where `n` is a symbolic parameter.
+
+ Solveset returns the value of `x` considering the domain of the symbolic
+ parameter `n` as well, i.e. :
+
+ `Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})`.
+
+ It simply means `n` is the solution only when it belongs to the Interval
+ [0, oo) and `-n` is the solution only when `n` belongs to the Interval
+ (-oo, 0].
+
+ There are various other cases as well which needs to be addressed, like
+ say, solving of `2**x + (a - 2)` for `x` where `a` is a symbolic parameter.
+ As of now, It returns the solution as an intersection with S.Reals, which
+ is trivial, as it doesn't reveals the domain of `a`, in the solution.
+
+
 References
 ----------
 
@@ -280,6 +304,7 @@ References
  * https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
  * https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
  * https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
+ * http://iamit.in/blog/
 
 
 Solveset Module Reference
