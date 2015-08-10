@@ -193,7 +193,7 @@ def simpleDE(f, x, g, order=4):
 
     Yields a tuple of (DE, order).
     """
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     a = symbols('a:%d' % (order))
 
@@ -211,10 +211,10 @@ def simpleDE(f, x, g, order=4):
         terms = eq.as_ordered_terms()
         ind = rational_independent(terms, x)
         if found or len(ind) == k:
-            sol = solve(ind, a, dict=True)
+            sol = dict(zip(a, (i for s in linsolve(ind, a[:k]) for i in s)))
             if sol:
                 found = True
-                DE = DE.subs(sol[0])
+                DE = DE.subs(sol)
             DE = DE.as_numer_denom()[0]
             DE = DE.factor().as_coeff_mul(Derivative)[1][0]
             yield DE.collect(Derivative(g(x))), k
@@ -581,7 +581,7 @@ def _solve_simple(f, x, DE, g, k):
 
 def _transform_explike_DE(DE, g, x, order, syms):
     """Converts DE with free parameters into DE with constant coefficients."""
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     eq = []
     highest_coeff = DE.coeff(Derivative(g(x), x, order))
@@ -589,19 +589,27 @@ def _transform_explike_DE(DE, g, x, order, syms):
         coeff = DE.coeff(Derivative(g(x), x, i))
         coeff = (coeff / highest_coeff).expand().collect(x)
         for t in Add.make_args(coeff):
-            if t.has(x):
-                eq.append(t)
-    sol = solve(eq, syms, dict=True)
-    if sol:
-        DE = DE.subs(sol[0])
-        DE = DE.factor().as_coeff_mul(Derivative)[1][0]
-        DE = DE.collect(Derivative(g(x)))
+            eq.append(t)
+    temp = []
+    for e in eq:
+        if e.has(x):
+            break
+        elif e.has(Symbol):
+            temp.append(e)
+    else:
+        eq = temp
+    if eq:
+        sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
+        if sol:
+            DE = DE.subs(sol)
+            DE = DE.factor().as_coeff_mul(Derivative)[1][0]
+            DE = DE.collect(Derivative(g(x)))
     return DE
 
 
 def _transform_DE_RE(DE, g, k, order, syms):
     """Converts DE with free parameters into RE of hypergeometric type."""
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     RE = hyper_re(DE, g, k)
 
@@ -609,10 +617,10 @@ def _transform_DE_RE(DE, g, k, order, syms):
     for i in range(1, order):
         coeff = RE.coeff(g(k + i))
         eq.append(coeff)
-    sol = solve(eq, syms, dict=True)
+    sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
     if sol:
         m = Wild('m')
-        RE = RE.subs(sol[0])
+        RE = RE.subs(sol)
         RE = RE.factor().as_numer_denom()[0].collect(g(k + m))
         RE = RE.as_coeff_mul(g)[1][0]
         for i in range(order):  # smallest order should be g(k)
