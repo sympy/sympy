@@ -227,6 +227,7 @@ class exp(ExpBase):
 
     @classmethod
     def eval(cls, arg):
+        from sympy.assumptions import ask, Q
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -241,6 +242,19 @@ class exp(ExpBase):
         elif arg.func is log:
             return arg.args[0]
         elif arg.is_Mul:
+            if arg.is_number:
+                coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+                if coeff:
+                    if ask(Q.integer(2*coeff)):
+                        if ask(Q.even(coeff)):
+                            return S.One
+                        elif ask(Q.odd(coeff)):
+                            return S.NegativeOne
+                        elif ask(Q.even(coeff + S.Half)):
+                            return -S.ImaginaryUnit
+                        elif ask(Q.odd(coeff + S.Half)):
+                            return S.ImaginaryUnit
+
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
 
