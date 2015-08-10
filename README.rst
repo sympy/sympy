@@ -1,6 +1,18 @@
 SymPy
 =====
 
+|pypi version| |pypi download| |Build status| |Gitter Badge|
+
+.. |pypi version| image:: https://img.shields.io/pypi/v/sympy.png
+   :target: https://pypi.python.org/pypi/sympy
+.. |pypi download| image:: https://img.shields.io/pypi/dm/sympy.png
+   :target: https://pypi.python.org/pypi/sympy
+.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/sympy/sympy
+   :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.png?branch=master
+    :target: http://travis-ci.org/sympy/sympy
+
 A Python library for symbolic mathematics.
 
 http://sympy.org/
@@ -20,21 +32,9 @@ https://groups.google.com/forum/?fromgroups#!forum/sympy.
 We have community chat at `Gitter <https://gitter.im/sympy/sympy>`_. Feel free
 to ask us anything there. We have a very welcoming and helpful community.
 
-|Gitter Badge|
-
-.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Join the chat at https://gitter.im/sympy/sympy
-   :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
 
 Download
 --------
-
-.. image:: https://pypip.in/v/sympy/badge.png
-    :target: https://pypi.python.org/pypi/sympy
-
-.. image:: https://pypip.in/d/sympy/badge.png
-    :target: https://pypi.python.org/pypi/sympy
 
 Get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
@@ -115,10 +115,7 @@ in the current directory.
 
 For more fine-grained running of tests or doctest, use ``bin/test`` or
 respectively ``bin/doctest``. The master branch is automatically tested by
-Travis CI, the results can be seen here:
-
-.. image:: https://secure.travis-ci.org/sympy/sympy.png?branch=master
-    :target: http://travis-ci.org/sympy/sympy
+Travis CI.
 
 To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 

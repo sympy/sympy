@@ -2814,6 +2814,28 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a summation. """
         return S.Zero, self
 
+    def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,
+            full=False):
+        """
+        Compute formal power power series of self.
+
+        See the docstring of the :func:`fps` function in sympy.series.formal for
+        more information.
+        """
+        from sympy.series.formal import fps
+
+        return fps(self, x, x0, dir, hyper, order, rational, full)
+
+    def fourier_series(self, limits=None):
+        """Compute fourier sine/cosine series of self.
+
+        See the docstring of the :func:`fourier_series` in sympy.series.fourier
+        for more information.
+        """
+        from sympy.series.fourier import fourier_series
+
+        return fourier_series(self, limits)
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
