@@ -430,19 +430,6 @@ class Abs(Function):
     def _eval_refine(self, val=None):
         from sympy.assumptions import Q, ask
         arg = self.args[0]
-        """
-        if val is not None:
-            arg = val
-        if arg.is_Mul:
-            prod = 1
-            for term in arg.args:
-                ref_term = self._eval_refine(val=term)
-                if ref_term is not None:
-                    prod *= ref_term
-                else:
-                    prod *= term
-            return Abs(prod)
-        """
         if arg.is_zero:
             return S.Zero
         if arg.is_nonnegative:
