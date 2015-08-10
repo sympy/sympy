@@ -739,6 +739,10 @@ def test_Infinity_inequations():
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
+    assert (-oo < -Float('inf')) ==  False
+    assert (oo > Float('inf')) == False
+    assert -oo >= -Float('inf')
+    assert oo <= Float('inf')
 
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)

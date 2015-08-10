@@ -166,6 +166,10 @@ def test_fps():
             break
         assert s[i] == t
 
+    f = sin(x).fps(x)
+    assert isinstance(f, FormalPowerSeries)
+    assert f.truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
     raises(NotImplementedError, lambda: fps(y*x))
     raises(ValueError, lambda: fps(x, dir=0))
 
