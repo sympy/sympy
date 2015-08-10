@@ -51,49 +51,51 @@ class RigidBody(object):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_masscenter(masscenter)
-        self.set_mass(mass)
-        self.set_frame(frame)
-        self.set_inertia(inertia)
-        self._pe = sympify(0)
+        self.masscenter = masscenter
+        self.mass = mass
+        self.frame = frame
+        self.inertia = inertia
+        self.potential_energy = 0
 
     def __str__(self):
         return self._name
 
     __repr__ = __str__
 
-    def get_frame(self):
+    @property
+    def frame(self):
         return self._frame
 
-    def set_frame(self, F):
+    @frame.setter
+    def frame(self, F):
         if not isinstance(F, ReferenceFrame):
             raise TypeError("RigdBody frame must be a ReferenceFrame object.")
         self._frame = F
 
-    frame = property(get_frame, set_frame)
-
-    def get_masscenter(self):
+    @property
+    def masscenter(self):
         return self._masscenter
 
-    def set_masscenter(self, p):
+    @masscenter.setter
+    def masscenter(self, p):
         if not isinstance(p, Point):
             raise TypeError("RigidBody center of mass must be a Point object.")
         self._masscenter = p
 
-    masscenter = property(get_masscenter, set_masscenter)
-
-    def get_mass(self):
+    @property
+    def mass(self):
         return self._mass
 
-    def set_mass(self, m):
+    @mass.setter
+    def mass(self, m):
         self._mass = sympify(m)
 
-    mass = property(get_mass, set_mass)
-
-    def get_inertia(self):
+    @property
+    def inertia(self):
         return (self._inertia, self._inertia_point)
 
-    def set_inertia(self, I):
+    @inertia.setter
+    def inertia(self, I):
         if not isinstance(I[0], Dyadic):
             raise TypeError("RigidBody inertia must be a Dyadic object.")
         if not isinstance(I[1], Point):
@@ -108,8 +110,6 @@ class RigidBody(object):
                                        self.masscenter.pos_from(I[1]),
                                        self.frame)
         self._central_inertia = I[0] - I_Ss_O
-
-    inertia = property(get_inertia, set_inertia)
 
     @property
     def central_inertia(self):
@@ -244,7 +244,31 @@ class RigidBody(object):
 
         return rotational_KE + translational_KE
 
-    def set_potential_energy(self, scalar):
+    @property
+    def potential_energy(self):
+        """The potential energy of the RigidBody.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+        >>> from sympy import symbols
+        >>> M, g, h = symbols('M g h')
+        >>> b = ReferenceFrame('b')
+        >>> P = Point('P')
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.potential_energy = M * g * h
+        >>> B.potential_energy
+        M*g*h
+
+        """
+
+        return self._pe
+
+    @potential_energy.setter
+    def potential_energy(self, scalar):
         """Used to set the potential energy of this RigidBody.
 
         Parameters
@@ -265,31 +289,8 @@ class RigidBody(object):
         >>> I = outer (b.x, b.x)
         >>> Inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.set_potential_energy(M * g * h)
+        >>> B.potential_energy = M * g * h
 
         """
 
         self._pe = sympify(scalar)
-
-    @property
-    def potential_energy(self):
-        """The potential energy of the RigidBody.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
-        >>> from sympy import symbols
-        >>> M, g, h = symbols('M g h')
-        >>> b = ReferenceFrame('b')
-        >>> P = Point('P')
-        >>> I = outer (b.x, b.x)
-        >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.set_potential_energy(M * g * h)
-        >>> B.potential_energy
-        M*g*h
-
-        """
-
-        return self._pe

@@ -322,8 +322,8 @@ def potential_energy(*body):
     >>> a = ReferenceFrame('a')
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, M, (I, Ac))
-    >>> Pa.set_potential_energy(m * g * h)
-    >>> A.set_potential_energy(M * g * h)
+    >>> Pa.potential_energy = m * g * h
+    >>> A.potential_energy = M * g * h
     >>> potential_energy(Pa, A)
     M*g*h + g*h*m
 
@@ -380,8 +380,8 @@ def Lagrangian(frame, *body):
     >>> a.set_ang_vel(N, 10 * N.z)
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, 20, (I, Ac))
-    >>> Pa.set_potential_energy(m * g * h)
-    >>> A.set_potential_energy(M * g * h)
+    >>> Pa.potential_energy = m * g * h
+    >>> A.potential_energy = M * g * h
     >>> Lagrangian(N, Pa, A)
     -M*g*h - g*h*m + 350
 
