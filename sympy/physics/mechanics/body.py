@@ -162,7 +162,7 @@ class Body(RigidBody, Particle):
         Parameters
         ----------
         vec: Vector
-            Defines the force vector. Can be any vector w.r.t any frame or
+        Defines the torque vector. Can be any vector w.r.t any frame or
             combinations of frame.
         """
         if not isinstance(vec, Vector):
