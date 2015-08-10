@@ -869,3 +869,10 @@ def test_issue_9536():
     from sympy.functions.elementary.exponential import log
     a = Symbol('a', real=True)
     assert FiniteSet(log(a)).intersect(S.Reals) == Intersection(S.Reals, FiniteSet(log(a)))
+
+
+def test_issue_FiniteInterUnion():
+    from sympy import symbols
+    m, n = symbols('m n')
+    assert Intersection(S.Reals, Interval(0, oo), FiniteSet(m), FiniteSet(m, n)) == \
+        Intersection(Interval(0, oo), FiniteSet(m), FiniteSet(n))
