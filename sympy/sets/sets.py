@@ -987,10 +987,9 @@ class Interval(Set, EvalfMixin):
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
         from sympy.solvers.solveset import solveset
-        from sympy.core.function import diff
+        from sympy.core.function import diff, Lambda
         from sympy.series import limit
         from sympy.calculus.singularities import singularities
-        # TODO: handle piecewise defined functions
         # TODO: handle functions with infinitely many solutions (eg, sin, tan)
         # TODO: handle multivariate functions
 
@@ -998,6 +997,28 @@ class Interval(Set, EvalfMixin):
         if len(expr.free_symbols) > 1 or len(f.variables) != 1:
             return
         var = f.variables[0]
+
+        if expr.is_Piecewise:
+            result = S.EmptySet
+            domain_set = self
+            for (p_expr, p_cond) in expr.args:
+                if p_cond is S.true:
+                    intrvl = domain_set
+                else:
+                    intrvl = p_cond.as_set()
+                    intrvl = Intersection(domain_set, intrvl)
+
+                if p_expr.is_Number:
+                    image = FiniteSet(p_expr)
+                else:
+                    image = imageset(Lambda(var, p_expr), intrvl)
+                result = Union(result, image)
+
+                # remove the part which has been `imaged`
+                domain_set = Complement(domain_set, intrvl)
+                if domain_set.is_EmptySet:
+                    break
+            return result
 
         if not self.start.is_comparable or not self.end.is_comparable:
             return
