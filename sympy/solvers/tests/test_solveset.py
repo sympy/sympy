@@ -8,6 +8,7 @@ from sympy import (
     oo)
 
 from sympy.core.function import nfloat
+from sympy.core.relational import Unequality as Ne
 from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -931,3 +932,15 @@ def test_issue_9557():
 
     assert solveset(x**2 + a, x, S.Reals) == Intersection(S.Reals,
         FiniteSet(-sqrt(-a), sqrt(-a)))
+
+
+def test_issue_9778():
+    assert solveset(x**3 + 1, x, S.Reals) == FiniteSet(-1)
+    assert solveset(x**(S(3)/5) + 1, x, S.Reals) == S.EmptySet
+    assert solveset(x**3 + y, x, S.Reals) == Intersection(Interval(-oo, oo), \
+        FiniteSet((-y)**(S(1)/3)*Piecewise((1, Ne(-im(y), 0)), ((-1)**(S(2)/3), -y < 0), (1, True))))
+
+
+@XFAIL
+def test_issue_failing_pow():
+    assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
