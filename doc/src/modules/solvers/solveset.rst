@@ -60,6 +60,8 @@ Why Solveset?
 Why do we use Sets as an output type?
 -------------------------------------
 
+.. First give an overview of the Sets module of SymPy
+
 The main reason for using sets as output to solvers is that it can consistently
 represent many types of solutions. For single variable case it can represent:
 
@@ -106,8 +108,15 @@ Why not use Dictionary as Output?
   other by solving `y = 2`.
 
 
+
+
 What is this domain argument about?
 -----------------------------------
+
+.. You first need to explain the input API, maybe you should restructure the
+.. question so that it expects us to answer this question.
+
+.. Also explain "why" we added the domain argument
 
  Solveset is designed to be independent of the assumptions on the
  variable being solved for and instead, uses the `domain` argument to
@@ -127,6 +136,8 @@ What is this domain argument about?
 What are the general methods employed by solveset to solve an equation?
 -----------------------------------------------------------------------
 
+.. Remember to change this part when the new solver is implemented.
+
  Solveset uses various methods to solve an equation, here is a brief overview
  of the methodology:
 
@@ -137,6 +148,7 @@ What are the general methods employed by solveset to solve an equation?
    domain is real, then `solve\_univariate\_inequality` and solutions are
    returned. Solving for complex inequalities are not supported yet.
 
+
  * Based on the `domain`, the equation is dispatched to one of the two
    functions `solveset\_real` or `solveset\_complex`, which solves the
    given equation in complex and real domain respectively.
@@ -144,11 +156,13 @@ What are the general methods employed by solveset to solve an equation?
  * If the given function (equation) is a product of two or more functions,
    like say `f = g*h`, then the solution to the given equation is the Union
    of the solution of the equations `g = 0` and `h = 0`, if and only if both
-   g and h are finite for a finite input. So, the solution is build up
+   `g` and `h` are finite for a finite input. So, the solution is build up
    recursively.
 
  * The function class is now checked if it's Trigonometric or Hyperbolic, then
    the function `\_solve\_real\_trig` is called.
+.. Tell what does "solve_real_trig" do, we don't expect the reader of this doc
+.. to open up the code and see what it does.
 
  * The function is now checked if there is any instance of Piecewise
    expression, if it is, then it's converted to explict expression and
@@ -160,6 +174,8 @@ What are the general methods employed by solveset to solve an equation?
  * After the invert, the equations are checked for radical or Abs (Modulus),
    then the methods `\_solve\_radical` and `\_solve\_abs` respectively are
    used.
+.. Same here tell how does _solve_radical and _solve_abs work just don't give
+.. the names
 
  * If none of the above method is successful, then method of polynomial is
    used as follows:
@@ -176,9 +192,16 @@ What are the general methods employed by solveset to solve an equation?
  * The Final solution set obtained is taken intersection with the input
    domain, and the resultant solution is returned.
 
+.. It is not necessary that you give all the steps involved you just need to
+.. give a general overview
+
 
 How do we manipulate and return an infinite solution?
 -----------------------------------------------------
+.. solution -> solutions probably
+
+.. You should explain  ImageSet, Intergers and other set classes in the set
+.. question above
 
  * In Real Domain, we use our `ImageSet` class in the sets module to
    return infinite solutions. `ImageSet` is an Image of a set under
@@ -234,6 +257,9 @@ How does solveset ensures that it is not returning any wrong solution?
 
  Though, there still a lot of work needs to be done in this regard.
 
+.. Also mention the search based solver we are trying to implement
+.. and the step by step solutions.
+
 
 How do we deal with cases where only some of the solutions are known?
 ---------------------------------------------------------------------
@@ -256,12 +282,16 @@ How do we deal with cases where only some of the solutions are known?
 
  `FiniteSet(-2, 2) U ConditionSet(Lambda(x, Eq(sin(x) + x, 0)), S.Reals)`
 
+.. Should we use the mathematical symbols here?
+
 
 What will you do with the old solve?
 ------------------------------------
 
- The `solve` would possibly be deprecated in future versions & we encourage
+ The (current) `solve` would possibly be deprecated in future versions & we encourage
  our users to use `solveset`. We may proceeds as follows:
+
+.. solveset will be renamed as solve
 
  * Replace all internal instances of solve by solveset by next release.
  * Raise a deprecation warning with solve calls possibly from next to
@@ -294,6 +324,8 @@ How are symbolic parameters handled in solveset?
  say, solving of `2**x + (a - 2)` for `x` where `a` is a symbolic parameter.
  As of now, It returns the solution as an intersection with `mathbb{R}`, which
  is trivial, as it doesn't reveals the domain of `a`, in the solution.
+
+.. Also mention the no_empty_in PR by gxyd
 
 
 References
