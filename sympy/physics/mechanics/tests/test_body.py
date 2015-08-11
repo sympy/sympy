@@ -1,7 +1,7 @@
 from sympy import Symbol, symbols
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
-
+from sympy.utilities.pytest import raises
 
 def test_default():
     body = Body('body')
@@ -102,6 +102,7 @@ def test_body_add_force():
         l * rigid_body.frame.x)
     point.set_vel(rigid_body.frame, 0)
     force_vector = Fa * rigid_body.frame.z
+    # apply_force with point
     rigid_body.apply_force(force_vector, point)
     assert len(rigid_body.loads) == 1
     force_point = rigid_body.loads[0][0]
@@ -109,7 +110,13 @@ def test_body_add_force():
     assert force_point.vel(frame) == point.vel(frame)
     assert force_point.pos_from(force_point) == point.pos_from(force_point)
     assert rigid_body.loads[0][1] == force_vector
-
+    # apply_force without point
+    rigid_body.apply_force(force_vector)
+    assert len(rigid_body.loads) == 2
+    assert rigid_body.loads[1][1] == force_vector
+    # passing something else than point
+    raises(TypeError, lambda: rigid_body.apply_force(force_vector,  0))
+    raises(TypeError, lambda: rigid_body.apply_force(0))
 
 def test_body_add_torque():
     body = Body('body')
@@ -118,3 +125,4 @@ def test_body_add_torque():
 
     assert len(body.loads) == 1
     assert body.loads[0] == (body.frame, torque_vector)
+    raises(TypeError, lambda: body.apply_torque(0))
