@@ -182,7 +182,8 @@ def not_empty_in(finset_intersection, *syms):
     Examples
     ========
 
-    >>> from sympy import Symbol, codomain, FiniteSet, Interval, not_empty_in, sqrt, oo
+    >>> from sympy import Symbol, codomain, FiniteSet, Interval, sqrt, oo
+    >>> from sympy.calculus.codomain import not_empty_in
     >>> x = Symbol('x')
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
     [0, 2]
