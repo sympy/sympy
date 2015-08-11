@@ -23,6 +23,10 @@ from . import functions
 from .functions import *
 __all__.extend(functions.__all__)
 
+from . import joint
+from .joint import *
+__all__.extend(joint.__all__)
+
 from . import particle
 from .particle import *
 __all__.extend(particle.__all__)
