@@ -64,9 +64,11 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet(x**2 + x, x).intersect(Interval(2, 4)), x) == \
         Union(Interval(-sqrt(17)/2 - S(1)/2, -2), Interval(1, -S(1)/2 + sqrt(17)/2), Interval(2, 4))
     assert not_empty_in(FiniteSet(x/(x - 1)).intersect(S.Reals), x) == Complement(S.Reals, FiniteSet(1))
+    assert not_empty_in(FiniteSet((x**2 - 3*x + 2)/(x - 1)).intersect(S.Reals), x) == \
+        Complement(S.Reals, FiniteSet(3))
 
 
 @XFAIL
 def test_failing_not_empty_in():
-    assert not_empty_in(FiniteSet(x/(x**2 - 1)), S.Reals, x) == \
+    assert not_empty_in(FiniteSet(x/(x**2 - 1)).intersect(S.Reals), x) == \
         Complement(S.Reals, FiniteSet(-1, 1))

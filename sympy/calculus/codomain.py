@@ -1,7 +1,7 @@
 from sympy import S, sympify, diff, limit, oo, Dummy, I
 from sympy.calculus.singularities import singularities
 from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
-from sympy.solvers.solveset import solveset_real
+from sympy.solvers.solveset import solveset
 
 
 def codomain(func, domain, *syms):
@@ -77,7 +77,7 @@ def codomain(func, domain, *syms):
         return Intersection(FiniteSet(*singul), set_im)
 
     # all the singularities of the function
-    sing = solveset_real(func.as_numer_denom()[1], symbol)
+    sing = solveset(func.as_numer_denom()[1], symbol, domain=S.Reals)
     sing_in_domain = closure_handle(domain, sing)
     domain = Complement(domain, sing_in_domain)
 
@@ -88,7 +88,7 @@ def codomain(func, domain, *syms):
         symb = sym[0]
         df1 = diff(f, symb)
         df2 = diff(df1, symb)
-        der_zero = solveset_real(df1, symb)
+        der_zero = solveset(df1, symb, domain=S.Reals)
         der_zero_in_dom = closure_handle(set_val, der_zero)
 
         local_maxima = set()
@@ -101,7 +101,7 @@ def codomain(func, domain, *syms):
         elif start_val is S.NegativeInfinity or end_val is S.NegativeInfinity:
             local_minima = set([(-oo, True)])
 
-        if start_val.has(I) or end_val.has(I):
+        if (not start_val.is_real) or (not end_val.is_real):
             raise ValueError('Function does not contain all points of %s '
                             'as its domain' % (domain))
 
@@ -206,26 +206,33 @@ def not_empty_in(finset_intersection, *syms):
 
     y = Dummy('y')
 
-    def elm_domain(expr, *sym):
+    def elm_domain(expr, codomain_expr, *sym):
         """
-        finds the domain of a single element of `finite_set` with `sets`
-        as its range and with given symbol `syms`
+        finds the domain of a single element of `finite_set` with `codomain_expr`
+        as its codomain and with given symbols `syms`
         """
         domain_union = S.EmptySet
 
         # find the inverse of items in the finite_set
-        invert_expr = solveset_real(expr - y, symbol)
+        invert_expr = solveset(expr - y, symbol, domain=S.Reals)
+
         if isinstance(invert_expr, Intersection):
             invert_set = invert_expr.args[1]
         elif isinstance(invert_expr, Complement):
-            invert_set = invert_expr.args[0].args[1]
+            # remove the elements which are not in `domain` of `syms`
+            exclude_sing = invert_expr.args[1]
+            codomain_expr = Complement(codomain_expr, exclude_sing)
+            if isinstance(invert_expr.args[0], Intersection):
+                invert_set = invert_expr.args[0].args[1]
         else:
             raise NotImplementedError("The algorithm to find the domain for the function %s \
                                         are not yet implemented." % (expr))
 
+        # find the domain of `every` inverse of `expr`
+        # since expr can have more than one inverse
         for inverse_val in invert_set:
-            domain = codomain(inverse_val, sets, y)
+            domain = codomain(inverse_val, codomain_expr, y)
             domain_union = Union(domain_union, domain)
         return domain_union
 
-    return Union(*[elm_domain(element, symbol) for element in finite_set])
+    return Union(*[elm_domain(element, sets, symbol) for element in finite_set])
