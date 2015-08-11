@@ -16,7 +16,7 @@ issues
 1. It doesn't have a consistent output for various types of solutions
    It needs to return a lot of types of solutions consistently:
 
-   * single solution : ` x == 1`
+   * single solution : `x == 1`
    * Multiple solutions: `x^2 == 1`
    * No Solution: `x^2 + 1 == 0` ; x is real
    * Interval of solution: `floor(x) == 0`
@@ -47,14 +47,14 @@ Why Solveset?
   be solved.
 
 * `solveset` can return infinitely many solutions. For example solving for
-  `sin(x) = 0` returns {2⋅n⋅π | n ∊ ℤ} ∪ {2⋅n⋅π + π | n ∊ ℤ}, whereas `solve`
+  `sin(x) = 0` returns `\{2 n \pi \| n \in \mathbb{Z}\} \cup \{2 n \pi + \pi \| n \in \mathbb{Z}\}`, whereas `solve`
   only returns [0, π].
 
 * There is a clear code level and interface level separation between solvers
   for equations in complex domain and equations in real domain. For example
   solving `exp(x) == 1` when `x` is to be solved in complex `domain`, returns
-  the set of all solutions that is {2⋅n⋅ⅈ⋅π | n ∊ ℤ}, whereas if x is to be
-  solved in the Real `domain` then only {0} is returned.
+  the set of all solutions that is `\{2 n i \pi \| n \in \mathbb{Z}\}`, whereas if `x` is to be
+  solved in the Real `domain` then only `\{0\}` is returned.
 
 
 Why do we use Sets as an output type?
@@ -91,18 +91,19 @@ a tuple as it's first argument is ordered. For example:
 
 Why not use Dictionary as Output?
 
-  Dictionary are easy to deal with programatically but mathematically they are not
-  very precise and use of them can quickly lead to inconsistency and a lot of
-  confusion. For example addition of two solutions is a fairly valid operation
-  but dictionaries by themselves have no add operation. Since we are representing
-  solutions as dictionary we can define a custom add operation where value of x
-  variable is added with value of other x variable and value of y variable
-  with the value of other y variable. But what if the user tries to add solution
-  of two equations which have different sets of variables? Say one has x and y
-  as variables and other has u and v? We cannot allow this addition because
-  the keys of dictionaries are unordered but this behavior will be inconsistent
-  with the one variable case because it will be absurd to not to allow addition of
-  two numbers, say one obtained by solution of x = 1 and other by solving y = 2.
+  Dictionary are easy to deal with programatically but mathematically they are
+  not very precise and use of them can quickly lead to inconsistency and a lot
+  of confusion. For example addition of two solutions is a fairly valid
+  operation but dictionaries by themselves have no add operation. Since we are
+  representing solutions as dictionary we can define a custom add operation
+  where value of `x` variable is added with value of other `x` variable and
+  value of `y` variable with the value of other `y` variable. But what if the user
+  tries to add solution of two equations which have different sets of variables?
+  Say one has `x` and `y` as variables and other has `u` and `v`? We cannot allow this
+  addition because the keys of dictionaries are unordered but this behavior will
+  be inconsistent with the one variable case because it will be absurd to not to
+  allow addition of two numbers, say one obtained by solution of `x = 1` and
+  other by solving `y = 2`.
 
 
 What is this domain argument about?
@@ -219,7 +220,7 @@ How does solveset ensures that it is not returning any wrong solution?
  possible case. However there are still a lot of cases where we can ensure
  correctness. Solveset tries to verify correctness wherever it can for
  example:
- 
+
  Consider the equation `|x| = n`, a naive method to solve this equation
  would return {-n, n} as it's solution, which is not correct since {-n, n}
  can only be it's solution if and only if n is positive. Solveset returns
@@ -253,7 +254,7 @@ How do we deal with cases where only some of the solutions are known?
 
  We can represent it as:
 
- FiniteSet(-2, 2) U `ConditionSet(Lambda(x, Eq(sin(x) + x, 0)), S.Reals)`
+ `FiniteSet(-2, 2) U ConditionSet(Lambda(x, Eq(sin(x) + x, 0)), S.Reals)`
 
 
 What will you do with the old solve?
@@ -265,7 +266,7 @@ What will you do with the old solve?
  * Replace all internal instances of solve by solveset by next release.
  * Raise a deprecation warning with solve calls possibly from next to
    next release.
- * Possibly rename solve to solve\_old, so that people can easily fix
+ * Possibly rename `solve` to `solve\_old`, so that people can easily fix
    their code.
  * The issues pertaining to old `solve` would be addressed by new issues
    for `solveset`.
@@ -285,13 +286,13 @@ How are symbolic parameters handled in solveset?
 
  `Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})`.
 
- It simply means `n` is the solution only when it belongs to the Interval
- [0, oo) and `-n` is the solution only when `n` belongs to the Interval
- (-oo, 0].
+ It simply means `n` is the solution only when it belongs to the `Interval`
+ `[0, oo)` and `-n` is the solution only when `n` belongs to the `Interval`
+ `(-oo, 0]`.
 
  There are various other cases as well which needs to be addressed, like
  say, solving of `2**x + (a - 2)` for `x` where `a` is a symbolic parameter.
- As of now, It returns the solution as an intersection with S.Reals, which
+ As of now, It returns the solution as an intersection with `mathbb{R}`, which
  is trivial, as it doesn't reveals the domain of `a`, in the solution.
 
 
