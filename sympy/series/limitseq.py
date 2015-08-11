@@ -6,7 +6,7 @@ from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 
 
-def differenceDelta(expr, n=None, step=1):
+def difference_delta(expr, n=None, step=1):
     """Difference Operator.
 
     Discrete analogous to differential operator.
@@ -14,7 +14,7 @@ def differenceDelta(expr, n=None, step=1):
     Examples
     ========
 
-    >>> from sympy import differenceDelta as dd
+    >>> from sympy import difference_delta as dd
     >>> from sympy.abc import n
     >>> dd(n*(n + 1), n)
     2*n + 2
@@ -44,7 +44,7 @@ def differenceDelta(expr, n=None, step=1):
     elif step in [S.Infinity, -S.Infinity]:
         raise ValueError("Step should be bounded.")
 
-    if hasattr(expr, '_eval_differenceDelta'):
-        return expr._eval_differenceDelta(n, step)
+    if hasattr(expr, '_eval_difference_delta'):
+        return expr._eval_difference_delta(n, step)
 
     return expr.subs(n, n + step) - expr

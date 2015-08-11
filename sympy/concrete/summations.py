@@ -235,7 +235,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         else:
             return NotImplementedError('Lower and upper bound expected.')
 
-    def _eval_differenceDelta(self, n, step):
+    def _eval_difference_delta(self, n, step):
         k, _, upper = self.args[-1]
         new_upper = upper.subs(n, n + step)
 

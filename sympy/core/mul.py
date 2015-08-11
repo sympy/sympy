@@ -800,8 +800,8 @@ class Mul(Expr, AssocOp):
                 terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
         return Add(*terms)
 
-    def _eval_differenceDelta(self, n, step):
-        from sympy.series.limitseq import differenceDelta as dd
+    def _eval_difference_delta(self, n, step):
+        from sympy.series.limitseq import difference_delta as dd
         arg0 = self.args[0]
         rest = Mul(*self.args[1:])
         return (arg0.subs(n, n + step) * dd(rest, n, step) + dd(arg0, n, step) *
