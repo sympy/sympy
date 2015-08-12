@@ -27,7 +27,8 @@ def unicode_vpretty(expr):
     return vpprint(expr, use_unicode=True, wrap_line=False)
 
 def test_latex_printer():
-    r = Function('r')('t')
+    t = dynamicsymbols.t
+    r = Function('r')(t)
     assert VectorLatexPrinter().doprint(r ** 2) == "r^{2}"
 
 def test_vector_pretty_print():

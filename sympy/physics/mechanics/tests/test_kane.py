@@ -13,7 +13,7 @@ def test_one_dof():
     # It is described in more detail in the KanesMethod docstring.
     q, u = dynamicsymbols('q u')
     qd, ud = dynamicsymbols('q u', 1)
-    m, c, k = symbols('m c k')
+    m, c, k = symbols('m c k', real=True)
     N = ReferenceFrame('N')
     P = Point('P')
     P.set_vel(N, u * N.x)
@@ -52,7 +52,7 @@ def test_two_dof():
     # particles. Speeds are defined as the time derivatives of the particles.
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
     q1d, q2d, u1d, u2d = dynamicsymbols('q1 q2 u1 u2', 1)
-    m, c1, c2, k1, k2 = symbols('m c1 c2 k1 k2')
+    m, c1, c2, k1, k2 = symbols('m c1 c2 k1 k2', real=True)
     N = ReferenceFrame('N')
     P1 = Point('P1')
     P2 = Point('P2')
@@ -84,7 +84,7 @@ def test_two_dof():
 def test_pend():
     q, u = dynamicsymbols('q u')
     qd, ud = dynamicsymbols('q u', 1)
-    m, l, g = symbols('m l g')
+    m, l, g = symbols('m l g', real=True)
     N = ReferenceFrame('N')
     P = Point('P')
     P.set_vel(N, -l * u * sin(q) * N.x + l * u * cos(q) * N.y)
@@ -111,7 +111,7 @@ def test_rolling_disc():
     # mass and radius, and the local gravity (note that mass will drop out).
     q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
-    r, m, g = symbols('r m g')
+    r, m, g = symbols('r m g', real=True)
 
     # The kinematics are formed by a series of simple rotations. Each simple
     # rotation creates a new frame, and the next rotation is defined by the new
@@ -184,7 +184,7 @@ def test_aux():
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     u4, u5, f1, f2 = dynamicsymbols('u4, u5, f1, f2')
     u4d, u5d = dynamicsymbols('u4, u5', 1)
-    r, m, g = symbols('r m g')
+    r, m, g = symbols('r m g', real=True)
 
     N = ReferenceFrame('N')
     Y = N.orientnew('Y', 'Axis', [q1, N.z])
@@ -232,11 +232,11 @@ def test_parallel_axis():
     # pendulum is defined about the hinge, not about the center of mass.
 
     # Defining the constants and knowns of the system
-    gravity = symbols('g')
-    k, ls = symbols('k ls')
-    a, mA, mC = symbols('a mA mC')
+    gravity = symbols('g', real=True)
+    k, ls = symbols('k ls', real=True)
+    a, mA, mC = symbols('a mA mC', real=True)
     F = dynamicsymbols('F')
-    Ix, Iy, Iz = symbols('Ix Iy Iz')
+    Ix, Iy, Iz = symbols('Ix Iy Iz', real=True)
 
     # Declaring the Generalized coordinates and speeds
     q1, q2 = dynamicsymbols('q1 q2')

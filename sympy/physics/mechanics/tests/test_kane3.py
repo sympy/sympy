@@ -34,13 +34,13 @@ def test_bicycle():
     u1d, u2d, u3d, u4d, u5d, u6d = dynamicsymbols('u1 u2 u3 u4 u5 u6', 1)
 
     # Declare System's Parameters
-    WFrad, WRrad, htangle, forkoffset = symbols('WFrad WRrad htangle forkoffset')
-    forklength, framelength, forkcg1 = symbols('forklength framelength forkcg1')
-    forkcg3, framecg1, framecg3, Iwr11 = symbols('forkcg3 framecg1 framecg3 Iwr11')
-    Iwr22, Iwf11, Iwf22, Iframe11 = symbols('Iwr22 Iwf11 Iwf22 Iframe11')
-    Iframe22, Iframe33, Iframe31, Ifork11 = symbols('Iframe22 Iframe33 Iframe31 Ifork11')
-    Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g')
-    mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr')
+    WFrad, WRrad, htangle, forkoffset = symbols('WFrad WRrad htangle forkoffset', real=True)
+    forklength, framelength, forkcg1 = symbols('forklength framelength forkcg1', real=True)
+    forkcg3, framecg1, framecg3, Iwr11 = symbols('forkcg3 framecg1 framecg3 Iwr11', real=True)
+    Iwr22, Iwf11, Iwf22, Iframe11 = symbols('Iwr22 Iwf11 Iwf22 Iframe11', real=True)
+    Iframe22, Iframe33, Iframe31, Ifork11 = symbols('Iframe22 Iframe33 Iframe31 Ifork11', real=True)
+    Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g', real=True)
+    mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr', real=True)
 
     # Set up reference frames for the system
     # N - inertial
@@ -209,7 +209,7 @@ def test_bicycle():
     # later be substituted in. Again the sign on the *product* of inertia
     # values is flipped here, due to different orientations of coordinate
     # systems.
-    v = symbols('v')
+    v = symbols('v', real=True)
     val_dict = {WFrad: PaperRadFront,
                 WRrad: PaperRadRear,
                 htangle: HTA,

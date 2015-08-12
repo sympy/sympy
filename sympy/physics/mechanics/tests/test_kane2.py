@@ -23,8 +23,8 @@ def test_aux_dep():
 
     # Symbols for time and constant parameters.
     # Symbols for contact forces: Fx, Fy, Fz.
-    t, r, m, g, I, J = symbols('t r m g I J')
-    Fx, Fy, Fz = symbols('Fx Fy Fz')
+    t, r, m, g, I, J = symbols('t r m g I J', real=True)
+    Fx, Fy, Fz = symbols('Fx Fy Fz', real=True)
 
     # Configuration variables and their time derivatives:
     # q[0] -- yaw
@@ -197,10 +197,10 @@ def test_non_central_inertia():
     q1, q2, q3 = dynamicsymbols('q1:4')
     q1d, q2d, q3d = dynamicsymbols('q1:4', level=1)
     u1, u2, u3, u4, u5 = dynamicsymbols('u1:6')
-    u_prime, R, M, g, e, f, theta = symbols('u\' R, M, g, e, f, theta')
-    a, b, mA, mB, IA, J, K, t = symbols('a b mA mB IA J K t')
-    Q1, Q2, Q3 = symbols('Q1, Q2 Q3')
-    IA22, IA23, IA33 = symbols('IA22 IA23 IA33')
+    u_prime, R, M, g, e, f, theta = symbols('u\' R, M, g, e, f, theta', real=True)
+    a, b, mA, mB, IA, J, K, t = symbols('a b mA mB IA J K t', real=True)
+    Q1, Q2, Q3 = symbols('Q1, Q2 Q3', real=True)
+    IA22, IA23, IA33 = symbols('IA22 IA23 IA33', real=True)
 
     # Reference Frames
     F = ReferenceFrame('F')
@@ -294,10 +294,10 @@ def test_sub_qdot():
     q1, q2, q3 = dynamicsymbols('q1:4')
     q1d, q2d, q3d = dynamicsymbols('q1:4', level=1)
     u1, u2, u3 = dynamicsymbols('u1:4')
-    u_prime, R, M, g, e, f, theta = symbols('u\' R, M, g, e, f, theta')
-    a, b, mA, mB, IA, J, K, t = symbols('a b mA mB IA J K t')
-    IA22, IA23, IA33 = symbols('IA22 IA23 IA33')
-    Q1, Q2, Q3 = symbols('Q1 Q2 Q3')
+    u_prime, R, M, g, e, f, theta = symbols('u\' R, M, g, e, f, theta', real=True)
+    a, b, mA, mB, IA, J, K, t = symbols('a b mA mB IA J K t', real=True)
+    IA22, IA23, IA33 = symbols('IA22 IA23 IA33', real=True)
+    Q1, Q2, Q3 = symbols('Q1 Q2 Q3', real=True)
 
     # --- Reference Frames ---
     F = ReferenceFrame('F')
@@ -385,7 +385,7 @@ def test_sub_qdot2():
     # the B matrix will be poorly formed and inversion of the dependent part
     # will fail.
 
-    g, m, Px, Py, Pz, R, t = symbols('g m Px Py Pz R t')
+    g, m, Px, Py, Pz, R, t = symbols('g m Px Py Pz R t', real=True)
     q = dynamicsymbols('q:5')
     qd = dynamicsymbols('q:5', level=1)
     u = dynamicsymbols('u:5')

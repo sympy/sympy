@@ -15,7 +15,7 @@ def test_lagrange_2forces():
     qds = q1d, q2d = dynamicsymbols('q1, q2', 1)
 
     ### Mass, spring strength, friction coefficient
-    m, k, nu = symbols('m, k, nu')
+    m, k, nu = symbols('m, k, nu', real=True)
 
     N = ReferenceFrame('N')
     O = Point('O')

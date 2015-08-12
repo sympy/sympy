@@ -8,7 +8,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      find_dynamicsymbols)
 
 Vector.simp = True
-q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
+q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5', real=True)
 N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])
 B = A.orientnew('B', 'Axis', [q2, A.x])
@@ -17,8 +17,8 @@ C = B.orientnew('C', 'Axis', [q3, B.y])
 
 def test_inertia():
     N = ReferenceFrame('N')
-    ixx, iyy, izz = symbols('ixx iyy izz')
-    ixy, iyz, izx = symbols('ixy iyz izx')
+    ixx, iyy, izz = symbols('ixx iyy izz', real=True)
+    ixy, iyz, izx = symbols('ixy iyz izx', real=True)
     assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
             (N.y | N.y) + izz * (N.z | N.z))
     assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
@@ -29,7 +29,7 @@ def test_inertia():
 
 
 def test_inertia_of_point_mass():
-    r, s, t, m = symbols('r s t m')
+    r, s, t, m = symbols('r s t m', real=True)
     N = ReferenceFrame('N')
 
     px = r * N.x
@@ -74,7 +74,7 @@ def test_angular_momentum_and_linear_momentum():
     particle of mass m fixed to the end of the rod rotate with an angular rate
     of omega about point O which is fixed to the non-particle end of the rod.
     The rod's reference frame is A and the inertial frame is N."""
-    m, M, l, I = symbols('m, M, l, I')
+    m, M, l, I = symbols('m, M, l, I', real=True)
     omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
     a = ReferenceFrame('a')
@@ -94,7 +94,7 @@ def test_angular_momentum_and_linear_momentum():
 
 
 def test_kinetic_energy():
-    m, M, l1 = symbols('m M l1')
+    m, M, l1 = symbols('m M l1', real=True)
     omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
     O = Point('O')
@@ -113,7 +113,7 @@ def test_kinetic_energy():
 
 
 def test_potential_energy():
-    m, M, l1, g, h, H = symbols('m M l1 g h H')
+    m, M, l1, g, h, H = symbols('m M l1 g h H', real=True)
     omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
     O = Point('O')
@@ -133,7 +133,7 @@ def test_potential_energy():
 
 
 def test_msubs():
-    a, b = symbols('a, b')
+    a, b = symbols('a, b', real=True)
     x, y, z = dynamicsymbols('x, y, z')
     # Test simple substitution
     expr = Matrix([[a*x + b, x*y.diff() + y],
@@ -157,7 +157,7 @@ def test_msubs():
 
 
 def test_find_dynamicsymbols():
-    a, b = symbols('a, b')
+    a, b = symbols('a, b', real=True)
     x, y, z = dynamicsymbols('x, y, z')
     expr = Matrix([[a*x + b, x*y.diff() + y],
                    [x.diff().diff(), z + sin(z.diff())]])

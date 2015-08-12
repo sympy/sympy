@@ -9,7 +9,7 @@ from sympy.utilities.pytest import slow
 @slow
 def test_linearize_rolling_disc_kane():
     # Symbols for time and constant parameters
-    t, r, m, g, v = symbols('t r m g v')
+    t, r, m, g, v = symbols('t r m g v', real=True)
 
     # Configuration variables and their time derivatives
     q1, q2, q3, q4, q5, q6 = q = dynamicsymbols('q1:7')
@@ -132,7 +132,7 @@ def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     u1 = dynamicsymbols('u1')                     # Angular velocity
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
-    L, m, t = symbols('L, m, t')
+    L, m, t = symbols('L, m, t', real=True)
     g = 9.8
 
     # Compose world frame
@@ -173,7 +173,7 @@ def test_linearize_pendulum_kane_nonminimal():
     q1d, q2d = dynamicsymbols('q1:3', level=1)
     u1, u2 = dynamicsymbols('u1:3')
     u1d, u2d = dynamicsymbols('u1:3', level=1)
-    L, m, t = symbols('L, m, t')
+    L, m, t = symbols('L, m, t', real=True)
     g = 9.8
 
     # Compose world frame
@@ -232,7 +232,7 @@ def test_linearize_pendulum_kane_nonminimal():
 def test_linearize_pendulum_lagrange_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
-    L, m, t = symbols('L, m, t')
+    L, m, t = symbols('L, m, t', real=True)
     g = 9.8
 
     # Compose world frame
@@ -263,7 +263,7 @@ def test_linearize_pendulum_lagrange_minimal():
 def test_linearize_pendulum_lagrange_nonminimal():
     q1, q2 = dynamicsymbols('q1:3')
     q1d, q2d = dynamicsymbols('q1:3', level=1)
-    L, m, t = symbols('L, m, t')
+    L, m, t = symbols('L, m, t', real=True)
     g = 9.8
     # Compose World Frame
     N = ReferenceFrame('N')
@@ -296,7 +296,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
 def test_linearize_rolling_disc_lagrange():
     q1, q2, q3 = q = dynamicsymbols('q1 q2 q3')
     q1d, q2d, q3d = qd = dynamicsymbols('q1 q2 q3', 1)
-    r, m, g = symbols('r m g')
+    r, m, g = symbols('r m g', real=True)
 
     N = ReferenceFrame('N')
     Y = N.orientnew('Y', 'Axis', [q1, N.z])
