@@ -3,7 +3,7 @@ from sympy.physics.mechanics import Point, Particle, ReferenceFrame
 
 
 def test_particle():
-    m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
+    m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h', real=True)
     P = Point('P')
     P2 = Point('P2')
     p = Particle('pa', P, m)
