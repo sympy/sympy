@@ -4,7 +4,7 @@ from collections import defaultdict
 from heapq import heappush, heappop
 
 from sympy import default_sort_key
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates, Boolean
 
 
 def pycosat_satisfiable(expr, all_models):
@@ -19,7 +19,9 @@ def pycosat_satisfiable(expr, all_models):
         result = (r != "UNSAT")
         if not result:
             return result
-        return dict((symbols[abs(lit) - 1], lit > 0) for lit in r)
+        if expr:
+            return dict((symbols[abs(lit) - 1], lit > 0) for lit in r)
+        return bool(expr)
     else:
         r = pycosat.itersolve(map(list, clauses_int_repr))
         result = (r != "UNSAT")
@@ -30,4 +32,6 @@ def pycosat_satisfiable(expr, all_models):
         for sol in r:
             sols.append(dict((symbols[abs(lit) - 1], lit > 0) for lit in sol))
         # Return generator object
-        return (sol for sol in sols)
+        if expr:
+            return (sol for sol in sols)
+        return (i for i in [bool(expr)])
