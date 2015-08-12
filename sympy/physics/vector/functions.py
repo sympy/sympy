@@ -179,7 +179,7 @@ def time_derivative(expr, frame, order=1):
 
     """
 
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     _check_frame(frame)
 
     if order == 0:
@@ -275,7 +275,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             raise ValueError('Need 3 coordinates for body or space')
         # Actual hard-coded kinematic differential equations
         q1, q2, q3 = coords
-        q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
+        q1d, q2d, q3d = [diff(i, dynamicsymbols.t) for i in coords]
         w1, w2, w3 = speeds
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
@@ -363,7 +363,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         w = Matrix(speeds + [0])
         E = Matrix([[e0, -e3, e2, e1], [e3, e0, -e1, e2], [-e2, e1, e0, e3],
             [-e1, -e2, -e3, e0]])
-        edots = Matrix([diff(i, dynamicsymbols._t) for i in [e1, e2, e3, e0]])
+        edots = Matrix([diff(i, dynamicsymbols.t) for i in [e1, e2, e3, e0]])
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
@@ -386,7 +386,7 @@ def get_motion_params(frame, **kwargs):
     If any of the boundary conditions are not provided, they are taken
     to be zero by default (zero vectors, in case of vectorial inputs). If
     the boundary conditions are also functions of time, they are converted
-    to constants by substituting the time values in the dynamicsymbols._t
+    to constants by substituting the time values in the dynamicsymbols.t
     time Symbol.
 
     This function can also be used for calculating rotational motion
@@ -500,16 +500,16 @@ def get_motion_params(frame, **kwargs):
     if mode == 2:
         vel = _process_vector_differential(kwargs['acceleration'],
                                            kwargs['velocity'],
-                                           dynamicsymbols._t,
+                                           dynamicsymbols.t,
                                            kwargs['timevalue2'], frame)[2]
         pos = _process_vector_differential(vel, kwargs['position'],
-                                           dynamicsymbols._t,
+                                           dynamicsymbols.t,
                                            kwargs['timevalue1'], frame)[2]
         return (kwargs['acceleration'], vel, pos)
     elif mode == 1:
         return _process_vector_differential(kwargs['velocity'],
                                             kwargs['position'],
-                                            dynamicsymbols._t,
+                                            dynamicsymbols.t,
                                             kwargs['timevalue1'], frame)
     else:
         vel = time_derivative(kwargs['position'], frame)
@@ -611,12 +611,12 @@ def dynamicsymbols(names, level=0, real=True, **kwargs):
 
     The default time symbol is stored on the function, i.e.::
 
-        >>> dynamicsymbols._t
+        >>> dynamicsymbols.t
         t
 
     It can be changed by simply overriding the attribute::
 
-        >>> dynamicsymbols._t = symbols('T', real=False)
+        >>> dynamicsymbols.t = symbols('T', real=False)
 
     """
 
@@ -624,12 +624,12 @@ def dynamicsymbols(names, level=0, real=True, **kwargs):
 
     syms = symbols(names, cls=Function, real=real, **kwargs)
 
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
 
     if iterable(syms):
         return tuple([reduce(diff, [t] * level, s(t)) for s in syms])
     else:
         return reduce(diff, [t] * level, syms(t))
 
-dynamicsymbols._t = Symbol('t', real=True)
+dynamicsymbols.t = Symbol('t', real=True)
 dynamicsymbols._str = '\''

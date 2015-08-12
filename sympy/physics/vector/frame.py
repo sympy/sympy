@@ -251,7 +251,7 @@ class ReferenceFrame(object):
         """Angular velocity from time differentiating the DCM. """
         from sympy.physics.vector.functions import dynamicsymbols
         dcm2diff = self.dcm(otherframe)
-        diffed = dcm2diff.diff(dynamicsymbols._t)
+        diffed = dcm2diff.diff(dynamicsymbols.t)
         angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
@@ -568,7 +568,7 @@ class ReferenceFrame(object):
         self._dcm_cache.update({parent: parent_orient.T})
         parent._dcm_cache.update({self: parent_orient})
         if rot_type == 'QUATERNION':
-            t = dynamicsymbols._t
+            t = dynamicsymbols.t
             q0, q1, q2, q3 = amounts
             q0d = diff(q0, t)
             q1d = diff(q1, t)
@@ -579,7 +579,7 @@ class ReferenceFrame(object):
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
-            thetad = (amounts[0]).diff(dynamicsymbols._t)
+            thetad = (amounts[0]).diff(dynamicsymbols.t)
             wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:

@@ -377,7 +377,7 @@ def test_time_derivative():
 
 def test_get_motion_methods():
     #Initialization
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     s1, s2, s3 = symbols('s1 s2 s3')
     S1, S2, S3 = symbols('S1 S2 S3')
     S4, S5, S6 = symbols('S4 S5 S6')
