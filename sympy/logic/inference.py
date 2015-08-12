@@ -4,6 +4,7 @@ from __future__ import print_function, division
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
 from sympy.core.compatibility import ordered
 from sympy.core.sympify import sympify
+from sympy.external.importtools import import_module
 
 
 def literal_symbol(literal):
@@ -35,7 +36,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2", all_models=False):
+def satisfiable(expr, algorithm=None, all_models=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -77,6 +78,15 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     UNSAT
 
     """
+    if algorithm is None or algorithm == "pycosat":
+        pycosat = import_module('pycosat')
+        if pycosat is not None:
+            algorithm = "pycosat"
+        else:
+            # Silently fall back to dpll2 if pycosat
+            # is not installed
+            algorithm = "dpll2"
+
     expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
@@ -86,7 +96,7 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
         return dpll_satisfiable(expr, all_models)
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
-        return pycosat_satisfiable(expr)
+        return pycosat_satisfiable(expr, all_models)
     raise NotImplementedError
 
 
