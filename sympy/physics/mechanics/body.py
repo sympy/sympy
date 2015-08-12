@@ -34,14 +34,14 @@ class Body(RigidBody, Particle):
 
     Examples
     --------
-    1. Default behaviour. It creates a RigidBody after defining mass,
-     mass center, frame and inertia.
+    Default behaviour. It creates a RigidBody after defining mass,
+    mass center, frame and inertia.
 
     >>> from sympy.physics.mechanics import Body
     >>> body = Body('name_of_body')
 
-    2. Passing attributes of Rigidbody. All the arguments needed to create a
-     RigidBody can be passed while creating a Body too.
+    Passing attributes of Rigidbody. All the arguments needed to create a
+    RigidBody can be passed while creating a Body too.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import ReferenceFrame, Point, inertia
@@ -53,8 +53,8 @@ class Body(RigidBody, Particle):
     >>> body_inertia = inertia(frame, ixx, 0, 0)
     >>> body = Body('name_of_body',masscenter,mass,frame,body_inertia)
 
-    3. Creating a Particle. If masscenter and mass are passed, and inertia is
-     not then a Particle is created.
+    Creating a Particle. If masscenter and mass are passed, and inertia is
+    not then a Particle is created.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.vector import Point
