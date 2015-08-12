@@ -84,6 +84,9 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr, all_models)
+    elif algorithm == "pycosat":
+        from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
+        return pycosat_satisfiable(expr)
     raise NotImplementedError
 
 
