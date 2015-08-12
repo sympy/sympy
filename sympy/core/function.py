@@ -1111,14 +1111,19 @@ class Derivative(Expr):
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i)
                     new_v.dummy_index = hash(v)
-                    expr = expr.subs(v, new_v)
+                    expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative(v)
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
-                        obj = obj.subs(v, old_v)
+                        if not old_v.is_Symbol and obj.is_Derivative:
+                            # Derivative evaluated at a point that is not a
+                            # symbol
+                            obj = Subs(obj, v, old_v)
+                        else:
+                            obj = obj.xreplace({v: old_v})
                     v = old_v
 
             if obj is None:
