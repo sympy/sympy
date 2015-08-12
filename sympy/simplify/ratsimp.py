@@ -159,6 +159,10 @@ def ratsimpmodprime(expr, G, *gens, **args):
                         order=opt.order, polys=True)[1]
 
             S = Poly(r, gens=opt.gens).coeffs()
+
+            # TODO: Replace solve with linsolve, as of now solving for
+            # particular solution of linear system with as many zeros
+            # as possible is not supported.
             sol = solve(S, Cs + Ds, particular=True, quick=True)
 
             if sol and not all([s == 0 for s in sol.values()]):
@@ -206,6 +210,10 @@ def ratsimpmodprime(expr, G, *gens, **args):
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
+
+            # TODO: Replace solve with linsolve, as of now solving for
+            # particular solution of linear system with as many zeros
+            # as possible is not supported
             sol = solve(S, ng, particular=True, quick=False)
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))

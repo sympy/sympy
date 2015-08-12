@@ -737,7 +737,7 @@ class Formula(object):
         instantiations need not actually match, or be valid!
 
         """
-        from sympy.solvers import solve
+        from sympy.solvers.solveset import solveset
         ap = func.ap
         bq = func.bq
         if len(ap) != len(self.func.ap) or len(bq) != len(self.func.bq):
@@ -775,7 +775,7 @@ class Formula(object):
                         repl0[a] += _n
                         for expr in exprs:
                             for target in bucket[mod]:
-                                n0, = solve(expr.xreplace(repl0) - target, _n)
+                                n0, = solveset(expr.xreplace(repl0) - target, _n)
                                 if n0.free_symbols:
                                     raise ValueError("Value should not be true")
                                 vals.append(n0)
