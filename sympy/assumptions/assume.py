@@ -176,6 +176,10 @@ class Predicate(Boolean):
                 except AttributeError:
                     continue
                 res = eval(expr, assumptions)
+                # Do not stop if Expr method returned None
+                # Try to check for higher classes
+                if res is None and subclass.__name__ == 'Expr':
+                    continue
                 if _res is None:
                     _res = res
                 elif res is None:
