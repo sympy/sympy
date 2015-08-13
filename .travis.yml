@@ -106,6 +106,9 @@ matrix:
     - python: 3.4
       env:
         - TEST_ASCII="true"
+    - python: 3.4
+      env:
+        - TEST_PYCOSAT="true"
   allow_failures:
     - python: 3.3 # Dummy value
       env:
@@ -145,6 +148,9 @@ before_install:
       sudo apt-add-repository -y ppa:aims/sagemath;
       sudo apt-get update;
       sudo apt-get install sagemath-upstream-binary;
+    fi
+  - if [[ "${TEST_PYCOSAT}" == "true" ]]; then
+      pip install "pycosat==0.6.0";
     fi
 install:
 #The install cycle below is to test installation on systems without setuptools.
