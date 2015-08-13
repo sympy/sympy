@@ -64,8 +64,8 @@ def is_increasing(f, interval):
         raise NotImplementedError
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
-    df_pos_interval = solveset(df >= 0, symbol, domain=S.Reals)
-    return interval.is_subset(df_pos_interval)
+    df_nonneg_interval = solveset(df >= 0, symbol, domain=S.Reals)
+    return interval.is_subset(df_nonneg_interval)
 
 
 def is_strictly_increasing(f, interval):
