@@ -1448,7 +1448,7 @@ def rs_cos(p, x, prec):
     # cos/sin of the constant term.
         p_cos = rs_cos(p1, x, prec)
         p_sin = rs_sin(p1, x, prec)
-        R = (R.compose(p_cos.ring)).compose(p_sin.ring)
+        R = R.compose(p_cos.ring).compose(p_sin.ring)
         p_cos.set_ring(R)
         p_sin.set_ring(R)
         t1, t2 = R(sin(c_expr)), R(cos(c_expr))
@@ -1791,7 +1791,7 @@ _convert_func = {
         }
 
 def rs_min_pow(expr, series_rs, a):
-    """Finds the minimum power of `a` in the series expansion of expr"""
+    """Find the minimum power of `a` in the series expansion of expr"""
     series = 0
     n = 2
     while series == 0:
@@ -1806,27 +1806,30 @@ def rs_min_pow(expr, series_rs, a):
 def _rs_series(expr, series_rs, a, prec):
     # TODO Use _parallel_dict_from_expr instead of sring as sring is
     # inefficient. For details, read the todo in sring.
-
     args = expr.args
     R = series_rs.ring
+
+    # expr does not contain any function to be expanded
     if not any(arg.has(Function) for arg in args) and not expr.is_Function:
         return series_rs
+
     if not expr.has(a):
         return series_rs
+
     elif expr.is_Function:
         arg = args[0]
         if len(args) > 1:
             raise NotImplementedError
         R1, series = sring(arg, domain=QQ, expand=False)
         series_inner = _rs_series(arg, series, a, prec)
-        R = (R.compose(R1)).compose(series_inner.ring)
+        R = R.compose(R1).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
         series = eval(_convert_func[str(expr.func)])(series_inner,
             R(a), prec)
         return series
+
     elif expr.is_Mul:
         n = len(args)
-
         for arg in args:    # XXX Looks redundant
             R1, _ = sring(arg, expand=False)
             R = R.compose(R1)
@@ -1834,6 +1837,7 @@ def _rs_series(expr, series_rs, a, prec):
             [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
+
         for i in range(n):
             _series = _rs_series(args[i], R(args[i]), a, prec - sum_pows +
                 min_pows[i])
@@ -1843,6 +1847,7 @@ def _rs_series(expr, series_rs, a, prec):
             series *= _series
         series = rs_trunc(series, R(a), prec)
         return series
+
     elif expr.is_Add:
         n = len(args)
         series = R(0)
@@ -1853,18 +1858,23 @@ def _rs_series(expr, series_rs, a, prec):
             series = series.set_ring(R)
             series += _series
         return series
+
     elif expr.is_Pow:
         R1, _ = sring(expr.base, domain=QQ, expand=False)
         R = R.compose(R1)
         series_inner = _rs_series(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
+
+    # The `is_constant` method is buggy hence we check it at the end.
+    # See issue #9786 for details.
     elif isinstance(expr, Expr) and expr.is_constant():
         return sring(expr, domain=QQ, expand=False)[1]
+
     else:
         raise NotImplementedError
 
 def rs_series(expr, a, prec):
-    """Return the series expansion of an expression
+    """Return the series expansion of an expression about 0
 
     Parameters
     ----------
@@ -1882,12 +1892,14 @@ def rs_series(expr, a, prec):
     ========
 
     >>> from sympy.polys.ring_series import rs_series
-    >>> from sympy.abc import a, b
-
+    >>> from sympy.functions import sin, cos, exp, tan
+    >>> from sympy.core import symbols
+    >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1
-    >>> rs_series(tan(a**2 + 1)*cos(a), a, 3)
-    tan(1)**2*a**2 - 1/2*tan(1)*a**2 + tan(1) + a**2
+    >>> series = rs_series(tan(a + b)*cos(a + c), a, 2)
+    >>> series.as_expr()
+    -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
 
     """
     R, series = sring(expr, domain=QQ, expand=False)
@@ -1898,6 +1910,7 @@ def rs_series(expr, a, prec):
     R = series.ring
     gen = R(a)
     prec_got = series.degree(gen) + 1
+
     if prec_got >= prec:
         return rs_trunc(series, gen, prec)
     else:
