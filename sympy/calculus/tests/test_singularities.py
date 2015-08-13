@@ -1,7 +1,7 @@
 from sympy import Symbol, exp, log
 from sympy.calculus.singularities import (singularities, is_increasing,
                                           is_strictly_increasing, is_decreasing,
-                                          is_strictly_decreasing)
+                                          is_strictly_decreasing, is_monotonic)
 from sympy.sets import Interval
 from sympy import oo, S
 
@@ -51,3 +51,10 @@ def test_is_strictly_decreasing():
     assert is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     assert not is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
     assert not is_decreasing(-x**2, Interval(-oo, 0))
+
+
+def test_is_monotonic():
+    assert is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
+    assert is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
+    assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
+    assert not is_monotonic(-x**2, S.Reals)

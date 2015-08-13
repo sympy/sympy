@@ -157,3 +157,34 @@ def is_strictly_decreasing(f, interval):
     df = f.diff(symbol)
     df_neg_interval = solveset(df < 0, symbol, domain=S.Reals)
     return interval.is_subset(df_neg_interval)
+
+
+def is_monotonic(f, interval):
+    """
+    Returns if a function is monotonic or not, in the given
+    `Interval`.
+
+    Examples
+    ========
+
+    >>> from sympy.calculus.singularities import is_monotonic
+    >>> from sympy.abc import x
+    >>> from sympy import S, Interval, oo, Or
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
+    True
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
+    True
+    >>> is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
+    True
+    >>> is_monotonic(-x**2, S.Reals)
+    False
+
+    """
+    from sympy.core.logic import fuzzy_and, fuzzy_or
+    if len(f.free_symbols) > 1:
+        raise NotImplementedError('is_strictly_decreasing has not yet been '
+                                  'implemented for multivariate expressions')
+    inc = is_increasing(f, interval)
+    dec = is_decreasing(f, interval)
+
+    return fuzzy_or([inc, dec])
