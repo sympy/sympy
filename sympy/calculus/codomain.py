@@ -1,4 +1,4 @@
-from sympy import S, sympify, diff, limit, oo, Dummy, I
+from sympy import S, sympify, diff, limit, oo, Dummy
 from sympy.calculus.singularities import singularities
 from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
 from sympy.solvers.solveset import solveset
@@ -196,8 +196,15 @@ def not_empty_in(finset_intersection, *syms):
     # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
-    finite_set = finset_intersection.args[1]
-    sets = finset_intersection.args[0]
+    if isinstance(finset_intersection, FiniteSet):
+        finite_set = finset_intersection
+        sets = S.Reals
+    elif isinstance(finset_intersection, Union):
+        elm_in_sets = finset_intersection.args[0]
+        return Union(not_empty_in(finset_intersection.args[1], *syms), elm_in_sets)
+    else:
+        finite_set = finset_intersection.args[1]
+        sets = finset_intersection.args[0]
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
     if len(syms) == 1:
@@ -225,6 +232,8 @@ def not_empty_in(finset_intersection, *syms):
             codomain_expr = Complement(codomain_expr, exclude_sing)
             if isinstance(invert_expr.args[0], Intersection):
                 invert_set = invert_expr.args[0].args[1]
+            elif isinstance(invert_expr.args[0], FiniteSet):
+                invert_set = invert_expr.args[0]
         else:
             raise NotImplementedError("The algorithm to find the domain for the function %s \
                                         are not yet implemented." % (expr))

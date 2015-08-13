@@ -58,14 +58,18 @@ def test_codomain():
 
 def test_not_empty_in():
     from sympy.abc import x
+    a = Symbol('a', real=True)
     assert not_empty_in(FiniteSet(x, 2*x).intersect(Interval(1, 2)), x) == Interval(S(1)/2, 2)
     assert not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x) == \
         Union(Interval(-sqrt(2), -1), Interval(1, 2))
     assert not_empty_in(FiniteSet(x**2 + x, x).intersect(Interval(2, 4)), x) == \
         Union(Interval(-sqrt(17)/2 - S(1)/2, -2), Interval(1, -S(1)/2 + sqrt(17)/2), Interval(2, 4))
     assert not_empty_in(FiniteSet(x/(x - 1)).intersect(S.Reals), x) == Complement(S.Reals, FiniteSet(1))
+    assert not_empty_in(FiniteSet(a/(a - 1)).intersect(S.Reals), a) == Complement(S.Reals, FiniteSet(1))
     assert not_empty_in(FiniteSet((x**2 - 3*x + 2)/(x - 1)).intersect(S.Reals), x) == \
         Complement(S.Reals, FiniteSet(3))
+    assert not_empty_in(FiniteSet(3, 4, x/(x - 1)).intersect(Interval(2, 3)), x) == \
+        Union(Interval(S(3)/2, 2), FiniteSet(3))
 
 
 @XFAIL
