@@ -39,7 +39,7 @@ def singularities(expr, sym):
 ###########################################################################
 
 
-def is_increasing(f, given_interval):
+def is_increasing(f, interval):
     """
     Returns if a function is increasing or not, in the given
     `Interval`.
@@ -65,10 +65,10 @@ def is_increasing(f, given_interval):
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_pos_interval = solveset(df >= 0, symbol, domain=S.Reals)
-    return given_interval.is_subset(df_pos_interval)
+    return interval.is_subset(df_pos_interval)
 
 
-def is_strictly_increasing(f, given_interval):
+def is_strictly_increasing(f, interval):
     """
     Returns if a function is strictly increasing or not, in the given
     `Interval`.
@@ -94,10 +94,10 @@ def is_strictly_increasing(f, given_interval):
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_pos_interval = solveset(df > 0, symbol, domain=S.Reals)
-    return given_interval.is_subset(df_pos_interval)
+    return interval.is_subset(df_pos_interval)
 
 
-def is_decreasing(f, given_interval):
+def is_decreasing(f, interval):
     """
     Returns if a function is decreasing or not, in the given
     `Interval`.
@@ -123,10 +123,10 @@ def is_decreasing(f, given_interval):
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_nonpos_interval = solveset(df <= 0, symbol, domain=S.Reals)
-    return given_interval.is_subset(df_nonpos_interval)
+    return interval.is_subset(df_nonpos_interval)
 
 
-def is_strictly_decreasing(f, given_interval):
+def is_strictly_decreasing(f, interval):
     """
     Returns if a function is decreasing or not, in the given
     `Interval`.
@@ -152,4 +152,4 @@ def is_strictly_decreasing(f, given_interval):
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_neg_interval = solveset(df < 0, symbol, domain=S.Reals)
-    return given_interval.is_subset(df_neg_interval)
+    return interval.is_subset(df_neg_interval)
