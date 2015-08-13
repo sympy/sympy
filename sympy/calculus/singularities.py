@@ -184,7 +184,7 @@ def is_monotonic(f, interval):
     """
     from sympy.core.logic import fuzzy_and, fuzzy_or
     if len(f.free_symbols) > 1:
-        raise NotImplementedError('is_strictly_decreasing has not yet been '
+        raise NotImplementedError('is_monotonic has not yet been '
                                   'implemented for multivariate expressions')
     inc = is_increasing(f, interval)
     dec = is_decreasing(f, interval)
