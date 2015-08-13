@@ -75,8 +75,8 @@ class Linearizer(object):
         self.lams = none_handler(lams)
 
         # Derivatives of generalized equation variables
-        self._qd = self.q.diff(dynamicsymbols._t)
-        self._ud = self.u.diff(dynamicsymbols._t)
+        self._qd = self.q.diff(dynamicsymbols.t)
+        self._ud = self.u.diff(dynamicsymbols.t)
         # If the user doesn't actually use generalized variables, and the
         # qd and u vectors have any intersecting variables, this can cause
         # problems. We'll fix this with some hackery, and Dummy variables

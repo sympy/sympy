@@ -151,7 +151,7 @@ class KanesMethod(object):
         q_ind = Matrix(q_ind)
         self._qdep = q_dep
         self._q = Matrix([q_ind, q_dep])
-        self._qdot = self.q.diff(dynamicsymbols._t)
+        self._qdot = self.q.diff(dynamicsymbols.t)
 
         # Initialize generalized speeds
         u_dep = none_handler(u_dep)
@@ -162,7 +162,7 @@ class KanesMethod(object):
         u_ind = Matrix(u_ind)
         self._udep = u_dep
         self._u = Matrix([u_ind, u_dep])
-        self._udot = self.u.diff(dynamicsymbols._t)
+        self._udot = self.u.diff(dynamicsymbols.t)
         self._uaux = none_handler(u_aux)
 
     def _initialize_constraint_matrices(self, config, vel, acc):
@@ -206,8 +206,8 @@ class KanesMethod(object):
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
             if not acc:
-                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                               self._f_nh.diff(dynamicsymbols._t))
+                self._f_dnh = (self._k_nh.diff(dynamicsymbols.t) * self.u +
+                               self._f_nh.diff(dynamicsymbols.t))
                 self._k_dnh = self._k_nh
             else:
                 if self._qdot_u_map is not None:
@@ -302,7 +302,7 @@ class KanesMethod(object):
         if not iterable(bl):
             raise TypeError('Bodies must be supplied in an iterable.')
 
-        t = dynamicsymbols._t
+        t = dynamicsymbols.t
         N = self._inertial
         # Dicts setting things to zero
         udot_zero = dict((i, 0) for i in self._udot)
@@ -442,7 +442,7 @@ class KanesMethod(object):
 
         # Form dictionary to set auxiliary speeds & their derivatives to 0.
         uaux = self._uaux
-        uauxdot = uaux.diff(dynamicsymbols._t)
+        uauxdot = uaux.diff(dynamicsymbols.t)
         uaux_zero = dict((i, 0) for i in Matrix([uaux, uauxdot]))
 
         # Checking for dynamic symbols outside the dynamic differential
@@ -460,7 +460,7 @@ class KanesMethod(object):
 
         # Check for any derivatives of variables in r that are also found in r.
         for i in r:
-            if diff(i, dynamicsymbols._t) in r:
+            if diff(i, dynamicsymbols.t) in r:
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
@@ -527,7 +527,7 @@ class KanesMethod(object):
             if self._k_kqdot.diff(i) != 0 * self._k_kqdot:
                 raise ValueError('Matrix K_kqdot must not depend on any q.')
 
-        t = dynamicsymbols._t
+        t = dynamicsymbols.t
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
         # dictionary of auxiliary speeds & derivatives which are equal to zero
@@ -548,7 +548,7 @@ class KanesMethod(object):
         other_dyns.sort(key=default_sort_key)
 
         for i in other_dyns:
-            if diff(i, dynamicsymbols._t) in other_dyns:
+            if diff(i, dynamicsymbols.t) in other_dyns:
                 raise ValueError('Cannot have derivatives of specified '
                                  'quantities when linearizing forcing terms.')
 

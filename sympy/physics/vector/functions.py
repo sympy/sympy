@@ -9,6 +9,7 @@ from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
@@ -568,68 +569,96 @@ def partial_velocity(vel_list, u_list, frame):
         list_of_pvlists += [pvlist]
     return list_of_pvlists
 
-
-def dynamicsymbols(names, level=0, real=True, **kwargs):
-    """Returns a tuple of functions of time or their derivatives. This is a
-    convenience function that is analogous to ``symbols()``. It allows the
-    user to avoid typing::
-
-        >>> t = symbols('t', real=True)
-        >>> F = symbols('F', real=True, cls=Function)(t)
-
-    and simply type::
-
-        >>> F = dynamicsymbols('F')
-
-    Parameters
-    ==========
-    names : str
-        Names of the dynamic symbols you want to create. This works the same
-        way as inputs to ``symbols()``.
-    level : int
-        Order of differentiation of the returned function(s).
-    real : boolean, optional
-        By default the functions are assumed to be real.
-    kwargs : key value pairs
-        Any options that can be passed to ``symbols()`` except for ``cls``.
-
-    Examples
-    ========
-
-    >>> from sympy.physics.vector import dynamicsymbols
-    >>> from sympy import diff, Symbol
-    >>> q1 = dynamicsymbols('q1')
-    >>> q1
-    q1(t)
-    >>> diff(q1, Symbol('t', real=True))
-    Derivative(q1(t), t)
-    >>> q1d = dynamicsymbols('q1', level=1)
-    Derivative(q1(t), t)
-
-    Notes
-    =====
-
-    The default time symbol is stored on the function, i.e.::
-
-        >>> dynamicsymbols.t
-        t
-
-    It can be changed by simply overriding the attribute::
-
-        >>> dynamicsymbols.t = symbols('T', real=False)
-
+class __dynamicsymbols_class(object):
+    """The class used to manage the dynamicsymbols time symbol attribute.
     """
 
-    kwargs.pop('cls', None)
+    def __init__(self):
+        self.__time_symbol = Symbol('t', real=True)
+        self._str = '\''
 
-    syms = symbols(names, cls=Function, real=real, **kwargs)
+    def _get_time_symbol(self):
+        return self.__time_symbol
 
-    t = dynamicsymbols.t
+    def _set_time_symbol(self, value):
+        self.__time_symbol = value
 
-    if iterable(syms):
-        return tuple([reduce(diff, [t] * level, s(t)) for s in syms])
-    else:
-        return reduce(diff, [t] * level, syms(t))
+    def _get_time_symbol_dep(self):
+        SymPyDeprecationWarning(
+                feature="Attribute sympy.physics.vector.dynamicsymbols._t",
+                useinstead="attribute sympy.physics.vector.dynamicsymbols.t",
+                deprecated_since_version="0.7.7").warn()
+        return self._get_time_symbol()
 
-dynamicsymbols.t = Symbol('t', real=True)
-dynamicsymbols._str = '\''
+    def _set_time_symbol_dep(self, value):
+        SymPyDeprecationWarning(
+                feature="Attribute sympy.physics.vector.dynamicsymbols._t",
+                useinstead="attribute sympy.physics.vector.dynamicsymbols.t",
+                deprecated_since_version="0.7.7").warn()
+        return self._set_time_symbol(value)
+
+    t = property(_get_time_symbol, _set_time_symbol)
+    _t = property(_get_time_symbol_dep, _set_time_symbol_dep)
+
+    def __call__(self, names, level=0, real=True, **kwargs):
+        """Returns a tuple of functions of time or their derivatives. This is a
+        convenience function that is analogous to ``symbols()``. It allows the
+        user to avoid typing::
+
+            >>> t = symbols('t', real=True)
+            >>> F = symbols('F', real=True, cls=Function)(t)
+
+        and simply type::
+
+            >>> F = dynamicsymbols('F')
+
+        Parameters
+        ==========
+        names : str
+            Names of the dynamic symbols you want to create. This works the same
+            way as inputs to ``symbols()``.
+        level : int
+            Order of differentiation of the returned function(s).
+        real : boolean, optional
+            By default the functions are assumed to be real.
+        kwargs : key value pairs
+            Any options that can be passed to ``symbols()`` except for ``cls``.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy import diff, Symbol
+        >>> q1 = dynamicsymbols('q1')
+        >>> q1
+        q1(t)
+        >>> diff(q1, Symbol('t', real=True))
+        Derivative(q1(t), t)
+        >>> q1d = dynamicsymbols('q1', level=1)
+        Derivative(q1(t), t)
+
+        Notes
+        =====
+
+        The default time symbol is stored on the function, i.e.::
+
+            >>> dynamicsymbols.t
+            t
+
+        It can be changed by simply overriding the attribute::
+
+            >>> dynamicsymbols.t = symbols('T', real=False)
+
+        """
+        kwargs.pop('cls', None)
+
+        syms = symbols(names, cls=Function, real=real, **kwargs)
+
+        t = self.__time_symbol
+
+        if iterable(syms):
+            return tuple([reduce(diff, [t] * level, s(t)) for s in syms])
+        else:
+            return reduce(diff, [t] * level, syms(t))
+
+dynamicsymbols = __dynamicsymbols_class()

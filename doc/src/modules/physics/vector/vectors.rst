@@ -694,7 +694,7 @@ derivative of such a 'dynamicsymbol' is shown below. ::
 
   >>> from sympy import diff
   >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
-  >>> diff(q1, Symbol('t'))
+  >>> diff(q1, dynamicsymbols.t)
   Derivative(q1(t), t)
 
 The 'dynamicsymbol' printing is not very clear above; we will also introduce a
@@ -703,7 +703,7 @@ non-interactive sessions. ::
 
   >>> q1
   q1(t)
-  >>> q1d = diff(q1, Symbol('t'))
+  >>> q1d = diff(q1, dynamicsymbols.t)
   >>> vprint(q1)
   q1
   >>> vprint(q1d)
