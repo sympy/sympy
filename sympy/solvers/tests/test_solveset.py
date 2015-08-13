@@ -811,6 +811,29 @@ def test_solveset():
                                                   S.Integers)
 
 
+def test_conditonset():
+    assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, True), S.Reals)
+
+    assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, Eq(x*(x + sin(x)) - 1, 0)), S.Reals)
+
+    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, Eq(sin(Abs(x)) - 1, 0)), S.Reals)
+
+    assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
+        imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
+    assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, x + sin(x) > 1), S.Reals)
+
+
+@XFAIL
+def test_conditionset_equality():
+    ''' Checking equality of different representations of ConditionSet'''
+    assert solveset(Eq(tan(x), y), x) == ConditionSet(Lambda(x, Eq(tan(x), y)), S.Complexes)
+
+
 def test_solveset_domain():
     x = Symbol('x')
 

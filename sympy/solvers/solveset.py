@@ -355,6 +355,8 @@ def solveset_real(f, symbol):
     Set
         A set of values for `symbol` for which `f` is equal to
         zero. An `EmptySet` is returned if no solution is found.
+        A `ConditionSet` is returned as unsolved object if algorithms
+        to evaluate complete solutions are not yet implemented.
 
     `solveset_real` claims to be complete in the set of the solution it
     returns.
@@ -363,7 +365,7 @@ def solveset_real(f, symbol):
     ======
 
     NotImplementedError
-        The algorithms for to find the solution of the given equation are
+        Algorithms to solve inequalities in complex domain are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -688,6 +690,8 @@ def solveset_complex(f, symbol):
     Set
         A set of values for `symbol` for which `f` equal to
         zero. An `EmptySet` is returned if no solution is found.
+        A `ConditionSet` is returned as an unsolved object if algorithms
+        to evaluate complete solutions are not yet implemented.
 
     `solveset_complex` claims to be complete in the solution set that
     it returns.
@@ -696,7 +700,7 @@ def solveset_complex(f, symbol):
     ======
 
     NotImplementedError
-        The algorithms for to find the solution of the given equation are
+        The algorithms to solve inequalities in complex domain  are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -796,6 +800,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Set
         A set of values for `symbol` for which `f` is True or is equal to
         zero. An `EmptySet` is returned if no solution is found.
+        A `ConditionSet` is returned as unsolved object if algorithms
+        to evaluatee complete solution are not yet implemented.
 
     `solveset` claims to be complete in the solution set that it returns.
 
@@ -803,7 +809,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     ======
 
     NotImplementedError
-        The algorithms for to find the solution of the given equation are
+        The algorithms to solve inequalities in complex domain  are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -885,8 +891,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError("Inequalities in the complex domain are "
                                       "not supported. Try the real domain by"
                                       "setting domain=S.Reals")
-        return solve_univariate_inequality(
+        try:
+            result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
+        except NotImplementedError:
+            pass
+            result = ConditionSet(Lambda(symbol, f), domain)
+        return result
 
     if isinstance(f, (Expr, Number)):
         if domain is S.Reals:
