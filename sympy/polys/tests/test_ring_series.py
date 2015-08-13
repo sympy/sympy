@@ -584,13 +584,13 @@ def test_puiseux2():
 def test_rs_series():
     x, a, b, c = symbols('x, a, b, c')
 
-    assert (rs_series(a, a, 5)).as_expr() == a
+    assert rs_series(a, a, 5).as_expr() == a
     assert rs_series(sin(1/a), a, 5).as_expr() == sin(1/a)
-    assert (rs_series(sin(a), a, 5)).as_expr() == (sin(a).series(a, 0,
+    assert rs_series(sin(a), a, 5).as_expr() == (sin(a).series(a, 0,
         5)).removeO()
-    assert (rs_series(sin(a) + cos(a), a, 5)).as_expr() == ((sin(a) +
+    assert rs_series(sin(a) + cos(a), a, 5).as_expr() == ((sin(a) +
         cos(a)).series(a, 0, 5)).removeO()
-    assert (rs_series(sin(a)*cos(a), a, 5)).as_expr() == ((sin(a)*
+    assert rs_series(sin(a)*cos(a), a, 5).as_expr() == ((sin(a)*
         cos(a)).series(a, 0, 5)).removeO()
 
     p = (sin(a) - a)*(cos(a**2) + a**4/2)

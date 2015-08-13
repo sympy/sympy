@@ -1267,8 +1267,6 @@ def rs_tan(p, x, prec):
                 const = R(tan(c_expr))
             except ValueError:
                 R = R.add_gens([tan(c_expr, )])
-                #gens = list(R.gens).remove(x.set_ring(R))
-                #R.drop_to_ground(gens)
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
@@ -1367,8 +1365,6 @@ def rs_sin(p, x, prec):
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 R = R.add_gens([sin(c_expr), cos(c_expr)])
-                #gens = list(R.gens).remove(x.set_ring(R))
-                #R.drop_to_ground(gens)
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
@@ -1437,8 +1433,6 @@ def rs_cos(p, x, prec):
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 R = R.add_gens([sin(c_expr), cos(c_expr)])
-                #gens = list(R.gens).remove(x.set_ring(R))
-                #R.drop_to_ground(gens)
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
@@ -1797,6 +1791,7 @@ _convert_func = {
         }
 
 def rs_min_pow(expr, series_rs, a):
+    """Finds the minimum power of `a` in the series expansion of expr"""
     series = 0
     n = 2
     while series == 0:
@@ -1809,7 +1804,8 @@ def rs_min_pow(expr, series_rs, a):
 
 
 def _rs_series(expr, series_rs, a, prec):
-    # XXX Use _parallel_dict_from_expr instead of sring.
+    # TODO Use _parallel_dict_from_expr instead of sring as sring is
+    # inefficient. For details, read the todo in sring.
 
     args = expr.args
     R = series_rs.ring
@@ -1868,6 +1864,32 @@ def _rs_series(expr, series_rs, a, prec):
         raise NotImplementedError
 
 def rs_series(expr, a, prec):
+    """Return the series expansion of an expression
+
+    Parameters
+    ----------
+    expr : :class:`Expr`
+    a : :class:`Symbol` with respect to which expr is to be expanded
+    prec : order of the series expansion
+
+    Currently supports multivariate Taylor series expansion. This is much
+    faster that Sympy's series method as it uses sparse polynomial operations.
+
+    It automatically creates the simplest ring required to represent the series
+    expansion through repeated calls to sring.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.ring_series import rs_series
+    >>> from sympy.abc import a, b
+
+    >>> rs_series(sin(a) + exp(a), a, 5)
+    1/24*a**4 + 1/2*a**2 + 2*a + 1
+    >>> rs_series(tan(a**2 + 1)*cos(a), a, 3)
+    tan(1)**2*a**2 - 1/2*tan(1)*a**2 + tan(1) + a**2
+
+    """
     R, series = sring(expr, domain=QQ, expand=False)
     if a not in R.symbols:
         R = R.add_gens([a, ])
