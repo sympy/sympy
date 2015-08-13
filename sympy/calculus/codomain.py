@@ -196,6 +196,9 @@ def not_empty_in(finset_intersection, *syms):
     # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
+    if len(syms) == 0:
+        raise ValueError("A Symbol or a tuple of symbols must be given \
+                            as the third parameter")
     if isinstance(finset_intersection, FiniteSet):
         finite_set = finset_intersection
         sets = S.Reals
