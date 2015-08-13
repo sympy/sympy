@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, pi, S
-from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix
+from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix
 from sympy.matrices.expressions import MatPow, MatAdd, MatMul
 from sympy.matrices.expressions.matexpr import ShapeError
 
@@ -93,3 +93,33 @@ def test_doit_nested_MatrixExpr():
     Y = ImmutableMatrix([[2, 3], [4, 5]])
     assert MatPow(MatMul(X, Y), 2).doit() == (X*Y)**2
     assert MatPow(MatAdd(X, Y), 2).doit() == (X + Y)**2
+
+
+def test_ZeroMatrix():
+    M = ZeroMatrix(n, n)
+    assert MatPow(M, 2).doit() == M
+    assert MatPow(M, 1).doit() == M
+    assert MatPow(M, 0).doit() == Identity(n)
+    assert MatPow(M, -1).doit() == M
+    assert MatPow(M, -2).doit() == M
+    N = ZeroMatrix(3, 3)
+    assert MatPow(N, 2).doit() == N
+    assert MatPow(N, 1).doit() == N
+    assert MatPow(N, 0).doit() == Identity(3)
+    assert MatPow(N, -1).doit() == N
+    assert MatPow(N, -2).doit() == N
+
+
+def test_Identity():
+    M = Identity(n)
+    assert MatPow(M, 2).doit() == M
+    assert MatPow(M, 1).doit() == M
+    assert MatPow(M, 0).doit() == M
+    assert MatPow(M, -1).doit() == M
+    assert MatPow(M, -2).doit() == M
+    N = Identity(3)
+    assert MatPow(N, 2).doit() == N
+    assert MatPow(N, 1).doit() == N
+    assert MatPow(N, 0).doit() == N
+    assert MatPow(N, -1).doit() == N
+    assert MatPow(N, -2).doit() == N
