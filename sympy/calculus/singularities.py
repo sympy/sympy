@@ -61,7 +61,8 @@ def is_increasing(f, interval):
 
     """
     if len(f.free_symbols) > 1:
-        raise NotImplementedError
+        raise NotImplementedError('is_increasing has not yet been implemented '
+                                  'for multivariate expressions')
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_nonneg_interval = solveset(df >= 0, symbol, domain=S.Reals)
@@ -90,7 +91,8 @@ def is_strictly_increasing(f, interval):
 
     """
     if len(f.free_symbols) > 1:
-        raise NotImplementedError
+        raise NotImplementedError('is_strictly_increasing has not yet been '
+                                  'implemented for multivariate expressions')
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_pos_interval = solveset(df > 0, symbol, domain=S.Reals)
@@ -119,7 +121,8 @@ def is_decreasing(f, interval):
 
     """
     if len(f.free_symbols) > 1:
-        raise NotImplementedError
+        raise NotImplementedError('is_decreasing has not yet been implemented '
+                                  'for multivariate expressions')
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_nonpos_interval = solveset(df <= 0, symbol, domain=S.Reals)
@@ -148,7 +151,8 @@ def is_strictly_decreasing(f, interval):
 
     """
     if len(f.free_symbols) > 1:
-        raise NotImplementedError
+        raise NotImplementedError('is_strictly_decreasing has not yet been '
+                                  'implemented for multivariate expressions')
     symbol = f.free_symbols.pop()
     df = f.diff(symbol)
     df_neg_interval = solveset(df < 0, symbol, domain=S.Reals)
