@@ -89,6 +89,8 @@ def test_ff_eval_apply():
     assert ff(n, m + pi).is_integer is False
     assert ff(pi, m).is_integer is False
 
+    assert ff(x, x) == factorial(x)
+
 
 def test_factorial():
     x = Symbol('x')

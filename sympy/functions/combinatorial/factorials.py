@@ -512,20 +512,18 @@ class FallingFactorial(CombinatorialFunction):
        Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
        Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-       >>> from sympy import ff
+       >>> from sympy import ff, factorial
        >>> from sympy.abc import x
-
        >>> ff(x, 0)
        1
-
        >>> ff(5, 5)
        120
-
        >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
        True
-
        >>> ff(x**2, 2)
        Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
+       >>> ff(x, x)
+       factorial(x)
 
 
        See Also
@@ -541,6 +539,8 @@ class FallingFactorial(CombinatorialFunction):
 
         if x is S.NaN:
             return S.NaN
+        elif x == k:
+            return factorial(x)
         elif k.is_Integer:
             if k is S.NaN:
                 return S.NaN
