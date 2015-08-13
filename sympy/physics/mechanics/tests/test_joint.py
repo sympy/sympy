@@ -1,239 +1,110 @@
 from sympy import Symbol
-from sympy.physics.vector import ReferenceFrame, Point
-from sympy.physics.mechanics import inertia, RigidBody, KanesMethod, \
-    dynamicsymbols
-
-from pydy.bodies import Body
-from pydy.joints import PinJoint, SlidingJoint, CylindricalJoint
-from pydy.joints_method import JointsMethod
+from sympy.physics.vector import Vector
+from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
+                                     SlidingJoint, CylindricalJoint)
 
 
-class TestPinJoint():
-    def setup(self):
-        parent = Body('parent')
-        child = Body('child')
+def test_pin_joint():
+    parent = Body('parent')
+    child = Body('child')
+    l = Symbol('l')
+    pin_joint = PinJoint('pin_joint', parent, child, child_point_pos=(0, l, 0))
 
-        gravity = Symbol('gravity')
-        # add gravity force in y direction at the center of mass of child.
-        child.add_force((0, child.get_mass() * gravity, 0), child.get_masscenter())
+    assert pin_joint.name == 'pin_joint'
+    assert pin_joint.parent == parent
+    assert pin_joint.child == child
+    assert pin_joint.parent_joint_vector == Vector(0)
+    assert pin_joint.child_joint_vector == l * child.frame.y
+    assert pin_joint.parent_axis == parent.frame.x
+    assert pin_joint.child_axis == child.frame.x
 
-        self.pin_joint = PinJoint('pin_joint', parent, child, parent_point_pos=(1, 1, 1),
-                             child_point_pos=(1, 1, 1))
+    theta = dynamicsymbols('pin_joint_theta')
+    thetad = dynamicsymbols('pin_joint_theta', 1)
+    omega = dynamicsymbols('pin_joint_omega')
+    assert pin_joint.coordinates == [theta]
+    assert pin_joint.speeds == [omega]
+    assert pin_joint.kds == [thetad - omega]
 
-        JM = JointsMethod([self.pin_joint], parent)
-        self.eom = JM.rhs()
+    child_joint_point = pin_joint.child_joint_point
+    parent_joint_point = pin_joint.parent_joint_point
+    assert parent_joint_point.name == 'pin_joint_parent_joint'
+    assert child_joint_point.name == 'pin_joint_child_joint'
+    assert child_joint_point.pos_from(parent_joint_point) == Vector(0)
+    assert child_joint_point.pos_from(child.masscenter) == l * child.frame.y
+    assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
 
-    def test_simple_equations_of_motion(self):
-        # parent
-        p_name = "parent"
-        p_frame = ReferenceFrame(p_name + '_frame')
-        p_masscenter = Point(p_name + '_masscenter')
-        p_masscenter.set_vel(p_frame, 0)
-        p_mass = Symbol(p_name + '_mass')
-        p_inertia = (inertia(p_frame, 1, 1, 1), p_masscenter)
-        parent = RigidBody(p_name, p_masscenter, p_frame, p_mass, p_inertia)
-        # child
-        c_name = "child"
-        c_frame = ReferenceFrame(c_name + '_frame')
-        c_masscenter = Point(c_name + '_masscenter')
-        c_masscenter.set_vel(c_frame, 0)
-        c_mass = Symbol(c_name + '_mass')
-        c_inertia = (inertia(c_frame, 1, 1, 1), c_masscenter)
-        child = RigidBody(c_name, c_masscenter, c_frame, c_mass, c_inertia)
-
-        # pinjoint
-        theta = dynamicsymbols('theta')
-        thetad = dynamicsymbols('theta', 1)
-        omega = dynamicsymbols('omega')
-
-        p_axis = p_frame.x
-        c_axis = c_frame.x
-
-        c_frame.orient(p_frame, 'Axis', [theta, p_axis])
-        c_frame.set_ang_vel(p_frame, omega * p_axis)
-
-        p_joint_point = p_masscenter.locatenew(
-            p_name + '_parent_joint',
-            p_frame.x + p_frame.y + p_frame.z)
-
-        c_joint_point = c_masscenter.locatenew(
-            c_name + '_child_joint',
-            c_frame.x + c_frame.y + c_frame.z)
-
-        c_joint_point.set_pos(p_joint_point, 0)
-        c_masscenter.v2pt_theory(p_masscenter, p_frame, c_frame)
-
-        # JointsMethod
-        q_ind = [theta]
-        u_ind = [omega]
-        kd = [thetad - omega]
-        BL = [parent, child]
-        gravity = Symbol('gravity')
-        FL = [(c_masscenter, c_mass * gravity * c_frame.y)]
-
-        KM = KanesMethod(p_frame, q_ind=q_ind, u_ind=u_ind, kd_eqs=kd)
-        (fr, frstar) = KM.kanes_equations(FL, BL)
-        eom = KM.rhs()
-
-        assert eom == self.eom
+    assert child.frame.ang_vel_in(parent.frame) == omega * parent.frame.x
 
 
-class TestSlidingJoint():
-    def setup(self):
-        parent = Body('parent')
-        child = Body('child')
+def test_sliding_joint():
+    parent = Body('parent')
+    child = Body('child')
+    l = Symbol('l')
+    sliding_joint = SlidingJoint('sliding_joint', parent, child,
+                                 child_point_pos=(l, 0, 0))
 
-        gravity = Symbol('gravity')
-        child.add_force((child.get_mass() * gravity, 0, 0), child.get_masscenter())
+    assert sliding_joint.name == 'sliding_joint'
+    assert sliding_joint.parent == parent
+    assert sliding_joint.child == child
+    assert sliding_joint.parent_joint_vector == Vector(0)
+    assert sliding_joint.child_joint_vector == l * child.frame.x
+    assert sliding_joint.parent_axis == parent.frame.x
+    assert sliding_joint.child_axis == child.frame.x
 
-        sliding_joint = SlidingJoint('sliding_joint', parent, child,
-                                     parent_point_pos=(1, 1, 1),
-                                     child_point_pos=(1, 1, 1))
+    dis = dynamicsymbols('sliding_joint_dis')
+    disd = dynamicsymbols('sliding_joint_dis', 1)
+    vel = dynamicsymbols('sliding_joint_vel')
+    assert sliding_joint.coordinates == [dis]
+    assert sliding_joint.speeds == [vel]
+    assert sliding_joint.kds == [disd - vel]
 
-        spring_constant = Symbol('k')
-        child.add_force((spring_constant * sliding_joint.get_coordinates()[0], 0, 0),
-                        child.get_masscenter())
+    child_joint_point = sliding_joint.child_joint_vector
+    parent_joint_point = sliding_joint.parent_joint_point
+    assert parent_joint_point.name == 'sliding_joint_parent_joint'
+    assert child_joint_point.name == 'sliding_joint_child_joint'
+    assert child_joint_point.pos_from(parent_joint_point) == dis * parent.frame.x
+    assert child_joint_point.pos_from(child.masscenter) == l * child.frame.x
+    assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
 
-        JM = JointsMethod([sliding_joint], parent)
-        self.eom = JM.rhs()
-
-    def test_simple_equations_of_motion(self):
-        # parent
-        p_name = "parent"
-        p_frame = ReferenceFrame(p_name + '_frame')
-        p_masscenter = Point(p_name + '_masscenter')
-        p_masscenter.set_vel(p_frame, 0)
-        p_mass = Symbol(p_name + '_mass')
-        p_inertia = (inertia(p_frame, 1, 1, 1), p_masscenter)
-        parent = RigidBody(p_name, p_masscenter, p_frame, p_mass, p_inertia)
-
-        # child
-        c_name = "child"
-        c_frame = ReferenceFrame(c_name + '_frame')
-        c_masscenter = Point(c_name + '_masscenter')
-        c_masscenter.set_vel(c_frame, 0)
-        c_mass = Symbol(c_name + '_mass')
-        c_inertia = (inertia(c_frame, 1, 1, 1), c_masscenter)
-        child = RigidBody(c_name, c_masscenter, c_frame, c_mass, c_inertia)
-
-        # sliding joint
-        dis = dynamicsymbols('dis')
-        disd = dynamicsymbols('dis', 1)
-        vel = dynamicsymbols('vel')
-
-        p_direction = p_frame.x
-        c_direction = c_frame.x
-
-        c_frame.orient(p_frame, 'Axis', [0, p_frame.x])
-
-        p_joint_point = p_masscenter.locatenew(
-            p_name + '_parent_joint',
-            p_frame.x + p_frame.y + p_frame.z)
-
-        c_joint_point = c_masscenter.locatenew(
-            c_name + '_child_joint',
-            c_frame.x + c_frame.y + c_frame.z)
-
-        p_joint_point.set_vel(p_frame, 0)
-        c_joint_point.set_vel(c_frame, 0)
-
-        c_joint_point.set_pos(p_joint_point, dis * p_direction)
-        c_joint_point.set_vel(p_frame, vel * p_direction)
-        c_masscenter.set_vel(p_frame, vel * p_direction)
-
-        # JointsMethod
-        q_ind = [dis]
-        u_ind = [vel]
-        kd = [disd - vel]
-        BL = [parent, child]
-        gravity = Symbol('gravity')
-        spring_constant = Symbol('k')
-        # Note: Here, spring force is in direction c_frame.x + c_frame.y
-        # but due to sliding joint's restriction of degree of freedom,
-        # the child is moving only in c_frame.x
-        FL = [(c_masscenter, c_mass * gravity * c_frame.x),
-              (c_masscenter, spring_constant * dis * (c_frame.x + c_frame.y))]
-        KM = KanesMethod(p_frame, q_ind=q_ind, u_ind=u_ind, kd_eqs=kd)
-        (fr, frstar) = KM.kanes_equations(FL, BL)
-        eom = KM.rhs()
-
-        assert eom == self.eom
+    assert parent_joint_point.vel(parent.frame) == Vector(0)
+    assert child_joint_point.vel(child.frame) == Vector(0)
+    assert child_joint_point.vel(parent.frame) == vel * parent.frame.x
+    assert child.masscenter.vel(parent.frame) == vel * parent.frame.x
 
 
-class TestCylindricalJoint():
-    def setup(self):
-        parent = Body('parent')
-        child = Body('child')
+def test_cylindrical_joint():
+    parent = Body('parent')
+    child = Body('child')
+    l = Symbol('l')
+    cylindrical_joint = CylindricalJoint('cylindrical_joint', parent, child,
+                                         child_point_pos=(l, l, 0))
 
-        cylindrical_joint = CylindricalJoint('cylindrical_joint', parent, child,
-                                             child_point_pos=(1, 1, 1))
+    assert cylindrical_joint.name == 'cylindrical_joint'
+    assert cylindrical_joint.parent == parent
+    assert cylindrical_joint.child == child
+    assert cylindrical_joint.parent_joint_vector == Vector(0)
+    assert cylindrical_joint.child_joint_vector == l * (child.frame.x + child.frame.y)
+    assert cylindrical_joint.parent_axis == parent.frame.x
+    assert cylindrical_joint.child_axis == child.frame.x
+    
+    dis = dynamicsymbols('cylindrical_joint_dis')
+    disd = dynamicsymbols('cylindrical_joint_dis', 1)
+    vel = dynamicsymbols('cylindrical_joint_vel')
 
-        JM = JointsMethod([cylindrical_joint], parent)
-        self.eom = JM.rhs()
+    theta = dynamicsymbols('cylindrical_joint_theta')
+    thetad = dynamicsymbols('cylindrical_joint_theta', 1)
+    omega = dynamicsymbols('cylindrical_joint_omega')
 
-    def test_simple_equation_of_motion(self):
-        # parent
-        p_name = "parent"
-        p_frame = ReferenceFrame(p_name + '_frame')
-        p_masscenter = Point(p_name + '_masscenter')
-        p_masscenter.set_vel(p_frame, 0)
-        p_mass = Symbol(p_name + '_mass')
-        p_inertia = (inertia(p_frame, 1, 1, 1), p_masscenter)
-        parent = RigidBody(p_name, p_masscenter, p_frame, p_mass, p_inertia)
+    assert cylindrical_joint.coordinates == [dis, theta]
+    assert cylindrical_joint.speeds == [vel, omega]
+    assert cylindrical_joint.kds == [disd - vel, thetad - omega]
 
-        # child
-        c_name = "child"
-        c_frame = ReferenceFrame(c_name + '_frame')
-        c_masscenter = Point(c_name + '_masscenter')
-        c_masscenter.set_vel(c_frame, 0)
-        c_mass = Symbol(c_name + '_mass')
-        c_inertia = (inertia(c_frame, 1, 1, 1), c_masscenter)
-        child = RigidBody(c_name, c_masscenter, c_frame, c_mass, c_inertia)
-
-        # Cylindrical joint
-        dis = dynamicsymbols('dis')
-        disd = dynamicsymbols('dis', 1)
-        vel = dynamicsymbols('vel')
-        theta = dynamicsymbols('theta')
-        thetad = dynamicsymbols('theta', 1)
-        omega = dynamicsymbols('omega')
-
-        p_axis = p_frame.x
-        c_axis = c_frame.x
-
-        c_frame.orient(p_frame, 'Axis', [0, p_frame.x])
-
-        p_joint_point = p_masscenter.locatenew(
-            p_name + '_parent_joint',
-            Vector(0))
-
-        c_joint_point = c_masscenter.locatenew(
-            c_name + '_child_joint',
-            c_frame.x + c_frame.y + c_frame.z)
-
-        c_frame.orient(p_frame, 'Axis', [theta, p_axis])
-        c_frame.set_ang_vel(p_frame, omega * p_axis)
-
-        c_joint_point.set_pos(p_joint_point, dis * p_axis)
-        c_joint_point.set_vel(p_frame, vel * p_axis)
-        c_masscenter.set_vel(p_frame, vel * p_axis)
-
-        c_joint_point.set_pos(p_joint_point, 0)
-        c_masscenter.v2pt_theory(p_masscenter, p_frame, c_frame)
-
-        # JointsMethod
-        q_ind = [theta, dis]
-        u_ind = [omega, vel]
-        kd = [thetad - omega, disd - vel]
-        BL = [parent, child]
-        gravity = Symbol('gravity')
-        spring_constant = Symbol('k')
-        FL = [(c_masscenter, c_mass * gravity * c_frame.y),
-              (c_masscenter, c_mass * gravity * c_frame.x),
-              (c_masscenter, spring_constant * dis * (c_frame.x + c_frame.y))]
-
-        KM = KanesMethod(p_frame, q_ind=q_ind, u_ind=u_ind, kd_eqs=kd)
-        (fr, frstar) = KM.kanes_equations(FL, BL)
-        eom = KM.rhs()
-
-        assert eom == self.eom
+    child_joint_point = sliding_joint.child_joint_vector
+    parent_joint_point = sliding_joint.parent_joint_point
+    assert parent_joint_point.name == 'cylindrical_joint_parent_joint'
+    assert child_joint_point.name == 'cylindrical_joint_child_joint'
+    assert child_joint_point.pos_from(parent_joint_point) == dis * parent.frame.x
+    child_joint_masscenter = l * (child.frame.x + l * child.frame.y)
+    assert child_joint_point.pos_from(child.masscenter) == child_joint_masscenter
+    assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
+    assert child.frame.ang_vel_in(parent.frame) == omega * parent.frame.x

@@ -1,13 +1,13 @@
 from sympy import acos
-from sympy.physics.vector import cross, Vector, dot
-from sympy.physics.mechanics import dynamicsymbols
+from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
+from sympy.physics.mechanics.functions import convert_tuple_to_vector
 
 __all__ = ['Joint', 'PinJoint', 'SlidingJoint', 'CylindricalJoint',
            'SphericalJoint', 'PlanarJoint']
 
 
 class Joint(object):
-    """Base class for all specific joints.
+    """Abstract Base class for all specific joints.
 
     Joints connects two bodies (a parent and child) by adding degrees of freedom
     to child w.r.t parent. Different joints adds different degrees of freedom.
@@ -44,7 +44,7 @@ class Joint(object):
     """
 
     def __init__(self, name, parent, child, parent_point_pos=None,
-                 child_point_pos=None, parent_axis=None, child_axis=None):
+                 child_point_pos=None):
         self.name = name
         self.parent = parent
         self.child = child
@@ -58,38 +58,13 @@ class Joint(object):
         if child_point_pos is None:
             child_point_pos = (0, 0, 0)  # Child's Center of mass
 
-        self.parent_joint_vector = self._convert_tuple_to_vector(
+        self.parent_joint_vector = convert_tuple_to_vector(
             parent.frame, parent_point_pos)
-        self.child_joint_vector = self._convert_tuple_to_vector(
+        self.child_joint_vector = convert_tuple_to_vector(
             child.frame, child_point_pos)
 
-        if parent_axis is None:
-            self.parent_axis = parent.frame.x
-        else:
-            self.parent_axis = self._convert_tuple_to_vector(parent.frame,
-                                                             parent_axis)
-        if child_axis is None:
-            self.child_axis = child.frame.x
-        else:
-            self.child_axis = self._convert_tuple_to_vector(child.frame,
-                                                            child_axis)
         self._locate_joint_point()
         self.apply_joint()
-
-    def _convert_tuple_to_vector(self, frame, pos_tuple):
-        if len(pos_tuple) != 3:
-            raise TypeError('position tuple must be of length 3')
-        else:
-            unit_vectors = [frame.x, frame.y, frame.z]
-            vector = Vector(0)
-            for i in range(3):
-                vector += pos_tuple[i] * unit_vectors[i]
-            return vector
-
-    def get_angle(self, vec1, vec2):
-        mag1 = vec1.magnitude()
-        mag2 = vec2.magnitude()
-        return acos(dot(vec1, vec2)/(mag1 * mag2))
 
     def _locate_joint_point(self):
         self.parent_joint_point = self.parent.masscenter.locatenew(
@@ -99,10 +74,12 @@ class Joint(object):
             self.name + '_child_joint',
             self.child_joint_vector)
 
-    def align_axes(self):
+    def _align_axes(self, parent_axis, child_axis):
         """Rotates child_frame so that child_axis is aligned to parent_axis."""
-        angle = self.get_angle(self.parent_axis, self.child_axis)
-        axis = cross(self.child_axis, self.parent_axis)
+        mag1 = parent_axis.magnitude()
+        mag2 = child_axis.magnitude()
+        angle = acos(dot(parent_axis, child_axis)/(mag1 * mag2))
+        axis = cross(child_axis, parent_axis)
         if axis != Vector(0):
             self.child.frame.orient(
                 self.parent.frame, 'Axis', [angle, axis])
@@ -172,13 +149,24 @@ class PinJoint(Joint):
     def __init__(self, name, parent, child, parent_point_pos=None,
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
+        if parent_axis is None:
+            self.parent_axis = parent.frame.x
+        else:
+            self.parent_axis = convert_tuple_to_vector(parent.frame,
+                                                        parent_axis)
+        if child_axis is None:
+            self.child_axis = child.frame.x
+        else:
+            self.child_axis = convert_tuple_to_vector(child.frame,
+                                                       child_axis)
+
         super(PinJoint, self).__init__(name, parent, child, parent_point_pos,
-                                       child_point_pos, parent_axis, child_axis)
+                                       child_point_pos)
 
     def apply_joint(self):
-        theta = dynamicsymbols('theta')
-        thetad = dynamicsymbols('theta', 1)
-        omega = dynamicsymbols('omega')
+        theta = dynamicsymbols(self.name + '_theta')
+        thetad = dynamicsymbols(self.name + '_theta', 1)
+        omega = dynamicsymbols(self.name + '_omega')
 
         self.coordinates.append(theta)
         self.speeds.append(omega)
@@ -188,7 +176,7 @@ class PinJoint(Joint):
                                 [theta, self.parent_axis])
         self.child.frame.set_ang_vel(self.parent.frame,
                                      omega * self.parent_axis)
-        self.align_axes()
+        self._align_axes(self.parent_axis, self.child_axis)
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame, self.child.frame)
@@ -238,9 +226,9 @@ class SlidingJoint(Joint):
     >>> parent = Body('parent')
     >>> child = Body('child')
     >>> sliding_joint = SlidingJoint('slidingjoint', parent, child, \
-                                     child_point_pos=(1, 0, 0)
+                                     child_point_pos=(1, 0, 0))
     >>> sliding_joint.coordinates
-    [(dis(t)]
+    [dis(t)]
     >>> sliding_joint.speeds
     [vel(t)]
 
@@ -248,14 +236,24 @@ class SlidingJoint(Joint):
     def __init__(self, name, parent, child, parent_point_pos, child_point_pos,
                  parent_axis=None, child_axis=None):
 
+        if parent_axis is None:
+            self.parent_axis = parent.frame.x
+        else:
+            self.parent_axis = convert_tuple_to_vector(parent.frame,
+                                                        parent_axis)
+        if child_axis is None:
+            self.child_axis = child.frame.x
+        else:
+            self.child_axis = convert_tuple_to_vector(child.frame,
+                                                       child_axis)
+
         super(SlidingJoint, self).__init__(name, parent, child,
-                                           parent_point_pos, child_point_pos,
-                                           parent_axis, child_axis)
+                                           parent_point_pos, child_point_pos)
 
     def apply_joint(self):
-        dis = dynamicsymbols('dis')
-        disd = dynamicsymbols('dis', 1)
-        vel = dynamicsymbols('vel')
+        dis = dynamicsymbols(self.name + '_dis')
+        disd = dynamicsymbols(self.name + '_dis', 1)
+        vel = dynamicsymbols(self.name + '_vel')
 
         self.coordinates.append(dis)
         self.speeds.append(vel)
@@ -263,7 +261,7 @@ class SlidingJoint(Joint):
 
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [0, self.parent.frame.z])
-        self.align_axes()
+        self._align_axes(self.parent_axis, self.child_axis)
         self._locate_joint_point()
 
         self.parent_joint_point.set_vel(self.parent.frame, 0)
@@ -322,7 +320,7 @@ class CylindricalJoint(Joint):
     >>> parent = Body('parent')
     >>> child = Body('child')
     >>> cylindrical_joint = CylindricalJoint('cylindricaljoint', parent, child, \
-                                             child_point_pos=(1, 1, 0)
+                                             child_point_pos=(1, 1, 0))
     >>> cylindrical_joint.coordinates
     [theta(t), dis(t)]
     >>>cylindrical_joint.speeds
@@ -332,18 +330,28 @@ class CylindricalJoint(Joint):
     def __init__(self, name, parent, child, parent_point_pos=None,
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
+        if parent_axis is None:
+            self.parent_axis = parent.frame.x
+        else:
+            self.parent_axis = convert_tuple_to_vector(parent.frame,
+                                                        parent_axis)
+        if child_axis is None:
+            self.child_axis = child.frame.x
+        else:
+            self.child_axis = convert_tuple_to_vector(child.frame,
+                                                       child_axis)
+
         super(CylindricalJoint, self).__init__(name, parent, child,
-                                               parent_point_pos, child_point_pos,
-                                               parent_axis, child_axis)
+                                               parent_point_pos, child_point_pos)
 
     def apply_joint(self):
-        dis = dynamicsymbols('dis')
-        disd = dynamicsymbols('dis', 1)
-        vel = dynamicsymbols('vel')
+        dis = dynamicsymbols(self.name + '_dis')
+        disd = dynamicsymbols(self.name + '_dis', 1)
+        vel = dynamicsymbols(self.name + '_vel')
 
-        theta = dynamicsymbols('theta')
-        thetad = dynamicsymbols('theta', 1)
-        omega = dynamicsymbols('omega')
+        theta = dynamicsymbols(self.name + '_theta')
+        thetad = dynamicsymbols(self.name + '_theta', 1)
+        omega = dynamicsymbols(self.name + '_omega')
 
         self.coordinates.append(dis)
         self.speeds.append(vel)
@@ -355,7 +363,7 @@ class CylindricalJoint(Joint):
 
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [0, self.parent.frame.z])
-        self.align_axes()
+        self._align_axes(self.parent_axis, self.child_axis)
         self._locate_joint_point()
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [theta, self.parent_axis])
@@ -423,7 +431,7 @@ class PlanarJoint(Joint):
     >>> parent = Body('parent')
     >>> child = Body('child')
     >>> planar_joint = PlanarJoint('planarjoint', parent, child, \
-                                   child_point_pos=(0, 1, 0)
+                                   child_point_pos=(0, 1, 0))
     >>> planar_joint.coordinates
     [theta(t), disx(t), disy(t)]
     >>> planar_joint.speeds
@@ -433,21 +441,31 @@ class PlanarJoint(Joint):
     def __init__(self, name, parent, child, parent_point_pos=None,
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
+        if parent_axis is None:
+            self.parent_axis = parent.frame.x
+        else:
+            self.parent_axis = convert_tuple_to_vector(parent.frame,
+                                                        parent_axis)
+        if child_axis is None:
+            self.child_axis = child.frame.x
+        else:
+            self.child_axis = convert_tuple_to_vector(child.frame,
+                                                       child_axis)
+
         super(PlanarJoint, self).__init__(name, parent, child,
-                                          parent_point_pos, child_point_pos,
-                                          parent_axis, child_axis)
+                                          parent_point_pos, child_point_pos)
 
     def apply_joint(self):
         # generalized coordinates in specific order.
-        theta = dynamicsymbols('theta')  # rotation around z axis.
-        thetad = dynamicsymbols('theta', 1)
-        omega = dynamicsymbols('omega')
-        disx = dynamicsymbols('disx')  # translation along x axis.
-        disxd = dynamicsymbols('disx', 1)
-        velx = dynamicsymbols('velxx')
-        disy = dynamicsymbols('disy')  # translation along y axis.
-        disyd = dynamicsymbols('disy', 1)
-        vely = dynamicsymbols('vely')
+        theta = dynamicsymbols(self.name + '_theta')  # rotation around z axis.
+        thetad = dynamicsymbols(self.name + '_theta', 1)
+        omega = dynamicsymbols(self.name + '_omega')
+        disx = dynamicsymbols(self.name + '_disx')  # translation along x axis.
+        disxd = dynamicsymbols(self.name + '_disx', 1)
+        velx = dynamicsymbols(self.name + '_velx')
+        disy = dynamicsymbols(self.name + '_disy')  # translation along y axis.
+        disyd = dynamicsymbols(self.name + '_disy', 1)
+        vely = dynamicsymbols(self.name + '_vely')
 
         self.coordinates.append(theta)
         self.speeds.append(omega)
@@ -464,7 +482,7 @@ class PlanarJoint(Joint):
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [0, self.parent.frame.x])
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
-        self.align_axes()
+        self._align_axes(self.parent_axis, self.child_axis)
         self._locate_joint_point()
 
         # Adding rotation
@@ -533,7 +551,7 @@ class SphericalJoint(Joint):
     >>> parent = Body('parent')
     >>> child = Body('child')
     >>> spherical_joint = SphericalJoint('sphericaljoint', parent, child, \
-                                         child_point_pos=(0, 1, 0)
+                                         child_point_pos=(0, 1, 0))
     >>> spherical_joint.coordinates
     [thetax(t), thetay(t), thetaz(t)]
     >>> spherical_joint.speeds
@@ -541,22 +559,21 @@ class SphericalJoint(Joint):
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
-                 child_point_pos=None, parent_axis=None, child_axis=None):
+                 child_point_pos=None):
 
         super(SphericalJoint, self).__init__(name, parent, child,
-                                             parent_point_pos, child_point_pos,
-                                             parent_axis, child_axis)
+                                             parent_point_pos, child_point_pos)
 
     def apply_joint(self):
-        thetax = dynamicsymbols('thetax')
-        thetay = dynamicsymbols('thetay')
-        thetaz = dynamicsymbols('thetaz')
-        thetaxd = dynamicsymbols('thetax', 1)
-        thetayd = dynamicsymbols('thetay', 1)
-        thetazd = dynamicsymbols('thetaz', 1)
-        omegax = dynamicsymbols('omegax')
-        omegay = dynamicsymbols('omegay')
-        omegaz = dynamicsymbols('omegaz')
+        thetax = dynamicsymbols(self.name + '_thetax')
+        thetay = dynamicsymbols(self.name + '_thetay')
+        thetaz = dynamicsymbols(self.name + '_thetaz')
+        thetaxd = dynamicsymbols(self.name + '_thetax', 1)
+        thetayd = dynamicsymbols(self.name + '_thetay', 1)
+        thetazd = dynamicsymbols(self.name + '_thetaz', 1)
+        omegax = dynamicsymbols(self.name + '_omegax')
+        omegay = dynamicsymbols(self.name + '_omegay')
+        omegaz = dynamicsymbols(self.name + '_omegaz')
 
         self.coordinates.append(thetax)
         self.speeds.append(omegax)
@@ -570,7 +587,6 @@ class SphericalJoint(Joint):
         self.speeds.append(omegaz)
         self.kds.append(thetazd - omegaz)
 
-        self.align_axes()
         self._locate_joint_point()
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
         

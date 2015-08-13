@@ -570,3 +570,14 @@ def _f_list_parser(fl, ref_frame):
     unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
     vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
+
+
+def convert_tuple_to_vector(self, frame, val_tuple):
+    if len(val_tuple) != 3:
+        raise TypeError('position tuple must be of length 3')
+    else:
+        unit_vectors = [frame.x, frame.y, frame.z]
+        vector = Vector(0)
+        for i in range(3):
+            vector += val_tuple[i] * unit_vectors[i]
+        return vector
