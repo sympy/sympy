@@ -38,7 +38,7 @@ def singularities(expr, sym):
 ###########################################################################
 
 
-def is_increasing(f, interval):
+def is_increasing(f, interval=S.Reals):
     """
     Returns if a function is increasing or not, in the given
     ``Interval``.
@@ -68,7 +68,7 @@ def is_increasing(f, interval):
     return interval.is_subset(df_nonneg_interval)
 
 
-def is_strictly_increasing(f, interval):
+def is_strictly_increasing(f, interval=S.Reals):
     """
     Returns if a function is strictly increasing or not, in the given
     ``Interval``.
@@ -98,7 +98,7 @@ def is_strictly_increasing(f, interval):
     return interval.is_subset(df_pos_interval)
 
 
-def is_decreasing(f, interval):
+def is_decreasing(f, interval=S.Reals):
     """
     Returns if a function is decreasing or not, in the given
     ``Interval``.
@@ -128,7 +128,7 @@ def is_decreasing(f, interval):
     return interval.is_subset(df_nonpos_interval)
 
 
-def is_strictly_decreasing(f, interval):
+def is_strictly_decreasing(f, interval=S.Reals):
     """
     Returns if a function is decreasing or not, in the given
     `Interval``.
@@ -158,7 +158,7 @@ def is_strictly_decreasing(f, interval):
     return interval.is_subset(df_neg_interval)
 
 
-def is_monotonic(f, interval):
+def is_monotonic(f, interval=S.Reals):
     """
     Returns if a function is monotonic or not, in the given
     ``Interval``.
