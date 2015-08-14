@@ -93,3 +93,17 @@ def test_doit_nested_MatrixExpr():
     Y = ImmutableMatrix([[2, 3], [4, 5]])
     assert MatPow(MatMul(X, Y), 2).doit() == (X*Y)**2
     assert MatPow(MatAdd(X, Y), 2).doit() == (X + Y)**2
+
+
+def test_identity_power():
+    k = Identity(n)
+    assert MatPow(k, 4).doit()==k
+    assert MatPow(k, 1).doit() == k
+    assert MatPow(k, -3).doit() == k
+    assert MatPow(k, 0).doit() == k
+
+    l = Identity(3)
+    assert MatPow(l, 2).doit() == l
+    assert MatPow(l, -1).doit() == l
+    assert MatPow(l, 0).doit() == l
+
