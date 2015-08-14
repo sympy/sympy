@@ -175,10 +175,8 @@ def is_monotonic(f, interval=S.Reals):
     True
     >>> is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     True
-
-    # Will Pass after 9822 is merged
-    # >>> is_monotonic(-x**2, S.Reals)
-    # False
+    >>> is_monotonic(-x**2, S.Reals)
+    False
 
     """
     from sympy.core.logic import fuzzy_or

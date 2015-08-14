@@ -57,6 +57,4 @@ def test_is_monotonic():
     assert is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
     assert is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
-
-    # Will Pass after 9822 is merged
-    # assert is_monotonic(-x**2, S.Reals) is False
+    assert is_monotonic(-x**2, S.Reals) is False
