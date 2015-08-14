@@ -26,7 +26,8 @@ def codomain(func, domain, *syms):
     ValueError
           The input is not valid.
     RuntimeError
-          It is a bug, please report to the github issue tracker.
+          It is a bug, please report to the github issue tracker
+          (https://github.com/sympy/sympy/issues).
 
     Examples
     ========
@@ -52,11 +53,11 @@ def codomain(func, domain, *syms):
         raise ValueError("A Symbol or a tuple of symbols must be given")
 
     if len(syms) == 1:
-        symbol = syms[0]
+        sym = syms[0]
     else:
         raise NotImplementedError("more than one variables %s not handled" % (syms,))
 
-    if not func.has(symbol):
+    if not func.has(sym):
         return FiniteSet(func)
 
     # this block of code can be replaced by
@@ -77,7 +78,7 @@ def codomain(func, domain, *syms):
         return Intersection(FiniteSet(*singul), set_im)
 
     # all the singularities of the function
-    sing = solveset(func.as_numer_denom()[1], symbol, domain=S.Reals)
+    sing = solveset(func.as_numer_denom()[1], sym, domain=S.Reals)
     sing_in_domain = closure_handle(domain, sing)
     domain = Complement(domain, sing_in_domain)
 
@@ -146,14 +147,14 @@ def codomain(func, domain, *syms):
         return Union(Interval(minimum[0], maximum[0], minimum[1], maximum[1]))
 
     if isinstance(domain, Union):
-        return Union(*[codomain(func, intrvl_or_finset, symbol) for intrvl_or_finset in domain.args])
+        return Union(*[codomain(func, intrvl_or_finset, sym) for intrvl_or_finset in domain.args])
 
     if isinstance(domain, Interval):
-        return codomain_interval(func, domain, symbol)
+        return codomain_interval(func, domain, sym)
 
     if isinstance(domain, FiniteSet):
-        return FiniteSet(*[limit(func, symbol, i) if i in FiniteSet(-oo, oo)
-                            else func.subs({symbol: i}) for i in domain])
+        return FiniteSet(*[limit(func, sym, i) if i in FiniteSet(-oo, oo)
+                            else func.subs({sym: i}) for i in domain])
 
 
 def not_empty_in(finset_intersection, *syms):
@@ -177,7 +178,8 @@ def not_empty_in(finset_intersection, *syms):
     ValueError
         The input is not valid.
     RuntimeError
-        It is a bug, please report to the github issue tracker.
+        It is a bug, please report to the github issue tracker
+        (https://github.com/sympy/sympy/issues).
 
     Examples
     ========
@@ -208,10 +210,12 @@ def not_empty_in(finset_intersection, *syms):
     else:
         finite_set = finset_intersection.args[1]
         sets = finset_intersection.args[0]
+
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
+
     if len(syms) == 1:
-        symbol = syms[0]
+        symb = syms[0]
     else:
         raise NotImplementedError('more than one variables %s not handled' % (syms,))
 
@@ -225,7 +229,7 @@ def not_empty_in(finset_intersection, *syms):
         domain_union = S.EmptySet
 
         # find the inverse of items in the finite_set
-        invert_expr = solveset(expr - y, symbol, domain=S.Reals)
+        invert_expr = solveset(expr - y, symb, domain=S.Reals)
 
         if isinstance(invert_expr, Intersection):
             invert_set = invert_expr.args[1]
@@ -248,4 +252,4 @@ def not_empty_in(finset_intersection, *syms):
             domain_union = Union(domain_union, domain)
         return domain_union
 
-    return Union(*[elm_domain(element, sets, symbol) for element in finite_set])
+    return Union(*[elm_domain(element, sets, symb) for element in finite_set])
