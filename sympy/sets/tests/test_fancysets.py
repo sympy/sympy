@@ -186,6 +186,7 @@ def test_Reals():
     assert (2, 5) not in S.Reals
     assert sqrt(-1) not in S.Reals
     assert S.Reals == Interval(-oo, oo)
+    assert S.Reals != Interval(0, oo)
 
 
 def test_Complex():

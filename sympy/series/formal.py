@@ -34,15 +34,20 @@ def rational_algorithm(f, x, k, order=4, full=False):
     is a rational function in x.
 
     :func:`rational_algorithm` uses :func:`apart` function for partial fraction
-    decomposition. :func`apart` by default uses 'undetermined coefficients
+    decomposition. :func:`apart` by default uses 'undetermined coefficients
     method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
     This can be overriden using order option.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -62,11 +67,11 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Notes
     =====
 
-    By setting full=True, range of admissible functions to be solved using
-    rational_algorithm can be increased. This option should be used carefully
-    as it can signifcantly slow down the computation as ``doit`` is performed
-    on the :class:`RootSum` object returned by the ``apart`` function.
-    Use full=False whenever possible.
+    By setting ``full=True``, range of admissible functions to be solved using
+    ``rational_algorithm`` can be increased. This option should be used
+    carefully as it can signifcantly slow down the computation as ``doit`` is
+    performed on the :class:`RootSum` object returned by the ``apart`` function.
+    Use ``full=False`` whenever possible.
 
     See Also
     ========
@@ -183,7 +188,7 @@ def simpleDE(f, x, g, order=4):
     DE is of the form
 
     .. math::
-        f^k(x) + \sum\limits\_{j=0}^{k-1} A_j f^j(x) = 0
+        f^k(x) + \sum\limits_{j=0}^{k-1} A_j f^j(x) = 0
 
     where :math:`A_j` should be rational function in x.
 
@@ -223,8 +228,12 @@ def simpleDE(f, x, g, order=4):
 def exp_re(DE, r, k):
     """Converts a DE with constant coefficients (explike) into a RE.
 
-    Substitutes :math:`f^j(x) \to r(k + j)`. Normalises the terms
-    so that lowest order of a term is always r(k).
+    Performs the substitution:
+
+    .. math::
+        f^j(x) \\to r(k + j)
+
+    Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
     ========
@@ -266,7 +275,11 @@ def exp_re(DE, r, k):
 def hyper_re(DE, r, k):
     """Converts a DE into a RE.
 
-    Substitutes :math:`x^l f^j(x) \to (k + 1 - l)_j . a_{k + j - l}`.
+    Performs the substitution:
+
+    .. math::
+        x^l f^j(x) \\to (k + 1 - l)_j . a_{k + j - l}
+
     Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
@@ -459,8 +472,13 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
     Some of these transformations have been used to solve the RE.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -636,8 +654,13 @@ def solve_de(f, x, DE, order, g, k):
     Tries to solve DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -828,11 +851,8 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
                 full=False):
     """Computes the formula for Formal Power Series of a function.
 
-    Returns (sequence of coefficients, sequence of x, independent terms,
-    common terms).
-
     Tries to compute the formula by applying the following techniques
-    (in order)
+    (in order):
 
     * rational_algorithm
     * Hypergeomitric algorithm
@@ -860,11 +880,23 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
         See :func:`rational_algorithm` for details. By default it is set to
         False.
 
+    Returns
+    =======
+
+    ak : sequence
+        Sequence of coefficients.
+    xk : sequence
+        Sequence of powers of x.
+    ind : Expr
+        Independent terms.
+    mul : Pow
+        Common terms.
+
     See Also
     ========
 
-    sympy.series.rational_algorithm
-    sympy.series.hyper_algorithm
+    sympy.series.formal.rational_algorithm
+    sympy.series.formal.hyper_algorithm
     """
     f = sympify(f)
     x = sympify(x)

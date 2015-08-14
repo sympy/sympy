@@ -75,7 +75,7 @@ class LagrangesMethod(object):
     with the Vectors representing the nonconservative forces or torques.
 
         >>> Pa = Particle('Pa', P, m)
-        >>> Pa.set_potential_energy(k * q**2 / 2.0)
+        >>> Pa.potential_energy = k * q**2 / 2.0
         >>> L = Lagrangian(N, Pa)
         >>> fl = [(P, -b * qd * N.x)]
 

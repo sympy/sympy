@@ -4,6 +4,7 @@ __all__ = ['RigidBody']
 
 from sympy import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class RigidBody(object):
@@ -51,49 +52,103 @@ class RigidBody(object):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_masscenter(masscenter)
-        self.set_mass(mass)
-        self.set_frame(frame)
-        self.set_inertia(inertia)
-        self._pe = sympify(0)
+        self.masscenter = masscenter
+        self.mass = mass
+        self.frame = frame
+        self.inertia = inertia
+        self.potential_energy = 0
 
     def __str__(self):
         return self._name
 
     __repr__ = __str__
 
-    def get_frame(self):
+    @property
+    def frame(self):
         return self._frame
 
-    def set_frame(self, F):
+    @frame.setter
+    def frame(self, F):
         if not isinstance(F, ReferenceFrame):
             raise TypeError("RigdBody frame must be a ReferenceFrame object.")
         self._frame = F
 
-    frame = property(get_frame, set_frame)
+    def get_frame(self):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.get_frame(self)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.frame",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        return self.frame
 
-    def get_masscenter(self):
+    def set_frame(self, F):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_frame(self, F)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.frame",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        self.frame = F
+
+    @property
+    def masscenter(self):
         return self._masscenter
 
-    def set_masscenter(self, p):
+    @masscenter.setter
+    def masscenter(self, p):
         if not isinstance(p, Point):
             raise TypeError("RigidBody center of mass must be a Point object.")
         self._masscenter = p
 
-    masscenter = property(get_masscenter, set_masscenter)
+    def get_masscenter(self):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.get_masscenter(self)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.masscenter",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        return self.masscenter
 
-    def get_mass(self):
+    def set_masscenter(self, p):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_masscenter(self, p)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.masscenter",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        self.masscenter = p
+
+    @property
+    def mass(self):
         return self._mass
 
-    def set_mass(self, m):
+    @mass.setter
+    def mass(self, m):
         self._mass = sympify(m)
 
-    mass = property(get_mass, set_mass)
+    def get_mass(self):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.get_mass(self)",
+                useinstead="property sympy.physics.mechanics.RigidBody.mass",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        return self.mass
 
-    def get_inertia(self):
+    def set_mass(self, m):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_mass(self, m)",
+                useinstead="property sympy.physics.mechanics.RigidBody.mass",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        self.mass = m
+
+    @property
+    def inertia(self):
         return (self._inertia, self._inertia_point)
 
-    def set_inertia(self, I):
+    @inertia.setter
+    def inertia(self, I):
         if not isinstance(I[0], Dyadic):
             raise TypeError("RigidBody inertia must be a Dyadic object.")
         if not isinstance(I[1], Point):
@@ -109,7 +164,23 @@ class RigidBody(object):
                                        self.frame)
         self._central_inertia = I[0] - I_Ss_O
 
-    inertia = property(get_inertia, set_inertia)
+    def get_inertia(self):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.get_inertia(self)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.inertia",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        return self.inertia
+
+    def set_inertia(self, I):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_inertia(self, I)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.inertia",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        self.inertia = I
 
     @property
     def central_inertia(self):
@@ -244,7 +315,31 @@ class RigidBody(object):
 
         return rotational_KE + translational_KE
 
-    def set_potential_energy(self, scalar):
+    @property
+    def potential_energy(self):
+        """The potential energy of the RigidBody.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+        >>> from sympy import symbols
+        >>> M, g, h = symbols('M g h')
+        >>> b = ReferenceFrame('b')
+        >>> P = Point('P')
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.potential_energy = M * g * h
+        >>> B.potential_energy
+        M*g*h
+
+        """
+
+        return self._pe
+
+    @potential_energy.setter
+    def potential_energy(self, scalar):
         """Used to set the potential energy of this RigidBody.
 
         Parameters
@@ -265,31 +360,17 @@ class RigidBody(object):
         >>> I = outer (b.x, b.x)
         >>> Inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.set_potential_energy(M * g * h)
+        >>> B.potential_energy = M * g * h
 
         """
 
         self._pe = sympify(scalar)
 
-    @property
-    def potential_energy(self):
-        """The potential energy of the RigidBody.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
-        >>> from sympy import symbols
-        >>> M, g, h = symbols('M g h')
-        >>> b = ReferenceFrame('b')
-        >>> P = Point('P')
-        >>> I = outer (b.x, b.x)
-        >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.set_potential_energy(M * g * h)
-        >>> B.potential_energy
-        M*g*h
-
-        """
-
-        return self._pe
+    def set_potential_energy(self, scalar):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_potential_energy(self, scalar)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.potential_energy",
+                deprecated_since_version="0.7.7", issue=9800).warn()
+        self.potential_energy = scalar
