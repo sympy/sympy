@@ -56,6 +56,8 @@ class MatPow(MatrixExpr):
             args = self.args
         base = args[0]
         exp = args[1]
+        if isinstance(base,Identity) and exp.is_number:
+            return base
         if isinstance(base, MatrixBase) and exp.is_number:
             if exp is S.One:
                 return base
