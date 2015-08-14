@@ -423,6 +423,9 @@ class PlanarJoint(Joint):
         axis before adding joint. If it is not passed, default is x axis in
         child's frame.
 
+    Note: Both child_point_pos and parent_point_pos cannot be None, atleast
+    one of them must be supplied.
+
     Example
     -------
     Adds planar Joint between parent's masscenter and a point at unit distance
@@ -430,8 +433,9 @@ class PlanarJoint(Joint):
     >>> from sympy.physics.mechanics import Body, PlanarJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
+    >>> l = Symbol('l')
     >>> planar_joint = PlanarJoint('planarjoint', parent, child, \
-                                   child_point_pos=(0, 1, 0))
+                                   child_point_pos=(0, l, 0))
     >>> planar_joint.coordinates
     [theta(t), disx(t), disy(t)]
     >>> planar_joint.speeds
@@ -451,6 +455,10 @@ class PlanarJoint(Joint):
         else:
             self.child_axis = convert_tuple_to_vector(child.frame,
                                                        child_axis)
+
+        if child_point_pos is None and parent_point_pos is None:
+            raise TypeError("Atleast one of child_point_pos " +
+                            "or parent_point_pos must be supplied.")
 
         super(PlanarJoint, self).__init__(name, parent, child,
                                           parent_point_pos, child_point_pos)
@@ -478,7 +486,16 @@ class PlanarJoint(Joint):
         self.coordinates.append(disy)
         self.speeds.append(vely)
         self.kds.append(disyd - vely)
+
+        # getting vectors in the joint plane, atleast one of them is not 0 vec.
+        if self.parent_joint_vector is not Vector(0):
+            self.vecx = cross(self.parent_axis, self.parent_joint_vector)
+        else:
+            self.vecx = cross(self.parent_axis, self.child_joint_vector)
         
+        self.vecy = cross(self.parent_axis, self.vecx)
+        self.vecz = self.parent_axis  # To maintain symmetry, not used anywhere.
+
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [0, self.parent.frame.x])
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
@@ -487,21 +504,17 @@ class PlanarJoint(Joint):
 
         # Adding rotation
         self.child.frame.orient(self.parent.frame, 'Axis',
-                                [theta, self.parent.frame.z])
+                                [theta, self.parent_axis])
         self.child.frame.set_ang_vel(self.parent.frame,
-                                     omega * self.parent.frame.z)
+                                     omega * self.parent_axis)
         
-        # Adding translation along x axis.
-        self.child_joint_point.set_pos(self.parent_joint_point,
-                                       disx * self.parent.frame.x)
-        self.child_joint_point.set_vel(self.parent.frame,
-                                       velx * self.parent.frame.x)
+        # Adding translation along self.vecx.
+        self.child_joint_point.set_pos(self.parent_joint_point, disx * self.vecx)
+        self.child_joint_point.set_vel(self.parent.frame, velx * self.vecx)
         
         # Adding translation along y axis
-        self.child_joint_point.set_pos(self.parent_joint_point,
-                                       disy * self.parent.frame.y)
-        self.child_joint_point.set_vel(self.parent.frame,
-                                       vely * self.parent.frame.y)
+        self.child_joint_point.set_pos(self.parent_joint_point, disy * self.vecy)
+        self.child_joint_point.set_vel(self.parent.frame, vely * self.vecy)
         
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame, self.child.frame)
@@ -550,8 +563,9 @@ class SphericalJoint(Joint):
     >>> from sympy.physics.mechanics import Body, SphericalJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
+    >>> l = Symbol('l')
     >>> spherical_joint = SphericalJoint('sphericaljoint', parent, child, \
-                                         child_point_pos=(0, 1, 0))
+                                         child_point_pos=(0, l, 0))
     >>> spherical_joint.coordinates
     [thetax(t), thetay(t), thetaz(t)]
     >>> spherical_joint.speeds
