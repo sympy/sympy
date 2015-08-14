@@ -1,4 +1,3 @@
-from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
 from sympy import S
@@ -42,12 +41,12 @@ def singularities(expr, sym):
 def is_increasing(f, interval):
     """
     Returns if a function is increasing or not, in the given
-    `Interval`.
+    ``Interval``.
 
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import is_increasing
+    >>> from sympy import is_increasing
     >>> from sympy.abc import x
     >>> from sympy import S, Interval, oo
     >>> is_increasing(x**3 - 3*x**2 + 4*x, S.Reals)
@@ -72,14 +71,14 @@ def is_increasing(f, interval):
 def is_strictly_increasing(f, interval):
     """
     Returns if a function is strictly increasing or not, in the given
-    `Interval`.
+    ``Interval``.
 
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import is_strictly_increasing
+    >>> from sympy import is_strictly_increasing
     >>> from sympy.abc import x
-    >>> from sympy import S, Interval, oo
+    >>> from sympy import Interval, oo
     >>> is_strictly_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval.Ropen(-oo, -2))
     True
     >>> is_strictly_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval.Lopen(3, oo))
@@ -102,12 +101,12 @@ def is_strictly_increasing(f, interval):
 def is_decreasing(f, interval):
     """
     Returns if a function is decreasing or not, in the given
-    `Interval`.
+    ``Interval``.
 
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import is_decreasing
+    >>> from sympy import is_decreasing
     >>> from sympy.abc import x
     >>> from sympy import S, Interval, oo
     >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
@@ -132,12 +131,12 @@ def is_decreasing(f, interval):
 def is_strictly_decreasing(f, interval):
     """
     Returns if a function is decreasing or not, in the given
-    `Interval`.
+    `Interval``.
 
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import is_decreasing
+    >>> from sympy import is_decreasing
     >>> from sympy.abc import x
     >>> from sympy import S, Interval, oo
     >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
@@ -162,14 +161,14 @@ def is_strictly_decreasing(f, interval):
 def is_monotonic(f, interval):
     """
     Returns if a function is monotonic or not, in the given
-    `Interval`.
+    ``Interval``.
 
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import is_monotonic
+    >>> from sympy import is_monotonic
     >>> from sympy.abc import x
-    >>> from sympy import S, Interval, oo, Or
+    >>> from sympy import S, Interval, oo
     >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
