@@ -181,7 +181,7 @@ def is_monotonic(f, interval=S.Reals):
     # False
 
     """
-    from sympy.core.logic import fuzzy_and, fuzzy_or
+    from sympy.core.logic import fuzzy_or
     if len(f.free_symbols) > 1:
         raise NotImplementedError('is_monotonic has not yet been '
                                   'implemented for multivariate expressions')
