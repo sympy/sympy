@@ -116,7 +116,7 @@ class MatrixExpr(Basic):
             return Identity(self.rows)
         elif other is S.One:
             return self
-        elif self.is_Identity == True:
+        elif self.is_Identity:
             return self
         return MatPow(self, other)
 
