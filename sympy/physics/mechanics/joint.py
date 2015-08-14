@@ -127,23 +127,24 @@ class PinJoint(Joint):
         axis before adding joint. If it is not passed, default is x axis in
         child's frame.
 
-    Example
-    -------
+    Examples
+    --------
     Adding a Pin Joint which connects center of mass of parent to a point
     pointed by child.frame.x + child.frame.y . Gravity is along y axis of
     parent.
+
     >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Body, PinJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
     >>> gravity = Symbol('gravity')
-    >>> child.add_force(child.mass * gravity * parent.frame.y, child.masscenter)
-    >>> pin_joint = PinJoint('pin_joint', parent, \
+    >>> child.apply_force(child.mass * gravity * parent.frame.y, child.masscenter)
+    >>> pin_joint = PinJoint('pinjoint', parent, \
                              child, child_point_pos=(1, 1, 0))
     >>> pin_joint.coordinates
-    [theta(t)]
+    [pinjoint_theta(t)]
     >>> pin_joint.speeds
-    [omega(t)]
+    [pinjoint_omega(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
@@ -215,20 +216,22 @@ class SlidingJoint(Joint):
         axis before adding joint. If it is not passed, default is x axis in
         child's frame.
 
-    Example
-    -------
+    Examples
+    --------
     Adds sliding Joint between parent's masscenter and a point located at unit
     distance in x axis of child.
-    >>> from sympy import
+
+    >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Body, SlidingJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
+    >>> l = Symbol('l')
     >>> sliding_joint = SlidingJoint('slidingjoint', parent, child, \
-                                     child_point_pos=(1, 0, 0))
+                                     child_point_pos=(l, 0, 0))
     >>> sliding_joint.coordinates
-    [dis(t)]
+    [slidingjoint_dis(t)]
     >>> sliding_joint.speeds
-    [vel(t)]
+    [slidingjoint_vel(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None, child_point_pos=None,
@@ -308,19 +311,20 @@ class CylindricalJoint(Joint):
         axis before adding joint. If it is not passed, default is x axis in
         child's frame.
 
-    Example
-    -------
+    Examples
+    --------
     Adds cylindrical Joint between parent's masscenter and a point located by
     child.frame.x + child.frame.y in child.
+
     >>> from sympy.physics.mechanics import Body, CylindricalJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
     >>> cylindrical_joint = CylindricalJoint('cylindricaljoint', parent, child, \
                                              child_point_pos=(1, 1, 0))
     >>> cylindrical_joint.coordinates
-    [theta(t), dis(t)]
-    >>>cylindrical_joint.speeds
-    [omega(t), vel(t)]
+    [cylindricaljoint_dis(t), cylindricaljoint_theta(t)]
+    >>> cylindrical_joint.speeds
+    [cylindricaljoint_vel(t), cylindricaljoint_omega(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
@@ -420,10 +424,12 @@ class PlanarJoint(Joint):
     Note: Both child_point_pos and parent_point_pos cannot be None, atleast
     one of them must be supplied.
 
-    Example
-    -------
+    Examples
+    --------
     Adds planar Joint between parent's masscenter and a point at unit distance
     along child's y axis.
+
+    >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Body, PlanarJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
@@ -431,9 +437,9 @@ class PlanarJoint(Joint):
     >>> planar_joint = PlanarJoint('planarjoint', parent, child, \
                                    child_point_pos=(0, l, 0))
     >>> planar_joint.coordinates
-    [theta(t), disx(t), disy(t)]
+    [planarjoint_theta(t), planarjoint_disx(t), planarjoint_disy(t)]
     >>> planar_joint.speeds
-    [omega(t), velx(t), vely(t)]
+    [planarjoint_omega(t), planarjoint_velx(t), planarjoint_vely(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
@@ -548,10 +554,12 @@ class SphericalJoint(Joint):
         axis before adding joint. If it is not passed, default is x axis in
         child's frame.
 
-    Example
-    -------
+    Examples
+    --------
     Adds spherical Joint between parent's masscenter and a point at unit distance
     along child's y axis.
+
+    >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Body, SphericalJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
@@ -559,9 +567,9 @@ class SphericalJoint(Joint):
     >>> spherical_joint = SphericalJoint('sphericaljoint', parent, child, \
                                          child_point_pos=(0, l, 0))
     >>> spherical_joint.coordinates
-    [thetax(t), thetay(t), thetaz(t)]
+    [sphericaljoint_thetax(t), sphericaljoint_thetay(t), sphericaljoint_thetaz(t)]
     >>> spherical_joint.speeds
-    [omegax(t), omegay(t), omegaz(t)]
+    [sphericaljoint_omegax(t), sphericaljoint_omegay(t), sphericaljoint_omegaz(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
