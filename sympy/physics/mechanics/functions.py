@@ -572,7 +572,7 @@ def _f_list_parser(fl, ref_frame):
     return vel_list, f_list
 
 
-def convert_tuple_to_vector(self, frame, val_tuple):
+def convert_tuple_to_vector(frame, val_tuple):
     if len(val_tuple) != 3:
         raise TypeError('position tuple must be of length 3')
     else:

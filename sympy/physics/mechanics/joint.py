@@ -152,13 +152,11 @@ class PinJoint(Joint):
         if parent_axis is None:
             self.parent_axis = parent.frame.x
         else:
-            self.parent_axis = convert_tuple_to_vector(parent.frame,
-                                                        parent_axis)
+            self.parent_axis = parent_axis
         if child_axis is None:
             self.child_axis = child.frame.x
         else:
-            self.child_axis = convert_tuple_to_vector(child.frame,
-                                                       child_axis)
+            self.child_axis = child_axis
 
         super(PinJoint, self).__init__(name, parent, child, parent_point_pos,
                                        child_point_pos)
@@ -233,19 +231,17 @@ class SlidingJoint(Joint):
     [vel(t)]
 
     """
-    def __init__(self, name, parent, child, parent_point_pos, child_point_pos,
+    def __init__(self, name, parent, child, parent_point_pos=None, child_point_pos=None,
                  parent_axis=None, child_axis=None):
 
         if parent_axis is None:
             self.parent_axis = parent.frame.x
         else:
-            self.parent_axis = convert_tuple_to_vector(parent.frame,
-                                                        parent_axis)
+            self.parent_axis = parent_axis
         if child_axis is None:
             self.child_axis = child.frame.x
         else:
-            self.child_axis = convert_tuple_to_vector(child.frame,
-                                                       child_axis)
+            self.child_axis = child_axis
 
         super(SlidingJoint, self).__init__(name, parent, child,
                                            parent_point_pos, child_point_pos)
@@ -333,13 +329,11 @@ class CylindricalJoint(Joint):
         if parent_axis is None:
             self.parent_axis = parent.frame.x
         else:
-            self.parent_axis = convert_tuple_to_vector(parent.frame,
-                                                        parent_axis)
+            self.parent_axis = parent_axis
         if child_axis is None:
             self.child_axis = child.frame.x
         else:
-            self.child_axis = convert_tuple_to_vector(child.frame,
-                                                       child_axis)
+            self.child_axis = child_axis
 
         super(CylindricalJoint, self).__init__(name, parent, child,
                                                parent_point_pos, child_point_pos)
@@ -448,13 +442,11 @@ class PlanarJoint(Joint):
         if parent_axis is None:
             self.parent_axis = parent.frame.x
         else:
-            self.parent_axis = convert_tuple_to_vector(parent.frame,
-                                                        parent_axis)
+            self.parent_axis = parent_axis
         if child_axis is None:
             self.child_axis = child.frame.x
         else:
-            self.child_axis = convert_tuple_to_vector(child.frame,
-                                                       child_axis)
+            self.child_axis = child_axis
 
         if child_point_pos is None and parent_point_pos is None:
             raise TypeError("Atleast one of child_point_pos " +
@@ -603,18 +595,12 @@ class SphericalJoint(Joint):
 
         self._locate_joint_point()
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
-        
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [thetax, self.parent.frame.x])
+
+        self.child.frame.orient(self.parent.frame, 'Body',
+                                [thetax, thetay, thetaz], 'XYZ')
         self.child.frame.set_ang_vel(self.parent.frame,
-                                     omegax * self.parent.frame.x)
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [thetay, self.parent.frame.y])
-        self.child.frame.set_ang_vel(self.parent.frame,
-                                     omegay * self.parent.frame.y)
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [thetaz, self.parent.frame.z])
-        self.child.frame.set_ang_vel(self.parent.frame,
+                                     omegax * self.parent.frame.x +
+                                     omegay * self.parent.frame.y +
                                      omegaz * self.parent.frame.z)
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame,
