@@ -512,7 +512,7 @@ class FallingFactorial(CombinatorialFunction):
     Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
     Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, polygamma
+    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial
     >>> from sympy.abc import x, k
     >>> ff(x, 0)
     1
@@ -531,6 +531,10 @@ class FallingFactorial(CombinatorialFunction):
     (-1)**k*gamma(k - x)/gamma(-x)
     >>> ff(x, k).rewrite(rf)
     RisingFactorial(-k + x + 1, k)
+    >>> ff(x, k).rewrite(binomial)
+    binomial(x, k)*factorial(k)
+    >>> ff(x, k).rewrite(factorial)
+    factorial(x)/factorial(-k + x)
 
     See Also
     ========
@@ -606,6 +610,12 @@ class FallingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_RisingFactorial(self, x, k):
         return rf(x - k + 1, k)
+
+    def _eval_rewrite_as_binomial(self, x, k):
+        return factorial(k) * binomial(x, k)
+
+    def _eval_rewrite_as_factorial(self, x, k):
+        return factorial(x) / factorial(x - k)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,

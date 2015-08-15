@@ -94,11 +94,16 @@ def test_ff_eval_apply():
     assert ff(x, k).rewrite(rf) == rf(x - k + 1, k)
 <<<<<<< HEAD
     assert ff(x, k).rewrite(gamma) == gamma(x + 1) / gamma(x - k + 1)
+<<<<<<< HEAD
 =======
     assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
     assert ff(x, k).rewrite(factorial) == factorial(x) / factorial(x - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
 >>>>>>> 9778045... revert to old gamma representation
+=======
+    assert ff(x, k).rewrite(factorial) == factorial(x) / factorial(x - k)
+    assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
+>>>>>>> 6515e7e... rewrite ff in terms of factorial and binomial
 
 
 def test_factorial():
