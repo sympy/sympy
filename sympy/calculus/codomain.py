@@ -1,4 +1,4 @@
-from sympy import S, sympify, diff, limit, oo, Dummy
+from sympy import S, sympify, diff, limit, oo
 from sympy.calculus.singularities import singularities
 from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
 from sympy.solvers.solveset import solveset
@@ -184,9 +184,9 @@ def not_empty_in(finset_intersection, *syms):
     Examples
     ========
 
-    >>> from sympy import Symbol, codomain, FiniteSet, Interval, sqrt, oo
+    >>> from sympy import Symbol, FiniteSet, Interval, sqrt, oo
     >>> from sympy.calculus.codomain import not_empty_in
-    >>> x = Symbol('x')
+    >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
     [0, 2]
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
@@ -229,11 +229,12 @@ def not_empty_in(finset_intersection, *syms):
 
         _start = min(intrvl.start, intrvl.end)
         _end = max(intrvl.start, intrvl.end)
+        _sing = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
 
         if intrvl.right_open:
             if _end is S.Infinity:
-                _sing = solveset(expr.as_numer_denom()[1], symb, S.Reals)
-                _domain1 = Complement(sets, _sing)
+                _sing1 = solveset(1/expr, symb, domain=S.Reals)
+                _domain1 = Complement(S.Reals ,_sing1)
             else:
                 _domain1 = solveset(expr < _end, symb, domain=S.Reals)
         else:
@@ -241,15 +242,16 @@ def not_empty_in(finset_intersection, *syms):
 
         if intrvl.left_open:
             if _start is S.NegativeInfinity:
-                _sing = solveset(expr.as_numer_denom()[1], symb, S.Reals)
-                _domain2 = Complement(sets, _sing)
+                _sing2 = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
+                _domain2 = Complement(S.Reals, _sing2)
             else:
                 _domain2 = solveset(expr > _start, symb, domain=S.Reals)
         else:
             _domain2 = solveset(expr >= _start, symb, domain=S.Reals)
 
         # domain in the interval
-        return Intersection(_domain1, _domain2)
+        expr_domain = Intersection(_domain1, _domain2)
+        return Complement(expr_domain, _sing)
 
     if isinstance(sets, Interval):
         return Union(*[elm_domain(element, sets) for element in finite_set])

@@ -76,3 +76,5 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet(x, x**2).intersect(Union(Interval(1, 3, True, True), Interval(4, 5))), x) == \
         Union(Interval(-sqrt(5), -2), Interval(-sqrt(3), -1, True, True), Interval(1, 3, True, True), Interval(4, 5))
     assert not_empty_in(FiniteSet(1).intersect(Interval(3, 4)), x) == S.EmptySet
+    assert not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x) == \
+        Union(Interval(-2, -1, True, False), Interval(2, oo))
