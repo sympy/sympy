@@ -524,6 +524,12 @@ def test_solve_abs():
         FiniteSet(-1, Rational(1, 3))
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
+    assert solveset_real(Abs((x - 1)/(x - 3)) - 1, x) == FiniteSet(2)
+    assert solveset_real(Abs((x**2 - 3*x + 2)/(x - 3)) - 2, x) == \
+        FiniteSet((1 + sqrt(17))/2, (1 - sqrt(17))/2)
+    assert solveset_real(Abs((x - 2)/(x**2 - 5*x + 4)) - 1, x) == \
+        FiniteSet(2 + sqrt(2), 2 - sqrt(2), 3 - sqrt(3), 3 + sqrt(3))
+    assert solveset_real(Abs((x - 1)/(x**2 - 5*x + 4)) - 1, x) == FiniteSet(3, 5)
 
 
 @XFAIL
