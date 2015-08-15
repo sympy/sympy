@@ -360,13 +360,11 @@ class CylindricalJoint(Joint):
         self.kds.append(thetad - omega)
 
         self.child.frame.orient(self.parent.frame, 'Axis',
-                                [0, self.parent.frame.z])
-        self._align_axes(self.parent_axis, self.child_axis)
-        self._locate_joint_point()
-        self.child.frame.orient(self.parent.frame, 'Axis',
                                 [theta, self.parent_axis])
         self.child.frame.set_ang_vel(self.parent.frame,
                                      omega * self.parent_axis)
+        self._align_axes(self.parent_axis, self.child_axis)
+        self._locate_joint_point()
 
         self.parent_joint_point.set_vel(self.parent.frame, 0)
         self.child_joint_point.set_vel(self.child.frame, 0)
@@ -490,30 +488,27 @@ class PlanarJoint(Joint):
             self.vecx = cross(self.parent_axis, self.parent_joint_vector)
         else:
             self.vecx = cross(self.parent_axis, self.child_joint_vector)
-        
+
         self.vecy = cross(self.parent_axis, self.vecx)
         self.vecz = self.parent_axis  # To maintain symmetry, not used anywhere.
-
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [0, self.parent.frame.x])
-        self.child_joint_point.set_pos(self.parent_joint_point, 0)
-        self._align_axes(self.parent_axis, self.child_axis)
-        self._locate_joint_point()
 
         # Adding rotation
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [theta, self.parent_axis])
         self.child.frame.set_ang_vel(self.parent.frame,
                                      omega * self.parent_axis)
-        
+        self.child_joint_point.set_pos(self.parent_joint_point, 0)
+        self._align_axes(self.parent_axis, self.child_axis)
+        self._locate_joint_point()
+
         # Adding translation along self.vecx.
         self.child_joint_point.set_pos(self.parent_joint_point, disx * self.vecx)
         self.child_joint_point.set_vel(self.parent.frame, velx * self.vecx)
-        
+
         # Adding translation along y axis
         self.child_joint_point.set_pos(self.parent_joint_point, disy * self.vecy)
         self.child_joint_point.set_vel(self.parent.frame, vely * self.vecy)
-        
+
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame, self.child.frame)
 

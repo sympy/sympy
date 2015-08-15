@@ -88,7 +88,7 @@ def test_cylindrical_joint():
                                                         child.frame.y)
     assert cylindrical_joint.parent_axis == parent.frame.x
     assert cylindrical_joint.child_axis == child.frame.x
-    
+
     dis = dynamicsymbols('cylindrical_joint_dis')
     disd = dynamicsymbols('cylindrical_joint_dis', 1)
     vel = dynamicsymbols('cylindrical_joint_vel')
@@ -127,7 +127,7 @@ def test_planar_joint():
     assert planar_joint.parent_joint_vector == Vector(0)
     assert planar_joint.child_joint_vector == l * child.frame.y
     assert planar_joint.parent_axis == parent.frame.y
-    
+
     theta = dynamicsymbols('planar_joint_theta')  # rotation around z axis.
     thetad = dynamicsymbols('planar_joint_theta', 1)
     omega = dynamicsymbols('planar_joint_omega')
@@ -137,11 +137,11 @@ def test_planar_joint():
     disy = dynamicsymbols('planar_joint_disy')  # translation along y axis.
     disyd = dynamicsymbols('planar_joint_disy', 1)
     vely = dynamicsymbols('planar_joint_vely')
-    
+
     assert planar_joint.coordinates == [theta, disx, disy]
     assert planar_joint.speeds == [omega, velx, vely]
     assert planar_joint.kds == [thetad - omega, disxd - velx, disyd - vely]
-    
+
     child_joint_point = planar_joint.child_joint_point
     parent_joint_point = planar_joint.parent_joint_point
     assert parent_joint_point.name == 'planar_joint_parent_joint'
