@@ -201,12 +201,17 @@ def not_empty_in(finset_intersection, *syms):
     if len(syms) == 0:
         raise ValueError("A Symbol or a tuple of symbols must be given \
                             as the third parameter")
+
+    if finset_intersection.is_EmptySet:
+        return S.EmptySet
+
+    if isinstance(finset_intersection, Union):
+        elm_in_sets = finset_intersection.args[0]
+        return Union(not_empty_in(finset_intersection.args[1], *syms), elm_in_sets)
+
     if isinstance(finset_intersection, FiniteSet):
         finite_set = finset_intersection
         sets = S.Reals
-    elif isinstance(finset_intersection, Union):
-        elm_in_sets = finset_intersection.args[0]
-        return Union(not_empty_in(finset_intersection.args[1], *syms), elm_in_sets)
     else:
         finite_set = finset_intersection.args[1]
         sets = finset_intersection.args[0]
@@ -219,38 +224,39 @@ def not_empty_in(finset_intersection, *syms):
     else:
         raise NotImplementedError('more than one variables %s not handled' % (syms,))
 
-    y = Dummy('y')
+    def elm_domain(expr, intrvl):
+        """ Finds the domain of an expression in any given interval """
 
-    def elm_domain(expr, codomain_expr, *sym):
-        """
-        finds the domain of a single element of `finite_set` with `codomain_expr`
-        as its codomain and with given symbols `syms`
-        """
-        domain_union = S.EmptySet
-        exclude_sing = S.EmptySet
+        _start = min(intrvl.start, intrvl.end)
+        _end = max(intrvl.start, intrvl.end)
 
-        # find the inverse of items in the finite_set
-        invert_expr = solveset(expr - y, symb, domain=S.Reals)
-
-        if isinstance(invert_expr, Intersection):
-            invert_set = invert_expr.args[1]
-        elif isinstance(invert_expr, Complement):
-            exclude_sing = invert_expr.args[1]
-            if isinstance(invert_expr.args[0], Intersection):
-                invert_set = invert_expr.args[0].args[1]
-            elif isinstance(invert_expr.args[0], FiniteSet):
-                invert_set = invert_expr.args[0]
+        if intrvl.right_open:
+            if _end is S.Infinity:
+                _sing = solveset(expr.as_numer_denom()[1], symb, S.Reals)
+                _domain1 = Complement(sets, _sing)
+            else:
+                _domain1 = solveset(expr < _end, symb, domain=S.Reals)
         else:
-            raise NotImplementedError("The algorithm to find the domain for the function %s \
-                                        are not yet implemented." % (expr))
+            _domain1 = solveset(expr <= _end, symb, domain=S.Reals)
 
-        # find the domain of `every` inverse of `expr`
-        # since expr can have more than one inverse
-        for inverse_val in invert_set:
-            domain = codomain(inverse_val, codomain_expr, y)
-            domain_union = Union(domain_union, domain)
-        # remove the elements which are not in `domain` of `syms`
-        domain_union = Complement(domain_union, exclude_sing)
-        return domain_union
+        if intrvl.left_open:
+            if _start is S.NegativeInfinity:
+                _sing = solveset(expr.as_numer_denom()[1], symb, S.Reals)
+                _domain2 = Complement(sets, _sing)
+            else:
+                _domain2 = solveset(expr > _start, symb, domain=S.Reals)
+        else:
+            _domain2 = solveset(expr >= _start, symb, domain=S.Reals)
 
-    return Union(*[elm_domain(element, sets, symb) for element in finite_set])
+        # domain in the interval
+        return Intersection(_domain1, _domain2)
+
+    if isinstance(sets, Interval):
+        return Union(*[elm_domain(element, sets) for element in finite_set])
+
+    if isinstance(sets, Union):
+        _dom_final = S.EmptySet
+        for intrvl in sets.args:
+            _dm = Union(*[elm_domain(element, intrvl) for element in finite_set])
+            _dom_final = Union(_dom_final, _dm)
+        return _dom_final
