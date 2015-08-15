@@ -47,7 +47,9 @@ def difference_delta(expr, n=None, step=1):
         raise ValueError("Step should be bounded.")
 
     if hasattr(expr, '_eval_difference_delta'):
-        return expr._eval_difference_delta(n, step)
+        result = expr._eval_difference_delta(n, step)
+        if result:
+            return result
 
     return expr.subs(n, n + step) - expr
 
