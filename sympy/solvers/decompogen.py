@@ -40,3 +40,5 @@ def decompogen(f, symbol):
         f1 = f.subs(gens[0], symbol)
         f2 = gens[0]
         return [f1, f2]
+
+    return [f]
