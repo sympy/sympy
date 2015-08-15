@@ -81,7 +81,7 @@ def dominant(expr, n):
     term0 = terms[-1]
     for t in terms[:-1]:
         e = (term0 / t).cancel().combsimp()
-        l = limitseq(e, n)
+        l = limit_seq(e, n)
         if l is S.Zero:
             term0 = t
     return term0
@@ -94,7 +94,7 @@ def _limitinf(expr, n):
         return None
 
 
-def limitseq(expr, n, trials=5, o=False):
+def limit_seq(expr, n, trials=5, o=False):
     """Finds limits infinity.
 
     Admissible Terms
@@ -104,13 +104,13 @@ def limitseq(expr, n, trials=5, o=False):
     Examples
     ========
 
-    >>> from sympy import limitseq, Sum, binomial
+    >>> from sympy import limit_seq, Sum, binomial
     >>> from sympy.abc import n, k, m
-    >>> limitseq((5*n**3 + 3*n**2 + 4) / (3*n**3 + 4*n - 5), n)
+    >>> limit_seq((5*n**3 + 3*n**2 + 4) / (3*n**3 + 4*n - 5), n)
     5/3
-    >>> limitseq(binomial(2*n, n) / Sum(binomial(2*k, k), (k, 1, n)), n)
+    >>> limit_seq(binomial(2*n, n) / Sum(binomial(2*k, k), (k, 1, n)), n)
     3/4
-    >>> limitseq(Sum(k**2 * Sum(2**m/m, (m, 1, k)), (k, 1, n)) / (2**n*n), n)
+    >>> limit_seq(Sum(k**2 * Sum(2**m/m, (m, 1, k)), (k, 1, n)) / (2**n*n), n)
     4
 
     See Also
