@@ -1,4 +1,4 @@
-from sympy import symbols, oo, Sum, harmonic
+from sympy import symbols, oo, Sum, harmonic, Add
 from sympy import difference_delta as dd
 from sympy.utilities.pytest import raises
 
@@ -19,10 +19,10 @@ def test_difference_delta():
 def test_difference_delta__Sum():
     e = Sum(1/k, (k, 1, n))
     assert dd(e, n) == 1/(n + 1)
-    assert dd(e, n, 5) == Sum(1/k, (k, n + 1, n + 5))
+    assert dd(e, n, 5) == Add(*[1/(i + n + 1) for i in range(5)])
 
     e = Sum(1/k, (k, 1, 3*n))
-    assert dd(e, n) == Sum(1/k, (k, 3*n + 1, 3*n + 3))
+    assert dd(e, n) == Add(*[1/(i + 3*n + 1) for i in range(3)])
 
     e = n * Sum(1/k, (k, 1, n))
     assert dd(e, n) == 1 + Sum(1/k, (k, 1, n))
@@ -38,4 +38,4 @@ def test_difference_delta__Add():
 
     e = n + Sum(1/k, (k, 1, n))
     assert dd(e, n) == 1 + 1/(n + 1)
-    assert dd(e, n, 5) == 5 + Sum(1/k, (k, n + 1, n + 5))
+    assert dd(e, n, 5) == 5 + Add(*[1/(i + n + 1) for i in range(5)])
