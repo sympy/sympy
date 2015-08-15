@@ -4,6 +4,8 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
+from sympy.core.add import Add
+from sympy.series.gruntz import limitinf
 
 
 def difference_delta(expr, n=None, step=1):
@@ -48,3 +50,90 @@ def difference_delta(expr, n=None, step=1):
         return expr._eval_difference_delta(n, step)
 
     return expr.subs(n, n + step) - expr
+
+
+def dominant(expr, n):
+    """Finds the most dominating term in an expression.
+
+    if limit(a/b, n, oo) is oo then a dominates b.
+    if limit(a/b, n, oo) is 0 then b dominates a.
+    else a and b are comparable.
+
+    Examples
+    ========
+
+    >>> from sympy import Sum
+    >>> from sympy.series.limitseq import dominant
+    >>> from sympy.abc import n, k
+    >>> dominant(5*n**3 + 4*n**2 + n + 1, n)
+    5*n**3
+    >>> dominant(2**n + Sum(k, (k, 0, n)), n)
+    2**n
+
+    See Also
+    ========
+
+    sympy.series.limitseq.dominant
+    """
+    terms = Add.make_args(expr.expand(func=True))
+    term0 = terms[-1]
+    for t in terms[:-1]:
+        e = (term0 / t).cancel().combsimp()
+        l = limitseq(e, n)
+        if l is S.Zero:
+            term0 = t
+    return term0
+
+
+def _limitinf(expr, n):
+    try:
+        return limitinf(expr, n)
+    except NotImplementedError:
+        return None
+
+
+def limitseq(expr, n, trials=5, o=False):
+    """Finds limits infinity.
+
+    Admissible Terms
+    ================
+    TODO
+
+    Examples
+    ========
+
+    >>> from sympy import limitseq, Sum, binomial
+    >>> from sympy.abc import n, k, m
+    >>> limitseq((5*n**3 + 3*n**2 + 4) / (3*n**3 + 4*n - 5), n)
+    5/3
+    >>> limitseq(binomial(2*n, n) / Sum(binomial(2*k, k), (k, 1, n)), n)
+    3/4
+    >>> limitseq(Sum(k**2 * Sum(2**m/m, (m, 1, k)), (k, 1, n)) / (2**n*n), n)
+    4
+
+    See Also
+    ========
+
+    sympy.series.limitseq.dominant
+
+    References
+    ==========
+
+    .. [1] Computing Limits of Sequences - Manuel Kauers
+    """
+    from sympy.concrete.summations import Sum
+
+    for i in range(trials):
+        if not expr.has(Sum):
+            return _limitinf(expr, n)
+
+        num, den = map(lambda t: difference_delta(t, n), expr.as_numer_denom())
+
+        expr = (num / den).cancel().combsimp()
+
+        if not expr.has(Sum):
+            return _limitinf(expr, n)
+
+        num, den = map(lambda t: dominant(t, n), expr.as_numer_denom())
+
+        expr = (num / den).cancel().combsimp()
