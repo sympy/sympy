@@ -498,38 +498,49 @@ class RisingFactorial(CombinatorialFunction):
 
 class FallingFactorial(CombinatorialFunction):
     """Falling factorial (related to rising factorial) is a double valued
-       function arising in concrete mathematics, hypergeometric functions
-       and series expansions. It is defined by
+    function arising in concrete mathematics, hypergeometric functions
+    and series expansions. It is defined by
 
-                   ff(x, k) = x * (x-1) * ... * (x - k+1)
+                ff(x, k) = x * (x-1) * ... * (x - k+1)
 
-       where 'x' can be arbitrary expression and 'k' is an integer. For
-       more information check "Concrete mathematics" by Graham, pp. 66
-       or visit http://mathworld.wolfram.com/FallingFactorial.html page.
+    where 'x' can be arbitrary expression and 'k' is an integer. For
+    more information check "Concrete mathematics" by Graham, pp. 66
+    or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
-       When x is a polynomial f of a single variable y of order >= 1,
-       ff(x,k) = f(y) * f(y-1) * ... * f(x-k+1) as described in
-       Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
-       Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
+    When x is a polynomial f of a single variable y of order >= 1,
+    ff(x,k) = f(y) * f(y-1) * ... * f(x-k+1) as described in
+    Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
+    Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-       >>> from sympy import ff, factorial
-       >>> from sympy.abc import x
-       >>> ff(x, 0)
-       1
-       >>> ff(5, 5)
-       120
-       >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
-       True
-       >>> ff(x**2, 2)
-       Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
-       >>> ff(x, x)
-       factorial(x)
+    >>> from sympy import ff, factorial, rf, gamma, polygamma
+    >>> from sympy.abc import x, k
+    >>> ff(x, 0)
+    1
+    >>> ff(5, 5)
+    120
+    >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
+    True
+    >>> ff(x**2, 2)
+    Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
+    >>> ff(x, x)
+    factorial(x)
 
+    Rewrite
 
-       See Also
-       ========
+    >>> ff(x, k).rewrite(gamma)
+    (-1)**k*gamma(k - x)/gamma(-x)
+    >>> ff(x, k).rewrite(rf)
+    RisingFactorial(-k + x + 1, k)
 
-       factorial, factorial2, RisingFactorial
+    See Also
+    ========
+
+    factorial, factorial2, RisingFactorial
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/FallingFactorial.html
     """
 
     @classmethod
@@ -559,12 +570,16 @@ class FallingFactorial(CombinatorialFunction):
                         try:
                             F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x - i),
+                                          range(0, int(k)), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return reduce(lambda r, i: r*(x - i), range(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x - i),
+                                          range(0, int(k)), 1)
                         else:
                             v = opt.gens[0]
-                            return reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(0, int(k)), 1)
+                            return reduce(lambda r, i:
+                                          r*(F.subs(v, v - i).expand()),
+                                          range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
@@ -574,16 +589,23 @@ class FallingFactorial(CombinatorialFunction):
                         try:
                             F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(x + i),
+                                            range(1, abs(int(k)) + 1), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return 1/reduce(lambda r, i: r*(x + i), range(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i: r*(x + i),
+                                            range(1, abs(int(k)) + 1), 1)
                         else:
                             v = opt.gens[0]
-                            return 1/reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i:
+                                            r*(F.subs(v, v + i).expand()),
+                                            range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
-        return (-1)**k * gamma(-x + k) / gamma(-x)
+        return (-1)**k*gamma(k - x) / gamma(-x)
+
+    def _eval_rewrite_as_RisingFactorial(self, x, k):
+        return rf(x - k + 1, k)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -591,7 +613,8 @@ class FallingFactorial(CombinatorialFunction):
 
     def _sage_(self):
         import sage.all as sage
-        return sage.falling_factorial(self.args[0]._sage_(), self.args[1]._sage_())
+        return sage.falling_factorial(self.args[0]._sage_(),
+                                      self.args[1]._sage_())
 
 
 rf = RisingFactorial
