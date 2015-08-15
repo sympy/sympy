@@ -227,6 +227,7 @@ def not_empty_in(finset_intersection, *syms):
         as its codomain and with given symbols `syms`
         """
         domain_union = S.EmptySet
+        exclude_sing = S.EmptySet
 
         # find the inverse of items in the finite_set
         invert_expr = solveset(expr - y, symb, domain=S.Reals)
@@ -234,9 +235,7 @@ def not_empty_in(finset_intersection, *syms):
         if isinstance(invert_expr, Intersection):
             invert_set = invert_expr.args[1]
         elif isinstance(invert_expr, Complement):
-            # remove the elements which are not in `domain` of `syms`
             exclude_sing = invert_expr.args[1]
-            codomain_expr = Complement(codomain_expr, exclude_sing)
             if isinstance(invert_expr.args[0], Intersection):
                 invert_set = invert_expr.args[0].args[1]
             elif isinstance(invert_expr.args[0], FiniteSet):
@@ -250,6 +249,8 @@ def not_empty_in(finset_intersection, *syms):
         for inverse_val in invert_set:
             domain = codomain(inverse_val, codomain_expr, y)
             domain_union = Union(domain_union, domain)
+        # remove the elements which are not in `domain` of `syms`
+        domain_union = Complement(domain_union, exclude_sing)
         return domain_union
 
     return Union(*[elm_domain(element, sets, symb) for element in finite_set])
