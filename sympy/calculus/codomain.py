@@ -260,6 +260,6 @@ def not_empty_in(finset_intersection, *syms):
     if isinstance(_sets, Union):
         _dom_final = S.EmptySet
         for intrvl in _sets.args:
-            _dm = Union(*[elm_domain(element, intrvl) for element in finite_set])
-            _dom_final = Union(_dom_final, _dm)
+            _domain_element = Union(*[elm_domain(element, intrvl) for element in finite_set])
+            _dom_final = Union(_dom_final, _domain_element)
         return _dom_final
