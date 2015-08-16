@@ -1,7 +1,7 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
+    acos, asin, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
@@ -127,6 +127,13 @@ def test_invert_complex():
         (x, imageset(Lambda(n, I*(2*pi*n + arg(y)) + log(Abs(y))), S.Integers))
 
     assert invert_complex(log(x), y, x) == (x, FiniteSet(exp(y)))
+    assert invert_complex(sin(x), y, x) == \
+        (x, imageset(Lambda(n, n*pi + (-1)**n*asin(y)), S.Integers))
+    assert invert_complex(cos(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*pi + acos(y)), S.Integers), \
+                imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers)))
+    assert invert_complex(tan(x), y, x) == \
+        (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
 
     raises(ValueError, lambda: invert_real(S.One, y, x))
     raises(ValueError, lambda: invert_complex(x, x, x))
@@ -683,8 +690,17 @@ def test_solve_invalid_sol():
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
 
 
-def test_solve_complex_unsolvable():
-    raises(NotImplementedError, lambda: solveset_complex(cos(x) - S.Half, x))
+def test_solve_complex_trig():
+    from sympy.abc import n
+    assert solveset_complex(cos(x) - S.Half, x) == \
+        Union(imageset(Lambda(n, 2*n*pi - pi/3), S.Integers), \
+            imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
+    assert solveset_complex(sin(x), x) == \
+        imageset(Lambda(n, n*pi), S.Integers)
+    assert solveset_complex(sin(x) - S.Half, x) == \
+        imageset(Lambda(n, n*pi + (-1)**n*pi/6), S.Integers)
+    assert solveset_complex(tan(x) - S.One, x) == \
+        imageset(Lambda(n, n*pi + pi/4), S.Integers)
 
 
 @XFAIL
