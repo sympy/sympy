@@ -679,6 +679,9 @@ def test_solve_trig():
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) == \
+        imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
 
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
