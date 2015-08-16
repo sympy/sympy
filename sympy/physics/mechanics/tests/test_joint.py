@@ -1,8 +1,15 @@
 from sympy import Symbol
 from sympy.physics.vector import Vector, cross
-from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
+from sympy.physics.mechanics import (dynamicsymbols, Body, Joint, PinJoint,
                                      SlidingJoint, CylindricalJoint, PlanarJoint,
                                      SphericalJoint)
+from sympy.utilities.pytest import raises
+
+
+def test_joint_abstract_class():
+    parent = Body('parent')
+    child = Body('child')
+    raises(NotImplementedError, lambda: Joint('joint', parent, child))
 
 
 def test_pin_joint():
@@ -14,8 +21,8 @@ def test_pin_joint():
     assert pin_joint.name == 'pin_joint'
     assert pin_joint.parent == parent
     assert pin_joint.child == child
-    assert pin_joint.parent_joint_vector == Vector(0)
-    assert pin_joint.child_joint_vector == l * child.frame.y
+    assert pin_joint._parent_joint_location == Vector(0)
+    assert pin_joint._child_joint_location == l * child.frame.y
     assert pin_joint.parent_axis == parent.frame.x
     assert pin_joint.child_axis == child.frame.x
 
@@ -33,8 +40,27 @@ def test_pin_joint():
     assert child_joint_point.pos_from(parent_joint_point) == Vector(0)
     assert child_joint_point.pos_from(child.masscenter) == l * child.frame.y
     assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
-
+    assert child.masscenter.pos_from(parent.masscenter) == - l * child.frame.y
     assert child.frame.ang_vel_in(parent.frame) == omega * parent.frame.x
+
+
+def test_pin_joint_arguments():
+    parent = Body('parent')
+    child = Body('child')
+    l1 = Symbol('l1')
+    l2 = Symbol('l2')
+    pin_joint = PinJoint('pin_joint', parent, child,
+                         parent_point_pos=(0, l1, 0),
+                         child_point_pos=(0, l2, 0),
+                         parent_axis=parent.frame.y,
+                         child_axis=child.frame.y)
+    assert pin_joint.name == 'pin_joint'
+    assert pin_joint.parent == parent
+    assert pin_joint.child == child
+    assert pin_joint.parent_axis == parent.frame.y
+    assert pin_joint.child_axis == child.frame.y
+    assert pin_joint._parent_joint_location == l1 * parent.frame.y
+    assert pin_joint._child_joint_location == l2 * child.frame.y
 
 
 def test_sliding_joint():
@@ -47,8 +73,8 @@ def test_sliding_joint():
     assert sliding_joint.name == 'sliding_joint'
     assert sliding_joint.parent == parent
     assert sliding_joint.child == child
-    assert sliding_joint.parent_joint_vector == Vector(0)
-    assert sliding_joint.child_joint_vector == l * child.frame.x
+    assert sliding_joint._parent_joint_location == Vector(0)
+    assert sliding_joint._child_joint_location == l * child.frame.x
     assert sliding_joint.parent_axis == parent.frame.x
     assert sliding_joint.child_axis == child.frame.x
 
@@ -66,11 +92,32 @@ def test_sliding_joint():
     assert child_joint_point.pos_from(parent_joint_point) == dis * parent.frame.x
     assert child_joint_point.pos_from(child.masscenter) == l * child.frame.x
     assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
+    assert child.masscenter.pos_from(parent.masscenter) == (-l * child.frame.x +
+                                                            dis * parent.frame.x)
 
     assert parent_joint_point.vel(parent.frame) == Vector(0)
     assert child_joint_point.vel(child.frame) == Vector(0)
     assert child_joint_point.vel(parent.frame) == vel * parent.frame.x
     assert child.masscenter.vel(parent.frame) == vel * parent.frame.x
+
+
+def test_sliding_joint_arguments():
+    parent = Body('parent')
+    child = Body('child')
+    l1 = Symbol('l1')
+    l2 = Symbol('l2')
+    sliding_joint = SlidingJoint('sliding_joint', parent, child,
+                                 parent_point_pos=(0, l1, 0),
+                                 child_point_pos=(0, l2, 0),
+                                 parent_axis=parent.frame.z,
+                                 child_axis=child.frame.y)
+    assert sliding_joint.name == 'sliding_joint'
+    assert sliding_joint.parent == parent
+    assert sliding_joint.child == child
+    assert sliding_joint._parent_joint_location == l1 * parent.frame.y
+    assert sliding_joint._child_joint_location == l2 * child.frame.y
+    assert sliding_joint.parent_axis == parent.frame.z
+    assert sliding_joint.child_axis == child.frame.y
 
 
 def test_cylindrical_joint():
@@ -83,8 +130,8 @@ def test_cylindrical_joint():
     assert cylindrical_joint.name == 'cylindrical_joint'
     assert cylindrical_joint.parent == parent
     assert cylindrical_joint.child == child
-    assert cylindrical_joint.parent_joint_vector == Vector(0)
-    assert cylindrical_joint.child_joint_vector == l * (child.frame.x +
+    assert cylindrical_joint._parent_joint_location == Vector(0)
+    assert cylindrical_joint._child_joint_location == l * (child.frame.x +
                                                         child.frame.y)
     assert cylindrical_joint.parent_axis == parent.frame.x
     assert cylindrical_joint.child_axis == child.frame.x
@@ -112,6 +159,25 @@ def test_cylindrical_joint():
     assert child.frame.ang_vel_in(parent.frame) == omega * parent.frame.x
 
 
+def test_cylindrical_joint_arguments():
+    parent = Body('parent')
+    child = Body('child')
+    l1 = Symbol('l1')
+    l2 = Symbol('l2')
+    cylindrical_joint = CylindricalJoint('cylindrical_joint', parent, child,
+                                         parent_point_pos=(0, l1, 0),
+                                         child_point_pos=(0, l2, 0),
+                                         parent_axis=parent.frame.y,
+                                         child_axis=parent.frame.z)
+    assert cylindrical_joint.name == 'cylindrical_joint'
+    assert cylindrical_joint.parent == parent
+    assert cylindrical_joint.child == child
+    assert cylindrical_joint.parent_axis == parent.frame.y
+    assert cylindrical_joint.child_axis == parent.frame.z
+    assert cylindrical_joint._parent_joint_location == l1 * parent.frame.y
+    assert cylindrical_joint._child_joint_location == l2 * child.frame.y
+
+
 def test_planar_joint():
     parent = Body('parent')
     child = Body('child')
@@ -124,8 +190,8 @@ def test_planar_joint():
     assert planar_joint.name == 'planar_joint'
     assert planar_joint.parent == parent
     assert planar_joint.child == child
-    assert planar_joint.parent_joint_vector == Vector(0)
-    assert planar_joint.child_joint_vector == l * child.frame.y
+    assert planar_joint._parent_joint_location == Vector(0)
+    assert planar_joint._child_joint_location == l * child.frame.y
     assert planar_joint.parent_axis == parent.frame.y
 
     theta = dynamicsymbols('planar_joint_theta')  # rotation around z axis.
@@ -150,7 +216,7 @@ def test_planar_joint():
     assert child_joint_point.pos_from(child.masscenter) == l * child.frame.y
     assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
 
-    vecx = cross(planar_joint.parent_axis, planar_joint.child_joint_vector)
+    vecx = cross(planar_joint.parent_axis, planar_joint._child_joint_location)
     assert planar_joint.vecx == vecx
     vecy = cross(planar_joint.parent_axis, vecx)
     assert planar_joint.vecy == vecy
@@ -158,6 +224,25 @@ def test_planar_joint():
 
     assert child.frame.ang_vel_in(parent.frame) == omega * planar_joint.parent_axis
     assert child_joint_point.vel(parent.frame) == disx * vecx + disy * vecy
+
+
+def test_planar_joint_arguments():
+    parent = Body('parent')
+    child = Body('child')
+    l1 = Symbol('l1')
+    l2 = Symbol('l2')
+    planar_joint = PlanarJoint('planar_joint', parent, child,
+                               parent_point_pos=(0, l1, 0),
+                               child_point_pos=(0, l2, 0),
+                               parent_axis=parent.frame.y,
+                               child_axis=child.frame.y)
+    assert planar_joint.name == 'planar_joint'
+    assert planar_joint.parent == parent
+    assert planar_joint.child == child
+    assert planar_joint.parent_axis == parent.frame.y
+    assert planar_joint.child_axis == child.frame.y
+    assert planar_joint._parent_joint_location == l1 * parent.frame.y
+    assert planar_joint._child_joint_location == l2 * child.frame.y
 
 
 def test_spherical_joint():
@@ -170,8 +255,8 @@ def test_spherical_joint():
     assert spherical_joint.name == 'spherical_joint'
     assert spherical_joint.parent == parent
     assert spherical_joint.child == child
-    assert spherical_joint.parent_joint_vector == Vector(0)
-    assert spherical_joint.child_joint_vector == l * child.frame.y
+    assert spherical_joint._parent_joint_location == Vector(0)
+    assert spherical_joint._child_joint_location == l * child.frame.y
 
     thetax = dynamicsymbols('spherical_joint_thetax')
     thetay = dynamicsymbols('spherical_joint_thetay')
@@ -199,3 +284,18 @@ def test_spherical_joint():
     assert child.frame.ang_vel_in(parent.frame) == omegax * parent.frame.x + \
                                                    omegay * parent.frame.y + \
                                                    omegaz * parent.frame.z
+
+
+def test_spherical_joint_arguments():
+    parent = Body('parent')
+    child = Body('child')
+    l1 = Symbol('l1')
+    l2 = Symbol('l2')
+    spherical_joint = SphericalJoint('spherical_joint', parent, child,
+                                     parent_point_pos=(0, l1, 0),
+                                     child_point_pos=(0, l2, 0))
+    assert spherical_joint.name == 'spherical_joint'
+    assert spherical_joint.parent == parent
+    assert spherical_joint.child == child
+    assert spherical_joint._parent_joint_location == l1 * parent.frame.y
+    assert spherical_joint._child_joint_location == l2 * child.frame.y

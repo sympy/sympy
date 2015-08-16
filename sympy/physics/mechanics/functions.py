@@ -573,6 +573,11 @@ def _f_list_parser(fl, ref_frame):
 
 
 def convert_tuple_to_vector(frame, val_tuple):
+    """
+    Converts a 3-Tuple to a vector in the frame provided by taking values of
+    the tuple as values of the vector along x, y and z unit vectors of the
+    frame respectively.
+    """
     if len(val_tuple) != 3:
         raise TypeError('position tuple must be of length 3')
     else:

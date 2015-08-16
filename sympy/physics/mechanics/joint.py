@@ -58,9 +58,9 @@ class Joint(object):
         if child_point_pos is None:
             child_point_pos = (0, 0, 0)  # Child's Center of mass
 
-        self.parent_joint_vector = convert_tuple_to_vector(
+        self._parent_joint_location = convert_tuple_to_vector(
             parent.frame, parent_point_pos)
-        self.child_joint_vector = convert_tuple_to_vector(
+        self._child_joint_location = convert_tuple_to_vector(
             child.frame, child_point_pos)
 
         self._locate_joint_point()
@@ -69,10 +69,10 @@ class Joint(object):
     def _locate_joint_point(self):
         self.parent_joint_point = self.parent.masscenter.locatenew(
             self.name + '_parent_joint',
-            self.parent_joint_vector)
+            self._parent_joint_location)
         self.child_joint_point = self.child.masscenter.locatenew(
             self.name + '_child_joint',
-            self.child_joint_vector)
+            self._child_joint_location)
 
     def _align_axes(self, parent_axis, child_axis):
         """Rotates child_frame so that child_axis is aligned to parent_axis."""
@@ -484,10 +484,10 @@ class PlanarJoint(Joint):
         self.kds.append(disyd - vely)
 
         # getting vectors in the joint plane, atleast one of them is not 0 vec.
-        if self.parent_joint_vector is not Vector(0):
-            self.vecx = cross(self.parent_axis, self.parent_joint_vector)
+        if self._parent_joint_location is not Vector(0):
+            self.vecx = cross(self.parent_axis, self._parent_joint_location)
         else:
-            self.vecx = cross(self.parent_axis, self.child_joint_vector)
+            self.vecx = cross(self.parent_axis, self._child_joint_location)
 
         self.vecy = cross(self.parent_axis, self.vecx)
         self.vecz = self.parent_axis  # To maintain symmetry, not used anywhere.
