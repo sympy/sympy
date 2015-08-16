@@ -26,7 +26,7 @@ def codomain(func, domain, *syms):
     ValueError
           The input is not valid.
     RuntimeError
-          It is a bug, please report to the github issue tracker
+          It is a bug, please report it to the github issue tracker
           (https://github.com/sympy/sympy/issues).
 
     Examples
@@ -178,7 +178,7 @@ def not_empty_in(finset_intersection, *syms):
     ValueError
         The input is not valid.
     RuntimeError
-        It is a bug, please report to the github issue tracker
+        It is a bug, please report it to the github issue tracker
         (https://github.com/sympy/sympy/issues).
 
     Examples
@@ -203,7 +203,7 @@ def not_empty_in(finset_intersection, *syms):
                             as the third parameter")
 
     if finset_intersection.is_EmptySet:
-        return S.EmptySet
+        return EmptySet()
 
     if isinstance(finset_intersection, Union):
         elm_in_sets = finset_intersection.args[0]
@@ -211,10 +211,10 @@ def not_empty_in(finset_intersection, *syms):
 
     if isinstance(finset_intersection, FiniteSet):
         finite_set = finset_intersection
-        sets = S.Reals
+        _sets = S.Reals
     else:
         finite_set = finset_intersection.args[1]
-        sets = finset_intersection.args[0]
+        _sets = finset_intersection.args[0]
 
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
@@ -227,14 +227,14 @@ def not_empty_in(finset_intersection, *syms):
     def elm_domain(expr, intrvl):
         """ Finds the domain of an expression in any given interval """
 
-        _start = min(intrvl.start, intrvl.end)
-        _end = max(intrvl.start, intrvl.end)
+        _start = intrvl.start
+        _end = intrvl.end
         _sing = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
 
         if intrvl.right_open:
             if _end is S.Infinity:
-                _sing1 = solveset(1/expr, symb, domain=S.Reals)
-                _domain1 = Complement(S.Reals ,_sing1)
+                _sing1 = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
+                _domain1 = Complement(S.Reals, _sing1)
             else:
                 _domain1 = solveset(expr < _end, symb, domain=S.Reals)
         else:
@@ -250,15 +250,16 @@ def not_empty_in(finset_intersection, *syms):
             _domain2 = solveset(expr >= _start, symb, domain=S.Reals)
 
         # domain in the interval
-        expr_domain = Intersection(_domain1, _domain2)
-        return Complement(expr_domain, _sing)
+        expr_with_sing = Intersection(_domain1, _domain2)
+        expr_domain = Complement(expr_with_sing, _sing)
+        return expr_domain
 
-    if isinstance(sets, Interval):
-        return Union(*[elm_domain(element, sets) for element in finite_set])
+    if isinstance(_sets, Interval):
+        return Union(*[elm_domain(element, _sets) for element in finite_set])
 
-    if isinstance(sets, Union):
+    if isinstance(_sets, Union):
         _dom_final = S.EmptySet
-        for intrvl in sets.args:
+        for intrvl in _sets.args:
             _dm = Union(*[elm_domain(element, intrvl) for element in finite_set])
             _dom_final = Union(_dom_final, _dm)
         return _dom_final
