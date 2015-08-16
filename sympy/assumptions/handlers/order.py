@@ -26,7 +26,7 @@ class AskNegativeHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_negative
 
     @staticmethod
@@ -123,7 +123,7 @@ class AskNegativeHandler(CommonHandler):
 class AskNonNegativeHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_nonnegative
 
     @staticmethod
@@ -143,7 +143,7 @@ class AskNonZeroHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_nonzero
 
     @staticmethod
@@ -186,7 +186,7 @@ class AskNonZeroHandler(CommonHandler):
 class AskZeroHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_zero
 
     @staticmethod
@@ -202,7 +202,7 @@ class AskZeroHandler(CommonHandler):
 class AskNonPositiveHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_nonpositive
 
     @staticmethod
@@ -221,7 +221,7 @@ class AskPositiveHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_positive
 
     @staticmethod

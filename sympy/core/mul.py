@@ -800,6 +800,13 @@ class Mul(Expr, AssocOp):
                 terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
         return Add(*terms)
 
+    def _eval_difference_delta(self, n, step):
+        from sympy.series.limitseq import difference_delta as dd
+        arg0 = self.args[0]
+        rest = Mul(*self.args[1:])
+        return (arg0.subs(n, n + step) * dd(rest, n, step) + dd(arg0, n, step) *
+                rest)
+
     def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
         coeff, terms = self.as_coeff_Mul()

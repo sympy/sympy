@@ -33,5 +33,10 @@ class ConditionSet(Set):
     condition = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
 
+    def _intersect(self, other):
+        if not isinstance(other, ConditionSet):
+            return ConditionSet(self.condition,
+                                Intersection(self.base_set, other))
+
     def contains(self, other):
         return And(self.condition(other), self.base_set.contains(other))

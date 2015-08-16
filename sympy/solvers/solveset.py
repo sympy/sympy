@@ -1,10 +1,14 @@
 """
-This module contains functions to solve a single equation for a single variable.
+This module contains functions to:
+
+    - solve a single equation for a single variable, in any domain either real or complex.
+
+    - solve a system of linear equations with N variables and M equations.
 """
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
@@ -13,8 +17,10 @@ from sympy.functions import (log, Abs, tan, cot, exp,
                              arg, Piecewise, piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.sets import FiniteSet, EmptySet, imageset, Interval, Union
-from sympy.matrices import Matrix, zeros
+from sympy.functions.elementary.miscellaneous import real_root
+from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
+                        Union)
+from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
@@ -112,7 +118,7 @@ def _invert_real(f, g_ys, symbol):
         expo_has_sym = expo.has(symbol)
 
         if not expo_has_sym:
-            res = imageset(Lambda(n, Pow(n, 1/expo)), g_ys)
+            res = imageset(Lambda(n, real_root(n, expo)), g_ys)
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if numer == S.One or numer == - S.One:
@@ -763,7 +769,7 @@ def solveset_complex(f, symbol):
         return result
 
 
-def solveset(f, symbol=None):
+def solveset(f, symbol=None, domain=S.Complexes):
     """Solves a given inequality or equation with set as output
 
     Parameters
@@ -773,6 +779,8 @@ def solveset(f, symbol=None):
         The target equation or inequality
     symbol : Symbol
         The variable for which the equation is solved
+    domain : Set
+        The domain over which the equation is solved
 
     Returns
     =======
@@ -796,10 +804,10 @@ def solveset(f, symbol=None):
 
 
     `solveset` uses two underlying functions `solveset_real` and
-    `solveset_complex` to solve equations. They are
-    the solvers for real and complex domain respectively. The domain of
-    the solver is decided by the assumption on the variable for which the
-    equation is being solved.
+    `solveset_complex` to solve equations. They are the solvers for real and
+    complex domain respectively. `solveset` ignores the assumptions on the
+    variable being solved for and instead, uses the `domain` parameter to
+    decide which solver to use.
 
 
     See Also
@@ -811,30 +819,30 @@ def solveset(f, symbol=None):
     Examples
     ========
 
-    >>> from sympy import exp, Symbol, Eq, pprint
+    >>> from sympy import exp, Symbol, Eq, pprint, S
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy.abc import x
 
-    * Symbols in Sympy are complex by default. A complex variable
-      will lead to the solving of the equation in complex domain.
+    * The default domain is complex. Not specifying a domain will lead to the
+      solving of the equation in the complex domain.
 
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
     * If you want to solve equation in real domain by the `solveset`
-      interface, then specify the variable to real. Alternatively use
+      interface, then specify that the domain is real. Alternatively use
       `solveset\_real`.
 
-    >>> x = Symbol('x', real=True)
-    >>> solveset(exp(x) - 1, x)
+    >>> x = Symbol('x')
+    >>> solveset(exp(x) - 1, x, S.Reals)
     {0}
-    >>> solveset(Eq(exp(x), 1), x)
+    >>> solveset(Eq(exp(x), 1), x, S.Reals)
     {0}
 
-    * Inequalities are always solved in the real domain irrespective of
-      the assumption on the variable for which the inequality is solved.
+    * Inequalities can be solved over the real domain only. Use of a complex
+      domain leads to a NotImplementedError.
 
-    >>> solveset(exp(x) > 1, x)
+    >>> solveset(exp(x) > 1, x, S.Reals)
     (0, oo)
 
     """
@@ -852,37 +860,35 @@ def solveset(f, symbol=None):
     elif not symbol.is_Symbol:
         raise ValueError('A Symbol must be given, not type %s: %s' % (type(symbol), symbol))
 
-    real = (symbol.is_real is True)
-
     f = sympify(f)
 
     if f is S.false:
         return EmptySet()
 
     if f is S.true:
-        if real:
-            return S.Reals
-        else:
-            return S.Complexes
+        return domain
 
     if isinstance(f, Eq):
         from sympy.core import Add
         f = Add(f.lhs, - f.rhs, evaluate=False)
 
     if f.is_Relational:
-        if real is False:
-            warnings.warn(filldedent('''
-                The variable you are solving for is complex
-                but will assumed to be real since solving complex
-                inequalities is not supported.
-            '''))
-        return solve_univariate_inequality(f, symbol, relational=False)
+        if not domain.is_subset(S.Reals):
+            raise NotImplementedError("Inequalities in the complex domain are "
+                                      "not supported. Try the real domain by"
+                                      "setting domain=S.Reals")
+        return solve_univariate_inequality(
+            f, symbol, relational=False).intersection(domain)
 
     if isinstance(f, (Expr, Number)):
-        if real is True:
+        if domain is S.Reals:
             return solveset_real(f, symbol)
-        else:
+        elif domain is S.Complexes:
             return solveset_complex(f, symbol)
+        elif domain.is_subset(S.Reals):
+            return Intersection(solveset_real(f, symbol), domain)
+        else:
+            return Intersection(solveset_complex(f, symbol), domain)
 
 
 ###############################################################################
@@ -901,15 +907,17 @@ def linear_eq_to_matrix(equations, *symbols):
     The Matrix form corresponds to the augmented matrix form.
     For example:
 
-    4.x + 2.y + 3.z  = 1
-    3.x +   y +   z  = -6
-    2.x + 4.y + 9.z  = 2
+    .. math:: 4x + 2y + 3z  = 1
+    .. math:: 3x +  y +  z  = -6
+    .. math:: 2x + 4y + 9z  = 2
 
-    This system would return A & b as given below:
+    This system would return `A` & `b` as given below:
 
-    [ 4  2  3 ]     [ 1 ]
-    [ 3  1  1 ]     [-6 ]
-    [ 2  4  9 ]     [ 2 ]
+    ::
+
+         [ 4  2  3 ]          [ 1 ]
+     A = [ 3  1  1 ]   b  =   [-6 ]
+         [ 2  4  9 ]          [ 2 ]
 
     Examples
     ========
@@ -917,7 +925,6 @@ def linear_eq_to_matrix(equations, *symbols):
     >>> from sympy.solvers.solveset import linear_eq_to_matrix
     >>> from sympy import symbols
     >>> x, y, z = symbols('x, y, z')
-
     >>> eqns = [x + 2*y + 3*z - 1, 3*x + y + z + 6, 2*x + 4*y + 9*z - 2]
     >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
     >>> A
@@ -930,7 +937,6 @@ def linear_eq_to_matrix(equations, *symbols):
     [ 1],
     [-6],
     [ 2]])
-
     >>> eqns = [x + z - 1, y + z, x - y]
     >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
     >>> A
@@ -1009,27 +1015,31 @@ def linsolve(system, *symbols):
     For the given set of Equations, the respective input types
     are given below:
 
-    3*x + 2*y -   z = 1
-    2*x - 2*y + 4*z = -2
-    2*x -   y + 2*z = 0
+    .. math:: 3x + 2y -   z = 1
+    .. math:: 2x - 2y + 4z = -2
+    .. math:: 2x -   y + 2z = 0
 
-    * Augmented Matrix Form
+    * Augmented Matrix Form, `system` given below:
 
-                 [3   2  -1  1]
-    system   =   [2  -2   4 -2]  (Matrix)
-                 [2  -1   2  0]
+    ::
+
+              [3   2  -1  1]
+     system = [2  -2   4 -2]
+              [2  -1   2  0]
 
     * List Of Equations Form
 
-    system  =  [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, 2*x - y + 2*z]
+    `system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]`
 
-    * Input A & b Matrix Form (from Ax = b)
+    * Input A & b Matrix Form (from Ax = b) are given as below:
 
-            [3   2  -1 ]          [  1 ]
-    A   =   [2  -2   4 ]    b  =  [ -2 ]
-            [2  -1   2 ]          [  0 ]
+    ::
 
-    system = (A, b)
+         [3   2  -1 ]         [  1 ]
+     A = [2  -2   4 ]    b =  [ -2 ]
+         [2  -1   2 ]         [  0 ]
+
+    `system = (A, b)`
 
     Symbols to solve for should be given as input in all the
     cases either in an iterable or as comma separated arguments.
@@ -1073,7 +1083,6 @@ def linsolve(system, *symbols):
     >>> from sympy import Matrix, S
     >>> from sympy import symbols
     >>> x, y, z = symbols("x, y, z")
-
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
     >>> b = Matrix([3, 6, 9])
     >>> A
@@ -1086,7 +1095,6 @@ def linsolve(system, *symbols):
     [3],
     [6],
     [9]])
-
     >>> linsolve((A, b), [x, y, z])
     {(-1, 2, 0)}
 

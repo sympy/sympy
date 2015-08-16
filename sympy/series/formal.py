@@ -34,15 +34,20 @@ def rational_algorithm(f, x, k, order=4, full=False):
     is a rational function in x.
 
     :func:`rational_algorithm` uses :func:`apart` function for partial fraction
-    decomposition. :func`apart` by default uses 'undetermined coefficients
+    decomposition. :func:`apart` by default uses 'undetermined coefficients
     method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
     This can be overriden using order option.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -62,11 +67,11 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Notes
     =====
 
-    By setting full=True, range of admissible functions to be solved using
-    rational_algorithm can be increased. This option should be used carefully
-    as it can signifcantly slow down the computation as ``doit`` is performed
-    on the :class:`RootSum` object returned by the ``apart`` function.
-    Use full=False whenever possible.
+    By setting ``full=True``, range of admissible functions to be solved using
+    ``rational_algorithm`` can be increased. This option should be used
+    carefully as it can signifcantly slow down the computation as ``doit`` is
+    performed on the :class:`RootSum` object returned by the ``apart`` function.
+    Use ``full=False`` whenever possible.
 
     See Also
     ========
@@ -183,7 +188,7 @@ def simpleDE(f, x, g, order=4):
     DE is of the form
 
     .. math::
-        f^k(x) + \sum\limits\_{j=0}^{k-1} A_j f^j(x) = 0
+        f^k(x) + \sum\limits_{j=0}^{k-1} A_j f^j(x) = 0
 
     where :math:`A_j` should be rational function in x.
 
@@ -193,7 +198,7 @@ def simpleDE(f, x, g, order=4):
 
     Yields a tuple of (DE, order).
     """
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     a = symbols('a:%d' % (order))
 
@@ -211,10 +216,10 @@ def simpleDE(f, x, g, order=4):
         terms = eq.as_ordered_terms()
         ind = rational_independent(terms, x)
         if found or len(ind) == k:
-            sol = solve(ind, a, dict=True)
+            sol = dict(zip(a, (i for s in linsolve(ind, a[:k]) for i in s)))
             if sol:
                 found = True
-                DE = DE.subs(sol[0])
+                DE = DE.subs(sol)
             DE = DE.as_numer_denom()[0]
             DE = DE.factor().as_coeff_mul(Derivative)[1][0]
             yield DE.collect(Derivative(g(x))), k
@@ -223,8 +228,12 @@ def simpleDE(f, x, g, order=4):
 def exp_re(DE, r, k):
     """Converts a DE with constant coefficients (explike) into a RE.
 
-    Substitutes :math:`f^j(x) \to r(k + j)`. Normalises the terms
-    so that lowest order of a term is always r(k).
+    Performs the substitution:
+
+    .. math::
+        f^j(x) \\to r(k + j)
+
+    Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
     ========
@@ -266,7 +275,11 @@ def exp_re(DE, r, k):
 def hyper_re(DE, r, k):
     """Converts a DE into a RE.
 
-    Substitutes :math:`x^l f^j(x) \to (k + 1 - l)_j . a_{k + j - l}`.
+    Performs the substitution:
+
+    .. math::
+        x^l f^j(x) \\to (k + 1 - l)_j . a_{k + j - l}
+
     Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
@@ -459,8 +472,13 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
     Some of these transformations have been used to solve the RE.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -581,7 +599,7 @@ def _solve_simple(f, x, DE, g, k):
 
 def _transform_explike_DE(DE, g, x, order, syms):
     """Converts DE with free parameters into DE with constant coefficients."""
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     eq = []
     highest_coeff = DE.coeff(Derivative(g(x), x, order))
@@ -589,19 +607,27 @@ def _transform_explike_DE(DE, g, x, order, syms):
         coeff = DE.coeff(Derivative(g(x), x, i))
         coeff = (coeff / highest_coeff).expand().collect(x)
         for t in Add.make_args(coeff):
-            if t.has(x):
-                eq.append(t)
-    sol = solve(eq, syms, dict=True)
-    if sol:
-        DE = DE.subs(sol[0])
-        DE = DE.factor().as_coeff_mul(Derivative)[1][0]
-        DE = DE.collect(Derivative(g(x)))
+            eq.append(t)
+    temp = []
+    for e in eq:
+        if e.has(x):
+            break
+        elif e.has(Symbol):
+            temp.append(e)
+    else:
+        eq = temp
+    if eq:
+        sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
+        if sol:
+            DE = DE.subs(sol)
+            DE = DE.factor().as_coeff_mul(Derivative)[1][0]
+            DE = DE.collect(Derivative(g(x)))
     return DE
 
 
 def _transform_DE_RE(DE, g, k, order, syms):
     """Converts DE with free parameters into RE of hypergeometric type."""
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     RE = hyper_re(DE, g, k)
 
@@ -609,10 +635,10 @@ def _transform_DE_RE(DE, g, k, order, syms):
     for i in range(1, order):
         coeff = RE.coeff(g(k + i))
         eq.append(coeff)
-    sol = solve(eq, syms, dict=True)
+    sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
     if sol:
         m = Wild('m')
-        RE = RE.subs(sol[0])
+        RE = RE.subs(sol)
         RE = RE.factor().as_numer_denom()[0].collect(g(k + m))
         RE = RE.as_coeff_mul(g)[1][0]
         for i in range(order):  # smallest order should be g(k)
@@ -628,8 +654,13 @@ def solve_de(f, x, DE, order, g, k):
     Tries to solve DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -820,11 +851,8 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
                 full=False):
     """Computes the formula for Formal Power Series of a function.
 
-    Returns (sequence of coefficients, sequence of x, independent terms,
-    common terms).
-
     Tries to compute the formula by applying the following techniques
-    (in order)
+    (in order):
 
     * rational_algorithm
     * Hypergeomitric algorithm
@@ -852,11 +880,23 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
         See :func:`rational_algorithm` for details. By default it is set to
         False.
 
+    Returns
+    =======
+
+    ak : sequence
+        Sequence of coefficients.
+    xk : sequence
+        Sequence of powers of x.
+    ind : Expr
+        Independent terms.
+    mul : Pow
+        Common terms.
+
     See Also
     ========
 
-    sympy.series.rational_algorithm
-    sympy.series.hyper_algorithm
+    sympy.series.formal.rational_algorithm
+    sympy.series.formal.hyper_algorithm
     """
     f = sympify(f)
     x = sympify(x)

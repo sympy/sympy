@@ -386,7 +386,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     >>> from sympy.solvers.inequalities import solve_univariate_inequality
     >>> from sympy.core.symbol import Symbol
-    >>> x = Symbol('x', real=True)
+    >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
     Or(And(-oo < x, x <= -2), And(2 <= x, x < oo))
@@ -397,6 +397,14 @@ def solve_univariate_inequality(expr, gen, relational=True):
     """
 
     from sympy.solvers.solvers import solve, denoms
+
+    # This keeps the function independent of the assumptions about `gen`.
+    # `solveset` makes sure this function is called only when the domain is
+    # real.
+    d = Dummy(real=True)
+    expr = expr.subs(gen, d)
+    _gen = gen
+    gen = d
 
     e = expr.lhs - expr.rhs
     parts = n, d = e.as_numer_denom()
@@ -456,8 +464,8 @@ def solve_univariate_inequality(expr, gen, relational=True):
     if valid(start + 1):
         sol_sets.append(Interval(start, end, True, True))
 
-    rv = Union(*sol_sets)
-    return rv if not relational else rv.as_relational(gen)
+    rv = Union(*sol_sets).subs(gen, _gen)
+    return rv if not relational else rv.as_relational(_gen)
 
 
 def _solve_inequality(ie, s):
