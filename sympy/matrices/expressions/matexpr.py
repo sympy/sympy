@@ -110,13 +110,13 @@ class MatrixExpr(Basic):
     def __pow__(self, other):
         if not self.is_square:
             raise ShapeError("Power of non-square matrix %s" % self)
-        if other is S.NegativeOne:
+        if self.is_Identity:
+           return self
+        elif other is S.NegativeOne:
             return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
         elif other is S.One:
-            return self
-        elif self.is_Identity:
             return self
         return MatPow(self, other)
 
