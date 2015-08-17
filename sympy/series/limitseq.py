@@ -79,11 +79,19 @@ def dominant(expr, n):
     """
     terms = Add.make_args(expr.expand(func=True))
     term0 = terms[-1]
+    comp = [term0]  # comparable terms
     for t in terms[:-1]:
         e = (term0 / t).cancel().combsimp()
         l = limit_seq(e, n)
         if l is S.Zero:
             term0 = t
+            comp = [term0]
+        elif l is None:
+            return None
+        elif l not in [S.Infinity, -S.Infinity]:
+            comp.append(t)
+    if len(comp) > 1:
+        return None
     return term0
 
 
@@ -127,15 +135,25 @@ def limit_seq(expr, n, trials=5, o=False):
 
     for i in range(trials):
         if not expr.has(Sum):
-            return _limitinf(expr, n)
+            result = _limitinf(expr, n)
+            if result is not None:
+                return result
 
-        num, den = map(lambda t: difference_delta(t, n), expr.as_numer_denom())
+        num, den = expr.as_numer_denom()
+        if not den.has(n):
+            return None
+
+        num, den = map(lambda t: difference_delta(t, n), [num, den])
 
         expr = (num / den).cancel().combsimp()
 
         if not expr.has(Sum):
-            return _limitinf(expr, n)
+            result = _limitinf(expr, n)
+            if result is not None:
+                return result
 
         num, den = map(lambda t: dominant(t, n), expr.as_numer_denom())
+        if num is None or den is None:
+            return None
 
         expr = (num / den).cancel().combsimp()
