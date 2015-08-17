@@ -515,7 +515,7 @@ class Vector(object):
         >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
         >>> from sympy.physics.vector import Vector
         >>> Vector.simp = True
-        >>> t = Symbol('t')
+        >>> t = dynamicsymbols.t
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
