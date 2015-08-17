@@ -41,6 +41,22 @@ def test_difference_delta__Add():
     assert dd(e, n, 5) == 5 + Add(*[1/(i + n + 1) for i in range(5)])
 
 
+def test_difference_delta__Pow():
+    e = 4**n
+    assert dd(e, n) == 3*4**n
+    assert dd(e, n, 2) == 15*4**n
+
+    e = 4**(2*n)
+    assert dd(e, n) == 15*4**(2*n)
+    assert dd(e, n, 2) == 255*4**(2*n)
+
+    e = n**4
+    assert dd(e, n) == (n + 1)**4 - n**4
+
+    e = n**n
+    assert dd(e, n) == (n + 1)**(n + 1) - n**n
+
+
 def test_limit_seq():
     e = binomial(2*n, n) / Sum(binomial(2*k, k), (k, 1, n))
     assert limit_seq(e, n) == S(3) / 4
