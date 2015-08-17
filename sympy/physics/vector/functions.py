@@ -605,12 +605,12 @@ class __dynamicsymbols_class(object):
         convenience function that is analogous to ``symbols()``. It allows the
         user to avoid typing::
 
-            >>> t = symbols('t', real=True)
-            >>> F = symbols('F', real=True, cls=Function)(t)
+            >>> t = symbols('t', real=True) #doctest: +SKIP
+            >>> F = symbols('F', real=True, cls=Function)(t) #doctest: +SKIP
 
         and simply type::
 
-            >>> F = dynamicsymbols('F')
+            >>> F = dynamicsymbols('F') #doctest: +SKIP
 
         Parameters
         ==========
@@ -635,6 +635,7 @@ class __dynamicsymbols_class(object):
         >>> diff(q1, Symbol('t', real=True))
         Derivative(q1(t), t)
         >>> q1d = dynamicsymbols('q1', level=1)
+        >>> q1d
         Derivative(q1(t), t)
 
         Notes
@@ -642,12 +643,12 @@ class __dynamicsymbols_class(object):
 
         The default time symbol is stored on the function, i.e.::
 
-            >>> dynamicsymbols.t
+            >>> dynamicsymbols.t #doctest: +SKIP
             t
 
         It can be changed by simply overriding the attribute::
 
-            >>> dynamicsymbols.t = symbols('T', real=False)
+            >>> dynamicsymbols.t = symbols('T', real=False) #doctest: +SKIP
 
         """
         kwargs.pop('cls', None)
