@@ -31,8 +31,8 @@ def test_exp_values():
     assert refine(exp(pi*I*2*(k + Rational(3, 4)))) == -I
 
     assert exp(log(x)) == x
-    assert refine(exp(2*log(x))) == x**2
-    assert refine(exp(pi*log(x))) == x**pi
+    assert exp(2*log(x)) == x**2
+    assert exp(pi*log(x)) == x**pi
 
     assert exp(17*log(x) + E*log(y)) == x**17 * y**E
 

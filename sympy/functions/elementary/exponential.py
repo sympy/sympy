@@ -242,7 +242,7 @@ class exp(ExpBase):
         elif arg.func is log:
             return arg.args[0]
         elif arg.is_Mul:
-            if arg.is_number:
+            if arg.is_number or arg.is_Symbol:
                 coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
                 if coeff:
                     if ask(Q.integer(2*coeff)):
