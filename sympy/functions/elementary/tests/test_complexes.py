@@ -2,7 +2,7 @@ from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral, refine)
+    Interval, comp, Integral)
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -692,7 +692,7 @@ def test_issue_4035():
 
 def test_issue_3206():
     x = Symbol('x')
-    assert refine(Abs(Abs(x))) == Abs(x)
+    assert Abs(Abs(x)) == Abs(x)
 
 
 def test_issue_4754_derivative_conjugate():
