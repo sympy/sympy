@@ -438,13 +438,17 @@ class Abs(Function):
         if arg.is_Add:
             expr_list = []
             for _arg in Add.make_args(arg):
+                if _arg.is_negative or _arg.is_negative is None:
+                    return None
                 if _arg.is_zero:
                     expr_list.append(S.Zero)
                 elif _arg.is_nonnegative:
                     expr_list.append(_arg)
                 elif _arg.is_nonpositive:
-                    expr_list.append(-arg)
-            return Add(*expr_list)
+                    expr_list.append(-_arg)
+            if expr_list:
+                return Add(*expr_list)
+            return arg
 
     @classmethod
     def eval(cls, arg):
