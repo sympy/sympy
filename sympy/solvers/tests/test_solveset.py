@@ -1,8 +1,8 @@
 from sympy import (
     Abs, Dummy, Eq, Gt,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    acos, atan, atanh, cos, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sqrt, symbols,
+    asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
+    exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
@@ -82,6 +82,34 @@ def test_invert_real():
     assert invert_real(Abs(x**31 + x + 1), y, x) == (x**31 + x,
                                                      Union(y_1, y_2))
 
+    assert invert_real(sin(x), y, x) == \
+        (x, imageset(Lambda(n, n*pi + (-1)**n*asin(y)), S.Integers))
+
+    assert invert_real(sin(exp(x)), y, x) == \
+        (x, imageset(Lambda(n, log((-1)**n*asin(y) + n*pi)), S.Integers))
+
+    assert invert_real(csc(x), y, x) == \
+        (x, imageset(Lambda(n, n*pi + (-1)**n*acsc(y)), S.Integers))
+
+    assert invert_real(csc(exp(x)), y, x) == \
+        (x, imageset(Lambda(n, log((-1)**n*acsc(y) + n*pi)), S.Integers))
+
+    assert invert_real(cos(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*pi + acos(y)), S.Integers), \
+                imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers)))
+
+    assert invert_real(cos(exp(x)), y, x) == \
+        (x, Union(imageset(Lambda(n, log(2*n*pi + acos(y))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))
+
+    assert invert_real(sec(x), y, x) == \
+        (x, Union(imageset(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
+                imageset(Lambda(n, 2*n*pi - asec(y)), S.Integers)))
+
+    assert invert_real(sec(exp(x)), y, x) == \
+        (x, Union(imageset(Lambda(n, log(2*n*pi + asec(y))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi - asec(y))), S.Integers)))
+
     assert invert_real(tan(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
 
@@ -90,6 +118,7 @@ def test_invert_real():
 
     assert invert_real(cot(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + acot(y)), S.Integers))
+
     assert invert_real(cot(exp(x)), y, x) == \
         (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
 
@@ -685,7 +714,6 @@ def test_solve_invalid_sol():
 
 def test_solve_complex_unsolvable():
     raises(NotImplementedError, lambda: solveset_complex(cos(x) - S.Half, x))
-
 
 @XFAIL
 def test_solve_trig_simplified():
