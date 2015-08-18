@@ -15,7 +15,7 @@ def pycosat_satisfiable(expr, all_models):
     clauses_int_repr = to_int_repr(clauses, symbols)
 
     if not all_models:
-        r = pycosat.solve(map(list, clauses_int_repr))
+        r = pycosat.solve(clauses_int_repr)
         result = (r != "UNSAT")
         if not result:
             return result
@@ -23,15 +23,15 @@ def pycosat_satisfiable(expr, all_models):
             return dict((symbols[abs(lit) - 1], lit > 0) for lit in r)
         return bool(expr)
     else:
-        r = pycosat.itersolve(map(list, clauses_int_repr))
+        r = pycosat.itersolve(clauses_int_repr)
         result = (r != "UNSAT")
         if not result:
             return result
-        sols = []
-        # Make solutions sympy compatible
-        for sol in r:
-            sols.append(dict((symbols[abs(lit) - 1], lit > 0) for lit in sol))
-        # Return generator object
+
+        # Make solutions sympy compatible by creating a generator
+        def _gen(results):
+          return (dict((symbols[abs(lit) - 1], lit > 0) for lit in sol) for sol in results)
+
         if expr:
-            return (sol for sol in sols)
+            return _gen(r)
         return (i for i in [bool(expr)])
