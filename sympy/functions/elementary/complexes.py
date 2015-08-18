@@ -427,8 +427,7 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_refine(self, val=None):
-        from sympy.assumptions import Q, ask
+    def _eval_refine(self):
         arg = self.args[0]
         if arg.is_zero:
             return S.Zero
@@ -436,11 +435,21 @@ class Abs(Function):
             return arg
         if arg.is_nonpositive:
             return -arg
+        if arg.is_Add:
+            expr_list = []
+            for _arg in Add.make_args(arg):
+                if _arg.is_zero:
+                    expr_list.append(S.Zero)
+                elif _arg.is_nonnegative:
+                    expr_list.append(_arg)
+                elif _arg.is_nonpositive:
+                    expr_list.append(-arg)
+            return Add(*expr_list)
 
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.assumptions import refine
+        from sympy.physics.units import Unit
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -479,7 +488,7 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_number or arg.is_Symbol or isinstance(arg, cls):
+        if arg.is_number or arg.is_Symbol or isinstance(arg, (cls, Unit)):
             if arg.is_zero:
                 return S.Zero
             if arg.is_nonnegative:
