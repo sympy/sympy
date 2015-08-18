@@ -1,6 +1,6 @@
 from sympy import (
-    symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol, Abs,
-    LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
+    symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
+    LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
 
 
@@ -306,7 +306,7 @@ def test_log_sign():
 
 def test_log_expand_complex():
     assert log(1 + I).expand(complex=True) == log(2)/2 + I*pi/4
-    assert log(1 - sqrt(2)).expand(complex=True) == log(Abs(Abs(-1 + sqrt(2)))) + I*pi
+    assert log(1 - sqrt(2)).expand(complex=True) == log(-1 + sqrt(2)) + I*pi
 
 
 def test_log_apply_evalf():

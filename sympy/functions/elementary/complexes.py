@@ -452,8 +452,8 @@ class Abs(Function):
         if arg.is_Mul:
             known = []
             unk = []
-            for t in arg.args:
-                tnew = refine(cls(t))
+            for t in Mul.make_args(arg):
+                tnew = cls(t)
                 if tnew.func is cls:
                     unk.append(tnew.args[0])
                 else:
@@ -479,7 +479,7 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_number or arg.is_Symbol:
+        if arg.is_number or arg.is_Symbol or isinstance(arg, cls):
             if arg.is_zero:
                 return S.Zero
             if arg.is_nonnegative:
