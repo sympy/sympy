@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.add import Add
+from sympy.core.function import PoleError
 from sympy.series.gruntz import limitinf
 
 
@@ -81,7 +82,7 @@ def dominant(expr, n):
     term0 = terms[-1]
     comp = [term0]  # comparable terms
     for t in terms[:-1]:
-        e = (term0 / t).cancel().combsimp()
+        e = (term0 / t).combsimp()
         l = limit_seq(e, n)
         if l is S.Zero:
             term0 = t
@@ -98,11 +99,11 @@ def dominant(expr, n):
 def _limitinf(expr, n):
     try:
         return limitinf(expr, n)
-    except NotImplementedError:
+    except NotImplementedError, PoleError:
         return None
 
 
-def limit_seq(expr, n, trials=5, o=False):
+def limit_seq(expr, n, trials=5):
     """Finds limits infinity.
 
     Admissible Terms
@@ -145,7 +146,7 @@ def limit_seq(expr, n, trials=5, o=False):
 
         num, den = map(lambda t: difference_delta(t, n), [num, den])
 
-        expr = (num / den).cancel().combsimp()
+        expr = (num / den).combsimp()
 
         if not expr.has(Sum):
             result = _limitinf(expr, n)
@@ -156,4 +157,4 @@ def limit_seq(expr, n, trials=5, o=False):
         if num is None or den is None:
             return None
 
-        expr = (num / den).cancel().combsimp()
+        expr = (num / den).combsimp()
