@@ -184,8 +184,7 @@ def not_empty_in(finset_intersection, *syms):
     Examples
     ========
 
-    >>> from sympy import Symbol, FiniteSet, Interval, sqrt, oo
-    >>> from sympy.calculus.codomain import not_empty_in
+    >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
     >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
     [0, 2]
@@ -229,12 +228,11 @@ def not_empty_in(finset_intersection, *syms):
 
         _start = intrvl.start
         _end = intrvl.end
-        _sing = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
+        _singularities = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
 
         if intrvl.right_open:
             if _end is S.Infinity:
-                _sing1 = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
-                _domain1 = Complement(S.Reals, _sing1)
+                _domain1 = S.Reals
             else:
                 _domain1 = solveset(expr < _end, symb, domain=S.Reals)
         else:
@@ -242,8 +240,7 @@ def not_empty_in(finset_intersection, *syms):
 
         if intrvl.left_open:
             if _start is S.NegativeInfinity:
-                _sing2 = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
-                _domain2 = Complement(S.Reals, _sing2)
+                _domain2 = S.Reals
             else:
                 _domain2 = solveset(expr > _start, symb, domain=S.Reals)
         else:
@@ -251,15 +248,15 @@ def not_empty_in(finset_intersection, *syms):
 
         # domain in the interval
         expr_with_sing = Intersection(_domain1, _domain2)
-        expr_domain = Complement(expr_with_sing, _sing)
+        expr_domain = Complement(expr_with_sing, _singularities)
         return expr_domain
 
     if isinstance(_sets, Interval):
         return Union(*[elm_domain(element, _sets) for element in finite_set])
 
     if isinstance(_sets, Union):
-        _dom_final = S.EmptySet
+        _domain = S.EmptySet
         for intrvl in _sets.args:
             _domain_element = Union(*[elm_domain(element, intrvl) for element in finite_set])
-            _dom_final = Union(_dom_final, _domain_element)
-        return _dom_final
+            _domain = Union(_domain, _domain_element)
+        return _domain
