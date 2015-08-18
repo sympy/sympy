@@ -895,7 +895,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
         except NotImplementedError:
-            pass
             result = ConditionSet(Lambda(symbol, f), domain)
         return result
 
