@@ -7,15 +7,15 @@ from sympy.functions.elementary.piecewise import Piecewise
 
 def test_Abs():
     x = Symbol('x', positive=True)
-    assert refine(Abs(x)) == x
-    assert refine(1 + Abs(x)) == 1 + x
+    assert Abs(x) == x
+    assert 1 + Abs(x) == 1 + x
     x = Symbol('x', negative=True)
-    assert refine(Abs(x), Q.negative(x)) == -x
-    assert refine(1 + Abs(x), Q.negative(x)) == 1 - x
+    assert Abs(x) == -x
+    assert 1 + Abs(x) == 1 - x
     x = Symbol('x')
     assert refine(Abs(x**2)) != x**2
     x = Symbol('x', real=True)
-    assert refine(Abs(x**2), Q.real(x)) == x**2
+    assert refine(Abs(x**2)) == x**2
 
 
 def test_pow():

@@ -479,7 +479,7 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_number:
+        if arg.is_number or arg.is_Symbol:
             if arg.is_zero:
                 return S.Zero
             if arg.is_nonnegative:
