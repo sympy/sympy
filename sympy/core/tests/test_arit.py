@@ -1203,11 +1203,8 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (I**i).is_nonnegative is True
     assert (exp(I)**i).is_nonnegative is True
 
-@XFAIL
-def test_temp_xfail():
-    # refine(expr) works
-    assert ((-k)**n).is_nonnegative is None
-    assert ((-k)**m).is_nonpositive is None
+    assert ((-k)**n).is_nonnegative is True
+    assert ((-k)**m).is_nonpositive is True
 
 
 def test_Mul_is_imaginary_real():

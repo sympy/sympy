@@ -2188,6 +2188,7 @@ def test_issue_9636():
 
 @XFAIL
 def test_autosimp_fails():
+    # Unxfail after fixing issue #9807
     assert ask(Q.imaginary(0**I)) is False
     assert ask(Q.imaginary(0**(-I))) is False
     assert ask(Q.real(0**I)) is False
