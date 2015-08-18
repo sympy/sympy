@@ -577,6 +577,24 @@ def convert_tuple_to_vector(frame, val_tuple):
     Converts a 3-Tuple to a vector in the frame provided by taking values of
     the tuple as values of the vector along x, y and z unit vectors of the
     frame respectively.
+
+    Parameters
+    ----------
+    frame: ReferenceFrame
+        Frame in which the vector will be defined.
+    val_tuple: 3-Tuple
+        Tuple containing the values to be converted to the vector.
+
+    Example
+    -------
+    >>> from sympy import symbols
+    >>> from sympy.physics.vector import ReferenceFrame
+    >>> from sympy.physics.mechanics.functions import convert_tuple_to_vector
+    >>> N = ReferenceFrame('N')
+    >>> a, b, c = symbols('a b c')
+    >>> convert_tuple_to_vector(N, (a, b, c))
+    a*N.x + b*N.y + c*N.z
+
     """
     if len(val_tuple) != 3:
         raise TypeError('position tuple must be of length 3')
