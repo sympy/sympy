@@ -37,7 +37,7 @@ To make a function work with rs_series you need to do two things::
       so and need to be called every time you expand a series containing a
       constant term.
 
-Look at rs_sin for reference.
+Look at rs_sin and rs_series for further reference.
 
 """
 
@@ -379,15 +379,11 @@ def rs_subs(p, rules, x, prec):
     5*x**2 + 12*x*y + 8*y**2
 
     Parameters
-    ==========
-    p : PolyElement
-     Input series.
-    rules : Dict
-         Dictionary with substitution mappings.
-    x : PolyElement
-     Variable in which the series truncation is to be done.
-    prec : Integer
-        Order of the series after truncation.
+    ----------
+    p : :class:`PolyElement` Input series.
+    rules : :class:`dict` with substitution mappings.
+    x : :class:`PolyElement` in which the series truncation is to be done.
+    prec : :class:`Integer` order of the series after truncation.
 
     Examples
     ========
@@ -734,9 +730,8 @@ def rs_diff(p, x):
     Return partial derivative of ``p`` with respect to ``x``.
 
     Parameters
-    ==========
-    x : PolyElement
-     Variable with respect to which ``p`` is differentiated.
+    ----------
+    x : :class:`PolyElement` with respect to which ``p`` is differentiated.
 
     Examples
     ========
@@ -766,9 +761,8 @@ def rs_integrate(p, x):
     Integrate ``p`` with respect to ``x``.
 
     Parameters
-    ==========
-    x : PolyElement
-     Variable with respect to which ``p`` is differentiated.
+    ----------
+    x : :class:`PolyElement` with respect to which ``p`` is integrated.
 
     Examples
     ========
@@ -803,19 +797,15 @@ def rs_fun(p, f, *args):
         `rs\_fun(p, tan, iv, prec)`
 
         tan series is first computed for a dummy variable _x,
-        i.e, `rs\_tan(_x, iv, prec)`. Then we substitute _x with p to get the
+        i.e, `rs\_tan(\_x, iv, prec)`. Then we substitute _x with p to get the
         desired series
 
     Parameters
-    ==========
-    p : PolyElement
-     The multivariate series to be expanded.
-    f : `ring\_series` function
-     Name of the function to be applied on `p`.
-    args[-2] : PolyElement
-            The variable with respect to which, the series is to be expanded.
-    args[-1] : Integer
-            Required order of the expanded series.
+    ----------
+    p : :class:`PolyElement` The multivariate series to be expanded.
+    f : `ring\_series` function to be applied on `p`.
+    args[-2] : :class:`PolyElement` with respect to which, the series is to be expanded.
+    args[-1] : Required order of the expanded series.
 
     Examples
     ========
@@ -925,13 +915,10 @@ def rs_nth_root(p, n, x, prec):
     Multivariate series expansion of the nth root of ``p``.
 
     Parameters
-    ==========
-    n : Integer
-     `p**(1/n)` is returned.
-    x : PolyElement
-     Name of the variable.
-    prec : Integer
-        Order of the expanded series.
+    ----------
+    n : `p**(1/n)` is returned.
+    x : :class:`PolyElement`
+    prec : Order of the expanded series.
 
     Notes
     =====
@@ -1888,6 +1875,20 @@ def _rs_series(expr, series_rs, a, prec):
             raise NotImplementedError
         R1, series = sring(arg, domain=QQ, expand=False)
         series_inner = _rs_series(arg, series, a, prec)
+
+        # Why do we need to compose these three rings?
+        #
+        # We want to use a simple domain (like ``QQ`` or ``RR``) but they don't
+        # support symbolic coefficients. We need a ring that for example lets
+        # us have `sin(1)` and `cos(1)` as coefficients if we are expanding
+        # `sin(x + 1)`. The ``EX`` domain allows all symbolic coefficients, but
+        # that makes it very complex and hence slow.
+        #
+        # To solve this problem, we add only those symbolic elements as
+        # generators to our ring, that we need. Here, series_inner might
+        # involve terms like `sin(4)`, `exp(a)`, etc, which are not there in
+        # R1 or R. Hence, we compose these three rings to create one that has
+        # the generators of all three.
         R = R.compose(R1).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
         series = eval(_convert_func[str(expr.func)])(series_inner,
@@ -1940,7 +1941,7 @@ def _rs_series(expr, series_rs, a, prec):
         raise NotImplementedError
 
 def rs_series(expr, a, prec):
-    """Return the series expansion of an expression about 0
+    """Return the series expansion of an expression about 0.
 
     Parameters
     ----------
