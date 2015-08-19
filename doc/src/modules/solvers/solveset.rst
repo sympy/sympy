@@ -60,7 +60,61 @@ Why Solveset?
 Why do we use Sets as an output type?
 -------------------------------------
 
-.. First give an overview of the Sets module of SymPy
+SymPy has a well developed sets module, which can represent most of the set
+containers in Mathematics such as:
+
+ * ``FiniteSet``
+   Represents a finite set of discrete numbers.
+
+ * ``Interval`` 
+   Represents a real interval as a Set.
+
+ * ``ProductSet``
+   Represents a Cartesian Product of Sets.
+
+ * ``ImageSet``
+   Represents the Image of a set under a mathematical function
+
+   ```
+    >>> from sympy import ImageSet, S, Lambda
+    >>> from sympy.abc import x
+    >>> from sympy.sets import ImageSet
+    >>> squares = ImageSet(Lambda(x, x**2), S.Naturals)  # {x**2 for x in N}
+    >>> 4 in squares
+   ```
+
+ * ``ComplexPlane``
+   Represents the Set of all Complex Numbers
+
+ * ``ConditionSet``
+   Represents the Set of elements which satisfies a given condition
+
+Also, the predefined set classes such as:
+
+ * ``Naturals`` `\mathbb{N}`
+   Represents the natural numbers (or counting numbers) which are all
+   positive integers starting from 1 
+
+ * ``Naturals0`` `\mathbb{W}`
+   Represents the whole numbers which are all the non-negative integers,
+   inclusive of zero
+
+ * ``Integers`` `\mathbb{Z}`
+   Represents all integers: positive, negative and zero. This set is also
+   available as the Singleton, ``S.Integers``.
+
+ * ``Reals`` `\mathbb{R}`
+   Represents the Set of all Real numbers.
+
+ * ``Complexes`` `\mathbb{C}`
+   Represents the Set of all Complex numbers.
+
+It is capable of most of the set operations in Mathematics:
+
+ * ``Union``
+ * ``Intersection``
+ * ``Complement``
+ * ``SymmetricDifference``
 
 The main reason for using sets as output to solvers is that it can consistently
 represent many types of solutions. For single variable case it can represent:
@@ -109,14 +163,28 @@ Why not use Dictionary as Output?
 
 
 
+Input API of `Solveset`
+-----------------------
+
+``solveset`` has a cleaner input API, unlike ``solve``, It takes a maximum
+of three arguments:
+
+* Equation(s)
+  The equation(s) to solve.
+
+* Variable(s)
+  The variable(s) for which the equation is to be solved.
+
+* domain
+  The domain in which the equation is to be solved.
+
+
+ ``solveset`` removes the ``flags`` argument of ``solve``, which had made
+ the input API messy and output API inconsistent in ``solve``.
+
 
 What is this domain argument about?
 -----------------------------------
-
-.. You first need to explain the input API, maybe you should restructure the
-.. question so that it expects us to answer this question.
-
-.. Also explain "why" we added the domain argument
 
  Solveset is designed to be independent of the assumptions on the
  variable being solved for and instead, uses the `domain` argument to
@@ -160,9 +228,8 @@ What are the general methods employed by solveset to solve an equation?
    recursively.
 
  * The function class is now checked if it's Trigonometric or Hyperbolic, then
-   the function `\_solve\_real\_trig` is called.
-.. Tell what does "solve_real_trig" do, we don't expect the reader of this doc
-.. to open up the code and see what it does.
+   the function `\_solve\_real\_trig` is called, which solves it by converting
+   it in terms of ``exp`` complex exponential form.
 
  * The function is now checked if there is any instance of Piecewise
    expression, if it is, then it's converted to explict expression and
@@ -172,10 +239,10 @@ What are the general methods employed by solveset to solve an equation?
    `invert\_real` and `invert\_complex`.
 
  * After the invert, the equations are checked for radical or Abs (Modulus),
-   then the methods `\_solve\_radical` and `\_solve\_abs` respectively are
-   used.
-.. Same here tell how does _solve_radical and _solve_abs work just don't give
-.. the names
+   then the method `\_solve\_radical` tries to simplify the radical, by
+   removing it using techniques like squarring, cubing etc, and `\_solve\_abs`
+   solves nested Modulus by considering the positive and negative variants,
+   iteratively.
 
  * If none of the above method is successful, then method of polynomial is
    used as follows:
@@ -192,13 +259,9 @@ What are the general methods employed by solveset to solve an equation?
  * The Final solution set obtained is taken intersection with the input
    domain, and the resultant solution is returned.
 
-.. It is not necessary that you give all the steps involved you just need to
-.. give a general overview
-
 
 How do we manipulate and return an infinite solution?
 -----------------------------------------------------
-.. solution -> solutions probably
 
 .. You should explain  ImageSet, Intergers and other set classes in the set
 .. question above
@@ -280,9 +343,7 @@ How do we deal with cases where only some of the solutions are known?
 
  We can represent it as:
 
- `FiniteSet(-2, 2) U ConditionSet(Lambda(x, Eq(sin(x) + x, 0)), S.Reals)`
-
-.. Should we use the mathematical symbols here?
+ ``{-2, 2} ∪ {x | x ∊ ℝ ∧ x + sin(x) = 0}``
 
 
 What will you do with the old solve?
@@ -322,7 +383,7 @@ How are symbolic parameters handled in solveset?
 
  There are various other cases as well which needs to be addressed, like
  say, solving of `2**x + (a - 2)` for `x` where `a` is a symbolic parameter.
- As of now, It returns the solution as an intersection with `mathbb{R}`, which
+ As of now, It returns the solution as an intersection with `\mathbb{R}`, which
  is trivial, as it doesn't reveals the domain of `a`, in the solution.
 
 .. Also mention the no_empty_in PR by gxyd
@@ -331,11 +392,11 @@ How are symbolic parameters handled in solveset?
 References
 ----------
 
- * https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
- * https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
- * https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
- * https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
- * http://iamit.in/blog/
+ .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
+ .. [2] https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
+ .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
+ .. [4] https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
+ .. [5] http://iamit.in/blog/
 
 
 Solveset Module Reference
