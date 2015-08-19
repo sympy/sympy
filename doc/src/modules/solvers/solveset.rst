@@ -3,14 +3,14 @@ Solveset
 
 .. module:: sympy.solvers.solveset
 
-This is the official documentation of the `solveset` module in solvers.
+This is the official documentation of the ``solveset`` module in solvers.
 It contains the Frequently asked Questions about our new module to solve
 equations.
 
 What's wrong with solve():
 --------------------------
 
-SymPy already has a pretty powerful `solve` function. But it has a lot of major
+SymPy already has a pretty powerful ``solve`` function. But it has a lot of major
 issues
 
 1. It doesn't have a consistent output for various types of solutions
@@ -33,20 +33,20 @@ issues
 
 3. There are cases like finding the maxima and minima of function using
    critical points where it is important to know if it has returned all the
-   solutions. `solve` does not guarantee this.
+   solutions. ``solve`` does not guarantee this.
 
 
 Why Solveset?
 -------------
 
-* `solveset` has a cleaner input and output interface: `solveset` returns
+* ``solveset`` has a cleaner input and output interface: ``solveset`` returns
   a set object and a set object takes care of all types of output. For
   cases where it doesn't "know" all the solutions a `ConditionSet` with partial
   solution is returned. For input it only takes the equation, the variables
   to solve for & the optional argument `domain` in which the equations has to
   be solved.
 
-* `solveset` can return infinitely many solutions. For example solving for
+* ``solveset`` can return infinitely many solutions. For example solving for
   `sin(x) = 0` returns `\{2 n \pi \| n \in \mathbb{Z}\} \cup \{2 n \pi + \pi \| n \in \mathbb{Z}\}`, whereas `solve`
   only returns [0, π].
 
@@ -141,8 +141,8 @@ n-dimensional space and a point is represented by a FiniteSet of ordered tuple.
 Please Note that, the General FiniteSet is unordered, but a FiniteSet with
 a tuple as it's first argument is ordered. For example:
 
- - FiniteSet(1, 2, 3) : {1, 2, 3}    # Unordered
- - FiniteSet((1, 2, 3)) {(1, 2, 3)}  # Ordered
+ - ``FiniteSet(1, 2, 3) : {1, 2, 3}``   # Unordered
+ - ``FiniteSet((1, 2, 3)) {(1, 2, 3)}``  # Ordered
 
 
 Why not use Dictionary as Output?
@@ -187,9 +187,9 @@ What is this domain argument about?
 -----------------------------------
 
  Solveset is designed to be independent of the assumptions on the
- variable being solved for and instead, uses the `domain` argument to
- decide the solver to dispatch the equation to, namely `solveset\_real`
- or `solveset\_complex`. It's unlike the old `solve` which considers the
+ variable being solved for and instead, uses the ``domain`` argument to
+ decide the solver to dispatch the equation to, namely ``solveset\_real``
+ or ``solveset\_complex``. It's unlike the old ``solve`` which considers the
  assumption on the variable.
 
     >>> from sympy.solvers.solveset import solveset
@@ -207,7 +207,7 @@ What are the general methods employed by solveset to solve an equation?
  Solveset uses various methods to solve an equation, here is a brief overview
  of the methodology:
 
- * The `domain` argument is first considered to know the domain in which
+ * The ``domain`` argument is first considered to know the domain in which
    the user is interested to get the solution.
 
  * If the given function is a relational (`>=`, `<=`, `>`, `<`), and the
@@ -215,8 +215,8 @@ What are the general methods employed by solveset to solve an equation?
    returned. Solving for complex inequalities are not supported yet.
 
 
- * Based on the `domain`, the equation is dispatched to one of the two
-   functions `solveset\_real` or `solveset\_complex`, which solves the
+ * Based on the ``domain``, the equation is dispatched to one of the two
+   functions ``solveset\_real`` or ``solveset\_complex``, which solves the
    given equation in complex and real domain respectively.
 
  * If the given function (equation) is a product of two or more functions,
@@ -226,7 +226,7 @@ What are the general methods employed by solveset to solve an equation?
    recursively.
 
  * The function class is now checked if it's Trigonometric or Hyperbolic, then
-   the function `\_solve\_real\_trig` is called, which solves it by converting
+   the function ``\_solve\_real\_trig`` is called, which solves it by converting
    it in terms of ``exp`` complex exponential form.
 
  * The function is now checked if there is any instance of Piecewise
@@ -234,23 +234,23 @@ What are the general methods employed by solveset to solve an equation?
    set pairs and then solved recursively.
 
  * The respective solvers now tries to invert the equation using the routines
-   `invert\_real` and `invert\_complex`.
+   ``invert\_real`` and ``invert\_complex``.
 
  * After the invert, the equations are checked for radical or Abs (Modulus),
-   then the method `\_solve\_radical` tries to simplify the radical, by
-   removing it using techniques like squarring, cubing etc, and `\_solve\_abs`
+   then the method ``\_solve\_radical`` tries to simplify the radical, by
+   removing it using techniques like squarring, cubing etc, and ``\_solve\_abs``
    solves nested Modulus by considering the positive and negative variants,
    iteratively.
 
  * If none of the above method is successful, then method of polynomial is
    used as follows:
 
-   - `\_solve\_as\_rational` is called, it's third argument is the
-     `solveset\_solver` which can either be `solveset_real` or
-     `solveset\_complex` based on these respective poly solvers
-     `\_solve\_as\_poly\_real` and `\_solve\_as\_poly\_complex` is called.
+   - ``\_solve\_as\_rational`` is called, it's third argument is the
+     ``solveset\_solver`` which can either be ``solveset_real`` or
+     ``solveset\_complex`` based on these respective poly solvers
+     ``\_solve\_as\_poly\_real`` and ``\_solve\_as\_poly\_complex`` is called.
 
-   - The underlying method `\_solve\_as\_poly` solves the equation using
+   - The underlying method ``\_solve\_as\_poly`` solves the equation using
      polynomial techniques if it already is a polynomial equation or, with
      a change of variables, can be made so.
 
@@ -263,33 +263,33 @@ What are the general methods employed by solveset to solve an equation?
 How do we manipulate and return an infinite solution?
 -----------------------------------------------------
 
- * In Real Domain, we use our `ImageSet` class in the sets module to
-   return infinite solutions. `ImageSet` is an Image of a set under
+ * In Real Domain, we use our ``ImageSet`` class in the sets module to
+   return infinite solutions. ``ImageSet`` is an Image of a set under
    a mathematical function. For example, to represent the solution
    of the equation `sin(x) == 0`, we can use the ImageSet as:
 
-   `ImageSet(Lambda(n, 2*n*pi), Integers())`
+   ``ImageSet(Lambda(n, 2*n*pi), Integers())``
 
    Where n is a dummy variable. It is basically the image of the
    Integers set under the function `2*n*pi`.
 
  * In Complex Domain, we use Complex Sets, which is implemented as
-   `ComplexPlane` class in the sets module, to represent infinite
+   ``ComplexPlane`` class in the sets module, to represent infinite
    solution in the argand plane. For example to represent the solution
    of the equation `|z| == 1`, which is a unit circle, we can use
    the ComplexPlane as:
 
-   `ComplexPlane(FiniteSet(1)*Interval(0, 2*pi), polar=True)`
+   ``ComplexPlane(FiniteSet(1)*Interval(0, 2*pi), polar=True)``
 
-   Where the FiniteSet in the `ProductSet` is the range of the value of `r`,
-   which is the radius of the circle and the Interval is the range of theta,
+   Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value of `r`,
+   which is the radius of the circle and the ``Interval`` is the range of theta,
    representing a unit circle in the argand plane.
 
    Note: We also have non-polar form notation for representing solution
    in rectangular form. For example, to represent first quadrant in argand
    plane, we can write the ComplexPlane as:
 
-   `ComplexPlane(Interval(0, oo)*Interval(0, oo))`
+   ``ComplexPlane(Interval(0, oo)*Interval(0, oo))``
 
    where the Intervals are the range of `x` and `y` for the set of complex
    number `(x + I*y)`.
@@ -340,24 +340,24 @@ How do we deal with cases where only some of the solutions are known?
 
  We can represent it as:
 
- ``{-2, 2} ∪ {x | x ∊ ℝ ∧ x + sin(x) = 0}``
+ `{-2, 2} ∪ {x | x ∊ ℝ ∧ x + sin(x) = 0}`
 
 
 What will you do with the old solve?
 ------------------------------------
 
- The (current) `solve` would possibly be deprecated in future versions & we encourage
- our users to use `solveset`. We may proceeds as follows:
+ The (current) ``solve`` would possibly be deprecated in future versions & we encourage
+ our users to use ``solveset``. We may proceeds as follows:
 
 .. solveset will be renamed as solve
 
  * Replace all internal instances of solve by solveset by next release.
  * Raise a deprecation warning with solve calls possibly from next to
    next release.
- * Possibly rename `solve` to `solve\_old`, so that people can easily fix
+ * Possibly rename ``solve`` to ``solve\_old``, so that people can easily fix
    their code.
- * The issues pertaining to old `solve` would be addressed by new issues
-   for `solveset`.
+ * The issues pertaining to old ``solve`` would be addressed by new issues
+   for ``solveset``.
 
 
 How are symbolic parameters handled in solveset?
@@ -374,8 +374,8 @@ How are symbolic parameters handled in solveset?
 
  `Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})`.
 
- It simply means `n` is the solution only when it belongs to the `Interval`
- `[0, oo)` and `-n` is the solution only when `n` belongs to the `Interval`
+ It simply means `n` is the solution only when it belongs to the ``Interval``
+ `[0, oo)` and `-n` is the solution only when `n` belongs to the ``Interval``
  `(-oo, 0]`.
 
  There are various other cases as well which needs to be addressed, like
