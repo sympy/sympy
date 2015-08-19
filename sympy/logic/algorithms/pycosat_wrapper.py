@@ -15,7 +15,7 @@ def pycosat_satisfiable(expr, all_models):
     clauses_int_repr = to_int_repr(clauses, symbols)
 
     if not all_models:
-        r = pycosat.solve(clauses_int_repr)
+        r = pycosat.solve(map(list, clauses_int_repr))
         result = (r != "UNSAT")
         if not result:
             return result
@@ -23,7 +23,7 @@ def pycosat_satisfiable(expr, all_models):
             return dict((symbols[abs(lit) - 1], lit > 0) for lit in r)
         return bool(expr)
     else:
-        r = pycosat.itersolve(clauses_int_repr)
+        r = pycosat.itersolve(map(list, clauses_int_repr))
         result = (r != "UNSAT")
         if not result:
             return result
