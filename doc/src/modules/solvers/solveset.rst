@@ -394,6 +394,9 @@ References
  .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
  .. [4] https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
  .. [5] http://iamit.in/blog/
+ .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
+ .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
+ .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR 
 
 
 Solveset Module Reference
