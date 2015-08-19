@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, pi, S
-from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix
+from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix
 from sympy.matrices.expressions import MatPow, MatAdd, MatMul
 from sympy.matrices.expressions.matexpr import ShapeError
 
@@ -101,8 +101,22 @@ def test_identity_power():
     assert MatPow(k, 1).doit() == k
     assert MatPow(k, -3).doit() == k
     assert MatPow(k, 0).doit() == k
-
     l = Identity(3)
     assert MatPow(l, 2).doit() == l
     assert MatPow(l, -1).doit() == l
     assert MatPow(l, 0).doit() == l
+    
+
+def test_Zero_power():
+    z1 = ZeroMatrix(n, n)
+    assert MatPow(z1, 3).doit() == z1
+    assert MatPow(z1, -1).doit() == z1
+    assert MatPow(z1, 0).doit() == Identity(n)
+    assert MatPow(z1, 2).doit() == z1
+    assert MatPow(z1, -2).doit() == z1
+    z2 = ZeroMatrix(4, 4)
+    assert MatPow(z2, 4).doit() == z2
+    assert MatPow(z2, -3).doit() == z2
+    assert MatPow(z2, 2).doit() == z2
+    assert MatPow(z2, 0).doit() == Identity(4)
+    assert MatPow(z2, -1).doit() == z2
