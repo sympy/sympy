@@ -1820,7 +1820,7 @@ def _rs_series(expr, series_rs, a, prec):
         arg = args[0]
         if len(args) > 1:
             raise NotImplementedError
-        R1, series = sring(arg, domain=QQ, expand=False)
+        R1, series = sring(arg, domain=QQ, expand=False, series=True)
         series_inner = _rs_series(arg, series, a, prec)
         R = R.compose(R1).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
@@ -1831,7 +1831,7 @@ def _rs_series(expr, series_rs, a, prec):
     elif expr.is_Mul:
         n = len(args)
         for arg in args:    # XXX Looks redundant
-            R1, _ = sring(arg, expand=False)
+            R1, _ = sring(arg, expand=False, series=True)
             R = R.compose(R1)
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
             [a]*len(args)))
@@ -1860,7 +1860,7 @@ def _rs_series(expr, series_rs, a, prec):
         return series
 
     elif expr.is_Pow:
-        R1, _ = sring(expr.base, domain=QQ, expand=False)
+        R1, _ = sring(expr.base, domain=QQ, expand=False, series=True)
         R = R.compose(R1)
         series_inner = _rs_series(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
@@ -1868,7 +1868,7 @@ def _rs_series(expr, series_rs, a, prec):
     # The `is_constant` method is buggy hence we check it at the end.
     # See issue #9786 for details.
     elif isinstance(expr, Expr) and expr.is_constant():
-        return sring(expr, domain=QQ, expand=False)[1]
+        return sring(expr, domain=QQ, expand=False, series=True)[1]
 
     else:
         raise NotImplementedError
@@ -1902,7 +1902,7 @@ def rs_series(expr, a, prec):
     -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
 
     """
-    R, series = sring(expr, domain=QQ, expand=False)
+    R, series = sring(expr, domain=QQ, expand=False, series=True)
     if a not in R.symbols:
         R = R.add_gens([a, ])
     series = series.set_ring(R)
