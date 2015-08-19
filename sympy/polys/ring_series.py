@@ -661,7 +661,10 @@ def rs_diff(p, x):
     """
     Computes partial derivative of p with respect to x
 
-      `x`: variable with respect to which p is differentiated,
+    Parameters
+    ==========
+    x : PolyElement
+     Variable with respect to which p is differentiated.
 
     Examples
     ========
@@ -688,7 +691,12 @@ def rs_diff(p, x):
 
 def rs_integrate(p, x):
     """
-    Integrate ``p`` with respect to ``x``
+    Integrate `p` with respect to `x`
+
+    Parameters
+    ==========
+    x : PolyElement
+     Variable with respect to which p is differentiated.
 
     Examples
     ========
@@ -717,19 +725,25 @@ def rs_fun(p, f, *args):
     """
     Function of a multivariate series computed by substitution
 
-      p: multivariate series
-      f: method name or function
-      args[:-2] arguments of f, apart from the first one
-      args[-2] = iv: names of the series variables
-      args[-1] = prec: list of the precisions of the series variables
+    Parameters
+    ==========
+    p : PolyElement
+     The multivariate series to be expanded.
+    f : `ring\_series` function
+     Name of the function to be applied on `p`.
+    args[-2] : PolyElement
+            The variable with respect to which, the series is to be expanded.
+    args[-1] : Integer
+            Requried order of the expanded series.
 
-    The case with f method name is used to compute rs_tan and rs_nth_root
+    The case with f method name is used to compute `rs\_tan` and `rs\_nth\_root`
     of a multivariate series:
 
-      rs_fun(p, tan, iv, prec)
-      tan series is first computed for a dummy variable _x,
-      ie, rs_tan(_x, iv, prec). Then we substitute _x with p to get the
-      desired series
+        `rs\_fun(p, tan, iv, prec)`
+
+        tan series is first computed for a dummy variable _x,
+        i.e, `rs\_tan(_x, iv, prec)`. Then we substitute _x with p to get the
+        desired series
 
     Examples
     ========
@@ -768,7 +782,7 @@ def rs_fun(p, f, *args):
 
 def mul_xin(p, i, n):
     """
-    Computes p*x_i**n
+    Computes `p*x_i**n`
 
     x_i is the ith variable in p
     """
@@ -1438,7 +1452,8 @@ def rs_cos(p, x, prec):
 
 def rs_cos_sin(p, x, prec):
     """
-    Returns the tuple (rs_cos(p, x, prec), rs_sin(p, x, prec))
+    Returns the tuple `(rs_cos(p, x, prec)`, `rs_sin(p, x, prec))`.
+
     Is faster than calling rs_cos and rs_sin separately
     """
     if rs_is_puiseux(p, x):
