@@ -611,14 +611,6 @@ class SphericalJoint(Joint):
         Defines the joint's point where the child will be connected to parent.
         3 Tuple defines the values of x, y and z directions w.r.t child's frame.
         If it is not supplied, center of mass is added as default.
-    parent_axis: Vector, Optional
-        Defines the orientation as a vector which must be aligned with child's
-        axis before adding joint. If it is not passed, default is x axis in
-        parent's frame.
-    child_axis: Vector, Optional
-        Defines the orientation as a vector which must be aligned with parent's
-        axis before adding joint. If it is not passed, default is x axis in
-        child's frame.
 
     Examples
     --------
@@ -633,49 +625,57 @@ class SphericalJoint(Joint):
     >>> spherical_joint = SphericalJoint('sphericaljoint', parent, child, \
                                          child_point_pos=(0, l, 0))
     >>> spherical_joint.coordinates
-    [sphericaljoint_theta_x(t), sphericaljoint_theta_y(t), sphericaljoint_theta_z(t)]
+    [sphericaljoint_alpha(t), sphericaljoint_beta(t), sphericaljoint_gamma(t)]
     >>> spherical_joint.speeds
-    [sphericaljoint_omega_x(t), sphericaljoint_omega_y(t), sphericaljoint_omega_z(t)]
+    [sphericaljoint_omega_alpha(t), sphericaljoint_omega_beta(t), sphericaljoint_omega_gamma(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
-                 child_point_pos=None):
+                 child_point_pos=None, rot_order=None):
+
+        if rot_order is None:
+            self.rot_order = 'XYZ'
+        else:
+            self.rot_order = rot_order
 
         super(SphericalJoint, self).__init__(name, parent, child,
                                              parent_point_pos, child_point_pos)
 
     def apply_joint(self):
-        theta_x = dynamicsymbols(self.name + '_theta_x')
-        theta_y = dynamicsymbols(self.name + '_theta_y')
-        theta_z = dynamicsymbols(self.name + '_theta_z')
-        theta_xd = dynamicsymbols(self.name + '_theta_x', 1)
-        theta_yd = dynamicsymbols(self.name + '_theta_y', 1)
-        theta_zd = dynamicsymbols(self.name + '_theta_z', 1)
-        omega_x = dynamicsymbols(self.name + '_omega_x')
-        omega_y = dynamicsymbols(self.name + '_omega_y')
-        omega_z = dynamicsymbols(self.name + '_omega_z')
+        alpha = dynamicsymbols(self.name + '_alpha')
+        beta = dynamicsymbols(self.name + '_beta')
+        gamma = dynamicsymbols(self.name + '_gamma')
+        alphad = dynamicsymbols(self.name + '_alpha', 1)
+        betad = dynamicsymbols(self.name + '_beta', 1)
+        gammad = dynamicsymbols(self.name + '_gamma', 1)
+        omega_alpha = dynamicsymbols(self.name + '_omega_alpha')
+        omega_beta = dynamicsymbols(self.name + '_omega_beta')
+        omega_gamma = dynamicsymbols(self.name + '_omega_gamma')
 
-        self.coordinates.append(theta_x)
-        self.speeds.append(omega_x)
-        self.kds.append(theta_xd - omega_x)
+        self.coordinates.append(alpha)
+        self.speeds.append(omega_alpha)
+        self.kds.append(alphad - omega_alpha)
 
-        self.coordinates.append(theta_y)
-        self.speeds.append(omega_y)
-        self.kds.append(theta_yd - omega_y)
+        self.coordinates.append(beta)
+        self.speeds.append(omega_beta)
+        self.kds.append(betad - omega_beta)
 
-        self.coordinates.append(theta_z)
-        self.speeds.append(omega_z)
-        self.kds.append(theta_zd - omega_z)
+        self.coordinates.append(gamma)
+        self.speeds.append(omega_gamma)
+        self.kds.append(gammad - omega_gamma)
 
         self._locate_joint_point()
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
+        self.child_joint_point.set_vel(self.child.frame, 0)
+        self.child_joint_point.set_vel(self.parent.frame, 0)
+        self.parent_joint_point.set_vel(self.parent.frame, 0)
 
         self.child.frame.orient(self.parent.frame, 'Body',
-                                [theta_x, theta_y, theta_z], 'XYZ')
+                                [alpha, beta, gamma], self.rot_order)
         self.child.frame.set_ang_vel(self.parent.frame,
-                                     omega_x * self.parent.frame.x +
-                                     omega_y * self.parent.frame.y +
-                                     omega_z * self.parent.frame.z)
+                                     omega_alpha * self.parent.frame.x +
+                                     omega_beta * self.parent.frame.y +
+                                     omega_gamma * self.parent.frame.z)
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame,
                                           self.child.frame)

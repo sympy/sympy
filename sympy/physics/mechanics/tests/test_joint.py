@@ -283,20 +283,20 @@ def test_spherical_joint():
     assert spherical_joint._parent_joint_location == Vector(0)
     assert spherical_joint._child_joint_location == l * child.frame.y
 
-    theta_x = dynamicsymbols('spherical_joint_theta_x')
-    theta_y = dynamicsymbols('spherical_joint_theta_y')
-    theta_z = dynamicsymbols('spherical_joint_theta_z')
-    theta_xd = dynamicsymbols('spherical_joint_theta_x', 1)
-    theta_yd = dynamicsymbols('spherical_joint_theta_y', 1)
-    theta_zd = dynamicsymbols('spherical_joint_theta_z', 1)
-    omega_x = dynamicsymbols('spherical_joint_omega_x')
-    omega_y = dynamicsymbols('spherical_joint_omega_y')
-    omega_z = dynamicsymbols('spherical_joint_omega_z')
+    alpha = dynamicsymbols('spherical_joint_alpha')
+    beta = dynamicsymbols('spherical_joint_beta')
+    gamma = dynamicsymbols('spherical_joint_gamma')
+    alphad = dynamicsymbols('spherical_joint_alpha', 1)
+    betad = dynamicsymbols('spherical_joint_beta', 1)
+    gammad = dynamicsymbols('spherical_joint_gamma', 1)
+    omega_alpha = dynamicsymbols('spherical_joint_omega_alpha')
+    omega_beta = dynamicsymbols('spherical_joint_omega_beta')
+    omega_gamma = dynamicsymbols('spherical_joint_omega_gamma')
 
-    assert spherical_joint.coordinates == [theta_x, theta_y, theta_z]
-    assert spherical_joint.speeds == [omega_x, omega_y, omega_z]
-    assert spherical_joint.kds == [theta_xd - omega_x, theta_yd - omega_y,
-                                   theta_zd - omega_z]
+    assert spherical_joint.coordinates == [alpha, beta, gamma]
+    assert spherical_joint.speeds == [omega_alpha, omega_beta, omega_gamma]
+    assert spherical_joint.kds == [alphad - omega_alpha, betad - omega_beta,
+                                   gammad - omega_gamma]
 
     child_joint_point = spherical_joint.child_joint_point
     parent_joint_point = spherical_joint.parent_joint_point
@@ -305,10 +305,30 @@ def test_spherical_joint():
     assert child_joint_point.pos_from(parent_joint_point) == Vector(0)
     assert child_joint_point.pos_from(child.masscenter) == l * child.frame.y
     assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
-
-    assert child.frame.ang_vel_in(parent.frame) == (omega_x * parent.frame.x +
-                                                    omega_y * parent.frame.y +
-                                                    omega_z * parent.frame.z)
+    assert child.frame.ang_vel_in(parent.frame) == (omega_alpha * parent.frame.x +
+                                                    omega_beta * parent.frame.y +
+                                                    omega_gamma * parent.frame.z)
+    assert child_joint_point.vel(child.frame) == 0
+    assert child.masscenter.vel(child.frame) == 0
+    assert parent_joint_point.vel(parent.frame) == 0
+    assert parent.masscenter.vel(parent.frame) == 0
+    assert child_joint_point.vel(parent.frame) == 0
+    assert child.masscenter.vel(parent.frame) == (l*(omega_alpha*sin(beta) -
+        omega_beta*sin(alpha)*cos(beta) +
+        omega_gamma*cos(alpha)*cos(beta))*child.frame.x -
+        l*((sin(alpha)*sin(gamma) -
+        sin(beta)*cos(alpha)*cos(gamma))*omega_gamma +
+        (sin(alpha)*sin(beta)*cos(gamma) +
+         sin(gamma)*cos(alpha))*omega_beta +
+        omega_alpha*cos(beta)*cos(gamma))*child.frame.z)
+    assert parent.frame.dcm(child.frame) == Matrix([
+        [cos(beta)*cos(gamma), -sin(gamma)*cos(beta), sin(beta)],
+        [sin(alpha)*sin(beta)*cos(gamma) + sin(gamma)*cos(alpha),
+         -sin(alpha)*sin(beta)*sin(gamma) + cos(alpha)*cos(gamma),
+         -sin(alpha)*cos(beta)],
+        [sin(alpha)*sin(gamma) - sin(beta)*cos(alpha)*cos(gamma),
+         sin(alpha)*cos(gamma) + sin(beta)*sin(gamma)*cos(alpha),
+         cos(alpha)*cos(beta)]])
 
 
 def test_spherical_joint_arguments():
@@ -318,7 +338,8 @@ def test_spherical_joint_arguments():
     l2 = Symbol('l2')
     spherical_joint = SphericalJoint('spherical_joint', parent, child,
                                      parent_point_pos=(0, l1, 0),
-                                     child_point_pos=(0, l2, 0))
+                                     child_point_pos=(0, l2, 0),
+                                     rot_order='XYX')
     assert spherical_joint.name == 'spherical_joint'
     assert spherical_joint.parent == parent
     assert spherical_joint.child == child
