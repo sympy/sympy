@@ -6,7 +6,7 @@ from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.add import Add
 from sympy.core.function import PoleError
-from sympy.series.gruntz import limitinf
+from sympy.series.limits import limit
 
 
 def difference_delta(expr, n=None, step=1):
@@ -96,10 +96,10 @@ def dominant(expr, n):
     return term0
 
 
-def _limitinf(expr, n):
+def _limit_inf(expr, n):
     try:
-        return limitinf(expr, n)
-    except NotImplementedError, PoleError:
+        return limit(expr, n, S.Infinity)
+    except (NotImplementedError, PoleError):
         return None
 
 
@@ -136,7 +136,7 @@ def limit_seq(expr, n, trials=5):
 
     for i in range(trials):
         if not expr.has(Sum):
-            result = _limitinf(expr, n)
+            result = _limit_inf(expr, n)
             if result is not None:
                 return result
 
@@ -149,7 +149,7 @@ def limit_seq(expr, n, trials=5):
         expr = (num / den).combsimp()
 
         if not expr.has(Sum):
-            result = _limitinf(expr, n)
+            result = _limit_inf(expr, n)
             if result is not None:
                 return result
 
