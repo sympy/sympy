@@ -14,7 +14,7 @@ import math
 
 def _invert_monoms(p1):
     """
-    Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in x.
+    Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in ``x``.
 
     Examples
     ========
@@ -79,8 +79,9 @@ def rs_trunc(p1, x, prec):
 
 def rs_is_puiseux(p, x):
     """
-    Test if `p` is Puiseux series in `x`; raise an exception if it has
-    negative powers in `x`.
+    Test if ``p`` is Puiseux series in ``x``.
+
+    Raise an exception if it has a negative power in ``x``.
 
     Examples
     ========
@@ -103,9 +104,9 @@ def rs_is_puiseux(p, x):
 
 def rs_puiseux(f, p, x, prec):
     """
-    Return the puiseux series for `f(p, x, prec)`
+    Return the puiseux series for `f(p, x, prec)`.
 
-    To be used when function`f` is implemented only for regular series
+    To be used when function ``f`` is implemented only for regular series.
 
     Examples
     ========
@@ -142,9 +143,9 @@ def rs_puiseux(f, p, x, prec):
 
 def rs_puiseux2(f, p, q, x, prec):
     """
-    Return the puiseux series for `f(p, q, x, prec)`
+    Return the puiseux series for `f(p, q, x, prec)`.
 
-    To be used when function `f` is implemented only for regular series
+    To be used when function ``f`` is implemented only for regular series.
     """
     index = p.ring.gens.index(x)
     n = 1
@@ -167,7 +168,7 @@ def rs_puiseux2(f, p, q, x, prec):
 
 def rs_mul(p1, p2, x, prec):
     """
-    Return the product of the given two series, modulo ``O(x**prec)``
+    Return the product of the given two series, modulo ``O(x**prec)``.
 
     ``x`` is the series variable or its position in the generators.
 
@@ -313,13 +314,9 @@ def rs_pow(p1, n, x, prec):
 
 def rs_subs(p, rules, x, prec):
     """
-    Substitution with truncation according to the mapping in `rules`.
-    Returns a series with precision `prec` in the generator `x`
+    Substitution with truncation according to the mapping in ``rules``.
 
-      p:     input polynomial
-      rules: dict with substitution mappings
-      x:     variable in which the series truncation is done
-      prec:  order of the truncation
+    Return a series with precision ``prec`` in the generator ``x``
 
     Note that substitutions are not done one after the other
 
@@ -337,6 +334,17 @@ def rs_subs(p, rules, x, prec):
 
     >>> rs_subs(rs_subs(p, {x: x+ y}, x, 3), {y: x+ 2*y}, x, 3)
     5*x**2 + 12*x*y + 8*y**2
+
+    Parameters
+    ==========
+    p : PolyElement
+     Input series.
+    rules : Dict
+         Dictionary with substitution mappings.
+    x : PolyElement
+     Variable in which the series truncation is to be done.
+    prec : Integer
+        Order of the series after truncation.
 
     Examples
     ========
@@ -412,7 +420,7 @@ def _check_series_var(p, x, name):
 
 def _series_inversion1(p, x, prec):
     """
-    Univariate series inversion ``1/p`` modulo ``O(x**prec)``
+    Univariate series inversion ``1/p`` modulo ``O(x**prec)``.
 
     The Newton method is used.
 
@@ -458,7 +466,7 @@ def _series_inversion1(p, x, prec):
 
 def rs_series_inversion(p, x, prec):
     """
-    Multivariate series inversion ``1/p`` modulo ``O(x**prec)``
+    Multivariate series inversion ``1/p`` modulo ``O(x**prec)``.
 
     Examples
     ========
@@ -495,7 +503,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    """Coefficient of `x_i**j` in p, where t = (i, j)"""
+    """Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -509,35 +517,35 @@ def _coefficient_t(p, t):
 
 def rs_series_reversion(p, x, n, y):
     """
-    Reversion of a series
+    Reversion of a series.
 
-    p is a series with O(x**n) of the form p = a*x + f(x)
-    where `a` is a number different from 0
+    ``p`` is a series with ``O(x**n)`` of the form `p = a*x + f(x)`
+    where `a` is a number different from 0.
 
-    f(x) = sum( a_k*x_k, k in range(2, n))
+    `f(x) = sum( a\_k*x\_k, k in range(2, n))`
 
-      a_k can depend polynomially on other variables, not indicated.
-      x: variable with name x
-      y: variable with name y
+      a_k : Can depend polynomially on other variables, not indicated.
+      x : Variable with name x.
+      y : Variable with name y.
 
-    Solve p = y, that is, given a*x + f(x) - y = 0,
+    Solve `p = y`, that is, given `a*x + f(x) - y = 0`,
     find the solution x = r(y) up to O(y**n)
 
     Algorithm:
 
-    If r_i is the solution at order i, then:
-    a*r_i + f(r_i) - y = O(y**(i + 1))
+    If `r\_i` is the solution at order i, then:
+    `a*r\_i + f(r\_i) - y = O(y**(i + 1))`
 
     and if r_(i + 1) is the solution at order i + 1, then:
-    a*r_(i + 1) + f(r_(i + 1)) - y = O(y**(i + 2))
+    `a*r\_(i + 1) + f(r\_(i + 1)) - y = O(y**(i + 2))`
 
     We have, r_(i + 1) = r_i + e, such that,
-    a*e + f(r_i) = O(y**(i + 2))
-    or e = -f(r_i)/a
+    `a*e + f(r\_i) = O(y**(i + 2))`
+    or `e = -f(r\_i)/a`
 
     So we use the recursion relation:
-    r_(i + 1) = r_i -f(r_i)/a
-    with the boundary condition: r_1 = y
+    `r\_(i + 1) = r\_i - f(r\_i)/a`
+    with the boundary condition: `r\_1 = y`
 
     Examples
     ========
@@ -574,12 +582,13 @@ def rs_series_reversion(p, x, n, y):
 
 def rs_series_from_list(p, c, x, prec, concur=1):
     """
-    Return a series ``sum c[n]*p**n`` modulo ``O(x**prec)``
+    Return a series `sum c[n]*p**n` modulo `O(x**prec)`.
 
-    It reduces the number of multiplications by summing concurrently
-    ``ax = [1, p, p**2, .., p**(J - 1)]``
-    ``s = sum(c[i]*ax[i] for i in range(r, (r + 1)*J)) * p**((K - 1)*J)``
-    with ``K >= (n + 1)/J``
+    It reduces the number of multiplications by summing concurrently.
+
+    `ax = [1, p, p**2, .., p**(J - 1)]`
+    `s = sum(c[i]*ax[i]` for i in `range(r, (r + 1)*J))*p**((K - 1)*J)`
+    with `K >= (n + 1)/J`
 
     Examples
     ========
@@ -659,12 +668,12 @@ def rs_series_from_list(p, c, x, prec, concur=1):
 
 def rs_diff(p, x):
     """
-    Computes partial derivative of p with respect to x
+    Return partial derivative of ``p`` with respect to ``x``.
 
     Parameters
     ==========
     x : PolyElement
-     Variable with respect to which p is differentiated.
+     Variable with respect to which ``p`` is differentiated.
 
     Examples
     ========
@@ -691,12 +700,12 @@ def rs_diff(p, x):
 
 def rs_integrate(p, x):
     """
-    Integrate `p` with respect to `x`
+    Integrate ``p`` with respect to ``x``.
 
     Parameters
     ==========
     x : PolyElement
-     Variable with respect to which p is differentiated.
+     Variable with respect to which ``p`` is differentiated.
 
     Examples
     ========
@@ -723,7 +732,16 @@ def rs_integrate(p, x):
 
 def rs_fun(p, f, *args):
     """
-    Function of a multivariate series computed by substitution
+    Function of a multivariate series computed by substitution.
+
+    The case with f method name is used to compute `rs\_tan` and `rs\_nth\_root`
+    of a multivariate series:
+
+        `rs\_fun(p, tan, iv, prec)`
+
+        tan series is first computed for a dummy variable _x,
+        i.e, `rs\_tan(_x, iv, prec)`. Then we substitute _x with p to get the
+        desired series
 
     Parameters
     ==========
@@ -734,16 +752,7 @@ def rs_fun(p, f, *args):
     args[-2] : PolyElement
             The variable with respect to which, the series is to be expanded.
     args[-1] : Integer
-            Requried order of the expanded series.
-
-    The case with f method name is used to compute `rs\_tan` and `rs\_nth\_root`
-    of a multivariate series:
-
-        `rs\_fun(p, tan, iv, prec)`
-
-        tan series is first computed for a dummy variable _x,
-        i.e, `rs\_tan(_x, iv, prec)`. Then we substitute _x with p to get the
-        desired series
+            Required order of the expanded series.
 
     Examples
     ========
@@ -782,9 +791,9 @@ def rs_fun(p, f, *args):
 
 def mul_xin(p, i, n):
     """
-    Computes `p*x_i**n`
+    Return `p*x_i**n`.
 
-    x_i is the ith variable in p
+    `x\_i` is the ith variable in ``p``.
     """
     R = p.ring
     q = R(0)
@@ -815,13 +824,7 @@ def pow_xin(p, i, n):
 
 def _nth_root1(p, n, x, prec):
     """
-    Univariate series expansion of the nth root of p
-
-    While passing p, make sure that it is of the form `1 + f(x)`.
-
-      n (integer): compute p**(1/n)
-      x: name of the series variable
-      prec: precision of the series
+    Univariate series expansion of the nth root of ``p``.
 
     The Newton method is used.
     """
@@ -856,11 +859,16 @@ def _nth_root1(p, n, x, prec):
 
 def rs_nth_root(p, n, x, prec):
     """
-    Multivariate series expansion of the nth root of p
+    Multivariate series expansion of the nth root of ``p``.
 
-      n(integer): compute p**(1/n)
-      x: variable name
-      prec: precision of the series
+    Parameters
+    ==========
+    n : Integer
+     `p**(1/n)` is returned.
+    x : PolyElement
+     Name of the variable.
+    prec : Integer
+        Order of the expanded series.
 
     Notes
     =====
@@ -928,12 +936,12 @@ def rs_nth_root(p, n, x, prec):
 
 def rs_log(p, x, prec):
     """
-    The Logarithm of ``p`` modulo ``O(x**prec)``
+    The Logarithm of ``p`` modulo ``O(x**prec)``.
 
     Notes
     =====
 
-    truncation of ``integral dx p**-1*d p/dx`` is used.
+    Truncation of ``integral dx p**-1*d p/dx`` is used.
 
     Examples
     ========
@@ -983,7 +991,7 @@ def rs_log(p, x, prec):
 
 def rs_LambertW(p, x, prec):
     """
-    Calculates the series expansion of the principal branch of the Lambert W
+    Calculate the series expansion of the principal branch of the Lambert W
     function.
 
     Examples
@@ -1021,7 +1029,7 @@ def rs_LambertW(p, x, prec):
         raise NotImplementedError
 
 def _exp1(p, x, prec):
-    """Helper function for ``rs_exp`` """
+    """Helper function for `rs\_exp`. """
     R = p.ring
     p1 = R(1)
     for precx in _giant_steps(prec):
@@ -1088,7 +1096,7 @@ def rs_exp(p, x, prec):
 
 def _atan(p, iv, prec):
     """
-    Expansion using formula
+    Expansion using formula.
 
     Faster on very small and univariate series.
     """
@@ -1106,7 +1114,7 @@ def rs_atan(p, x, prec):
     """
     The arctangent of a series
 
-    Returns the series expansion of the atan of p, about 0.
+    Return the series expansion of the atan of ``p``, about 0.
 
     Examples
     ========
@@ -1160,7 +1168,7 @@ def rs_asin(p, x, prec):
     """
     Arcsine of a series
 
-    Returns the series expansion of the asin of p, about 0.
+    Return the series expansion of the asin of ``p``, about 0.
 
     Examples
     ========
@@ -1203,9 +1211,9 @@ def rs_asin(p, x, prec):
 
 def _tan1(p, x, prec):
     """
-    Helper function of ``rs_tan``
+    Helper function of `rs\_tan`.
 
-    Returns the series expansion of tan of a univariate series using Newton's
+    Return the series expansion of tan of a univariate series using Newton's
     method. It takes advantage of the fact that series expansion of atan is
     easier than that of tan.
 
@@ -1224,9 +1232,9 @@ def _tan1(p, x, prec):
 
 def rs_tan(p, x, prec):
     """
-    Tangent of a series
+    Tangent of a series.
 
-    Returns the series expansion of the tan of p, about 0.
+    Return the series expansion of the tan of ``p``, about 0.
 
     Examples
     ========
@@ -1241,7 +1249,7 @@ def rs_tan(p, x, prec):
    See Also
    ========
 
-   tan
+   _tan1, tan
    """
     if rs_is_puiseux(p, x):
         r = rs_puiseux(rs_tan, p, x, prec)
@@ -1284,7 +1292,7 @@ def rs_cot(p, x, prec):
     """
     Cotangent of a series
 
-    Returns the series expansion of the cot of p, about 0.
+    Return the series expansion of the cot of ``p``, about 0.
 
     Examples
     ========
@@ -1320,7 +1328,7 @@ def rs_sin(p, x, prec):
     """
     Sine of a series
 
-    Returns the series expansion of the sin of p, about 0.
+    Return the series expansion of the sin of ``p``, about 0.
 
     Examples
     ========
@@ -1388,7 +1396,7 @@ def rs_cos(p, x, prec):
     """
     Cosine of a series
 
-    Returns the series expansion of the cos of p, about 0.
+    Return the series expansion of the cos of ``p``, about 0.
 
     Examples
     ========
@@ -1452,7 +1460,7 @@ def rs_cos(p, x, prec):
 
 def rs_cos_sin(p, x, prec):
     """
-    Returns the tuple `(rs_cos(p, x, prec)`, `rs_sin(p, x, prec))`.
+    Return the tuple `(rs\_cos(p, x, prec)`, `rs\_sin(p, x, prec))`.
 
     Is faster than calling rs_cos and rs_sin separately
     """
@@ -1483,7 +1491,7 @@ def rs_atanh(p, x, prec):
     """
     Hyperbolic arctangent of a series
 
-    Returns the series expansion of the atanh of p, about 0.
+    Return the series expansion of the atanh of ``p``, about 0.
 
     Examples
     ========
@@ -1537,7 +1545,7 @@ def rs_sinh(p, x, prec):
     """
     Hyperbolic sine of a series
 
-    Returns the series expansion of the sinh of p, about 0.
+    Return the series expansion of the sinh of ``p``, about 0.
 
     Examples
     ========
@@ -1564,7 +1572,7 @@ def rs_cosh(p, x, prec):
     """
     Hyperbolic cosine of a series
 
-    Returns the series expansion of the cosh of p, about 0.
+    Return the series expansion of the cosh of ``p``, about 0.
 
     Examples
     ========
@@ -1589,9 +1597,9 @@ def rs_cosh(p, x, prec):
 
 def _tanh(p, x, prec):
     """
-    Helper function of ``rs_tanh``
+    Helper function of `rs\_tanh`
 
-    Returns the series expansion of tanh of a univariate series using Newton's
+    Return the series expansion of tanh of a univariate series using Newton's
     method. It takes advantage of the fact that series expansion of atanh is
     easier than that of tanh.
 
@@ -1612,7 +1620,7 @@ def rs_tanh(p, x, prec):
     """
     Hyperbolic tangent of a series
 
-    Returns the series expansion of the tanh of p, about 0.
+    Return the series expansion of the tanh of ``p``, about 0.
 
     Examples
     ========
