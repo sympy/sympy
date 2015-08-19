@@ -174,7 +174,7 @@ def test_cylindrical_joint():
     assert child.masscenter.vel(parent.frame) == - l * omega * child.frame.z
     assert child_joint_point.vel(parent.frame) == v * parent.frame.x
     assert parent.frame.dcm(child.frame) == Matrix([
-        [1,             0,              0],
+        [1,          0,           0],
         [0, cos(theta), -sin(theta)],
         [0, sin(theta),  cos(theta)]])
 
@@ -201,14 +201,16 @@ def test_planar_joint():
     parent = Body('parent')
     child = Body('child')
     l = Symbol('l')
-    planar_joint = PlanarJoint('planar_joint', parent, child, parent_axis='y', child_axis='y', parent_distance=l)
+    planar_joint = PlanarJoint('planar_joint', parent, child, child_axis='y',
+                               parent_distance=l)
 
     assert planar_joint.name == 'planar_joint'
     assert planar_joint.parent == parent
     assert planar_joint.child == child
-    assert planar_joint._parent_joint_location == l * parent.frame.y
+    assert planar_joint._parent_joint_location == l * parent.frame.z
     assert planar_joint._child_joint_location == 0
-    assert planar_joint.parent_axis == parent.frame.y
+    assert planar_joint.parent_axis == parent.frame.z
+    assert planar_joint.child_axis == child.frame.y
 
     theta = dynamicsymbols('planar_joint_theta')
     thetad = dynamicsymbols('planar_joint_theta', 1)
@@ -228,33 +230,44 @@ def test_planar_joint():
     parent_joint_point = planar_joint.parent_joint_point
     assert parent_joint_point.name == 'planar_joint_parent_joint'
     assert child_joint_point.name == 'planar_joint_child_joint'
-    assert child_joint_point.pos_from(parent_joint_point) == 0
+    assert child_joint_point.pos_from(parent_joint_point) == (x_x*parent.frame.x +
+                                                              x_y*parent.frame.y)
     assert child_joint_point.pos_from(child.masscenter) == 0
-    assert parent_joint_point.pos_from(parent.masscenter) == l * parent.frame.y
-    assert child.masscenter.pos_from(parent.masscenter) == l * child.frame.y
+    assert parent_joint_point.pos_from(parent.masscenter) == l * parent.frame.z
+    assert child_joint_point.pos_from(parent.masscenter) == (x_x*parent.frame.x +
+                                                             x_y*parent.frame.y +
+                                                             l*parent.frame.z)
+    assert child.masscenter.pos_from(parent.masscenter) == (x_x*parent.frame.x +
+                                                            x_y*parent.frame.y +
+                                                            l*parent.frame.z)
 
-    vecx = cross(planar_joint.parent_axis, planar_joint._child_joint_location)
-    assert planar_joint.vecx == vecx
-    vecy = cross(planar_joint.parent_axis, vecx)
-    assert planar_joint.vecy == vecy
-    assert planar_joint.vecz == planar_joint.parent_axis
-
+    assert parent.masscenter.vel(parent.frame) == 0
     assert child.frame.ang_vel_in(parent.frame) == omega * planar_joint.parent_axis
-    assert child_joint_point.vel(parent.frame) == x_x * vecx + x_y * vecy
+    assert child_joint_point.vel(parent.frame) == (v_x * parent.frame.x +
+                                                   v_y * parent.frame.y)
+    assert parent_joint_point.vel(parent.frame) == 0
+    assert child.masscenter.vel(parent.frame) == (- omega*x_y*parent.frame.x +
+                                                  omega*x_x*parent.frame.y)
+    assert parent.frame.dcm(child.frame) == Matrix([
+        [cos(theta), -sin(theta), 0],
+        [sin(theta),  cos(theta), 0],
+        [0, 0, 1]])
 
 
 def test_planar_joint_arguments():
     parent = Body('parent')
     child = Body('child')
     l1 = Symbol('l1')
-    planar_joint = PlanarJoint('planar_joint', parent, child, parent_axis='y', child_axis='y', parent_distance=l1)
+    l2 = Symbol('l2')
+    planar_joint = PlanarJoint('planar_joint', parent, child, child_axis='y',
+                               parent_distance=l1, child_distance=l2)
     assert planar_joint.name == 'planar_joint'
     assert planar_joint.parent == parent
     assert planar_joint.child == child
-    assert planar_joint.parent_axis == parent.frame.y
+    assert planar_joint.parent_axis == parent.frame.z
     assert planar_joint.child_axis == child.frame.y
-    assert planar_joint._parent_joint_location == l1 * parent.frame.y
-    assert planar_joint._child_joint_location == Vector(0)
+    assert planar_joint._parent_joint_location == l1 * parent.frame.z
+    assert planar_joint._child_joint_location == l2 * planar_joint.child_axis
 
 
 def test_spherical_joint():
@@ -293,9 +306,9 @@ def test_spherical_joint():
     assert child_joint_point.pos_from(child.masscenter) == l * child.frame.y
     assert parent_joint_point.pos_from(parent.masscenter) == Vector(0)
 
-    assert child.frame.ang_vel_in(parent.frame) == omega_x * parent.frame.x + \
-                                                   omega_y * parent.frame.y + \
-                                                   omega_z * parent.frame.z
+    assert child.frame.ang_vel_in(parent.frame) == (omega_x * parent.frame.x +
+                                                    omega_y * parent.frame.y +
+                                                    omega_z * parent.frame.z)
 
 
 def test_spherical_joint_arguments():
