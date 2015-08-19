@@ -204,8 +204,6 @@ What is this domain argument about?
 What are the general methods employed by solveset to solve an equation?
 -----------------------------------------------------------------------
 
-.. Remember to change this part when the new solver is implemented.
-
  Solveset uses various methods to solve an equation, here is a brief overview
  of the methodology:
 
@@ -259,12 +257,11 @@ What are the general methods employed by solveset to solve an equation?
  * The Final solution set obtained is taken intersection with the input
    domain, and the resultant solution is returned.
 
+.. Remember to change the above part when the new solver is implemented.
+
 
 How do we manipulate and return an infinite solution?
 -----------------------------------------------------
-
-.. You should explain  ImageSet, Intergers and other set classes in the set
-.. question above
 
  * In Real Domain, we use our `ImageSet` class in the sets module to
    return infinite solutions. `ImageSet` is an Image of a set under
