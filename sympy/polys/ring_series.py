@@ -918,14 +918,14 @@ def rs_nth_root(p, n, x, prec):
                 c_expr = c.as_expr()
                 const = R(c_expr**(QQ(1, n)))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:                              # RealElement doesn't support
                 const = R(c**Rational(1, n))  # exponentiation with mpq object
             except ValueError:                # as exponent
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         res = rs_nth_root(p/c, n, x, prec)*const
     else:
         res = _nth_root1(p, n, x, prec)
@@ -975,13 +975,13 @@ def rs_log(p, x, prec):
                     const = R(log(c_expr))
                 except ValueError:
                     raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                        "this domain.")
             else:
                 try:
                     const = R(log(c))
                 except ValueError:
                     raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                        "this domain.")
 
         dlog = p.diff(x)
         dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
@@ -1066,14 +1066,14 @@ def rs_exp(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(exp(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 const = R(exp(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         p1 = p - c
 
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
@@ -1146,14 +1146,14 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 const = R(atan(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1267,14 +1267,14 @@ def rs_tan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tan(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 const = R(tan(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         p1 = p - c
 
     # Makes use of sympy fuctions to evaluate the values of the cos/sin
@@ -1363,14 +1363,14 @@ def rs_sin(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the
@@ -1429,14 +1429,14 @@ def rs_cos(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         p1 = p - c
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the
@@ -1523,14 +1523,14 @@ def rs_atanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atanh(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 const = R(atanh(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
     # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1652,14 +1652,14 @@ def rs_tanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tanh(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         else:
             try:
                 const = R(tanh(c))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                raise DomainError("The given series can't be expanded in "
+                    "this domain.")
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)
         t = rs_series_inversion(1 + const*t1, x, prec)
