@@ -62,6 +62,9 @@ def dominant(expr, n):
     if limit(a/b, n, oo) is 0 then b dominates a.
     else a and b are comparable.
 
+    returns the most dominant term.
+    If no unique domiant term, then returns ``None``.
+
     Examples
     ========
 
@@ -104,11 +107,15 @@ def _limit_inf(expr, n):
 
 
 def limit_seq(expr, n, trials=5):
-    """Finds limits infinity.
+    """Finds limits of terms having sequences at infinity.
 
     Admissible Terms
     ================
-    TODO
+
+    The terms should be built from rational functions, indefinite sums,
+    and indefinite products over an indeterminate n. A term is admissible
+    if the scope of all product quantifiers are asymptotically positive.
+    Every admissible term is asymptoticically monotonous.
 
     Examples
     ========
@@ -142,9 +149,12 @@ def limit_seq(expr, n, trials=5):
 
         num, den = expr.as_numer_denom()
         if not den.has(n):
+            result = _limit_inf(expr.doit(), n)
+            if result is not None:
+                return result
             return None
 
-        num, den = map(lambda t: difference_delta(t, n), [num, den])
+        num, den = map(lambda t: difference_delta(t.expand(), n), [num, den])
 
         expr = (num / den).combsimp()
 
@@ -153,8 +163,14 @@ def limit_seq(expr, n, trials=5):
             if result is not None:
                 return result
 
-        num, den = map(lambda t: dominant(t, n), expr.as_numer_denom())
-        if num is None or den is None:
+        num, den = expr.as_numer_denom()
+
+        num = dominant(num, n)
+        if num is None:
+            return None
+
+        den = dominant(den, n)
+        if den is None:
             return None
 
         expr = (num / den).combsimp()
