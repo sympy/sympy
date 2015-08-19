@@ -38,13 +38,22 @@ fractional exponents)::
     >>> rs_tan(x**QQ(2, 5)*y**QQ(1, 2), x, 2)
     1/3*x**(6/5)*y**(3/2) + x**(2/5)*y**(1/2)
 
+All series returned by the functions of this module are instances of the
+``PolyElement`` class. To use them with other SymPy types, convert them  to
+``Expr``::
+
+    >>> a = symbols('a')
+    >>> series = rs_exp(x, x, 5)
+    >>> a + series.as_expr()
+    a + x**4/24 + x**3/6 + x**2/2 + x + 1
+
 rs_series
 =========
 
-Direct use of elementary ring series functions does give more control to the
-user, but is limiting at the same time. Creating an appropriate ring for the
-desired series expansion and knowing which ring series function to call, are
-things not everyone might be familiar with.
+Direct use of elementary ring series functions does give more control, but is
+limiting at the same time. Creating an appropriate ring for the desired series
+expansion and knowing which ring series function to call, are things not
+everyone might be familiar with.
 
 `rs\_series` is a function that takes an arbitrary ``Expr`` and returns its
 expansion by calling the appropriate ring series functions. The returned series
@@ -75,25 +84,18 @@ improvement becomes more prominent::
     >>> %timeit rs_series((sin(a) + cos(a))**10, a, 100)
     10 loops, best of 3: 32.8 ms per loop
 
-**Limitations**
+Contribute
+==========
 
 `rs\_series` is not fully implemented yet. As of now, it supports only
-multivariate Taylor expansions of expressions involving `sin`, `cos`, `exp` and
-`tan`. Adding the remaining functions is not at all difficult and they will be
-gradually added. If you are interested in helping, read the comments in
-``ring_series.py``.
+multivariate Taylor expansions of expressions involving ``sin``, ``cos``,
+``exp`` and ``tan``. Adding the remaining functions is not at all difficult and
+they will be gradually added. If you are interested in helping, read the
+comments in ``ring_series.py``. Currently, it does not support Puiseux series
+(though the elementary functions do). This is expected to be fixed soon.
 
-Currently, it does not support Puiseux series (though the elementary
-functions do). This is expected to be fixed soon.
-
-All series returned by the functions of this module are
-instances of the ``PolyElement`` class. To use them with other SymPy types,
-convert them  to ``Expr``::
-
-    >>> a = symbols('a')
-    >>> series = rs_exp(x, x, 5)
-    >>> a + series.as_expr()
-    a + x**4/24 + x**3/6 + x**2/2 + x + 1
+You can also add more functions to ``ring_series.py``. Only elementary
+functions are supported currently.
 
 Manipulation of power series
 ****************************************************************************
