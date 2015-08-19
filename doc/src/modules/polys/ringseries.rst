@@ -35,6 +35,7 @@ fractional exponents)::
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_cos(x**QQ(1, 3) + x*y, x, 2)
     -x**(4/3)*y + 1/24*x**(4/3) - 1/2*x**(2/3) + 1
+
     >>> rs_tan(x**QQ(2, 5)*y**QQ(1, 2), x, 2)
     1/3*x**(6/5)*y**(3/2) + x**(2/5)*y**(1/2)
 
@@ -64,8 +65,10 @@ ring when it needs them. Some examples::
     >>> from sympy.abc import a, b, c
     >>> rs_series(sin(a + b), a, 5)
     1/24*sin(b)*a**4 - 1/2*sin(b)*a**2 + sin(b) - 1/6*cos(b)*a**3 + cos(b)*a
+
     >>> rs_series(sin(exp(a*b) + cos(a + c)), a, 2)
     -sin(c)*cos(cos(c) + 1)*a + cos(cos(c) + 1)*a*b + sin(cos(c) + 1)
+
     >>> rs_series(sin(a + b)*cos(a + c)*tan(a**2 + b), a, 2)
     cos(b)*cos(c)*tan(b)*a - sin(b)*sin(c)*tan(b)*a + sin(b)*cos(c)*tan(b)
 
@@ -74,6 +77,7 @@ functions and most importantly, it does so blazingly fast::
 
     >>> %timeit ((sin(a) + cos(a))**10).series(a, 0, 5)
     1 loops, best of 3: 1.33 s per loop
+
     >>> %timeit rs_series((sin(a) + cos(a))**10, a, 5)
     100 loops, best of 3: 4.13 ms per loop
 
@@ -95,7 +99,8 @@ comments in ``ring_series.py``. Currently, it does not support Puiseux series
 (though the elementary functions do). This is expected to be fixed soon.
 
 You can also add more functions to ``ring_series.py``. Only elementary
-functions are supported currently.
+functions are supported currently. The long term goal is to replace SymPy's
+current ``series`` method with ``rs_series``.
 
 Manipulation of power series
 ****************************************************************************

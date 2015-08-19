@@ -1,3 +1,46 @@
+"""Power series evaluation and manipulation using sparse Polynomials
+
+Implementing a new function
+---------------------------
+
+There are a few things to be kept in mind when adding a new function here::
+
+    - The implementation should work on all possible input domains/rings.
+      Special cases include the ``EX`` ring and a constant term in the series
+      to be expanded. There can be two types of constant terms in the series:
+
+        + A constant value or symbol.
+        + A term of a multivariate series not involving the generator, with
+          respect to which the series is to expanded.
+
+      Strictly speaking, a generator of a ring should not be considered a
+      constant. However, for series expansion both the cases need similar
+      treatment (as the user doesn't care about inner details), i.e, use an
+      addition formula to separate the constant part and the variable part (see
+      rs_sin for reference).
+
+    - All the algorithms used here are primarily designed to work for Taylor
+      series (number of iterations in the algo equals the required order).
+      Hence, it becomes tricky to get the series of the right order if a
+      Puiseux series is input. Use rs_puiseux? in your function if your
+      algorithm is not designed to handle fractional powers.
+
+Extending rs_series
+-------------------
+
+To make a function work with rs_series you need to do two things::
+
+    - Many sure it works with a constant term (as explained above).
+    - If the series contains constant terms, you might need to extend its ring.
+      You do so by adding the new terms to the rings as generators.
+      ``PolyRing.compose`` and ``PolyRing.add_gens`` are two functions that do
+      so and need to be called every time you expand a series containing a
+      constant term.
+
+Look at rs_sin for reference.
+
+"""
+
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
 from sympy.polys.polyerrors import DomainError
