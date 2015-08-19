@@ -751,51 +751,6 @@ Modular GCD
 .. autofunction:: modgcd_multivariate
 .. autofunction:: func_field_modgcd
 
-Manipulation of power series
-****************************************************************************
-.. currentmodule:: sympy.polys.ring_series
-
-Functions in this module carry the prefix ``rs_``, standing for "ring series".
-They manipulate finite power series in the sparse representation provided
-by ``polys.ring.ring``.
-
-
-.. autofunction:: rs_trunc
-.. autofunction:: rs_is_puiseux
-.. autofunction:: rs_puiseux
-.. autofunction:: rs_puiseux2
-.. autofunction:: rs_mul
-.. autofunction:: rs_square
-.. autofunction:: rs_pow
-.. autofunction:: rs_subs
-.. autofunction:: rs_series_inversion
-.. autofunction:: rs_series_reversion
-.. autofunction:: rs_series_from_list
-.. autofunction:: rs_diff
-.. autofunction:: rs_integrate
-.. autofunction:: rs_fun
-.. autofunction:: mul_xin
-.. autofunction:: pow_xin
-.. autofunction:: rs_nth_root
-.. autofunction:: rs_log
-.. autofunction:: rs_LambertW
-.. autofunction:: rs_exp
-.. autofunction:: rs_atan
-.. autofunction:: rs_asin
-.. autofunction:: rs_tan
-.. autofunction:: rs_cot
-.. autofunction:: rs_sin
-.. autofunction:: rs_cos
-.. autofunction:: rs_cos_sin
-.. autofunction:: rs_atanh
-.. autofunction:: rs_sinh
-.. autofunction:: rs_cosh
-.. autofunction:: rs_tanh
-.. autofunction:: rs_newton
-.. autofunction:: rs_hadamard_exp
-.. autofunction:: rs_compose_add
-
-
 Undocumented
 ============
 
