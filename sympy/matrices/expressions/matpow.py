@@ -56,11 +56,11 @@ class MatPow(MatrixExpr):
             args = self.args
         base = args[0]
         exp = args[1]
-        if exp.is_zero and (base.is_square):
+        if exp.is_zero and base.is_square:
             return Identity(base.shape[0])
-        if isinstance(base,(Identity,ZeroMatrix)) and exp.is_number:
+        elif isinstance(base,(Identity,ZeroMatrix)) and exp.is_number:
             return base
-        if isinstance(base, (MatrixBase,Identity,ZeroMatrix)) and exp.is_number:
+        elif isinstance(base, MatrixBase) and exp.is_number:
             if exp is S.One:
                 return base
             return base**exp
