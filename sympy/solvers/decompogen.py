@@ -1,5 +1,5 @@
 from sympy.core import Function, Pow, sympify
-from sympy.polys import Poly
+from sympy.polys import Poly, decompose
 
 
 def decompogen(f, symbol):
@@ -9,8 +9,8 @@ def decompogen(f, symbol):
     where::
               f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))
 
-    Note: This is a General decomposition function. For Polynomial
-    decomposition see ``decompose`` in polys.
+    Note: This is a General decomposition function. It also decomposes
+    Polynomials. For only Polynomial decomposition see ``decompose`` in polys.
 
     Examples
     ========
@@ -26,6 +26,8 @@ def decompogen(f, symbol):
     [sqrt(x), 6*x**2 - 5]
     >>> decompogen(sin(sqrt(cos(x**2 + 1))), x)
     [sin(x), sqrt(x), cos(x), x**2 + 1]
+    >>> decompogen(x**4 + 2*x**3 - x - 1, x)
+    [x**2 - x - 1, x**2 + x]
 
     """
     f = sympify(f)
@@ -48,4 +50,6 @@ def decompogen(f, symbol):
         result += [f1] + decompogen(f2, symbol)
         return result
 
-    return [f]
+    # ===== Polynomial decompose() ====== #
+    result += decompose(f)
+    return result
