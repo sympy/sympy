@@ -24,21 +24,28 @@ def decompogen(f, symbol):
     [x**2 + x + 1, sin(x)]
     >>> decompogen(sqrt(6*x**2 - 5), x)
     [sqrt(x), 6*x**2 - 5]
+    >>> decompogen(sin(sqrt(cos(x**2 + 1))), x)
+    [sin(x), sqrt(x), cos(x), x**2 + 1]
 
     """
     f = sympify(f)
+    result = []
 
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
-        return [f.subs(f.args[0], symbol), f.args[0]]
+        if f.args[0] == symbol:
+            return [f]
+        result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
+        return result
 
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)
     gens = fp.gens
 
-    if len(gens) == 1:
+    if len(gens) == 1 and gens[0] != symbol:
         f1 = f.subs(gens[0], symbol)
         f2 = gens[0]
-        return [f1, f2]
+        result += [f1] + decompogen(f2, symbol)
+        return result
 
     return [f]
