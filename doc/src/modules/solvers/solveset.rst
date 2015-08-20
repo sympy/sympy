@@ -75,13 +75,12 @@ containers in Mathematics such as:
  * ``ImageSet``
    Represents the Image of a set under a mathematical function
 
-   ```
     >>> from sympy import ImageSet, S, Lambda
     >>> from sympy.abc import x
     >>> from sympy.sets import ImageSet
     >>> squares = ImageSet(Lambda(x, x**2), S.Naturals)  # {x**2 for x in N}
     >>> 4 in squares
-   ```
+    True
 
  * ``ComplexPlane``
    Represents the Set of all Complex Numbers
