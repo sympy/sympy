@@ -56,14 +56,14 @@ class MatPow(MatrixExpr):
             args = self.args
         base = args[0]
         exp = args[1]
-        if exp.is_zero and base.is_square:
-            return Identity(base.shape[0])
-        elif isinstance(base,(Identity,ZeroMatrix)) and exp.is_number:
+        if isinstance(base,(Identity,ZeroMatrix)) and exp.is_number:
             return base
-        elif isinstance(base, MatrixBase) and exp.is_number:
+        if isinstance(base, MatrixBase) and exp.is_number:
             if exp is S.One:
                 return base
             return base**exp
+        elif exp.is_zero and base.is_square:
+            return Identity(base.shape[0])
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
         elif exp is S.One:
