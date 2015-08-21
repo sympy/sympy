@@ -71,7 +71,7 @@ class JointsMethod(object):
     def _generate_forcelist(self):
         force_list = []
         for body in self.bodylist:
-            for force in body.force_list:
+            for force in body.loads:
                 force_list.append(force)
         return force_list
 
@@ -120,7 +120,7 @@ class JointsMethod(object):
         return self._KM.mass_matrix_full
 
     def _set_kanes(self):
-        self._KM = KanesMethod(self.root_body.get_frame(), q_ind=self.q, u_ind=self.u,
+        self._KM = KanesMethod(self.root_body.frame, q_ind=self.q, u_ind=self.u,
                                kd_eqs=self.kd)
         self._KM.kanes_equations(self.forcelist, self.bodylist)
         # TODO Removing call to private attributes in pydy.System and fix this.
