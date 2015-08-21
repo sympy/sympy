@@ -14,6 +14,8 @@ All the functions expand any given series on some ring specified by the user.
 Thus, the coefficients of the calculated series depend on the ring being used.
 For example::
 
+    >>> from sympy.polys import ring, QQ, RR
+    >>> from sympy.polys.ring_series import rs_sin
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_sin(x*y, x, 5)
     -1/6*x**3*y**3 + x*y
@@ -32,6 +34,7 @@ Though the definition of a polynomial limits the use of Polynomial module to
 Taylor series, we extend it to allow Laurent and even Puiseux series (with
 fractional exponents)::
 
+    >>> from sympy.polys.ring_series import rs_cos, rs_tan
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_cos(x**QQ(1, 3) + x*y, x, 2)
     -x**(4/3)*y + 1/24*x**(4/3) - 1/2*x**(2/3) + 1
@@ -43,7 +46,8 @@ All series returned by the functions of this module are instances of the
 ``PolyElement`` class. To use them with other SymPy types, convert them  to
 ``Expr``::
 
-    >>> a = symbols('a')
+    >>> from sympy.polys.ring_series import rs_exp
+    >>> from sympy.abc import a, b, c
     >>> series = rs_exp(x, x, 5)
     >>> a + series.as_expr()
     a + x**4/24 + x**3/6 + x**2/2 + x + 1
@@ -58,34 +62,33 @@ everyone might be familiar with.
 
 `rs\_series` is a function that takes an arbitrary ``Expr`` and returns its
 expansion by calling the appropriate ring series functions. The returned series
-is over the simplest (almost) possible ring that does the job. It recursively
-builds the ring as it parses the given expression, adding generators to the
-ring when it needs them. Some examples::
+is a polynomial over the simplest (almost) possible ring that does the job. It
+recursively builds the ring as it parses the given expression, adding
+generators to the ring when it needs them. Some examples::
 
-    >>> from sympy.abc import a, b, c
-    >>> rs_series(sin(a + b), a, 5)
+    >>> rs_series(sin(a + b), a, 5) # doctest: +SKIP
     1/24*sin(b)*a**4 - 1/2*sin(b)*a**2 + sin(b) - 1/6*cos(b)*a**3 + cos(b)*a
 
-    >>> rs_series(sin(exp(a*b) + cos(a + c)), a, 2)
+    >>> rs_series(sin(exp(a*b) + cos(a + c)), a, 2) # doctest: +SKIP
     -sin(c)*cos(cos(c) + 1)*a + cos(cos(c) + 1)*a*b + sin(cos(c) + 1)
 
-    >>> rs_series(sin(a + b)*cos(a + c)*tan(a**2 + b), a, 2)
+    >>> rs_series(sin(a + b)*cos(a + c)*tan(a**2 + b), a, 2) # doctest: +SKIP
     cos(b)*cos(c)*tan(b)*a - sin(b)*sin(c)*tan(b)*a + sin(b)*cos(c)*tan(b)
 
 `rs\_series` can expand complicated multivariate expressions involving multiple
 functions and most importantly, it does so blazingly fast::
 
-    >>> %timeit ((sin(a) + cos(a))**10).series(a, 0, 5)
+    >>> %timeit ((sin(a) + cos(a))**10).series(a, 0, 5) # doctest: +SKIP
     1 loops, best of 3: 1.33 s per loop
 
-    >>> %timeit rs_series((sin(a) + cos(a))**10, a, 5)
+    >>> %timeit rs_series((sin(a) + cos(a))**10, a, 5) # doctest: +SKIP
     100 loops, best of 3: 4.13 ms per loop
 
 `rs\_series` is over 300 times faster. Given an expression to expand, there is
 some fixed overhead to parse it. Thus, for larger orders, the speed
 improvement becomes more prominent::
 
-    >>> %timeit rs_series((sin(a) + cos(a))**10, a, 100)
+    >>> %timeit rs_series((sin(a) + cos(a))**10, a, 100) # doctest: +SKIP
     10 loops, best of 3: 32.8 ms per loop
 
 Contribute
