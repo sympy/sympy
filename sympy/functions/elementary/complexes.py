@@ -453,7 +453,7 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.physics.units import Unit
+        from sympy import Atom
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -492,7 +492,7 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_number or arg.is_Symbol or isinstance(arg, (cls, Unit)):
+        if arg.is_number or isinstance(arg, Atom):
             if arg.is_zero:
                 return S.Zero
             if arg.is_nonnegative:
