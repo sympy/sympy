@@ -54,11 +54,11 @@ import sympy
 if not sympy.test('*theano*'):
     raise Exception('Tests failed')
 EOF
-    elif [[ "${TEST_GMPY}" == "true" ]] && [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
+    elif [[ "${TEST_GMPY}" == "true" ]] && [[ "${TEST_MATPLOTLIB}" == "true" ]] && [[ "${TEST_PYCOSAT}" == "true" ]]; then
         cat << EOF | python
 import sympy
-if not (sympy.test('sympy/polys/', 'sympy/plotting') and
-        sympy.doctest('sympy/polys/', 'sympy/plotting')):
+if not (sympy.test('sympy/polys/', 'sympy/plotting', 'sympy/logic') and
+        sympy.doctest('sympy/polys/', 'sympy/plotting', 'sympy/logic')):
     raise Exception('Tests failed')
 EOF
     elif [[ "${TEST_AUTOWRAP}" == "true" ]]; then
