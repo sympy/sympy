@@ -847,9 +847,6 @@ def test_conditonset():
     assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
         ConditionSet(Lambda(x, Eq(x*(x + sin(x)) - 1, 0)), S.Reals)
 
-    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
-        ConditionSet(Lambda(x, Eq(sin(Abs(x)) - 1, 0)), S.Reals)
-
     assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
 
