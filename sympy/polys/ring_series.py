@@ -492,7 +492,7 @@ def rs_series_inversion(p, x, prec):
     >>> rs_series_inversion(1 + x*y**2, y, 4)
     -x*y**2 + 1
     >>> rs_series_inversion(x + x**2, x, 4)
-    x**3 - x**2 + x - 1 + x**-1
+    x**3 - x**2 + x - 1 + x**(-1)
     """
     R = p.ring
     if p == R.zero:
@@ -1304,7 +1304,7 @@ def rs_cot(p, x, prec):
     >>> from sympy.polys.ring_series import rs_cot
     >>> R, x, y = ring('x, y', QQ)
     >>> rs_cot(x, x, 6)
-    -2/945*x**5 - 1/45*x**3 - 1/3*x + x**-1
+    -2/945*x**5 - 1/45*x**3 - 1/3*x + x**(-1)
 
     See Also
     ========

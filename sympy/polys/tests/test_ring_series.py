@@ -120,8 +120,6 @@ def test_series_reversion():
     R, x, y = ring('x, y', QQ)
 
     p = rs_tan(x, x, 10)
-    r1 = rs_series_reversion(p, x, 8, y)
-    r2 = rs_atan(y, y, 8)
     assert rs_series_reversion(p, x, 8, y) == rs_atan(y, y, 8)
 
     p = rs_sin(x, x, 10)
@@ -293,7 +291,7 @@ def test_tan():
     # Constant term in series
     a = symbols('a')
     R, x, y = ring('x, y', QQ[tan(a), a])
-    assert rs_tan(x + a, x, 5) == (tan(a)**5 + 5*tan(a)**3/3 + \
+    assert rs_tan(x + a, x, 5) == (tan(a)**5 + 5*tan(a)**3/3 +
         2*tan(a)/3)*x**4 + (tan(a)**4 + 4*tan(a)**2/3 + 1/3)*x**3 + \
         (tan(a)**3 + tan(a))*x**2 + (tan(a)**2 + 1)*x + tan(a)
     assert rs_tan(x + x**2*y + a, x, 4) == (2*tan(a)**3 + 2*tan(a))*x**3*y + \
@@ -301,24 +299,25 @@ def test_tan():
         (tan(a)**3 + tan(a))*x**2 + (tan(a)**2 + 1)*x + tan(a)
 
     R, x, y = ring('x, y', EX)
-    assert rs_tan(x + a, x, 5) == EX(tan(a)**5 + 5*tan(a)**3/3 + \
+    assert rs_tan(x + a, x, 5) == EX(tan(a)**5 + 5*tan(a)**3/3 +
         2*tan(a)/3)*x**4 + EX(tan(a)**4 + 4*tan(a)**2/3 + EX(1)/3)*x**3 + \
         EX(tan(a)**3 + tan(a))*x**2 + EX(tan(a)**2 + 1)*x + EX(tan(a))
-    assert rs_tan(x + x**2*y + a, x, 4) ==  EX(2*tan(a)**3 + \
+    assert rs_tan(x + x**2*y + a, x, 4) == EX(2*tan(a)**3 +
         2*tan(a))*x**3*y + EX(tan(a)**4 + 4*tan(a)**2/3 + EX(1)/3)*x**3 + \
         EX(tan(a)**2 + 1)*x**2*y + EX(tan(a)**3 + tan(a))*x**2 + \
         EX(tan(a)**2 + 1)*x + EX(tan(a))
 
     p = x + x**2 + 5
-    assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + 67701870330562640/ \
+    assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + 67701870330562640 / \
         668083460499)
 
 def test_cot():
     R, x, y = ring('x, y', QQ)
-    assert rs_cot(x**6 + x**7, x, 8) == x**-6 - x**-5 + x**-4 - x**-3 + \
-        x**-2 - x**-1 + 1 - x + x**2 - x**3 + x**4 - x**5 + 2*x**6/3 - 4*x**7/3
+    assert rs_cot(x**6 + x**7, x, 8) == x**(-6) - x**(-5) + x**(-4) - \
+        x**(-3) + x**(-2) - x**(-1) + 1 - x + x**2 - x**3 + x**4 - x**5 + \
+        2*x**6/3 - 4*x**7/3
     assert rs_cot(x + x**2*y, x, 5) == -x**4*y**5 - x**4*y/15 + x**3*y**4 - \
-        x**3/45 - x**2*y**3 - x**2*y/3 + x*y**2 - x/3 - y + x**-1
+        x**3/45 - x**2*y**3 - x**2*y/3 + x*y**2 - x/3 - y + x**(-1)
 
 def test_sin():
     R, x, y = ring('x, y', QQ)
@@ -424,7 +423,7 @@ def test_cosh():
 def test_tanh():
     R, x, y = ring('x, y', QQ)
     assert rs_tanh(x, x, 9)/x**5 == -17/315*x**2 + 2/15 - 1/3*x**(-2) + x**(-4)
-    assert rs_tanh(x*y + x**2*y**3 , x, 9) == 4*x**8*y**11/3 - \
+    assert rs_tanh(x*y + x**2*y**3, x, 9) == 4*x**8*y**11/3 - \
         17*x**8*y**9/45 + 4*x**7*y**9/3 - 17*x**7*y**7/315 - x**6*y**9/3 + \
         2*x**6*y**7/3 - x**5*y**7 + 2*x**5*y**5/15 - x**4*y**5 - \
         x**3*y**3/3 + x**2*y**3 + x*y
