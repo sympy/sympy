@@ -36,11 +36,43 @@ fractional exponents)::
 
     >>> from sympy.polys.ring_series import rs_cos, rs_tan
     >>> R, x, y = ring('x, y', QQ)
-    >>> rs_cos(x**QQ(1, 3) + x*y, x, 2)
-    -x**(4/3)*y + 1/24*x**(4/3) - 1/2*x**(2/3) + 1
+
+    >>> rs_cos(x + x*y, x, 3)/x**3
+    -1/2*x**(-1)*y**2 - x**(-1)*y - 1/2*x**(-1) + x**(-3)
 
     >>> rs_tan(x**QQ(2, 5)*y**QQ(1, 2), x, 2)
     1/3*x**(6/5)*y**(3/2) + x**(2/5)*y**(1/2)
+
+By default, ``PolyElement`` did not allow non-natural numbers as exponents. It
+converted a fraction to an integer and raised an error on getting negative
+exponents. The goal of the ``ring series`` module is fast series expansion, and
+not to use the ``polys`` module. The reason we use it as our backend is simply
+because it implements a sparse representation and most of the basic functions
+that we need. However, this default behaviour of ``polys`` was limiting for
+``ring series``.
+
+Note that there is no such constraint (in having rational exponents) in the
+data-structure used by ``polys``- ``dict``. Sparse polynomials
+(``PolyElement``) use the Python dict to store a polynomial term by term, where
+a tuple of exponents is the key and the coefficient of that term is the value.
+There is no reason why we can't have rational values in the ``dict`` so as to
+support rational exponents.
+
+So the approach we took was to modify sparse ``polys`` to allow non-natural
+exponents. And it turned out to be quite simple. We only had to delete the
+conversion to ``int`` of exponents in the ``__pow__`` method of
+``PolyElement``. So::
+
+    >>>x**QQ(3, 4)
+    x**(3/4)
+
+and not ``1`` as was the case earlier.
+
+Though this change violates the definition of a polynomial, it doesn't break
+anything yet.  Ideally, we shouldn't modify ``polys`` in any way. But to have
+all the ``series`` capabilities we want, no other simple way was found. If need
+be, we can separate the modified part of ``polys`` from core ``polys``. It
+would be great if any other elegant solution is found.
 
 All series returned by the functions of this module are instances of the
 ``PolyElement`` class. To use them with other SymPy types, convert them  to
@@ -75,8 +107,8 @@ generators to the ring when it needs them. Some examples::
     >>> rs_series(sin(a + b)*cos(a + c)*tan(a**2 + b), a, 2) # doctest: +SKIP
     cos(b)*cos(c)*tan(b)*a - sin(b)*sin(c)*tan(b)*a + sin(b)*cos(c)*tan(b)
 
-`rs\_series` can expand complicated multivariate expressions involving multiple
-functions and most importantly, it does so blazingly fast::
+It can expand complicated multivariate expressions involving multiple functions
+and most importantly, it does so blazingly fast::
 
     >>> %timeit ((sin(a) + cos(a))**10).series(a, 0, 5) # doctest: +SKIP
     1 loops, best of 3: 1.33 s per loop
@@ -90,6 +122,31 @@ improvement becomes more prominent::
 
     >>> %timeit rs_series((sin(a) + cos(a))**10, a, 100) # doctest: +SKIP
     10 loops, best of 3: 32.8 ms per loop
+
+To figure out the right ring for a given expression, `rs\_series` uses the
+``sring`` function, which in turn uses other functions of ``polys``. As
+explained above, non-natural exponents are not allowed. But the restriction is
+on exponents and not generators. So, ``polys`` allows all sorts of symbolic
+terms as generators to make sure that the exponent is a natural number::
+
+    >>> R, expr = sring(1/a**3 + a**QQ(3, 7)); R
+    Polynomial ring in 1/a, a**(1/7) over ZZ with lex order
+
+In the above example, `1/a` and `a**(1/7)` will be treated as completely
+different atoms. For all practical purposes, we could let `b = 1/a` and `c =
+a**(1/7)` and do the manipulations. Effectively, expressions of `1/a` and
+`a**(1/7)` (and their powers) will never simplify::
+
+    >>> expr*R(1/a)
+    (1/a)**2 + (1/a)*(a**(1/7))**3
+
+This leads to similar issues with manipulating Laurent and Puiseux series as
+faced earlier. Fortunately, this time we have an elegant solution and are able
+to isolate the ``series`` and ``polys`` behaviour from one another. We
+introduce a boolean flag ``series`` in the list of allowed ``Options`` for
+polynomials (see :class:`sympy.polys.polyoptions.Options`). Thus, when we want
+``sring`` to allow rational exponents we supply a ``series=True`` flag to
+``sring``.
 
 Contribute
 ==========
