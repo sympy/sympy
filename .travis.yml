@@ -147,7 +147,7 @@ before_install:
       sudo apt-get install sagemath-upstream-binary;
     fi
   - if [[ "${TEST_PYCOSAT}" == "true" ]]; then
-      pip install "pycosat==0.6.0";
+      pip install "pycosat==0.6.1";
     fi
 install:
 #The install cycle below is to test installation on systems without setuptools.
