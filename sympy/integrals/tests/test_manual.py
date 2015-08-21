@@ -259,5 +259,13 @@ def test_issue_2850():
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
 
+def test_issue_9841():
+    # This used to cause a RuntimeError: maximum recursion depth exceeded.
+    # This doesn't error anymore but the answer is still "manually" integrable.
+    # TODO: make this return (3/5)**x/(-log(5) + log(3))
+    manualintegrate(3**x/5**x, x)
+    manualintegrate((3**x+4**x)/5**x, x)
+
+
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
