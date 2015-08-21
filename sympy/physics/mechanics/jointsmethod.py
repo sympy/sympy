@@ -116,20 +116,8 @@ class JointsMethod(object):
         return self._KM.forcing_full
 
     @property
-    def forcing(self):
-        return self._KM.forcing
-
-    @property
     def mass_matrix_full(self):
         return self._KM.mass_matrix_full
-
-    @property
-    def mass_matrix(self):
-        return self._KM.mass_matrix
-
-    @property
-    def auxiliary_eqs(self):
-        return self._KM.auxiliary_eqs
 
     def _set_kanes(self):
         self._KM = KanesMethod(self.root_body.get_frame(), q_ind=self.q, u_ind=self.u,

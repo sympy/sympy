@@ -38,3 +38,7 @@ __all__.extend(vector.__all__)
 from . import linearize
 from .linearize import *
 __all__.extend(linearize.__all__)
+
+from . import jointsmethod
+from .jointsmethod import *
+__all__.extend(jointsmethod.__all__)
