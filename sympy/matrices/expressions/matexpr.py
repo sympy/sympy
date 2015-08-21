@@ -469,6 +469,8 @@ class ZeroMatrix(MatrixExpr):
             raise ShapeError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
+        if other<1:
+            raise ValueError("Matrix det == 0; not invertible.")
         return self
 
     def _eval_transpose(self):
