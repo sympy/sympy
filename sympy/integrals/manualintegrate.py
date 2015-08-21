@@ -150,7 +150,7 @@ def find_substitutions(integrand, symbol, u_var):
         return []
 
     for u in possible_subterms(integrand):
-        if u == symbol:
+        if u == symbol or u == -symbol:
             continue
         u_diff = manual_diff(u, symbol)
         new_integrand = test_subterm(u, u_diff)
