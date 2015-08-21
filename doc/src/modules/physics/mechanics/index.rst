@@ -77,6 +77,7 @@ Guide to Mechanics
     kane.rst
     lagrange.rst
     linearize.rst
+    joints.rst
     examples.rst
     advanced.rst
     reference.rst
