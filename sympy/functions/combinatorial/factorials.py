@@ -553,14 +553,12 @@ class FallingFactorial(CombinatorialFunction):
         x = sympify(x)
         k = sympify(k)
 
-        if x is S.NaN:
+        if x is S.NaN or k is S.NaN:
             return S.NaN
         elif k.is_integer and x == k:
             return factorial(x)
         elif k.is_Integer:
-            if k is S.NaN:
-                return S.NaN
-            elif k is S.Zero:
+            if k is S.Zero:
                 return S.One
             else:
                 if k.is_positive:
