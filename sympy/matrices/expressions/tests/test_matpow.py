@@ -105,7 +105,6 @@ def test_identity_power():
     assert MatPow(l, 2).doit() == l
     assert MatPow(l, -1).doit() == l
     assert MatPow(l, 0).doit() == l
-    
 
 def test_zero_power():
     z1 = ZeroMatrix(n, n)
