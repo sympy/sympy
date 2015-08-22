@@ -1578,9 +1578,9 @@ class LatexPrinter(Printer):
     def _print_ComplexPlane(self, s):
         vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
         return r"\left\{%s\; |\; %s \in %s \right\}" % (
-            self._print(s.args[0].expr),  # expression: x+iy or ri(cos(theta) + i*sin(theta))
-            vars_print,                   # variable: (x, y) or (r, theta)
-            self._print(s.sets))       # ProductSet
+            self._print(s.args[0].expr),
+            vars_print,
+            self._print(s.sets))
 
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
