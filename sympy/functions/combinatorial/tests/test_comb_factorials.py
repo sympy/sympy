@@ -8,6 +8,8 @@ from sympy.utilities.pytest import XFAIL
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
+    n, k = symbols('n k', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
 
     assert rf(nan, y) == nan
     assert rf(x, nan) == nan
@@ -38,15 +40,14 @@ def test_rf_eval_apply():
     assert rf(x**2 + 3*x, 2) == x**4 + 8*x**3 + 19*x**2 + 12*x
     assert rf(x**3 + x, -2) == 1/(x**6 - 9*x**5 + 35*x**4 - 75*x**3 + 94*x**2 - 66*x + 20)
 
-    n = Symbol('n', integer=True)
-    k = Symbol('k', integer=True)
-    m = Symbol('m', integer=True, nonnegative=True)
     assert rf(x, m).is_integer is None
     assert rf(n, k).is_integer is None
     assert rf(n, m).is_integer is True
     assert rf(n, k + pi).is_integer is False
     assert rf(n, m + pi).is_integer is False
     assert rf(pi, m).is_integer is False
+
+    assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
 
 
 def test_ff_eval_apply():

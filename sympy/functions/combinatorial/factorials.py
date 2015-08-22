@@ -399,7 +399,7 @@ class RisingFactorial(CombinatorialFunction):
        function arising in concrete mathematics, hypergeometric functions
        and series expansions. It is defined by:
 
-                   rf(x, k) = x * (x+1) * ... * (x + k-1)
+                   rf(x, k) = x * (x + 1) * ... * (x + k - 1)
 
        where 'x' can be arbitrary expression and 'k' is an integer. For
        more information check "Concrete mathematics" by Graham, pp. 66
@@ -415,16 +415,12 @@ class RisingFactorial(CombinatorialFunction):
 
        >>> from sympy import rf
        >>> from sympy.abc import x
-
        >>> rf(x, 0)
        1
-
        >>> rf(1, 5)
        120
-
        >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
        True
-
        >>> rf(x**3, 2)
        Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
 
@@ -484,6 +480,9 @@ class RisingFactorial(CombinatorialFunction):
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
         return gamma(x + k) / gamma(x)
+
+    def _eval_rewrite_as_FallingFactorial(self, x, k):
+        return FallingFactorial(x + k - 1, k)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
