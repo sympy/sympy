@@ -10,6 +10,7 @@ def test_rf_eval_apply():
     x, y = symbols('x,y')
 
     assert rf(nan, y) == nan
+    assert rf(x, nan) == nan
 
     assert rf(x, y) == rf(x, y)
 
