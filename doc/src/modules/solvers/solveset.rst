@@ -389,18 +389,17 @@ How do we deal with cases where only some of the solutions are known?
 What will you do with the old solve?
 ------------------------------------
 
- The (current) ``solve`` would possibly be deprecated in future versions & we encourage
- our users to use ``solveset``. We may proceeds as follows:
+ There is still a few things `solveset` can't do, which the old `solve`
+ can, such as solving non linear multivariate & LambertW type equations.
+ Hence, it's yet not a perfect replacement for old `solve`. The ultimate
+ goal is to:
 
-.. solveset will be renamed as solve
+ * Replace ``solve`` with ``solveset`, by the time solveset is
+   atleast powerful as ``solve``, i.e. ``solveset`` does everything
+   that ``solve`` can do currently, and
 
- * Replace all internal instances of solve by solveset by next release.
- * Raise a deprecation warning with solve calls possibly from next to
-   next release.
- * Possibly rename ``solve`` to ``solve\_old``, so that people can easily fix
-   their code.
- * The issues pertaining to old ``solve`` would be addressed by new issues
-   for ``solveset``.
+ * Eventually rename ``solveset`` as ``solve``. Meanwhile
+   issue a deprecation warning for the current behavior of ``solve``.
 
 
 How are symbolic parameters handled in solveset?
