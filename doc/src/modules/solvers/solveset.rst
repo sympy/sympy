@@ -316,8 +316,52 @@ How does solveset ensures that it is not returning any wrong solution?
 
  Though, there still a lot of work needs to be done in this regard.
 
-.. Also mention the search based solver we are trying to implement
-.. and the step by step solutions.
+
+Search Based solver & Step by Step Solution
+-------------------------------------------
+
+ Note: This is under Development.
+
+ After the introduction of ``ConditionSet`` [10], the solving of equations can be
+ seen as set transformation, We can do the following things to solve equations
+ (abstract View):
+
+ * Apply Various Set Transformations on the given Set.
+ * Define a Metric of the usability or define a notion of better solution over others.
+ * Different Transformation would be the nodes of the tree.
+ * Suitable searching techniques could be applied to get the best solution.
+
+ ConditionSet gives us the ability to represent unevaluated equations and
+ inequalities in forms like `{x|f(x)=0; x in S}` and `{x|f(x)>0; x in S}`
+ but a more powerful thing about ConditionSet is that it allows us to write
+ the intermediate steps as set to set transformation. Some of the transformations
+ are:
+
+ * Composition: `{x|f(g(x))=0;x in S} => {x|g(x)=y; x in S,y in {z|f(z)=0; z in S}}`
+
+ * Polynomial Solver: `{x|P(x)=0;x in S} => {x_1,x_2, ... ,x_n}.intersection(S)`
+   where `x_i` are roots of P(x)
+
+ * Invert solver: `{x|f(x)=0;x in S} => {g(0)| all g such that f(g(x)) = x}`
+
+ * logcombine: `{x| log(f(x)) + log(g(x));x in S}`
+                => `{x| log(f(x)*g(x)); x in S}` if f(x) > 0 and g(x) > 0
+                => `{x| log(f(x)) + log(g(x));x in S}` otherwise
+
+ * product solve: {x|f(x)*g(x)=0; x in S}
+                => `{x|f(x)=0; x in S} U {x|g(x)=0; x in S}` given f(x) and g(x) are bounded
+                => {x|f(x)*g(x)=0; x in S}, otherwise
+
+ Since the output type is same as input type any composition of these
+ transformations is also a valid transformation. And our aim is to find
+ the right sequence of compositions (given the atoms) which transforms
+ the given condition set to a set which is not a condition set i.e.,
+ FiniteSet, Interval, Set of Integers and their Union, Intersection,
+ Complement or ImageSet. We can assign a cost function to each set,
+ such that, more desirable that form of set is to us, the less the value
+ of cost function. This way our problem is now reduced to finding the path
+ from the initial ConditionSet to of the lowest valued set on a graph where
+ the atomic transformations forms the edges.
 
 
 How do we deal with cases where only some of the solutions are known?
@@ -406,6 +450,8 @@ References
  .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
  .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
  .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR 
+ .. [9] https://groups.google.com/forum/#!topic/sympy/-SIbX0AFL3Q
+ .. [10] https://github.com/sympy/sympy/pull/9696
 
 
 Solveset Module Reference
