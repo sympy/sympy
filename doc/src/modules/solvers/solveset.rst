@@ -382,7 +382,17 @@ How are symbolic parameters handled in solveset?
  As of now, It returns the solution as an intersection with `\mathbb{R}`, which
  is trivial, as it doesn't reveals the domain of `a`, in the solution.
 
-.. Also mention the no_empty_in PR by gxyd
+ Recently, we have also implemented a function to find the domain of the
+ expression in a FiniteSet (Intersection with the interval) in which it is
+ not-empty. It is a useful addition for dealing with symbolic parameters.
+ For e.g :
+
+    >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
+    >>> from sympy.abc import x
+    >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
+    [0, 2]
+    >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
+    [-sqrt(2), -1] U [1, 2]
 
 
 References
