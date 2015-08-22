@@ -708,6 +708,13 @@ def test_solve_trig():
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
 
+@XFAIL
+def test_solve_trig_abs():
+    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
+        Union(ImageSet(Lambda(n, n*pi + (-1)**n*pi/2), S.Naturals0),
+              ImageSet(Lambda(n, -n*pi - (-1)**n*pi/2), S.Naturals0))
+
+
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
@@ -846,6 +853,9 @@ def test_conditonset():
 
     assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
         ConditionSet(Lambda(x, Eq(x*(x + sin(x)) - 1, 0)), S.Reals)
+
+    assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, Eq(-x + sin(Abs(x)), 0)), Interval(-oo, oo))
 
     assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
