@@ -360,7 +360,7 @@ Search Based solver & Step by Step Solution
  Complement or ImageSet. We can assign a cost function to each set,
  such that, more desirable that form of set is to us, the less the value
  of cost function. This way our problem is now reduced to finding the path
- from the initial ConditionSet to of the lowest valued set on a graph where
+ from the initial ConditionSet to the lowest valued set on a graph where
  the atomic transformations forms the edges.
 
 
@@ -391,7 +391,7 @@ What will you do with the old solve?
 
  There is still a few things `solveset` can't do, which the old `solve`
  can, such as solving non linear multivariate & LambertW type equations.
- Hence, it's yet not a perfect replacement for old `solve`. The ultimate
+ Hence, it's not yet a perfect replacement for old `solve`. The ultimate
  goal is to:
 
  * Replace ``solve`` with ``solveset`, by the time solveset is
