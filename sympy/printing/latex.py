@@ -1552,6 +1552,9 @@ class LatexPrinter(Printer):
     def _print_Naturals(self, n):
         return r"\mathbb{N}"
 
+    def _print_Naturals0(self, n):
+        return r"\mathbb{N_0}"
+
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 

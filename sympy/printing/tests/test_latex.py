@@ -594,6 +594,13 @@ def test_latex_productset():
 
 def test_latex_Naturals():
     assert latex(S.Naturals) == r"\mathbb{N}"
+
+
+def test_latex_Naturals0():
+    assert latex(S.Naturals0) == r"\mathbb{N_0}"
+
+
+def test_latex_Integers():
     assert latex(S.Integers) == r"\mathbb{Z}"
 
 
