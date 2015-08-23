@@ -50,7 +50,7 @@ def test_rigidbody2():
     O.set_vel(N, v * b.x)
     P.set_pos(O, r * b.y)
     assert B.angular_momentum(O, N) == omega * b.x - M*v*r*b.z
-    B.set_potential_energy(M * g * h)
+    B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
     assert B.kinetic_energy(N) == (omega**2 + M * v**2) / 2
 

@@ -15,7 +15,7 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, fps)
+    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexPlane, fps)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -607,6 +607,13 @@ def test_latex_ConditionSet():
     x = Symbol('x')
     assert latex(ConditionSet(Lambda(x, Eq(x**2, 1)), S.Reals)) == \
         r"\left\{x\; |\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+
+
+def test_latex_ComplexPlane():
+    assert latex(ComplexPlane(Interval(3, 5)*Interval(4, 6))) == \
+        r"\left\{x + i y\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
+    assert latex(ComplexPlane(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
+        r"\left\{r \left(i \sin{\left (\theta \right )} + \cos{\left (\theta \right )}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
 
 
 def test_latex_Contains():

@@ -124,8 +124,8 @@ def test_potential_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    Pa.set_potential_energy(m * g * h)
-    A.set_potential_energy(M * g * H)
+    Pa.potential_energy = m * g * h
+    A.potential_energy = M * g * H
     assert potential_energy(A, Pa) == m * g * h + M * g * H
 
 
