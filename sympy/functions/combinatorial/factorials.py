@@ -512,8 +512,9 @@ class FallingFactorial(CombinatorialFunction):
     Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
     Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial
+    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols
     >>> from sympy.abc import x, k
+    >>> n, m = symbols('n m', integer=True)
     >>> ff(x, 0)
     1
     >>> ff(5, 5)
@@ -522,8 +523,8 @@ class FallingFactorial(CombinatorialFunction):
     True
     >>> ff(x**2, 2)
     Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
-    >>> ff(x, x)
-    factorial(x)
+    >>> ff(n, n)
+    factorial(n)
 
     Rewrite
 
@@ -531,10 +532,10 @@ class FallingFactorial(CombinatorialFunction):
     (-1)**k*gamma(k - x)/gamma(-x)
     >>> ff(x, k).rewrite(rf)
     RisingFactorial(-k + x + 1, k)
-    >>> ff(x, k).rewrite(binomial)
-    binomial(x, k)*factorial(k)
-    >>> ff(x, k).rewrite(factorial)
-    factorial(x)/factorial(-k + x)
+    >>> ff(x, m).rewrite(binomial)
+    binomial(x, m)*factorial(m)
+    >>> ff(n, m).rewrite(factorial)
+    factorial(n)/factorial(-m + n)
 
     See Also
     ========
@@ -554,7 +555,7 @@ class FallingFactorial(CombinatorialFunction):
 
         if x is S.NaN:
             return S.NaN
-        elif x == k:
+        elif k.is_integer and x == k:
             return factorial(x)
         elif k.is_Integer:
             if k is S.NaN:
@@ -612,10 +613,12 @@ class FallingFactorial(CombinatorialFunction):
         return rf(x - k + 1, k)
 
     def _eval_rewrite_as_binomial(self, x, k):
-        return factorial(k) * binomial(x, k)
+        if k.is_integer:
+            return factorial(k) * binomial(x, k)
 
     def _eval_rewrite_as_factorial(self, x, k):
-        return factorial(x) / factorial(x - k)
+        if x.is_integer and k.is_integer:
+            return factorial(x) / factorial(x - k)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -815,6 +818,10 @@ class binomial(CombinatorialFunction):
     def _eval_rewrite_as_gamma(self, n, k):
         from sympy import gamma
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+
+    def _eval_rewrite_as_FallingFactorial(self, n, k):
+        if k.is_integer:
+            return ff(n, k) / factorial(k)
 
     def _eval_is_integer(self):
         n, k = self.args
