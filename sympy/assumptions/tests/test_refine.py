@@ -1,5 +1,5 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan)
+                   atan, atan2, nan, Symbol)
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -53,10 +53,11 @@ def test_pow():
 
 
 def test_exp():
-    assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
-    assert refine(exp(pi*I*2*(x + Rational(1, 2))), Q.integer(x)) == -1
-    assert refine(exp(pi*I*2*(x + Rational(1, 4))), Q.integer(x)) == I
-    assert refine(exp(pi*I*2*(x + Rational(3, 4))), Q.integer(x)) == -I
+    x = Symbol('x', integer=True)
+    assert refine(exp(pi*I*2*x)) == 1
+    assert refine(exp(pi*I*2*(x + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
+    assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
 
 
 def test_Relational():

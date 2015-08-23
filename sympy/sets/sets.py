@@ -1784,6 +1784,12 @@ class FiniteSet(Set, EvalfMixin):
             elif nums == []:
                 return None
 
+        elif isinstance(other, FiniteSet):
+            elms_unknown = FiniteSet(*[el for el in self if other.contains(el) not in (True, False)])
+            if elms_unknown == self:
+                return
+            return Complement(FiniteSet(*[el for el in other if self.contains(el) != True]), elms_unknown)
+
         return Set._complement(self, other)
 
 

@@ -888,3 +888,9 @@ def test_issue_9637():
         Complement(Union(Interval(1, 2, False, True), Interval(2, 3, True, False)), a)
     assert Complement(a, S.Reals) == Complement(a, S.Reals, evaluate=False)
     assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
+
+
+def test_issue_9808():
+    assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
+    assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
+        Complement(FiniteSet(1), FiniteSet(y), evaluate=False)

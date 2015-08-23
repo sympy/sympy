@@ -1,7 +1,7 @@
 from sympy import S, sympify, diff, limit, oo
 from sympy.calculus.singularities import singularities
 from sympy.sets.sets import Interval, Intersection, FiniteSet, Union, Complement, Set, EmptySet
-from sympy.solvers.solveset import solveset_real
+from sympy.solvers.solveset import solveset
 
 
 def codomain(func, domain, *syms):
@@ -26,7 +26,8 @@ def codomain(func, domain, *syms):
     ValueError
           The input is not valid.
     RuntimeError
-          It is a bug, please report to the github issue tracker.
+          It is a bug, please report it to the github issue tracker
+          (https://github.com/sympy/sympy/issues).
 
     Examples
     ========
@@ -45,19 +46,18 @@ def codomain(func, domain, *syms):
     if not isinstance(domain, Set):
         raise ValueError('A Set must be given, not %s: %s' % (type(domain), domain))
 
+    # TODO: handle piecewise defined functions
+    # TODO: handle transcendental functions
+    # TODO: handle multivariate functions
     if len(syms) == 0:
         raise ValueError("A Symbol or a tuple of symbols must be given")
 
     if len(syms) == 1:
-        symbol = syms[0]
+        sym = syms[0]
     else:
         raise NotImplementedError("more than one variables %s not handled" % (syms,))
 
-    if not func.is_rational_function(symbol):
-        raise NotImplementedError("Algorithms finding range for non-rational functions "
-                                    "are not yet implemented")
-
-    if not func.has(symbol):
+    if not func.has(sym):
         return FiniteSet(func)
 
     # this block of code can be replaced by
@@ -78,7 +78,7 @@ def codomain(func, domain, *syms):
         return Intersection(FiniteSet(*singul), set_im)
 
     # all the singularities of the function
-    sing = solveset_real(func.as_numer_denom()[1], symbol)
+    sing = solveset(func.as_numer_denom()[1], sym, domain=S.Reals)
     sing_in_domain = closure_handle(domain, sing)
     domain = Complement(domain, sing_in_domain)
 
@@ -89,7 +89,7 @@ def codomain(func, domain, *syms):
         symb = sym[0]
         df1 = diff(f, symb)
         df2 = diff(df1, symb)
-        der_zero = solveset_real(df1, symb)
+        der_zero = solveset(df1, symb, domain=S.Reals)
         der_zero_in_dom = closure_handle(set_val, der_zero)
 
         local_maxima = set()
@@ -101,6 +101,10 @@ def codomain(func, domain, *syms):
             local_maxima = set([(oo, True)])
         elif start_val is S.NegativeInfinity or end_val is S.NegativeInfinity:
             local_minima = set([(-oo, True)])
+
+        if (not start_val.is_real) or (not end_val.is_real):
+            raise ValueError('Function does not contain all points of %s '
+                            'as its domain' % (domain))
 
         if local_maxima == set():
             if start_val > end_val:
@@ -143,11 +147,116 @@ def codomain(func, domain, *syms):
         return Union(Interval(minimum[0], maximum[0], minimum[1], maximum[1]))
 
     if isinstance(domain, Union):
-        return Union(*[codomain(func, intrvl_or_finset, symbol) for intrvl_or_finset in domain.args])
+        return Union(*[codomain(func, intrvl_or_finset, sym) for intrvl_or_finset in domain.args])
 
     if isinstance(domain, Interval):
-        return codomain_interval(func, domain, symbol)
+        return codomain_interval(func, domain, sym)
 
     if isinstance(domain, FiniteSet):
-        return FiniteSet(*[limit(func, symbol, i) if i in FiniteSet(-oo, oo)
-                            else func.subs({symbol: i}) for i in domain])
+        return FiniteSet(*[limit(func, sym, i) if i in FiniteSet(-oo, oo)
+                            else func.subs({sym: i}) for i in domain])
+
+
+def not_empty_in(finset_intersection, *syms):
+    """ Finds the domain of the functions in `finite_set` in which the
+    `finite_set` is not-empty
+
+    Parameters
+    ==========
+
+    finset_intersection: The unevaluated intersection of FiniteSet containing
+                        real-valued functions with Union of Sets
+    syms: Tuple of symbols
+            Symbol for which domain is to be found
+
+    Raises
+    ======
+
+    NotImplementedError
+        The algorithms to find the non-emptiness of the given FiniteSet are
+        not yet implemented.
+    ValueError
+        The input is not valid.
+    RuntimeError
+        It is a bug, please report it to the github issue tracker
+        (https://github.com/sympy/sympy/issues).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
+    >>> from sympy.abc import x
+    >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
+    [0, 2]
+    >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
+    [-sqrt(2), -1] U [1, 2]
+    >>> not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x)
+    (-2, -1] U [2, oo)
+    """
+
+    # TODO: handle piecewise defined functions
+    # TODO: handle transcendental functions
+    # TODO: handle multivariate functions
+    if len(syms) == 0:
+        raise ValueError("A Symbol or a tuple of symbols must be given \
+                            as the third parameter")
+
+    if finset_intersection.is_EmptySet:
+        return EmptySet()
+
+    if isinstance(finset_intersection, Union):
+        elm_in_sets = finset_intersection.args[0]
+        return Union(not_empty_in(finset_intersection.args[1], *syms), elm_in_sets)
+
+    if isinstance(finset_intersection, FiniteSet):
+        finite_set = finset_intersection
+        _sets = S.Reals
+    else:
+        finite_set = finset_intersection.args[1]
+        _sets = finset_intersection.args[0]
+
+    if not isinstance(finite_set, FiniteSet):
+        raise ValueError('A FiniteSet must be given, not %s: %s' % (type(finite_set), finite_set))
+
+    if len(syms) == 1:
+        symb = syms[0]
+    else:
+        raise NotImplementedError('more than one variables %s not handled' % (syms,))
+
+    def elm_domain(expr, intrvl):
+        """ Finds the domain of an expression in any given interval """
+
+        _start = intrvl.start
+        _end = intrvl.end
+        _singularities = solveset(expr.as_numer_denom()[1], symb, domain=S.Reals)
+
+        if intrvl.right_open:
+            if _end is S.Infinity:
+                _domain1 = S.Reals
+            else:
+                _domain1 = solveset(expr < _end, symb, domain=S.Reals)
+        else:
+            _domain1 = solveset(expr <= _end, symb, domain=S.Reals)
+
+        if intrvl.left_open:
+            if _start is S.NegativeInfinity:
+                _domain2 = S.Reals
+            else:
+                _domain2 = solveset(expr > _start, symb, domain=S.Reals)
+        else:
+            _domain2 = solveset(expr >= _start, symb, domain=S.Reals)
+
+        # domain in the interval
+        expr_with_sing = Intersection(_domain1, _domain2)
+        expr_domain = Complement(expr_with_sing, _singularities)
+        return expr_domain
+
+    if isinstance(_sets, Interval):
+        return Union(*[elm_domain(element, _sets) for element in finite_set])
+
+    if isinstance(_sets, Union):
+        _domain = S.EmptySet
+        for intrvl in _sets.args:
+            _domain_element = Union(*[elm_domain(element, intrvl) for element in finite_set])
+            _domain = Union(_domain, _domain_element)
+        return _domain
