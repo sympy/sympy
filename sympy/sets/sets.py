@@ -2003,3 +2003,70 @@ def imageset(*args):
         return r
 
     return ImageSet(f, set)
+
+
+class BigUnion(Set):
+    """
+    Represents union of an arbitrary collection of sets
+
+    Examples
+    ========
+    >>> from sympy import IndexedBase, Interval, S, Union, FiniteSet, Idx, symbols
+    >>> from sympy.sets.sets import BigUnion
+    >>> i, j = symbols('x y', cls=Idx)
+    >>> X = IndexedBase('X', shape=(i,))
+    >>> BigUnion(X, S.Naturals)
+    BigUnion(X, Naturals())
+    >>> BigUnion(FiniteSet(Interval(1, 2), FiniteSet(3)), FiniteSet(1, 2))
+    [1, 2] U {3}
+
+    See Also
+    ========
+
+    BigIntersection
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Union_(set_theory)#Arbitrary_unions
+    """
+    is_Union = True
+
+    def __new__(cls, set_vals, index_set):
+        if isinstance(index_set, FiniteSet):
+            return Union(*set_vals)
+        return Basic.__new__(cls, set_vals, index_set)
+
+
+class BigIntersection(Set):
+    """
+    Represents intersection of an arbitrary collection of sets
+
+    Examples
+    ========
+
+    >>> from sympy import IndexedBase, S, Union, FiniteSet, Interval, Idx, symbols
+    >>> from sympy.sets.sets import BigIntersection
+    >>> i, j = symbols('x y', cls=Idx)
+    >>> X = IndexedBase('X', shape=(i,))
+    >>> BigIntersection(X, S.Naturals)
+    BigIntersection(X, Naturals())
+    >>> BigIntersection(FiniteSet(Interval(1, 3), FiniteSet(2)), FiniteSet(1, 2))
+    {2}
+
+    See Also
+    ========
+
+    BigUnion
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Intersection_(set_theory)#Arbitrary_intersections
+    """
+    is_Intersection = True
+
+    def __new__(cls, set_vals, index_set):
+        if isinstance(index_set, FiniteSet):
+            return Intersection(*set_vals)
+        return Basic.__new__(cls, set_vals, index_set)
