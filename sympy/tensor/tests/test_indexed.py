@@ -97,10 +97,12 @@ def test_IndexedBase_sugar():
 
 def test_IndexedBase_subs():
     i, j, k = symbols('i j k', integer=True)
-    a, b = symbols('a b')
+    a, b, c = symbols('a b c')
     A = IndexedBase(a)
     B = IndexedBase(b)
+    C = IndexedBase(c)
     assert A[i] == B[i].subs(b, a)
+    assert isinstance(C[1].subs(C, {1: 2}), type(A[1]))
 
 
 def test_IndexedBase_shape():

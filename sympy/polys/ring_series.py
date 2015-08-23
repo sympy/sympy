@@ -1,13 +1,13 @@
 from sympy.polys.domains import QQ, EX
-from sympy.polys.rings import PolyElement, ring
+from sympy.polys.rings import PolyElement, ring, sring
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
-from sympy.core import PoleError
+from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
-from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log
+from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -401,6 +401,26 @@ def _has_constant_term(p, x):
         if monomial_min(expv, miv) == zm:
             return True
     return False
+
+def _get_constant_term(p, x):
+    """Return constant term in p with respect to x
+
+    Note that it is not simply `p[R.zero_monom]` as there might be multiple
+    generators in the ring R. We want the `x`-free term which can contain other
+    generators.
+    """
+    R = p.ring
+    zm = R.zero_monom
+    i = R.gens.index(x)
+    zm = R.zero_monom
+    a = [0]*R.ngens
+    a[i] = 1
+    miv = tuple(a)
+    c = 0
+    for expv in p:
+        if monomial_min(expv, miv) == zm:
+            c += R({expv: p[expv]})
+    return c
 
 def _check_series_var(p, x, name):
     index = p.ring.gens.index(x)
@@ -1033,9 +1053,8 @@ def rs_exp(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_exp, p, x, prec)
     R = p.ring
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = exp(c_expr)
@@ -1044,8 +1063,11 @@ def rs_exp(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(exp(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                R = R.add_gens([exp(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(exp(c_expr))
         else:
             try:
                 const = R(exp(c))
@@ -1234,9 +1256,8 @@ def rs_tan(p, x, prec):
         return r
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = tan(c_expr)
@@ -1245,8 +1266,11 @@ def rs_tan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tan(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                R = R.add_gens([tan(c_expr, )])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(tan(c_expr))
         else:
             try:
                 const = R(tan(c))
@@ -1330,9 +1354,8 @@ def rs_sin(p, x, prec):
     R = x.ring
     if not p:
         return R(0)
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             t1, t2 = sin(c_expr), cos(c_expr)
@@ -1341,8 +1364,11 @@ def rs_sin(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                R = R.add_gens([sin(c_expr), cos(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
@@ -1396,9 +1422,8 @@ def rs_cos(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos, p, x, prec)
     R = p.ring
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             t1, t2 = sin(c_expr), cos(c_expr)
@@ -1407,8 +1432,10 @@ def rs_cos(p, x, prec):
                 c_expr = c.as_expr()
                 t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                                      "this domain.")
+                R = R.add_gens([sin(c_expr), cos(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
         else:
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
@@ -1419,7 +1446,13 @@ def rs_cos(p, x, prec):
 
     # Makes use of sympy cos, sin fuctions to evaluate the values of the
     # cos/sin of the constant term.
-        return rs_cos(p1, x, prec)*t2 - rs_sin(p1, x, prec)*t1
+        p_cos = rs_cos(p1, x, prec)
+        p_sin = rs_sin(p1, x, prec)
+        R = R.compose(p_cos.ring).compose(p_sin.ring)
+        p_cos.set_ring(R)
+        p_sin.set_ring(R)
+        t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        return p_cos*t2 - p_sin*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1748,3 +1781,159 @@ def rs_compose_add(p1, p2):
     if dp:
         q = q*x**dp
     return q
+
+
+_convert_func = {
+        'sin': 'rs_sin',
+        'cos': 'rs_cos',
+        'exp': 'rs_exp',
+        'tan': 'rs_tan'
+        }
+
+def rs_min_pow(expr, series_rs, a):
+    """Find the minimum power of `a` in the series expansion of expr"""
+    series = 0
+    n = 2
+    while series == 0:
+        series = _rs_series(expr, series_rs, a, n)
+        n *= 2
+    R = series.ring
+    a = R(a)
+    i = R.gens.index(a)
+    return min(series, key=lambda t: t[i])[i]
+
+
+def _rs_series(expr, series_rs, a, prec):
+    # TODO Use _parallel_dict_from_expr instead of sring as sring is
+    # inefficient. For details, read the todo in sring.
+    args = expr.args
+    R = series_rs.ring
+
+    # expr does not contain any function to be expanded
+    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+        return series_rs
+
+    if not expr.has(a):
+        return series_rs
+
+    elif expr.is_Function:
+        arg = args[0]
+        if len(args) > 1:
+            raise NotImplementedError
+        R1, series = sring(arg, domain=QQ, expand=False)
+        series_inner = _rs_series(arg, series, a, prec)
+        R = R.compose(R1).compose(series_inner.ring)
+        series_inner = series_inner.set_ring(R)
+        series = eval(_convert_func[str(expr.func)])(series_inner,
+            R(a), prec)
+        return series
+
+    elif expr.is_Mul:
+        n = len(args)
+        for arg in args:    # XXX Looks redundant
+            R1, _ = sring(arg, expand=False)
+            R = R.compose(R1)
+        min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
+            [a]*len(args)))
+        sum_pows = sum(min_pows)
+        series = R(1)
+
+        for i in range(n):
+            _series = _rs_series(args[i], R(args[i]), a, prec - sum_pows +
+                min_pows[i])
+            R = R.compose(_series.ring)
+            _series = _series.set_ring(R)
+            series = series.set_ring(R)
+            series *= _series
+        series = rs_trunc(series, R(a), prec)
+        return series
+
+    elif expr.is_Add:
+        n = len(args)
+        series = R(0)
+        for i in range(n):
+            _series = _rs_series(args[i], R(args[i]), a, prec)
+            R = R.compose(_series.ring)
+            _series = _series.set_ring(R)
+            series = series.set_ring(R)
+            series += _series
+        return series
+
+    elif expr.is_Pow:
+        R1, _ = sring(expr.base, domain=QQ, expand=False)
+        R = R.compose(R1)
+        series_inner = _rs_series(expr.base, R(expr.base), a, prec)
+        return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
+
+    # The `is_constant` method is buggy hence we check it at the end.
+    # See issue #9786 for details.
+    elif isinstance(expr, Expr) and expr.is_constant():
+        return sring(expr, domain=QQ, expand=False)[1]
+
+    else:
+        raise NotImplementedError
+
+def rs_series(expr, a, prec):
+    """Return the series expansion of an expression about 0
+
+    Parameters
+    ----------
+    expr : :class:`Expr`
+    a : :class:`Symbol` with respect to which expr is to be expanded
+    prec : order of the series expansion
+
+    Currently supports multivariate Taylor series expansion. This is much
+    faster that Sympy's series method as it uses sparse polynomial operations.
+
+    It automatically creates the simplest ring required to represent the series
+    expansion through repeated calls to sring.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.ring_series import rs_series
+    >>> from sympy.functions import sin, cos, exp, tan
+    >>> from sympy.core import symbols
+    >>> a, b, c = symbols('a, b, c')
+    >>> rs_series(sin(a) + exp(a), a, 5)
+    1/24*a**4 + 1/2*a**2 + 2*a + 1
+    >>> series = rs_series(tan(a + b)*cos(a + c), a, 2)
+    >>> series.as_expr()
+    -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
+
+    """
+    R, series = sring(expr, domain=QQ, expand=False)
+    if a not in R.symbols:
+        R = R.add_gens([a, ])
+    series = series.set_ring(R)
+    series = _rs_series(expr, series, a, prec)
+    R = series.ring
+    gen = R(a)
+    prec_got = series.degree(gen) + 1
+
+    if prec_got >= prec:
+        return rs_trunc(series, gen, prec)
+    else:
+        # increase the requested number of terms to get the desired
+        # number keep increasing (up to 9) until the received order
+        # is different than the original order and then predict how
+        # many additional terms are needed
+        for more in range(1, 9):
+            p1 = _rs_series(expr, series, a, prec=prec + more)
+            gen = gen.set_ring(p1.ring)
+            new_prec = p1.degree(gen) + 1
+            if new_prec != prec_got:
+                prec_do = ceiling(prec + (prec - prec_got)*more/(new_prec -
+                    prec_got))
+                p1 = _rs_series(expr, series, a, prec=prec_do)
+                while p1.degree(gen) + 1 < prec:
+                    p1 = _rs_series(expr, series, a, prec=prec_do)
+                    gen = gen.set_ring(p1.ring)
+                    prec_do *= 2
+                break
+            else:
+                break
+        else:
+            raise ValueError('Could not calculate %s terms for %s'
+                             % (str(prec), expr))
+        return rs_trunc(p1, gen, prec)

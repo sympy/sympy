@@ -6,6 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
 from sympy.utilities.iterables import uniq
+from sympy.sets.sets import Complement
 
 
 class Order(Expr):
@@ -415,6 +416,10 @@ class Order(Expr):
                         from sympy.solvers.solveset import solveset
                         d = Dummy()
                         sol = solveset(old - new.subs(var, d), d)
+                        if isinstance(sol, Complement):
+                            e1 = sol.args[0]
+                            e2 = sol.args[1]
+                            sol = set(e1) - set(e2)
                         res = [dict(zip((d, ), sol))]
                         point = d.subs(res[0]).limit(old, self.point[i])
                     newvars[i] = var

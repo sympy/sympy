@@ -3108,6 +3108,15 @@ def test_pretty_ConditionSet():
     assert upretty(ConditionSet(Lambda(x, Eq(sin(x), 0)), S.Reals)) == ucode_str
 
 
+def test_pretty_ComplexPlane():
+    from sympy import ComplexPlane
+    ucode_str = u('{x + ⅈ⋅y | x, y ∊ [3, 5] × [4, 6]}')
+    assert upretty(ComplexPlane(Interval(3, 5)*Interval(4, 6))) == ucode_str
+
+    ucode_str = u('{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}')
+    assert upretty(ComplexPlane(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
+
+
 def test_ProductSet_paranthesis():
     from sympy import Interval, Union, FiniteSet
     ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')
