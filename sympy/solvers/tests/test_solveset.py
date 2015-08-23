@@ -603,6 +603,7 @@ def test_atan2():
 
 def test_piecewise():
     eq = Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3
+    f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert set(solveset_real(eq, x)) == set(FiniteSet(-1, 5))
     absxm3 = Piecewise(
         (x - 3, S(0) <= x - 3),
@@ -610,6 +611,7 @@ def test_piecewise():
     )
     y = Symbol('y', positive=True)
     assert solveset_real(absxm3 - y, x) == FiniteSet(-y + 3, y + 3)
+    assert solveset(f, x, domain=S.Reals) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
 
 def test_solveset_complex_polynomial():
