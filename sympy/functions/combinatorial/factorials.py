@@ -396,38 +396,46 @@ class factorial2(CombinatorialFunction):
 
 class RisingFactorial(CombinatorialFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
-       function arising in concrete mathematics, hypergeometric functions
-       and series expansions. It is defined by:
+    function arising in concrete mathematics, hypergeometric functions
+    and series expansions. It is defined by:
 
-                   rf(x, k) = x * (x + 1) * ... * (x + k - 1)
+                rf(x, k) = x * (x + 1) * ... * (x + k - 1)
 
-       where 'x' can be arbitrary expression and 'k' is an integer. For
-       more information check "Concrete mathematics" by Graham, pp. 66
-       or visit http://mathworld.wolfram.com/RisingFactorial.html page.
+    where 'x' can be arbitrary expression and 'k' is an integer. For
+    more information check "Concrete mathematics" by Graham, pp. 66
+    or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
-       When x is a polynomial f of a single variable y of order >= 1,
-       rf(x,k) = f(y) * f(y+1) * ... * f(x+k-1) as described in
-       Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
-       Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
+    When x is a polynomial f of a single variable y of order >= 1,
+    rf(x,k) = f(y) * f(y+1) * ... * f(x+k-1) as described in
+    Peter Paule, "Greatest Factorial Factorization and Symbolic Summation",
+    Journal of Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy import rf
-       >>> from sympy.abc import x
-       >>> rf(x, 0)
-       1
-       >>> rf(1, 5)
-       120
-       >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
-       True
-       >>> rf(x**3, 2)
-       Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
+    >>> from sympy import rf, symbols, factorial, ff
+    >>> from sympy.abc import x
+    >>> n, k = symbols('n k', integer=True)
+    >>> rf(x, 0)
+    1
+    >>> rf(1, 5)
+    120
+    >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
+    True
+    >>> rf(x**3, 2)
+    Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
 
-       See Also
-       ========
+    Rewrite
 
-       factorial, factorial2, FallingFactorial
+    >>> rf(x, k).rewrite(ff)
+    FallingFactorial(k + x - 1, k)
+    >>> rf(n, k).rewrite(factorial)
+    factorial(k + n - 1)/factorial(n - 1)
+
+    See Also
+    ========
+
+    factorial, factorial2, FallingFactorial
     """
 
     @classmethod
@@ -483,6 +491,10 @@ class RisingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_FallingFactorial(self, x, k):
         return FallingFactorial(x + k - 1, k)
+
+    def _eval_rewrite_as_factorial(self, x, k):
+        if x.is_integer and k.is_integer:
+            return factorial(k + x - 1) / factorial(x - 1)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,

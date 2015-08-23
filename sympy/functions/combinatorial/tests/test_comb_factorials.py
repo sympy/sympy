@@ -48,6 +48,8 @@ def test_rf_eval_apply():
     assert rf(pi, m).is_integer is False
 
     assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
+    assert rf(n, k).rewrite(factorial) == (factorial(n + k - 1) /
+                                           factorial(n - 1))
 
 
 def test_ff_eval_apply():
