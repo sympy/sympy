@@ -438,6 +438,11 @@ class RisingFactorial(CombinatorialFunction):
     ========
 
     factorial, factorial2, FallingFactorial
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Pochhammer_symbol
     """
 
     @classmethod
@@ -470,7 +475,9 @@ class RisingFactorial(CombinatorialFunction):
                             return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
                         else:
                             v = opt.gens[0]
-                            return reduce(lambda r, i: r*(F.subs(v, v + i).expand()), range(0, int(k)), 1)
+                            return reduce(lambda r, i:
+                                          r*(F.subs(v, v + i).expand()),
+                                          range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
@@ -480,12 +487,18 @@ class RisingFactorial(CombinatorialFunction):
                         try:
                             F, opt = poly_from_expr(x)
                         except PolificationFailed:
-                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i:
+                                            r*(x - i),
+                                            range(1, abs(int(k)) + 1), 1)
                         if len(opt.gens) > 1 or F.degree() <= 1:
-                            return 1/reduce(lambda r, i: r*(x - i), range(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i:
+                                            r*(x - i),
+                                            range(1, abs(int(k)) + 1), 1)
                         else:
                             v = opt.gens[0]
-                            return 1/reduce(lambda r, i: r*(F.subs(v, v - i).expand()), range(1, abs(int(k)) + 1), 1)
+                            return 1/reduce(lambda r, i:
+                                            r*(F.subs(v, v - i).expand()),
+                                            range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
