@@ -413,7 +413,7 @@ class RisingFactorial(CombinatorialFunction):
     Examples
     ========
 
-    >>> from sympy import rf, symbols, factorial, ff
+    >>> from sympy import rf, symbols, factorial, ff, binomial
     >>> from sympy.abc import x
     >>> n, k = symbols('n k', integer=True)
     >>> rf(x, 0)
@@ -429,6 +429,8 @@ class RisingFactorial(CombinatorialFunction):
 
     >>> rf(x, k).rewrite(ff)
     FallingFactorial(k + x - 1, k)
+    >>> rf(x, k).rewrite(binomial)
+    binomial(k + x - 1, k)*factorial(k)
     >>> rf(n, k).rewrite(factorial)
     factorial(k + n - 1)/factorial(n - 1)
 
@@ -495,6 +497,10 @@ class RisingFactorial(CombinatorialFunction):
     def _eval_rewrite_as_factorial(self, x, k):
         if x.is_integer and k.is_integer:
             return factorial(k + x - 1) / factorial(x - 1)
+
+    def _eval_rewrite_as_binomial(self, x, k):
+        if k.is_integer:
+            return factorial(k) * binomial(x + k - 1, k)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
