@@ -394,7 +394,7 @@ What will you do with the old solve?
  Hence, it's not yet a perfect replacement for old `solve`. The ultimate
  goal is to:
 
- * Replace ``solve`` with ``solveset`, by the time solveset is
+ * Replace ``solve`` with ``solveset``, by the time solveset is
    atleast powerful as ``solve``, i.e. ``solveset`` does everything
    that ``solve`` can do currently, and
 
