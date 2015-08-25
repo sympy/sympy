@@ -1009,3 +1009,7 @@ def test_issue_9778():
 @XFAIL
 def test_issue_failing_pow():
     assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
+
+
+def test_issue_9849():
+    assert solveset(Abs(sin(x)) + 1, x, S.Reals) == S.EmptySet

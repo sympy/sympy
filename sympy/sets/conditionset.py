@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy import S
 from sympy.core.basic import Basic
 from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
@@ -28,6 +29,10 @@ class ConditionSet(Set):
     True
     """
     def __new__(cls, condition, base_set):
+        if condition.args[1] is S.false:
+            return S.EmptySet
+        if condition.args[1] is S.true:
+            return base_set
         return Basic.__new__(cls, condition, base_set)
 
     condition = property(lambda self: self.args[0])
