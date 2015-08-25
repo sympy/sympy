@@ -2687,10 +2687,16 @@ class MatrixBase(object):
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
+            # if cannot element being zero with the given flags
+            if iszerofunc(r[pivot, i]) is None:
+                raise NotImplementedError("cannot determine whether %s is zero or not, try again setting"
+                                            " flag `simplify=True`" % (r[pivot, i]))
             if iszerofunc(r[pivot, i]):
                 for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
+                    if iszerofunc(r[k, i]) is None:
+                        raise NotImplementedError("NotImplementedError")
                     if not iszerofunc(r[k, i]):
                         r.row_swap(pivot, k)
                         break
