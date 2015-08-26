@@ -5,6 +5,34 @@ from sympy import Integral, Dummy, sympify, Tuple
 class _IndexedIntegral(Integral):
     """
     Experimental class to test integration by indexed variables.
+
+    Usage is analogue to ``Integral``, it simply adds awareness of
+    integration over indices.
+
+    Contraction of non-identical index symbols referring to the same
+    ``IndexedBase`` is not yet supported.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.indexed_integrals import _IndexedIntegral
+    >>> from sympy import IndexedBase
+    >>> A = IndexedBase('A')
+    >>> i, j = symbols('i j', integer=True)
+    >>> ii = _IndexedIntegral(A[i], A[i])
+    >>> ii
+    Integral(_A[i], _A[i])
+    >>> ii.doit()
+    A[i]**2/2
+
+    If the indices are different, indexed objects are considered to be
+    different variables:
+
+    >>> i2 = _IndexedIntegral(A[j], A[i])
+    >>> i2
+    Integral(A[j], _A[i])
+    >>> i2.doit()
+    A[i]*A[j]
     """
 
     def __new__(cls, function, *limits, **assumptions):
