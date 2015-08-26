@@ -2011,13 +2011,14 @@ class BigUnion(Set):
 
     Examples
     ========
-    >>> from sympy import IndexedBase, Interval, S, Union, FiniteSet, Idx, symbols
+
+    >>> from sympy import IndexedBase, Interval, S, Union, FiniteSet, symbols
     >>> from sympy.sets.sets import BigUnion
-    >>> i, j = symbols('x y', cls=Idx)
-    >>> X = IndexedBase('X', shape=(i,))
-    >>> BigUnion(X, S.Naturals)
-    BigUnion(X, Naturals())
-    >>> BigUnion(FiniteSet(Interval(1, 2), FiniteSet(3)), FiniteSet(1, 2))
+    >>> i = symbols('i')
+    >>> X = IndexedBase('X')
+    >>> BigUnion(X, i, S.Naturals)
+    BigUnion(X, i, Naturals())
+    >>> BigUnion(FiniteSet(Interval(1, 2), FiniteSet(3)), i, FiniteSet(1, 2))
     [1, 2] U {3}
 
     See Also
@@ -2032,10 +2033,10 @@ class BigUnion(Set):
     """
     is_Union = True
 
-    def __new__(cls, set_vals, index_set):
+    def __new__(cls, set_vals, index, index_set):
         if isinstance(index_set, FiniteSet):
             return Union(*set_vals)
-        return Basic.__new__(cls, set_vals, index_set)
+        return Basic.__new__(cls, set_vals, index, index_set)
 
 
 class BigIntersection(Set):
@@ -2045,13 +2046,13 @@ class BigIntersection(Set):
     Examples
     ========
 
-    >>> from sympy import IndexedBase, S, Union, FiniteSet, Interval, Idx, symbols
+    >>> from sympy import IndexedBase, S, Union, FiniteSet, Interval, symbols
     >>> from sympy.sets.sets import BigIntersection
-    >>> i, j = symbols('x y', cls=Idx)
-    >>> X = IndexedBase('X', shape=(i,))
-    >>> BigIntersection(X, S.Naturals)
-    BigIntersection(X, Naturals())
-    >>> BigIntersection(FiniteSet(Interval(1, 3), FiniteSet(2)), FiniteSet(1, 2))
+    >>> i = symbols('i')
+    >>> X = IndexedBase('X')
+    >>> BigIntersection(X, i, S.Naturals)
+    BigIntersection(X, i, Naturals())
+    >>> BigIntersection(FiniteSet(Interval(1, 3), FiniteSet(2)), i, FiniteSet(1, 2))
     {2}
 
     See Also
@@ -2066,7 +2067,7 @@ class BigIntersection(Set):
     """
     is_Intersection = True
 
-    def __new__(cls, set_vals, index_set):
+    def __new__(cls, set_vals, index, index_set):
         if isinstance(index_set, FiniteSet):
             return Intersection(*set_vals)
-        return Basic.__new__(cls, set_vals, index_set)
+        return Basic.__new__(cls, set_vals, index, index_set)

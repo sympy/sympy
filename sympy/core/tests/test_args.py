@@ -3715,3 +3715,19 @@ def test_sympy__vector__scalar__BaseScalar():
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
+
+
+def test_sympy__sets__sets__BigUnion():
+    from sympy.tensor.indexed import IndexedBase
+    from sympy.sets.sets import BigUnion
+    i = symbols('i')
+    X = IndexedBase('X')
+    assert _test_args(BigUnion(X, i, S.Naturals))
+
+
+def test_sympy__sets__sets__BigIntersection():
+    from sympy.tensor.indexed import IndexedBase
+    from sympy.sets.sets import BigIntersection
+    i = symbols('i')
+    X = IndexedBase('X')
+    assert _test_args(BigIntersection(X, i, S.Naturals))
