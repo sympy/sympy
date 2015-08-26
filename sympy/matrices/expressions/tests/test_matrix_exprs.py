@@ -223,10 +223,11 @@ def test_identity_powers():
     assert MatPow(M, -1).doit() == M**5
     assert MatPow(M, -2).doit() == M**0
     N = Identity(3)
-    assert MatPow(N, 2).doit().as_explicit() == (N**2).as_explicit()
+    assert MatPow(N, 2).doit() == (N**2)
     assert MatPow(N, 3).doit() == N
-    assert MatPow(N, -2).doit().as_explicit() == (N**4).as_explicit()
-    assert MatPow(N, 2).doit().as_explicit() == (N**0).as_explicit()
+    assert MatPow(N, -2).doit() == (N**4)
+    assert MatPow(N, 2).doit() == (N**0)
+
 
 def test_Zero_power():
     z1 = ZeroMatrix(n, n)
@@ -236,8 +237,8 @@ def test_Zero_power():
     assert MatPow(z1, 2).doit() == z1**2
     raises(ValueError, lambda:MatPow(z1, -2).doit())
     z2 = ZeroMatrix(3, 3)
-    assert MatPow(z2, 4).doit().as_explicit() == (z2**4).as_explicit()
+    assert MatPow(z2, 4).doit() == (z2**4)
     raises(ValueError, lambda:z2**-3)
     assert z2**3 ==MatPow(z2, 3).doit()
     assert z2**0 == Identity(3)
-    raises(ValueError, lambda:MatPow(z2, -1).doit().as_explicit() )
+    raises(ValueError, lambda:MatPow(z2, -1).doit())

@@ -70,7 +70,7 @@ def test_doit_square_MatrixSymbol_symsize():
 
 def test_doit_with_MatrixBase():
     X = ImmutableMatrix([[1, 2], [3, 4]])
-    assert MatPow(X, 0).doit() == Identity(2)
+    assert MatPow(X, 0).doit() == ImmutableMatrix(Identity(2))
     assert MatPow(X, 1).doit() == X
     assert MatPow(X, 2).doit() == X**2
     assert MatPow(X, -1).doit() == X.inv()
