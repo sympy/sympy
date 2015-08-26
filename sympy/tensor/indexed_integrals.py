@@ -16,7 +16,7 @@ class _IndexedIntegral(Integral):
     ========
 
     >>> from sympy.tensor.indexed_integrals import _IndexedIntegral
-    >>> from sympy import IndexedBase
+    >>> from sympy import IndexedBase, symbols
     >>> A = IndexedBase('A')
     >>> i, j = symbols('i j', integer=True)
     >>> ii = _IndexedIntegral(A[i], A[i])
