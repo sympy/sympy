@@ -439,7 +439,7 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(Lambda(q, Eq((-2*sqrt(4*q**2*(m - q)**2 + (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2)*Abs(q))/Abs(q), 0)), S.Reals)
+    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 + (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2)*Abs(q))/Abs(q), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -723,7 +723,7 @@ def test_solve_invalid_sol():
 
 
 def test_solve_complex_unsolvable():
-    unsolved_object = ConditionSet(Lambda(x, Eq(2*cos(x) - 1, 0)), S.Complexes)
+    unsolved_object = ConditionSet(x, Eq(2*cos(x) - 1, 0), S.Complexes)
     solution = solveset_complex(cos(x) - S.Half, x)
     assert solution == unsolved_object
 
@@ -851,25 +851,25 @@ def test_solveset():
 
 def test_conditonset():
     assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \
-        ConditionSet(Lambda(x, True), S.Reals)
+        ConditionSet(x, True, S.Reals)
 
     assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
-        ConditionSet(Lambda(x, Eq(x*(x + sin(x)) - 1, 0)), S.Reals)
+        ConditionSet(x, Eq(x*(x + sin(x)) - 1, 0), S.Reals)
 
     assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == \
-        ConditionSet(Lambda(x, Eq(-x + sin(Abs(x)), 0)), Interval(-oo, oo))
+        ConditionSet(x, Eq(-x + sin(Abs(x)), 0), Interval(-oo, oo))
 
     assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
 
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
-        ConditionSet(Lambda(x, x + sin(x) > 1), S.Reals)
+        ConditionSet(x, x + sin(x) > 1, S.Reals)
 
 
 @XFAIL
 def test_conditionset_equality():
     ''' Checking equality of different representations of ConditionSet'''
-    assert solveset(Eq(tan(x), y), x) == ConditionSet(Lambda(x, Eq(tan(x), y)), S.Complexes)
+    assert solveset(Eq(tan(x), y), x) == ConditionSet(x, Eq(tan(x), y), S.Complexes)
 
 
 def test_solveset_domain():
@@ -885,7 +885,7 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(Lambda(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0)), S.Reals)
+    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)

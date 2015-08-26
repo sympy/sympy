@@ -569,7 +569,7 @@ def test_sympy__sets__conditionset__ConditionSet():
     from sympy.sets.conditionset import ConditionSet
     from sympy import S, Symbol
     x = Symbol('x')
-    assert _test_args(ConditionSet(Lambda(x, Eq(x**2, 1)), S.Reals))
+    assert _test_args(ConditionSet(x, Eq(x**2, 1), S.Reals))
 
 
 def test_sympy__sets__contains__Contains():
