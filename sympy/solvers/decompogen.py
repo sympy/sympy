@@ -51,5 +51,8 @@ def decompogen(f, symbol):
         return result
 
     # ===== Polynomial decompose() ====== #
-    result += decompose(f)
-    return result
+    try:
+        result += decompose(f)
+        return result
+    except ValueError:
+        return [f]
