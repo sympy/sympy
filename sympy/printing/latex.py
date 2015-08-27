@@ -1572,7 +1572,7 @@ class LatexPrinter(Printer):
             self._print(s.base_set))
 
     def _print_ConditionSet(self, s):
-        vars_print = ', '.join([self._print(var) for var in Tuple(s.vari)])
+        vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,

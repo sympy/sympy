@@ -1524,7 +1524,7 @@ class PrettyPrinter(Printer):
         else:
             inn = 'in'
             _and = 'and'
-        variables = self._print_seq(Tuple(ts.vari))
+        variables = self._print_seq(Tuple(ts.sym))
         cond = self._print(ts.condition.as_expr())
         bar = self._print("|")
         base = self._print(ts.base_set)
