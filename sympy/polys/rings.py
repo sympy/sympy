@@ -508,6 +508,17 @@ class PolyRing(DefaultPrinting, IPolys):
         else:
             return self.clone(symbols=symbols, domain=self.drop(*gens))
 
+    def compose(self, other):
+        if self != other:
+            syms = set(self.symbols).union(set(other.symbols))
+            return self.clone(symbols=list(syms))
+        else:
+            return self
+
+    def add_gens(self, symbols):
+        syms = set(self.symbols).union(set(symbols))
+        return self.clone(symbols=list(syms))
+
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """

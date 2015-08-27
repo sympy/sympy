@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union)
+                        Union, ConditionSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -391,6 +391,8 @@ def solveset_real(f, symbol):
     Set
         A set of values for `symbol` for which `f` is equal to
         zero. An `EmptySet` is returned if no solution is found.
+        A `ConditionSet` is returned as unsolved object if algorithms
+        to evaluate complete solutions are not yet implemented.
 
     `solveset_real` claims to be complete in the set of the solution it
     returns.
@@ -399,7 +401,7 @@ def solveset_real(f, symbol):
     ======
 
     NotImplementedError
-        The algorithms for to find the solution of the given equation are
+        Algorithms to solve inequalities in complex domain are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -500,7 +502,7 @@ def solveset_real(f, symbol):
                 else:
                     result += solveset_real(equation, symbol)
         else:
-            raise NotImplementedError
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -548,12 +550,11 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             if poly.degree() <= len(solns):
                 result = FiniteSet(*solns)
             else:
-                raise NotImplementedError("Couldn't find all roots "
-                                          "of the equation %s" % f)
+                result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
     else:
         poly = Poly(f)
         if poly is None:
-            raise NotImplementedError("Could not convert %s to Poly" % f)
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
         gens = [g for g in poly.gens if g.has(symbol)]
 
         if len(gens) == 1:
@@ -561,12 +562,13 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             gen = poly.gen
             deg = poly.degree()
             poly = Poly(poly.as_expr(), poly.gen, composite=True)
+
             solns = roots(poly, cubics=True, quartics=True,
                                     quintics=True)
             num_roots = sum(solns.values())
             if num_roots < deg:
-                raise NotImplementedError("Couldn't find all the roots of "
-                                          "the equation %s" % f)
+                result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+
             poly_solns = FiniteSet(*solns)
 
             if gen != symbol:
@@ -575,11 +577,9 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 if lhs is symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
-                    raise NotImplementedError(
-                        "inversion of %s not handled" % gen)
+                    result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
         else:
-            raise NotImplementedError("multiple generators not handled"
-                                      " by solveset")
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
     if result is not None:
         if isinstance(result, FiniteSet):
@@ -593,7 +593,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 result = imageset(Lambda(s, expand_complex(s)), result)
         return result
     else:
-        raise NotImplementedError
+        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
 
 def _solve_as_poly_real(f, symbol):
@@ -692,7 +692,7 @@ def _solve_abs(f, symbol):
                                            symbol).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
-        raise NotImplementedError
+        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
 
 def solveset_complex(f, symbol):
@@ -712,6 +712,8 @@ def solveset_complex(f, symbol):
     Set
         A set of values for `symbol` for which `f` equal to
         zero. An `EmptySet` is returned if no solution is found.
+        A `ConditionSet` is returned as an unsolved object if algorithms
+        to evaluate complete solutions are not yet implemented.
 
     `solveset_complex` claims to be complete in the solution set that
     it returns.
@@ -720,7 +722,7 @@ def solveset_complex(f, symbol):
     ======
 
     NotImplementedError
-        The algorithms for to find the solution of the given equation are
+        The algorithms to solve inequalities in complex domain  are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -793,7 +795,7 @@ def solveset_complex(f, symbol):
                 else:
                     result += solveset_complex(equation, symbol)
         else:
-            raise NotImplementedError
+            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -823,6 +825,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Set
         A set of values for `symbol` for which `f` is True or is equal to
         zero. An `EmptySet` is returned if no solution is found.
+        A `ConditionSet` is returned as unsolved object if algorithms
+        to evaluatee complete solution are not yet implemented.
 
     `solveset` claims to be complete in the solution set that it returns.
 
@@ -830,7 +834,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     ======
 
     NotImplementedError
-        The algorithms for to find the solution of the given equation are
+        The algorithms to solve inequalities in complex domain  are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -912,8 +916,12 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError("Inequalities in the complex domain are "
                                       "not supported. Try the real domain by"
                                       "setting domain=S.Reals")
-        return solve_univariate_inequality(
+        try:
+            result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
+        except NotImplementedError:
+            result = ConditionSet(Lambda(symbol, f), domain)
+        return result
 
     if isinstance(f, (Expr, Number)):
         if domain is S.Reals:

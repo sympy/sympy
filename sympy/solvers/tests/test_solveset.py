@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.sets import FiniteSet
+from sympy.sets import (FiniteSet, ConditionSet)
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -439,7 +439,8 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    raises(NotImplementedError, lambda: solveset_real(eq, q))
+    unsolved_object = ConditionSet(Lambda(q, Eq((-2*sqrt(4*q**2*(m - q)**2 + (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2)*Abs(q))/Abs(q), 0)), S.Reals)
+    assert solveset_real(eq, q) == unsolved_object
 
 
 def test_solve_polynomial_symbolic_param():
@@ -602,6 +603,7 @@ def test_atan2():
 
 def test_piecewise():
     eq = Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3
+    f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert set(solveset_real(eq, x)) == set(FiniteSet(-1, 5))
     absxm3 = Piecewise(
         (x - 3, S(0) <= x - 3),
@@ -609,6 +611,7 @@ def test_piecewise():
     )
     y = Symbol('y', positive=True)
     assert solveset_real(absxm3 - y, x) == FiniteSet(-y + 3, y + 3)
+    assert solveset(f, x, domain=S.Reals) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
 
 def test_solveset_complex_polynomial():
@@ -712,6 +715,13 @@ def test_solve_trig():
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
 
 
+@XFAIL
+def test_solve_trig_abs():
+    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
+        Union(ImageSet(Lambda(n, n*pi + (-1)**n*pi/2), S.Naturals0),
+              ImageSet(Lambda(n, -n*pi - (-1)**n*pi/2), S.Naturals0))
+
+
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
@@ -720,7 +730,8 @@ def test_solve_invalid_sol():
 def test_solve_complex_unsolvable():
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(imageset(Lambda(n, 2*n*pi - pi/3), S.Integers),
-            imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
+              imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
+
 
 @XFAIL
 def test_solve_trig_simplified():
@@ -839,6 +850,29 @@ def test_solveset():
                                                   S.Integers)
 
 
+def test_conditonset():
+    assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, True), S.Reals)
+
+    assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, Eq(x*(x + sin(x)) - 1, 0)), S.Reals)
+
+    assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, Eq(-x + sin(Abs(x)), 0)), Interval(-oo, oo))
+
+    assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
+        imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
+    assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
+        ConditionSet(Lambda(x, x + sin(x) > 1), S.Reals)
+
+
+@XFAIL
+def test_conditionset_equality():
+    ''' Checking equality of different representations of ConditionSet'''
+    assert solveset(Eq(tan(x), y), x) == ConditionSet(Lambda(x, Eq(tan(x), y)), S.Complexes)
+
+
 def test_solveset_domain():
     x = Symbol('x')
 
@@ -851,7 +885,9 @@ def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x')
     y = exp(x+1/x**2)
-    raises(NotImplementedError, lambda: solveset(y**2+y, x, S.Reals))
+    solution = solveset(y**2+y, x, S.Reals)
+    unsolved_object = ConditionSet(Lambda(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0)), S.Reals)
+    assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
@@ -974,3 +1010,7 @@ def test_issue_9778():
 @XFAIL
 def test_issue_failing_pow():
     assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
+
+
+def test_issue_9849():
+    assert solveset(Abs(sin(x)) + 1, x, S.Reals) == S.EmptySet

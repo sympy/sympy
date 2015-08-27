@@ -1,5 +1,5 @@
 from sympy.sets import (ConditionSet, Intersection)
-from sympy import (Symbol, Eq, S, sin, pi, Lambda, Interval)
+from sympy import (Symbol, Eq, S, Abs, sin, pi, Lambda, Interval)
 
 x = Symbol('x')
 
@@ -19,3 +19,8 @@ def test_CondSet_intersect():
     other_domain = Interval(0, 3, False, False)
     output_conditionset = ConditionSet(Lambda(x, x**2 > 4), Interval(1, 3, False, False))
     assert Intersection(input_conditionset, other_domain) == output_conditionset
+
+
+def test_issue_9849():
+    assert ConditionSet(Lambda(x, Eq(x, x)), S.Naturals) == S.Naturals
+    assert ConditionSet(Lambda(x, Eq(Abs(sin(x)), -1)), S.Naturals) == S.EmptySet

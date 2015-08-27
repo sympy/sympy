@@ -1552,6 +1552,9 @@ class LatexPrinter(Printer):
     def _print_Naturals(self, n):
         return r"\mathbb{N}"
 
+    def _print_Naturals0(self, n):
+        return r"\mathbb{N_0}"
+
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
@@ -1574,6 +1577,13 @@ class LatexPrinter(Printer):
             vars_print,
             self._print(s.base_set),
             self._print(s.condition.expr))
+
+    def _print_ComplexPlane(self, s):
+        vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
+        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+            self._print(s.args[0].expr),
+            vars_print,
+            self._print(s.sets))
 
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
