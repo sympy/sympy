@@ -618,7 +618,7 @@ def test_latex_ConditionSet():
 
 def test_latex_ComplexPlane():
     assert latex(ComplexPlane(Interval(3, 5)*Interval(4, 6))) == \
-        r"\left\{x + i y\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
+        r"\left\{x + y i\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
     assert latex(ComplexPlane(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
         r"\left\{r \left(i \sin{\left (\theta \right )} + \cos{\left (\theta \right )}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
 

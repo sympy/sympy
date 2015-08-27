@@ -573,7 +573,7 @@ class ComplexPlane(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexPlane(a*b)  # Rectangular Form
     >>> c1
-    ComplexPlane(Lambda((x, y), x + I*y), [2, 3] x [4, 6])
+    ComplexPlane(Lambda((_x, _y), _x + _y*I), [2, 3] x [4, 6])
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -581,7 +581,7 @@ class ComplexPlane(Set):
 
     >>> c2 = ComplexPlane(Union(a*b, b*c))
     >>> c2
-    ComplexPlane(Lambda((x, y), x + I*y),
+    ComplexPlane(Lambda((_x, _y), _x + _y*I),
                  [2, 3] x [4, 6] U [4, 6] x [1, 8])
 
     * c2 represents the Union of two rectangular regions in complex
@@ -598,7 +598,7 @@ class ComplexPlane(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexPlane(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))),
+    ComplexPlane(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))),
                  [0, 1] x [0, 2*pi))
 
     * c2 represents the region in complex plane inside the
@@ -613,7 +613,7 @@ class ComplexPlane(Set):
     >>> upper_half_unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))), [0, 1] x [0, pi])
+    ComplexPlane(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))), [0, 1] x [0, pi])
     >>> intersection == upper_half_unit_disk
     True
 
@@ -626,9 +626,9 @@ class ComplexPlane(Set):
     is_ComplexPlane = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols
+        from sympy import symbols, Dummy
 
-        x, y, r, theta = symbols('x, y, r, theta')
+        x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
 
         # Rectangular Form
