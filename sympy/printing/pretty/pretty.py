@@ -93,6 +93,7 @@ class PrettyPrinter(Printer):
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet = _print_Atom
     _print_Naturals = _print_Atom
+    _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
     _print_Complexes = _print_Atom
@@ -1529,6 +1530,18 @@ class PrettyPrinter(Printer):
 
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
+
+    def _print_ComplexPlane(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+        else:
+            inn = 'in'
+        variables = self._print_seq(ts.args[0].variables)
+        expr = self._print(ts.args[0].expr)
+        bar = self._print("|")
+        prodsets = self._print(ts.sets)
+
+        return self._print_seq((expr, bar, variables, inn, prodsets), "{", "}", ' ')
 
     def _print_Contains(self, e):
         var, set = e.args
