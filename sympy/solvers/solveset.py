@@ -531,29 +531,6 @@ def _solve_trig_hyperbolic(f, symbol):
     return solveset_complex(g, symbol)
 
 
-def _solve_real_trig(f, symbol):
-    """ Helper to solve trigonometric equations """
-    f = trigsimp(f)
-    f = f.rewrite(exp)
-    f = together(f)
-    g, h = fraction(f)
-    y = Dummy('y')
-    g, h = g.expand(), h.expand()
-    g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
-    if g.has(symbol) or h.has(symbol):
-        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
-
-    solns = solveset_complex(g, y) - solveset_complex(h, y)
-
-    if isinstance(solns, FiniteSet):
-        return Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
-                       for s in solns])
-    elif solns is S.EmptySet:
-        return S.EmptySet
-    else:
-        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
-
-
 def _solve_as_poly(f, symbol, solveset_solver, invert_func):
     """
     Solve the equation using polynomial techniques if it already is a
