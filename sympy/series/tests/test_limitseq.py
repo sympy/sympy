@@ -1,5 +1,6 @@
-from sympy import symbols, oo, Sum, harmonic, Add, S, binomial, factorial, dd
+from sympy import symbols, oo, Sum, harmonic, Add, S, binomial, factorial
 from sympy.series.limitseq import limit_seq
+from sympy.series.limitseq import difference_delta as dd
 from sympy.utilities.pytest import raises, XFAIL
 
 n, m, k = symbols('n m k', integer=True)

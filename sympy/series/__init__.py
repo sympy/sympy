@@ -12,9 +12,8 @@ from .formal import fps
 from .limitseq import difference_delta, limit_seq
 
 O = Order
-dd = difference_delta
 
 __all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'residue',
            'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence',
            'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
-           'dd', 'limit_seq']
+           'limit_seq']

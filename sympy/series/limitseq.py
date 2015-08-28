@@ -109,6 +109,18 @@ def _limit_inf(expr, n):
 def limit_seq(expr, n, trials=5):
     """Finds limits of terms having sequences at infinity.
 
+    Parameters
+    ==========
+
+    expr : Expr
+        SymPy expression that is admissible (see section below).
+    n : Symbol
+        Find the limit wrt to n at infinity.
+    trials: int, optional
+        The algorithm is highly recursive. ``trials`` is a safeguard from
+        infinite recursion incase limit is not easily computed by the
+        algorithm. Try increasing ``trials`` if the algorithm returns ``None``.
+
     Admissible Terms
     ================
 
@@ -154,7 +166,7 @@ def limit_seq(expr, n, trials=5):
                 return result
             return None
 
-        num, den = map(lambda t: difference_delta(t.expand(), n), [num, den])
+        num, den = (difference_delta(t.expand(), n) for t in [num, den])
 
         expr = (num / den).combsimp()
 
