@@ -106,7 +106,7 @@ def _limit_inf(expr, n):
         return None
 
 
-def limit_seq(expr, n, trials=5):
+def limit_seq(expr, n=None, trials=5):
     """Finds limits of terms having sequences at infinity.
 
     Parameters
@@ -152,6 +152,18 @@ def limit_seq(expr, n, trials=5):
     .. [1] Computing Limits of Sequences - Manuel Kauers
     """
     from sympy.concrete.summations import Sum
+
+    if n is None:
+        free = expr.free_symbols
+        if len(free) == 1:
+            n = free.pop()
+        elif not free:
+            return expr
+        else:
+            raise ValueError("expr %s has more than one variables. Please"
+                             "specify a variable." %(expr))
+    elif n not in expr.free_symbols:
+        return expr
 
     for i in range(trials):
         if not expr.has(Sum):
