@@ -3110,7 +3110,7 @@ def test_pretty_ConditionSet():
 
 def test_pretty_ComplexPlane():
     from sympy import ComplexPlane
-    ucode_str = u('{x + ⅈ⋅y | x, y ∊ [3, 5] × [4, 6]}')
+    ucode_str = u('{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}')
     assert upretty(ComplexPlane(Interval(3, 5)*Interval(4, 6))) == ucode_str
 
     ucode_str = u('{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}')
