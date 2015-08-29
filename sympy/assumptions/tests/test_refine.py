@@ -82,20 +82,26 @@ def test_exp():
 def test_Relational():
     assert not refine(x < 0, ~Q.is_true(x < 0))
     assert refine(x < 0, Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(0 > x)) == True
     assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
     assert not refine(x <= 0, ~Q.is_true(x <= 0))
     assert refine(x <= 0,  Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
     assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
     assert not refine(x > 0, ~Q.is_true(x > 0))
     assert refine(x > 0,  Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(0 < x)) == True
     assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
     assert not refine(x >= 0, ~Q.is_true(x >= 0))
     assert refine(x >= 0,  Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
     assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
     assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
     assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
     assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
     assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
     assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
     assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
 
@@ -119,7 +125,11 @@ def test_Piecewise():
         Piecewise((1, x >= 0), (3, True))
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(x, 0)))\
         == 1
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(0, x)))\
+        == 1
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(x, 0)))\
+        == 3
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(0, x)))\
         == 3
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(y, 0)))\
         == Piecewise((1, Eq(x, 0)), (3, True))
