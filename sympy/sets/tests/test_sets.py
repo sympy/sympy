@@ -2,7 +2,8 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise)
+    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise,
+    BigUnion, BigIntersection)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -894,3 +895,19 @@ def test_issue_9808():
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
     assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
         Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
+
+
+def test_big_union():
+    from sympy import IndexedBase
+    i = Symbol('i')
+    X = IndexedBase('X')
+    assert BigUnion(X, i, S.Naturals) == BigUnion(X, i, S.Naturals)
+    assert BigUnion(FiniteSet(Interval(1, 2), FiniteSet(3)), i, FiniteSet(1, 2)) == Union(Interval(1, 2), FiniteSet(3))
+
+
+def test_big_intersection():
+    from sympy import IndexedBase
+    i = Symbol('i')
+    X = IndexedBase('X')
+    assert BigIntersection(X, i, S.Naturals) == BigIntersection(X, i, S.Naturals)
+    assert BigIntersection(FiniteSet(Interval(1, 3), FiniteSet(2)), i, FiniteSet(1, 2)) == FiniteSet(2)
