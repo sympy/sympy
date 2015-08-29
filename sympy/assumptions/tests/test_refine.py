@@ -6,40 +6,57 @@ from sympy.functions.elementary.piecewise import Piecewise
 
 
 def test_Abs():
-    assert refine(Abs(x), Q.positive(x)) == x
-    assert refine(1 + Abs(x), Q.positive(x)) == 1 + x
-    assert refine(Abs(x), Q.negative(x)) == -x
-    assert refine(1 + Abs(x), Q.negative(x)) == 1 - x
-
+    x = Symbol('x', positive=True)
+    assert Abs(x) == x
+    assert 1 + Abs(x) == 1 + x
+    x = Symbol('x', negative=True)
+    assert Abs(x) == -x
+    assert 1 + Abs(x) == 1 - x
+    x = Symbol('x')
     assert refine(Abs(x**2)) != x**2
-    assert refine(Abs(x**2), Q.real(x)) == x**2
+    x = Symbol('x', real=True)
+    assert refine(Abs(x**2)) == x**2
 
 
 def test_pow():
-    assert refine((-1)**x, Q.even(x)) == 1
-    assert refine((-1)**x, Q.odd(x)) == -1
-    assert refine((-2)**x, Q.even(x)) == 2**x
+    x = Symbol('x', even=True)
+    assert refine((-1)**x) == 1
+    x = Symbol('x', odd=True)
+    assert refine((-1)**x) == -1
+    x = Symbol('x', even=True)
+    assert refine((-2)**x) == 2**x
 
     # nested powers
+    x = Symbol('x')
     assert refine(sqrt(x**2)) != Abs(x)
-    assert refine(sqrt(x**2), Q.complex(x)) != Abs(x)
-    assert refine(sqrt(x**2), Q.real(x)) == Abs(x)
-    assert refine(sqrt(x**2), Q.positive(x)) == x
+    x = Symbol('x', complex=True)
+    assert refine(sqrt(x**2)) != Abs(x)
+    x = Symbol('x', real=True)
+    assert refine(sqrt(x**2)) == Abs(x)
+    p = Symbol('p', positive=True)
+    assert refine(sqrt(p**2)) == p
+    x = Symbol('x')
     assert refine((x**3)**(S(1)/3)) != x
-
-    assert refine((x**3)**(S(1)/3), Q.real(x)) != x
-    assert refine((x**3)**(S(1)/3), Q.positive(x)) == x
-
-    assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
-    assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
+    x = Symbol('x', real=True)
+    assert refine((x**3)**(S(1)/3)) != x
+    x = Symbol('x', positive=True)
+    assert refine((x**3)**(S(1)/3)) == x
+    x = Symbol('x', real=True)
+    assert refine(sqrt(1/x)) != 1/sqrt(x)
+    x = Symbol('x', positive=True)
+    assert refine(sqrt(1/x)) == 1/sqrt(x)
 
     # powers of (-1)
+    x = Symbol('x', even=True)
     assert refine((-1)**(x + y), Q.even(x)) == (-1)**y
+    x = Symbol('x', odd=True)
+    z = Symbol('z', odd=True)
     assert refine((-1)**(x + y + z), Q.odd(x) & Q.odd(z)) == (-1)**y
     assert refine((-1)**(x + y + 1), Q.odd(x)) == (-1)**y
     assert refine((-1)**(x + y + 2), Q.odd(x)) == (-1)**(y + 1)
+    x = Symbol('x')
     assert refine((-1)**(x + 3)) == (-1)**(x + 1)
-
+    x = Symbol('x', integer=True)
     assert refine((-1)**((-1)**x/2 - S.Half), Q.integer(x)) == (-1)**x
     assert refine((-1)**((-1)**x/2 + S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 + 5*S.Half), Q.integer(x)) == (-1)**(x + 1)
@@ -47,8 +64,10 @@ def test_pow():
     assert refine((-1)**((-1)**x/2 - 9*S.Half), Q.integer(x)) == (-1)**x
 
     # powers of Abs
+    x = Symbol('x', real=True)
     assert refine(Abs(x)**2, Q.real(x)) == x**2
     assert refine(Abs(x)**3, Q.real(x)) == Abs(x)**3
+    x = Symbol('x')
     assert refine(Abs(x)**2) == Abs(x)**2
 
 
