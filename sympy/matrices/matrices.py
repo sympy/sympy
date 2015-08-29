@@ -2703,6 +2703,7 @@ class MatrixBase(object):
                     continue
                 scale = r[j, i]
                 r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
+                r.row_op(j, simpfunc)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
