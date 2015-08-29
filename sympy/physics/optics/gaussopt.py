@@ -560,7 +560,7 @@ class BeamParameter(Expr):
         >>> p.radius
         0.2809/pi**2 + 1
         """
-        return self.z*(1 + (self.z/self.z_r)**2)
+        return self.z*(1 + (self.z_r/self.z)**2)
 
     @property
     def w(self):
