@@ -612,7 +612,7 @@ def test_latex_ImageSet():
 
 def test_latex_ConditionSet():
     x = Symbol('x')
-    assert latex(ConditionSet(Lambda(x, Eq(x**2, 1)), S.Reals)) == \
+    assert latex(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
         r"\left\{x\; |\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
 
 
