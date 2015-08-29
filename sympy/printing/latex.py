@@ -1578,7 +1578,7 @@ class LatexPrinter(Printer):
             self._print(s.base_set),
             self._print(s.condition.expr))
 
-    def _print_ComplexPlane(self, s):
+    def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
         return r"\left\{%s\; |\; %s \in %s \right\}" % (
             self._print(s.args[0].expr),

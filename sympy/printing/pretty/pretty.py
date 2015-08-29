@@ -1531,7 +1531,7 @@ class PrettyPrinter(Printer):
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
 
-    def _print_ComplexPlane(self, ts):
+    def _print_ComplexRegion(self, ts):
         if self._use_unicode:
             inn = u("\N{SMALL ELEMENT OF}")
         else:
