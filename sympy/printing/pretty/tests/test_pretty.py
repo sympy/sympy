@@ -5176,3 +5176,16 @@ u("""\
      0                              0                   \
 """)
     assert upretty(e) == ucode_str
+
+
+def test_Complement_paranthesis():
+    from sympy import Complement, FiniteSet, Interval, Intersection, Union
+    ucode_str1 = u('(2, 3) ∪ ([1, 2] \ {x})')
+
+    a, b, c = Interval(1, 2), FiniteSet(x), Interval(2, 3, True, True)
+    assert upretty(Union(Complement(a, b), c)) == ucode_str1
+
+    ucode_str2 = u('{x} ∩ {y} ∩ ({z} \ [1, 2])')
+
+    d, e, f = FiniteSet(x), FiniteSet(y), FiniteSet(z)
+    assert upretty(Intersection(d, e, Complement(f, Interval(1, 2)))) == ucode_str2
