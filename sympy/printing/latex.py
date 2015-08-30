@@ -9,6 +9,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
+from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
@@ -1571,14 +1572,14 @@ class LatexPrinter(Printer):
             self._print(s.base_set))
 
     def _print_ConditionSet(self, s):
-        vars_print = ', '.join([self._print(var) for var in s.condition.variables])
+        vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
-            self._print(s.condition.expr))
+            self._print(s.condition.as_expr()))
 
-    def _print_ComplexPlane(self, s):
+    def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
         return r"\left\{%s\; |\; %s \in %s \right\}" % (
             self._print(s.args[0].expr),

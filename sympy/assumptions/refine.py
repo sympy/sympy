@@ -16,11 +16,12 @@ def refine(expr, assumptions=True):
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Q.real(x))
+        >>> from sympy import Symbol, refine, sqrt, Q
+        >>> x = Symbol('x', real=True)
+        >>> refine(sqrt(x**2))
         Abs(x)
-        >>> refine(sqrt(x**2), Q.positive(x))
+        >>> x = Symbol('x', positive=True)
+        >>> refine(sqrt(x**2))
         x
 
     """
@@ -44,32 +45,6 @@ def refine(expr, assumptions=True):
     if not isinstance(new_expr, Expr):
         return new_expr
     return refine(new_expr, assumptions)
-
-
-def refine_abs(expr, assumptions):
-    """
-    Handler for the absolute value.
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, Q, refine, Abs
-    >>> from sympy.assumptions.refine import refine_abs
-    >>> from sympy.abc import x
-    >>> refine_abs(Abs(x), Q.real(x))
-    >>> refine_abs(Abs(x), Q.positive(x))
-    x
-    >>> refine_abs(Abs(x), Q.negative(x))
-    -x
-
-    """
-    arg = expr.args[0]
-    if ask(Q.real(arg), assumptions) and \
-            fuzzy_not(ask(Q.negative(arg), assumptions)):
-        # if it's nonnegative
-        return arg
-    if ask(Q.negative(arg), assumptions):
-        return -arg
 
 
 def refine_Pow(expr, assumptions):
@@ -230,7 +205,6 @@ def refine_Relational(expr, assumptions):
 
 
 handlers_dict = {
-    'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
     'Equality': refine_Relational,

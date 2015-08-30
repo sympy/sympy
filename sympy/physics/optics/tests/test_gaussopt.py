@@ -83,7 +83,7 @@ def test_gauss_opt():
 
     z, l, w = symbols('z l r', positive=True)
     p = BeamParameter(l, z, w=w)
-    assert p.radius == z*(l**2*z**2/(pi**2*w**4) + 1)
+    assert p.radius == z*(pi**2*w**4/(l**2*z**2) + 1)
     assert p.w == w*sqrt(l**2*z**2/(pi**2*w**4) + 1)
     assert p.w_0 == w
     assert p.divergence == l/(pi*w)

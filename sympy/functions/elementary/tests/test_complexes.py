@@ -214,7 +214,7 @@ def test_sign():
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is False
-    assert sign(x).doit() == x / Abs(x)
+    assert sign(x).doit() == x/Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
@@ -289,7 +289,7 @@ def test_as_real_imag():
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)
-    assert sqrt(i**2).as_real_imag() == (0, abs(i))
+    assert sqrt(i**2).as_real_imag() == (0, Abs(-i))
 
 
 @XFAIL
@@ -317,10 +317,10 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
-    assert Abs(I * pi) == pi
-    assert Abs(-I * pi) == pi
-    assert Abs(I * x) == Abs(x)
-    assert Abs(-I * x) == Abs(x)
+    assert Abs(I*pi) == pi
+    assert Abs(-I*pi) == pi
+    assert Abs(I*x) == Abs(x)
+    assert Abs(-I*x) == Abs(x)
     assert Abs(-2*x) == 2*Abs(x)
     assert Abs(-2.0*x) == 2.0*Abs(x)
     assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)

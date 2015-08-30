@@ -1,6 +1,6 @@
 from sympy.core.compatibility import range
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
-                                  ComplexPlane)
+                                  ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
@@ -198,7 +198,7 @@ def test_Complex():
     assert sqrt(-1) in S.Complexes
     assert S.Complexes.intersect(S.Reals) == S.Reals
     assert S.Complexes.union(S.Reals) == S.Complexes
-    assert S.Complexes == ComplexPlane(S.Reals*S.Reals)
+    assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
 
 
 def take(n, iterable):
@@ -276,14 +276,14 @@ def test_ImageSet_simplification():
             imageset(Lambda(m, sin(tan(m))), S.Integers)
 
 
-def test_ComplexPlane_contains():
+def test_ComplexRegion_contains():
 
-    # contains in ComplexPlane
+    # contains in ComplexRegion
     a = Interval(2, 3)
     b = Interval(4, 6)
     c = Interval(7, 9)
-    c1 = ComplexPlane(a*b)
-    c2 = ComplexPlane(Union(a*b, c*a))
+    c1 = ComplexRegion(a*b)
+    c2 = ComplexRegion(Union(a*b, c*a))
     assert 2.5 + 4.5*I in c1
     assert 2 + 4*I in c1
     assert 3 + 4*I in c1
@@ -293,7 +293,7 @@ def test_ComplexPlane_contains():
 
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
-    c3 = ComplexPlane(r1*theta1, polar=True)
+    c3 = ComplexRegion(r1*theta1, polar=True)
     assert 0.5 + 0.6*I in c3
     assert I in c3
     assert 1 in c3
@@ -302,89 +302,89 @@ def test_ComplexPlane_contains():
     assert 1 - I not in c3
 
 
-def test_ComplexPlane_intersect():
+def test_ComplexRegion_intersect():
 
     # Polar form
-    X_axis = ComplexPlane(Interval(0, oo)*FiniteSet(0, S.Pi), polar=True)
+    X_axis = ComplexRegion(Interval(0, oo)*FiniteSet(0, S.Pi), polar=True)
 
-    unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
-    upper_half_unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, S.Pi), polar=True)
-    upper_half_disk = ComplexPlane(Interval(0, oo)*Interval(0, S.Pi), polar=True)
-    lower_half_disk = ComplexPlane(Interval(0, oo)*Interval(S.Pi, 2*S.Pi), polar=True)
-    right_half_disk = ComplexPlane(Interval(0, oo)*Interval(-S.Pi/2, S.Pi/2), polar=True)
-    first_quad_disk = ComplexPlane(Interval(0, oo)*Interval(0, S.Pi/2), polar=True)
+    unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
+    upper_half_disk = ComplexRegion(Interval(0, oo)*Interval(0, S.Pi), polar=True)
+    lower_half_disk = ComplexRegion(Interval(0, oo)*Interval(S.Pi, 2*S.Pi), polar=True)
+    right_half_disk = ComplexRegion(Interval(0, oo)*Interval(-S.Pi/2, S.Pi/2), polar=True)
+    first_quad_disk = ComplexRegion(Interval(0, oo)*Interval(0, S.Pi/2), polar=True)
 
     assert upper_half_disk.intersect(unit_disk) == upper_half_unit_disk
     assert right_half_disk.intersect(first_quad_disk) == first_quad_disk
     assert upper_half_disk.intersect(right_half_disk) == first_quad_disk
     assert upper_half_disk.intersect(lower_half_disk) == X_axis
 
-    c1 = ComplexPlane(Interval(0, 4)*Interval(0, 2*S.Pi), polar=True)
+    c1 = ComplexRegion(Interval(0, 4)*Interval(0, 2*S.Pi), polar=True)
     assert c1.intersect(Interval(1, 5)) == Interval(1, 4)
     assert c1.intersect(Interval(4, 9)) == FiniteSet(4)
     assert c1.intersect(Interval(5, 12)) == EmptySet()
 
     # Rectangular form
-    X_axis = ComplexPlane(Interval(-oo, oo)*FiniteSet(0))
+    X_axis = ComplexRegion(Interval(-oo, oo)*FiniteSet(0))
 
-    unit_square = ComplexPlane(Interval(-1, 1)*Interval(-1, 1))
-    upper_half_unit_square = ComplexPlane(Interval(-1, 1)*Interval(0, 1))
-    upper_half_plane = ComplexPlane(Interval(-oo, oo)*Interval(0, oo))
-    lower_half_plane = ComplexPlane(Interval(-oo, oo)*Interval(-oo, 0))
-    right_half_plane = ComplexPlane(Interval(0, oo)*Interval(-oo, oo))
-    first_quad_plane = ComplexPlane(Interval(0, oo)*Interval(0, oo))
+    unit_square = ComplexRegion(Interval(-1, 1)*Interval(-1, 1))
+    upper_half_unit_square = ComplexRegion(Interval(-1, 1)*Interval(0, 1))
+    upper_half_plane = ComplexRegion(Interval(-oo, oo)*Interval(0, oo))
+    lower_half_plane = ComplexRegion(Interval(-oo, oo)*Interval(-oo, 0))
+    right_half_plane = ComplexRegion(Interval(0, oo)*Interval(-oo, oo))
+    first_quad_plane = ComplexRegion(Interval(0, oo)*Interval(0, oo))
 
     assert upper_half_plane.intersect(unit_square) == upper_half_unit_square
     assert right_half_plane.intersect(first_quad_plane) == first_quad_plane
     assert upper_half_plane.intersect(right_half_plane) == first_quad_plane
     assert upper_half_plane.intersect(lower_half_plane) == X_axis
 
-    c1 = ComplexPlane(Interval(-5, 5)*Interval(-10, 10))
+    c1 = ComplexRegion(Interval(-5, 5)*Interval(-10, 10))
     assert c1.intersect(Interval(2, 7)) == Interval(2, 5)
     assert c1.intersect(Interval(5, 7)) == FiniteSet(5)
     assert c1.intersect(Interval(6, 9)) == EmptySet()
 
     # unevaluated object
-    C1 = ComplexPlane(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
-    C2 = ComplexPlane(Interval(-1, 1)*Interval(-1, 1))
+    C1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    C2 = ComplexRegion(Interval(-1, 1)*Interval(-1, 1))
     assert C1.intersect(C2) == Intersection(C1, C2)
 
 
-def test_ComplexPlane_union():
+def test_ComplexRegion_union():
 
     # Polar form
-    c1 = ComplexPlane(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
-    c2 = ComplexPlane(Interval(0, 1)*Interval(0, S.Pi), polar=True)
-    c3 = ComplexPlane(Interval(0, oo)*Interval(0, S.Pi), polar=True)
-    c4 = ComplexPlane(Interval(0, oo)*Interval(S.Pi, 2*S.Pi), polar=True)
+    c1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    c2 = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
+    c3 = ComplexRegion(Interval(0, oo)*Interval(0, S.Pi), polar=True)
+    c4 = ComplexRegion(Interval(0, oo)*Interval(S.Pi, 2*S.Pi), polar=True)
 
     p1 = Union(Interval(0, 1)*Interval(0, 2*S.Pi), Interval(0, 1)*Interval(0, S.Pi))
     p2 = Union(Interval(0, oo)*Interval(0, S.Pi), Interval(0, oo)*Interval(S.Pi, 2*S.Pi))
 
-    assert c1.union(c2) == ComplexPlane(p1, polar=True)
-    assert c3.union(c4) == ComplexPlane(p2, polar=True)
+    assert c1.union(c2) == ComplexRegion(p1, polar=True)
+    assert c3.union(c4) == ComplexRegion(p2, polar=True)
 
     # Rectangular form
-    c5 = ComplexPlane(Interval(2, 5)*Interval(6, 9))
-    c6 = ComplexPlane(Interval(4, 6)*Interval(10, 12))
-    c7 = ComplexPlane(Interval(0, 10)*Interval(-10, 0))
-    c8 = ComplexPlane(Interval(12, 16)*Interval(14, 20))
+    c5 = ComplexRegion(Interval(2, 5)*Interval(6, 9))
+    c6 = ComplexRegion(Interval(4, 6)*Interval(10, 12))
+    c7 = ComplexRegion(Interval(0, 10)*Interval(-10, 0))
+    c8 = ComplexRegion(Interval(12, 16)*Interval(14, 20))
 
     p3 = Union(Interval(2, 5)*Interval(6, 9), Interval(4, 6)*Interval(10, 12))
     p4 = Union(Interval(0, 10)*Interval(-10, 0), Interval(12, 16)*Interval(14, 20))
 
-    assert c5.union(c6) == ComplexPlane(p3)
-    assert c7.union(c8) == ComplexPlane(p4)
+    assert c5.union(c6) == ComplexRegion(p3)
+    assert c7.union(c8) == ComplexRegion(p4)
 
     assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
     assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4))
 
 
-def test_ComplexPlane_measure():
+def test_ComplexRegion_measure():
     a, b = Interval(2, 5), Interval(4, 8)
     theta1, theta2 = Interval(0, 2*S.Pi), Interval(0, S.Pi)
-    c1 = ComplexPlane(a*b)
-    c2 = ComplexPlane(Union(a*theta1, b*theta2), polar=True)
+    c1 = ComplexRegion(a*b)
+    c2 = ComplexRegion(Union(a*theta1, b*theta2), polar=True)
 
     assert c1.measure == 12
     assert c2.measure == 9*pi
@@ -416,11 +416,11 @@ def test_normalize_theta_set():
     raises(ValueError, lambda: normalize_theta_set(S.Complexes))
 
 
-def test_ComplexPlane_FiniteSet():
+def test_ComplexRegion_FiniteSet():
     x, y, z, a, b, c = symbols('x y z a b c')
 
     # Issue #9669
-    assert ComplexPlane(FiniteSet(a, b, c)*FiniteSet(x, y, z)) == \
+    assert ComplexRegion(FiniteSet(a, b, c)*FiniteSet(x, y, z)) == \
         FiniteSet(a + I*x, a + I*y, a + I*z, b + I*x, b + I*y,
                   b + I*z, c + I*x, c + I*y, c + I*z)
-    assert ComplexPlane(FiniteSet(2)*FiniteSet(3)) == FiniteSet(2 + 3*I)
+    assert ComplexRegion(FiniteSet(2)*FiniteSet(3)) == FiniteSet(2 + 3*I)
