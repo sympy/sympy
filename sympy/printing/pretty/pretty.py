@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
+from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -1523,15 +1524,15 @@ class PrettyPrinter(Printer):
         else:
             inn = 'in'
             _and = 'and'
-        variables = self._print_seq(ts.condition.variables)
-        cond = self._print(ts.condition.expr)
+        variables = self._print_seq(Tuple(ts.sym))
+        cond = self._print(ts.condition.as_expr())
         bar = self._print("|")
         base = self._print(ts.base_set)
 
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
 
-    def _print_ComplexPlane(self, ts):
+    def _print_ComplexRegion(self, ts):
         if self._use_unicode:
             inn = u("\N{SMALL ELEMENT OF}")
         else:

@@ -502,7 +502,7 @@ def solveset_real(f, symbol):
                 else:
                     result += solveset_real(equation, symbol)
         else:
-            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Reals)
+            result = ConditionSet(symbol, Eq(f, 0), S.Reals)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -550,11 +550,11 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             if poly.degree() <= len(solns):
                 result = FiniteSet(*solns)
             else:
-                result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+                result = ConditionSet(symbol, Eq(f, 0), S.Complexes)
     else:
         poly = Poly(f)
         if poly is None:
-            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+            result = ConditionSet(symbol, Eq(f, 0), S.Complexes)
         gens = [g for g in poly.gens if g.has(symbol)]
 
         if len(gens) == 1:
@@ -562,10 +562,10 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
             gen = poly.gen
             deg = poly.degree()
             poly = Poly(poly.as_expr(), poly.gen, composite=True)
-
             solns = roots(poly, cubics=True, quartics=True,
-                                    quintics=True)
+                          quintics=True)
             num_roots = sum(solns.values())
+
             if num_roots < deg:
                 result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
 
@@ -577,9 +577,9 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 if lhs is symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
-                    result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+                    result = ConditionSet(symbol, Eq(f, 0), S.Complexes)
         else:
-            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+            result = ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
     if result is not None:
         if isinstance(result, FiniteSet):
@@ -593,7 +593,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func):
                 result = imageset(Lambda(s, expand_complex(s)), result)
         return result
     else:
-        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+        return ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
 
 def _solve_as_poly_real(f, symbol):
@@ -692,7 +692,7 @@ def _solve_abs(f, symbol):
                                            symbol).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
-        return ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+        return ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
 
 def solveset_complex(f, symbol):
@@ -795,7 +795,7 @@ def solveset_complex(f, symbol):
                 else:
                     result += solveset_complex(equation, symbol)
         else:
-            result = ConditionSet(Lambda(symbol, Eq(f, 0)), S.Complexes)
+            result = ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
@@ -920,7 +920,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
         except NotImplementedError:
-            result = ConditionSet(Lambda(symbol, f), domain)
+            result = ConditionSet(symbol, f, domain)
         return result
 
     if isinstance(f, (Expr, Number)):

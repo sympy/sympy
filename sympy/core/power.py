@@ -207,7 +207,7 @@ class Pow(Expr):
         return 3, 2, cls.__name__
 
     def _eval_power(self, other):
-        from sympy import Abs, arg, exp, floor, im, log, re, sign
+        from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
@@ -251,9 +251,9 @@ class Pow(Expr):
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
                     if b.is_real:
-                        b = abs(b)
+                        b = refine(abs(b))
                     if b.is_imaginary:
-                        b = abs(im(b))*S.ImaginaryUnit
+                        b = refine(abs(im(b)))*S.ImaginaryUnit
 
                 if (abs(e) < 1) == True or (e == 1) == True:
                     s = 1  # floor = 0
