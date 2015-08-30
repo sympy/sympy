@@ -97,7 +97,7 @@ def test_doit_nested_MatrixExpr():
 
 def test_identity_power():
     k = Identity(n)
-    assert MatPow(k, 4).doit()==k
+    assert MatPow(k, 4).doit() == k
     assert MatPow(k, 1).doit() == k
     assert MatPow(k, -3).doit() == k
     assert MatPow(k, 0).doit() == k

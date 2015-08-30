@@ -467,7 +467,7 @@ class ZeroMatrix(MatrixExpr):
             raise ShapeError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
-        if other<1:
+        if other < 1:
             raise ValueError("Matrix det == 0; not invertible.")
         return self
 
