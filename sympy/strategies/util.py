@@ -9,6 +9,7 @@ def assoc(d, k, v):
     d[k] = v
     return d
 
+# Basically do not use basic_fns. Use expr_fns.
 basic_fns = {'op': type,
              'new': Basic.__new__,
              'leaf': lambda x: not isinstance(x, Basic) or x.is_Atom,
