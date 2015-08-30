@@ -7,13 +7,12 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, Add, Mul, Pow
 from sympy.logic.boolalg import And, Or, Xor, Nand, Nor
-from sympy.matrices import MatAdd, MatMul, MatrixExpr
+from sympy.matrices import MatAdd, MatMul
 from sympy.sets.sets import Union, Intersection, FiniteSet
-from sympy.core.operations import AssocOp, LatticeOp
+from sympy.core.operations import AssocOp
 from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core
 
-basic_new_legal = [MatrixExpr]
 eval_false_legal = [AssocOp, Pow, FiniteSet]
 
 def sympy_associative(op):
@@ -60,8 +59,6 @@ def construct(t):
         return t
     if any(issubclass(t.op, cls) for cls in eval_false_legal):
         return t.op(*map(construct, t.args), evaluate=False)
-    elif any(issubclass(t.op, cls) for cls in basic_new_legal):
-        return Basic.__new__(t.op, *map(construct, t.args))
     else:
         return t.op(*map(construct, t.args))
 

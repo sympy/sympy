@@ -52,6 +52,9 @@ def test_matrix():
     rl = rewriterule(A * B + C, A + C, (A, B, C))
     assert set([m.doit() for m in rl(X * Y + Z * X)]) == set([X + Z * X, Z + X * Y])
 
+    rl = rewriterule(A * B + C, A.T + B.T, (A, B, C))
+    assert set([m.doit() for m in rl(X * Y + Z * X)]) == set([X.T + Y.T, Z.T + X.T])
+
 def test_Exprs_ok():
     rl = rewriterule(p+q, q+p, (p, q))
     next(rl(x+y)).is_commutative
