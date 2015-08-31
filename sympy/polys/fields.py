@@ -50,6 +50,20 @@ def sfield(exprs, *symbols, **options):
     exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
     symbols : sequence of :class:`Symbol`/:class:`Expr`
     options : keyword arguments understood by :class:`Options`
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.functions import exp, log
+    >>> from sympy.polys.fields import sfield
+
+    >>> x = symbols("x")
+    >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)
+    >>> K
+    Rational function field in x, exp(1/x), log(x), x**(1/3) over ZZ with lex order
+    >>> f
+    (4*x**2*exp(1/x) + x*exp(1/x)*log(x))/((x**(1/3))**5)
     """
     single = False
     if not is_sequence(exprs):
