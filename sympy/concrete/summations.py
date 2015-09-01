@@ -244,10 +244,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         else:
             f = self.func(*self.args[:-1])
 
-        if upper + 1 == new_upper:
-            return Sum(f, (k, upper + 1, new_upper)).doit()
-        else:
-            return Sum(f, (k, upper + 1, new_upper))
+        return Sum(f, (k, upper + 1, new_upper)).doit()
 
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import sum_simplify

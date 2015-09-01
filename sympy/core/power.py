@@ -1434,6 +1434,13 @@ class Pow(Expr):
 
         return e.equals(0)
 
+    def _eval_difference_delta(self, n, step):
+        b, e = self.args
+        if e.has(n) and not b.has(n):
+            new_e = e.subs(n, n + step)
+            return (b**(new_e - e) - 1) * self
+
+
 from .add import Add
 from .numbers import Integer
 from .mul import Mul, _keep_coeff
