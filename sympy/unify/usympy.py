@@ -62,13 +62,6 @@ def construct(t):
     else:
         return t.op(*map(construct, t.args))
 
-def rebuild(s):
-    """ Rebuild a SymPy expression
-
-    This removes harm caused by Expr-Rules interactions
-    """
-    return construct(deconstruct(s))
-
 def unify(x, y, s=None, variables=(), **kwargs):
     """ Structural unification of two expressions/patterns
 
