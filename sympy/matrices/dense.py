@@ -884,7 +884,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             raise IndexError("Index out of range: 'i = %s', valid -%s <= i"
                              " < %s" % (i, self.rows, self.rows))
         if i < 0:
-            i = self.rows - abs(i)
+            i += self.rows
         del self._mat[i*self.cols:(i+1)*self.cols]
         self.rows -= 1
 
