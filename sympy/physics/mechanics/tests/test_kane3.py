@@ -1,6 +1,6 @@
 import warnings
 
-from sympy.core.compatibility import range
+from sympy.core.compatibility import xrange
 from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot)
@@ -290,6 +290,6 @@ def test_bicycle():
 
     # Actual eigenvalue comparison
     eps = 1.e-12
-    for i in range(6):
+    for i in xrange(6):
         error = Res.subs(v, i) - A.subs(v, i)
         assert all(abs(x) < eps for x in error)
