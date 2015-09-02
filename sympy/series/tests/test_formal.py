@@ -480,12 +480,12 @@ def test_fps__operations():
          x**(S(7)/2)/80640 + x**(S(9)/2)/7257600 + x**(S(11)/2)/958003200 +
          O(x**6))
 
-    assert Integral(f1, (x, 0, 1)) == -cos(1) + 1
+    assert f1.integrate((x, 0, 1)) == -cos(1) + 1
 
-    fi = Integral(f1, x)
+    fi = f1.integrate(x)
     assert fi.function == -cos(x)
     assert fi.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
 
-    fi = Integral(f2, x)
+    fi = f2.integrate()
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)

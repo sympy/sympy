@@ -1028,10 +1028,25 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def _eval_Integral(self, x):
+    def integrate(self, x=None):
+        """Integrate Formal Power Series.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin
+        >>> from sympy.abc import x
+        >>> f = fps(sin(x))
+        >>> f.integrate(x).truncate()
+        -1 + x**2/2 - x**4/24 + O(x**6)
+        >>> f.integrate((x, 0, 1))
+        -cos(1) + 1
+        """
         from sympy.integrals import integrate
 
-        if iterable(x):
+        if x is None:
+            x = self.x
+        elif iterable(x):
             return integrate(self.function, x)
 
         f = integrate(self.function, x)
