@@ -632,13 +632,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = p1.ring
 
         if isinstance(p2, ring.dtype):
-            if list(p1.keys()) != list(p2.keys()):
+            if set(p1.keys()) != set(p2.keys()):
                 return False
 
             almosteq = ring.domain.almosteq
 
-            for c1, c2 in zip(p1.itercoeffs(), p2.itercoeffs()):
-                if not almosteq(c1, c2, tolerance):
+            for k in p1.keys():
+                if not almosteq(p1[k], p2[k], tolerance):
                     return False
             else:
                 return True
