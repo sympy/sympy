@@ -322,13 +322,12 @@ How do we manipulate and return an infinite solution?
    a mathematical function. For example, to represent the solution
    of the equation `\sin{(x)} = 0`, we can use the ``ImageSet`` as:
 
-   ```
-   >>> from sympy import ImageSet, Lambda, pi, S, Dummy, init_printing
+
+   >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pretty
    >>> n = Dummy('n')
-   >>> init_printing()
-   >>> ImageSet(Lambda(n, 2*pi*n), S.Integers
-   {2⋅n⋅π | n ∊ ℤ}
-   ```
+   >>> pretty(ImageSet(Lambda(n, 2*pi*n), S.Integers))
+   '{2*n*pi | n in Integers()}'
+
 
    Where ``n`` is a dummy variable. It is basically the image of the
    set of integers under the function `2\pi n`.
@@ -339,12 +338,11 @@ How do we manipulate and return an infinite solution?
    of the equation `|z| = 1`, which is a unit circle, we can use
    the ``ComplexRegion`` as:
 
-   ```
-   >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, init_printing
-   >>> init_printing()
-   >>> ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True)
-   {r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ {1} × [0, 2⋅π)}
-   ```
+
+   >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pretty
+   >>> pretty(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True))
+   '{r*(I*sin(theta) + cos(theta)) | r, theta in {1} × [0, 2*pi)}'
+
 
    Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
    of `r`, which is the radius of the circle and the ``Interval`` is the range
@@ -356,12 +354,10 @@ How do we manipulate and return an infinite solution?
    Argand plane, we can write the ``ComplexRegion`` as:
 
 
-   ```
-   >>> from sympy import ComplexRegion, Interval, pi, oo, init_printing
-   >>> init_printing()
-   >>> ComplexRegion(Interval(-oo, oo)*Interval(0, oo))
-   {x + ⅈ⋅y | x, y ∊ (-∞, ∞) × [0, ∞)}
-   ```
+   >>> from sympy import ComplexRegion, Interval, pi, oo, pretty
+   >>> pretty(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)))
+   '{x + y*I | x, y in (-oo, oo) × [0, oo)}'
+
 
    where the Intervals are the range of `x` and `y` for the set of complex
    numbers `x + iy`.
@@ -384,8 +380,8 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy.solvers.solveset import solveset
     >>> from sympy import symbols, S
     >>> x, n = symbols('x, n')
-    >>> solveset(abs(x) - n, x, domain=S.Reals)
-    Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})
+    >>> pretty(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
+    '([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})'
 
  Though, there still a lot of work needs to be done in this regard.
 
