@@ -1141,6 +1141,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             else:
                 p[ring.monomial_pow(monom, n)] = coeff**n
             return p
+
+        # For ring series, we need negative and rational exponent support only
+        # with monomials.
+        n = int(n)
+        if n < 0:
+            raise ValueError("Negative exponent")
+
         elif n == 1:
             return self.copy()
         elif n == 2:
