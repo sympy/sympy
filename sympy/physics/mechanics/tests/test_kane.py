@@ -1,4 +1,8 @@
-from sympy import cos, expand, Matrix, sin, symbols, tan, sqrt, S
+import warnings
+
+from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
+                   simplify, zeros)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
@@ -25,7 +29,20 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize(A_and_B=True, new_method=True)[0] == Matrix([[0, 1], [-k/m, -c/m]])
+    assert (KM.linearize(A_and_B=True, new_method=True)[0] ==
+            Matrix([[0, 1], [-k/m, -c/m]]))
+
+    # Ensure that the old linearizer still works and that the new linearizer
+    # gives the same results. The old linearizer is deprecated and should be
+    # removed in >= 0.7.7.
+    M_old = KM.mass_matrix_full
+    # The old linearizer raises a deprecation warning, so catch it here so
+    # it doesn't cause py.test to fail.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        F_A_old, F_B_old, r_old = KM.linearize()
+    M_new, F_A_new, F_B_new, r_new = KM.linearize(new_method=True)
+    assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
 
 
 def test_two_dof():

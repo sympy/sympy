@@ -1,7 +1,12 @@
-from sympy import evalf, symbols, zeros, pi, sin, cos, sqrt, acos, Matrix
+import warnings
+
+from sympy.core.compatibility import xrange
+from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import slow, ON_TRAVIS, skip
+
 
 @slow
 def test_bicycle():
@@ -122,7 +127,6 @@ def test_bicycle():
     BodyFork = RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
     BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
     BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
-
 
     # The kinematic differential equations; they are defined quite simply. Each
     # entry in this list is equal to zero.
@@ -252,7 +256,9 @@ def test_bicycle():
     # many rows as *total* coordinates and speeds, but only as many columns as
     # independent coordinates and speeds.
 
-    forcing_lin = KM.linearize()[0]
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        forcing_lin = KM.linearize()[0]
 
     # As mentioned above, the size of the linearized forcing terms is expanded
     # to include both q's and u's, so the mass matrix must have this done as
@@ -284,6 +290,6 @@ def test_bicycle():
 
     # Actual eigenvalue comparison
     eps = 1.e-12
-    for i in range(6):
+    for i in xrange(6):
         error = Res.subs(v, i) - A.subs(v, i)
         assert all(abs(x) < eps for x in error)
