@@ -5176,3 +5176,10 @@ u("""\
      0                              0                   \
 """)
     assert upretty(e) == ucode_str
+
+def test_issue_9877():
+    from sympy.abc import x, y, z
+    
+    ucode_str = u('{x} u"\u2229" {y} u"\u2229" ({z} u"\u005C" {1,2})')
+    a, b, c = FiniteSet(x), FiniteSet(y), FiniteSet(z)
+    assert upretty(Intersection(a, b, Complement(f, Interval(1, 2))) == ucode_str)
