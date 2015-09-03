@@ -19,7 +19,7 @@ issues
    * Single solution : `x = 1`
    * Multiple solutions: `x^2 = 1`
    * No Solution: `x^2 + 1 = 0` ; x \in `\mathbb{R}`
-   * Interval of solution: `\floor{x}` `= 0`
+   * Interval of solution: `\floor{x} = 0`
    * Infinitely many solutions: `sin(x) = 0`
    * Multivariate functions with point solutions: `x^2 + y^2 = 0`
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
@@ -52,7 +52,7 @@ Why Solveset?
 
 * There is a clear code level and interface level separation between solvers
   for equations in the complex domain and the real domain. For example
-  solving `exp(x) = 1` when `x` is to be solved in complex domain, returns
+  solving `exp(x) = 1` when `x` is to be solved in the complex domain, returns
   the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, whereas
   if `x` is to be solved in the real domain then only `\{0\}` is returned.
 
@@ -76,7 +76,7 @@ containers in Mathematics such as:
 
  * ``ProductSet``
 
-   Represents a Cartesian Product of sets.
+   Represents a Cartesian product of sets.
 
 
  * ``ImageSet``
@@ -90,9 +90,9 @@ containers in Mathematics such as:
     >>> 4 in squares
     True
 
- * ``ComplexPlane``
+ * ``ComplexRegion``
 
-   Represents the set of all complex numbers.
+   Represents the set of all complex numbers in a region in the Argand plane.
 
 
  * ``ConditionSet``
@@ -108,7 +108,7 @@ Also, the predefined set classes such as:
    positive integers starting from 1.
 
 
- * ``Naturals0`` `\mathbb{W}`
+ * ``Naturals0`` `\mathbb{N0}`
 
    Represents the whole numbers, which are all the non-negative integers,
    inclusive of 0.
@@ -133,7 +133,7 @@ Also, the predefined set classes such as:
 
    Represents the empty set.
 
- The above six sets are available as the Singleton, like say ``S.Integers``.
+ The above six sets are available as Singletons, like say ``S.Integers``.
 
 
 It is capable of most of the set operations in mathematics:
@@ -158,7 +158,7 @@ represent many types of solutions. For the single variable case it can represent
  * There can also be bizarre solutions to equations like set of rational
    numbers.
 
-No other programmer's object (list, dictionary, generator python sets)
+No other programmer's object (list, dictionary, generator, python sets)
 provides the flexibility of mathematical sets which our sets module try to
 emulate. The second reason to use sets is that they are close to the entities
 which mathematician's deals with and it makes it easier to reason about them.
@@ -334,15 +334,15 @@ How do we manipulate and return an infinite solution?
    set of integers under the function `2\pi n`.
 
  * In the complex domain, we use complex sets, which are implemented as the
-   ``ComplexPlane`` class in the sets module, to represent infinite
+   ``ComplexRegion`` class in the sets module, to represent infinite
    solution in the Argand plane. For example to represent the solution
    of the equation `|z| = 1`, which is a unit circle, we can use
-   the ``ComplexPlane`` as:
+   the ``ComplexRegion`` as:
 
    ```
-   >>> from sympy import ComplexPlane, FiniteSet, Interval, pi, init_printing
+   >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, init_printing
    >>> init_printing()
-   >>> ComplexPlane(FiniteSet(1)*Interval(0, 2*pi), polar=True)
+   >>> ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True)
    {r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ {1} × [0, 2⋅π)}
    ```
 
@@ -353,21 +353,21 @@ How do we manipulate and return an infinite solution?
 
    Note: We also have non-polar form notation for representing solution
    in rectangular form. For example, to represent first two quadrants in the
-   argand plane, we can write the ``ComplexPlane`` as:
+   Argand plane, we can write the ``ComplexRegion`` as:
 
 
    ```
-   >>> from sympy import ComplexPlane, Interval, pi, oo, init_printing
+   >>> from sympy import ComplexRegion, Interval, pi, oo, init_printing
    >>> init_printing()
-   >>> ComplexPlane(Interval(-oo, oo)*Interval(0, oo))
+   >>> ComplexRegion(Interval(-oo, oo)*Interval(0, oo))
    {x + ⅈ⋅y | x, y ∊ (-∞, ∞) × [0, ∞)}
    ```
 
    where the Intervals are the range of `x` and `y` for the set of complex
-   numbers ``x + I*y``.
+   numbers `x + iy`.
 
 
-How does ``solveset`` ensures that it is not returning any wrong solution?
+How does ``solveset`` ensure that it is not returning any wrong solution?
 --------------------------------------------------------------------------
 
  Solvers in a Computer Algebra System are based on heuristic algorithms,
@@ -414,7 +414,7 @@ Search based solver and step-by-step solution
  * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S,y in \{z|f(z)=0; z \in S\}\}`
 
  * Polynomial Solver: `\{x|P(x)=0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\}.intersection(S)`
-   where `x_i` are roots of ``P(x)``.
+   where `x_i` are roots of `P(x)`.
 
  * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| all g such that f(g(x)) = x\}`
 
@@ -463,7 +463,7 @@ How do we deal with cases where only some of the solutions are known?
 What will you do with the old solve?
 ------------------------------------
 
- There is still a few things ``solveset`` can't do, which the old ``solve``
+ There are still a few things ``solveset`` can't do, which the old ``solve``
  can, such as solving non linear multivariate & LambertW type equations.
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
