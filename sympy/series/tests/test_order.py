@@ -1,7 +1,7 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
     Function)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
 
@@ -405,3 +405,8 @@ def test_order_subs_limits():
 
     assert Order(x**2).subs(x, y - 1) == Order((y - 1)**2, (y, 1))
     assert Order(10*x**2, (x, 2)).subs(x, y - 1) == Order(1, (y, 3))
+
+
+def test_issue_9192():
+    assert O(1)*O(1) == O(1)
+    assert O(1)**O(1) == O(1)

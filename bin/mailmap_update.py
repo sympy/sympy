@@ -7,6 +7,7 @@ A tool to help keep .mailmap and AUTHORS up-to-date.
 # - Check doc/src/aboutus.rst
 # - Make it easier to update .mailmap or AUTHORS with the correct entries.
 
+from __future__ import unicode_literals
 from __future__ import print_function
 
 import os
@@ -46,12 +47,12 @@ with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
     os.path.pardir, "AUTHORS"))) as fd:
     AUTHORS = unicode(fd.read(), 'utf-8')
 
-firstauthor = u"Ondřej Čertík"
+firstauthor = "Ondřej Čertík"
 
 authors = AUTHORS[AUTHORS.find(firstauthor):].strip().split('\n')
 
 # People who don't want to be listed in AUTHORS
-authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>"]
+authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>", "Sergey B Kirpichev <skirpichev@gmail.com>"]
 
 predate_git = 0
 

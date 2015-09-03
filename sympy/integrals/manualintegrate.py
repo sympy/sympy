@@ -23,9 +23,9 @@ from collections import namedtuple
 import sympy
 
 from sympy.core.compatibility import reduce
+from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.strategies.core import (switch, identity, do_one, null_safe,
-                                   condition, tryit)
+from sympy.strategies.core import switch, do_one, null_safe, condition
 
 def Rule(name, props=""):
     # GOTCHA: namedtuple class name not considered!
@@ -55,7 +55,7 @@ DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
-HeavisideRule = Rule("HeavisideRule", "func")
+HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
                             "theta func rewritten substep restriction")
 
@@ -234,7 +234,7 @@ def power_rule(integral):
     elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
         rule = ExpRule(base, exp, integrand, symbol)
 
-        if sympy.log(base).is_nonzero:
+        if fuzzy_not(sympy.log(base).is_zero):
             return rule
         elif sympy.log(base).is_zero:
             return ConstantRule(1, 1, symbol)
@@ -513,11 +513,6 @@ def trig_product_rule(integral):
 
         return rule
 
-def heaviside_rule(integral):
-    integrand, symbol = integral
-    if isinstance(integrand.args[0], sympy.Symbol):
-        return HeavisideRule(integrand.args[0], integrand, symbol)
-    # else perhaps substitution can handle this
 
 @sympy.cacheit
 def make_wilds(symbol):
@@ -548,6 +543,15 @@ def cotcsc_pattern(symbol):
     pattern = sympy.cot(a*symbol)**m * sympy.csc(b*symbol)**n
 
     return pattern, a, b, m, n
+
+@sympy.cacheit
+def heaviside_pattern(symbol):
+    m = sympy.Wild('m', exclude=[symbol])
+    b = sympy.Wild('b', exclude=[symbol])
+    g = sympy.Wild('g')
+    pattern = sympy.Heaviside(m*symbol + b) * g
+
+    return pattern, m, b, g
 
 def uncurry(func):
     def uncurry_rl(args):
@@ -732,6 +736,17 @@ def trig_substitution_rule(integral):
                             theta, x_func, replaced, substep, restriction,
                             integrand, symbol)
 
+def heaviside_rule(integral):
+    integrand, symbol = integral
+    pattern, m, b, g = heaviside_pattern(symbol)
+    match = integrand.match(pattern)
+    if match and 0 != match[g]:
+        # f = Heaviside(m*x + b)*g
+        v_step = integral_steps(match[g], symbol)
+        result = _manualintegrate(v_step)
+        m, b = match[m], match[b]
+        return HeavisideRule(m*symbol + b, -b/m, result, integrand, symbol)
+
 def substitution_rule(integral):
     integrand, symbol = integral
 
@@ -758,7 +773,7 @@ def substitution_rule(integral):
                         could_be_zero.append(denom)
 
                     for expr in could_be_zero:
-                        if not expr.is_nonzero:
+                        if not fuzzy_not(expr.is_zero):
                             substep = integral_steps(integrand.subs(expr, 0), symbol)
 
                             if substep:
@@ -903,7 +918,8 @@ def integral_steps(integrand, symbol, **options):
             sympy.Symbol: power_rule,
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
-            sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
+            sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
+                null_safe(heaviside_rule)),
             sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             sympy.Heaviside: heaviside_rule,
@@ -1063,9 +1079,12 @@ def eval_derivativerule(integrand, symbol):
         return sympy.Derivative(integrand.args[0], *integrand.args[1:-1])
 
 @evaluates(HeavisideRule)
-def eval_heaviside(arg, integrand, symbol):
-    # this result can also be represented as sympy.Max(0, arg)
-    return arg*sympy.Heaviside(arg)
+def eval_heaviside(harg, ibnd, substep, integrand, symbol):
+    # If we are integrating over x and the integrand has the form
+    #       Heaviside(m*x+b)*g(x) == Heaviside(harg)*g(symbol)
+    # then there needs to be continuity at -b/m == ibnd,
+    # so we subtract the appropriate term.
+    return sympy.Heaviside(harg)*(substep - substep.subs(symbol, ibnd))
 
 @evaluates(DontKnowRule)
 def eval_dontknowrule(integrand, symbol):

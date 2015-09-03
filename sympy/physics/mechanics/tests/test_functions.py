@@ -124,8 +124,8 @@ def test_potential_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    Pa.set_potential_energy(m * g * h)
-    A.set_potential_energy(M * g * H)
+    Pa.potential_energy = m * g * h
+    A.potential_energy = M * g * H
     assert potential_energy(A, Pa) == m * g * h + M * g * H
 
 
@@ -143,6 +143,14 @@ def test_msubs():
     expr = cos(x + y)*tan(x + y) + b*x.diff()
     sd = {x: 0, y: pi/2, x.diff(): 1}
     assert msubs(expr, sd, smart=True) == b + 1
+    N = ReferenceFrame('N')
+    v = x*N.x + y*N.y
+    d = x*(N.x|N.x) + y*(N.y|N.y)
+    v_sol = 1*N.y
+    d_sol = 1*(N.y|N.y)
+    sd = {x: 0, y: 1}
+    assert msubs(v, sd) == v_sol
+    assert msubs(d, sd) == d_sol
 
 
 def test_find_dynamicsymbols():

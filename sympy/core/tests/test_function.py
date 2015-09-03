@@ -4,11 +4,12 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Tuple, Dummy, Eq, Expr, symbols, nfloat)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
-from sympy.core.function import PoleError
+from sympy.core.function import PoleError, _mexpand
 from sympy.sets.sets import FiniteSet
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -183,7 +184,7 @@ def test_Lambda_equality():
 
 def test_Subs():
     assert Subs(x, x, 0) == Subs(y, y, 0)
-    assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 1)
+    assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 0)
     assert Subs(y, x, 0).subs(y, 1) == Subs(1, x, 0)
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
@@ -206,7 +207,7 @@ def test_Subs():
     assert Subs(f(x)*y, (x, y), (0, 1)) == Subs(f(y)*x, (y, x), (0, 1))
     assert Subs(f(x)*y, (x, y), (1, 1)) == Subs(f(y)*x, (x, y), (1, 1))
 
-    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(1)
+    assert Subs(f(x), x, 0).subs(x, 1).doit() == f(0)
     assert Subs(f(x), x, y).subs(y, 0) == Subs(f(x), x, 0)
     assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
@@ -234,6 +235,9 @@ def test_Subs():
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)
+
+    assert f(x).diff(x).subs(x, 0).subs(x, y) == f(x).diff(x).subs(x, 0)
+    assert (x*f(x).diff(x).subs(x, 0)).subs(x, y) == y*f(x).diff(x).subs(x, 0)
 
 
 @XFAIL
@@ -600,17 +604,18 @@ def test_nfloat():
     eq = x**(S(4)/3) + 4*x**(x/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
     big = 12345678901234567890
-    Float_big = Float(big)
-    assert _aresame(nfloat(x**big, exponent=True),
-                    x**Float_big)
+    # specify precision to match value used in nfloat
+    Float_big = Float(big, 15)
     assert _aresame(nfloat(big), Float_big)
+    assert _aresame(nfloat(big*x), Float_big*x)
+    assert _aresame(nfloat(x**big, exponent=True), x**Float_big)
     assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
     # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
-    assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
+    assert not any(a.free_symbols for a in solveset(f.subs(x, -0.139)))
 
     # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
@@ -651,6 +656,7 @@ def test_issue_7231():
     ans2 = f(x).series(x, a)
     assert res == ans2
 
+
 def test_issue_7687():
     from sympy.core.function import Function
     from sympy.abc import x
@@ -663,9 +669,9 @@ def test_issue_7687():
     assert isinstance(f, type(ff))
     assert match_with_cache == ff.matches(f)
 
+
 def test_issue_7688():
     from sympy.core.function import Function, UndefinedFunction
-    from sympy.abc import x
 
     f = Function('f')  # actually an UndefinedFunction
     clear_cache()
@@ -673,3 +679,24 @@ def test_issue_7688():
         pass
     a = A('f')
     assert isinstance(a, type(f))
+
+
+def test_mexpand():
+    from sympy.abc import x
+    assert _mexpand(None) is None
+    assert _mexpand(1) is S.One
+    assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+
+def test_issue_8469():
+    # This should not take forever to run
+    N = 40
+    def g(w, theta):
+        return 1/(1+exp(w-theta))
+
+    ws = symbols(['w%i'%i for i in range(N)])
+    import functools
+    expr = functools.reduce(g,ws)
+
+def test_should_evalf():
+    # This should not take forever to run (see #8506)
+    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)

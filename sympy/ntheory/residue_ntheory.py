@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy.core.singleton import S
 from sympy.core.numbers import igcd, igcdex
-from sympy.core.compatibility import as_int, xrange
+from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient
@@ -45,7 +45,7 @@ def n_order(a, n):
         a = a % n
     for p, e in factors.items():
         exponent = group_order
-        for f in xrange(e + 1):
+        for f in range(e + 1):
             if pow(a, exponent, n) != 1:
                 order *= p ** (e - f + 1)
                 break
@@ -137,7 +137,7 @@ def primitive_root(p):
             if is_primitive_root(g, p1**2):
                 return g
             else:
-                for i in xrange(2, g + p1 + 1):
+                for i in range(2, g + p1 + 1):
                     if igcd(i, p) == 1 and is_primitive_root(i, p):
                         return i
 
@@ -194,7 +194,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     A = pow(a, t, p)
     D = pow(d, t, p)
     m = 0
-    for i in xrange(s):
+    for i in range(s):
         adm = A*pow(D, m, p) % p
         adm = pow(adm, 2**(s - 1 - i), p)
         if adm % p == p - 1:
@@ -306,7 +306,7 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+    from sympy.polys.galoistools import gf_crt1, gf_crt2
     from sympy.polys.domains import ZZ
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
@@ -411,7 +411,7 @@ def _sqrt_mod_prime_power(a, p, k):
                 return None
             if k <= 3:
                s = set()
-               for i in xrange(0, pk, 4):
+               for i in range(0, pk, 4):
                     s.add(1 + i)
                     s.add(-1 + i)
                return list(s)
@@ -665,7 +665,7 @@ def _nthroot_mod1(s, q, p, all_roots):
         # used a naive implementation
         # TODO implement using Ref [1]
         pr = 1
-        for t in xrange(p):
+        for t in range(p):
             if pr == s1:
                 break
             pr = pr*h % p
@@ -761,7 +761,7 @@ def quadratic_residues(p):
     [0, 1, 2, 4]
     """
     r = set()
-    for i in xrange(p // 2 + 1):
+    for i in range(p // 2 + 1):
         r.add(pow(i, 2, p))
     return sorted(list(r))
 

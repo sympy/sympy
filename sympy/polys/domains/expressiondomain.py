@@ -9,7 +9,6 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.core import sympify, SympifyError
 from sympy.utilities import public
 from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.polyerrors import DomainError
 
 @public
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):

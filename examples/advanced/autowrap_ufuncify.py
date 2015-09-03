@@ -25,7 +25,7 @@ np = import_module('numpy')
 if not np:
     sys.exit("Cannot import numpy. Exiting.")
 
-import sympy.mpmath as mpmath
+import mpmath
 from sympy.utilities.autowrap import ufuncify
 from sympy.utilities.lambdify import implemented_function
 from sympy import symbols, legendre, Plot, pprint

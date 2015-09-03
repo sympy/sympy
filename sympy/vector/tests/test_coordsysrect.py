@@ -1,7 +1,7 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
-from sympy import Symbol, sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, sqrt, zeros, S
+from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
+     symbols, simplify, zeros
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector

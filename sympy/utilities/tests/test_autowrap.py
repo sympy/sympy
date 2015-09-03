@@ -136,7 +136,6 @@ def test_binary_function():
 
 
 def test_ufuncify_source():
-    from sympy import Equality
     x, y, z = symbols('x,y,z')
     code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
     CodeWrapper._module_counter = 0

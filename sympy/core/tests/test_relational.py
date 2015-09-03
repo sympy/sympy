@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational)
+                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -322,9 +323,9 @@ def test_Not():
 
 
 def test_evaluate():
-    assert str(Eq(x, x, evaluate=False)) == 'x == x'
+    assert str(Eq(x, x, evaluate=False)) == 'Eq(x, x)'
     assert Eq(x, x, evaluate=False).doit() == S.true
-    assert str(Ne(x, x, evaluate=False)) == 'x != x'
+    assert str(Ne(x, x, evaluate=False)) == 'Ne(x, x)'
     assert Ne(x, x, evaluate=False).doit() == S.false
 
     assert str(Ge(x, x, evaluate=False)) == 'x >= x'
@@ -444,6 +445,27 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
+def test_nan_inequality_raise_errors():
+    # See discussion in pull request #7776.  We test inequalities with
+    # a set including examples of various classes.
+    for q in (x, S(0), S(10), S(1)/3, pi, S(1.3), oo, -oo, nan):
+        assert_all_ineq_raise_TypeError(q, nan)
+
+
+def test_nan_complex_inequalities():
+    # Comparisons of NaN with non-real raise errors, we're not too
+    # fussy whether its the NaN error or complex error.
+    for r in (I, zoo, Symbol('z', imaginary=True)):
+        assert_all_ineq_raise_TypeError(r, nan)
+
+
+def test_complex_infinity_inequalities():
+    raises(TypeError, lambda: zoo > 0)
+    raises(TypeError, lambda: zoo >= 0)
+    raises(TypeError, lambda: zoo < 0)
+    raises(TypeError, lambda: zoo <= 0)
+
+
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # We test all combinations from a set
@@ -474,7 +496,6 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    # FIXME: add NaN here too later
     for a in (x, S(0), S(1)/3, pi, oo):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
@@ -538,3 +559,94 @@ def test_issue_8245():
     assert (r < a) == True
     assert (r >= a) == False
     assert (r <= a) == True
+
+
+def test_issue_8449():
+    p = Symbol('p', nonnegative=True)
+    assert Lt(-oo, p)
+    assert Ge(-oo, p) is S.false
+    assert Gt(oo, -p)
+    assert Le(oo, -p) is S.false
+
+
+def test_simplify():
+    assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
+    assert simplify(S(1) < -x) == (x < -1)
+
+
+def test_equals():
+    w, x, y, z = symbols('w:z')
+    f = Function('f')
+    assert Eq(x, 1).equals(Eq(x*(y + 1) - x*y - x + 1, x))
+    assert Eq(x, y).equals(x < y, True) == False
+    assert Eq(x, f(1)).equals(Eq(x, f(2)), True) == f(1) - f(2)
+    assert Eq(f(1), y).equals(Eq(f(2), y), True) == f(1) - f(2)
+    assert Eq(x, f(1)).equals(Eq(f(2), x), True) == f(1) - f(2)
+    assert Eq(f(1), x).equals(Eq(x, f(2)), True) == f(1) - f(2)
+    assert Eq(w, x).equals(Eq(y, z), True) == False
+    assert Eq(f(1), f(2)).equals(Eq(f(3), f(4)), True) == f(1) - f(3)
+    assert (x < y).equals(y > x, True) == True
+    assert (x < y).equals(y >= x, True) == False
+    assert (x < y).equals(z < y, True) == False
+    assert (x < y).equals(x < z, True) == False
+    assert (x < f(1)).equals(x < f(2), True) == f(1) - f(2)
+    assert (f(1) < x).equals(f(2) < x, True) == f(1) - f(2)
+
+
+def test_reversed():
+    assert (x < y).reversed == (y > x)
+    assert (x <= y).reversed == (y >= x)
+    assert Eq(x, y, evaluate=False).reversed == Eq(y, x, evaluate=False)
+    assert Ne(x, y, evaluate=False).reversed == Ne(y, x, evaluate=False)
+    assert (x >= y).reversed == (y <= x)
+    assert (x > y).reversed == (y < x)
+
+
+def test_canonical():
+    one = S(1)
+
+    def unchanged(v):
+        c = v.canonical
+        return v.is_Relational and c.is_Relational and v == c
+
+    def isreversed(v):
+        return v.canonical == v.reversed
+
+    assert unchanged(x < one)
+    assert unchanged(x <= one)
+    assert isreversed(Eq(one, x, evaluate=False))
+    assert unchanged(Eq(x, one, evaluate=False))
+    assert isreversed(Ne(one, x, evaluate=False))
+    assert unchanged(Ne(x, one, evaluate=False))
+    assert unchanged(x >= one)
+    assert unchanged(x > one)
+
+    assert unchanged(x < y)
+    assert unchanged(x <= y)
+    assert isreversed(Eq(y, x, evaluate=False))
+    assert unchanged(Eq(x, y, evaluate=False))
+    assert isreversed(Ne(y, x, evaluate=False))
+    assert unchanged(Ne(x, y, evaluate=False))
+    assert isreversed(x >= y)
+    assert isreversed(x > y)
+    assert (-x < 1).canonical == (x > -1)
+    assert isreversed(-x > y)
+
+
+@XFAIL
+def test_issue_8444():
+    x = symbols('x', real=True)
+    assert (x <= oo) == (x >= -oo) == True
+
+    x = symbols('x')
+    assert x >= floor(x)
+    assert (x < floor(x)) == False
+    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
+    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
+    assert x <= ceiling(x)
+    assert (x > ceiling(x)) == False
+    assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
+    assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
+    i = symbols('i', integer=True)
+    assert (i > floor(i)) == False
+    assert (i < ceiling(i)) == False

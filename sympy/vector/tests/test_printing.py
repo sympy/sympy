@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import Integral, latex, Function
 from sympy import pretty as xpretty
-from sympy.vector import CoordSysCartesian, Vector, Dyadic, express
+from sympy.vector import CoordSysCartesian, Vector, express
 from sympy.abc import a, b, c
 from sympy.core.compatibility import u_decode as u
 from sympy.utilities.pytest import XFAIL

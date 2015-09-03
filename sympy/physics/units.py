@@ -185,6 +185,7 @@ speed = m/s
 acceleration = m/s**2
 density = kg/m**3
 optical_power = dioptre = D = 1/m
+illuminance = lux = lx = sr*cd/m**2
 
 # Common length units
 

@@ -4,16 +4,19 @@ from __future__ import print_function, division
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import reduce, string_types
+from sympy.core.compatibility import is_sequence, reduce, string_types
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.orderings import lex
-from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyoptions import build_options
+from sympy.polys.polyutils import _parallel_dict_from_expr
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.fractionfield import FractionField
+from sympy.polys.constructor import construct_domain
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -39,8 +42,55 @@ def vfield(symbols, domain, order=lex):
 
 @public
 def sfield(exprs, *symbols, **options):
-    """Construct a field deriving generators and domain from options and input expressions. """
-    raise NotImplementedError
+    """Construct a field deriving generators and domain
+    from options and input expressions.
+
+    Parameters
+    ----------
+    exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
+    symbols : sequence of :class:`Symbol`/:class:`Expr`
+    options : keyword arguments understood by :class:`Options`
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.functions import exp, log
+    >>> from sympy.polys.fields import sfield
+
+    >>> x = symbols("x")
+    >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)
+    >>> K
+    Rational function field in x, exp(1/x), log(x), x**(1/3) over ZZ with lex order
+    >>> f
+    (4*x**2*exp(1/x) + x*exp(1/x)*log(x))/((x**(1/3))**5)
+    """
+    single = False
+    if not is_sequence(exprs):
+        exprs, single = [exprs], True
+
+    exprs = list(map(sympify, exprs))
+    opt = build_options(symbols, options)
+    numdens = []
+    for expr in exprs:
+        numdens.extend(expr.as_numer_denom())
+    reps, opt = _parallel_dict_from_expr(numdens, opt)
+
+    if opt.domain is None:
+        # NOTE: this is inefficient because construct_domain() automatically
+        # performs conversion to the target domain. It shouldn't do this.
+        coeffs = sum([list(rep.values()) for rep in reps], [])
+        opt.domain, _ = construct_domain(coeffs, opt=opt)
+
+    _field = FracField(opt.gens, opt.domain, opt.order)
+    fracs = []
+    for i in range(0, len(reps), 2):
+        fracs.append(_field(tuple(reps[i:i+2])))
+
+    if single:
+        return (_field, fracs[0])
+    else:
+        return (_field, fracs)
 
 _field_cache = {}
 
@@ -501,7 +551,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Computes partial derivative in ``x``.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.polys.fields import field
         >>> from sympy.polys.domains import ZZ
 

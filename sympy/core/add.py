@@ -2,15 +2,14 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from .basic import C, Basic
-from .compatibility import cmp_to_key, reduce, is_sequence
+from .basic import Basic
+from .compatibility import cmp_to_key, reduce, is_sequence, range
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -71,9 +70,6 @@ class Add(Expr, AssocOp):
     __slots__ = []
 
     is_Add = True
-
-    #identity = S.Zero
-    # cyclic import, so defined in numbers.py
 
     @classmethod
     def flatten(cls, seq):
@@ -496,8 +492,20 @@ class Add(Expr, AssocOp):
         return False
 
     def _eval_is_positive(self):
+        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super(Add, self)._eval_is_positive()
+        c, a = self.as_coeff_Add()
+        if not c.is_zero:
+            v = _monotonic_sign(a)
+            if v is not None:
+                s = v + c
+                if s.is_positive and a.is_nonnegative:
+                    return True
+                if len(self.free_symbols) == 1:
+                    v = _monotonic_sign(self)
+                    if v is not None and v.is_positive:
+                        return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
@@ -537,9 +545,51 @@ class Add(Expr, AssocOp):
         elif not pos and not nonneg:
             return False
 
+    def _eval_is_nonnegative(self):
+        from sympy.core.exprtools import _monotonic_sign
+        if not self.is_number:
+            c, a = self.as_coeff_Add()
+            if not c.is_zero and a.is_nonnegative:
+                v = _monotonic_sign(a)
+                if v is not None:
+                    s = v + c
+                    if s.is_nonnegative:
+                        return True
+                    if len(self.free_symbols) == 1:
+                        v = _monotonic_sign(self)
+                        if v is not None and v.is_nonnegative:
+                            return True
+
+    def _eval_is_nonpositive(self):
+        from sympy.core.exprtools import _monotonic_sign
+        if not self.is_number:
+            c, a = self.as_coeff_Add()
+            if not c.is_zero and a.is_nonpositive:
+                v = _monotonic_sign(a)
+                if v is not None:
+                    s = v + c
+                    if s.is_nonpositive:
+                        return True
+                    if len(self.free_symbols) == 1:
+                        v = _monotonic_sign(self)
+                        if v is not None and v.is_nonpositive:
+                            return True
+
     def _eval_is_negative(self):
+        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super(Add, self)._eval_is_negative()
+        c, a = self.as_coeff_Add()
+        if not c.is_zero:
+            v = _monotonic_sign(a)
+            if v is not None:
+                s = v + c
+                if s.is_negative and a.is_nonpositive:
+                    return True
+                if len(self.free_symbols) == 1:
+                    v = _monotonic_sign(self)
+                    if v is not None and v.is_negative:
+                        return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
@@ -639,11 +689,12 @@ class Add(Expr, AssocOp):
         ((x, O(x)),)
 
         """
+        from sympy import Order
         lst = []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
         if not point:
             point = [0]*len(symbols)
-        seq = [(f, C.Order(f, *zip(symbols, point))) for f in self.args]
+        seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
                 if o.contains(of) and o != of:
@@ -687,30 +738,30 @@ class Add(Expr, AssocOp):
 
         old = self
 
-        self = expand_mul(self)
-        if not self.is_Add:
-            return self.as_leading_term(x)
+        expr = expand_mul(self)
+        if not expr.is_Add:
+            return expr.as_leading_term(x)
 
-        infinite = [t for t in self.args if t.is_infinite]
+        infinite = [t for t in expr.args if t.is_infinite]
 
-        self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
-        if not self:
+        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
+        if not expr:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
-        elif self is S.NaN:
+        elif expr is S.NaN:
             return old.func._from_args(infinite)
-        elif not self.is_Add:
-            return self
+        elif not expr.is_Add:
+            return expr
         else:
-            plain = self.func(*[s for s, _ in self.extract_leading_order(x)])
+            plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)
             rv_simplify = rv.simplify()
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
             if x not in rv_simplify.free_symbols:
                 if rv_simplify.is_zero and plain.is_zero is not True:
-                    return (self - plain)._eval_as_leading_term(x)
+                    return (expr - plain)._eval_as_leading_term(x)
                 return rv_simplify
             return rv
 
@@ -881,6 +932,10 @@ class Add(Expr, AssocOp):
     def _sorted_args(self):
         from sympy.core.compatibility import default_sort_key
         return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
+
+    def _eval_difference_delta(self, n, step):
+        from sympy.series.limitseq import difference_delta as dd
+        return self.func(*[dd(a, n, step) for a in self.args])
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

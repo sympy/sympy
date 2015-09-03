@@ -1,9 +1,10 @@
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
+from sympy.core.compatibility import range
+from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor, cancel)
+        cancel)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, given, independent, dependent, where, FiniteRV, pspace, cdf,
+    density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment)
 from sympy.utilities.pytest import raises, slow
 from sympy.abc import p
@@ -112,7 +113,7 @@ def test_domains():
 
     raises(ValueError, lambda: P(X > Z))  # Two domains with same internal symbol
 
-    pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
+    assert pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
 
     assert where(X > 3).set == FiniteSet(4, 5, 6)
     assert X.pspace.domain.dict == FiniteSet(
@@ -152,8 +153,8 @@ def test_bernoulli():
 
     assert E(X) == p
     assert simplify(variance(X)) == p*(1 - p)
-    E(a*X + b) == a*E(X) + b
-    variance(a*X + b) == a**2 * variance(X)
+    assert E(a*X + b) == a*E(X) + b
+    assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
 
 
 def test_cdf():

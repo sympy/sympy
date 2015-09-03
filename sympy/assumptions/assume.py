@@ -4,6 +4,7 @@ import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
+
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
 from contextlib import contextmanager
@@ -175,6 +176,10 @@ class Predicate(Boolean):
                 except AttributeError:
                     continue
                 res = eval(expr, assumptions)
+                # Do not stop if value returned is None
+                # Try to check for higher classes
+                if res is None:
+                    continue
                 if _res is None:
                     _res = res
                 elif res is None:

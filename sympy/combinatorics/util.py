@@ -2,15 +2,15 @@ from __future__ import print_function, division
 
 from sympy.ntheory import isprime
 from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 rmul = Permutation.rmul
 _af_new = Permutation._af_new
 
 ############################################
-###
-### Utilities for computational group theory
-###
+#
+# Utilities for computational group theory
+#
 ############################################
 
 
@@ -59,10 +59,10 @@ def _base_ordering(base, degree):
     """
     base_len = len(base)
     ordering = [0]*degree
-    for i in xrange(base_len):
+    for i in range(base_len):
         ordering[base[i]] = i
     current = base_len
-    for i in xrange(degree):
+    for i in range(degree):
         if i not in base:
             ordering[i] = current
             current += 1
@@ -81,10 +81,10 @@ def _check_cycles_alt_sym(perm):
 
     >>> from sympy.combinatorics.util import _check_cycles_alt_sym
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> a = Permutation([[0,1,2,3,4,5,6,7,8,9,10], [11, 12]])
+    >>> a = Permutation([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12]])
     >>> _check_cycles_alt_sym(a)
     False
-    >>> b = Permutation([[0,1,2,3,4,5,6], [7,8,9,10]])
+    >>> b = Permutation([[0, 1, 2, 3, 4, 5, 6], [7, 8, 9, 10]])
     >>> _check_cycles_alt_sym(b)
     True
 
@@ -99,7 +99,7 @@ def _check_cycles_alt_sym(perm):
     current_len = 0
     total_len = 0
     used = set()
-    for i in xrange(n//2):
+    for i in range(n//2):
         if not i in used and i < n//2 - total_len:
             current_len = 1
             used.add(i)
@@ -164,7 +164,7 @@ def _distribute_gens_by_base(base, gens):
     """
     base_len = len(base)
     degree = gens[0].size
-    stabs = [[] for _ in xrange(base_len)]
+    stabs = [[] for _ in range(base_len)]
     max_stab_index = 0
     for gen in gens:
         j = 0
@@ -172,11 +172,12 @@ def _distribute_gens_by_base(base, gens):
             j += 1
         if j > max_stab_index:
             max_stab_index = j
-        for k in xrange(j + 1):
+        for k in range(j + 1):
             stabs[k].append(gen)
     for i in range(max_stab_index + 1, base_len):
         stabs[i].append(_af_new(list(range(degree))))
     return stabs
+
 
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
                              basic_orbits=None, strong_gens_distr=None):
@@ -295,7 +296,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     transversals = [None]*base_len
     if transversals_only is False:
         basic_orbits = [None]*base_len
-    for i in xrange(base_len):
+    for i in range(base_len):
         transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
                                  base[i], pairs=True))
         if transversals_only is False:
@@ -352,7 +353,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     "Handbook of computational group theory"
 
     """
-    from sympy.combinatorics.perm_groups import PermutationGroup, _orbit
+    from sympy.combinatorics.perm_groups import _orbit
     base_len = len(base)
     degree = strong_gens[0].size
     if strong_gens_distr is None:
@@ -378,6 +379,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                     gens_copy.remove(gen)
                     res.remove(gen)
     return res
+
 
 def _strip(g, base, orbits, transversals):
     """
@@ -456,6 +458,7 @@ def _strip(g, base, orbits, transversals):
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
 
+
 def _strip_af(h, base, orbits, transversals, j):
     """
     optimized _strip, with h, transversals and result in array form
@@ -475,6 +478,7 @@ def _strip_af(h, base, orbits, transversals, j):
             return False, base_len + 1
         h = _af_rmul(_af_invert(u), h)
     return h, base_len + 1
+
 
 def _strong_gens_from_distr(strong_gens_distr):
     """

@@ -258,8 +258,7 @@ class Vector(object):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
+                ar = e.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
                 settings = printer._settings if printer else {}
@@ -571,7 +570,7 @@ class Vector(object):
             The matrix that gives the 1D vector.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
@@ -656,6 +655,16 @@ class Vector(object):
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""
         return Vector(self.args + []) / self.magnitude()
+
+    def applyfunc(self, f):
+        """Apply a function to each component of a vector."""
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        ov = Vector(0)
+        for v in self.args:
+            ov += Vector([(v[0].applyfunc(f), v[1])])
+        return ov
 
 
 class VectorTypeError(TypeError):

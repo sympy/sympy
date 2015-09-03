@@ -8,23 +8,24 @@ Ray
 Segment
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, C, sympify, Dummy
-from sympy.core.logic import fuzzy_and
+from sympy.core import Dummy, S, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, sqrt, tan)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
-from .entity import GeometryEntity
+from sympy.core.compatibility import is_sequence
+from sympy.core.decorators import deprecated
+
+from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .util import _symbol
-from sympy.core.compatibility import is_sequence
+
 
 # TODO: this should be placed elsewhere and reused in other modules
 
@@ -33,7 +34,7 @@ class Undecidable(ValueError):
     pass
 
 
-class LinearEntity(GeometryEntity):
+class LinearEntity(GeometrySet):
     """A base class for all linear entities (line, ray and segment)
     in a 2-dimensional Euclidean space.
 
@@ -62,11 +63,19 @@ class LinearEntity(GeometryEntity):
         p1 = Point(p1)
         p2 = Point(p2)
         if p1 == p2:
-            # if it makes sense to return a Point, handle in subclass
+            # sometimes we return a single point if we are not given two unique
+            # points. This is done in the specific subclass
             raise ValueError(
                 "%s.__new__ requires two unique Points." % cls.__name__)
+        if len(p1) != len(p2):
+            raise ValueError(
+                "%s.__new__ requires two Points of equal dimension." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
+
+    @property
+    def ambient_dimension(self):
+        return len(self.p1)
 
     @property
     def p1(self):
@@ -84,7 +93,7 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
         >>> l.p1
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         return self.args[0]
@@ -105,7 +114,7 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
         >>> l.p2
-        Point(5, 3)
+        Point2D(5, 3)
 
         """
         return self.args[1]
@@ -340,7 +349,7 @@ class LinearEntity(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
@@ -375,6 +384,7 @@ class LinearEntity(GeometryEntity):
 
         """
         d = self.p1 - self.p2
+        p = Point(p)
         return Line(p, p + d)
 
     def perpendicular_line(self, p):
@@ -409,6 +419,7 @@ class LinearEntity(GeometryEntity):
         True
 
         """
+        p = Point(p)
         d1, d2 = (self.p1 - self.p2).args
         if d2 == 0:  # If a horizontal line
             if p.y == self.p1.y:  # if p is on this linear entity
@@ -459,9 +470,10 @@ class LinearEntity(GeometryEntity):
         >>> p3 in s1
         True
         >>> l1.perpendicular_segment(Point(4, 0))
-        Segment(Point(2, 2), Point(4, 0))
+        Segment(Point2D(2, 2), Point2D(4, 0))
 
         """
+        p = Point(p)
         if p in self:
             return p
         a, b, c = self.coefficients
@@ -551,10 +563,22 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(5, 11)
         >>> l1 = Line(p1, p2)
         >>> l1.points
-        (Point(0, 0), Point(5, 11))
+        (Point2D(0, 0), Point2D(5, 11))
 
         """
         return (self.p1, self.p2)
+
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
+        verts = self.points
+        xs = [p.x for p in verts]
+        ys = [p.y for p in verts]
+        return (min(xs), min(ys), max(xs), max(ys))
 
     def projection(self, o):
         """Project a point, line, ray, or segment onto this linear entity.
@@ -599,12 +623,12 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(Rational(1, 2), 0)
         >>> l1 = Line(p1, p2)
         >>> l1.projection(p3)
-        Point(1/4, 1/4)
+        Point2D(1/4, 1/4)
 
         >>> p4, p5 = Point(10, 0), Point(12, 1)
         >>> s1 = Segment(p4, p5)
         >>> l1.projection(s1)
-        Segment(Point(5, 5), Point(13/2, 13/2))
+        Segment(Point2D(5, 5), Point2D(13/2, 13/2))
 
         """
         tline = Line(self.p1, self.p2)
@@ -661,12 +685,12 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(7, 7)
         >>> l1 = Line(p1, p2)
         >>> l1.intersection(p3)
-        [Point(7, 7)]
+        [Point2D(7, 7)]
 
         >>> p4, p5 = Point(5, 0), Point(0, 3)
         >>> l2 = Line(p4, p5)
         >>> l1.intersection(l2)
-        [Point(15/8, 15/8)]
+        [Point2D(15/8, 15/8)]
 
         >>> p6, p7 = Point(0, 5), Point(2, 6)
         >>> s1 = Segment(p6, p7)
@@ -775,22 +799,23 @@ class LinearEntity(GeometryEntity):
                     return True
 
             prec = (Line, Ray, Segment)
-            if prec.index(self.func) > prec.index(o.func):
-                self, o = o, self
+            expr = self
+            if prec.index(expr.func) > prec.index(o.func):
+                expr, o = o, expr
             rv = [inter]
-            if isinstance(self, Line):
+            if isinstance(expr, Line):
                 if isinstance(o, Line):
                     return rv
                 elif isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Ray) and inray(self):
+            elif isinstance(expr, Ray) and inray(expr):
                 if isinstance(o, Ray) and inray(o):
                     return rv
                 elif isinstance(o, Segment) and inseg(o):
                     return rv
-            elif isinstance(self, Segment) and inseg(self):
+            elif isinstance(expr, Segment) and inseg(expr):
                 if isinstance(o, Segment) and inseg(o):
                     return rv
             return []
@@ -832,16 +857,16 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.arbitrary_point()
-        Point(4*t + 1, 3*t)
+        Point2D(4*t + 1, 3*t)
 
         """
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object '
             'and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
-        return Point(x, y)
+        # multiply on the right so the variable gets
+        # combined witht he coordinates of the point
+        return self.p1 + (self.p2 - self.p1)*t
 
     def random_point(self):
         """A random point on a LinearEntity.
@@ -865,7 +890,7 @@ class LinearEntity(GeometryEntity):
         >>> p3 = l1.random_point()
         >>> # random point - don't know its coords in advance
         >>> p3 # doctest: +ELLIPSIS
-        Point(...)
+        Point2D(...)
         >>> # point should belong to the line
         >>> p3 in l1
         True
@@ -977,9 +1002,9 @@ class Line(LinearEntity):
     >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
-    Line(Point(2, 3), Point(3, 5))
+    Line(Point2D(2, 3), Point2D(3, 5))
     >>> L.points
-    (Point(2, 3), Point(3, 5))
+    (Point2D(2, 3), Point2D(3, 5))
     >>> L.equation()
     -2*x + y + 1
     >>> L.coefficients
@@ -988,7 +1013,7 @@ class Line(LinearEntity):
     Instantiate with keyword ``slope``:
 
     >>> Line(Point(0, 0), slope=0)
-    Line(Point(0, 0), Point(1, 0))
+    Line(Point2D(0, 0), Point2D(1, 0))
 
     Instantiate with another linear object
 
@@ -1120,14 +1145,14 @@ class Line(LinearEntity):
             x, y = Dummy(), Dummy()
             eq = self.equation(x, y)
             if not eq.has(y):
-                return (solve(eq, x)[0] - o.x).equals(0)
+                return (list(solveset(eq, x))[0] - o.x).equals(0)
             if not eq.has(x):
-                return (solve(eq, y)[0] - o.y).equals(0)
-            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
+                return (list(solveset(eq, y))[0] - o.y).equals(0)
+            return (list(solveset(eq.subs(x, o.x), y))[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
-            return self.__eq__(o)
+            return self.equals(o)
         elif not self.is_similar(o):
             return False
         else:
@@ -1164,11 +1189,39 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
+    @deprecated(useinstead="equals", deprecated_since_version="0.7.7")
     def equal(self, other):
+        return self.equals(other)
+
+    def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the LinearEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = (N(self.p1), N(self.p2))
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" '
+            'marker-start="url(#markerReverseArrow)" marker-end="url(#markerArrow)"/>'
+            ).format(2. * scale_factor, path, fill_color)
 
 class Ray(LinearEntity):
     """
@@ -1212,11 +1265,11 @@ class Ray(LinearEntity):
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
-    Ray(Point(2, 3), Point(3, 5))
+    Ray(Point2D(2, 3), Point2D(3, 5))
     >>> r.points
-    (Point(2, 3), Point(3, 5))
+    (Point2D(2, 3), Point2D(3, 5))
     >>> r.source
-    Point(2, 3)
+    Point2D(2, 3)
     >>> r.xdirection
     oo
     >>> r.ydirection
@@ -1265,7 +1318,7 @@ class Ray(LinearEntity):
                 m = 2*c/S.Pi
                 left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
                 x = Piecewise((-1, left), (Piecewise((0, Eq(m % 1, 0)), (1, True)), True))
-                y = Piecewise((-C.tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (C.tan(c), True)), True))
+                y = Piecewise((-tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (tan(c), True)), True))
                 p2 = p1 + Point(x, y)
         else:
             raise ValueError('A 2nd point or keyword "angle" must be used.')
@@ -1288,10 +1341,31 @@ class Ray(LinearEntity):
         >>> p1, p2 = Point(0, 0), Point(4, 1)
         >>> r1 = Ray(p1, p2)
         >>> r1.source
-        Point(0, 0)
+        Point2D(0, 0)
 
         """
         return self.p1
+
+    @property
+    def direction(self):
+        """The direction in which the ray emanates.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ray
+        >>> p1, p2 = Point(0, 0), Point(4, 1)
+        >>> r1 = Ray(p1, p2)
+        >>> r1.direction
+        Point2D(4, 1)
+
+        """
+        return self.p2 - self.p1
 
     @property
     def xdirection(self):
@@ -1488,9 +1562,33 @@ class Ray(LinearEntity):
         # No other known entity can be contained in a Ray
         return False
 
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the LinearEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = (N(self.p1), N(self.p2))
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" '
+            'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
+            ).format(2. * scale_factor, path, fill_color)
+
 
 class Segment(LinearEntity):
-    """A undirected line segment in space.
+    """An undirected line segment in space.
 
     Parameters
     ==========
@@ -1523,18 +1621,18 @@ class Segment(LinearEntity):
     >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
-    Segment(Point(1, 0), Point(1, 1))
+    Segment(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1))
     >>> s
-    Segment(Point(1, 1), Point(4, 3))
+    Segment(Point2D(1, 1), Point2D(4, 3))
     >>> s.points
-    (Point(1, 1), Point(4, 3))
+    (Point2D(1, 1), Point2D(4, 3))
     >>> s.slope
     2/3
     >>> s.length
     sqrt(13)
     >>> s.midpoint
-    Point(5/2, 2)
+    Point2D(5/2, 2)
 
     """
 
@@ -1611,14 +1709,14 @@ class Segment(LinearEntity):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 6), Point(5, 1)
         >>> s1 = Segment(p1, p2)
         >>> s1.perpendicular_bisector()
-        Line(Point(3, 3), Point(9, -3))
+        Line(Point2D(3, 3), Point2D(9, -3))
 
         >>> s1.perpendicular_bisector(p3)
-        Segment(Point(3, 3), Point(5, 1))
+        Segment(Point2D(3, 3), Point2D(5, 1))
 
         """
         l = LinearEntity.perpendicular_line(self, self.midpoint)
-        if p is None or p not in l:
+        if p is None or Point(p) not in l:
             return l
         else:
             return Segment(self.midpoint, p)
@@ -1660,7 +1758,7 @@ class Segment(LinearEntity):
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
         >>> s1.midpoint
-        Point(2, 3/2)
+        Point2D(2, 3/2)
 
         """
         return Point.midpoint(self.p1, self.p2)
@@ -1722,12 +1820,33 @@ class Segment(LinearEntity):
                 t = Dummy('t')
                 x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
-                    ti = solve(x - other.x, t)[0]
+                    ti = list(solveset(x - other.x, t))[0]
                 else:
-                    ti = solve(y - other.y, t)[0]
+                    ti = list(solveset(y - other.y, t))[0]
                 if ti.is_number:
                     return 0 <= ti <= 1
                 return None
 
-        # No other known entity can be contained in a Ray
         return False
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the LinearEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+
+        from sympy.core.evalf import N
+
+        verts = (N(self.p1), N(self.p2))
+        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
+        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+        return (
+            '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
+            'stroke-width="{0}" opacity="0.6" d="{1}" />'
+            ).format(2. * scale_factor, path, fill_color)

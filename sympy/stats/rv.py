@@ -15,9 +15,9 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        sympify, Equality, solve, Lambda, DiracDelta)
-from sympy.core.compatibility import reduce
-from sympy.sets.sets import FiniteSet, ProductSet
+        Equality, Lambda, DiracDelta)
+from sympy.solvers.solveset import solveset
+from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.abc import x
 
 
@@ -385,7 +385,7 @@ class ProductDomain(RandomDomain):
         for domain in self.domains:
             # Collect the parts of this event which associate to this domain
             elem = frozenset([item for item in other
-                if item[0] in domain.symbols])
+                              if domain.symbols.contains(item[0]) == S.true])
             # Test this sub-event
             if elem not in domain:
                 return False
@@ -436,7 +436,7 @@ def sumsets(sets):
     """
     Union of sets
     """
-    return reduce(frozenset.union, sets, frozenset())
+    return frozenset().union(*sets)
 
 
 def rs_swap(a, b):
@@ -503,7 +503,11 @@ def given(expr, condition=None, **kwargs):
     if (isinstance(condition, Equality) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
-        results = solve(condition, rv)
+
+        results = solveset(condition, rv)
+        if isinstance(results, Intersection) and S.Reals in results.args:
+            results = list(results.args[1])
+
         return sum(expr.subs(rv, res) for res in results)
 
     # Get full probability space of both the expression and the condition
@@ -758,8 +762,7 @@ def where(condition, given_condition=None, **kwargs):
     (-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
-    """
+    Domain: Or(And(Eq(a, 1), Eq(b, 1)), And(Eq(a, 1), Eq(b, 2)), And(Eq(a, 2), Eq(b, 2)))    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)
@@ -1039,9 +1042,10 @@ def pspace_independent(a, b):
     pspace_independent(a, b) implies independent(a, b)
     independent(a, b) does not imply pspace_independent(a, b)
     """
-    a_symbols = pspace(b).symbols
-    b_symbols = pspace(a).symbols
-    if len(a_symbols.intersect(b_symbols)) == 0:
+    a_symbols = set(pspace(b).symbols)
+    b_symbols = set(pspace(a).symbols)
+
+    if len(a_symbols.intersection(b_symbols)) == 0:
         return True
     return None
 

@@ -1,16 +1,13 @@
 from __future__ import print_function, division
 
 from sympy.functions import sqrt, sign, root
-from sympy.core import S, Wild, sympify, Mul, Add, Expr
-from sympy.core.function import expand_multinomial, expand_mul
+from sympy.core import S, sympify, Mul, Add, Expr
+from sympy.core.function import expand_mul
+from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, _mexpand
 from sympy.utilities import default_sort_key
-
-
-def _mexpand(expr):
-    return expand_mul(expand_multinomial(expr))
 
 
 def is_sqrt(expr):
@@ -151,7 +148,7 @@ def _sqrt_match(p):
     >>> _sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
     [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
     """
-    from sympy.simplify.simplify import split_surds
+    from sympy.simplify.radsimp import split_surds
 
     p = _mexpand(p)
     if p.is_Number:
@@ -207,7 +204,6 @@ def _sqrt_match(p):
                             a1.append(x[1])
             a = Add(*a1)
             b = Add(*b1)
-            #a = Add._from_args(pargs)
             res = (a, b, r**2)
     else:
         b, r = p.as_coeff_Mul()
@@ -270,7 +266,7 @@ def _sqrtdenest_rec(expr):
     >>> _sqrtdenest_rec(sqrt(w))
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
     """
-    from sympy.simplify.simplify import radsimp, split_surds, rad_rationalize
+    from sympy.simplify.radsimp import radsimp, rad_rationalize, split_surds
     if not expr.is_Pow:
         return sqrtdenest(expr)
     if expr.base < 0:
@@ -491,7 +487,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
     >>> sqrt_biquadratic_denest(z, a, b, r, d2)
     sqrt(2) + sqrt(sqrt(2) + 2) + 2
     """
-    from sympy.simplify.simplify import radsimp, rad_rationalize
+    from sympy.simplify.radsimp import radsimp, rad_rationalize
     if r <= 0 or d2 < 0 or not b or sqrt_depth(expr.base) < 2:
         return None
     for x in (a, b, r):
@@ -576,7 +572,6 @@ def _denester(nested, av0, h, max_depth_level):
             nested2 = [_mexpand(v[0]**2) -
                        _mexpand(R*v[1]**2) for v in values] + [R]
         d, f = _denester(nested2, av0, h + 1, max_depth_level)
-        #d = sqrtdenest(d)
         if not f:
             return None, None
         if not any(f[i] for i in range(len(nested))):

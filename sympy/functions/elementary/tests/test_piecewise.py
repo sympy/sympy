@@ -1,9 +1,10 @@
 from sympy import (
-    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
+    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol
+    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
+    cos, exp, Abs, Not, Symbol, S, refine
 )
+from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x y')
@@ -336,7 +337,7 @@ def test_piecewise_fold_piecewise_in_cond():
     p3 = piecewise_fold(p2)
     assert(p2.subs(x, -pi/2) == 0.0)
     assert(p2.subs(x, 1) == 0.0)
-    assert(p2.subs(x, -pi/4) == 1.0)
+    assert(refine(p2.subs(x, -pi/4)) == 1.0)
     p4 = Piecewise((0, Eq(p1, 0)), (1,True))
     assert(piecewise_fold(p4) == Piecewise(
         (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))
@@ -489,3 +490,9 @@ def test_as_expr_set_pairs():
 
     assert Piecewise(((x - 2)**2, x >= 0), (0, True)).as_expr_set_pairs() == \
         [((x - 2)**2, Interval(0, oo)), (0, Interval(-oo, 0, True, True))]
+
+
+def test_S_srepr_is_identity():
+    p = Piecewise((10, Eq(x, 0)), (12, True))
+    q = S(srepr(p))
+    assert p == q

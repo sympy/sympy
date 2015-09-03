@@ -1,5 +1,5 @@
 from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                   oo, LambertW, I, meijerg, exp_polar, Max)
+                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show
@@ -9,7 +9,6 @@ from sympy.external import import_module
 from sympy.core.decorators import wraps
 
 from tempfile import NamedTemporaryFile
-import warnings
 import os
 import sys
 
@@ -88,6 +87,9 @@ def plot_and_save(name):
     p.save(tmp_file('%s_line_multiple_range' % name))
 
     raises(ValueError, lambda: plot(x, y))
+
+    p = plot(Piecewise((1, x > 0), (0, True)),(x,-1,1))
+    p.save(tmp_file('%s_plot_piecewise' % name))
 
     #parametric 2d plots.
     #Single plot with default range.

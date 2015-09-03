@@ -196,18 +196,18 @@ class Dyadic(object):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
+                ar = e.args  # just to shorten things
                 settings = printer._settings if printer else {}
                 if printer:
                     use_unicode = printer._use_unicode
                 else:
-                    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
+                    from sympy.printing.pretty.pretty_symbology import (
+                        pretty_use_unicode)
                     use_unicode = pretty_use_unicode()
                 mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u("\u2297") if use_unicode else "|"
+                bar = u("\N{CIRCLED TIMES}") if use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
@@ -432,7 +432,7 @@ class Dyadic(object):
             The matrix that gives the 2D tensor form.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame, Vector
@@ -518,6 +518,16 @@ class Dyadic(object):
 
         return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
                     for v in self.args], Dyadic(0))
+
+    def applyfunc(self, f):
+        """Apply a function to each component of a Dyadic."""
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        out = Dyadic(0)
+        for a, b, c in self.args:
+            out += f(a) * (b|c)
+        return out
 
     dot = __and__
     cross = __xor__

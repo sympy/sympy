@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
+from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -162,6 +163,10 @@ class DiracDelta(Function):
     def _latex_no_arg(printer):
         return r'\delta'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.dirac_delta(self.args[0]._sage_())
+
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -228,7 +233,7 @@ class Heaviside(Function):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
-        elif im(arg).is_nonzero:
+        elif fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
         elif arg.is_negative:
             return S.Zero
@@ -244,3 +249,7 @@ class Heaviside(Function):
     def _eval_rewrite_as_sign(self, arg):
         if arg.is_real:
             return (sign(arg)+1)/2
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.heaviside(self.args[0]._sage_())

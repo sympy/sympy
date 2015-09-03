@@ -1,15 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key, xrange
+from sympy.core import Basic, Dict, sympify
+from sympy.core.compatibility import as_int, default_sort_key, range
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
+from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict
 
 
-class Partition(C.FiniteSet):
+class Partition(FiniteSet):
     """
     This class represents an abstract partition.
 
@@ -48,7 +49,7 @@ class Partition(C.FiniteSet):
 
         """
         args = partition
-        if not all(isinstance(part, (list, C.FiniteSet)) for part in args):
+        if not all(isinstance(part, (list, FiniteSet)) for part in args):
             raise ValueError(
                 "Each argument to Partition should be a list or a FiniteSet")
 
@@ -57,7 +58,7 @@ class Partition(C.FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, *list(map(lambda x: C.FiniteSet(*x), args)))
+        obj = FiniteSet.__new__(cls, *[FiniteSet(*x) for x in args])
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -261,7 +262,7 @@ class Partition(C.FiniteSet):
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
-        partition = [[] for i in xrange(max_elem)]
+        partition = [[] for i in range(max_elem)]
         j = 0
         for i in rgs:
             partition[i].append(elements[j])
@@ -319,6 +320,7 @@ class IntegerPartition(Basic):
 
         If the value that the partion should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
+
         >>> IntegerPartition(10, [5, 4, 3, 1])
         Traceback (most recent call last):
         ...
@@ -594,11 +596,11 @@ def RGS_generalized(m):
     [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
-    for i in xrange(0, m + 1):
+    for i in range(0, m + 1):
         d[0, i] = 1
 
-    for i in xrange(1, m + 1):
-        for j in xrange(m):
+    for i in range(1, m + 1):
+        for j in range(m):
             if j <= m - i:
                 d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
@@ -665,7 +667,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2, m + 1):
+    for i in range(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:
@@ -694,7 +696,7 @@ def RGS_rank(rgs):
     rgs_size = len(rgs)
     rank = 0
     D = RGS_generalized(rgs_size)
-    for i in xrange(1, rgs_size):
+    for i in range(1, rgs_size):
         n = len(rgs[(i + 1):])
         m = max(rgs[0:i])
         rank += D[n, m + 1] * rgs[i]

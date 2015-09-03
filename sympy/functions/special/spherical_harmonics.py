@@ -1,13 +1,14 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions import assoc_legendre
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 
 _x = Dummy("x")
@@ -147,20 +148,20 @@ class Ynm(Function):
         # Handle negative index m and arguments theta, phi
         if m.could_extract_minus_sign():
             m = -m
-            return S.NegativeOne**m * C.exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
+            return S.NegativeOne**m * exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
         if theta.could_extract_minus_sign():
             theta = -theta
             return Ynm(n, m, theta, phi)
         if phi.could_extract_minus_sign():
             phi = -phi
-            return C.exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
+            return exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
 
         # TODO Add more simplififcation here
 
     def _eval_expand_func(self, **hints):
         n, m, theta, phi = self.args
-        rv = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
-                C.exp(I*m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        rv = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
+                exp(I*m*phi) * assoc_legendre(n, m, cos(theta)))
         # We can do this because of the range of theta
         return rv.subs(sqrt(-cos(theta)**2 + 1), sin(theta))
 
@@ -174,8 +175,8 @@ class Ynm(Function):
         elif argindex == 3:
             # Diff wrt theta
             n, m, theta, phi = self.args
-            return (m * C.cot(theta) * Ynm(n, m, theta, phi) +
-                    sqrt((n - m)*(n + m + 1)) * C.exp(-I*phi) * Ynm(n, m + 1, theta, phi))
+            return (m * cot(theta) * Ynm(n, m, theta, phi) +
+                    sqrt((n - m)*(n + m + 1)) * exp(-I*phi) * Ynm(n, m + 1, theta, phi))
         elif argindex == 4:
             # Diff wrt phi
             n, m, theta, phi = self.args
@@ -209,17 +210,17 @@ class Ynm(Function):
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
         n, m, theta, phi = self.args
-        re = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
-              C.cos(m*phi) * assoc_legendre(n, m, C.cos(theta)))
-        im = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
-              C.sin(m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        re = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
+              cos(m*phi) * assoc_legendre(n, m, cos(theta)))
+        im = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
+              sin(m*phi) * assoc_legendre(n, m, cos(theta)))
         return (re, im)
 
     def _eval_evalf(self, prec):
         # Note: works without this function by just calling
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.
-        from sympy.mpmath import mp, workprec
+        from mpmath import mp, workprec
         from sympy import Expr
         n = self.args[0]._to_mpmath(prec)
         m = self.args[1]._to_mpmath(prec)
@@ -228,6 +229,13 @@ class Ynm(Function):
         with workprec(prec):
             res = mp.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.spherical_harmonic(self.args[0]._sage_(),
+                                       self.args[1]._sage_(),
+                                       self.args[2]._sage_(),
+                                       self.args[3]._sage_())
 
 
 def Ynm_c(n, m, theta, phi):
@@ -295,13 +303,9 @@ class Znm(Function):
 
         if m.is_positive:
             zz = (Ynm(n, m, th, ph) + Ynm_c(n, m, th, ph)) / sqrt(2)
-            #zz = zz.expand(complex=True)
-            #zz = simplify(zz)
             return zz
         elif m.is_zero:
             return Ynm(n, m, th, ph)
         elif m.is_negative:
             zz = (Ynm(n, m, th, ph) - Ynm_c(n, m, th, ph)) / (sqrt(2)*I)
-            #zz = zz.expand(complex=True)
-            #zz = simplify(zz)
             return zz

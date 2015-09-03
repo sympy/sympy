@@ -1,17 +1,17 @@
-from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,\
-    Pow, And, Or, Xor, Not, true, false
+from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Pow, Or, true, false, Abs, pi)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY
 
-from sympy import mpmath
+import mpmath
 
 
 def test_issue_3538():
@@ -445,9 +445,9 @@ def test_issue_4988_builtins():
 
 def test_geometry():
     p = sympify(Point(0, 1))
-    assert p == Point(0, 1) and type(p) == Point
+    assert p == Point(0, 1) and isinstance(p, Point)
     L = sympify(Line(p, (1, 0)))
-    assert L == Line((0, 1), (1, 0)) and type(L) == Line
+    assert L == Line((0, 1), (1, 0)) and isinstance(L, Line)
 
 
 def test_kernS():
@@ -479,10 +479,16 @@ def test_issue_6540_6552():
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
-def test_issue_5596():
+def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'And(C, Q)'
+
+
+def test_issue_8821_highprec_from_str():
+    s = str(pi.evalf(128))
+    p = sympify(s)
+    assert Abs(sin(p)) < 1e-127
