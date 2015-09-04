@@ -655,10 +655,9 @@ class jn(SphericalBesselBase):
         return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
     def _expand(self, **hints):
-        # TODO not valid for non-integral orders
-        n = self.order
+        nu = self.order
         z = self.argument
-        return _jn_orthopoly(n, z)
+        return _jn_orthopoly(nu, z)
 
 
 class yn(SphericalBesselBase):
@@ -710,10 +709,9 @@ class yn(SphericalBesselBase):
         return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
 
     def _expand(self, **hints):
-        # TODO not valid for non-integral orders
-        n = self.order
+        nu = self.order
         z = self.argument
-        return _yn_orthopoly(n, z)
+        return _yn_orthopoly(nu, z)
 
 
 class SphericalHankelBase(SphericalBesselBase):
