@@ -1053,6 +1053,12 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_hn1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^{(1)}')
+
+    def _print_hn2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^{(2)}')
+
     def _hprint_airy(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
