@@ -69,6 +69,14 @@ class LambdaPrinter(StrPrinter):
     def _print_BooleanFalse(self, expr):
         return "False"
 
+    def _print_ITE(self, expr):
+        result = [
+            '((', self._print(expr.args[1]),
+            ') if (', self._print(expr.args[0]),
+            ') else (', self._print(expr.args[2]), '))'
+        ]
+        return ''.join(result)
+
 class NumPyPrinter(LambdaPrinter):
     """
     Numpy printer which handles vectorized piecewise functions,
