@@ -323,10 +323,10 @@ How do we manipulate and return an infinite solution?
    of the equation `\sin{(x)} = 0`, we can use the ``ImageSet`` as:
 
 
-   >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pretty
+   >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pprint
    >>> n = Dummy('n')
-   >>> pretty(ImageSet(Lambda(n, 2*pi*n), S.Integers))
-   '{2*n*pi | n in Integers()}'
+   >>> pprint(ImageSet(Lambda(n, 2*pi*n), S.Integers), use_unicode=True)
+   {2⋅n⋅π | n ∊ ℤ}
 
 
    Where ``n`` is a dummy variable. It is basically the image of the
@@ -339,9 +339,9 @@ How do we manipulate and return an infinite solution?
    the ``ComplexRegion`` as:
 
 
-   >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pretty
-   >>> pretty(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True))
-   '{r*(I*sin(theta) + cos(theta)) | r, theta in {1} × [0, 2*pi)}'
+   >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pprint
+   >>> pprint(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True), use_unicode=True)
+   {r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ {1} × [0, 2⋅π)}
 
 
    Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
@@ -354,9 +354,9 @@ How do we manipulate and return an infinite solution?
    Argand plane, we can write the ``ComplexRegion`` as:
 
 
-   >>> from sympy import ComplexRegion, Interval, pi, oo, pretty
-   >>> pretty(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)))
-   '{x + y*I | x, y in (-oo, oo) × [0, oo)}'
+   >>> from sympy import ComplexRegion, Interval, pi, oo, pprint
+   >>> pprint(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)), use_unicode=True)
+   {x + y⋅ⅈ | x, y ∊ (-∞, ∞) × [0, ∞)}
 
 
    where the Intervals are the range of `x` and `y` for the set of complex
@@ -378,10 +378,10 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
  Solveset returns this information as well to ensure correctness.
 
     >>> from sympy.solvers.solveset import solveset
-    >>> from sympy import symbols, S
+    >>> from sympy import symbols, S, pprint
     >>> x, n = symbols('x, n')
-    >>> pretty(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    '([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})'
+    >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
+    ([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})
 
  Though, there still a lot of work needs to be done in this regard.
 
