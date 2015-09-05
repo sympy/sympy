@@ -593,12 +593,12 @@ class SphericalBesselBase(BesselBase):
             self * (self.order + 1)/self.argument
 
 
-def _jn_orthopoly(n, z):
+def _jn(n, z):
     return fn(n, z)*sin(z) + (-1)**(n + 1)*fn(-n - 1, z)*cos(z)
 
 
-def _yn_orthopoly(n, z):
-    return (-1)**(n + 1) * _jn_orthopoly(-n - 1, z)
+def _yn(n, z):
+    return (-1)**(n + 1) * _jn(-n - 1, z)
 
 
 class jn(SphericalBesselBase):
@@ -655,9 +655,7 @@ class jn(SphericalBesselBase):
         return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
     def _expand(self, **hints):
-        nu = self.order
-        z = self.argument
-        return _jn_orthopoly(nu, z)
+        return _jn(self.order, self.argument)
 
 
 class yn(SphericalBesselBase):
@@ -709,9 +707,7 @@ class yn(SphericalBesselBase):
         return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
 
     def _expand(self, **hints):
-        nu = self.order
-        z = self.argument
-        return _yn_orthopoly(nu, z)
+        return _yn(self.order, self.argument)
 
 
 class SphericalHankelBase(SphericalBesselBase):
@@ -740,15 +736,16 @@ class SphericalHankelBase(SphericalBesselBase):
         z = self.argument
         hk = self._hankel_kind_sign
 
-        # fully expanded version (valid for hn1)
-        # return (-1)**(n + 1) * \
-        #        (fn(-n - 1, z) * I * sin(z) +
-        #         (-1)**(-n) * fn(n, z) * I * cos(z)) + \
-        #        (fn(n, z) * sin(z) +
-        #         (-1)**(n + 1) * fn(-n - 1, z) * cos(z))
+        # fully expanded version
+        # return ((fn(n, z) * sin(z) +
+        #          (-1)**(n + 1) * fn(-n - 1, z) * cos(z)) +  # jn
+        #         (hk * I * (-1)**(n + 1) *
+        #          (fn(-n - 1, z) * hk * I * sin(z) +
+        #           (-1)**(-n) * fn(n, z) * I * cos(z)))  # +-I*yn
+        #         )
 
         # call expand ?
-        return (_jn_orthopoly(n, z) + hk*I*_yn_orthopoly(n, z)).expand()
+        return (_jn(n, z) + hk*I*_yn(n, z)).expand()
 
 
 class hn1(SphericalHankelBase):
