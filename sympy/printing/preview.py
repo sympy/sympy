@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from os.path import join
 import tempfile
 import shutil
+import sys
 import io
 from io import BytesIO
 
@@ -188,8 +189,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             rendered = latex_main % latex_string
-            # escape \ before calling u():
-            fh.write(u(rendered.replace('\\', '\\\\')))
+            fh.write(unicode(rendered))
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
