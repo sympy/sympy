@@ -2003,3 +2003,28 @@ def imageset(*args):
         return r
 
     return ImageSet(f, set)
+
+
+class fuzzy_set(Basic):
+
+    def __new__(cls, args):
+        if isinstance(args, dict):
+            for grade_val in args.values():
+                if grade_val < -1 or grade_val > 1:
+                    raise ValueError("membership grade must be in unit Interval")
+            return Basic.__new__(cls, args)
+
+        if isinstance(args, tuple):
+            if args[0].is_FiniteSet:
+                return fuzzy_set()
+
+    def membership_grade(self, elm):
+        return self.args[0][elm]
+
+    @property
+    def cardinality(self):
+        return sum(self.args[0].values())
+
+    @property
+    def height(self):
+        return max(self.membership_grade)
