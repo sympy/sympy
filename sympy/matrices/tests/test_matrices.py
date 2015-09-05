@@ -61,6 +61,47 @@ def test_addition():
     ))
 
     assert a + b == a.add(b) == Matrix([[2, 4], [6, 1]])
+    assert a + 5 == a.add(5) == Matrix([[6, 7], [8, 6]])
+
+
+def test_lt_le_gt_ge():
+    a = Matrix((
+        (1, 2),
+        (3, 1),
+    ))
+
+    b = Matrix((
+        (1, 2),
+        (3, 0),
+    ))
+
+    assert (a < b) == a.lt(b) == Matrix([[False, False], [False, False]])
+    assert (a < 2) == a.lt(2) == Matrix([[True, False], [False, True]])
+    assert (a <= b) == a.le(b) == Matrix([[True, True], [True, False]])
+    assert (a <= 2) == a.le(2) == Matrix([[True, True], [False, True]])
+    assert (a > b) == a.gt(b) == Matrix([[False, False], [False, True]])
+    assert (a > 2) == a.gt(2) == Matrix([[False, False], [True, False]])
+    assert (a >= b) == a.ge(b) == Matrix([[True, True], [True, True]])
+    assert (a >= 2) == a.ge(2) == Matrix([[False, True], [True, False]])
+
+
+def test_and_or_xor():
+    a = Matrix((
+        (True, False),
+        (False, True),
+    ))
+
+    b = Matrix((
+        (True, True),
+        (False, False),
+    ))
+
+    assert (a & b) == Matrix([[True, False], [False, False]])
+    assert (a & True) == (True & a) == Matrix([[True, False], [False, True]])
+    assert (a | b) == Matrix([[True, True], [False, True]])
+    assert (a | True) == (True | a) == Matrix([[True, True], [True, True]])
+    assert (a ^ b) == Matrix([[False, True], [False, True]])
+    assert (a ^ True) == (True ^ a) == Matrix([[False, True], [True, False]])
 
 
 def test_fancy_index_matrix():

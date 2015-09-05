@@ -553,6 +553,37 @@ class MatrixBase(object):
 
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x + y)
+
+    def __lt__(self, other):
+        """Return self < other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x < y)
+
+    def __le__(self, other):
+        """Return self <= other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x <= y)
+
+    def __gt__(self, other):
+        """Return self > other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x > y)
+
+    def __ge__(self, other):
+        """Return self >= other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x >= y)
+
+    def __and__(self, other):
+        """Return self & other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x & y)
+
+    def __or__(self, other):
+        """Return self | other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x | y)
+
+    def __xor__(self, other):
+        """Return self ^ other, raising ShapeError if shapes don't match."""
+        return self.binary_op(other, lambda x, y: x ^ y)
+
+    def binary_op(self, other, f):
         if getattr(other, 'is_Matrix', False):
             A = self
             B = other
@@ -562,15 +593,26 @@ class MatrixBase(object):
             blst = B.tolist()
             ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
-                ret[i] = [j + k for j, k in zip(alst[i], blst[i])]
+                ret[i] = list(map(f, alst[i], blst[i]))
             rv = classof(A, B)._new(ret)
             if 0 in A.shape:
                 rv = rv.reshape(*A.shape)
             return rv
-        raise TypeError('cannot add matrix and %s' % type(other))
+        else:
+            return self._new(self.rows, self.cols,
+                             [f(i, other) for i in self._mat])
 
     def __radd__(self, other):
         return self + other
+
+    def __rand__(self, other):
+        return self & other
+
+    def __ror__(self, other):
+        return self | other
+
+    def __rxor__(self, other):
+        return self ^ other
 
     def __div__(self, other):
         return self*(S.One / other)
@@ -596,6 +638,22 @@ class MatrixBase(object):
     def add(self, b):
         """Return self + b """
         return self + b
+
+    def lt(self, b):
+        """Return self < b """
+        return self < b
+
+    def le(self, b):
+        """Return self <= b """
+        return self <= b
+
+    def gt(self, b):
+        """Return self > b """
+        return self > b
+
+    def ge(self, b):
+        """Return self >= b """
+        return self >= b
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
