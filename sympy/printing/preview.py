@@ -189,7 +189,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             rendered = latex_main % latex_string
-            fh.write(unicode(rendered))
+            if sys.version_info[0] == 2:  # Python 2
+                rendered = unicode(rendered)
+            fh.write(rendered)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
