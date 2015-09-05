@@ -758,12 +758,15 @@ class hn1(SphericalHankelBase):
     Examples
     ========
 
-    >>> from sympy import Symbol, hn1, expand_func
+    >>> from sympy import Symbol, hn1, hankel1, expand_func
     >>> z = Symbol("z")
+    >>> nu = Symbol("nu", integer=True)
     >>> print(expand_func(hn1(0, z)))
     sin(z)/z - I*cos(z)/z
     >>> print(expand_func(hn1(1, z)))
     -I*sin(z)/z - cos(z)/z + sin(z)/z**2 - I*cos(z)/z**2
+    >>> hn1(nu, z).rewrite(hankel1)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel1(nu, z)/2
 
     For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
 
@@ -771,6 +774,9 @@ class hn1(SphericalHankelBase):
     """
 
     _hankel_kind_sign = S.One
+
+    def _eval_rewrite_as_hankel1(self, nu, z):
+        return sqrt(pi/(2*z))*hankel1(nu, z)
 
 
 class hn2(SphericalHankelBase):
@@ -780,12 +786,15 @@ class hn2(SphericalHankelBase):
     Examples
     ========
 
-    >>> from sympy import Symbol, hn2, expand_func
+    >>> from sympy import Symbol, hn2, hankel2, expand_func
     >>> z = Symbol("z")
+    >>> nu = Symbol("nu", integer=True)
     >>> print(expand_func(hn2(0, z)))
     sin(z)/z + I*cos(z)/z
     >>> print(expand_func(hn2(1, z)))
     I*sin(z)/z - cos(z)/z + sin(z)/z**2 + I*cos(z)/z**2
+    >>> hn2(nu, z).rewrite(hankel2)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
 
     For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
 
@@ -793,6 +802,9 @@ class hn2(SphericalHankelBase):
     """
 
     _hankel_kind_sign = -S.One
+
+    def _eval_rewrite_as_hankel2(self, nu, z):
+        return sqrt(pi/(2*z))*hankel2(nu, z)
 
 
 def jn_zeros(n, k, method="sympy", dps=15):
