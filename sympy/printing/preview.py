@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
 from os.path import join
+from itertools import chain
 import tempfile
 import shutil
+import sys
 import io
 from io import BytesIO
 
@@ -12,7 +14,7 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import u
+from sympy.core.compatibility import unicode, u
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
@@ -187,8 +189,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         workdir = tempfile.mkdtemp()
 
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
-            rendered = latex_main % latex_string
-            fh.write(u(rendered.replace(r'\u', r'\\u')))
+            if sys.version_info[0] == 2:
+                # Work around for issue 9107
+                for esc in chain([r'\\'], 'abfnrtuvxNU01234567'):
+                    latex_string = latex_string.replace('\\'+esc, '\\\\'+esc)
+                latex_string = u(latex_string)
+                fh.write(unicode(latex_main) % latex_string)
+            else:
+                fh.write(latex_main % latex_string)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
