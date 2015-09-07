@@ -294,7 +294,12 @@ What are the general methods employed by solveset to solve an equation?
 
 
  * The respective solver now tries to invert the equation using the routines
-   ``invert_real`` and ``invert_complex``.
+   ``invert_real`` and ``invert_complex``. These routines are based on the
+   concept of mathematical inverse (though not exactly). It reduces the
+   real/complex valued equation ``f(x) = y`` to a set of equations:
+   ``{g(x)  = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is a
+   simpler function than ``f(x)``. There is some work needed to be done in
+   this to find invert of more complex expressions.
 
 
  * After the invert, the equations are checked for radical or Abs (Modulus),
@@ -307,13 +312,15 @@ What are the general methods employed by solveset to solve an equation?
  * If none of the above method is successful, then methods of polynomial is
    used as follows:
 
-   - ``_solve_as_rational`` is called, its third argument is the
-     ``solveset_solver`` which can either be ``solveset_real`` or
-     ``solveset_complex`` based on these respective poly solvers
-     ``_solve_as_poly_real`` and ``_solve_as_poly_complex`` is called.
+   - The method to solve the rational function is called:
+     ``_solve_as_rational(f, symbol, solveset_solver, as_poly_solver)``
+     its third argument is the ``solveset_solver`` which can either be
+     ``solveset_real`` or ``solveset_complex`` based on these, respective
+     poly solvers ``_solve_as_poly_real`` or ``_solve_as_poly_complex``
+     is called to solve as polynomial.
 
    - The underlying method ``_solve_as_poly`` solves the equation using
-     polynomial techniques if it already is a polynomial equation or, with
+     polynomial techniques if its already a polynomial equation or, with
      a change of variables, can be made so.
 
 
