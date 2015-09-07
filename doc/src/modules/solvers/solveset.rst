@@ -187,18 +187,27 @@ Why not use dicts as output?
 
   Dictionary are easy to deal with programatically but mathematically they are
   not very precise and use of them can quickly lead to inconsistency and a lot
-  of confusion. For example addition of two solutions is a fairly valid
-  operation but dictionaries by themselves have no add operation. Since we are
-  representing solutions as dictionary we can define a custom add operation
-  where value of `x` variable is added with value of other `x` variable and
-  value of `y` variable with the value of other `y` variable. But what if the user
-  tries to add solution of two equations which have different sets of variables?
-  Say one has `x` and `y` as variables and other has `u` and `v`? We cannot allow this
-  addition because the keys of dictionaries are unordered but this behavior will
-  be inconsistent with the one variable case because it will be absurd to not to
-  allow addition of two numbers, say one obtained by solution of `x = 1` and
-  other by solving `y = 2`.
+  of confusion. For example:
 
+  * There are a lot of cases where we don't know the complete solution and we
+    may like to output a partial solution, consider the equation `fg = 0`. The
+    solution of this equation is the union of the solution of the following
+    two equations: `f = 0`, `g = 0`. Let's say that we are able to solve
+    `f = 0` but solving `g = 0` isn't supported yet. In this case we cannot
+    represent partial solution of the given equation `fg = 0` using dicts.
+    This problem is solved with sets using ``ConditionSet`` object:
+
+    `sol_f U `\{x | x ∊ `\mathbb{R}` ∧ g = 0\}`, where ``sol_f`` is the solution
+    of the equation `f = 0`.
+
+  * Using dict may lead to surprising results like:
+    - ``solve(Eq(x**2, 1), x) != solve(Eq(y**2, 1), y)``
+    Though, mathematically, it doesn't make sense. Using ``FiniteSet`` here
+    solves the problem.
+
+  * It can also not represent solutions for Equations like `|x| < 1`, which
+    is a disk of radius 1 in the Argand Plane. This problem is solved using
+    complex sets implemented as ``ComplexRegion``.
 
 
 Input API of ``solveset``
@@ -512,7 +521,6 @@ References
  .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
  .. [2] https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
  .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
- .. [4] https://github.com/sympy/sympy/pull/9438#issuecomment-109289855
  .. [5] http://iamit.in/blog/
  .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
  .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
