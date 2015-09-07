@@ -420,6 +420,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Michael Zingale: add a left_eigenvectors() method
 #. Kumar Krishna Agrawal: UnXFAIL tests in solveset
 #. Dustin Gadal: Replace linear diophantine solver to resolve issue #9539
+#. Yu Kobayashi: Tuple constructor should not take the argument `**assumptions`
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
