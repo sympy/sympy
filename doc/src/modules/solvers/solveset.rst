@@ -411,9 +411,9 @@ Search based solver and step-by-step solution
 
  Note: This is under Development.
 
- After the introduction of ``ConditionSet``, the solving of equations can
- be seen as set transformations. Here is an abstract view of the things we
- can do to solve equations.
+ After the introduction of :py:class:`~sympy.sets.conditionset.ConditionSet`, the
+ solving of equations can be seen as set transformations. Here is an abstract
+ view of the things we can do to solve equations.
 
  * Apply various set transformations on the given set.
  * Define a metric of the usability of solutions, or a notion of some
@@ -466,7 +466,7 @@ How do we deal with cases where only some of the solutions are known?
  `ConditionSet` class in the sets module, which acts as an unevaluated
  solveset object.
 
- See `Richardson theorem <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_.
+ See `Richardson's theorem <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_.
 
  ``ConditionSet`` is basically a Set of elements which satisfy a given
  condition. For example, to represent the solutions of the equation in
@@ -491,8 +491,7 @@ What will you do with the old solve?
    at least powerful as ``solve``, i.e. ``solveset`` does everything
    that ``solve`` can do currently, and
 
- * Eventually rename ``solveset`` to ``solve``. Meanwhile
-   issue a deprecation warning for the current behavior of ``solve``.
+ * Eventually rename ``solveset`` to ``solve``.
 
 
 How are symbolic parameters handled in solveset?
