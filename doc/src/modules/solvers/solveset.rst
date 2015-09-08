@@ -18,8 +18,8 @@ issues
 
    * Single solution : `x = 1`
    * Multiple solutions: `x^2 = 1`
-   * No Solution: `x^2 + 1 = 0` ; x \in `\mathbb{R}`
-   * Interval of solution: `\floor{x} = 0`
+   * No Solution: `x^2 + 1 = 0 ; x \in \mathbb{R}`
+   * Interval of solution: `\lfloor x \rfloor = 0`
    * Infinitely many solutions: `sin(x) = 0`
    * Multivariate functions with point solutions: `x^2 + y^2 = 0`
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
@@ -108,7 +108,7 @@ Also, the predefined set classes such as:
    positive integers starting from 1.
 
 
- * ``Naturals0`` `\mathbb{N0}`
+ * ``Naturals0`` `\mathbb{N_0}`
 
    Represents the whole numbers, which are all the non-negative integers,
    inclusive of 0.
@@ -129,7 +129,7 @@ Also, the predefined set classes such as:
    Represents the set of all complex numbers.
 
 
- * ``EmptySet`` `\mathbb{phi}`
+ * ``EmptySet`` `\phi`
 
    Represents the empty set.
 
@@ -179,8 +179,11 @@ while returning solutions.
 
 For example:
 
- - ``FiniteSet(1, 2, 3) : {1, 2, 3}``   # Unordered
- - ``FiniteSet((1, 2, 3)) {(1, 2, 3)}``  # Ordered
+ >>> from sympy import FiniteSet
+ >>> FiniteSet(1, 2, 3)   # Unordered
+ {1, 2, 3}   
+ >>> FiniteSet((1, 2, 3))  # Ordered
+ {(1, 2, 3)}
 
 
 Why not use dicts as output?
@@ -197,13 +200,14 @@ Why not use dicts as output?
     represent partial solution of the given equation `fg = 0` using dicts.
     This problem is solved with sets using ``ConditionSet`` object:
 
-    `sol_f U `\{x | x ∊ `\mathbb{R}` ∧ g = 0\}`, where ``sol_f`` is the solution
+    `sol_f` U `\{x | x ∊ \mathbb{R} ∧ g = 0\}`, where `sol_f` is the solution
     of the equation `f = 0`.
 
   * Using dict may lead to surprising results like:
+
     - ``solve(Eq(x**2, 1), x) != solve(Eq(y**2, 1), y)``
-    Though, mathematically, it doesn't make sense. Using ``FiniteSet`` here
-    solves the problem.
+      Though, mathematically, it doesn't make sense. Using ``FiniteSet`` here
+      solves the problem.
 
   * It can also not represent solutions for Equations like `|x| < 1`, which
     is a disk of radius 1 in the Argand Plane. This problem is solved using
@@ -266,8 +270,8 @@ What are the general methods employed by solveset to solve an equation?
 
 
  * If the given function is a relational (``>=``, ``<=``, ``>``, ``<``), and
-   the domain is real, then `solve_univariate_inequality` and solutions are
-   returned. Solving for complex solutions of inequalities, like `x**2 < 0`
+   the domain is real, then ``solve_univariate_inequality`` and solutions are
+   returned. Solving for complex solutions of inequalities, like `x^2 < 0`
    is not yet supported.".
 
 
@@ -407,9 +411,9 @@ Search based solver and step-by-step solution
 
  Note: This is under Development.
 
- After the introduction of ``ConditionSet`` [10], the solving of equations
- can be seen as set transformations. Here is an abstract view of the things
- we can do to solve equations.
+ After the introduction of ``ConditionSet``, the solving of equations can
+ be seen as set transformations. Here is an abstract view of the things we
+ can do to solve equations.
 
  * Apply various set transformations on the given set.
  * Define a metric of the usability of solutions, or a notion of some
@@ -423,20 +427,21 @@ Search based solver and step-by-step solution
  the intermediate steps as set to set transformation. Some of the transformations
  are:
 
- * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S,y in \{z|f(z)=0; z \in S\}\}`
+ * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S, y \in \{z|f(z)=0; z \in S\}\}`
 
- * Polynomial Solver: `\{x|P(x)=0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\}.intersection(S)`
-   where `x_i` are roots of `P(x)`.
+ * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} ∩ S` 
+                      `\text{ where } `x_i` `\text{ are roots of } P(x)`
 
- * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| all g such that f(g(x)) = x\}`
+ * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| \text{ all g such that } f(g(x)) = x\}`
 
  * logcombine: `\{x| log(f(x)) + log(g(x));x \in S\}`
-                \Rightarrow  `\{x| log(f(x)*g(x)); x \in S\}` if f(x) > 0 and g(x) > 0
-                \Rightarrow  `\{x| log(f(x)) + log(g(x));x \in S\}` otherwise
+               `\Rightarrow  \{x| log(f(x).g(x)); x \in S\} \text{ if } f(x) > 0 \text{ and } g(x) > 0`
+               `\Rightarrow  \{x| log(f(x)) + log(g(x));x \in S\} \text{ otherwise}`
 
- * product solve: \{x|f(x)*g(x)=0; x \in S\}
-                \Rightarrow  `\{x|f(x)=0; x \in S\} U \{x|g(x)=0; x \in S\}` given f(x) and g(x) are bounded
-                \Rightarrow  \{x|f(x)*g(x)=0; x \in S\}, otherwise
+ * product solve: `\{x|f(x)*g(x)=0; x \in S\}`
+                  `\Rightarrow  \{x|f(x)=0; x \in S\} U \{x|g(x)=0; x \in S\}`
+                  `\text{ given } f(x) \text{ and } g(x) \text{ are bounded.}`
+                  `\Rightarrow  \{x|f(x)*g(x)=0; x \in S\}, \text{ otherwise}`
 
  Since the output type is same as the input type any composition of these
  transformations is also a valid transformation. And our aim is to find
@@ -461,6 +466,8 @@ How do we deal with cases where only some of the solutions are known?
  `ConditionSet` class in the sets module, which acts as an unevaluated
  solveset object.
 
+ See `Richardson theorem <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_.
+
  ``ConditionSet`` is basically a Set of elements which satisfy a given
  condition. For example, to represent the solutions of the equation in
  the real domain:
@@ -469,7 +476,7 @@ How do we deal with cases where only some of the solutions are known?
 
  We can represent it as:
 
- `{-2, 2} ∪ {x | x ∊ ℝ ∧ x + sin(x) = 0}`
+ `\{-2, 2\} ∪ \{x | x \in \mathbb{R} ∧ x + \sin(x) = 0\}`
 
 
 What will you do with the old solve?
@@ -498,14 +505,14 @@ How are symbolic parameters handled in solveset?
  where `n` is a symbolic parameter. Solveset returns the value of `x`
  considering the domain of the symbolic parameter `n` as well, i.e. :
 
- `Intersection([0, oo), {n}) U Intersection((-oo, 0], {-n})`.
+ `([0, \infty) ∩ \{n\}) ∪ ((-\infty, 0] ∩ \{-n\})`.
 
  It simply means `n` is the solution only when it belongs to the ``Interval``
  `[0, \infty)` and `-n` is the solution only when `n` belongs to the ``Interval``
  `(- \infty, 0]`.
 
  There are various other cases as well which needs to be addressed, like
- say, solving of ``2**x + (a - 2)`` for ``x`` where ``a`` is a symbolic parameter.
+ say, solving of `2^x + (a - 2)` for `x` where `a` is a symbolic parameter.
  As of now, It returns the solution as an intersection with `\mathbb{R}`, which
  is trivial, as it doesn't reveal the domain of `a` in the solution.
 
@@ -534,6 +541,7 @@ References
  .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR 
  .. [9] https://groups.google.com/forum/#!topic/sympy/-SIbX0AFL3Q
  .. [10] https://github.com/sympy/sympy/pull/9696
+ .. [11] https://en.wikipedia.org/wiki/Richardson%27s_theorem
 
 
 Solveset Module Reference
