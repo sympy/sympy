@@ -1177,7 +1177,6 @@ def test_hash():
     assert check_all(tsymmetry)
 
 
-@XFAIL
 def test_hidden_indices_for_matrix_multiplication():
     """
     This test function is expected to fail, as there is an inconstistency in
@@ -1711,3 +1710,45 @@ def test_valued_components_with_wrong_symmetry():
 
     A_sym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
     A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+
+def test_index_iteration():
+    L = TensorIndexType("Lorentz", dummy_fmt="L")
+    i0,i1,i2,i3,i4 = tensor_indices('i0:5', L)
+    L0 = tensor_indices('L_0', L)
+    L1 = tensor_indices('L_1', L)
+    A = tensorhead("A", [L, L], [[1], [1]])
+    B = tensorhead("B", [L, L], [[1, 1]])
+    C = tensorhead("C", [L], [[1]])
+
+    e1 = A(i0, i2)
+    e2 = A(i0, -i0)
+    e3 = A(i0, i1)*B(i2, i3)
+    e4 = A(i0, i1)*B(i2, -i1)
+    e5 = A(i0, i1)*B(-i0, -i1)
+    e6 = e1 + e4
+
+
+    assert list(e1._iterate_free_indices) == [(i0, (1, 0)), (i2, (1, 1))]
+    assert list(e1._iterate_dummy_indices) == []
+    assert list(e1._iterate_indices) == [(i0, (1, 0)), (i2, (1, 1))]
+
+    assert list(e2._iterate_free_indices) == []
+    assert list(e2._iterate_dummy_indices) == [(L0, (1, 0)), (-L0, (1, 1))]
+    assert list(e2._iterate_indices) == [(L0, (1, 0)), (-L0, (1, 1))]
+
+    assert list(e3._iterate_free_indices) == [(i0, (0, 1, 0)), (i1, (0, 1, 1)), (i2, (1, 1, 0)), (i3, (1, 1, 1))]
+    assert list(e3._iterate_dummy_indices) == []
+    assert list(e3._iterate_indices) == [(i0, (0, 1, 0)), (i1, (0, 1, 1)), (i2, (1, 1, 0)), (i3, (1, 1, 1))]
+
+    assert list(e4._iterate_free_indices) == [(i0, (0, 1, 0)), (i2, (1, 1, 0))]
+    assert list(e4._iterate_dummy_indices) == [(L0, (0, 1, 1)), (-L0, (1, 1, 1))]
+    assert list(e4._iterate_indices) == [(i0, (0, 1, 0)), (L0, (0, 1, 1)), (i2, (1, 1, 0)), (-L0, (1, 1, 1))]
+
+    assert list(e5._iterate_free_indices) == []
+    assert list(e5._iterate_dummy_indices) == [(L0, (0, 1, 0)), (L1, (0, 1, 1)), (-L0, (1, 1, 0)), (-L1, (1, 1, 1))]
+    assert list(e5._iterate_indices) == [(L0, (0, 1, 0)), (L1, (0, 1, 1)), (-L0, (1, 1, 0)), (-L1, (1, 1, 1))]
+
+    assert list(e6._iterate_free_indices) == [(i0, (0, 1, 0)), (i2, (0, 1, 1)), (i0, (1, 0, 1, 0)), (i2, (1, 1, 1, 0))]
+    assert list(e6._iterate_dummy_indices) == [(L0, (1, 0, 1, 1)), (-L0, (1, 1, 1, 1))]
+    assert list(e6._iterate_indices) == [(i0, (0, 1, 0)), (i2, (0, 1, 1)), (i0, (1, 0, 1, 0)), (L0, (1, 0, 1, 1)), (i2, (1, 1, 1, 0)), (-L0, (1, 1, 1, 1))]
