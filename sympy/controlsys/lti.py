@@ -518,7 +518,7 @@ class StateSpaceModel(object):
         return '$' + latex(self.BlockRepresent) + '$'
 
     def __str__(self):
-        return str(self.BlockRepresent)
+        return 'StateSpaceModel' + str(self.BlockRepresent)[6:]
 
 
 class TransferFunctionModel(object):
@@ -584,16 +584,6 @@ class TransferFunctionModel(object):
             raise TypeError("argument of unsupported type")
 
     #
-    # _repr_latex_(self)
-    #   defines the representation of the class in ipython pretty printing
-    #
-    def _repr_latex_(self):
-        return '$' + latex(self.G) + '$'
-
-    def __str__(self):
-        return str(self.G)
-
-    #
     # evaluate(self, u, s)
     #
     def evaluate(self, u, s):
@@ -638,6 +628,19 @@ class TransferFunctionModel(object):
             raise AttributeError("%r object has no attribute %r" %
                                  (self.__class__, name))
         return handler
+
+    #
+    # _repr_latex_(self)
+    #   defines the representation of the class in ipython pretty printing
+    #
+    def _repr_latex_(self):
+        return '$' + latex(self.G) + '$'
+
+    def __str__(self):
+        return 'TransferFunctionModel' + str(self.G)[6:]
+
+    def __repr__(self):
+        return 'TransferFunctionModel' + srepr(self.G)[6:]
 
 
 #
