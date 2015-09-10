@@ -5,7 +5,7 @@ from sympy import (
     sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le, Indexed,
     Idx, IndexedBase, prod)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
-from sympy.concrete.summations import telescopic
+from sympy.concrete.summations import telescopic, _order_growth
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
 from sympy.matrices import Matrix
@@ -858,3 +858,50 @@ def test_indexed_idx_sum():
     raises(ValueError, lambda: Product(A[k], (k, 1, 4)))
     raises(ValueError, lambda: Product(A[k], (k, 0, 3)))
     raises(ValueError, lambda: Product(A[k], (k, 2, oo)))
+
+
+def test_is_convergent():
+    # divergence tests --
+    assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() == S.false
+    assert Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent() == S.false
+    assert Sum(3**(-2*n - 1)*n**n, (n, 1, oo)).is_convergent() == S.false
+
+    # root test --
+    assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() == S.false
+    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() == S.true
+
+    # integral test --
+    assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() == S.false
+    assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() == S.true
+
+    # comparison test --
+    assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() == S.true
+    assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() == S.true
+    assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() == S.true
+
+    # singularities
+    assert Sum(1/(n**3 - 1), (n, 0, oo)).is_convergent() == S.false
+
+    # alternating series tests --
+    assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() == S.true
+    assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() == S.false
+
+
+@XFAIL
+def test_convergent_failing():
+    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() == S.false
+
+    # currently raise TypeError
+    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() == S.true
+    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() == S.true
+
+
+def test__order_growth():
+    assert _order_growth(n**2 + 1) == 2
+    assert _order_growth(sqrt(n**2 + 1)) == 1
+    assert _order_growth(1/(sqrt(n**3 + 1) + n)) == S(-3)/2
+    assert _order_growth((sqrt(n**3 + 1) + n)) == S(3)/2
+    assert _order_growth(1/(sqrt(n**2 + 1))) == S(-1)
+    assert _order_growth(1/(n**3 + 1)) == S(-3)
+    assert _order_growth((n*sqrt(n))/(n**2 + 1)) == S(-1)/2
+    assert _order_growth(2/(n*sqrt(n**2 - 1))) == S(-2)

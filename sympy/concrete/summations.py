@@ -7,10 +7,14 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.add import Add
+from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
+from sympy.integrals.integrals import integrate
+from sympy import oo, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.series.limits import limit
 from sympy.core.compatibility import range
 from sympy.tensor.indexed import Idx
 
@@ -252,6 +256,93 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def _eval_summation(self, f, x):
         return None
+
+    def is_convergent(self):
+        """
+        Convergence tests are used for checking the convergence of an
+        a series. There are various tests employed to check the
+        convergence. Like divergence test, root test, integral test,
+        alternating series test, comparison tests.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Convergence_tests
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, factorial, oo, S, Sum
+        >>> from sympy.abc import n
+        >>> Sum(n/(n - 1), (n, 4, 7)).is_convergent()
+        True
+        >>> Sum(n/(2*n + 1), (n, 1, oo)).is_convergent()
+        False
+        >>> Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent()
+        False
+        >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
+        True
+        """
+        from sympy import singularities, Interval
+        from sympy.solvers.solveset import solveset
+
+        _sequence_term = self.args[0]
+        sym = self.args[1][0]
+        _lower_limit = self.args[1][1]
+        _upper_limit = self.args[1][2]
+        _interval = Interval(_lower_limit, _upper_limit)
+
+        _sing = solveset(_sequence_term.as_numer_denom()[1], sym, S.Reals)
+        try:
+            for singul in _sing:
+                if singul.is_integer and singul in _interval:
+                    return S.false
+        except TypeError:
+            pass
+
+        if _lower_limit.is_finite and _upper_limit.is_finite:
+            return S.true
+
+        ###  ------- Divergence test ---------- ###
+        try:
+            if limit(_sequence_term, sym, oo) != S.Zero:
+                return S.false
+        except NotImplementedError:
+            pass
+
+        ### ---------- root test --------------- ###
+        _lim = limit(abs(_sequence_term)**(1/sym), sym, oo)
+        if _lim < 1:
+            return S.true
+        if _lim > 1:
+            return S.false
+
+        ### ------------ alternating series test ---------- ###
+        from sympy import symbols
+        p, q = symbols('p q', cls=Wild)
+        d = symbols('d', cls=Dummy)
+        dict_val = _sequence_term.match((-1)**p*q)
+        if dict_val[p] == sym or dict_val[p].has(sym):
+            if solveset((dict_val[q].subs({sym: d + 1})/dict_val[q].subs({sym: d})) < 1, d, _interval) == _interval and \
+                limit(dict_val[q], sym, oo).is_finite:
+                    return S.true
+            return S.false
+
+        ### ---------- comparison test ----------- ###
+        if not _order_growth(_sequence_term) is None:
+            if _order_growth(_sequence_term) < -1:
+                return S.true
+            return S.false
+
+        ### ------------ integral test ------------- ###
+        if is_decreasing(_sequence_term, _interval):
+            intgral_val = integrate(_sequence_term, (sym, _lower_limit, _upper_limit))
+            if intgral_val.is_infinite:
+                return S.false
+            return S.true
+
+        # absolute convergence test
+
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -790,3 +881,24 @@ def eval_sum_hyper(f, i_a_b):
                     return S.NegativeInfinity
             return None
         return Piecewise(res, (old_sum, True))
+
+
+def _order_growth(expression):
+    from sympy.polys.polytools import degree
+    if expression.has(log):
+        return None
+
+    if expression.is_number:
+        return S.Zero
+
+    if expression.is_rational_function() and expression.as_numer_denom()[1] == 1:
+        return degree(expression)
+
+    if expression.is_Add:
+        return max(_order_growth(val) for val in expression.args)
+
+    if expression.is_Pow:
+        return _order_growth(expression.args[0])*expression.args[1]
+
+    if expression.is_Mul:
+        return sum([_order_growth(val) for val in expression.args])
