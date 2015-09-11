@@ -5,7 +5,7 @@ from sympy import (
     sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le, Indexed,
     Idx, IndexedBase, prod)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
-from sympy.concrete.summations import telescopic, _order_growth
+from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
 from sympy.matrices import Matrix
@@ -872,12 +872,12 @@ def test_is_convergent():
 
     # integral test --
     assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() == S.false
-    assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() == S.true
 
     # comparison test --
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() == S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() == S.true
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() == S.true
+    assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() == S.true
 
     # singularities
     assert Sum(1/(n**3 - 1), (n, 0, oo)).is_convergent() == S.false
@@ -885,6 +885,14 @@ def test_is_convergent():
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() == S.true
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() == S.false
+
+    # with -negativeInfinite Limits
+    assert Sum(1/(n**2 + 1), (n, -oo, 1)).is_convergent() == S.true
+    assert Sum(1/(n - 1), (n, -oo, -1)).is_convergent() == S.false
+    assert Sum(1/(n**2 - 1), (n, -oo, -5)).is_convergent() == S.true
+    assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() == S.false
+    assert Sum(1/(n**2 + 1), (n, -oo, oo)).is_convergent() == S.true
+    assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.false
 
 
 @XFAIL
@@ -894,14 +902,3 @@ def test_convergent_failing():
     # currently raise TypeError
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() == S.true
     assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() == S.true
-
-
-def test__order_growth():
-    assert _order_growth(n**2 + 1) == 2
-    assert _order_growth(sqrt(n**2 + 1)) == 1
-    assert _order_growth(1/(sqrt(n**3 + 1) + n)) == S(-3)/2
-    assert _order_growth((sqrt(n**3 + 1) + n)) == S(3)/2
-    assert _order_growth(1/(sqrt(n**2 + 1))) == S(-1)
-    assert _order_growth(1/(n**3 + 1)) == S(-3)
-    assert _order_growth((n*sqrt(n))/(n**2 + 1)) == S(-1)/2
-    assert _order_growth(2/(n*sqrt(n**2 - 1))) == S(-2)

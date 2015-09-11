@@ -15,6 +15,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.core.compatibility import range
 from sympy.tensor.indexed import Idx
 
@@ -259,9 +260,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def is_convergent(self):
         """
-        Convergence tests are used for checking the convergence of an
+        Convergence tests are used for checking the convergence of
         a series. There are various tests employed to check the
-        convergence. Like divergence test, root test, integral test,
+        convergence, returns True if convergent and false if divergent and
+        None if unknow. Like divergence test, root test, integral test,
         alternating series test, comparison tests.
 
         References
@@ -283,63 +285,74 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
         True
         """
-        from sympy import singularities, Interval
+        from sympy import singularities, Interval, symbols
         from sympy.solvers.solveset import solveset
+        p, q = symbols('p q', cls=Wild)
 
-        _sequence_term = self.args[0]
+        sequence_term = self.args[0]
         sym = self.args[1][0]
-        _lower_limit = self.args[1][1]
-        _upper_limit = self.args[1][2]
-        _interval = Interval(_lower_limit, _upper_limit)
+        lower_limit = self.args[1][1]
+        upper_limit = self.args[1][2]
+        interval = Interval(lower_limit, upper_limit)
 
-        _sing = solveset(_sequence_term.as_numer_denom()[1], sym, S.Reals)
+        sing = solveset(sequence_term.as_numer_denom()[1], sym, S.Reals)
         try:
-            for singul in _sing:
-                if singul.is_integer and singul in _interval:
-                    return S.false
+            for singul in sing:
+                if singul.is_integer and singul in interval:
+                    return False
         except TypeError:
             pass
 
-        if _lower_limit.is_finite and _upper_limit.is_finite:
-            return S.true
+        if lower_limit.is_finite and upper_limit.is_finite:
+            return True
+
+        # transform sym -> -sym and swap the upper_limit = oo and lower_limit = - upper_limit
+        if lower_limit is -oo:
+            sequence_term = sequence_term.xreplace({sym: -sym})
+            lower_limit = -upper_limit
+            upper_limit = oo
 
         ###  ------- Divergence test ---------- ###
         try:
-            if limit(_sequence_term, sym, oo) != S.Zero:
-                return S.false
+            if limit(sequence_term, sym, upper_limit) != S.Zero:
+                return False
         except NotImplementedError:
             pass
 
         ### ---------- root test --------------- ###
-        _lim = limit(abs(_sequence_term)**(1/sym), sym, oo)
-        if _lim < 1:
-            return S.true
-        if _lim > 1:
-            return S.false
+        lim = limit(abs(sequence_term)**(1/sym), sym, oo)
+        if lim < 1:
+            return True
+        if lim > 1:
+            return False
 
         ### ------------ alternating series test ---------- ###
-        from sympy import symbols
-        p, q = symbols('p q', cls=Wild)
         d = symbols('d', cls=Dummy)
-        dict_val = _sequence_term.match((-1)**p*q)
+        dict_val = sequence_term.match((-1)**p*q)
         if dict_val[p] == sym or dict_val[p].has(sym):
-            if solveset((dict_val[q].subs({sym: d + 1})/dict_val[q].subs({sym: d})) < 1, d, _interval) == _interval and \
+            if solveset((dict_val[q].subs({sym: d + 1})/dict_val[q].subs({sym: d})) < 1, d, interval) == interval and \
                 limit(dict_val[q], sym, oo).is_finite:
-                    return S.true
-            return S.false
+                    return True
+            return False
 
         ### ---------- comparison test ----------- ###
-        if not _order_growth(_sequence_term) is None:
-            if _order_growth(_sequence_term) < -1:
-                return S.true
-            return S.false
+        order = O(sequence_term, (sym, oo))
+        if not order is None:
+            try:
+                if order.args[0].match(sym**p*q)[p] < -1 or order.args[0].match((1/sym)**p*q)[p] > 1:
+                    return True
+            except AttributeError:
+                pass
+            return False
 
         ### ------------ integral test ------------- ###
-        if is_decreasing(_sequence_term, _interval):
-            intgral_val = integrate(_sequence_term, (sym, _lower_limit, _upper_limit))
-            if intgral_val.is_infinite:
-                return S.false
-            return S.true
+        if is_decreasing(sequence_term, interval):
+            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
+            if integral_val.doit() == integral_val:
+                pass
+            if integral_val.is_infinite:
+                return False
+            return True
 
         # absolute convergence test
 
@@ -881,24 +894,3 @@ def eval_sum_hyper(f, i_a_b):
                     return S.NegativeInfinity
             return None
         return Piecewise(res, (old_sum, True))
-
-
-def _order_growth(expression):
-    from sympy.polys.polytools import degree
-    if expression.has(log):
-        return None
-
-    if expression.is_number:
-        return S.Zero
-
-    if expression.is_rational_function() and expression.as_numer_denom()[1] == 1:
-        return degree(expression)
-
-    if expression.is_Add:
-        return max(_order_growth(val) for val in expression.args)
-
-    if expression.is_Pow:
-        return _order_growth(expression.args[0])*expression.args[1]
-
-    if expression.is_Mul:
-        return sum([_order_growth(val) for val in expression.args])
