@@ -285,7 +285,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
         True
         """
-        from sympy import singularities, Interval, symbols
+        from sympy import singularities, Interval, symbols, Integral
         from sympy.solvers.solveset import solveset
         p, q = symbols('p q', cls=Wild)
 
@@ -294,14 +294,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         lower_limit = self.args[1][1]
         upper_limit = self.args[1][2]
         interval = Interval(lower_limit, upper_limit)
-
-        sing = solveset(sequence_term.as_numer_denom()[1], sym, S.Reals)
-        try:
-            for singul in sing:
-                if singul.is_integer and singul in interval:
-                    return False
-        except TypeError:
-            pass
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return True
@@ -318,6 +310,21 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return False
         except NotImplementedError:
             pass
+
+        ### -------- p-series test (1/n**p) --------- ###
+        p1_series_test = sequence_term.match(sym**p)
+        p2_series_test = sequence_term.match((1/sym)**p)
+        if not p1_series_test is None:
+            if p1_series_test[p] < -1:
+                return True
+            if p1_series_test[p] > -1:
+                return False
+
+        if not p2_series_test is None:
+            if p2_series_test[p] > 1:
+                return True
+            if p2_series_test[p] < 1:
+                return False
 
         ### ---------- root test --------------- ###
         lim = limit(abs(sequence_term)**(1/sym), sym, oo)
@@ -337,24 +344,40 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ---------- comparison test ----------- ###
         order = O(sequence_term, (sym, oo))
-        if not order is None:
-            try:
-                if order.args[0].match(sym**p*q)[p] < -1 or order.args[0].match((1/sym)**p*q)[p] > 1:
-                    return True
-            except AttributeError:
-                pass
+        if order.contains(O(1/sym, (sym, oo))):
             return False
+
+        # (1/(n*log(n)**p)) comparison
+        log_n_test = sequence_term.match((1/(sym*(log(sym))**p)))
+        if not log_n_test is None:
+            if log_n_test[p] > 1:
+                return True
+            return False
+
+        # (1/(n*log(n)*log(log(n))*p)) comparison
+        log_log_n_test = sequence_term.match(1/(sym*(log(sym)*log(log(sym))**p)))
+        if not log_log_n_test is None:
+            if log_log_n_test[p] > 1:
+                return True
+            return False
+
+        if order.args[0] == sequence_term:
+            pass
+        else:
+            return Sum(order.args[0], (sym, lower_limit, upper_limit)).is_convergent()
 
         ### ------------ integral test ------------- ###
         if is_decreasing(sequence_term, interval):
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            if integral_val.doit() == integral_val:
+            integral_val_evaluated = integral_val.doit()
+            if integral_val_evaluated == integral_val:
                 pass
-            if integral_val.is_infinite:
+            if integral_val_evaluated.is_infinite:
                 return False
             return True
 
-        # absolute convergence test
+        raise NotImplementedError("The algorithm to find the convergence of %s "
+                                    "is not yet implemented" % (sequence_term))
 
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):

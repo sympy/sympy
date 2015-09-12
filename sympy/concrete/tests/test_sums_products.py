@@ -878,9 +878,8 @@ def test_is_convergent():
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() == S.true
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() == S.true
     assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() == S.true
-
-    # singularities
-    assert Sum(1/(n**3 - 1), (n, 0, oo)).is_convergent() == S.false
+    assert Sum(1/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() == S.true
+    assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() == S.false
 
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() == S.true
@@ -890,9 +889,9 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, -oo, 1)).is_convergent() == S.true
     assert Sum(1/(n - 1), (n, -oo, -1)).is_convergent() == S.false
     assert Sum(1/(n**2 - 1), (n, -oo, -5)).is_convergent() == S.true
-    assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() == S.false
+    assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() == S.true
     assert Sum(1/(n**2 + 1), (n, -oo, oo)).is_convergent() == S.true
-    assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.false
+    assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.true
 
 
 @XFAIL
