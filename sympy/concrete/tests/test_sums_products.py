@@ -2,8 +2,8 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le, Indexed,
-    Idx, IndexedBase, prod)
+    sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
+    Indexed, Idx, IndexedBase, prod)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -872,14 +872,20 @@ def test_is_convergent():
 
     # integral test --
     assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() == S.false
+    assert Sum(2/(n*log(n)**2), (n, 2, oo)).is_convergent() == S.true
+    assert Sum((n - 1)/(n**2*log(n)**2), (n, 2, oo)).is_convergent() == S.true
+    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() == S.true
 
     # comparison test --
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() == S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() == S.true
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() == S.true
+    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() == S.false
     assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() == S.true
-    assert Sum(1/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() == S.true
+    assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() == S.false
+    assert Sum(2/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() == S.true
     assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() == S.false
+    assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() == S.false
 
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() == S.true
@@ -894,10 +900,14 @@ def test_is_convergent():
     assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.true
 
 
+def test_is_absolute_convergent():
+    assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() == S.false
+    assert Sum(sin(n)/n, (n, 1, oo)).is_absolute_convergent() == S.false
+    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent() == S.true
+
+
 @XFAIL
 def test_convergent_failing():
-    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() == S.false
-
     # currently raise TypeError
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() == S.true
     assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() == S.true

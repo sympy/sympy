@@ -10,7 +10,6 @@ from sympy.core.add import Add
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.integrals.integrals import integrate
-from sympy import oo, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
@@ -274,8 +273,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Interval, factorial, oo, S, Sum
-        >>> from sympy.abc import n
+        >>> from sympy import Interval, factorial, S, Sum, Symbol, oo
+        >>> n = Symbol('n', integer=True)
         >>> Sum(n/(n - 1), (n, 4, 7)).is_convergent()
         True
         >>> Sum(n/(2*n + 1), (n, 1, oo)).is_convergent()
@@ -285,77 +284,81 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
         True
         """
-        from sympy import singularities, Interval, symbols, Integral
+        from sympy import Interval, Integral, Limit, log, singularities, symbols
         from sympy.solvers.solveset import solveset
         p, q = symbols('p q', cls=Wild)
 
-        sequence_term = self.args[0]
-        sym = self.args[1][0]
-        lower_limit = self.args[1][1]
-        upper_limit = self.args[1][2]
+        sequence_term = self.function
+        sym = self.limits[0][0]
+        lower_limit = self.limits[0][1]
+        upper_limit = self.limits[0][2]
         interval = Interval(lower_limit, upper_limit)
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return True
 
-        # transform sym -> -sym and swap the upper_limit = oo and lower_limit = - upper_limit
-        if lower_limit is -oo:
+        # transform sym -> -sym and swap the upper_limit = S.Infinity and lower_limit = - upper_limit
+        if lower_limit is S.NegativeInfinity:
             sequence_term = sequence_term.xreplace({sym: -sym})
             lower_limit = -upper_limit
-            upper_limit = oo
+            upper_limit = S.Infinity
 
-        ###  ------- Divergence test ---------- ###
+        ###  -------- Divergence test ----------- ###
         try:
             if limit(sequence_term, sym, upper_limit) != S.Zero:
                 return False
         except NotImplementedError:
             pass
 
-        ### -------- p-series test (1/n**p) --------- ###
-        p1_series_test = sequence_term.match(sym**p)
-        p2_series_test = sequence_term.match((1/sym)**p)
+        order = O(sequence_term, (sym, S.Infinity))
+
+        ### --------- p-series test (1/n**p) ---------- ###
+        p1_series_test = order.args[0].match(sym**p)
         if not p1_series_test is None:
             if p1_series_test[p] < -1:
                 return True
             if p1_series_test[p] > -1:
                 return False
 
+
+        p2_series_test = order.args[0].match((1/sym)**p)
         if not p2_series_test is None:
             if p2_series_test[p] > 1:
                 return True
             if p2_series_test[p] < 1:
                 return False
 
-        ### ---------- root test --------------- ###
-        lim = limit(abs(sequence_term)**(1/sym), sym, oo)
-        if lim < 1:
-            return True
-        if lim > 1:
-            return False
+        ### ----------- root test ---------------- ###
+        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
+        lim_evaluated = lim.doit()
+        if lim_evaluated.is_number:
+            if lim_evaluated < 1:
+                return True
+            if lim_evaluated > 1:
+                return False
 
-        ### ------------ alternating series test ---------- ###
+        ### ------------- alternating series test ----------- ###
         d = symbols('d', cls=Dummy)
         dict_val = sequence_term.match((-1)**p*q)
         if dict_val[p] == sym or dict_val[p].has(sym):
             if solveset((dict_val[q].subs({sym: d + 1})/dict_val[q].subs({sym: d})) < 1, d, interval) == interval and \
-                limit(dict_val[q], sym, oo).is_finite:
+                limit(dict_val[q], sym, S.Infinity).is_finite:
                     return True
             return False
 
-        ### ---------- comparison test ----------- ###
-        order = O(sequence_term, (sym, oo))
-        if order.contains(O(1/sym, (sym, oo))):
+        ### ------------- comparison test ------------- ###
+        if order.contains(O(1/sym, (sym, S.Infinity))):
             return False
 
         # (1/(n*log(n)**p)) comparison
-        log_n_test = sequence_term.match((1/(sym*(log(sym))**p)))
+        log_n_test = order.args[0].match(1/(sym*(log(sym))**p))
         if not log_n_test is None:
             if log_n_test[p] > 1:
                 return True
             return False
 
         # (1/(n*log(n)*log(log(n))*p)) comparison
-        log_log_n_test = sequence_term.match(1/(sym*(log(sym)*log(log(sym))**p)))
+        log_log_n_test = order.args[0].match(1/(sym*(log(sym)*log(log(sym))**p)))
         if not log_log_n_test is None:
             if log_log_n_test[p] > 1:
                 return True
@@ -366,7 +369,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         else:
             return Sum(order.args[0], (sym, lower_limit, upper_limit)).is_convergent()
 
-        ### ------------ integral test ------------- ###
+        ### ------------- integral test -------------- ###
         if is_decreasing(sequence_term, interval):
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
             integral_val_evaluated = integral_val.doit()
@@ -379,6 +382,35 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         raise NotImplementedError("The algorithm to find the convergence of %s "
                                     "is not yet implemented" % (sequence_term))
 
+    def is_absolute_convergent(self):
+        """
+        Checks for the absolute convergence of an infinite series.
+        Same as checking convergence of absolute value of sequence_term of
+        an infinite series.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Absolute_convergence
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Symbol, sin, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Sum((-1)**n, (n, 1, oo)).is_absolute_convergent()
+        False
+        >>> Sum(sin(n)/n, (n, 1, oo)).is_absolute_convergent()
+        False
+        >>> Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent()
+        True
+
+        See Also
+        ========
+
+        Sum.is_convergent()
+        """
+        return Sum(abs(self.function), self.limits).is_convergent()
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
