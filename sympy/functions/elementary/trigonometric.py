@@ -308,6 +308,10 @@ class sin(TrigonometricFunction):
             else:
                 return (-1)**(n//2) * x**(n)/factorial(n)
 
+    @property
+    def real_bound(self):
+        return S.One
+
     def _eval_rewrite_as_exp(self, arg):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
@@ -586,6 +590,10 @@ class cos(TrigonometricFunction):
                 return -p * x**2 / (n*(n - 1))
             else:
                 return (-1)**(n//2)*x**(n)/factorial(n)
+
+    @property
+    def real_bound(self):
+        return S.One
 
     def _eval_rewrite_as_exp(self, arg):
         I = S.ImaginaryUnit

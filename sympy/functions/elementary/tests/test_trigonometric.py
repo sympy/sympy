@@ -1416,6 +1416,11 @@ def test_acsc():
     assert acsc(x).rewrite(asec) == -asec(x) + pi/2
 
 
+def test_real_bound():
+    assert sin(n).real_bound == S(1)
+    assert cos(n).real_bound == S(1)
+
+
 @XFAIL
 def test_csc_rewrite_failing():
     # Move these 2 tests to test_csc() once bugs fixed
