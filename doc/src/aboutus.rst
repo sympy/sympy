@@ -236,7 +236,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Marek Šuppa: Improvements to symbols, tests
 #. Prasoon Shukla: Bug fixes
 #. Stefen Yin: Fixes to the mechanics module
-#. Thomas Hisch: Improvements to the printing module, Spherical Bessel functions, Improvements to the doctester
+#. Thomas Hisch: Spherical Hankel functions, Improvements to the printing module, Improvements to the doctesting system
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
 #. Case Van Horsen: Fixes to gmpy support
