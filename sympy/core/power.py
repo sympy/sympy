@@ -162,8 +162,9 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            # Only perform autosimplification if base if a Symbol or number
-            elif (b.is_Symbol or b.is_number) and e.is_integer and _coeff_isneg(b):
+            # Only perform autosimplification if exponent or base is a Symbol or number
+            elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
+                e.is_integer and _coeff_isneg(b):
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
