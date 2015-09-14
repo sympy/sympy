@@ -267,6 +267,10 @@ class Add(Expr, AssocOp):
         """Nice order of classes"""
         return 3, 1, cls.__name__
 
+    @property
+    def real_bound(self):
+        return Add(*[abs(val) if val.is_number else val.real_bound for val in self.args])
+
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which

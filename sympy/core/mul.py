@@ -600,6 +600,10 @@ class Mul(Expr, AssocOp):
     def class_key(cls):
         return 3, 0, cls.__name__
 
+    @property
+    def real_bound(self):
+        return Mul(*[abs(val) if val.is_number else val.real_bound for val in self.args])
+
     def _eval_evalf(self, prec):
         c, m = self.as_coeff_Mul()
         if c is S.NegativeOne:
