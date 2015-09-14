@@ -1424,6 +1424,8 @@ def test_real_bound():
     assert (-2 + 2*sin(n)).real_bound == S(4)
     assert (2 + 3*sin(n)).real_bound == S(5)
     assert (-3 - 4*cos(n)).real_bound == S(7)
+    assert ((-1 + sin(n))**2).real_bound == S(4)
+    assert ((-2 + 2*sin(n))**3).real_bound == S(64)
 
 
 @XFAIL
