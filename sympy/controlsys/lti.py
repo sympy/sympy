@@ -13,7 +13,6 @@ from scipy.linalg import expm
 from scipy.integrate import quad
 
 import numpy as np
-
 __all__ = ['StateSpaceModel', 'TransferFunctionModel']
 
 _matrixTypes = (
@@ -638,9 +637,6 @@ class TransferFunctionModel(object):
 
     def __str__(self):
         return 'TransferFunctionModel' + str(self.G)[6:]
-
-    def __repr__(self):
-        return 'TransferFunctionModel' + srepr(self.G)[6:]
 
 
 #

@@ -4,7 +4,7 @@ create linear control systems in state space or transfer funciton model
 representation, transform theese representatin into oneanother,
 interconnect systems, evaluate the systems etc.
 """
-__all__ = []
+__all__ = ['lti']
 
 # The following pattern is used below for importing sub-modules:
 #
@@ -15,10 +15,8 @@ __all__ = []
 # 2. "import foo; __all__.extend(foo.__all__)". This adds all the names in
 #    foo.__all__ to the __all__ of this module. The names in __all__
 #    determine which names are imported when
-#    "from sympy.physics.mechanics import *" is done.
+#    "from sympy.controlsys import *" is done.
 
 
-from .import lti
-from .lti import *
-
-__all__.extend(models.__all__)
+from sympy.controlsys import lti
+__all__.extend([lti.__all__])
