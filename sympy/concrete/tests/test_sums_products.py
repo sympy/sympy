@@ -252,6 +252,9 @@ def test_geometric_sums():
     # issue 8251:
     assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) == oo
 
+    #issue 9908:
+    assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
+
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
