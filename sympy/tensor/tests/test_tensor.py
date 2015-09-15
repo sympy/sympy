@@ -1190,30 +1190,36 @@ def test_hidden_indices_for_matrix_multiplication():
     m0, m1, m2, m3, m4, m5 = tensor_indices('m0:6', L)
     s0, s1, s2 = tensor_indices('s0:3', S)
 
+    matl1 = TensorIndex('matl1', S, is_matrix_index=True)
+    matl2 = TensorIndex('matl2', S, is_matrix_index=True)
+
+    Ll1 = TensorIndex('Ll1', L, is_matrix_index=True)
+    Ll2 = TensorIndex('Ll2', L, is_matrix_index=True)
+
     A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
     B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)
     D = tensorhead('D', [L, L, S, S], [[1, 1], [1, 1]], matrix_behavior=True)
     E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]], matrix_behavior=True)
     F = tensorhead('F', [L], [[1]], matrix_behavior=True)
 
-    assert (A(m0)) == A(m0, S.auto_left, -S.auto_right)
-    assert (B(-m1)) == B(-m1, S.auto_left)
+    assert (A(m0)) == A(m0, matl1, -matl2)
+    assert (B(-m1)) == B(-m1, matl2)
 
     A0 = A(m0)
     B0 = B(-m0)
     B1 = B(m1)
 
     assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
-    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, S.auto_left))
-    assert _is_equal((A0*B0), A(m0, S.auto_left, s0)*B(-m0, -s0))
+    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, matl2))
+    assert _is_equal((A0*B0), A(m0, matl2, s0)*B(-m0, -s0))
 
     C = tensorhead('C', [L, L], [[1]*2])
 
-    assert _is_equal((C(True, True)), C(L.auto_left, -L.auto_right))
+    assert _is_equal((C(True, True)), C(Ll2, -Ll1))
 
-    assert _is_equal((A(m0)*C(m1, -m0)), A(m2, S.auto_left, -S.auto_right)*C(m1, -m2))
+    assert _is_equal((A(m0)*C(m1, -m0)), A(m2, matl2, -matl1)*C(m1, -m2))
 
-    assert _is_equal((C(True, True)*C(True, True)), C(L.auto_left, m0)*C(-m0, -L.auto_right))
+    assert _is_equal((C(True, True)*C(True, True)), C(Ll2, m0)*C(-m0, -Ll1))
 
     assert _is_equal(A(m0), A(m0))
     assert _is_equal(B(-m1), B(-m1))
@@ -1232,8 +1238,8 @@ def test_hidden_indices_for_matrix_multiplication():
     D0 = D(True, True, True, True)
     Aa = A(True, True, True)
 
-    assert _is_equal(D0 * Aa, D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, -S.auto_right))
-    assert D(m0, m1) == D(m0, m1, S.auto_left, -S.auto_right)
+    assert _is_equal(D0 * Aa, D(L.auto_left, m0, matl2, s0)*A(-m0, -s0, -matl1))
+    assert D(m0, m1) == D(m0, m1, matl2, -matl1)
 
     raises(ValueError, lambda: C(True))
     raises(ValueError, lambda: C())
@@ -1242,18 +1248,18 @@ def test_hidden_indices_for_matrix_multiplication():
 
     # test that a delta is automatically added on missing auto-matrix indices in TensAdd
     assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
-        E(m1, m2, m3, m4)*S.delta(S.auto_left, -S.auto_right) +\
-        F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, -S.auto_right)
-    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, -L.auto_right)
+        E(m1, m2, m3, m4)*S.delta(matl2, -matl1) +\
+        F(m2)*F(m3)*F(m4)*A(m1, matl2, -matl1)
+    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(Ll2, -Ll1)
     assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
-        E(m1, m2, L.auto_left, -L.auto_right)*A(m3, S.auto_left, -S.auto_right) +\
-        F(m1)*F(m2)*F(m3)*L.delta(L.auto_left, -L.auto_right)*S.delta(S.auto_left, -S.auto_right)
+        E(m1, m2, Ll2, -Ll1)*A(m3, matl2, -matl1) +\
+        F(m1)*F(m2)*F(m3)*L.delta(Ll2, -Ll1)*S.delta(matl2, -matl1)
 
-    assert L.delta() == L.delta(L.auto_left, -L.auto_right)
-    assert S.delta() == S.delta(S.auto_left, -S.auto_right)
+    assert L.delta() == L.delta(Ll2, -Ll1)
+    assert S.delta() == S.delta(matl2, -matl1)
 
-    assert L.metric() == L.metric(L.auto_left, -L.auto_right)
-    assert S.metric() == S.metric(S.auto_left, -S.auto_right)
+    assert L.metric() == L.metric(Ll2, -Ll1)
+    assert S.metric() == S.metric(matl2, -matl1)
 
 
 ### TEST VALUED TENSORS ###
@@ -1666,6 +1672,10 @@ def test_contract_automatrix_and_data():
 
     c1 = G(m0, s0, -s1)*G(-m0, s1, -s2)
     c2 = G(m0) * G(-m0)
+
+    # TODO: remove this line:
+    assert TensMul(*c2.split()) == c2
+    # the valence of a matrix index gets changed...
 
     assert (c1.data == c2.data).all()
 

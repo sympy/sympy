@@ -886,14 +886,14 @@ class _IndexStructure(CantSympify):
         # index higher than those for the dummy indices
         # to avoid name collisions
         for indx, ipos in free:
-            if indx._name.split('_')[0] == indx.tensor_index_type._dummy_fmt[:-3]:
+            if indx._name.split('_')[0] == indx.tensor_index_type.dummy_fmt[:-3]:
                 cdt[indx.tensor_index_type] = max(cdt[indx.tensor_index_type], int(indx._name.split('_')[1]) + 1)
             indices[ipos] = indx
             assert indx.tensor_index_type == self.index_types[ipos]
         for ipos1, ipos2 in dum:
             typ1 = self.index_types[ipos1]
             assert typ1 == self.index_types[ipos2]
-            fmt = typ1._dummy_fmt
+            fmt = typ1.dummy_fmt
             nd = cdt[typ1]
             indices[ipos1] = TensorIndex(fmt % nd, typ1)
             indices[ipos2] = TensorIndex(fmt % nd, typ1, False)
@@ -1215,7 +1215,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             srch = (key.component,) + signature
             if srch in self._substitutions_dict_tensmul:
                 return self._substitutions_dict_tensmul[srch]
-            return self.data_tensmul_from_tensorhead(key, key.component)
+            return self.data_tensmul_from_tensorhead(key)
 
         if isinstance(key, TensMul):
             tensmul_list = key.split()
@@ -1227,7 +1227,7 @@ class _TensorDataLazyEvaluator(CantSympify):
                 srch = (tensmul_list[0].components[0],) + signature
                 if srch in self._substitutions_dict_tensmul:
                     return self._substitutions_dict_tensmul[srch]
-            data_list = [self.data_tensmul_from_tensorhead(i, i.components[0]) for i in tensmul_list]
+            data_list = [self.data_tensmul_from_tensorhead(i) for i in tensmul_list]
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
@@ -1266,20 +1266,22 @@ class _TensorDataLazyEvaluator(CantSympify):
             tensmul.dum,
             True)
 
-    def data_tensmul_from_tensorhead(self, tensmul, tensorhead):
+    def data_tensmul_from_tensorhead(self, tensor):
         """
         This method corrects the components data to the right signature
         (covariant/contravariant) using the metric associated with each
         ``TensorIndexType``.
         """
+        tensorhead = tensor.component
+
         if tensorhead.data is None:
             return None
 
         return self._correct_signature_from_indices(
             tensorhead.data,
-            tensmul.get_indices(),
-            tensmul.free,
-            tensmul.dum)
+            tensor.get_indices(),
+            tensor.free,
+            tensor.dum)
 
     def data_product_tensors(self, data_list, tensmul_list):
         """
@@ -1850,18 +1852,21 @@ class TensorIndexType(Basic):
         return obj
 
     @property
+    @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
     def auto_right(self):
         if not hasattr(self, '_auto_right'):
             self._auto_right = TensorIndex("auto_right", self, is_matrix_index=True)
         return self._auto_right
 
     @property
+    @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
     def auto_left(self):
         if not hasattr(self, '_auto_left'):
             self._auto_left = TensorIndex("auto_left", self, is_matrix_index=True)
         return self._auto_left
 
     @property
+    @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
     def auto_index(self):
         if not hasattr(self, '_auto_index'):
             self._auto_index = TensorIndex("auto_index", self, is_matrix_index=True)
@@ -1910,6 +1915,9 @@ class TensorIndexType(Basic):
             del _tensor_data_substitution_dict[self]
         if self.metric in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self.metric]
+
+    def _get_matrix_fmt(self, number):
+        return ("m" + self.dummy_fmt) % (number)
 
     @property
     def name(self):
@@ -2693,6 +2701,25 @@ class TensorHead(Basic):
 
         return indices, matrix_behavior_kinds
 
+    def _rename_matrix_indices(self, indices):
+        type_counter = defaultdict(int)
+        for i, idx in enumerate(indices):
+            if not idx.is_matrix_index:
+                continue
+            tc = type_counter[idx.tensor_index_type]
+            indices[i] = TensorIndex(
+                idx.tensor_index_type._get_matrix_fmt(tc),
+                idx.tensor_index_type,
+                idx.is_up,
+                is_matrix_index=True
+            )
+            tc += 1
+            if tc > 2:
+                raise ValueError("one tensor index type cannot have more than two matrix indices in a Tensor instance")
+            type_counter[idx.tensor_index_type] = tc
+
+        return indices
+
     def __call__(self, *indices, **kw_args):
         """
         Returns a tensor with indices.
@@ -2768,6 +2795,7 @@ class TensorHead(Basic):
         """
 
         indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
+        indices = self._rename_matrix_indices(list(indices))
         tensor = Tensor._new_with_dummy_replacement(self, indices, **kw_args)
         return tensor
 
@@ -3113,7 +3141,7 @@ class TensAdd(TensExpr):
             return args[0]
 
         # replace auto-matrix indices so that they are the same in all addends
-        args = TensAdd._tensAdd_check_automatrix(args)
+        TensAdd._tensAdd_check_automatrix(args)
 
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
@@ -3188,40 +3216,47 @@ class TensAdd(TensExpr):
 
     @staticmethod
     def _tensAdd_check_automatrix(args):
-        # check that all automatrix indices are the same.
+        # Check that all automatrix indices are the same.
+        # Add dirac deltas if pairs of matrix indices are missing.
 
         # if there are no addends, just return.
         if not args:
             return args
 
-        # @type auto_left_types: set
-        auto_left_types = set([])
-        auto_right_types = set([])
-        args_auto_left_types = []
-        args_auto_right_types = []
-        for i, arg in enumerate(args):
-            arg_auto_left_types = set([])
-            arg_auto_right_types = set([])
-            for index in get_indices(arg):
-                # @type index: TensorIndex
-                if index in (index.tensor_index_type.auto_left, -index.tensor_index_type.auto_left):
-                    auto_left_types.add(index.tensor_index_type)
-                    arg_auto_left_types.add(index.tensor_index_type)
-                if index in (index.tensor_index_type.auto_right, -index.tensor_index_type.auto_right):
-                    auto_right_types.add(index.tensor_index_type)
-                    arg_auto_right_types.add(index.tensor_index_type)
-            args_auto_left_types.append(arg_auto_left_types)
-            args_auto_right_types.append(arg_auto_right_types)
-        for arg, aas_left, aas_right in zip(args, args_auto_left_types, args_auto_right_types):
-            missing_left = auto_left_types - aas_left
-            missing_right = auto_right_types - aas_right
-            missing_intersection = missing_left & missing_right
-            for j in missing_intersection:
-                args[i] *= j.delta(j.auto_left, -j.auto_right)
-            if missing_left != missing_right:
-                raise ValueError("cannot determine how to add auto-matrix indices on some args")
+        # all_free_matrix_indices = set([])
+        free_mat_indices_types_count = {}
+        fmitcs = [defaultdict(lambda: 0) for i in args]
+        for arg, fmitc in zip(args, fmitcs):
+            if not isinstance(arg, TensExpr):
+                continue
+            for idx in arg._get_free_indices_set():
+                fmitc[idx.tensor_index_type] += 1
+            for typ, count in fmitc.items():
+                if typ not in free_mat_indices_types_count:
+                    free_mat_indices_types_count[typ] = count
+                else:
+                    free_mat_indices_types_count[typ] = max(free_mat_indices_types_count[typ], fmitc[typ])
+            #
+            # matrix_indices = [i for i in arg._get_free_indices_set() if i.is_matrix_index]
+            # all_free_matrix_indices.update(matrix_indices)
 
-        return args
+        for argi, arg in enumerate(args):
+            for typ, count in free_mat_indices_types_count.items():
+                if fmitcs[argi][typ] == count:
+                    continue
+                if count - fmitcs[argi][typ] != 2:
+                    raise ValueError("cannot determine how to add auto-matrix indices on some args")
+                args[argi] *= typ.delta()
+            # matrix_indices = [i for i in arg._get_free_indices_set() if i.is_matrix_index]
+            # intersection = all_free_matrix_indices.intersection(matrix_indices)
+            # if intersection:
+            #     inttypes = set([i.tensor_index_type for i in intersection])
+            #     for typ in inttypes:
+            #         indices = [i for i in intersection if i.tensor_index_type == typ]
+            #         if len(indices) == 2:
+            #             args[argi] *= typ.delta(indices[0], indices[1])
+            #         else:
+            #             raise ValueError("cannot determine how to add auto-matrix indices on some args")
 
     @staticmethod
     def _tensAdd_check(args):
@@ -3906,13 +3941,14 @@ class TensMul(TensExpr):
         type_count = defaultdict(lambda: 0)
         type_valence = defaultdict(lambda: True)
         type_contraction = defaultdict(lambda: False)
+
         def generate_for_type(index_type):
             number = type_count[index_type]
             type_count[index_type] += 1
-            dummy_fmt = ("m" + index_type.dummy_fmt) % (number)
+            matrix_fmt = index_type._get_matrix_fmt(number)
             valence = type_valence[index_type]
             type_valence[index_type] = not valence
-            return TensorIndex(dummy_fmt, index_type, valence, is_matrix_index=True)
+            return TensorIndex(matrix_fmt, index_type, valence, is_matrix_index=True)
 
         def relabel_matrix_inds(ind):
             if ind.is_matrix_index:
@@ -4762,6 +4798,11 @@ def get_lines(ex, index_type):
     rest = [x for x in range(len(components)) if x not in rest]
 
     return lines, traces, rest
+
+def get_free_indices(t):
+    if not isinstance(t, TensExpr):
+        return ()
+    return t.get_free_indices()
 
 def get_indices(t):
     if not isinstance(t, TensExpr):
