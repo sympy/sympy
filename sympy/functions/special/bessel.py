@@ -598,7 +598,8 @@ def _jn(n, z):
 
 
 def _yn(n, z):
-    return (-1)**(n + 1) * _jn(-n - 1, z)
+    # (-1)**(n + 1) * _jn(-n - 1, z)
+    return (-1)**(n + 1) * fn(-n - 1, z)*sin(z) - fn(n, z)*cos(z)
 
 
 class jn(SphericalBesselBase):
