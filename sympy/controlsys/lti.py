@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-
+from IPython.display import display
 from sympy import (
     Symbol, var, Function, simplify, oo, exp, Eq,
     Poly, lcm, LC, degree, Integral, integrate,
@@ -180,7 +180,7 @@ class StateSpaceModel(object):
     #
     # evaluate(self, u, t)
     #
-    def evaluate(self, u, x0, t, t0=0, method=None, do_integrals=True, dps=5):
+    def evaluate(self, u, x0, t, t0=0, **flags):
         """evaluate the system output for an input u
 
         The output of the system y for the output u if given by solving the state equation for x
@@ -214,6 +214,10 @@ class StateSpaceModel(object):
 
         Joao P. Hespanha, Linear Systems Theory. 2009.
         """
+        valid_flags = ('simplify', 'do_integrals')
+        for x in flags:
+            if x not in valid_flags:
+                raise ValueError('Unknown keyword argument: %s' % x)
         try:
             # assert right shape of u
             if not u.shape[1] == 1:
@@ -243,9 +247,12 @@ class StateSpaceModel(object):
 
         try:
 
-            # if t symobl, then calculate the solution symbolicaly
+            # if t symbol, then calculate the solution symbolicaly
             if isinstance(t, Symbol):
-                sol = self._solve_symbolicaly(u, x0, t, t0, do_integrals=do_integrals)
+                sol = self._solve_symbolicaly(u, x0, t, t0,
+                                              do_integrals=flags.get('do_integrals', True))
+                if flags.get('simplify', True):
+                    sol = simplify(sol)
 
             # if not, try if it is tuple, list or sth.
             elif isinstance(t[0], Symbol):
@@ -253,11 +260,11 @@ class StateSpaceModel(object):
                 if isinstance(t[1], (list, tuple)):
 
                     # use the private member function of the class to compute the numervial result
-                    sol = self._solve_numericaly(u, x0, t[0], t[1], t0, dps=dps)
+                    sol = self._solve_numericaly(u, x0, t[0], t[1], t0)
 
                 #  if its not, try to convert it
                 else:
-                    sol = self._solve_numericaly(u, x0, t[0], list(t[1]), t0, dps=dps)
+                    sol = self._solve_numericaly(u, x0, t[0], list(t[1]), t0)
 
         #
         # Error handling
@@ -279,7 +286,7 @@ class StateSpaceModel(object):
     #
     # _solve_numericaly
     #
-    def _solve_numericaly(self, u, x0, t, t_list, t0, dps=2):
+    def _solve_numericaly(self, u, x0, t, t_list, t0):
         """ returns the numeric evaluation of the system for input u, known state x0 at time t0 and times t_list
         """
         result = []
@@ -318,16 +325,9 @@ class StateSpaceModel(object):
     #
     # _solve_symbolicaly
     #
-    def _solve_symbolicaly(self, u, x0, t, t0, exp_method="diagonalize", do_integrals=True):
+    def _solve_symbolicaly(self, u, x0, t, t0, do_integrals):
         """ returns the symbolic evaluation of the system for input u and known state x0 at time t0
         """
-        # set the valid methods for the matrix exponential
-        # TODO: Laplace Transform
-        valid_methods = ("diagonalize")
-
-        if exp_method not in valid_methods:
-            raise ValueError("unknown method for matrix exponential:", exp_method)
-
         # define temporary symbols tau
         tau = Symbol('tau', positive=True)
         x = Symbol('x')
@@ -339,26 +339,28 @@ class StateSpaceModel(object):
         expAt = simplify(expAx.subs(x, t - tau))
 
         # define the integral and heuristic simplification nowing that in the integral, tau < t always holds
-        integrand = simplify(self.represent[2] * expAt * self.represent[1] * u.subs(t, tau))
-        integrand = simplify(integrand.subs([(abs(t - tau), t - tau), (abs(tau - t), t - tau)]))
+        integrand = self.represent[2] * expAt * self.represent[1] * u.subs(t, tau)
+        integrand = integrand.subs([(abs(t - tau), t - tau), (abs(tau - t), t - tau)])
         integral = zeros(integrand.shape[0], integrand.shape[1])
-
         for col_idx in xrange(integrand.cols):
 
             for row_idx in xrange(integrand.rows):
                 try:
                     if not integrand[row_idx, col_idx] == 0:
                         if do_integrals is True:
-                            integral[row_idx, col_idx] = simplify(integrate(integrand[row_idx, col_idx], (tau, t0, t)))
+                            integral[row_idx, col_idx] = \
+                                integrate(integrand[row_idx, col_idx], (tau, t0, t))
                         else:
-                            integral[row_idx, col_idx] = Integral(integrand, (tau, t0, t))
+                            integral[row_idx, col_idx] = \
+                                Integral(integrand[row_idx, col_idx], (tau, t0, t))
                 except:
-                    integral[row_idx, col_idx] = Integral(integrand, (tau, t0, t))
+                    integral[row_idx, col_idx] = \
+                        Integral(integrand[row_idx, col_idx], (tau, t0, t))
 
         # return the general solution
-        return simplify(self.represent[2] * expA * x0 + self.represent[3] * u + integral)
+        return self.represent[2] * expA * x0 + self.represent[3] * u + integral
 
-    def cotrollability_matrix(self):
+    def controllability_matrix(self):
         """ Returns the controllability matrix of the system:
             C = [B, A * B, A^2 * B, .. , A^(n-1), B]; A in R^(n x n), B in^R^(n x m)
         """
