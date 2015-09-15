@@ -45,12 +45,12 @@ class StateSpaceModel(object):
     Joao P. Hespanha, Linear Systems Theory. 2009.
     """
 
-    def __init__(self, arg):
+    def __init__(self, *arg):
 
-        if isinstance(arg, TransferFunctionModel):
+        if isinstance(arg[0], TransferFunctionModel):
 
             # call the private method for realization finding
-            self.represent = self._find_realization(arg.G, arg.s)
+            self.represent = self._find_realization(arg[0].G, arg[0].s)
 
             # create a block matrix [[A,B], [C,D]] for visual representation
             self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
