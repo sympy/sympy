@@ -31,8 +31,8 @@ class StateSpaceModel(object):
     Parameters
     ==========
 
-    arg : TransferFunctionModel, List of Sympy-Matrix
-        tfm to construct the state space model from, or the Matrices A,B,C,D in a list
+    *arg : TransferFunctionModel, Sympy-Matrices
+        tfm to construct the state space model from, or the Matrices A,B,C,D as StateSpaceModel(A, B, C, D)
 
     See Also
     ========
