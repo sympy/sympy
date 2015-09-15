@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy import (
     Symbol, var, Function, simplify, oo, exp, Eq,
     Poly, lcm, LC, degree, Integral, integrate,
-    Matrix, BlockMatrix, eye, zeros,
+    Matrix, BlockMatrix, eye, zeros, cancel, together,
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
     SparseMatrix, MutableDenseMatrix
 )
@@ -23,7 +23,7 @@ class StateSpaceModel(object):
     """state space model (ssm) of a linear, time invariant control system
 
     Represents the standard state-space model with state matrix A, input matrix B, output matrix C, and
-    transmission matrix D. This makes the linear controll system:
+    transmission matrix D. This makes the linear control system:
         (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
         (2) y(t)  = C * x(t) + D * u(t);    y in R^m
     where u(t)  is any input signal, y(t) the corresponding output, and x(t) the systems state.
@@ -37,7 +37,7 @@ class StateSpaceModel(object):
     See Also
     ========
 
-    TranferFunctionModel: transfer function model of a lti system
+    TransferFunctionModel: transfer function model of a lti system
 
     References
     ==========
@@ -53,7 +53,7 @@ class StateSpaceModel(object):
             self.represent = self._find_realization(arg.G, arg.s)
 
             # create a block matrix [[A,B], [C,D]] for visual representation
-            self.BlockRepresent = BlockMatrix([[self.represent[0], self.represent[1]],
+            self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
                                                [self.represent[2], self.represent[3]]])
             return None
 
@@ -73,7 +73,7 @@ class StateSpaceModel(object):
                     raise ShapeError("Shapes of A,B,C,D must fit")
 
                 # create a block matrix [[A,B], [C,D]] for visual representation
-                self.BlockRepresent = BlockMatrix([[self.represent[0], self.represent[1]],
+                self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
                                                    [self.represent[2], self.represent[3]]])
                 return None
 
@@ -124,15 +124,14 @@ class StateSpaceModel(object):
         D = G.limit(s, oo)
 
         # define G_sp as the (stricly proper) difference of G and D
-        G_sp = simplify(G - D)
+        G_sp = G - D
 
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         # get the coefficients of the monic least common denominator of all entries of G_sp
         # compute a least common denominator using utl and lcm
         lcd = lcm(_fraction_list(G_sp, only_denoms=True))
 
         # make it monic
-        lcd = simplify(lcd / LC(lcd, s))
+        lcd = lcd / LC(lcd, s)
 
         # and get a coefficient list of its monic. The [1:] cuts the LC away (thats a one)
         lcd_coeff = Poly(lcd, s).all_coeffs()[1:]
@@ -144,7 +143,6 @@ class StateSpaceModel(object):
         G_sp_coeff = _matrix_coeff(simplify(G_sp * lcd), s)
         G_sp_coeff = [zeros(m, k)] * (lcd_deg - len(G_sp_coeff)) + G_sp_coeff
 
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         # now store A, B, C, D in terms of the coefficients of lcd and G_sp
         # define A
         A = (-1) * lcd_coeff[0] * eye(k)
@@ -177,12 +175,12 @@ class StateSpaceModel(object):
             C = C.row_join(G_sp_coeff[i])
 
         # return the state space representation
-        return [simplify(A), simplify(B), simplify(C), simplify(D)]
+        return [A, B, C, D]
 
     #
     # evaluate(self, u, t)
     #
-    def evaluate(self, u, x0, t, t0=0, method=None, return_pretty=False, do_integrals=True, dps=5):
+    def evaluate(self, u, x0, t, t0=0, method=None, do_integrals=True, dps=5):
         """evaluate the system output for an input u
 
         The output of the system y for the output u if given by solving the state equation for x
@@ -276,22 +274,13 @@ class StateSpaceModel(object):
         # if that worked, return the prestored solution
         #
 
-        if return_pretty is True:
-
-            y = Function('y')
-            u_ = Function('u')
-            x_ = Function('x')
-
-            return (Eq(u_(t), u), Eq(x_(0), x0), Eq(y(t), sol))
-
-        else:
-            return sol
+        return sol
 
     #
     # _solve_numericaly
     #
     def _solve_numericaly(self, u, x0, t, t_list, t0, dps=2):
-        """ returns the numeric evaluation of the system for input u, know state x0 at time t0 and times t_list
+        """ returns the numeric evaluation of the system for input u, known state x0 at time t0 and times t_list
         """
         result = []
         for t_i in t_list:
@@ -514,10 +503,10 @@ class StateSpaceModel(object):
     #   defines the representation of the class in ipython pretty printing
     #
     def _repr_latex_(self):
-        return '$' + latex(self.BlockRepresent) + '$'
+        return '$' + latex(self._blockrepresent) + '$'
 
     def __str__(self):
-        return 'StateSpaceModel' + str(self.BlockRepresent)[6:]
+        return 'StateSpaceModel' + str(self._blockrepresent)[6:]
 
 
 class TransferFunctionModel(object):
@@ -678,10 +667,9 @@ def _matrix_coeff(m, s):
         for e, entry in enumerate(row):
 
             entry_coeff_list = Poly(entry, s).all_coeffs()
-            if simplify(entry) == 0:
+            coeff_deg = degree(entry, s)
+            if coeff_deg is -oo:
                 coeff_deg = 0
-            else:
-                coeff_deg = degree(entry, s)
 
             for c, coeff in enumerate(entry_coeff_list):
                 res[c + m_deg - coeff_deg] += \
