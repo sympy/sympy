@@ -1,16 +1,14 @@
 from __future__ import print_function, division
-from IPython.display import display
 from sympy import (
     Symbol, var, Function, simplify, oo, exp, Eq,
     Poly, lcm, LC, degree, Integral, integrate,
     Matrix, BlockMatrix, eye, zeros, cancel, together,
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
-    SparseMatrix, MutableDenseMatrix
+    SparseMatrix, MutableDenseMatrix, Subs
 )
 
-# import scipy for numercial results
-from scipy.linalg import expm
-from scipy.integrate import quad
+# import mpmath for numercial results
+from mpmath import expm, quad, matrix as mpm_matrix
 
 import numpy as np
 __all__ = ['StateSpaceModel', 'TransferFunctionModel']
@@ -214,10 +212,12 @@ class StateSpaceModel(object):
 
         Joao P. Hespanha, Linear Systems Theory. 2009.
         """
+        # verifiing valid arguments:
         valid_flags = ('simplify', 'do_integrals')
         for x in flags:
             if x not in valid_flags:
                 raise ValueError('Unknown keyword argument: %s' % x)
+
         try:
             # assert right shape of u
             if not u.shape[1] == 1:
@@ -250,7 +250,8 @@ class StateSpaceModel(object):
             # if t symbol, then calculate the solution symbolicaly
             if isinstance(t, Symbol):
                 sol = self._solve_symbolicaly(u, x0, t, t0,
-                                              do_integrals=flags.get('do_integrals', True))
+                                              do_integrals=flags.get('do_integrals', True)
+                                              )
                 if flags.get('simplify', True):
                     sol = simplify(sol)
 
@@ -291,34 +292,31 @@ class StateSpaceModel(object):
         """
         result = []
         for t_i in t_list:
+            print(t_i, end=' ')
             # we use the arbitrary precision module mpmath for numercial evaluation of the matrix exponentials
-            first = np.array(np.array(self.represent[2]), np.float).dot(
-                expm(np.array(np.array((self.represent[0] * (t_i - t0)).evalf()), np.float))
-            ).dot(
-                np.array(np.array(x0), np.float)
-            )
+            first = mpm_matrix(self.represent[2].evalf()) * \
+                expm((self.represent[0] * (t_i - t0)).evalf()) * \
+                mpm_matrix(x0.evalf())
 
-            second = np.array(np.array((self.represent[3] * u.subs(t, t_i)).evalf()), np.float)
+            second = mpm_matrix((self.represent[3] * u.subs(t, t_i)).evalf())
 
             integrand = lambda tau: \
-                np.array(np.array(self.represent[2]), np.float).dot(
-                    expm(np.array(np.array((self.represent[0] * (t_i - tau)).evalf()), np.float))
-                ).dot(
-                    np.array(np.array(self.represent[1]), np.float)
-                ).dot(
-                    np.array(np.array(u.subs(t, tau).evalf()), np.float)
-                )
+                mpm_matrix(self.represent[2].evalf()) * \
+                expm((self.represent[0] * (t_i - tau)).evalf()) * \
+                mpm_matrix(self.represent[1].evalf()) * \
+                mpm_matrix(u.subs(t, tau).evalf())
 
-            # the result must have the same shape as D:
-            integral = zeros(self.represent[2].rows, 1)
+            # the result must have the same number of rows as C:
+            integral = mpm_matrix(self.represent[2].rows, 1)
 
             # Loop through every entry and evaluate the integral using mpmath.quad()
             for row_idx in xrange(self.represent[2].rows):
 
-                    integral[row_idx, 0] = quad(lambda x: integrand(x)[row_idx, 0], t0, t_i)[0]
+                    integral[row_idx] = quad(lambda x: integrand(x)[row_idx], [t0, t_i])
 
-            result.append(Matrix(first) + Matrix(second) + integral)
+            result.append(Matrix((first + second + integral).tolist()))
 
+        print('finished')
         # return sum of results
         return result
 
@@ -334,9 +332,9 @@ class StateSpaceModel(object):
 
         # compute the two matrix exponentials that are used in the general solution
         # to avoid two eigenvalue problems, first solve for a general real x and substitude then
-        expAx = simplify(exp(self.represent[0] * x))
-        expA = simplify(expAx.subs(x, t - t0))
-        expAt = simplify(expAx.subs(x, t - tau))
+        expAx = exp(self.represent[0] * x)
+        expA = expAx.subs(x, t - t0)
+        expAt = expAx.subs(x, t - tau)
 
         # define the integral and heuristic simplification nowing that in the integral, tau < t always holds
         integrand = self.represent[2] * expAt * self.represent[1] * u.subs(t, tau)
@@ -430,7 +428,7 @@ class StateSpaceModel(object):
         newC = (anotherSystem.represent[3] * self.represent[2]).row_join(anotherSystem.represent[2])
         newD = anotherSystem.represent[3] * self.represent[3]
 
-        return StateSpaceModel([newA, newB, newC, newD])
+        return StateSpaceModel(newA, newB, newC, newD)
 
     def parallel(self, anotherSystem):
         """ Returns the parallel interconnection of the system and another system
@@ -473,7 +471,7 @@ class StateSpaceModel(object):
         newC = self.represent[2].row_join(anotherSystem.represent[2])
         newD = self.represent[3] + anotherSystem.represent[3]
 
-        return StateSpaceModel([newA, newB, newC, newD])
+        return StateSpaceModel(newA, newB, newC, newD)
 
     #
     # define a magic function for unknown method handling
@@ -492,7 +490,7 @@ class StateSpaceModel(object):
                 for r in self.represent:
                     methodToCall = getattr(r, name)
                     new_represent.append(methodToCall(*args, **kwargs))
-                return StateSpaceModel(new_represent)
+                return StateSpaceModel(*new_represent)
 
         except AttributeError:
             raise AttributeError("%r object has no attribute %r" %
