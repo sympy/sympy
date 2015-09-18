@@ -127,6 +127,7 @@ def test_latex_builtins():
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
 
+
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
@@ -352,6 +353,7 @@ def test_latex_functions():
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
+
 def test_hyper_printing():
     from sympy import pi
     from sympy.abc import x, z
@@ -371,7 +373,7 @@ def test_hyper_printing():
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,
-            besselk, hankel1, hankel2, jn, yn)
+            besselk, hankel1, hankel2, jn, yn, hn1, hn2)
     from sympy.abc import z
     assert latex(besselj(n, z**2)**k) == r'J^{k}_{n}\left(z^{2}\right)'
     assert latex(bessely(n, z)) == r'Y_{n}\left(z\right)'
@@ -382,6 +384,8 @@ def test_latex_bessel():
     assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
+    assert latex(hn1(n, z)) == r'h^{(1)}_{n}\left(z\right)'
+    assert latex(hn2(n, z)) == r'h^{(2)}_{n}\left(z\right)'
 
 
 def test_latex_fresnel():
