@@ -141,6 +141,8 @@ def checksol(f, symbol, sol=None, **flags):
     True
     >>> checksol(x**4 - 1, x, 0)
     False
+    >>> checksol(x - 1, x, 0)
+    False
     >>> checksol(x**2 + y**2 - 5**2, {x: 3, y: 4})
     True
 
