@@ -1,7 +1,7 @@
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
-                   bessely, besseli, besselk, hankel1, hankel2, expand_func,
-                   sqrt, sinh, cosh, diff, series, gamma, hyper, Abs, I, O, oo,
-                   conjugate)
+                   bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
+                   expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
+                   Abs, I, O, oo, conjugate)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime)
@@ -61,6 +61,25 @@ def test_rewrite():
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(besseli), z)
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(bessely), z)
 
+    for f in (jn, yn):
+        # check that the following functions can't be rewritten to 'f'
+        # when nu is non-integral
+        assert yn(nu, z) == yn(nu, z).rewrite(f)
+        assert jn(nu, z) == jn(nu, z).rewrite(f)
+        assert hn1(nu, z) == hn1(nu, z).rewrite(f)
+        assert hn2(nu, z) == hn2(nu, z).rewrite(f)
+
+    N = Symbol('n', integer=True)
+    assert yn(N, z) != yn(N, z).rewrite(jn)
+    assert jn(N, z) != jn(N, z).rewrite(yn)
+    assert hn1(N, z) != hn1(N, z).rewrite(yn)
+    assert hn2(N, z) != hn2(N, z).rewrite(yn)
+
+    for func, refunc in ((yn, jn), (jn, yn),
+                         (hn1, jn), (hn1, yn),
+                         (hn2, jn), (hn2, yn)):
+        assert tn(func(4, z), func(4, z).rewrite(refunc), z)
+        assert tn(func(-4, z), func(-4, z).rewrite(refunc), z)
 
 def test_expand():
     from sympy import besselsimp, Symbol, exp, exp_polar, I

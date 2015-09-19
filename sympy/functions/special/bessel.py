@@ -655,6 +655,10 @@ class jn(SphericalBesselBase):
     def _eval_rewrite_as_bessely(self, nu, z):
         return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
+    def _eval_rewrite_as_yn(self, nu, z):
+        if nu.is_integer:
+            return (-1)**(nu) * yn(-nu - 1, z)
+
     def _expand(self, **hints):
         return _jn(self.order, self.argument)
 
@@ -706,6 +710,10 @@ class yn(SphericalBesselBase):
     def _eval_rewrite_as_bessely(self, nu, z):
         return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
 
+    def _eval_rewrite_as_jn(self, nu, z):
+        if nu.is_integer:
+            return (-1)**(nu + 1) * jn(-nu - 1, z)
+
     def _expand(self, **hints):
         return _yn(self.order, self.argument)
 
@@ -733,11 +741,13 @@ class SphericalHankelBase(SphericalBesselBase):
 
     def _eval_rewrite_as_yn(self, nu, z):
         hks = self._hankel_kind_sign
-        return jn(nu, z).rewrite(yn) + hks*I*yn(nu, z)
+        if nu.is_integer:
+            return jn(nu, z).rewrite(yn) + hks*I*yn(nu, z)
 
     def _eval_rewrite_as_jn(self, nu, z):
         hks = self._hankel_kind_sign
-        return jn(nu, z) + hks*I*yn(nu, z).rewrite(jn)
+        if nu.is_integer:
+            return jn(nu, z) + hks*I*yn(nu, z).rewrite(jn)
 
     def _expand(self, **hints):
         n = self.order
