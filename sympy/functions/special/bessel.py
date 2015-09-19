@@ -784,7 +784,7 @@ class hn1(SphericalHankelBase):
     .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
 
     where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
-    Bessel function of the first and second kind.
+    Bessel function of the first and second kinds.
 
     For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
 
@@ -833,7 +833,7 @@ class hn2(SphericalHankelBase):
     .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
 
     where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
-    Bessel function of the first and second kind.
+    Bessel function of the first and second kinds.
 
     For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
 
