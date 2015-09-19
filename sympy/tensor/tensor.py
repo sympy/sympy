@@ -772,10 +772,11 @@ class _IndexStructure(CantSympify):
     objects corresponding to the given index structure.
     """
 
-    def __init__(self, free, dum, index_types, canon_bp=False):
+    def __init__(self, free, dum, index_types, indices, canon_bp=False):
         self.free = free
         self.dum = dum
         self.index_types = index_types
+        self.indices = indices
         self._ext_rank = len(self.free) + 2*len(self.dum)
         self.dum.sort(key=lambda x: x[0])
 
@@ -804,14 +805,16 @@ class _IndexStructure(CantSympify):
         """
         free, dum = _IndexStructure._free_dum_from_indices(*indices)
         index_types = [i.tensor_index_type for i in indices]
-        return _IndexStructure(free, dum, index_types)
+        indices = _IndexStructure._replace_dummy_names(indices, free, dum)
+        return _IndexStructure(free, dum, index_types, indices)
 
     @staticmethod
     def from_components_free_dum(components, free, dum):
         index_types = []
         for component in components:
             index_types.extend(component.index_types)
-        return _IndexStructure(free, dum, index_types)
+        indices = _IndexStructure.generate_indices_from_free_dum(free, dum)
+        return _IndexStructure(free, dum, index_types, indices)
 
     @staticmethod
     def _free_dum_from_indices(*indices):
@@ -877,10 +880,19 @@ class _IndexStructure(CantSympify):
         """
         Get a list of indices, creating new tensor indices to complete dummy indices.
         """
-        free = self.free
-        dum = self.dum
-        indices = [None]*self._ext_rank
+        return self.indices
 
+    @staticmethod
+    def generate_indices_from_free_dum(free, dum):
+        indices = [None]*(len(free)+2*len(dum))
+        for idx, pos in free:
+            indices[pos] = idx
+        return _IndexStructure._replace_dummy_names(indices, free, dum)
+
+    @staticmethod
+    def _replace_dummy_names(indices, free, dum):
+        new_indices = [ind for ind in indices]
+        assert len(indices) == len(free) + 2*len(dum)
         cdt = defaultdict(int)
         # if the free indices have names with dummy_fmt, start with an
         # index higher than those for the dummy indices
@@ -888,17 +900,14 @@ class _IndexStructure(CantSympify):
         for indx, ipos in free:
             if indx._name.split('_')[0] == indx.tensor_index_type.dummy_fmt[:-3]:
                 cdt[indx.tensor_index_type] = max(cdt[indx.tensor_index_type], int(indx._name.split('_')[1]) + 1)
-            indices[ipos] = indx
-            assert indx.tensor_index_type == self.index_types[ipos]
         for ipos1, ipos2 in dum:
-            typ1 = self.index_types[ipos1]
-            assert typ1 == self.index_types[ipos2]
+            typ1 = new_indices[ipos1].tensor_index_type
             fmt = typ1.dummy_fmt
             nd = cdt[typ1]
-            indices[ipos1] = TensorIndex(fmt % nd, typ1)
-            indices[ipos2] = TensorIndex(fmt % nd, typ1, False)
+            new_indices[ipos1] = TensorIndex(fmt % nd, typ1, True)
+            new_indices[ipos2] = TensorIndex(fmt % nd, typ1, False)
             cdt[typ1] += 1
-        return indices
+        return new_indices
 
     def get_free_indices(self):
         """
@@ -908,139 +917,11 @@ class _IndexStructure(CantSympify):
         free = sorted(self.free, key=lambda x: x[1])
         return [i[0] for i in free]
 
-    def __mul__(self, other):
-        return _IndexStructure(*self.mul(self, other))
-
     def __str__(self):
         return "_IndexStructure({0}, {1}, {2})".format(self.free, self.dum, self.index_types)
 
     def __repr__(self):
         return self.__str__()
-
-    @staticmethod
-    def mul(f, g):
-        """
-        The algorithms performing the multiplication of two ``_IndexStructure`` instances.
-
-        In short, it forms a new ``_IndexStructure`` object, joining components and indices,
-        checking that abstract indices are compatible, and possibly contracting
-        them.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, _IndexStructure
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> is1 = _IndexStructure.from_indices(m0, m1, -m1, m3)
-        >>> is2 = _IndexStructure.from_indices(m2)
-        >>> is1 * is2
-        _IndexStructure([(m0, 0), (m3, 3), (m2, 4)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz, Lorentz])
-
-        In this case no contraction has been performed.
-
-        >>> is3 = _IndexStructure.from_indices(-m3)
-        >>> is1 * is3
-        _IndexStructure([(m0, 0)], [(1, 2), (3, 4)], [Lorentz, Lorentz, Lorentz, Lorentz, Lorentz])
-
-        Free indices ``m3`` and ``-m3`` are identified as a contracted couple, and are
-        therefore transformed into dummy indices.
-
-        A wrong index construction (for example, trying to contract two
-        contravariant indices or using indices multiple times) would result in
-        an exception:
-
-        >>> is4 = _IndexStructure.from_indices(m3)
-        >>> # is1 * is4
-
-        This expression if not commented would raise an exception.
-        """
-        index_up = lambda u: u if u.is_up else -u
-
-        # lambda returns True is index is not a matrix index:
-        f_free = f.free[:]
-        g_free = g.free[:]
-        f_ext_rank = f._ext_rank
-
-        # find out which free indices of f and g are contracted
-        free_dict1 = dict([(i if i.is_up else -i, (pos, i)) for i, pos in f_free])
-        free_dict2 = dict([(i if i.is_up else -i, (pos, i)) for i, pos in g_free])
-        free_names = set(free_dict1.keys()) & set(free_dict2.keys())
-        # find the new `free` and `dum`
-
-        dum2 = [(i1 + f_ext_rank, i2 + f_ext_rank) for i1, i2 in g.dum]
-        free1 = [(ind, i) for ind, i in f_free if index_up(ind) not in free_names]
-        free2 = [(ind, i + f_ext_rank) for ind, i in g_free if index_up(ind) not in free_names]
-        free = free1 + free2
-        dum = f.dum + dum2
-        for name in free_names:
-            ipos1, ind1 = free_dict1[name]
-            ipos2, ind2 = free_dict2[name]
-            ipos2 += f_ext_rank
-            if ind1._is_up == ind2._is_up:
-                raise ValueError('wrong index construction {0}'.format(ind1))
-            if ind1._is_up:
-                new_dummy = (ipos1, ipos2)
-            else:
-                new_dummy = (ipos2, ipos1)
-            dum.append(new_dummy)
-        return (free, dum, f.index_types + g.index_types)
-    #
-    # @staticmethod
-    # def _check_matrix_indices(f_free, g_free, f_ext_rank):
-    #     # This "private" method checks matrix indices.
-    #     # Matrix indices are special as there are only two, and observe
-    #     # anomalous substitution rules to determine contractions.
-    #
-    #     dum = []
-    #     # make sure that free indices appear in the same order as in their component:
-    #     f_free.sort(key=lambda x: (x[1]))
-    #     g_free.sort(key=lambda x: (x[1]))
-    #     matrix_indices_storage = {}
-    #     transform_right_to_left = set([])
-    #     f_pop_pos = []
-    #     g_pop_pos = []
-    #     for free_pos, (ind, i) in enumerate(f_free):
-    #         index_type = ind.tensor_index_type
-    #         if ind not in (index_type.auto_left, -index_type.auto_right):
-    #             continue
-    #         matrix_indices_storage[ind] = (free_pos, i)
-    #
-    #     for free_pos, (ind, i) in enumerate(g_free):
-    #         index_type = ind.tensor_index_type
-    #         if ind not in (index_type.auto_left, -index_type.auto_right):
-    #             continue
-    #
-    #         if ind == index_type.auto_left:
-    #
-    #             if ind.tensor_index_type in transform_right_to_left:
-    #                 transform_right_to_left.remove(ind.tensor_index_type)
-    #
-    #             if -index_type.auto_right in matrix_indices_storage:
-    #                 other_pos, other_i = matrix_indices_storage.pop(-index_type.auto_right)
-    #                 dum.append((other_i, i + f_ext_rank))
-    #                 # mark to remove other_pos and free_pos from free:
-    #                 g_pop_pos.append(free_pos)
-    #                 f_pop_pos.append(other_pos)
-    #                 continue
-    #             if ind in matrix_indices_storage:
-    #                 other_pos, other_i = matrix_indices_storage.pop(ind)
-    #                 dum.append((other_i, i + f_ext_rank))
-    #                 # mark to remove other_pos and free_pos from free:
-    #                 g_pop_pos.append(free_pos)
-    #                 f_pop_pos.append(other_pos)
-    #                 transform_right_to_left.add(index_type)
-    #                 continue
-    #
-    #         elif ind.tensor_index_type in transform_right_to_left:
-    #             transform_right_to_left.remove(ind.tensor_index_type)
-    #             g_free[free_pos] = (index_type.auto_left, i)
-    #
-    #     for i in reversed(sorted(f_pop_pos)):
-    #         f_free.pop(i)
-    #     for i in reversed(sorted(g_pop_pos)):
-    #         g_free.pop(i)
-    #     return dum
 
     def _get_sorted_free_indices_for_canon(self):
         sorted_free = self.free[:]
@@ -1057,6 +938,13 @@ class _IndexStructure(CantSympify):
             index_types[permutation(i)] = it
         return index_types
 
+    def _get_lexicographically_sorted_indices(self):
+        permutation = self.indices_canon_args()[0]
+        indices = [None]*self._ext_rank
+        for i, it in enumerate(self.indices):
+            indices[permutation(i)] = it
+        return indices
+
     def perm2tensor(self, g, is_canon_bp=False):
         """
         Returns a ``_IndexStructure`` instance corresponding to the permutation ``g``
@@ -1069,15 +957,18 @@ class _IndexStructure(CantSympify):
         """
         sorted_free = [i[0] for i in self._get_sorted_free_indices_for_canon()]
         lex_index_types = self._get_lexicographically_sorted_index_types()
+        lex_indices = self._get_lexicographically_sorted_indices()
         nfree = len(sorted_free)
         rank = self._ext_rank
         dum = [[None]*2 for i in range((rank - nfree)//2)]
         free = []
 
         index_types = [None]*rank
+        indices = [None]*rank
         for i in range(rank):
             gi = g[i]
             index_types[i] = lex_index_types[gi]
+            indices[i] = lex_indices[gi]
             if gi < nfree:
                 ind = sorted_free[gi]
                 assert index_types[i] == sorted_free[gi].tensor_index_type
@@ -1091,7 +982,7 @@ class _IndexStructure(CantSympify):
                     dum[idum][0] = i
         dum = [tuple(x) for x in dum]
 
-        return _IndexStructure(free, dum, index_types)
+        return _IndexStructure(free, dum, index_types, indices)
 
     def indices_canon_args(self):
         """
@@ -3544,6 +3435,8 @@ class Tensor(TensExpr):
         obj._indices = indices
         obj._is_canon_bp = is_canon_bp
         obj._index_map = Tensor._build_index_map(indices, obj._index_structure)
+        # TODO: remove
+        assert len(obj._index_structure.index_types) == len(indices)
         return obj
 
     @staticmethod
@@ -3564,6 +3457,8 @@ class Tensor(TensExpr):
         return self._set_indices(*indices, is_canon_bp=is_canon_bp)
 
     def _set_indices(self, *indices, **kw_args):
+        if len(indices) != self.ext_rank:
+            raise ValueError("indices length mismatch")
         return self.func(self.args[0], indices, is_canon_bp=kw_args.pop('is_canon_bp', False))
 
     def _get_free_indices_set(self):
@@ -3890,25 +3785,22 @@ class TensMul(TensExpr):
         # flatten:
         args = TensMul._flatten(args)
         # substitute matrix indices:
-        args = TensMul._TensMul_check_matrix_indices(args)
+        args = TensMul._tensMul_check_matrix_indices(args)
 
         is_canon_bp = kw_args.get('is_canon_bp', False)
-        if not any([isinstance(arg, TensExpr) for arg in args]):
-            index_structure = _IndexStructure([], [], [])
-        else:
-            index_structure_list = [get_index_structure(arg) for arg in args if isinstance(arg, (Tensor, TensMul))]
-            if len(index_structure_list) == 1:
-                for arg in args:
-                    if not isinstance(arg, Tensor):
-                        continue
-                    is_canon_bp = kw_args.get('is_canon_bp', arg._is_canon_bp)
-            index_structure = reduce(lambda a, b: a*b, index_structure_list)
+        args, indices, free, dum = TensMul._tensMul_contract_indices(args)
+
+        index_types = []
+        for t in args:
+            if not isinstance(t, TensExpr):
+                continue
+            index_types.extend(t.index_types)
+        index_structure = _IndexStructure(free, dum, index_types, indices, canon_bp=is_canon_bp)
 
         if any([isinstance(arg, TensAdd) for arg in args]):
             add_args = TensAdd._tensAdd_flatten(args)
             return TensAdd(*add_args)
         coeff = reduce(lambda a, b: a*b, [S.One] + [arg for arg in args if not isinstance(arg, TensExpr)])
-        #components = TensMul._get_components_from_args(args)
         args = [arg for arg in args if isinstance(arg, TensExpr)]
         TensMul._rebuild_tensors_list(args, index_structure)
 
@@ -3918,11 +3810,8 @@ class TensMul(TensExpr):
             return args[0]
 
         obj = Basic.__new__(cls, *args)
-        obj._index_types = []
-        for t in args:
-            if not isinstance(t, TensExpr):
-                continue
-            obj._index_types.extend(t.index_types)
+
+        obj._index_types = index_types
         # TODO: remove
         assert len(obj._index_types) == index_structure._ext_rank
         obj._index_structure = index_structure
@@ -3932,7 +3821,58 @@ class TensMul(TensExpr):
         return obj
 
     @staticmethod
-    def _TensMul_check_matrix_indices(args):
+    def _tensMul_contract_indices(args):
+        f_ext_rank = 0
+        free = []
+        dum = []
+
+        index_up = lambda u: u if u.is_up else -u
+        # cdt = defaultdict(int)
+        # indices_by_arg = [get_indices(arg) for arg in args]
+
+        for arg in args:
+            if not isinstance(arg, TensExpr):
+                continue
+            free_dict1 = dict([(index_up(i), (pos, i)) for i, pos in free])
+            free_dict2 = dict([(index_up(i), (pos, i)) for i, pos in arg.free])
+            indices_to_contract = set(free_dict1.keys()) & set(free_dict2.keys())
+
+            for name in indices_to_contract:
+                ipos1, ind1 = free_dict1[name]
+                ipos2, ind2 = free_dict2[name]
+                ipos2pf = ipos2 + f_ext_rank
+                if ind1.is_up == ind2.is_up:
+                    raise ValueError('wrong index construction {0}'.format(ind1))
+                if ind1.is_up:
+                    new_dummy = (ipos1, ipos2pf)
+                else:
+                    new_dummy = (ipos2pf, ipos1)
+                dum.append(new_dummy)
+
+            # Update values to the cumulative data structures:
+            free = [(ind, i) for ind, i in free if index_up(ind) not in indices_to_contract]
+            free.extend([(ind, i + f_ext_rank) for ind, i in arg.free if index_up(ind) not in indices_to_contract])
+            dum.extend([(i1 + f_ext_rank, i2 + f_ext_rank) for i1, i2 in arg.dum])
+            f_ext_rank += arg.ext_rank
+
+        indices = list(itertools.chain(*[get_indices(arg) for arg in args]))
+        # rename contracted indices:
+        indices = _IndexStructure._replace_dummy_names(indices, free, dum)
+
+        # Let's replace these names in the args:
+        pos = 0
+        newargs = []
+        for arg in args:
+            if isinstance(arg, TensExpr):
+                newargs.append(arg._set_indices(*indices[pos:pos+arg.ext_rank]))
+                pos += arg.ext_rank
+            else:
+                newargs.append(arg)
+
+        return newargs, indices, free, dum
+
+    @staticmethod
+    def _tensMul_check_matrix_indices(args):
         # This "private" method checks matrix indices.
         # Matrix indices are special, and observe
         # anomalous substitution rules to determine contractions.
@@ -3950,22 +3890,23 @@ class TensMul(TensExpr):
             type_valence[index_type] = not valence
             return TensorIndex(matrix_fmt, index_type, valence, is_matrix_index=True)
 
-        def relabel_matrix_inds(ind):
-            if ind.is_matrix_index:
-                return generate_for_type(ind.tensor_index_type)
-            return ind
-
         newargs = []
         for arg in args:
             if not isinstance(arg, TensExpr):
                 newargs.append(arg)
                 continue
             old_indices = arg.get_indices()
-            new_indices = map(relabel_matrix_inds, old_indices)
+
+            new_indices = [None]*arg.ext_rank
+            for posi, ind in enumerate(old_indices):
+                if ind.is_matrix_index and ind in arg._get_free_indices_set():
+                    new_indices[posi] = generate_for_type(ind.tensor_index_type)
+                else:
+                    new_indices[posi] = ind
+
             newargs.append(arg._set_indices(*new_indices))
             old_index_types = [i.tensor_index_type for i in old_indices]
             for key in type_count.keys():
-                #itertools.groupby(arg.get_indices(), lambda x: x.tensor_index_type)
                 if type_contraction[key]:
                     if old_index_types.count(key) > 1:
                         # decrease by one all values of `type_count`,
@@ -4123,7 +4064,7 @@ class TensMul(TensExpr):
         >>> t2.get_indices()
         [L_0, -L_0, m2]
         """
-        return self._index_structure.get_indices()
+        return self._indices
 
     def get_free_indices(self):
         """
@@ -4497,6 +4438,8 @@ class TensMul(TensExpr):
         return self._set_indices(*indices, is_canon_bp=is_canon_bp)
 
     def _set_indices(self, *indices, **kw_args):
+        if len(indices) != self.ext_rank:
+            raise ValueError("indices length mismatch")
         args = list(self.args)[:]
         pos = 0
         is_canon_bp = kw_args.pop('is_canon_bp', False)
@@ -4812,7 +4755,7 @@ def get_indices(t):
 def get_index_structure(t):
     if isinstance(t, TensExpr):
         return t._index_structure
-    return _IndexStructure([], [], [])
+    return _IndexStructure([], [], [], [])
 
 def get_coeff(t):
     if isinstance(t, Tensor):

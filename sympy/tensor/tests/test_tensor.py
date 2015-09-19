@@ -1238,7 +1238,7 @@ def test_hidden_indices_for_matrix_multiplication():
     D0 = D(True, True, True, True)
     Aa = A(True, True, True)
 
-    assert _is_equal(D0 * Aa, D(L.auto_left, m0, matl2, s0)*A(-m0, -s0, -matl1))
+    assert _is_equal(D0 * Aa, D(Ll2, m0, matl2, s0)*A(-m0, -s0, -matl1))
     assert D(m0, m1) == D(m0, m1, matl2, -matl1)
 
     raises(ValueError, lambda: C(True))
