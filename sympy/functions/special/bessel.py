@@ -619,6 +619,14 @@ class jn(SphericalBesselBase):
 
     where :math:`J_\nu(z)` is the Bessel function of the first kind.
 
+    The spherical Bessel functions of integral order are
+    calculated using the formula:
+
+    .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},
+
+    where the coefficients :math:`f_n(z)` are available as
+    :func:`polys.orthopolys.spherical_bessel_fn`.
+
     Examples
     ========
 
@@ -630,14 +638,6 @@ class jn(SphericalBesselBase):
     True
     >>> expand_func(jn(3, z))
     (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
-
-    The spherical Bessel functions of integral order
-    are calculated using the formula:
-
-    .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},
-
-    where the coefficients :math:`f_n(z)` are available as
-    :func:`polys.orthopolys.spherical_bessel_fn`.
 
     See Also
     ========
@@ -667,9 +667,13 @@ class yn(SphericalBesselBase):
     linearly independent from :math:`j_n`. It can be defined as
 
     .. math ::
-        j_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
+        y_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
 
     where :math:`Y_\nu(z)` is the Bessel function of the second kind.
+
+    For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
+
+    .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
 
     Examples
     ========
@@ -685,11 +689,6 @@ class yn(SphericalBesselBase):
     (-1)**(nu + 1)*sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(-nu - 1/2, z)/2
     >>> yn(nu, z).rewrite(bessely)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(nu + 1/2, z)/2
-
-
-    For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
-
-    .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
 
     See Also
     ========
@@ -720,38 +719,57 @@ class SphericalHankelBase(SphericalBesselBase):
         # jn +- I*yn
         # jn as beeselj: sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
         # yn as besselj: (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
-        hk = self._hankel_kind_sign
+        hks = self._hankel_kind_sign
         return sqrt(pi/(2*z))*(besselj(nu + S.Half, z) +
-                               hk*I*(-1)**(nu+1)*besselj(-nu - S.Half, z))
+                               hks*I*(-1)**(nu+1)*besselj(-nu - S.Half, z))
 
     def _eval_rewrite_as_bessely(self, nu, z):
         # jn +- I*yn
         # jn as bessely: (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
         # yn as bessely: sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
-        hk = self._hankel_kind_sign
+        hks = self._hankel_kind_sign
         return sqrt(pi/(2*z))*((-1)**nu*bessely(-nu - S.Half, z) +
-                               hk*I*bessely(nu + S.Half, z))
+                               hks*I*bessely(nu + S.Half, z))
+
+    def _eval_rewrite_as_yn(self, nu, z):
+        hks = self._hankel_kind_sign
+        return jn(nu, z).rewrite(yn) + hks*I*yn(nu, z)
+
+    def _eval_rewrite_as_jn(self, nu, z):
+        hks = self._hankel_kind_sign
+        return jn(nu, z) + hks*I*yn(nu, z).rewrite(jn)
 
     def _expand(self, **hints):
         n = self.order
         z = self.argument
-        hk = self._hankel_kind_sign
+        hks = self._hankel_kind_sign
 
         # fully expanded version
         # return ((fn(n, z) * sin(z) +
         #          (-1)**(n + 1) * fn(-n - 1, z) * cos(z)) +  # jn
-        #         (hk * I * (-1)**(n + 1) *
+        #         (hks * I * (-1)**(n + 1) *
         #          (fn(-n - 1, z) * hk * I * sin(z) +
         #           (-1)**(-n) * fn(n, z) * I * cos(z)))  # +-I*yn
         #         )
 
         # call expand ?
-        return (_jn(n, z) + hk*I*_yn(n, z)).expand()
+        return (_jn(n, z) + hks*I*_yn(n, z)).expand()
 
 
 class hn1(SphericalHankelBase):
     r"""
     Spherical Hankel function of the first kind.
+
+    This function is defined as
+
+    .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
+
+    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    Bessel function of the first and second kind.
+
+    For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
+
+    .. math:: h_n^(1)(z) = j_{n}(z) + i (-1)^{n+1} j_{-n-1}(z)
 
     Examples
     ========
@@ -766,9 +784,11 @@ class hn1(SphericalHankelBase):
     >>> hn1(nu, z).rewrite(hankel1)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel1(nu, z)/2
 
-    For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
+    See Also
+    ========
 
-    .. math:: h_n^(1)(z) = j_{n} + i (-1)^{n+1} j_{-n-1}(z)
+    hn2, jn, yn, hankel1, hankel2
+
     """
 
     _hankel_kind_sign = S.One
@@ -780,6 +800,17 @@ class hn1(SphericalHankelBase):
 class hn2(SphericalHankelBase):
     r"""
     Spherical Hankel function of the second kind.
+
+    This function is defined as
+
+    .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
+
+    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    Bessel function of the first and second kind.
+
+    For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
+
+    .. math:: h_n^(2)(z) = j_{n} - i (-1)^{n+1} j_{-n-1}(z)
 
     Examples
     ========
@@ -794,9 +825,11 @@ class hn2(SphericalHankelBase):
     >>> hn2(nu, z).rewrite(hankel2)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
 
-    For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
+    See Also
+    ========
 
-    .. math:: h_n^(2)(z) = j_{n} - i (-1)^{n+1} j_{-n-1}(z)
+    hn1, jn, yn, hankel1, hankel2
+
     """
 
     _hankel_kind_sign = -S.One
