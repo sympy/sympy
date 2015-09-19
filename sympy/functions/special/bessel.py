@@ -749,6 +749,15 @@ class SphericalHankelBase(SphericalBesselBase):
         if nu.is_integer:
             return jn(nu, z) + hks*I*yn(nu, z).rewrite(jn)
 
+    def _eval_expand_func(self, **hints):
+        if self.order.is_Integer:
+            return self._expand(**hints)
+        else:
+            nu = self.order
+            z = self.argument
+            hks = self._hankel_kind_sign
+            return jn(nu, z) + hks*I*yn(nu, z)
+
     def _expand(self, **hints):
         n = self.order
         z = self.argument
@@ -784,15 +793,23 @@ class hn1(SphericalHankelBase):
     Examples
     ========
 
-    >>> from sympy import Symbol, hn1, hankel1, expand_func
+    >>> from sympy import Symbol, hn1, hankel1, expand_func, yn, jn
     >>> z = Symbol("z")
-    >>> nu = Symbol("nu", integer=True)
+    >>> nu = Symbol("nu")
+    >>> print(expand_func(hn1(nu, z)))
+    jn(nu, z) + I*yn(nu, z)
     >>> print(expand_func(hn1(0, z)))
     sin(z)/z - I*cos(z)/z
     >>> print(expand_func(hn1(1, z)))
     -I*sin(z)/z - cos(z)/z + sin(z)/z**2 - I*cos(z)/z**2
     >>> hn1(nu, z).rewrite(hankel1)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel1(nu, z)/2
+
+    >>> n = Symbol("n", integer=True)
+    >>> hn1(n, z).rewrite(jn)
+    (-1)**(n + 1)*I*jn(-n - 1, z) + jn(n, z)
+    >>> hn1(n, z).rewrite(yn)
+    (-1)**n*yn(-n - 1, z) + I*yn(n, z)
 
     See Also
     ========
@@ -825,15 +842,23 @@ class hn2(SphericalHankelBase):
     Examples
     ========
 
-    >>> from sympy import Symbol, hn2, hankel2, expand_func
+    >>> from sympy import Symbol, hn2, hankel2, expand_func, jn, yn
     >>> z = Symbol("z")
-    >>> nu = Symbol("nu", integer=True)
+    >>> nu = Symbol("nu")
+    >>> print(expand_func(hn2(nu, z)))
+    jn(nu, z) - I*yn(nu, z)
     >>> print(expand_func(hn2(0, z)))
     sin(z)/z + I*cos(z)/z
     >>> print(expand_func(hn2(1, z)))
     I*sin(z)/z - cos(z)/z + sin(z)/z**2 + I*cos(z)/z**2
     >>> hn2(nu, z).rewrite(hankel2)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
+
+    >>> n = Symbol("n", integer=True)
+    >>> hn2(n, z).rewrite(jn)
+    -(-1)**(n + 1)*I*jn(-n - 1, z) + jn(n, z)
+    >>> hn2(n, z).rewrite(yn)
+    (-1)**n*yn(-n - 1, z) - I*yn(n, z)
 
     See Also
     ========
