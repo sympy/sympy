@@ -602,7 +602,7 @@ class Mul(Expr, AssocOp):
 
     @property
     def real_bound(self):
-        return Mul(*[abs(val) if val.is_number else val.real_bound for val in self.args])
+        return Mul(*[val.real_bound if hasattr(val, 'real_bound') else abs(val) for val in self.args])
 
     def _eval_evalf(self, prec):
         c, m = self.as_coeff_Mul()
