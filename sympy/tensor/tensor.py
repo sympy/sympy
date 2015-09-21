@@ -891,6 +891,7 @@ class _IndexStructure(CantSympify):
 
     @staticmethod
     def _replace_dummy_names(indices, free, dum):
+        dum.sort(key=lambda x: x[0])
         new_indices = [ind for ind in indices]
         assert len(indices) == len(free) + 2*len(dum)
         cdt = defaultdict(int)
@@ -904,8 +905,8 @@ class _IndexStructure(CantSympify):
             typ1 = new_indices[ipos1].tensor_index_type
             fmt = typ1.dummy_fmt
             nd = cdt[typ1]
-            new_indices[ipos1] = TensorIndex(fmt % nd, typ1, True)
-            new_indices[ipos2] = TensorIndex(fmt % nd, typ1, False)
+            new_indices[ipos1] = TensorIndex(fmt % nd, typ1, True, is_matrix_index=indices[ipos1].is_matrix_index)
+            new_indices[ipos2] = TensorIndex(fmt % nd, typ1, False, is_matrix_index=indices[ipos1].is_matrix_index)
             cdt[typ1] += 1
         return new_indices
 
@@ -4064,7 +4065,7 @@ class TensMul(TensExpr):
         >>> t2.get_indices()
         [L_0, -L_0, m2]
         """
-        return self._indices
+        return self._index_structure.get_indices()
 
     def get_free_indices(self):
         """

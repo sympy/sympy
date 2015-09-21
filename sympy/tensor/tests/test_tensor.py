@@ -1209,17 +1209,17 @@ def test_hidden_indices_for_matrix_multiplication():
     B0 = B(-m0)
     B1 = B(m1)
 
-    assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
-    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, matl2))
-    assert _is_equal((A0*B0), A(m0, matl2, s0)*B(-m0, -s0))
+    assert str(B1*A0*B0) == 'B(m1, Matind_0)*A(Lorentz_0, -Matind_0, Matind_1)*B(-Lorentz_0, -Matind_1)'
+    assert str(B0*A0) == 'B(-Lorentz_0, Matind_0)*A(Lorentz_0, -Matind_0, mMatind_1)'
+    assert str(A0*B0) == 'A(Lorentz_0, mMatind_0, -Matind_0)*B(-Lorentz_0, Matind_0)'
 
     C = tensorhead('C', [L, L], [[1]*2])
 
-    assert _is_equal((C(True, True)), C(Ll2, -Ll1))
+    assert str(C(True, True)) == 'C(mLorentz_0, -mLorentz_1)'
 
-    assert _is_equal((A(m0)*C(m1, -m0)), A(m2, matl2, -matl1)*C(m1, -m2))
+    assert str(A(m0)*C(m1, -m0)) == 'A(Lorentz_0, mMatind_0, -mMatind_1)*C(m1, -Lorentz_0)'
 
-    assert _is_equal((C(True, True)*C(True, True)), C(Ll2, m0)*C(-m0, -Ll1))
+    assert str(C(True, True)*C(True, True)) == 'C(mLorentz_0, -Lorentz_0)*C(Lorentz_0, -mLorentz_2)'
 
     assert _is_equal(A(m0), A(m0))
     assert _is_equal(B(-m1), B(-m1))
@@ -1238,7 +1238,7 @@ def test_hidden_indices_for_matrix_multiplication():
     D0 = D(True, True, True, True)
     Aa = A(True, True, True)
 
-    assert _is_equal(D0 * Aa, D(Ll2, m0, matl2, s0)*A(-m0, -s0, -matl1))
+    assert str(D0 * Aa) == 'D(mLorentz_0, -Lorentz_0, mMatind_0, -Matind_0)*A(Lorentz_0, Matind_0, -mMatind_2)'
     assert D(m0, m1) == D(m0, m1, matl2, -matl1)
 
     raises(ValueError, lambda: C(True))
