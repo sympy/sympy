@@ -1,7 +1,7 @@
 from sympy.tensor.tensor import tensor_indices, tensorhead, get_lines, TensExpr
 from sympy import simplify
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinorIndex, LorentzIndex, simplify_lines, \
-    _kahane_simplify, GammaMatrix, _trace_single_line, gamma_trace
+    _kahane_simplify, GammaMatrix, _trace_single_line, gamma_trace, _simplify_single_line
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -188,7 +188,6 @@ def test_kahane_algorithm():
         return _simplify_single_line(e)
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
-
 
 
 def test_kahane_simplify1():

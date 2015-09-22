@@ -42,7 +42,7 @@ DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
 LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
 
 
-GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex, DiracSpinorIndex, DiracSpinorIndex], [[1], [1], [1]])
+GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex, DiracSpinorIndex, DiracSpinorIndex], [[1], [1], [1]], matrix_behavior=True)
 
 
 def extract_type_tens(expression):
@@ -67,7 +67,7 @@ def extract_type_tens(expression):
     new_expr = S.One
     residual_expr = S.One
     for i in sp:
-        if isinstance(i, Tensor) and isinstance(i.args[0], GammaMatrixHead):
+        if isinstance(i, Tensor) and i.component == GammaMatrix:
             new_expr *= i
         else:
             residual_expr *= i
@@ -244,7 +244,7 @@ def _simplify_single_line(expression):
     """
     t1, t2 = extract_type_tens(expression)
     if t1 != 1:
-        t1 = _kahane_simplify(t1.coeff, t1._tids)
+        t1 = _kahane_simplify(expression)
     res = t1*t2
     return res
 

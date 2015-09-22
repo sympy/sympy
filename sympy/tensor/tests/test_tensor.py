@@ -1673,10 +1673,6 @@ def test_contract_automatrix_and_data():
     c1 = G(m0, s0, -s1)*G(-m0, s1, -s2)
     c2 = G(m0) * G(-m0)
 
-    # TODO: remove this line:
-    assert TensMul(*c2.split()) == c2
-    # the valence of a matrix index gets changed...
-
     assert (c1.data == c2.data).all()
 
     del L.data
@@ -1738,7 +1734,6 @@ def test_index_iteration():
     e5 = A(i0, i1)*B(-i0, -i1)
     e6 = e1 + e4
 
-
     assert list(e1._iterate_free_indices) == [(i0, (1, 0)), (i2, (1, 1))]
     assert list(e1._iterate_dummy_indices) == []
     assert list(e1._iterate_indices) == [(i0, (1, 0)), (i2, (1, 1))]
@@ -1762,3 +1757,14 @@ def test_index_iteration():
     assert list(e6._iterate_free_indices) == [(i0, (0, 1, 0)), (i2, (0, 1, 1)), (i0, (1, 0, 1, 0)), (i2, (1, 1, 1, 0))]
     assert list(e6._iterate_dummy_indices) == [(L0, (1, 0, 1, 1)), (-L0, (1, 1, 1, 1))]
     assert list(e6._iterate_indices) == [(i0, (0, 1, 0)), (i2, (0, 1, 1)), (i0, (1, 0, 1, 0)), (L0, (1, 0, 1, 1)), (i2, (1, 1, 1, 0)), (-L0, (1, 1, 1, 1))]
+
+    assert e1.get_indices() == [i0, i2]
+    assert e1.get_free_indices() == [i0, i2]
+    assert e2.get_indices() == [L0, -L0]
+    assert e2.get_free_indices() == []
+    assert e3.get_indices() == [i0, i1, i2, i3]
+    assert e3.get_free_indices() == [i0, i1, i2, i3]
+    assert e4.get_indices() == [i0, L0, i2, -L0]
+    assert e4.get_free_indices() == [i0, i2]
+    assert e5.get_indices() == [L0, L1, -L0, -L1]
+    assert e5.get_free_indices() == []
