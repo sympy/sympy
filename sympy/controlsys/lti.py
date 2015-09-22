@@ -509,6 +509,13 @@ class StateSpaceModel(object):
 
         return StateSpaceModel(newA, newB, newC, newD)
 
+    def __eq__(self, other):
+        if isinstance(other, StateSpaceModel):
+            return TransferFunctionModel(self) == TransferFunctionModel(other)
+        elif isinstance(other, TransferFunctionModel):
+            return TransferFunctionModel(self) == other
+        return NotImplemented
+
     #
     # define a magic function for unknown method handling
     #   the class tries to pass the method to the matrices in self.represent
@@ -699,6 +706,13 @@ class TransferFunctionModel(object):
             raise ShapeError("Dimensions of inputs and outputs must match!")
 
         return TransferFunctionModel(self.G + anotherSystem.G)
+
+    def __eq__(self, other):
+        if isinstance(other, TransferFunctionModel):
+            return self.G == other.G
+        elif isinstance(other, StateSpaceModel):
+            return self.G == TransferFunctionModel(other).G
+        return NotImplemented
 
     #
     # define a magic function for unknown method handling
