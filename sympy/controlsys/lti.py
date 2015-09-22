@@ -499,10 +499,10 @@ class StateSpaceModel(object):
                 (self.represent[2].shape[0] == anotherSystem.represent[2].shape[0])):
             raise ShapeError("Dimensions of inputs and outputs must match!")
 
-        newA = self.represent[0].col_join(zeros(self.represent[0].rows, anotherSystem.represent[0].cols)) \
-                                .row_join(
+        newA = self.represent[0].row_join(zeros(self.represent[0].rows, anotherSystem.represent[0].cols)) \
+                                .col_join(
                                     zeros(anotherSystem.represent[0].rows, self.represent[0].cols)
-                                    .col_join(anotherSystem.represent[0]))
+                                    .row_join(anotherSystem.represent[0]))
         newB = self.represent[1].col_join(anotherSystem.represent[1])
         newC = self.represent[2].row_join(anotherSystem.represent[2])
         newD = self.represent[3] + anotherSystem.represent[3]
@@ -632,6 +632,73 @@ class TransferFunctionModel(object):
 
         # return result
         return self.G.subs(self.s, s) * u
+
+    def cascade(self, anotherSystem):
+        """ Returns the cascade interconnection of the system and another system
+
+        The casade interconnection of two systems P1 and P2 is the system for which
+        u = u1, y = y2 and z = u2 = y1 so that:
+
+               ----    z     ----
+        u --> | P1 | -----> | P2 | --> y
+               ----          ----
+
+        Parameters
+        ==========
+
+        anotherSystem : TransferFunctionModel
+            Transferfunction representation of the model you want to interconnect with
+            the current model
+
+        See Also
+        ========
+
+        parallel: parallel interconnection of two systems
+        """
+        if not isinstance(anotherSystem, TransferFunctionModel):
+            raise TypeError("Argument must be of type TransferFunctionModel, not %r" %
+                            (type(anotherSystem)))
+        # assert matching shapes
+        if not self.G.shape[0] == anotherSystem.G.shape[1]:
+            raise ShapeError("Dimensions of the input of the argument and the ouput of the System must match!")
+
+        return TransferFunctionModel(self.G * anotherSystem.G)
+
+    def parallel(self, anotherSystem):
+        """ Returns the parallel interconnection of the system and another system
+
+        The parallel interconnection of two systems P1 and P2 is the system for which
+        u = u1 + u2 and y = y1 + y2 so that:
+
+                  ----  y1
+             --> | P1 |---
+            |     ----    |+
+        u --|             o ---> y
+            |     ----    |+
+             --> | P2 |---
+                  ----  y2
+
+        Parameters
+        ==========
+
+        anotherSystem : TransferFunctionModel
+            TransferFuncion representation of the model you want to interconnect with
+            the current model
+
+        See Also
+        ========
+
+        cascade: cascade interconnection of two systems
+        """
+        if not isinstance(anotherSystem, TransferFunctionModel):
+            raise TypeError("Argument must be of type TransferFunctionModel, not %r" %
+                            (type(anotherSystem)))
+        # assert matching shapes
+        if not ((self.G.shape[1] == anotherSystem.G.shape[1]) and
+                (self.G.shape[0] == anotherSystem.G.shape[0])):
+            raise ShapeError("Dimensions of inputs and outputs must match!")
+
+        return TransferFunctionModel(self.G + anotherSystem.G)
 
     #
     # define a magic function for unknown method handling
