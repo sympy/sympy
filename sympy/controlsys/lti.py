@@ -6,6 +6,7 @@ from sympy import (
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
     SparseMatrix, MutableDenseMatrix, Subs
 )
+from sympy.printing import sstr
 
 # import mpmath for numercial results
 from mpmath import expm, quad, matrix as mpm_matrix
@@ -30,6 +31,61 @@ class StateSpaceModel(object):
 
     *arg : TransferFunctionModel, Sympy-Matrices
         tfm to construct the state space model from, or the Matrices A,B,C,D as StateSpaceModel(A, B, C, D)
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix, Symbol
+    >>> from sympy.controlsys.lti import StateSpaceModel, TransferFunctionModel
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A, B, C, D = Matrix([1,2]), Matrix([2,3]), Matrix([2]), Matrix([0])
+    >>> StateSpaceModel(A, B, C, D)
+    StateSpaceModel(
+    Matrix([
+    [1],
+    [2]]),
+    Matrix([
+    [2],
+    [3]]),
+    Matrix([[2]]),
+    Matrix([[0]]))
+
+    One can use less matrices aswell. The rest will be filled with a minimum of
+    zeros:
+
+    >>> StateSpaceModel(A, B)
+    StateSpaceModel(
+    Matrix([
+    [1],
+    [2]]),
+    Matrix([
+    [2],
+    [3]]),
+    Matrix([[0]]),
+    Matrix([[0]]))
+
+    One can also use a TansferFunctionModel to create a StateSpaceModel
+
+    >>> s = Symbol('s')
+    >>> tfm = TransferFunctionModel(Matrix([1/s, s/(1 + s**2)]))
+    >>> StateSpaceModel(tfm)
+    StateSpaceModel(
+    Matrix([
+    [0, -1, 0],
+    [1,  0, 0],
+    [0,  1, 0]]),
+    Matrix([
+    [1],
+    [0],
+    [0]]),
+    Matrix([
+    [1, 0, 1],
+    [1, 0, 0]]),
+    Matrix([
+    [0],
+    [0]]))
 
     See Also
     ========
@@ -549,7 +605,13 @@ class StateSpaceModel(object):
         return '$' + latex(self._blockrepresent) + '$'
 
     def __str__(self):
-        return 'StateSpaceModel' + str(self._blockrepresent)[6:]
+        return 'StateSpaceModel(\n' + sstr(self.represent[0]) + ',\n' \
+                                    + sstr(self.represent[1]) + ',\n' \
+                                    + sstr(self.represent[2]) + ',\n' \
+                                    + sstr(self.represent[3]) + ')'
+
+    def __repr__(self):
+        return sstr(self)
 
 
 class TransferFunctionModel(object):
@@ -742,7 +804,10 @@ class TransferFunctionModel(object):
         return '$' + latex(self.G) + '$'
 
     def __str__(self):
-        return 'TransferFunctionModel' + str(self.G)[6:]
+        return 'TransferFunctionModel(' + str(self.G) + ')'
+
+    def __repr__(self):
+        return sstr(self)
 
 
 #
