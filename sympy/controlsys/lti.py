@@ -10,7 +10,6 @@ from sympy import (
 # import mpmath for numercial results
 from mpmath import expm, quad, matrix as mpm_matrix
 
-import numpy as np
 __all__ = ['StateSpaceModel', 'TransferFunctionModel']
 
 _matrixTypes = (
@@ -45,42 +44,78 @@ class StateSpaceModel(object):
 
     def __init__(self, *arg):
 
-        if isinstance(arg[0], TransferFunctionModel):
+        def zero():
+            self.represent[0] = zeros(1)
+            self.represent[1] = zeros(1)
+            self.represent[2] = zeros(1)
+            self.represent[3] = zeros(1)
 
+        def one():
+            self.represent[1] = zeros(self.represent[0].shape[0], 1)
+            self.represent[2] = zeros(1, self.represent[0].shape[1])
+            self.represent[3] = zeros(1)
+
+        def two():
+            if not self.represent[0].shape[0] == self.represent[1].shape[0]:
+                raise ShapeError("Shapes of A,B,C,D must fit")
+            self.represent[2] = zeros(1, self.represent[0].shape[1])
+            self.represent[3] = zeros(1, self.represent[1].shape[1])
+
+        def three():
+            if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
+                    (self.represent[0].shape[1] == self.represent[2].shape[1])):
+                raise ShapeError("Shapes of A,B,C,D must fit")
+            self.represent[3] = zeros(self.represent[2].shape[0],
+                                      self.represent[1].shape[1])
+
+        def default():
+            # assert that A,B,C,D have matching shapes
+            if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
+                    (self.represent[0].shape[1] == self.represent[2].shape[1]) and
+                    (self.represent[1].shape[1] == self.represent[3].shape[1]) and
+                    (self.represent[2].shape[0] == self.represent[3].shape[0])):
+                raise ShapeError("Shapes of A,B,C,D must fit")
+
+        def transferfunction():
             # call the private method for realization finding
             self.represent = self._find_realization(arg[0].G, arg[0].s)
 
             # create a block matrix [[A,B], [C,D]] for visual representation
             self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
                                                [self.represent[2], self.represent[3]]])
+
+        try:
+            if len(arg) == 0:
+                self.represent = [None] * 4
+                zero()
+            else:
+                if isinstance(arg[0], TransferFunctionModel):
+                    transferfunction()
+
+                else:
+                    # store the argument as representation of the system, fill
+                    # in noneset args with None
+                    self.represent = [None] * 4
+                    for i, a in enumerate(arg):
+                        self.represent[i] = a
+
+                    {
+                        1: one,
+                        2: two,
+                        3: three
+                    }.get(len(arg), default)()
+
+            # create a block matrix [[A,B], [C,D]] for visual representation
+            self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
+                                                [self.represent[2], self.represent[3]]])
             return None
 
-        else:
-            # store the argument as representation of the system
-            try:
-                self.represent = arg[:4]
-            except TypeError:
-                raise TypeError("'repesentation' must be a list-like object")
-
-            try:
-                # assert that A,B,C,D have matching shapes
-                if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
-                        (self.represent[0].shape[1] == self.represent[2].shape[1]) and
-                        (self.represent[1].shape[1] == self.represent[3].shape[1]) and
-                        (self.represent[2].shape[0] == self.represent[3].shape[0])):
-                    raise ShapeError("Shapes of A,B,C,D must fit")
-
-                # create a block matrix [[A,B], [C,D]] for visual representation
-                self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
-                                                   [self.represent[2], self.represent[3]]])
-                return None
-
-            except TypeError:
-                raise TypeError("entries of 'representation' must be matrices")
-            except AttributeError:
-                raise TypeError("entries of 'representation' must be matrices")
-            except IndexError:
-                raise TypeError("'representation' must have at least 4 matrix-valued entries")
+        except TypeError:
+            raise TypeError("entries of 'representation' must be matrices")
+        except AttributeError:
+            raise TypeError("entries of 'representation' must be matrices")
+        except IndexError:
+            raise TypeError("'representation' must have at least 4 matrix-valued entries")
 
     def _find_realization(self, G, s):
         """ Represenatation [A, B, C, D] of the state space model
@@ -300,11 +335,12 @@ class StateSpaceModel(object):
 
             second = mpm_matrix((self.represent[3] * u.subs(t, t_i)).evalf())
 
-            integrand = lambda tau: \
-                mpm_matrix(self.represent[2].evalf()) * \
-                expm((self.represent[0] * (t_i - tau)).evalf()) * \
-                mpm_matrix(self.represent[1].evalf()) * \
-                mpm_matrix(u.subs(t, tau).evalf())
+            def integrand(tau):
+                return \
+                    mpm_matrix(self.represent[2].evalf()) * \
+                    expm((self.represent[0] * (t_i - tau)).evalf()) * \
+                    mpm_matrix(self.represent[1].evalf()) * \
+                    mpm_matrix(u.subs(t, tau).evalf())
 
             # the result must have the same number of rows as C:
             integral = mpm_matrix(self.represent[2].rows, 1)
@@ -364,7 +400,7 @@ class StateSpaceModel(object):
         """
         res = self.represent[1]
         for i in xrange(self.represent[0].shape[0] - 1):
-            res.col_join(self.represent[0] ** i * self.represent[1])
+            res = res.row_join(self.represent[0] ** (i + 1) * self.represent[1])
         return res
 
     def controllable_subspace(self):
@@ -387,7 +423,7 @@ class StateSpaceModel(object):
         """
         for eigenvect_of_A_tr in self.represent[0].transpose().eigenvects():
             for idx in xrange(eigenvect_of_A_tr[1]):
-                if (self.represent[1] * eigenvect_of_A_tr[2][idx]).is_zero:
+                if (self.represent[1].transpose() * eigenvect_of_A_tr[2][idx]).is_zero:
                     return False
         return True
 
