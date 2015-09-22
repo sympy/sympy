@@ -8,8 +8,8 @@ from sympy.controlsys.lti import StateSpaceModel, TransferFunctionModel
 
 def test_StateSpaceModel_create():
     a1, a2, a3, a4 = symbols('a1:5')
-    ssm = StateSpaceModel([Matrix([a1]), Matrix([a2]),
-                           Matrix([a3]), Matrix([a4])])
+    ssm = StateSpaceModel(Matrix([a1]), Matrix([a2]),
+                          Matrix([a3]), Matrix([a4]))
     assert ssm.represent[0] == Matrix([a1])
     assert ssm.represent[1] == Matrix([a2])
     assert ssm.represent[2] == Matrix([a3])
@@ -25,7 +25,7 @@ def test_StateSpaceModel_create():
                 b2])
     C = Matrix([[c1, c2]])
     D = Matrix([d])
-    ssm = StateSpaceModel([A, B, C, D])
+    ssm = StateSpaceModel(A, B, C, D)
     assert ssm.represent[0] == A
     assert ssm.represent[1] == B
     assert ssm.represent[2] == C
@@ -81,7 +81,7 @@ def test_TransferFunctionModel_create():
                 [0, 1, R(1, 2), R(3, 2), 1, R(1, 2)]])
     D = Matrix([[2, 0],
                 [0, 0]])
-    tfm = TransferFunctionModel(StateSpaceModel([A, B, C, D]), s)
+    tfm = TransferFunctionModel(StateSpaceModel(A, B, C, D), s)
     G = Matrix(
         [[(4 * s - 10) / (2 * s + 1), 3 / (s + 2)],
          [1 / (2 * s**2 + 5 * s + 2), (s + 1) / (s**2 + 4 * s + 4)]])
@@ -124,7 +124,8 @@ def test_transferFunctionModel_eval():
     G = Matrix([[1 / s + 2 / s**2],
                 [2 * s / (s**2 + 3 * s + 5)]])
     u = Matrix([[s + 1]])
-    assert expand(TransferFunctionModel(G).evaluate(u, s) - G * u) == 0
+    assert expand(TransferFunctionModel(G).evaluate(u, s) -
+                  G * u).is_zero
 
 
 def test_controllability_matrix():
@@ -242,7 +243,7 @@ def test_StateSpaceModel_parallel():
         Matrix([[b0, b1, b0, b1, b2]]),
         zeros(1)
     )
-    assert ssm1.cascade(ssm2).represent == expect.represent
+    assert ssm1.parallel(ssm2).represent == expect.represent
 
 
 def test_TransferFunctionModel_parallel():
@@ -254,9 +255,9 @@ def test_TransferFunctionModel_parallel():
         Matrix([(b + s) / (a + s)])
     )
     expect = TransferFunctionModel(
-        Matrix([(a + s + a * s * (b + s)) / a * s * (a + s)])
+        Matrix([(a + s + a * s * (b + s)) / (a * s * (a + s))])
     )
-    assert tfm1.cascade(tfm2).G == expect.G
+    assert tfm1.parallel(tfm2).G == expect.G
 
 
 def test_equality():
