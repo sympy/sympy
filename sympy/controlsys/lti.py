@@ -288,15 +288,87 @@ class StateSpaceModel(object):
         t0 = 0 : number
             the time t0 at which the state of the system is known
 
-        method : Bool
-            not supported yet, always uses diagonalizaton
-        return_pretty : Bool
-            if True, the funtion returns a tuple of equations showing the input, initial conditions, and the output
-        do_integrals : Bool
+
+        simplify=True
+            if True, the result is simplified before return.
+        do_integrals= Tue
             if True, the function tries to evaluate the integrals in the solution. if False, it returns an
             Integral object instead. Only valid for symbolic solutions, ignored otherwise
-        dps : integer
-            the decimal precision of numericial integration
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols, eye, zeros, ones, exp
+        >>> from sympy.controlsys.lti import StateSpaceModel
+        >>> t, y1, y2, omega = symbols('t, Y1, Y2, omega')
+        >>> ssm = StateSpaceModel(eye(2) * omega, zeros(2, 1), eye(2))
+
+            Symbolical evaluation
+            =====================
+
+        We can evaluate a StateSpaceModel, giving and input u and initial statte
+        x0 and a symbol t:
+
+        >>> u = eye(1) * omega
+        >>> x0 = Matrix([y1, y2])
+        >>> ssm.evaluate(u, x0, t)
+        Matrix([
+        [Y1*exp(omega*t)],
+        [Y2*exp(omega*t)]])
+
+        One does not always have to integrate to obtain a solution. In this
+        case the do_integrals flag does nothing:
+
+        >>> ssm.evaluate(u, x0, t, do_integrals=False)
+        Matrix([
+        [Y1*exp(omega*t)],
+        [Y2*exp(omega*t)]])
+
+        But for more complicated examples evaluate retuns an Integral() object
+        when the flag is set:
+
+        >>> ssm = StateSpaceModel(Matrix([[-1, 1], [1, -1]]), ones(2, 1), eye(2))
+        >>> u = Matrix([exp(2 * t)])
+        >>> x0 = Matrix([1, 0])
+
+        >>> ssm.evaluate(u, x0, t)
+        Matrix([
+        [cosh(2*t)],
+        [sinh(2*t)]])
+
+        >>> ssm.evaluate(u, x0, t, do_integrals=False)
+        Matrix([
+        [Integral(exp(2*tau), (tau, 0, t)) + 1/2 + exp(-2*t)/2],
+        [Integral(exp(2*tau), (tau, 0, t)) + 1/2 - exp(-2*t)/2]])
+
+        >>> ssm.evaluate(u, x0, t, simplify=False)
+        Matrix([
+        [exp(2*t)/2 + exp(-2*t)/2],
+        [exp(2*t)/2 - exp(-2*t)/2]])
+
+            Numerical evaluation
+            ====================
+
+        If we give a tuple (t, t_list) instead of only the symbol, the system is
+        evaluated numericaly. The method returns a list of Matrices:
+
+        >>> ssm.evaluate(u, x0, (t, [0]))
+        0 finished
+        [Matrix([
+        [1.0],
+        [  0]])]
+
+        >>> ssm.evaluate(u, x0, (t, [0, 0.2, 0.4, 0.6]))
+        0 0.2 0.4 0.6 finished
+        [Matrix([
+        [1.0],
+        [  0]]), Matrix([
+        [ 1.08107237183845],
+        [0.410752325802816]]), Matrix([
+        [ 1.33743494630484],
+        [0.888105982187623]]), Matrix([
+        [1.81065556732437],
+        [1.50946135541217]])]
 
         References
         ==========
@@ -453,6 +525,24 @@ class StateSpaceModel(object):
     def controllability_matrix(self):
         """ Returns the controllability matrix of the system:
             C = [B, A * B, A^2 * B, .. , A^(n-1), B]; A in R^(n x n), B in^R^(n x m)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.controlsys.lti import StateSpaceModel
+
+        The controllability matrix only depends on A and B:
+
+        >>> a0, a1, a2 = symbols('a:3')
+        >>> A = Matrix([[a0, a1, a2], [1, 0, 0], [0, 1, 0]])
+        >>> B = Matrix([1, 0, 0])
+        >>> StateSpaceModel(A, B).controllability_matrix()
+        Matrix([
+        [1, a0, a0**2 + a1],
+        [0,  1,         a0],
+        [0,  0,          1]])
+
         """
         res = self.represent[1]
         for i in xrange(self.represent[0].shape[0] - 1):
@@ -466,6 +556,30 @@ class StateSpaceModel(object):
         transfers the state x(t0) = x0 to x(t1) = 0.
 
         The controllable subspace of an lti system is equal to the image of its controllability matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.controlsys.lti import StateSpaceModel
+
+        The controllable subspace only depends on A and B:
+
+        >>> a0, a1, a2 = symbols('a:3')
+        >>> A = Matrix([[a0, a1, a2], [1, 0, 0], [0, 1, 0]])
+        >>> B = Matrix([1, 0, 0])
+        >>> StateSpaceModel(A, B).controllable_subspace()
+        [Matrix([
+        [1],
+        [0],
+        [0]]), Matrix([
+        [a0],
+        [ 1],
+        [ 0]]), Matrix([
+        [a0**2 + a1],
+        [        a0],
+        [         1]])]
+
         """
         return self.controllability_matrix().columnspace()
 
@@ -476,11 +590,30 @@ class StateSpaceModel(object):
         whole state space R^n. This means, that every state x0 can be transfered to zero at any time.
 
         The package implements the Eigenvector test for controllability
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.controlsys.lti import StateSpaceModel
+
+        The controllability only depends on A and B:
+
+        >>> a1, a2, b1, b2 = symbols('a1:3, b1:3')
+        >>> A = Matrix([[a1, 0], [0, a2]])
+        >>> B = Matrix([b1, b2])
+        >>> StateSpaceModel(A, B).is_controllable()
+        True
+
+        >>> StateSpaceModel(A, B.subs(b2, 0)).is_controllable()
+        False
+
         """
         for eigenvect_of_A_tr in self.represent[0].transpose().eigenvects():
             for idx in xrange(eigenvect_of_A_tr[1]):
                 if (self.represent[1].transpose() * eigenvect_of_A_tr[2][idx]).is_zero:
                     return False
+
         return True
 
     def cascade(self, anotherSystem):
@@ -499,6 +632,42 @@ class StateSpaceModel(object):
         anotherSystem : StateSpaceModel
             StateSpace representation of the model you want to interconnect with
             the current model
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.controlsys.lti import StateSpaceModel
+
+        >>> a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
+        >>> ssm1 = StateSpaceModel(Matrix([[0, 1], [-a0, -a1]]), Matrix([0, 1]), Matrix([[b0, b1]]))
+        >>> ssm2 = StateSpaceModel(Matrix([[0, 1, 0], [0, 0, 1], [-a0, -a1, -a2]]), Matrix([0, 0, 1]), Matrix([[b0, b1, b2]]))
+        >>> ssm1.cascade(ssm2)
+        StateSpaceModel(
+        Matrix([
+        [  0,   1,   0,   0,   0],
+        [-a0, -a1,   0,   0,   0],
+        [  0,   0,   0,   1,   0],
+        [  0,   0,   0,   0,   1],
+        [ b0,  b1, -a0, -a1, -a2]]),
+        Matrix([
+        [0],
+        [1],
+        [0],
+        [0],
+        [0]]),
+        Matrix([[0, 0, b0, b1, b2]]),
+        Matrix([[0]]))
+
+        When the number of outputs of the first systems does not match the
+        number of inputs of the second, an error is thrown:
+
+        >>> ssm1.cascade(StateSpaceModel(Matrix([[1, 2]]), Matrix([[2, 3]])))
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "sympy\controlsys\lti.py", line 514, in cascade
+            integrate(integrand[row_idx, col_idx], (tau, t0, t))
+        sympy.matrices.matrices.ShapeError: Dimensions of the input of the argument and the ouput of the System must match!
 
         See Also
         ========
@@ -542,6 +711,42 @@ class StateSpaceModel(object):
         anotherSystem : StateSpaceModel
             StateSpace representation of the model you want to interconnect with
             the current model
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.controlsys.lti import StateSpaceModel
+
+        >>> a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
+        >>> ssm1 = StateSpaceModel(Matrix([[0, 1], [-a0, -a1]]), Matrix([0, 1]), Matrix([[b0, b1]]))
+        >>> ssm2 = StateSpaceModel(Matrix([[0, 1, 0], [0, 0, 1], [-a0, -a1, -a2]]), Matrix([0, 0, 1]), Matrix([[b0, b1, b2]]))
+        >>> ssm1.parallel(ssm2)
+        StateSpaceModel(
+        Matrix([
+        [  0,   1,   0,   0,   0],
+        [-a0, -a1,   0,   0,   0],
+        [  0,   0,   0,   1,   0],
+        [  0,   0,   0,   0,   1],
+        [  0,   0, -a0, -a1, -a2]]),
+        Matrix([
+        [0],
+        [1],
+        [0],
+        [0],
+        [1]]),
+        Matrix([[b0, b1, b0, b1, b2]]),
+        Matrix([[0]]))
+
+        When the number of outputs or inputs of the two systems are not the
+        same, an error is thrown:
+
+        >>> ssm1.parallel(StateSpaceModel(Matrix([1]),Matrix([2]), Matrix([1, 2])))
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "sympy\controlsys\lti.py", line 558, in parallel
+            The controllable subspace of an lti system is equal to the image of its controllability matrix.
+        sympy.matrices.matrices.ShapeError: Dimensions of inputs and outputs must match!
 
         See Also
         ========
@@ -682,7 +887,8 @@ class TransferFunctionModel(object):
     def evaluate(self, u, s):
         """ evaluate the result for input u
 
-        The input u in laplace state depends on a complex variable s the result y is computed by
+        The input u in laplace state depends on a complex variable s.
+        The result y is computed by
             y(s) = G(s) * u(s)
 
         Parameters
@@ -692,6 +898,19 @@ class TransferFunctionModel(object):
             the input vector u in terms of complex variable s
         s : symbol
             the complex variable s u is dependent from.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Symbol
+        >>> from sympy.controlsys.lti import TransferFunctionModel
+        >>> s = Symbol('s')
+        >>> u = Matrix([1/s])
+        >>> TransferFunctionModel(Matrix([s/(1 + s**2), 1/s])).evaluate(u, s)
+        Matrix([
+        [1/(s**2 + 1)],
+        [     s**(-2)]])
+
         """
         # assert right shape of u
         if not u.shape[1] == 1:
@@ -718,6 +937,19 @@ class TransferFunctionModel(object):
         anotherSystem : TransferFunctionModel
             Transferfunction representation of the model you want to interconnect with
             the current model
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Symbol
+        >>> from sympy.controlsys.lti import TransferFunctionModel
+        >>> s = Symbol('s')
+        >>> tfm1 = TransferFunctionModel(Matrix([2*s/(2 + s**2 - s), s/(1 + s**3)]))
+        >>> tfm2 = TransferFunctionModel(Matrix([[1/(s + 2), (2 + s**3)/ (s**5 + s**2 + 7)]]))
+        >>> tfm1.cascade(tfm2)
+        TransferFunctionModel(Matrix([
+        [ 2*s/(s**3 + s**2 + 4), 2*s*(s**3 + 2)/((s**2 - s + 2)*(s**5 + s**2 + 7))],
+        [s/((s + 2)*(s**3 + 1)),       s*(s**3 + 2)/((s**3 + 1)*(s**5 + s**2 + 7))]]))
 
         See Also
         ========
@@ -753,6 +985,19 @@ class TransferFunctionModel(object):
         anotherSystem : TransferFunctionModel
             TransferFuncion representation of the model you want to interconnect with
             the current model
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Symbol
+        >>> from sympy.controlsys.lti import TransferFunctionModel
+        >>> s = Symbol('s')
+        >>> tfm1 = TransferFunctionModel(Matrix([2*s/(2 + s**2 - s), s/(1 + s**3)]))
+        >>> tfm2 = TransferFunctionModel(Matrix([1/(s + 2), (2 + s**3)/ (s**5 + s**2 + 7)]))
+        >>> tfm1.parallel(tfm2)
+        TransferFunctionModel(Matrix([
+        [       (3*s**2 + 3*s + 2)/(s**3 + s**2 + 4)],
+        [s/(s**3 + 1) + (s**3 + 2)/(s**5 + s**2 + 7)]]))
 
         See Also
         ========
