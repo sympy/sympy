@@ -4,6 +4,7 @@ from sympy import (symbols, Matrix, zeros, simplify, eye, exp,
                    )
 from sympy import Rational as R
 from sympy.controlsys.lti import StateSpaceModel, TransferFunctionModel
+from mpmath import e
 
 
 def test_StateSpaceModel_create():
@@ -97,6 +98,12 @@ def test_StateSpaceModel_eval():
     assert ssm.evaluate(u, x0, t) == Matrix([y1 * exp(omega * t),
                                              y2 * exp(omega * t)])
 
+    ssm = ssm.subs(omega, 1)
+    u = u.subs(omega, 1)
+    x0 = x0.subs([(y1, 1.0), (y2, 0.0)])
+    sol_num = ssm.evaluate(u, x0, (t, [0, 1.0]))
+    assert sol_num == [Matrix([1.0, 0.0]), Matrix([e, 0.0])]
+
     A = Matrix([[-1, 1], [1, -1]])
     ssm = StateSpaceModel(A, ones(2, 1),
                           eye(2), zeros(2, 1))
@@ -106,6 +113,9 @@ def test_StateSpaceModel_eval():
     assert sol == Matrix([
                          [cosh(2 * t)],
                          [sinh(2 * t)]])
+
+    sol_num = ssm.evaluate(u, x0, (t, [0]))
+    assert sol_num == [Matrix([1.0, 0])]
 
     sol = ssm.evaluate(u, x0, t, do_integrals=False, simplify=True)
     tau = symbols('tau', positive=True)
