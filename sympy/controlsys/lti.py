@@ -1,4 +1,5 @@
-from __future__ import print_function, division
+from __future__ import division
+
 from sympy import (
     Symbol, var, Function, simplify, oo, exp, Eq,
     Poly, lcm, LC, degree, Integral, integrate,
@@ -6,6 +7,8 @@ from sympy import (
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
     SparseMatrix, MutableDenseMatrix, Subs
 )
+
+from sympy.core.compatibility import range
 from sympy.printing import sstr
 
 # import mpmath for numercial results
@@ -217,7 +220,7 @@ class StateSpaceModel(object):
 
         # get the coefficients of the monic least common denominator of all entries of G_sp
         # compute a least common denominator using utl and lcm
-        lcd = lcm(_fraction_list(G_sp, only_denoms=True))
+        lcd = lcm(list(_fraction_list(G_sp, only_denoms=True)))
 
         # make it monic
         lcd = lcd / LC(lcd, s)
@@ -239,13 +242,13 @@ class StateSpaceModel(object):
         for alpha in lcd_coeff[1:]:
             A = A.row_join((-1) * alpha * eye(k))
 
-        for i in xrange(lcd_deg - 1):
+        for i in range(lcd_deg - 1):
             if i == 0:
                 tmp = eye(k)
             else:
                 tmp = zeros(k)
 
-            for j in range(lcd_deg)[1:]:
+            for j in range(1, lcd_deg):
                 if j == i:
                     tmp = tmp.row_join(eye(k))
                 else:
@@ -255,12 +258,12 @@ class StateSpaceModel(object):
 
         # define B
         B = eye(k)
-        for i in xrange(lcd_deg - 1):
+        for i in range(lcd_deg - 1):
             B = B.col_join(zeros(k))
 
         # define C
         C = G_sp_coeff[0]
-        for i in range(lcd_deg)[1:]:
+        for i in range(1, lcd_deg):
             C = C.row_join(G_sp_coeff[i])
 
         # return the state space representation
@@ -353,13 +356,11 @@ class StateSpaceModel(object):
         evaluated numericaly. The method returns a list of Matrices:
 
         >>> ssm.evaluate(u, x0, (t, [0]))
-        0 finished
         [Matrix([
         [1.0],
         [  0]])]
 
         >>> ssm.evaluate(u, x0, (t, [0, 0.2, 0.4, 0.6]))
-        0 0.2 0.4 0.6 finished
         [Matrix([
         [1.0],
         [  0]]), Matrix([
@@ -455,7 +456,6 @@ class StateSpaceModel(object):
         """
         result = []
         for t_i in t_list:
-            print(t_i, end=' ')
             # we use the arbitrary precision module mpmath for numercial evaluation of the matrix exponentials
             first = mpm_matrix(self.represent[2].evalf()) * \
                 expm((self.represent[0] * (t_i - t0)).evalf()) * \
@@ -474,13 +474,12 @@ class StateSpaceModel(object):
             integral = mpm_matrix(self.represent[2].rows, 1)
 
             # Loop through every entry and evaluate the integral using mpmath.quad()
-            for row_idx in xrange(self.represent[2].rows):
+            for row_idx in range(self.represent[2].rows):
 
                     integral[row_idx] = quad(lambda x: integrand(x)[row_idx], [t0, t_i])
 
             result.append(Matrix((first + second + integral).tolist()))
 
-        print('finished')
         # return sum of results
         return result
 
@@ -504,9 +503,9 @@ class StateSpaceModel(object):
         integrand = self.represent[2] * expAt * self.represent[1] * u.subs(t, tau)
         integrand = integrand.subs([(abs(t - tau), t - tau), (abs(tau - t), t - tau)])
         integral = zeros(integrand.shape[0], integrand.shape[1])
-        for col_idx in xrange(integrand.cols):
+        for col_idx in range(integrand.cols):
 
-            for row_idx in xrange(integrand.rows):
+            for row_idx in range(integrand.rows):
                 try:
                     if not integrand[row_idx, col_idx] == 0:
                         if do_integrals is True:
@@ -545,7 +544,7 @@ class StateSpaceModel(object):
 
         """
         res = self.represent[1]
-        for i in xrange(self.represent[0].shape[0] - 1):
+        for i in range(self.represent[0].shape[0] - 1):
             res = res.row_join(self.represent[0] ** (i + 1) * self.represent[1])
         return res
 
@@ -610,7 +609,7 @@ class StateSpaceModel(object):
 
         """
         for eigenvect_of_A_tr in self.represent[0].transpose().eigenvects():
-            for idx in xrange(eigenvect_of_A_tr[1]):
+            for idx in range(eigenvect_of_A_tr[1]):
                 if (self.represent[1].transpose() * eigenvect_of_A_tr[2][idx]).is_zero:
                     return False
 
