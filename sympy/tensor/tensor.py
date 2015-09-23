@@ -3717,7 +3717,7 @@ class Tensor(TensExpr):
     __rtruediv__ = __rdiv__
 
     def __neg__(self):
-        return TensMul(S.NegativeOne, self)
+        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp)
 
     def _print(self):
         indices = [str(ind) for ind in self.indices]
@@ -3828,6 +3828,10 @@ class TensMul(TensExpr):
         args = TensMul._tensMul_check_matrix_indices(args)
 
         is_canon_bp = kw_args.get('is_canon_bp', False)
+        # targs = [arg for arg in args if isinstance(arg, TensExpr)]
+        # if len(targs) == 1:
+        #     is_canon_bp = targs[0]._is_canon_bp
+
         args, indices, free, dum = TensMul._tensMul_contract_indices(args)
 
         index_types = []
