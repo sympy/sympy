@@ -734,6 +734,10 @@ class Basic(with_metaclass(ManagedProperties)):
         1 + 2*pi
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
         1 + 2*pi
+
+        >>> reps = (x, pi)
+        >>> (1 + x*y).subs(reps)
+        pi*y + 1
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
@@ -829,6 +833,9 @@ class Basic(with_metaclass(ManagedProperties)):
             elif isinstance(sequence, (Dict, dict)):
                 unordered = True
                 sequence = sequence.items()
+            elif isinstance(sequence, tuple) and len(args[0]) == 2:
+            # Added for (lhs, rhs) tuples.
+                sequence = [sequence]
             elif not iterable(sequence):
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent("""
