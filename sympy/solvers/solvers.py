@@ -643,7 +643,29 @@ def solve(f, *symbols, **flags):
     Notes
     =====
 
-    assumptions aren't checked when `solve()` input involves
+    solve() with check=True (default) will run through the symbol tags to
+    elimate unwanted solutions. As in the tutorial when solving for the
+    radius of a sphere in terms of volume, one knows that both radius and
+    volume must be positive numbers.
+
+        >>> from sympy import *
+        >>> r, v = symbols('r v')
+        >>> R, V = symbols('R V', positive=True)
+        >>> solve(Eq(v, S(4)/3 * pi * r**3), r)
+        ⎡3 ___ 3 ___    3 ___ 3 ___   3 ___  5/6   3 ___     ⎤
+        ⎢╲╱ 6 ⋅╲╱ v     ╲╱ 6 ⋅╲╱ v    ╲╱ 2 ⋅3   ⋅ⅈ⋅╲╱ v      ⎥
+        ⎢───────────, - ─────────── - ──────────────────, ...⎥
+        ⎢    3 ___          3 ___            3 ___           ⎥
+        ⎣  2⋅╲╱ π         4⋅╲╱ π           4⋅╲╱ π            ⎦
+
+        >>> solve(Eq(V, S(4)/3 * pi * R**3), R)
+        ⎡3 ___ 3 ___⎤
+        ⎢╲╱ 6 ⋅╲╱ V ⎥
+        ⎢───────────⎥
+        ⎢    3 ___  ⎥
+        ⎣  2⋅╲╱ π   ⎦
+
+    Assumptions aren't checked when `solve()` input involves
     relationals or bools.
 
     When the solutions are checked, those that make any denominator zero
