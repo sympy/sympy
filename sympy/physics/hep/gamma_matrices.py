@@ -473,11 +473,20 @@ def _kahane_simplify(expression):
     #index_structure = get_index_structure(reduce(lambda x, y: x*y, gammas))
 
     spinor_free = []
-    for pos, g in enumerate(gammas):
-        for f in get_index_structure(g).free:
-            if f[1] == 0:
-                continue  # this means, f[0] is a Lorentz index
-            spinor_free.append((f[0], f[1], pos))
+    for (indx, pos) in expression._iterate_free_indices:
+        if len(pos) != 3:
+            # probably not a Tensor instance contains `indx`:s
+            continue
+        if pos[2] == 0:
+            # it's a Lorentz index, skip:
+            continue
+        # (index, index of component, position of component):
+        spinor_free.append((indx, pos[2], pos[0]))
+    # for pos, g in enumerate(gammas):
+    #     for f in get_index_structure(g).free:
+    #         if f[1] == 0:
+    #             continue  # this means, f[0] is a Lorentz index
+    #         spinor_free.append((f[0], f[1], pos))
 
     #free = [_ for _ in tids.free if _[1] == 0]
     #spinor_free = [_ for _ in tids.free if _[1] != 0]
