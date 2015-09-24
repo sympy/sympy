@@ -55,7 +55,7 @@ class StateSpaceModel(object):
     Matrix([[2]]),
     Matrix([[0]]))
 
-    One can use less matrices aswell. The rest will be filled with a minimum of
+    One can use less matrices as well. The rest will be filled with a minimum of
     zeros:
 
     >>> StateSpaceModel(A, B)
@@ -177,7 +177,7 @@ class StateSpaceModel(object):
             raise TypeError("'representation' must have at least 4 matrix-valued entries")
 
     def _find_realization(self, G, s):
-        """ Represenatation [A, B, C, D] of the state space model
+        """ Representation [A, B, C, D] of the state space model
 
         Returns the representation in state space of a given transfer function
 
@@ -185,7 +185,7 @@ class StateSpaceModel(object):
         ==========
 
         G: Matrix
-            Matrix valued transfer function G(s) in laplace space
+            Matrix valued transfer function G(s) in Laplace space
         s: symbol
             variable s, where G is dependent from
 
@@ -286,8 +286,8 @@ class StateSpaceModel(object):
         x0 : one-column matrix
             the state of the system at time t0
         t  : symbol, tuple (t,[list of times])
-            if t is only a symbol, the system is evaluated simbolycaly.
-            if t is a tuple of a symbol and a list, the symstem is evaluated numericaly, at the given times in the list
+            if t is only a symbol, the system is evaluated symbolically.
+            if t is a tuple of a symbol and a list, the system is evaluated numerically, at the given times in the list
         t0 = 0 : number
             the time t0 at which the state of the system is known
 
@@ -309,7 +309,7 @@ class StateSpaceModel(object):
             Symbolical evaluation
             =====================
 
-        We can evaluate a StateSpaceModel, giving and input u and initial statte
+        We can evaluate a StateSpaceModel, giving and input u and initial state
         x0 and a symbol t:
 
         >>> u = eye(1) * omega
@@ -400,7 +400,7 @@ class StateSpaceModel(object):
         #
         # Error handling
         #
-        # if .shape goes wrong, a AttributeError is thorwn
+        # if .shape goes wrong, a AttributeError is thrown
         except AttributeError:
             raise TypeError("u and x0 must be matrices!")
 
@@ -411,11 +411,11 @@ class StateSpaceModel(object):
 
         try:
 
-            # if t symbol, then calculate the solution symbolicaly
+            # if t symbol, then calculate the solution symbolically
             if isinstance(t, Symbol):
-                sol = self._solve_symbolicaly(u, x0, t, t0,
-                                              do_integrals=flags.get('do_integrals', True)
-                                              )
+                sol = self._solve_symbolically(u, x0, t, t0,
+                                               do_integrals=flags.get('do_integrals', True)
+                                               )
                 if flags.get('simplify', True):
                     sol = simplify(sol)
 
@@ -424,17 +424,17 @@ class StateSpaceModel(object):
                 # if t[1] is a direct subclass of tuple or list
                 if isinstance(t[1], (list, tuple)):
 
-                    # use the private member function of the class to compute the numervial result
-                    sol = self._solve_numericaly(u, x0, t[0], t[1], t0)
+                    # use the private member function of the class to compute the numerical result
+                    sol = self._solve_numerically(u, x0, t[0], t[1], t0)
 
                 #  if its not, try to convert it
                 else:
-                    sol = self._solve_numericaly(u, x0, t[0], list(t[1]), t0)
+                    sol = self._solve_numerically(u, x0, t[0], list(t[1]), t0)
 
         #
         # Error handling
         #
-        # index error can occure if t is not list-like
+        # index error can occur if t is not list-like
         except IndexError:
                 IndexError("t must be symbol or have at least 2 entries")
 
@@ -449,14 +449,14 @@ class StateSpaceModel(object):
         return sol
 
     #
-    # _solve_numericaly
+    # _solve_numerically
     #
-    def _solve_numericaly(self, u, x0, t, t_list, t0):
+    def _solve_numerically(self, u, x0, t, t_list, t0):
         """ returns the numeric evaluation of the system for input u, known state x0 at time t0 and times t_list
         """
         result = []
         for t_i in t_list:
-            # we use the arbitrary precision module mpmath for numercial evaluation of the matrix exponentials
+            # we use the arbitrary precision module mpmath for numerical evaluation of the matrix exponentials
             first = mpm_matrix(self.represent[2].evalf()) * \
                 expm((self.represent[0] * (t_i - t0)).evalf()) * \
                 mpm_matrix(x0.evalf())
@@ -484,9 +484,9 @@ class StateSpaceModel(object):
         return result
 
     #
-    # _solve_symbolicaly
+    # _solve_symbolically
     #
-    def _solve_symbolicaly(self, u, x0, t, t0, do_integrals):
+    def _solve_symbolically(self, u, x0, t, t0, do_integrals):
         """ returns the symbolic evaluation of the system for input u and known state x0 at time t0
         """
         # define temporary symbols tau
@@ -494,12 +494,12 @@ class StateSpaceModel(object):
         x = Symbol('x')
 
         # compute the two matrix exponentials that are used in the general solution
-        # to avoid two eigenvalue problems, first solve for a general real x and substitude then
+        # to avoid two eigenvalue problems, first solve for a general real x and substitute then
         expAx = exp(self.represent[0] * x)
         expA = expAx.subs(x, t - t0)
         expAt = expAx.subs(x, t - tau)
 
-        # define the integral and heuristic simplification nowing that in the integral, tau < t always holds
+        # define the integral and heuristic simplification knowing that in the integral, tau < t always holds
         integrand = self.represent[2] * expAt * self.represent[1] * u.subs(t, tau)
         integrand = integrand.subs([(abs(t - tau), t - tau), (abs(tau - t), t - tau)])
         integral = zeros(integrand.shape[0], integrand.shape[1])
@@ -615,10 +615,10 @@ class StateSpaceModel(object):
 
         return True
 
-    def cascade(self, anotherSystem):
+    def cascade(self, other):
         """ Returns the cascade interconnection of the system and another system
 
-        The casade interconnection of two systems P1 and P2 is the system for which
+        The cascade interconnection of two systems P1 and P2 is the system for which
         u = u1, y = y2 and z = u2 = y1 so that:
 
                ----    z     ----
@@ -628,7 +628,7 @@ class StateSpaceModel(object):
         Parameters
         ==========
 
-        anotherSystem : StateSpaceModel
+        other : StateSpaceModel
             StateSpace representation of the model you want to interconnect with
             the current model
 
@@ -673,24 +673,24 @@ class StateSpaceModel(object):
 
         parallel: parallel interconnection of two systems
         """
-        if not isinstance(anotherSystem, StateSpaceModel):
+        if not isinstance(other, StateSpaceModel):
             raise TypeError("Argument must be of type StateSpaceModel")
         # assert matching shapes
-        if not self.represent[2].shape[0] == anotherSystem.represent[1].shape[1]:
-            raise ShapeError("Dimensions of the input of the argument and the ouput of the System must match!")
+        if not self.represent[2].shape[0] == other.represent[1].shape[1]:
+            raise ShapeError("Dimensions of the input of the argument and the output of the System must match!")
 
         newA = self.represent[0].row_join(
-            zeros(self.represent[0].rows, anotherSystem.represent[0].cols)
+            zeros(self.represent[0].rows, other.represent[0].cols)
         ).col_join(
-            (anotherSystem.represent[1] * self.represent[2]).row_join(anotherSystem.represent[0])
+            (other.represent[1] * self.represent[2]).row_join(other.represent[0])
         )
-        newB = self.represent[1].col_join(anotherSystem.represent[1] * self.represent[3])
-        newC = (anotherSystem.represent[3] * self.represent[2]).row_join(anotherSystem.represent[2])
-        newD = anotherSystem.represent[3] * self.represent[3]
+        newB = self.represent[1].col_join(other.represent[1] * self.represent[3])
+        newC = (other.represent[3] * self.represent[2]).row_join(other.represent[2])
+        newD = other.represent[3] * self.represent[3]
 
         return StateSpaceModel(newA, newB, newC, newD)
 
-    def parallel(self, anotherSystem):
+    def parallel(self, other):
         """ Returns the parallel interconnection of the system and another system
 
         The parallel interconnection of two systems P1 and P2 is the system for which
@@ -707,7 +707,7 @@ class StateSpaceModel(object):
         Parameters
         ==========
 
-        anotherSystem : StateSpaceModel
+        other : StateSpaceModel
             StateSpace representation of the model you want to interconnect with
             the current model
 
@@ -752,20 +752,20 @@ class StateSpaceModel(object):
 
         cascade: cascade interconnection of two systems
         """
-        if not isinstance(anotherSystem, StateSpaceModel):
-            raise TypeError("Argument must be of type StateSpaceModel, not %r" % (type(anotherSystem)))
+        if not isinstance(other, StateSpaceModel):
+            raise TypeError("Argument must be of type StateSpaceModel, not %r" % (type(other)))
         # assert matching shapes
-        if not ((self.represent[1].shape[1] == anotherSystem.represent[1].shape[1]) and
-                (self.represent[2].shape[0] == anotherSystem.represent[2].shape[0])):
+        if not ((self.represent[1].shape[1] == other.represent[1].shape[1]) and
+                (self.represent[2].shape[0] == other.represent[2].shape[0])):
             raise ShapeError("Dimensions of inputs and outputs must match!")
 
-        newA = self.represent[0].row_join(zeros(self.represent[0].rows, anotherSystem.represent[0].cols)) \
+        newA = self.represent[0].row_join(zeros(self.represent[0].rows, other.represent[0].cols)) \
                                 .col_join(
-                                    zeros(anotherSystem.represent[0].rows, self.represent[0].cols)
-                                    .row_join(anotherSystem.represent[0]))
-        newB = self.represent[1].col_join(anotherSystem.represent[1])
-        newC = self.represent[2].row_join(anotherSystem.represent[2])
-        newD = self.represent[3] + anotherSystem.represent[3]
+                                    zeros(other.represent[0].rows, self.represent[0].cols)
+                                    .row_join(other.represent[0]))
+        newB = self.represent[1].col_join(other.represent[1])
+        newC = self.represent[2].row_join(other.represent[2])
+        newD = self.represent[3] + other.represent[3]
 
         return StateSpaceModel(newA, newB, newC, newD)
 
@@ -819,18 +819,18 @@ class StateSpaceModel(object):
 
 
 class TransferFunctionModel(object):
-    """ Transfer function model of a linear, time invariant crontrol system
+    """ Transfer function model of a linear, time invariant control system
 
-    Represents the transfere Function model with a transfer function Matrix G in laplace space.
-    The input-output relation for the system in laplace space is then given by:
+    Represents the transfer Function model with a transfer function Matrix G in Laplace space.
+    The input-output relation for the system in Laplace space is then given by:
         y(s) = G(s) * u(s);     s in C
-    where u(s) is the input of the system in laplace space and y(s) the corresponding output
+    where u(s) is the input of the system in Laplace space and y(s) the corresponding output
 
     Parameters
     ==========
 
     arg : StateSpaceModel, Matrix
-        the state space model to contruct the transfer function model from, or the transfer matrix G
+        the state space model to construct the transfer function model from, or the transfer matrix G
     s = None : Symbol
         the variable G is dependent from. only has to be set if arg is a non-constant matrix or StateSpaceModel
 
@@ -871,7 +871,7 @@ class TransferFunctionModel(object):
             except AttributeError:
                 raise TypeError("Only explicit Matrix Type supported for A,B,C,D (.inv() must work)")
 
-        # constrcutor from a given transfer function
+        # constructor from a given transfer function
         elif isinstance(arg, (Matrix, ImmutableMatrix, MutableMatrix)):
 
             # set the given transfer function as self.G
@@ -886,7 +886,7 @@ class TransferFunctionModel(object):
     def evaluate(self, u, s):
         """ evaluate the result for input u
 
-        The input u in laplace state depends on a complex variable s.
+        The input u in Laplace state depends on a complex variable s.
         The result y is computed by
             y(s) = G(s) * u(s)
 
@@ -920,10 +920,10 @@ class TransferFunctionModel(object):
         # return result
         return self.G.subs(self.s, s) * u
 
-    def cascade(self, anotherSystem):
+    def cascade(self, other):
         """ Returns the cascade interconnection of the system and another system
 
-        The casade interconnection of two systems P1 and P2 is the system for which
+        The cascade interconnection of two systems P1 and P2 is the system for which
         u = u1, y = y2 and z = u2 = y1 so that:
 
                ----    z     ----
@@ -933,7 +933,7 @@ class TransferFunctionModel(object):
         Parameters
         ==========
 
-        anotherSystem : TransferFunctionModel
+        other : TransferFunctionModel
             Transferfunction representation of the model you want to interconnect with
             the current model
 
@@ -955,16 +955,16 @@ class TransferFunctionModel(object):
 
         parallel: parallel interconnection of two systems
         """
-        if not isinstance(anotherSystem, TransferFunctionModel):
+        if not isinstance(other, TransferFunctionModel):
             raise TypeError("Argument must be of type TransferFunctionModel, not %r" %
-                            (type(anotherSystem)))
+                            (type(other)))
         # assert matching shapes
-        if not self.G.shape[0] == anotherSystem.G.shape[1]:
+        if not self.G.shape[0] == other.G.shape[1]:
             raise ShapeError("Dimensions of the input of the argument and the ouput of the System must match!")
 
-        return TransferFunctionModel(self.G * anotherSystem.G)
+        return TransferFunctionModel(self.G * other.G)
 
-    def parallel(self, anotherSystem):
+    def parallel(self, other):
         """ Returns the parallel interconnection of the system and another system
 
         The parallel interconnection of two systems P1 and P2 is the system for which
@@ -981,7 +981,7 @@ class TransferFunctionModel(object):
         Parameters
         ==========
 
-        anotherSystem : TransferFunctionModel
+        other : TransferFunctionModel
             TransferFuncion representation of the model you want to interconnect with
             the current model
 
@@ -1003,15 +1003,15 @@ class TransferFunctionModel(object):
 
         cascade: cascade interconnection of two systems
         """
-        if not isinstance(anotherSystem, TransferFunctionModel):
+        if not isinstance(other, TransferFunctionModel):
             raise TypeError("Argument must be of type TransferFunctionModel, not %r" %
-                            (type(anotherSystem)))
+                            (type(other)))
         # assert matching shapes
-        if not ((self.G.shape[1] == anotherSystem.G.shape[1]) and
-                (self.G.shape[0] == anotherSystem.G.shape[0])):
+        if not ((self.G.shape[1] == other.G.shape[1]) and
+                (self.G.shape[0] == other.G.shape[0])):
             raise ShapeError("Dimensions of inputs and outputs must match!")
 
-        return TransferFunctionModel(self.G + anotherSystem.G)
+        return TransferFunctionModel(self.G + other.G)
 
     def __eq__(self, other):
         if isinstance(other, TransferFunctionModel):
@@ -1083,7 +1083,7 @@ def _matrix_coeff(m, s):
     m : Matrix
         matrix to get coefficient matrices from
     s :
-        symbol to compute coefficient list (coefficients are ambiguous for expressins with multiple symbols)
+        symbol to compute coefficient list (coefficients are ambiguous for expressions with multiple symbols)
     """
 
     m_deg = _matrix_degree(m, s)
@@ -1109,7 +1109,7 @@ def _matrix_coeff(m, s):
 def _fraction_list(m, only_denoms=False, only_numers=False):
     """list of fractions of m
 
-    retuns a list of tuples of the numerators and denominators of all entries of m.
+    returns a list of tuples of the numerators and denominators of all entries of m.
     the entries of m can be any sort of expressions.
     result[i*j + j][0/1] is the numerator/denominator of the matrix element m[i,j]
 
@@ -1125,7 +1125,7 @@ def _fraction_list(m, only_denoms=False, only_numers=False):
     only_denoms=False : Bool
         if True, function only returns a list of denominators, not tuples
     only_numers)False: Bool
-        if True, function only returns a list of nmerators, not tuples
+        if True, function only returns a list of numerators, not tuples
 
     """
 
