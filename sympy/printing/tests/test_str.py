@@ -357,6 +357,9 @@ def test_PolyElement():
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
+    assert str(x**2) == "x**2"
+    assert str(x**(-2)) == "x**(-2)"
+    assert str(x**QQ(1, 2)) == "x**(1/2)"
 
     assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
