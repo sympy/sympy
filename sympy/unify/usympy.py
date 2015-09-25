@@ -6,6 +6,7 @@ See sympy.unify.core for algorithmic docstring """
 from __future__ import print_function, division
 
 from sympy.core import Basic, Add, Mul, Pow
+from sympy.logic.boolalg import And, Or, Xor, Nand, Nor
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
 from sympy.sets.sets import Union, Intersection, FiniteSet
 from sympy.core.operations import AssocOp, LatticeOp
@@ -14,14 +15,13 @@ from sympy.unify import core
 
 basic_new_legal = [MatrixExpr]
 eval_false_legal = [AssocOp, Pow, FiniteSet]
-illegal = [LatticeOp]
 
 def sympy_associative(op):
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
     return any(issubclass(op, aop) for aop in assoc_ops)
 
 def sympy_commutative(op):
-    comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
+    comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet, And, Or, Xor, Nand, Nor)
     return any(issubclass(op, cop) for cop in comm_ops)
 
 def is_associative(x):
