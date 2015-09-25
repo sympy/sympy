@@ -97,12 +97,24 @@ def test_hard_match():
     assert list(unify(expr, pattern, {}, (p, q))) == [{p: x}]
 
 def test_matrix():
-    from sympy import MatrixSymbol
+    from sympy import MatrixSymbol, ZeroMatrix, Identity
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
     assert list(unify(X, Y, {}, variables=[n, 'X'])) == [{'X': 'Y', n: 2}]
     assert list(unify(X, Z, {}, variables=[n, 'X'])) == []
+
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    C = MatrixSymbol('C', 3, 3)
+    D = ZeroMatrix(3, 3)
+    I = Identity(3)
+
+    assert list(unify(C, A, {}, variables=[A])) == [{A: C}]
+    assert list(unify(D, A, {}, variables=[A])) == [{A: D}]
+
+    list1 = list(unify(C + I, A + B, {}, variables=[A, B]))
+    assert len(list1) == 2 and {A: C, B: I} in list1 and {A: I, B: C} in list1
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__

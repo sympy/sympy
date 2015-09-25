@@ -3,9 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.unify.usympy import unify
-from sympy.unify.usympy import rebuild
-from sympy.strategies.tools import subs
-from sympy import Expr
+from sympy import sympify
 from sympy.assumptions import ask
 
 def rewriterule(source, target, variables=(), condition=None, assume=None):
@@ -42,14 +40,12 @@ def rewriterule(source, target, variables=(), condition=None, assume=None):
     """
 
     def rewrite_rl(expr, assumptions=True):
+        starget = sympify(target)
         for match in unify(source, expr, {}, variables=variables):
             if (condition and
                 not condition(*[match.get(var, var) for var in variables])):
                 continue
             if (assume and not ask(assume.xreplace(match), assumptions)):
                 continue
-            expr2 = subs(match)(target)
-            if isinstance(expr2, Expr):
-                expr2 = rebuild(expr2)
-            yield expr2
+            yield starget.subs(match)
     return rewrite_rl

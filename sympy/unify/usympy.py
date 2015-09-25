@@ -6,22 +6,21 @@ See sympy.unify.core for algorithmic docstring """
 from __future__ import print_function, division
 
 from sympy.core import Basic, Add, Mul, Pow
-from sympy.matrices import MatAdd, MatMul, MatrixExpr
+from sympy.logic.boolalg import And, Or, Xor, Nand, Nor
+from sympy.matrices import MatAdd, MatMul
 from sympy.sets.sets import Union, Intersection, FiniteSet
-from sympy.core.operations import AssocOp, LatticeOp
+from sympy.core.operations import AssocOp
 from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core
 
-basic_new_legal = [MatrixExpr]
 eval_false_legal = [AssocOp, Pow, FiniteSet]
-illegal = [LatticeOp]
 
 def sympy_associative(op):
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
     return any(issubclass(op, aop) for aop in assoc_ops)
 
 def sympy_commutative(op):
-    comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
+    comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet, And, Or, Xor, Nand, Nor)
     return any(issubclass(op, cop) for cop in comm_ops)
 
 def is_associative(x):
@@ -60,17 +59,8 @@ def construct(t):
         return t
     if any(issubclass(t.op, cls) for cls in eval_false_legal):
         return t.op(*map(construct, t.args), evaluate=False)
-    elif any(issubclass(t.op, cls) for cls in basic_new_legal):
-        return Basic.__new__(t.op, *map(construct, t.args))
     else:
         return t.op(*map(construct, t.args))
-
-def rebuild(s):
-    """ Rebuild a SymPy expression
-
-    This removes harm caused by Expr-Rules interactions
-    """
-    return construct(deconstruct(s))
 
 def unify(x, y, s=None, variables=(), **kwargs):
     """ Structural unification of two expressions/patterns
