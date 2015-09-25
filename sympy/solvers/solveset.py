@@ -455,6 +455,12 @@ def solveset_real(f, symbol):
     original_eq = f
     f = together(f)
 
+    # In this, unlike in solveset_complex, expression should only
+    # be expanded when fraction(f)[1] does not contain the symbol
+    # for which we are solving
+    if not symbol in fraction(f)[1].free_symbols and f.is_rational_function():
+        f = expand(f)
+
     if f.has(Piecewise):
         f = piecewise_fold(f)
     result = EmptySet()
