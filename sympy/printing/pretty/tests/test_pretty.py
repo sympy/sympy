@@ -6,7 +6,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps, Intersection, Complement)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -5176,3 +5176,8 @@ u("""\
      0                              0                   \
 """)
     assert upretty(e) == ucode_str
+
+def test_issue_9877():
+    ucode_str = u({x} ∩ {y} ∩ ({z} \ [1, 2]))
+    a, b, c = FiniteSet(x), FiniteSet(y), FiniteSet(z)
+    assert upretty(Intersection(a, b, Complement(c, Interval(1, 2))) == ucode_str)
