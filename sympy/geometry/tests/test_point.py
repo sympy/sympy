@@ -1,11 +1,8 @@
 from __future__ import division
 
-from sympy import (Abs, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sin, sqrt, symbols, Derivative, asin, acos)
-from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
-                            Polygon, Ray, RegularPolygon, Segment, Triangle,
-                            are_similar, convex_hull, intersection,
-                            Point3D, Line3D, Ray3D, Segment3D, Plane, centroid)
+from sympy import I, Rational, Symbol, pi, sqrt
+from sympy.geometry import Line, Point, Point3D, Line3D
+from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.pytest import raises
 
@@ -13,23 +10,13 @@ x = Symbol('x', real=True)
 y = Symbol('y', real=True)
 z = Symbol('z', real=True)
 t = Symbol('t', real=True)
-k = Symbol('k', real=True)
 x1 = Symbol('x1', real=True)
 x2 = Symbol('x2', real=True)
 x3 = Symbol('x3', real=True)
 y1 = Symbol('y1', real=True)
 y2 = Symbol('y2', real=True)
 y3 = Symbol('y3', real=True)
-z1 = Symbol('z1', real=True)
-z2 = Symbol('z2', real=True)
-z3 = Symbol('z3', real=True)
 half = Rational(1, 2)
-
-
-def feq(a, b):
-    """Test if two floating point values are 'equal'."""
-    t = Float("1.0E-10")
-    return -t < a - b < t
 
 
 def test_point():
@@ -239,3 +226,17 @@ def test_issue_9214():
     p3 = Point3D(7, 2, 3)
 
     assert Point3D.are_collinear(p1, p2, p3) is False
+
+
+def test_transform():
+    p = Point(1, 1)
+    assert p.transform(rotate(pi/2)) == Point(-1, 1)
+    assert p.transform(scale(3, 2)) == Point(3, 2)
+    assert p.transform(translate(1, 2)) == Point(2, 3)
+
+
+def test_concyclic_doctest_bug():
+    p1, p2 = Point(-1, 0), Point(1, 0)
+    p3, p4 = Point(0, 1), Point(-1, 2)
+    assert Point.is_concyclic(p1, p2, p3)
+    assert not Point.is_concyclic(p1, p2, p3, p4)
