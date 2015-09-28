@@ -585,7 +585,6 @@ class SphericalBesselBase(BesselBase):
     def _eval_evalf(self, prec):
         if self.order.is_Integer:
             return self._rewrite()._eval_evalf(prec)
-        return self
 
     def fdiff(self, argindex=2):
         if argindex != 2:
