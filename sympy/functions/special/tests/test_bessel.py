@@ -1,3 +1,5 @@
+from itertools import product
+
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
@@ -17,8 +19,11 @@ randint = _randint()
 
 
 def test_bessel_rand():
-    for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
+    for f in [besselj, bessely, besseli, besselk, hankel1, hankel2]:
         assert td(f(randcplx(), z), z)
+
+    for f in [jn, yn, hn1, hn2]:
+        assert td(f(randint(-10, 10), z), z)
 
 
 def test_bessel_twoinputs():
@@ -61,25 +66,40 @@ def test_rewrite():
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(besseli), z)
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(bessely), z)
 
-    for f in (jn, yn):
-        # check that the following functions can't be rewritten to 'f'
-        # when nu is non-integral
-        assert yn(nu, z) == yn(nu, z).rewrite(f)
-        assert jn(nu, z) == jn(nu, z).rewrite(f)
-        assert hn1(nu, z) == hn1(nu, z).rewrite(f)
-        assert hn2(nu, z) == hn2(nu, z).rewrite(f)
+    # check that a rewrite was triggered, when the order is set to a generic
+    # symbol 'nu'
+    assert yn(nu, z) != yn(nu, z).rewrite(jn)
+    assert hn1(nu, z) != hn1(nu, z).rewrite(jn)
+    assert hn2(nu, z) != hn2(nu, z).rewrite(jn)
+    assert jn(nu, z) != jn(nu, z).rewrite(yn)
+    assert hn1(nu, z) != hn1(nu, z).rewrite(yn)
+    assert hn2(nu, z) != hn2(nu, z).rewrite(yn)
 
+    # rewriting spherical bessel functions (SBFs) w.r.t. besselj, bessely is
+    # not allowed if a generic symbol 'nu' is used as the order of the SBFs
+    # to avoid inconsistencies (the order of bessel[jy] is allowed to be
+    # complex-valued, whereas SBFs are defined only for integer orders)
+    order = nu
+    for f in (besselj, bessely):
+        assert yn(order, z) == yn(order, z).rewrite(f)
+        assert jn(order, z) == jn(order, z).rewrite(f)
+        assert hn1(order, z) == hn1(order, z).rewrite(f)
+        assert hn2(order, z) == hn2(order, z).rewrite(f)
+
+    # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)
-    assert yn(N, z) != yn(N, z).rewrite(jn)
-    assert jn(N, z) != jn(N, z).rewrite(yn)
-    assert hn1(N, z) != hn1(N, z).rewrite(yn)
-    assert hn2(N, z) != hn2(N, z).rewrite(yn)
+    ri = randint(-11, 10)
+    for order in (ri, N):
+        for f in (besselj, bessely):
+            assert yn(order, z) != yn(order, z).rewrite(f)
+            assert jn(order, z) != jn(order, z).rewrite(f)
+            assert hn1(order, z) != hn1(order, z).rewrite(f)
+            assert hn2(order, z) != hn2(order, z).rewrite(f)
 
-    for func, refunc in ((yn, jn), (jn, yn),
-                         (hn1, jn), (hn1, yn),
-                         (hn2, jn), (hn2, yn)):
-        assert tn(func(4, z), func(4, z).rewrite(refunc), z)
-        assert tn(func(-4, z), func(-4, z).rewrite(refunc), z)
+    for func, refunc in product((yn, jn, hn1, hn2),
+                                (jn, yn, besselj, bessely)):
+        assert tn(func(ri, z), func(ri, z).rewrite(refunc), z)
+
 
 def test_expand():
     from sympy import besselsimp, Symbol, exp, exp_polar, I
@@ -212,6 +232,12 @@ def test_jn():
 
     assert expand_func(jn(n, z)) == jn(n, z)
 
+    # SBFs not defined for complex-valued orders
+    assert jn(2+3j, 5.2+0.3j).evalf() == jn(2+3j, 5.2+0.3j)
+
+    assert eq([jn(2, 5.2+0.3j).evalf(10)],
+              [0.09941975672 - 0.05452508024*I])
+
 
 def test_yn():
     z = symbols("z")
@@ -219,6 +245,12 @@ def test_yn():
     assert myn(1, z) == -cos(z)/z**2 - sin(z)/z
     assert myn(2, z) == -((3/z**3 - 1/z)*cos(z) + (3/z**2)*sin(z))
     assert expand_func(yn(n, z)) == yn(n, z)
+
+    # SBFs not defined for complex-valued orders
+    assert yn(2+3j, 5.2+0.3j).evalf() == yn(2+3j, 5.2+0.3j)
+
+    assert eq([yn(2, 5.2+0.3j).evalf(10)],
+              [0.185250342 + 0.01489557397*I])
 
 
 def test_sympify_yn():
@@ -308,14 +340,14 @@ def test_conjugate():
     n, z, x = Symbol('n'), Symbol('z', real=False), Symbol('x', real=True)
     y, t = Symbol('y', real=True, positive=True), Symbol('t', negative=True)
 
-    for f in [besseli, besselj, besselk, bessely, jn, yn, hankel1, hankel2]:
+    for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:
         assert f(n, -1).conjugate() != f(conjugate(n), -1)
         assert f(n, x).conjugate() != f(conjugate(n), x)
         assert f(n, t).conjugate() != f(conjugate(n), t)
 
     rz = randcplx(b=0.5)
 
-    for f in [besseli, besselj, besselk, bessely, jn, yn]:
+    for f in [besseli, besselj, besselk, bessely]:
         assert f(n, 1 + I).conjugate() == f(conjugate(n), 1 - I)
         assert f(n, 0).conjugate() == f(conjugate(n), 0)
         assert f(n, 1).conjugate() == f(conjugate(n), 1)
