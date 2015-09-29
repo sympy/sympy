@@ -656,6 +656,11 @@ class jn(SphericalBesselBase):
 
     besselj, bessely, besselk, yn
 
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
     """
 
     def _rewrite(self):
@@ -713,6 +718,11 @@ class yn(SphericalBesselBase):
     ========
 
     besselj, bessely, besselk, jn
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
 
     """
 
@@ -829,6 +839,11 @@ class hn1(SphericalHankelBase):
 
     hn2, jn, yn, hankel1, hankel2
 
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
     """
 
     _hankel_kind_sign = S.One
@@ -876,6 +891,11 @@ class hn2(SphericalHankelBase):
     ========
 
     hn1, jn, yn, hankel1, hankel2
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
 
     """
 
