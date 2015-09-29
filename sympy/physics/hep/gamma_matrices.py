@@ -498,6 +498,10 @@ def _kahane_simplify(expression):
         raise ValueError('spinor indices do not match')
 
     dum = []
+    gamma_expr = TensMul(*gammas)  # TODO: this should be handled before calling this gunction
+    for g, pos in gamma_expr._iterate_dummy_indices:
+        pass
+        # TODO iterate over dummy indices.
     for pos, g in enumerate(gammas):
         for dm in get_index_structure(g).dum:
             if dm[0] != 0 or dm[1] != 0:
