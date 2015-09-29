@@ -53,10 +53,10 @@ class AxisOrienter(Orienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
         >>> from sympy.vector import AxisOrienter
         >>> orienter = AxisOrienter(q1, N.i + 2 * N.j)
         >>> B = N.orient_new('B', (orienter, ))
@@ -74,7 +74,7 @@ class AxisOrienter(Orienter):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSystem3D
             The coordinate system wrt which the rotation matrix
             is to be computed
         """
@@ -193,10 +193,10 @@ class BodyOrienter(ThreeAngleOrienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, BodyOrienter
+        >>> from sympy.vector import CoordSystem3D, BodyOrienter
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
 
         A 'Body' fixed rotation is described by three angles and
         three body-fixed rotation axes. To orient a coordinate system D
@@ -265,10 +265,10 @@ class SpaceOrienter(ThreeAngleOrienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, SpaceOrienter
+        >>> from sympy.vector import CoordSystem3D, SpaceOrienter
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
 
         To orient a coordinate system D with respect to N, each
         sequential rotation is always about N's orthogonal unit vectors.
@@ -329,7 +329,7 @@ class QuaternionOrienter(Orienter):
 
     def __init__(self, angle1, angle2, angle3, rot_order):
         """
-        Quaternion orientation orients the new CoordSysCartesian with
+        Quaternion orientation orients the new CoordSystem3D with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
@@ -354,10 +354,10 @@ class QuaternionOrienter(Orienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
         >>> from sympy.vector import QuaternionOrienter
         >>> q_orienter = QuaternionOrienter(q0, q1, q2, q3)
         >>> B = N.orient_new('B', (q_orienter, ))
