@@ -640,14 +640,20 @@ class jn(SphericalBesselBase):
     Examples
     ========
 
-    >>> from sympy import Symbol, jn, sin, cos, expand_func
+    >>> from sympy import Symbol, jn, sin, cos, expand_func, besselj, bessely
+    >>> from sympy import simplify
     >>> z = Symbol("z")
-    >>> print(jn(0, z).expand(func=True))
+    >>> nu = Symbol("nu", integer=True)
+    >>> print(expand_func(jn(0, z)))
     sin(z)/z
-    >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
+    >>> expand_func(jn(1, z)) == sin(z)/z**2 - cos(z)/z
     True
     >>> expand_func(jn(3, z))
     (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
+    >>> jn(nu, z).rewrite(besselj)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(nu + 1/2, z)/2
+    >>> jn(nu, z).rewrite(bessely)
+    (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-nu - 1/2, z)/2
     >>> jn(2, 5.2+0.3j).evalf(20)
     0.099419756723640344491 - 0.054525080242173562897*I
 
