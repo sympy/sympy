@@ -1907,6 +1907,12 @@ def latex(expr, **settings):
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
 
+    Not using a print statement for printing, results in double backslashes for
+    latex commands since that's the way Python escapes backslashes in strings.
+
+    >>> latex((2*tau)**Rational(7,2))
+    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
+
     order: Any of the supported monomial orderings (currently "lex", "grlex", or
     "grevlex"), "old", and "none". This parameter does nothing for Mul objects.
     Setting order to "old" uses the compatibility ordering for Add defined in
