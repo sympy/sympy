@@ -875,7 +875,7 @@ class TransferFunctionModel(object):
         elif isinstance(arg, (Matrix, ImmutableMatrix, MutableMatrix)):
 
             # set the given transfer function as self.G
-            self.G = simplify(arg)
+            self.G = arg
 
         else:
             raise TypeError("argument of unsupported type")
@@ -1139,11 +1139,24 @@ def _fraction_list(m, only_denoms=False, only_numers=False):
         return map(lambda x: x.as_numer_denom()[0], m)
     return map(lambda x: x.as_numer_denom(), m)
 
+
+#
+# deg(en)
+#
+def _entry_deg(en):
+    """_entry_deg
+
+    gives back the total degree of a rational function. If the degree of the
+    denominator ist greater than the degree of the numerator. The result is
+    negative
+    """
+    numer, denom = en.as_numer_denom()
+    return degree(numer) - degree(denom)
+
+
 #
 # is_proper(m, s, strict=False)
 #
-
-
 def _is_proper(m, s, strict=False):
     """is_proper
 
@@ -1164,8 +1177,6 @@ def _is_proper(m, s, strict=False):
         than the degree of the numerator
     """
     if strict is False:
-        return all(degree(en.as_numer_denom()[0], s) <=
-                   degree(en.as_numer_denom()[1], s) for en in m)
+        return all(_entry_deg(en) <= 0 for en in m)
     else:
-        return all(degree(en.as_numer_denom()[0], s) <
-                   degree(en.as_numer_denom()[1], s) for en in m)
+        return all(_entry_deg(en) < 0 for en in m)
