@@ -1,11 +1,11 @@
 from __future__ import division
 
 from sympy import (
-    Symbol, var, Function, simplify, oo, exp, Eq,
+    Symbol, var, simplify, oo, exp,
     Poly, lcm, LC, degree, Integral, integrate,
-    Matrix, BlockMatrix, eye, zeros, cancel, together,
+    Matrix, BlockMatrix, eye, zeros,
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
-    SparseMatrix, MutableDenseMatrix, Subs
+    SparseMatrix, MutableDenseMatrix
 )
 
 from sympy.core.compatibility import range
@@ -1143,7 +1143,7 @@ def _fraction_list(m, only_denoms=False, only_numers=False):
 #
 # deg(en)
 #
-def _entry_deg(en):
+def _entry_deg(en, s):
     """_entry_deg
 
     gives back the total degree of a rational function. If the degree of the
@@ -1151,7 +1151,7 @@ def _entry_deg(en):
     negative
     """
     numer, denom = en.as_numer_denom()
-    return degree(numer) - degree(denom)
+    return degree(numer, s) - degree(denom, s)
 
 
 #
@@ -1177,6 +1177,6 @@ def _is_proper(m, s, strict=False):
         than the degree of the numerator
     """
     if strict is False:
-        return all(_entry_deg(en) <= 0 for en in m)
+        return all(_entry_deg(en, s) <= 0 for en in m)
     else:
-        return all(_entry_deg(en) < 0 for en in m)
+        return all(_entry_deg(en, s) < 0 for en in m)

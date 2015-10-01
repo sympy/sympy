@@ -1,6 +1,6 @@
 from __future__ import division
 from sympy import (symbols, Matrix, zeros, simplify, eye, exp,
-                   ones, cosh, sinh, Integral, expand
+                   ones, cosh, sinh, Integral, expand, together
                    )
 from sympy import Rational as R
 from sympy.controlsys.lti import StateSpaceModel, TransferFunctionModel
@@ -267,7 +267,7 @@ def test_TransferFunctionModel_parallel():
     expect = TransferFunctionModel(
         Matrix([(a + s + a * s * (b + s)) / (a * s * (a + s))])
     )
-    assert tfm1.parallel(tfm2).G == expect.G
+    assert together(tfm1.parallel(tfm2).G) == together(expect.G)
 
 
 def test_equality():
