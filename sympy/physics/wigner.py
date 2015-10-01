@@ -533,15 +533,15 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
-    imin = 0
-    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
+    imax = int(min(j_1 + j_9, j_2 + j_6, j_4 + j_8) * 2)
+    imin = imax % 2
 
     sumres = 0
-    for kk in range(imin, int(imax) + 1):
-        sumres = sumres + (2 * kk + 1) * \
-            racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
-            racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
-            racah(j_1, j_4, j_9, j_8, j_7, kk, prec)
+    for kk in range(imin, int(imax) + 1, 2):
+        sumres = sumres + (kk + 1) * \
+            racah(j_1, j_2, j_9, j_6, j_3, kk / 2, prec) * \
+            racah(j_4, j_6, j_8, j_2, j_5, kk / 2, prec) * \
+            racah(j_1, j_4, j_9, j_8, j_7, kk / 2, prec)
     return sumres
 
 
