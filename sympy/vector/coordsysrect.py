@@ -2,49 +2,36 @@ import types
 from sympy.simplify import simplify
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sympify, symbols, Dummy, sqrt, Derivative, S, Tuple
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, symbols, sqrt, Lambda, Dummy
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import sympy.vector
 
 
-class DifferentialClass(Basic):
-    """
-    TODO
-    """
+def build_instance_from_lambda(fun=lambda x, y, z: (x, y, z)):
+    dv = symbols('d1, d2, d3', cls=Dummy, positive=True)
+    mv = fun(*dv)
 
-    def __new__(cls, grad_coeff, metric_det_sqrt):
-        grad_coeff = Tuple(*grad_coeff)
-        metric_det_sqrt = sympify(metric_det_sqrt)
-        return Basic.__new__(cls, grad_coeff, metric_det_sqrt)
+    # get jacobian matrix
+    jacobian = Matrix([[miter.diff(diter) for diter in dv] for miter in mv])
 
-    @property
-    def grad_coeff(self):
-        return self.args[0]
+    # invert the jacobian
+    inverse_jacobian = simplify(jacobian.inv())
 
-    @property
-    def metric_det_sqrt(self):
-        return self.args[1]
+    # get the metric in this new coordinate system:
+    metric = simplify(inverse_jacobian * inverse_jacobian.T)
 
-    @staticmethod
-    def build_instance_from_lambda(fun=lambda x, y, z: (x, y, z), variable_names=['x', 'y', 'z']):
-        dv = symbols(variable_names, positive=True)
-        mv = fun(*dv)
-        # get jacobian matrix
-        jacobian = Matrix([[miter.diff(diter) for diter in dv] for miter in mv])
-        inverse_jacobian = simplify(jacobian.inv())
-        metric = simplify(inverse_jacobian * inverse_jacobian.T)
-        scale_factors = [sqrt(metric[i, i]) for i in range(3)]
-        unscaled_grad = metric * Matrix([1, 1, 1])
+    # scale factors for the metric (i.e. normalize its diagonal):
+    scale_factors = [sqrt(metric[i, i]) for i in range(3)]
 
-        # These are the coefficients to the derivation operations for the gradient:
-        scaled_grad_coeff = [unscaled_grad[i] / scale_factors[i] for i in range(3)]
+    # get the unscaled coefficients:
+    unscaled_grad = metric * Matrix([1, 1, 1])
 
-        metric_det_sqrt = simplify(sqrt(metric.det()))
+    # These are the coefficients to the derivation operations for the gradient:
+    scaled_grad_coeff = tuple(unscaled_grad[i] / scale_factors[i] for i in range(3))
 
-        return DifferentialClass(scaled_grad_coeff, metric_det_sqrt)
+    return Lambda(dv, scaled_grad_coeff)
 
 
 class CoordSystem3D(Basic):
@@ -151,15 +138,10 @@ class CoordSystem3D(Basic):
             pretty_scalars = [(name + '_' + x) for x in variable_names]
 
         if differential_class is None:
-            differential_class = DifferentialClass.build_instance_from_lambda(
-                lambda x, y, z: (x, y, z),
-                variable_names
-            )
-        elif isinstance(differential_class, types.FunctionType):
-            differential_class = DifferentialClass.build_instance_from_lambda(
-                differential_class,
-                variable_names
-            )
+            from sympy.abc import x, y, z
+            differential_class = Lambda((x, y, z), (x, y, z))
+        elif not isinstance(differential_class, Lambda):
+            raise TypeError("expected Lambda expression")
 
         #All systems that are defined as 'roots' are unequal, unless
         #they have the same name.

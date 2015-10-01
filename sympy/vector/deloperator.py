@@ -56,7 +56,7 @@ class Del(Basic):
 
         scalar_field = express(scalar_field, self.system,
                                variables=True)
-        grad_coeff = self.system._differential_class.grad_coeff
+        grad_coeff = self.system._differential_class(*self.system.base_scalars())
         vx = grad_coeff[0]*Derivative(scalar_field, self._x)
         vy = grad_coeff[1]*Derivative(scalar_field, self._y)
         vz = grad_coeff[2]*Derivative(scalar_field, self._z)
@@ -97,10 +97,11 @@ class Del(Basic):
 
         """
 
-        metric_det_sqrt = self.system._differential_class.metric_det_sqrt
-        vx = _diff_conditional(metric_det_sqrt*vect.dot(self._i), self._x)/metric_det_sqrt
-        vy = _diff_conditional(metric_det_sqrt*vect.dot(self._j), self._y)/metric_det_sqrt
-        vz = _diff_conditional(metric_det_sqrt*vect.dot(self._k), self._z)/metric_det_sqrt
+        diff_coeff = self.system._differential_class(*self.system.base_scalars())
+        dprod = diff_coeff[0] * diff_coeff[1] * diff_coeff[2]
+        vx = dprod*_diff_conditional(diff_coeff[0]/dprod*vect.dot(self._i), self._x)
+        vy = dprod*_diff_conditional(diff_coeff[1]/dprod*vect.dot(self._j), self._y)
+        vz = dprod*_diff_conditional(diff_coeff[2]/dprod*vect.dot(self._k), self._z)
 
         if doit:
             return (vx + vy + vz).doit()
