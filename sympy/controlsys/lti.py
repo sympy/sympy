@@ -947,8 +947,8 @@ class TransferFunctionModel(object):
         >>> tfm2 = TransferFunctionModel(Matrix([[1/(s + 2), (2 + s**3)/ (s**5 + s**2 + 7)]]))
         >>> tfm1.cascade(tfm2)
         TransferFunctionModel(Matrix([
-        [ 2*s/(s**3 + s**2 + 4), 2*s*(s**3 + 2)/((s**2 - s + 2)*(s**5 + s**2 + 7))],
-        [s/((s + 2)*(s**3 + 1)),       s*(s**3 + 2)/((s**3 + 1)*(s**5 + s**2 + 7))]]))
+        [2*s/((s + 2)*(s**2 - s + 2)), 2*s*(s**3 + 2)/((s**2 - s + 2)*(s**5 + s**2 + 7))],
+        [      s/((s + 2)*(s**3 + 1)),       s*(s**3 + 2)/((s**3 + 1)*(s**5 + s**2 + 7))]]))
 
         See Also
         ========
@@ -995,7 +995,7 @@ class TransferFunctionModel(object):
         >>> tfm2 = TransferFunctionModel(Matrix([1/(s + 2), (2 + s**3)/ (s**5 + s**2 + 7)]))
         >>> tfm1.parallel(tfm2)
         TransferFunctionModel(Matrix([
-        [       (3*s**2 + 3*s + 2)/(s**3 + s**2 + 4)],
+        [             2*s/(s**2 - s + 2) + 1/(s + 2)],
         [s/(s**3 + 1) + (s**3 + 2)/(s**5 + s**2 + 7)]]))
 
         See Also
@@ -1048,7 +1048,7 @@ class TransferFunctionModel(object):
         return '$' + latex(self.G) + '$'
 
     def __str__(self):
-        return 'TransferFunctionModel(' + str(self.G) + ')'
+        return 'TransferFunctionModel(' + sstr(self.G) + ')'
 
     def __repr__(self):
         return sstr(self)
