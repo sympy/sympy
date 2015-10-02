@@ -130,7 +130,7 @@ def is_decreasing(f, interval=S.Reals):
 
 def is_strictly_decreasing(f, interval=S.Reals):
     """
-    Returns if a function is decreasing or not, in the given
+    Returns if a function is strictly decreasing or not, in the given
     ``Interval``.
 
     Examples
