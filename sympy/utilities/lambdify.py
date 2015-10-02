@@ -297,6 +297,20 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
 
+    
+    print('+++++++++++++++')
+    print(type(expr))
+    print('---------------')
+    blacklist = [tuple, list, int, str, dict]
+    blacklisted = False
+    for x in blacklist:
+        if issubclass(type(expr), x):
+            blacklisted = True
+            break
+
+    if not blacklisted:
+        expr = expr.doit()
+
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
     if modules is None:
