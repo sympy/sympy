@@ -318,7 +318,7 @@ class LatexPrinter(Printer):
 
         def convert(expr):
             if not expr.is_Mul:
-                return str(self._print(expr))
+                return r"(%s)"%str(self._print(expr))        
             else:
                 _tex = last_term_tex = ""
 
