@@ -899,6 +899,10 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, -oo, oo)).is_convergent() == S.true
     assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.true
 
+    # dirichlet tests
+    assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() == S.true
+    assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() == S.true
+
 
 def test_is_absolute_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() == S.false

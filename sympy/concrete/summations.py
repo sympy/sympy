@@ -313,16 +313,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         order = O(sequence_term, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
-        p1_series_test = order.args[0].match(sym**p)
-        if not p1_series_test is None:
+        p1_series_test = order.expr.match(sym**p)
+        if p1_series_test is not None:
             if p1_series_test[p] < -1:
                 return True
             if p1_series_test[p] > -1:
                 return False
 
-
-        p2_series_test = order.args[0].match((1/sym)**p)
-        if not p2_series_test is None:
+        p2_series_test = order.expr.match((1/sym)**p)
+        if p2_series_test is not None:
             if p2_series_test[p] > 1:
                 return True
             if p2_series_test[p] < 1:
@@ -341,43 +340,57 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         d = symbols('d', cls=Dummy)
         dict_val = sequence_term.match((-1)**p*q)
         if dict_val[p] == sym or dict_val[p].has(sym):
-            if solveset((dict_val[q].subs({sym: d + 1})/dict_val[q].subs({sym: d})) < 1, d, interval) == interval and \
-                limit(dict_val[q], sym, S.Infinity).is_finite:
-                    return True
+            if is_decreasing(dict_val[q], interval):
+                return True
             return False
 
         ### ------------- comparison test ------------- ###
-        if order.contains(O(1/sym, (sym, S.Infinity))):
+        # (1/log(n)**p) comparison
+        log_test = order.expr.match(1/(log(sym)**p))
+        if log_test is not None:
             return False
 
         # (1/(n*log(n)**p)) comparison
-        log_n_test = order.args[0].match(1/(sym*(log(sym))**p))
-        if not log_n_test is None:
+        log_n_test = order.expr.match(1/(sym*(log(sym))**p))
+        if log_n_test is not None:
             if log_n_test[p] > 1:
                 return True
             return False
 
         # (1/(n*log(n)*log(log(n))*p)) comparison
-        log_log_n_test = order.args[0].match(1/(sym*(log(sym)*log(log(sym))**p)))
-        if not log_log_n_test is None:
+        log_log_n_test = order.expr.match(1/(sym*(log(sym)*log(log(sym))**p)))
+        if log_log_n_test is not None:
             if log_log_n_test[p] > 1:
                 return True
             return False
 
-        if order.args[0] == sequence_term:
+        if order.expr == sequence_term:
             pass
         else:
-            return Sum(order.args[0], (sym, lower_limit, upper_limit)).is_convergent()
+            return Sum(order.expr, (sym, lower_limit, upper_limit)).is_convergent()
 
         ### ------------- integral test -------------- ###
         if is_decreasing(sequence_term, interval):
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            integral_val_evaluated = integral_val.doit()
-            if integral_val_evaluated == integral_val:
+            try:
+                integral_val_evaluated = integral_val.doit()
+                if integral_val_evaluated.is_infinite:
+                    return False
+            except NotImplementedError:
                 pass
-            if integral_val_evaluated.is_infinite:
-                return False
             return True
+
+        ### -------------- Dirichlet tests -------------- ###
+        if order.expr.is_Mul:
+            a_n = order.expr.args[0]
+            b_n = order.expr.args[1]
+            if is_decreasing(a_n, interval):
+                try:
+                    ing_val = integrate(b_n, (sym, 1, S.Infinity))
+                except NotImplementedError:
+                    pass
+                if ing_val.is_finite:
+                    return True
 
         raise NotImplementedError("The algorithm to find the convergence of %s "
                                     "is not yet implemented" % (sequence_term))
