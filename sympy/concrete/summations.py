@@ -260,10 +260,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def is_convergent(self):
         """
         Convergence tests are used for checking the convergence of
-        a series. There are various tests employed to check the
-        convergence, returns True if convergent and false if divergent and
-        None if unknow. Like divergence test, root test, integral test,
-        alternating series test, comparison tests.
+        a series. There are various tests employed to check the convergence,
+        returns True if convergent and false if divergent and NotImplementedError
+        if can not be checked. Like divergence test, root test, integral test,
+        alternating series test, comparison tests, Dirichlet tests.
 
         References
         ==========
@@ -283,25 +283,41 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         False
         >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
         True
+
+        See Also
+        ========
+
+        Sum.is_absolute_convergent()
         """
-        from sympy import Interval, Integral, Limit, log, singularities, symbols
+        from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
         from sympy.solvers.solveset import solveset
         p, q = symbols('p q', cls=Wild)
 
-        sequence_term = self.function
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        interval = Interval(lower_limit, upper_limit)
+        sequence_term = self.function
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return True
 
         # transform sym -> -sym and swap the upper_limit = S.Infinity and lower_limit = - upper_limit
         if lower_limit is S.NegativeInfinity:
-            sequence_term = sequence_term.xreplace({sym: -sym})
+            if upper_limit is S.Infinity:
+                return Sum(sequence_term, (sym, 0, S.Infinity)).is_convergent() and \
+                        Sum(sequence_term, (sym, S.NegativeInfinity, 0)).is_convergent()
+            sequence_term = simplify(sequence_term.xreplace({sym: -sym}))
             lower_limit = -upper_limit
             upper_limit = S.Infinity
+
+        interval = Interval(lower_limit, upper_limit)
+
+        # Piecewise function handle
+        if sequence_term.is_Piecewise:
+            for func_cond in sequence_term.args:
+                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
+                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            return True
 
         ###  -------- Divergence test ----------- ###
         try:
@@ -382,15 +398,24 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
-            a_n = order.expr.args[0]
-            b_n = order.expr.args[1]
-            if is_decreasing(a_n, interval):
-                try:
-                    ing_val = integrate(b_n, (sym, 1, S.Infinity))
-                except NotImplementedError:
-                    pass
-                if ing_val.is_finite:
-                    return True
+            a_n, b_n = order.expr.args[0], order.expr.args[1]
+
+            def _dirichlet_test(f_n, g_n):
+                if is_decreasing(f_n, interval):
+                    try:
+                        ing_val = integrate(g_n, (sym, interval.inf, interval.sup))
+                    except NotImplementedError:
+                        pass
+                    if ing_val.is_finite:
+                        return True
+
+            dirich1 = _dirichlet_test(a_n, b_n)
+            if dirich1 is not None:
+                return dirich1
+
+            dirich2 = _dirichlet_test(b_n, a_n)
+            if dirich2 is not None:
+                return dirich2
 
         raise NotImplementedError("The algorithm to find the convergence of %s "
                                     "is not yet implemented" % (sequence_term))

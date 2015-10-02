@@ -896,12 +896,17 @@ def test_is_convergent():
     assert Sum(1/(n - 1), (n, -oo, -1)).is_convergent() == S.false
     assert Sum(1/(n**2 - 1), (n, -oo, -5)).is_convergent() == S.true
     assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() == S.true
-    assert Sum(1/(n**2 + 1), (n, -oo, oo)).is_convergent() == S.true
     assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.true
 
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() == S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() == S.true
+
+    # piecewise functions
+    f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
+    assert Sum(f, (n, 1, oo)).is_convergent() == S.false
+    assert Sum(f, (n, -oo, oo)).is_convergent() == S.false
+    assert Sum(f, (n, -oo, 1)).is_convergent() == S.true
 
 
 def test_is_absolute_convergent():
@@ -915,3 +920,5 @@ def test_convergent_failing():
     # currently raise TypeError
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() == S.true
     assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() == S.true
+    # is_decreasing is not handling "is_decreasing(1)", so raises error
+    assert Sum((-1)**n, (n, 1, oo)).is_convergent() == S.false
