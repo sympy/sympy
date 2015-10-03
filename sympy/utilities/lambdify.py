@@ -295,20 +295,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     in other namespaces, unless the ``use_imps`` input parameter is False.
     """
     from sympy.core.symbol import Symbol
+    from sympy.core.basic import Basic
+    from sympy.concrete.expr_with_limits import ExprWithLimits
     from sympy.utilities.iterables import flatten
 
-    
-    print('+++++++++++++++')
-    print(type(expr))
-    print('---------------')
-    blacklist = [tuple, list, int, str, dict]
-    blacklisted = False
-    for x in blacklist:
-        if issubclass(type(expr), x):
-            blacklisted = True
-            break
-
-    if not blacklisted:
+    if issubclass(type(expr), Basic) and not issubclass(type(expr), ExprWithLimits):
         expr = expr.doit()
 
     # If the user hasn't specified any modules, use what is available.

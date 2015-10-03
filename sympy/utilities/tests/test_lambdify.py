@@ -580,6 +580,5 @@ def test_issue_2790():
 
 def test_issue_9339():
     f = lambdify(x, Derivative(sin(x)))
-    #assert f == cos(x)
     assert f(1) > 0.5403
     assert f(1) < 0.5404
