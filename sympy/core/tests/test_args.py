@@ -3562,7 +3562,7 @@ def test_sympy__printing__codeprinter__Assignment():
     assert _test_args(Assignment(x, y))
 
 
-def test_sympy__vector__coordsysrect__CoordSysCartesian():
+def test_sympy__vector__coordsysrect__CoordSystem3D():
     from sympy.vector.coordsysrect import CoordSystem3D
     assert _test_args(CoordSystem3D('C'))
 

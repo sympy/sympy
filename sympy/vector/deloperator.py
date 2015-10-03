@@ -139,15 +139,18 @@ class Del(Basic):
 
         """
 
-        vectx = express(vect.dot(self._i), self.system, variables=True)
-        vecty = express(vect.dot(self._j), self.system, variables=True)
-        vectz = express(vect.dot(self._k), self.system, variables=True)
+        diff_coeff = self.system._differential_class(*self.system.base_scalars())
+        dprod = diff_coeff[0] * diff_coeff[1] * diff_coeff[2]
+        vectx = express(vect.dot(self._i), self.system, variables=True)/diff_coeff[0]
+        vecty = express(vect.dot(self._j), self.system, variables=True)/diff_coeff[1]
+        vectz = express(vect.dot(self._k), self.system, variables=True)/diff_coeff[2]
         outvec = Vector.zero
-        outvec += (Derivative(vectz, self._y) -
+        # assert dprod == 1
+        outvec += dprod/diff_coeff[0]*(Derivative(vectz, self._y) -
                    Derivative(vecty, self._z)) * self._i
-        outvec += (Derivative(vectx, self._z) -
+        outvec += dprod/diff_coeff[1]*(Derivative(vectx, self._z) -
                    Derivative(vectz, self._x)) * self._j
-        outvec += (Derivative(vecty, self._x) -
+        outvec += dprod/diff_coeff[2]*(Derivative(vecty, self._x) -
                    Derivative(vectx, self._y)) * self._k
 
         if doit:

@@ -1,9 +1,9 @@
 from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSystem3D, DifferentialClass
+from sympy.vector.coordsysrect import CoordSystem3D
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
-from sympy.core import S
+from sympy.core import S, Lambda
 from sympy import sin, cos
 from sympy.vector.functions import (curl, divergence, gradient,
                                     is_conservative, is_solenoidal,
@@ -12,8 +12,13 @@ from sympy.vector.functions import (curl, divergence, gradient,
 from sympy.utilities.pytest import raises
 
 cartesian = CoordSystem3D('C')
-spherical = CoordSystem3D('spherical', DifferentialClass.build_instance_from_lambda(
-    lambda r, theta, phi: (r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta))))
+
+def _get_spherical_diff_parameters():
+    r, theta, phi = symbols('r, theta, phi')
+    return  Lambda((r, theta, phi), (r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)))
+
+spherical = CoordSystem3D('spherical', _get_spherical_diff_parameters())
+
 i, j, k = cartesian.base_vectors()
 x, y, z = cartesian.base_scalars()
 delop = cartesian.delop

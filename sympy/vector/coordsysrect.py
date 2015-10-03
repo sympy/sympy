@@ -138,8 +138,10 @@ class CoordSystem3D(Basic):
             pretty_scalars = [(name + '_' + x) for x in variable_names]
 
         if differential_class is None:
+            # If not specified, assume it's cartesian, i.e. that
+            # its differential factors are 1.
             from sympy.abc import x, y, z
-            differential_class = Lambda((x, y, z), (x, y, z))
+            differential_class = Lambda((x, y, z), (1, 1, 1))
         elif not isinstance(differential_class, Lambda):
             raise TypeError("expected Lambda expression")
 
@@ -389,7 +391,8 @@ class CoordSystem3D(Basic):
 
         """
 
-        return CoordSystem3D(name, location=position,
+        return CoordSystem3D(name, self._differential_class,
+                             location=position,
                              vector_names=vector_names,
                              variable_names=variable_names,
                              parent=self)
@@ -474,7 +477,8 @@ class CoordSystem3D(Basic):
                 else:
                     final_matrix *= orienter.rotation_matrix()
 
-        return CoordSystem3D(name, rotation_matrix=final_matrix,
+        return CoordSystem3D(name, self._differential_class,
+                             rotation_matrix=final_matrix,
                              vector_names=vector_names,
                              variable_names=variable_names,
                              location=location,
@@ -717,7 +721,7 @@ class CoordSystem3D(Basic):
                                vector_names=vector_names,
                                variable_names=variable_names)
 
-    def __init__(self, name, location=None, rotation_matrix=None,
+    def __init__(self, name, differential_class=None, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
                  pretty_scalars=None):
