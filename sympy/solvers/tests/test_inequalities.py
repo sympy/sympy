@@ -303,3 +303,10 @@ def test_issue_8545():
 def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
+
+
+@XFAIL
+def test_issue_9954():
+    # this will pass after issue #9958 is fixed
+    # currently this returns Or(And(-oo < x, x < oo), Eq(x, 0))
+    assert solve_univariate_inequality(x**2 >= 0, x) == And(-oo < x, x < oo)
