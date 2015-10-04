@@ -2,7 +2,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE)
+    true, false, And, Or, Not, ITE, Derivative)
 from sympy.printing.lambdarepr import LambdaPrinter
 import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -581,3 +581,8 @@ def test_issue_2790():
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
+
+def test_issue_9339():
+    f = lambdify(x, Derivative(sin(x)))
+    assert f(1) > 0.5403
+    assert f(1) < 0.5404
