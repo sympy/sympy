@@ -211,7 +211,7 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) != True])
+            return FiniteSet(*[el for el in other if self.contains(el) is not true])
 
     def symmetric_difference(self, other):
         return SymmetricDifference(self, other)
@@ -278,10 +278,10 @@ class Set(Basic):
 
         """
         other = sympify(other, strict=True)
-        ret = self._contains(other)
+        ret = sympify(self._contains(other))
         if ret is None:
             if all(Eq(i, other) == False for i in self):
-                return False
+                return false
             ret = Contains(other, self, evaluate=False)
         return ret
 
@@ -1461,7 +1461,7 @@ class Intersection(Set):
             if s.is_FiniteSet:
                 other_args = [a for a in args if a != s]
                 res = FiniteSet(*[x for x in s
-                             if all(other.contains(x) == True for other in other_args)])
+                             if all(other.contains(x) is true for other in other_args)])
                 unk = [x for x in s
                        if any(other.contains(x) not in (True, False) for other in other_args)]
                 if unk:
@@ -1788,7 +1788,7 @@ class FiniteSet(Set, EvalfMixin):
             elms_unknown = FiniteSet(*[el for el in self if other.contains(el) not in (True, False)])
             if elms_unknown == self:
                 return
-            return Complement(FiniteSet(*[el for el in other if self.contains(el) != True]), elms_unknown)
+            return Complement(FiniteSet(*[el for el in other if self.contains(el) is not true]), elms_unknown)
 
         return Set._complement(self, other)
 
