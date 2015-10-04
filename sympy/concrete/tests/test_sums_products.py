@@ -862,63 +862,62 @@ def test_indexed_idx_sum():
 
 def test_is_convergent():
     # divergence tests --
-    assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() == S.false
-    assert Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent() == S.false
-    assert Sum(3**(-2*n - 1)*n**n, (n, 1, oo)).is_convergent() == S.false
+    assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() is S.false
+    assert Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(3**(-2*n - 1)*n**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
+    assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
 
     # root test --
-    assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() == S.false
-    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() == S.true
+    assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
-    assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() == S.false
-    assert Sum(2/(n*log(n)**2), (n, 2, oo)).is_convergent() == S.true
-    assert Sum((n - 1)/(n**2*log(n)**2), (n, 2, oo)).is_convergent() == S.true
-    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() == S.true
+
+    # p-series test --
+    assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
 
     # comparison test --
-    assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() == S.true
-    assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() == S.true
-    assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() == S.true
-    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() == S.false
-    assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() == S.true
-    assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() == S.false
-    assert Sum(2/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() == S.true
-    assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() == S.false
-    assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() == S.false
+    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
+    assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(2/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() is S.true
+    assert Sum(2/(n*log(n)**2), (n, 2, oo)).is_convergent() is S.true
+    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() is S.false
+    assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() is S.false
+    assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
 
     # alternating series tests --
-    assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() == S.true
-    assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() == S.false
+    assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
 
     # with -negativeInfinite Limits
-    assert Sum(1/(n**2 + 1), (n, -oo, 1)).is_convergent() == S.true
-    assert Sum(1/(n - 1), (n, -oo, -1)).is_convergent() == S.false
-    assert Sum(1/(n**2 - 1), (n, -oo, -5)).is_convergent() == S.true
-    assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() == S.true
-    assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() == S.true
-
-    # dirichlet tests
-    assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() == S.true
-    assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() == S.true
+    assert Sum(1/(n**2 + 1), (n, -oo, 1)).is_convergent() is S.true
+    assert Sum(1/(n - 1), (n, -oo, -1)).is_convergent() is S.false
+    assert Sum(1/(n**2 - 1), (n, -oo, -5)).is_convergent() is S.true
+    assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() is S.true
+    assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() is S.true
 
     # piecewise functions
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
-    assert Sum(f, (n, 1, oo)).is_convergent() == S.false
-    assert Sum(f, (n, -oo, oo)).is_convergent() == S.false
-    assert Sum(f, (n, -oo, 1)).is_convergent() == S.true
+    assert Sum(f, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
+    assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
 
 def test_is_absolute_convergent():
-    assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() == S.false
-    assert Sum(sin(n)/n, (n, 1, oo)).is_absolute_convergent() == S.false
-    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent() == S.true
+    assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() is S.false
+    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent() is S.true
 
 
 @XFAIL
 def test_convergent_failing():
-    # currently raise TypeError
-    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() == S.true
-    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() == S.true
+    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
     # is_decreasing is not handling "is_decreasing(1)", so raises error
-    assert Sum((-1)**n, (n, 1, oo)).is_convergent() == S.false
+
+    # dirichlet tests
+    assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true

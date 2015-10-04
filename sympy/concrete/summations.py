@@ -261,7 +261,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         """
         Convergence tests are used for checking the convergence of
         a series. There are various tests employed to check the convergence,
-        returns True if convergent and false if divergent and NotImplementedError
+        returns true if convergent and false if divergent and NotImplementedError
         if can not be checked. Like divergence test, root test, integral test,
         alternating series test, comparison tests, Dirichlet tests.
 
@@ -290,7 +290,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_absolute_convergent()
         """
         from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
-        from sympy.solvers.solveset import solveset
         p, q = symbols('p q', cls=Wild)
 
         sym = self.limits[0][0]
@@ -298,8 +297,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         upper_limit = self.limits[0][2]
         sequence_term = self.function
 
+        if len(sequence_term.free_symbols) > 1:
+            raise NotImplementedError("convergence checking for more that one symbol \
+                                        containing series is not handled")
+
         if lower_limit.is_finite and upper_limit.is_finite:
-            return True
+            return S.true
 
         # transform sym -> -sym and swap the upper_limit = S.Infinity and lower_limit = - upper_limit
         if lower_limit is S.NegativeInfinity:
@@ -317,12 +320,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             for func_cond in sequence_term.args:
                 if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
                     return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
-            return True
+            return S.true
 
         ###  -------- Divergence test ----------- ###
         try:
-            if limit(sequence_term, sym, upper_limit) != S.Zero:
-                return False
+            lim_val = limit(abs(sequence_term), sym, upper_limit)
+            if lim_val.is_number and lim_val != S.Zero:
+                return S.false
         except NotImplementedError:
             pass
 
@@ -332,90 +336,91 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         p1_series_test = order.expr.match(sym**p)
         if p1_series_test is not None:
             if p1_series_test[p] < -1:
-                return True
+                return S.true
             if p1_series_test[p] > -1:
-                return False
+                return S.false
 
         p2_series_test = order.expr.match((1/sym)**p)
         if p2_series_test is not None:
             if p2_series_test[p] > 1:
-                return True
+                return S.true
             if p2_series_test[p] < 1:
-                return False
+                return S.false
 
         ### ----------- root test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         lim_evaluated = lim.doit()
         if lim_evaluated.is_number:
             if lim_evaluated < 1:
-                return True
+                return S.true
             if lim_evaluated > 1:
-                return False
+                return S.false
 
         ### ------------- alternating series test ----------- ###
         d = symbols('d', cls=Dummy)
-        dict_val = sequence_term.match((-1)**p*q)
-        if dict_val[p] == sym or dict_val[p].has(sym):
-            if is_decreasing(dict_val[q], interval):
-                return True
-            return False
+        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
+            return S.true
 
         ### ------------- comparison test ------------- ###
         # (1/log(n)**p) comparison
         log_test = order.expr.match(1/(log(sym)**p))
         if log_test is not None:
-            return False
+            return S.false
 
         # (1/(n*log(n)**p)) comparison
         log_n_test = order.expr.match(1/(sym*(log(sym))**p))
         if log_n_test is not None:
             if log_n_test[p] > 1:
-                return True
-            return False
+                return S.true
+            return S.false
 
         # (1/(n*log(n)*log(log(n))*p)) comparison
         log_log_n_test = order.expr.match(1/(sym*(log(sym)*log(log(sym))**p)))
         if log_log_n_test is not None:
             if log_log_n_test[p] > 1:
-                return True
-            return False
+                return S.true
+            return S.false
 
-        if order.expr == sequence_term:
-            pass
-        else:
-            return Sum(order.expr, (sym, lower_limit, upper_limit)).is_convergent()
+        # (1/(n**p*log(n))) comparison
+        n_log_test = order.expr.match(1/(sym**p*log(sym)))
+        if n_log_test is not None:
+            if n_log_test[p] > 1:
+                return S.true
+            return S.false
 
         ### ------------- integral test -------------- ###
         if is_decreasing(sequence_term, interval):
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
             try:
                 integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_infinite:
-                    return False
+                if integral_val_evaluated.is_number:
+                    return S(integral_val_evaluated.is_finite)
             except NotImplementedError:
                 pass
-            return True
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
             a_n, b_n = order.expr.args[0], order.expr.args[1]
+            m = Dummy('m', integer=True)
 
-            def _dirichlet_test(f_n, g_n):
-                if is_decreasing(f_n, interval):
-                    try:
-                        ing_val = integrate(g_n, (sym, interval.inf, interval.sup))
-                    except NotImplementedError:
-                        pass
+            def _dirichlet_test(g_n):
+                try:
+                    ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
                     if ing_val.is_finite:
-                        return True
+                        return S.true
+                except NotImplementedError:
+                    pass
 
-            dirich1 = _dirichlet_test(a_n, b_n)
-            if dirich1 is not None:
-                return dirich1
+            if is_decreasing(a_n, interval):
+                dirich1 = _dirichlet_test(b_n)
+                if dirich1 is not None:
+                    return dirich1
 
-            dirich2 = _dirichlet_test(b_n, a_n)
-            if dirich2 is not None:
-                return dirich2
+            if is_decreasing(b_n, interval):
+                dirich2 = _dirichlet_test(a_n)
+                if dirich2 is not None:
+                    return dirich2
 
         raise NotImplementedError("The algorithm to find the convergence of %s "
                                     "is not yet implemented" % (sequence_term))
@@ -437,8 +442,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         >>> from sympy import Sum, Symbol, sin, oo
         >>> n = Symbol('n', integer=True)
         >>> Sum((-1)**n, (n, 1, oo)).is_absolute_convergent()
-        False
-        >>> Sum(sin(n)/n, (n, 1, oo)).is_absolute_convergent()
         False
         >>> Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent()
         True
