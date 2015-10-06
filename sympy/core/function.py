@@ -648,15 +648,13 @@ class Function(Application, Expr):
             raise ArgumentIndexError(self, argindex)
 
         if self.args[argindex - 1].is_Symbol:
-            use_dummy = False
             for i in range(len(self.args)):
                 if i == argindex:
                     continue
                 # See issue 8510
                 if self.args[argindex - 1] in self.args[i].free_symbols:
-                    use_dummy=True
                     break
-            if not use_dummy:
+            else:
                 return Derivative(self, self.args[argindex - 1], evaluate=False)
         # See issue 4624 and issue 4719 and issue 5600
         arg_dummy = Dummy('xi_%i' % argindex)
