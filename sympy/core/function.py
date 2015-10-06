@@ -649,7 +649,7 @@ class Function(Application, Expr):
 
         if self.args[argindex - 1].is_Symbol:
             for i in range(len(self.args)):
-                if i == argindex:
+                if i == argindex - 1:
                     continue
                 # See issue 8510
                 if self.args[argindex - 1] in self.args[i].free_symbols:
