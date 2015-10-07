@@ -7,10 +7,14 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.add import Add
+from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
+from sympy.integrals.integrals import integrate
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.core.compatibility import range
 from sympy.tensor.indexed import Idx
 
@@ -252,6 +256,202 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def _eval_summation(self, f, x):
         return None
+
+    def is_convergent(self):
+        """
+        Convergence tests are used for checking the convergence of
+        a series. There are various tests employed to check the convergence,
+        returns true if convergent and false if divergent and NotImplementedError
+        if can not be checked. Like divergence test, root test, integral test,
+        alternating series test, comparison tests, Dirichlet tests.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Convergence_tests
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, factorial, S, Sum, Symbol, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Sum(n/(n - 1), (n, 4, 7)).is_convergent()
+        True
+        >>> Sum(n/(2*n + 1), (n, 1, oo)).is_convergent()
+        False
+        >>> Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent()
+        False
+        >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
+        True
+
+        See Also
+        ========
+
+        Sum.is_absolute_convergent()
+        """
+        from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
+        p, q = symbols('p q', cls=Wild)
+
+        sym = self.limits[0][0]
+        lower_limit = self.limits[0][1]
+        upper_limit = self.limits[0][2]
+        sequence_term = self.function
+
+        if len(sequence_term.free_symbols) > 1:
+            raise NotImplementedError("convergence checking for more that one symbol \
+                                        containing series is not handled")
+
+        if lower_limit.is_finite and upper_limit.is_finite:
+            return S.true
+
+        # transform sym -> -sym and swap the upper_limit = S.Infinity and lower_limit = - upper_limit
+        if lower_limit is S.NegativeInfinity:
+            if upper_limit is S.Infinity:
+                return Sum(sequence_term, (sym, 0, S.Infinity)).is_convergent() and \
+                        Sum(sequence_term, (sym, S.NegativeInfinity, 0)).is_convergent()
+            sequence_term = simplify(sequence_term.xreplace({sym: -sym}))
+            lower_limit = -upper_limit
+            upper_limit = S.Infinity
+
+        interval = Interval(lower_limit, upper_limit)
+
+        # Piecewise function handle
+        if sequence_term.is_Piecewise:
+            for func_cond in sequence_term.args:
+                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
+                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            return S.true
+
+        ###  -------- Divergence test ----------- ###
+        try:
+            lim_val = limit(abs(sequence_term), sym, upper_limit)
+            if lim_val.is_number and lim_val != S.Zero:
+                return S.false
+        except NotImplementedError:
+            pass
+
+        order = O(sequence_term, (sym, S.Infinity))
+
+        ### --------- p-series test (1/n**p) ---------- ###
+        p1_series_test = order.expr.match(sym**p)
+        if p1_series_test is not None:
+            if p1_series_test[p] < -1:
+                return S.true
+            if p1_series_test[p] > -1:
+                return S.false
+
+        p2_series_test = order.expr.match((1/sym)**p)
+        if p2_series_test is not None:
+            if p2_series_test[p] > 1:
+                return S.true
+            if p2_series_test[p] < 1:
+                return S.false
+
+        ### ----------- root test ---------------- ###
+        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
+        lim_evaluated = lim.doit()
+        if lim_evaluated.is_number:
+            if lim_evaluated < 1:
+                return S.true
+            if lim_evaluated > 1:
+                return S.false
+
+        ### ------------- alternating series test ----------- ###
+        d = symbols('d', cls=Dummy)
+        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
+            return S.true
+
+        ### ------------- comparison test ------------- ###
+        # (1/log(n)**p) comparison
+        log_test = order.expr.match(1/(log(sym)**p))
+        if log_test is not None:
+            return S.false
+
+        # (1/(n*log(n)**p)) comparison
+        log_n_test = order.expr.match(1/(sym*(log(sym))**p))
+        if log_n_test is not None:
+            if log_n_test[p] > 1:
+                return S.true
+            return S.false
+
+        # (1/(n*log(n)*log(log(n))*p)) comparison
+        log_log_n_test = order.expr.match(1/(sym*(log(sym)*log(log(sym))**p)))
+        if log_log_n_test is not None:
+            if log_log_n_test[p] > 1:
+                return S.true
+            return S.false
+
+        # (1/(n**p*log(n))) comparison
+        n_log_test = order.expr.match(1/(sym**p*log(sym)))
+        if n_log_test is not None:
+            if n_log_test[p] > 1:
+                return S.true
+            return S.false
+
+        ### ------------- integral test -------------- ###
+        if is_decreasing(sequence_term, interval):
+            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
+            try:
+                integral_val_evaluated = integral_val.doit()
+                if integral_val_evaluated.is_number:
+                    return S(integral_val_evaluated.is_finite)
+            except NotImplementedError:
+                pass
+
+        ### -------------- Dirichlet tests -------------- ###
+        if order.expr.is_Mul:
+            a_n, b_n = order.expr.args[0], order.expr.args[1]
+            m = Dummy('m', integer=True)
+
+            def _dirichlet_test(g_n):
+                try:
+                    ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
+                    if ing_val.is_finite:
+                        return S.true
+                except NotImplementedError:
+                    pass
+
+            if is_decreasing(a_n, interval):
+                dirich1 = _dirichlet_test(b_n)
+                if dirich1 is not None:
+                    return dirich1
+
+            if is_decreasing(b_n, interval):
+                dirich2 = _dirichlet_test(a_n)
+                if dirich2 is not None:
+                    return dirich2
+
+        raise NotImplementedError("The algorithm to find the convergence of %s "
+                                    "is not yet implemented" % (sequence_term))
+
+    def is_absolute_convergent(self):
+        """
+        Checks for the absolute convergence of an infinite series.
+        Same as checking convergence of absolute value of sequence_term of
+        an infinite series.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Absolute_convergence
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Symbol, sin, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Sum((-1)**n, (n, 1, oo)).is_absolute_convergent()
+        False
+        >>> Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent()
+        True
+
+        See Also
+        ========
+
+        Sum.is_convergent()
+        """
+        return Sum(abs(self.function), self.limits).is_convergent()
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
