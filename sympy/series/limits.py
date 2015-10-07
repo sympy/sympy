@@ -121,6 +121,8 @@ class Limit(Expr):
 
     def doit(self, **hints):
         """Evaluates limit"""
+        from sympy.series.limitseq import limit_seq
+
         e, z, z0, dir = self.args
 
         if hints.get('deep', True):
@@ -174,5 +176,14 @@ class Limit(Expr):
             r = heuristics(e, z, z0, dir)
             if r is None:
                 return self
+        except NotImplementedError:
+            # Trying finding limits of sequences
+            if hints.get('sequence', True) and z0 is S.Infinity:
+                trials = hints.get('trials', 5)
+                r = limit_seq(e, z, trials)
+                if r is None:
+                    raise NotImplementedError()
+            else:
+                raise NotImplementedError()
 
         return r
