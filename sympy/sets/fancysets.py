@@ -903,7 +903,7 @@ class ComplexPlane(Set):
             elif self.polar and other.polar:
                 return ComplexPlane(Union(self.sets, other.sets), polar=True)
 
-        if other is S.Reals:
+        if other.is_subset(S.Reals):
             return self
 
         return None
