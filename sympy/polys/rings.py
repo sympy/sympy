@@ -509,6 +509,7 @@ class PolyRing(DefaultPrinting, IPolys):
             return self.clone(symbols=symbols, domain=self.drop(*gens))
 
     def compose(self, other):
+        """Add the generators of ``other`` to ``self``"""
         if self != other:
             syms = set(self.symbols).union(set(other.symbols))
             return self.clone(symbols=list(syms))
@@ -516,6 +517,7 @@ class PolyRing(DefaultPrinting, IPolys):
             return self
 
     def add_gens(self, symbols):
+        """Add the elements of ``symbols`` as generators to ``self``"""
         syms = set(self.symbols).union(set(symbols))
         return self.clone(symbols=list(syms))
 
