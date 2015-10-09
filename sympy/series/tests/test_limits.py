@@ -2,8 +2,8 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, Rational, I,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols)
+    atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
+    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols, binomial)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -31,9 +31,6 @@ def test_basic1():
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
     assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
-    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) -
-           log(y), y, oo))
-    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
@@ -217,7 +214,7 @@ def test_doit2():
 
 
 def test_issue_3792():
-    assert limit( (1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
+    assert limit((1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
     assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
     assert limit(abs(sin(x + 1) + 1), x, 0) == 1 + sin(1)
 
@@ -386,8 +383,8 @@ def test_factorial():
 
 
 def test_issue_6560():
-    e = 5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) + \
-        35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1))
+    e = (5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) +
+                             35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1)))
     assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
 
 
@@ -397,8 +394,8 @@ def test_issue_5172():
     c = Symbol('c')
     p = Symbol('p', positive=True)
     m = Symbol('m', negative=True)
-    expr = ((2*n*(n - r + 1)/(n + r*(n - r + 1)))**c + \
-        (r - 1)*(n*(n - r + 2)/(n + r*(n - r + 1)))**c - n)/(n**c - n)
+    expr = ((2*n*(n - r + 1)/(n + r*(n - r + 1)))**c +
+            (r - 1)*(n*(n - r + 2)/(n + r*(n - r + 1)))**c - n)/(n**c - n)
     expr = expr.subs(c, c + 1)
     raises(NotImplementedError, lambda: limit(expr, n, oo))
     assert limit(expr.subs(c, m), n, oo) == 1
@@ -441,3 +438,12 @@ def test_issue_9205():
     assert Limit(x, x, a, '-').free_symbols == set([a])
     assert Limit(x + y, x + y, a).free_symbols == set([a])
     assert Limit(-x**2 + y, x**2, a).free_symbols == set([y, a])
+
+
+def test_limit_seq():
+    assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
+    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == S.Infinity
+    assert (limit(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x, oo) ==
+            S(3) / 4)
+    assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
+                  (2**x*x), x, oo) == 4)
