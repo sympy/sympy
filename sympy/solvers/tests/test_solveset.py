@@ -1013,3 +1013,6 @@ def test_issue_failing_pow():
 
 def test_issue_9849():
     assert solveset(Abs(sin(x)) + 1, x, S.Reals) == S.EmptySet
+
+def test_issue_9953():
+    assert linsolve([ ], x) == S.EmptySet
