@@ -1196,6 +1196,9 @@ def linsolve(system, *symbols):
 
     """
 
+    if not system:
+        return S.EmptySet
+
     if not symbols:
         raise ValueError('Symbols must be given, for which solution of the '
                          'system is to be found.')
