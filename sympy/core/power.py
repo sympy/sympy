@@ -206,6 +206,12 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
+    @property
+    def real_bound(self):
+        if self.exp > 0:
+            return Pow(*[self.base.real_bound if hasattr(self.base, 'real_bound') else self.base, self.exp])
+        return self
+
     def _eval_power(self, other):
         from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
         b, e = self.as_base_exp()
