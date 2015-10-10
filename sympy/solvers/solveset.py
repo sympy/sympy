@@ -1195,6 +1195,7 @@ def linsolve(system, *symbols):
     {(x, y)}
 
     * For an empty system linsolve returns empty set
+
     >>> linsolve([ ], x)
     EmptySet()
 
