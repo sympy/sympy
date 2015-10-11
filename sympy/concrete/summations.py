@@ -273,7 +273,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Interval, factorial, S, Sum, Symbol, oo
+        >>> from sympy import factorial, S, Sum, Symbol, oo
         >>> n = Symbol('n', integer=True)
         >>> Sum(n/(n - 1), (n, 4, 7)).is_convergent()
         True
@@ -298,8 +298,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sequence_term = self.function
 
         if len(sequence_term.free_symbols) > 1:
-            raise NotImplementedError("convergence checking for more that one symbol \
-                                        containing series is not handled")
+            raise NotImplementedError("convergence checking for more that one symbol "
+                                        "containing series is not handled")
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return S.true
@@ -324,8 +324,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit(abs(sequence_term), sym, upper_limit)
-            if lim_val.is_number and lim_val != S.Zero:
+            lim_val = limit(sequence_term, sym, upper_limit)
+            if lim_val.is_number and lim_val is not S.Zero:
+                return S.false
+        except NotImplementedError:
+            pass
+
+        try:
+            lim_val_abs = limit(abs(sequence_term), sym, upper_limit)
+            if lim_val_abs.is_number and lim_val_abs is not S.Zero:
                 return S.false
         except NotImplementedError:
             pass

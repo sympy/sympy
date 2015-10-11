@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.tensor.indexed import Idx
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.symbol import symbols, Wild
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
@@ -330,6 +331,54 @@ class Product(ExprWithIntLimits):
         if self.is_commutative:
             return self.func(self.function.transpose(), *self.limits)
         return None
+
+    def is_convergent(self):
+        """
+        The infinite product:
+
+        .. math::
+
+            \prod_{1 \leq i < \infty} f(i)
+
+        is defined to be the limit of the partial products
+
+        .. math::
+
+            f(1) f(2) \cdot \ldots \cdot f(n)
+
+        as n increases without bound. The product is said to converge
+        when the limit exists and is not zero. Otherwise the product
+        is said to diverge.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Infinite_product
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, S, Product, Symbol, cos, pi, exp, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Product(n/(n + 1), (n, 1, oo)).is_convergent()
+        False
+        >>> Product(1/n**2, (n, 1, oo)).is_convergent()
+        False
+        >>> Product(cos(pi/n), (n, 1, oo)).is_convergent()
+        True
+        >>> Product(exp(-n**2), (n, 1, oo)).is_convergent()
+        False
+        """
+        from sympy.concrete.summations import Sum
+
+        sequence_term = self.function
+        log_sum = log(sequence_term)
+        lim = self.limits
+        try:
+            is_conv = Sum(log_sum, *lim).is_convergent()
+        except NotImplementedError:
+            is_conv = Sum(sequence_term - 1, *lim).is_convergent()
+        return is_conv
 
     def reverse_order(expr, *indices):
         """
