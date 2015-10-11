@@ -348,7 +348,19 @@ class Product(ExprWithIntLimits):
 
         as n increases without bound. The product is said to converge
         when the limit exists and is not zero. Otherwise the product
-        is said to diverge.
+        is said to diverge. That is
+
+        .. math::
+
+            \prod_{1 \leq i < \infty} f(i)
+
+        converges to a nonzero real number if and only if the sum
+
+        .. math::
+
+            \sum_{1 \leq i < \infty} \log{f(n)}
+
+        converges.
 
         References
         ==========
@@ -377,7 +389,10 @@ class Product(ExprWithIntLimits):
         try:
             is_conv = Sum(log_sum, *lim).is_convergent()
         except NotImplementedError:
-            is_conv = Sum(sequence_term - 1, *lim).is_convergent()
+            if Sum(sequence_term - 1, *lim).is_absolute_convergent() is S.true:
+                return S.true
+            raise NotImplementedError("The algorithm to find the product convergence of %s "
+                                        "is not yet implemented" % (sequence_term))
         return is_conv
 
     def reverse_order(expr, *indices):

@@ -429,7 +429,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if dirich2 is not None:
                     return dirich2
 
-        raise NotImplementedError("The algorithm to find the convergence of %s "
+        raise NotImplementedError("The algorithm to find the Sum convergence of %s "
                                     "is not yet implemented" % (sequence_term))
 
     def is_absolute_convergent(self):
