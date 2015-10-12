@@ -177,9 +177,17 @@ def test_power():
 
     assert Matrix([[1, 0], [1, 1]])**(S(1)/2) == Matrix([[1, 0], [S.Half, 1]])
     assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
-    from sympy.abc import a, n
+    from sympy.abc import a, b, n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
     assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
+    assert Matrix([[a, 1, 0], [0, a, 1], [0, 0, a]])**n == Matrix([
+        [a**n, a**(n-1)*n, a**(n-2)*(n-1)*n/2],
+        [0, a**n, a**(n-1)*n],
+        [0, 0, a**n]])
+    assert Matrix([[a, 1, 0], [0, a, 0], [0, 0, b]])**n == Matrix([
+        [a**n, a**(n-1)*n, 0],
+        [0, a**n, 0],
+        [0, 0, b**n]])
 
 
 def test_creation():
