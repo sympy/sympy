@@ -557,7 +557,7 @@ class MatrixBase(object):
             return self._new(P*diag(*jordan_cells)*P.inv())
         else:
             raise TypeError(
-                "Only SymPy or int objects are supported")
+                "Only SymPy expressions or int objects are supported")
 
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
