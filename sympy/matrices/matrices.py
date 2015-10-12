@@ -539,7 +539,7 @@ class MatrixBase(object):
                 s *= s
                 n //= 2
             return self._new(a)
-        elif isinstance(num, (Basic, float)):
+        elif isinstance(num, (Expr, float)):
             def jordan_cell_power(jc, n):
                 N = jc.shape[0]
                 l = jc[0, 0]
