@@ -175,6 +175,12 @@ def test_power():
     A = Matrix([[0, 4], [-1, 5]])
     assert (A**(S(1)/2))**2 == A
 
+    assert Matrix([[1, 0], [1, 1]])**(S(1)/2) == Matrix([[1, 0], [S.Half, 1]])
+    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
+    from sympy.abc import a, n
+    assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
+    assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
@@ -1696,9 +1702,6 @@ def test_errors():
     raises(ValueError,
         lambda: Matrix([[5, 10, 7], [0, -1, 2], [8, 3, 4]]
         ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x) <= 4))
-    raises(NotImplementedError, lambda: Matrix([[1, 0], [1, 1]])**(S(1)/2))
-    raises(NotImplementedError,
-        lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])**(0.5))
     raises(IndexError, lambda: eye(3)[5, 2])
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
