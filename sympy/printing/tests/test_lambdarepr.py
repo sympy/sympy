@@ -1,4 +1,4 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum
 from sympy.utilities.pytest import raises
 
 from sympy.printing.lambdarepr import lambdarepr
@@ -144,6 +144,28 @@ def test_piecewise():
         "(x < 3) else (((4) if (x < 4) else (((5) if (x < 5) else (((6) if " \
         "(True) else None)))))))))))"
 
+
+def test_sum():
+    # In each case, test eval() the lambdarepr() to make sure that
+    # it evaluates to the same results as the symbolic expression
+
+    k, k0, kN = symbols("k, k0, kN")
+
+    s = Sum(x ** k, (k, k0, kN))
+
+    l = lambdarepr(s)
+    assert l == "(sum(x**k for k in range(k0, kN+1)))"
+
+    assert (eval("lambda x, k0, kN: " + l)(2, 3, 8) ==
+            s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
+
+    s = Sum(k * x, (k, k0, kN))
+
+    l = lambdarepr(s)
+    assert l == "(sum(k*x for k in range(k0, kN+1)))"
+
+    assert (eval("lambda x, k0, kN: " + l)(2, 3, 8) ==
+            s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
