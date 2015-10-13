@@ -258,12 +258,48 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return None
 
     def is_convergent(self):
-        """
-        Convergence tests are used for checking the convergence of
-        a series. There are various tests employed to check the convergence,
-        returns true if convergent and false if divergent and NotImplementedError
-        if can not be checked. Like divergence test, root test, integral test,
-        alternating series test, comparison tests, Dirichlet tests.
+        r"""Checks for the convergence of a Sum.
+
+        We divide the study of convergence of infinite sums and products in
+        two parts.
+
+        First Part:
+        One part is the question whether all the terms are well defined, i.e.,
+        they are finite in a sum and also non-zero in a product. Zero
+        is the analogy of (minus) infinity in products as :math:`e^{-\infty} = 0`.
+
+        Second Part:
+        The second part is the question of convergence after infinities,
+        and zeros in products, have been omitted assuming that their number
+        is finite. This means that we only consider the tail of the sum or
+        product, starting from some point after which all terms are well
+        defined.
+
+        For example, in a sum of the form:
+
+        .. math::
+
+            \sum_{1 \leq i < \infty} \frac{1}{n^2 + an + b}
+
+        where a and b are numbers. The routine will return true, even if there
+        are infinities in the term sequence (at most two). An analogous
+        product would be:
+
+        .. math::
+
+            \prod_{1 \leq i < \infty} e^{\frac{1}{n^2 + an + b}}
+
+        This is how convergence is interpreted. It is concerned with what
+        happens at the limit. Finding the bad terms is another independent
+        matter.
+
+        Note: It is responsibility of user to see that the sum or product
+        is well defined.
+
+        There are various tests employed to check the convergence like
+        divergence test, root test, integral test, alternating series test,
+        comparison tests, Dirichlet tests. It returns true if Sum is convergent
+        and false if divergent and NotImplementedError if it can not be checked.
 
         References
         ==========
@@ -288,6 +324,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolute_convergent()
+
+        Product.is_convergent()
         """
         from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
         p, q = symbols('p q', cls=Wild)
@@ -304,7 +342,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if lower_limit.is_finite and upper_limit.is_finite:
             return S.true
 
-        # transform sym -> -sym and swap the upper_limit = S.Infinity and lower_limit = - upper_limit
+        # transform sym -> -sym and swap the upper_limit = S.Infinity
+        # and lower_limit = - upper_limit
         if lower_limit is S.NegativeInfinity:
             if upper_limit is S.Infinity:
                 return Sum(sequence_term, (sym, 0, S.Infinity)).is_convergent() and \
@@ -364,7 +403,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.false
 
         ### ------------- alternating series test ----------- ###
-        d = symbols('d', cls=Dummy)
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true

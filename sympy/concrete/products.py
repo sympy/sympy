@@ -333,28 +333,24 @@ class Product(ExprWithIntLimits):
         return None
 
     def is_convergent(self):
-        """
+        r"""
+        See docs of Sum.is_convergent() for explanation of convergence
+        in SymPy.
+
         The infinite product:
 
         .. math::
 
             \prod_{1 \leq i < \infty} f(i)
 
-        is defined to be the limit of the partial products
+        is defined by the sequence of partial products:
 
         .. math::
 
-            f(1) f(2) \cdot \ldots \cdot f(n)
+            \prod_{i=1}^{n} f(i) = f(1) f(2) \cdots f(n)
 
-        as n increases without bound. The product is said to converge
-        when the limit exists and is not zero. Otherwise the product
-        is said to diverge. That is
-
-        .. math::
-
-            \prod_{1 \leq i < \infty} f(i)
-
-        converges to a nonzero real number if and only if the sum
+        as n increases without bound. The product converges to a non-zero
+        value if and only if the sum:
 
         .. math::
 
