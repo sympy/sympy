@@ -227,6 +227,7 @@ tropical_year = tropical_years = Rational('365.24219')*day
 common_year = common_years = Rational('365')*day
 julian_year = julian_years = Rational('365.25')*day
 draconic_year = draconic_years = Rational('346.62')*day
+gaussian_year = gaussian_years = Rational('365.2568983')*day
 
 year = years = tropical_year
 
