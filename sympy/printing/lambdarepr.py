@@ -108,7 +108,7 @@ class NumPyPrinter(LambdaPrinter):
         return 'select({0}, {1}, default=nan)'.format(conds, exprs)
 
     def _print_Relational(self, expr):
-        "Relational printer for equal and not_equal"
+        "Relational printer for Equality and Unequality"
         if expr.rel_op == '==':
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
