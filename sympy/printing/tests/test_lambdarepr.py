@@ -1,4 +1,4 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
 from sympy.utilities.pytest import raises
 
 from sympy.printing.lambdarepr import lambdarepr
@@ -156,7 +156,7 @@ def test_sum():
     l = lambdarepr(s)
     assert l == "(sum(x**k for k in range(k0, kN+1)))"
 
-    assert (eval("lambda x, k0, kN: " + l)(2, 3, 8) ==
+    assert (lambdify((x, k0, kN), s)(2, 3, 8) ==
             s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
 
     s = Sum(k * x, (k, k0, kN))
@@ -164,7 +164,7 @@ def test_sum():
     l = lambdarepr(s)
     assert l == "(sum(k*x for k in range(k0, kN+1)))"
 
-    assert (eval("lambda x, k0, kN: " + l)(2, 3, 8) ==
+    assert (lambdify((x, k0, kN), s)(2, 3, 8) ==
             s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
 
 def test_settings():
