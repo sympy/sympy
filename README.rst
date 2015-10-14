@@ -174,7 +174,7 @@ during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
 joined the development during the summer 2007 and he has made SymPy much more
 competitive by rewriting the core from scratch, that has made it from 10x to
 100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
-Fredrik Johansson has wrote mpmath and contributed a lot of patches.
+Fredrik Johansson has written mpmath and contributed a lot of patches.
 
 SymPy has participated in every Google Summer of Code since 2007. You can see
 https://github.com/sympy/sympy/wiki#google-summer-of-code for full details.
