@@ -43,7 +43,7 @@ class LambdaPrinter(StrPrinter):
 
     def _print_Sum(self, expr):
         e, (k, k0, kN) = expr.args
-        template = '(sum({expr} for {k} in range({k0}, {kN}+1)))'
+        template = '(builtins.sum({expr} for {k} in range({k0}, {kN}+1)))'
         return template.format(expr=self._print(e),
                                k=self._print(k),
                                k0=self._print(k0),

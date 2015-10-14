@@ -154,7 +154,7 @@ def test_sum():
     s = Sum(x ** k, (k, k0, kN))
 
     l = lambdarepr(s)
-    assert l == "(sum(x**k for k in range(k0, kN+1)))"
+    assert l == "(builtins.sum(x**k for k in range(k0, kN+1)))"
 
     assert (lambdify((x, k0, kN), s)(2, 3, 8) ==
             s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
@@ -162,7 +162,7 @@ def test_sum():
     s = Sum(k * x, (k, k0, kN))
 
     l = lambdarepr(s)
-    assert l == "(sum(k*x for k in range(k0, kN+1)))"
+    assert l == "(builtins.sum(k*x for k in range(k0, kN+1)))"
 
     assert (lambdify((x, k0, kN), s)(2, 3, 8) ==
             s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())

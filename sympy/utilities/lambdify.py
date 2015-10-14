@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
+import builtins
 
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range
@@ -373,6 +374,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     if flat in lstr:
         namespace.update({flat: flatten})
+
+    # Provide lambda expression with builtins, and compatible implementation of range
+    namespace.update({'builtins':builtins, 'range':range})
+
     func = eval(lstr, namespace)
     # Apply the docstring
     sig = "func({0})".format(", ".join(str(i) for i in names))
