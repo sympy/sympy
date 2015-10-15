@@ -6,7 +6,7 @@
 * lens_makers_formula
 * mirror_formula
 * lens_formula
-* hyperfocal_length
+* hyperfocal_distance
 """
 
 from __future__ import division
@@ -16,7 +16,7 @@ __all__ = ['refraction_angle',
            'lens_makers_formula',
            'mirror_formula',
            'lens_formula'
-           'hyperfocal_length'
+           'hyperfocal_distance'
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit
