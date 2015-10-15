@@ -626,6 +626,7 @@ class ComplexRegion(Set):
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
+        global obj
         from sympy import symbols, Dummy
 
         x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
