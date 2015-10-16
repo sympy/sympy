@@ -117,8 +117,6 @@ def test_pow():
     assert e == Rational(0)
     e = a**(b - b)
     assert e == Rational(1)
-    e = (a - a)**b
-    assert e == Rational(0)
     e = (a + Rational(1) - a)**b
     assert e == Rational(1)
 
@@ -171,8 +169,6 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == (2*x)**k  # we choose not to auto expand this
-    assert (-2*x)**o == -(2*x)**o  # but we do handle coefficient sign
     assert (-1)**k == 1
 
 
@@ -1183,7 +1179,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
-    assert ((-k)**n).is_nonnegative is None
+
     assert ((-k)**m).is_nonnegative is None
 
     assert (2**x).is_nonpositive is False
@@ -1197,7 +1193,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**x).is_nonpositive is None
     assert ((-k)**x).is_nonpositive is None
     assert ((-k)**n).is_nonpositive is None
-    assert ((-k)**m).is_nonpositive is None
+
 
     assert (x**2).is_nonnegative is True
     i = symbols('i', imaginary=True)
@@ -1206,6 +1202,9 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (i**3).is_nonpositive is False
     assert (I**i).is_nonnegative is True
     assert (exp(I)**i).is_nonnegative is True
+
+    assert ((-k)**n).is_nonnegative is True
+    assert ((-k)**m).is_nonpositive is True
 
 
 def test_Mul_is_imaginary_real():

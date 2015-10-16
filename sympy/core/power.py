@@ -162,7 +162,9 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif e.is_integer and _coeff_isneg(b):
+            # Only perform autosimplification if exponent or base is a Symbol or number
+            elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
+                e.is_integer and _coeff_isneg(b):
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
@@ -205,6 +207,14 @@ class Pow(Expr):
     @classmethod
     def class_key(cls):
         return 3, 2, cls.__name__
+
+    def _eval_refine(self):
+        b, e = self.as_base_exp()
+        if e.is_integer and _coeff_isneg(b):
+            if e.is_even:
+                return Pow(-b, e)
+            elif e.is_odd:
+                return -Pow(-b, e)
 
     def _eval_power(self, other):
         from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
