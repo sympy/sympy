@@ -15,7 +15,7 @@ __all__ = ['refraction_angle',
            'deviation',
            'lens_makers_formula',
            'mirror_formula',
-           'lens_formula'
+           'lens_formula',
            'hyperfocal_distance'
            ]
 
