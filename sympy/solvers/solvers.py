@@ -18,6 +18,7 @@ from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, range)
 from sympy.core.sympify import sympify
 from sympy.core import S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
+from sympy.core.decorators import deprecated
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -2046,7 +2047,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             bestsol = thissol
         return bestsol
 
-
+@deprecated(useinstead="linsolve", issue=10001, deprecated_since_version="0.7.6")
 def solve_linear_system(system, *symbols, **flags):
     r"""
     Solve system of N linear equations with M variables, which means
@@ -2087,162 +2088,8 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
-    do_simplify = flags.get('simplify', True)
-
-    if system.rows == system.cols - 1 == len(symbols):
-        try:
-            # well behaved n-equations and n-unknowns
-            inv = inv_quick(system[:, :-1])
-            rv = dict(zip(symbols, inv*system[:, -1]))
-            if do_simplify:
-                for k, v in rv.items():
-                    rv[k] = simplify(v)
-            if not all(i.is_zero for i in rv.values()):
-                # non-trivial solution
-                return rv
-        except ValueError:
-            pass
-
-    matrix = system[:, :]
-    syms = list(symbols)
-
-    i, m = 0, matrix.cols - 1  # don't count augmentation
-
-    while i < matrix.rows:
-        if i == m:
-            # an overdetermined system
-            if any(matrix[i:, m]):
-                return None   # no solutions
-            else:
-                # remove trailing rows
-                matrix = matrix[:i, :]
-                break
-
-        if not matrix[i, i]:
-            # there is no pivot in current column
-            # so try to find one in other columns
-            for k in range(i + 1, m):
-                if matrix[i, k]:
-                    break
-            else:
-                if matrix[i, m]:
-                    # We need to know if this is always zero or not. We
-                    # assume that if there are free symbols that it is not
-                    # identically zero (or that there is more than one way
-                    # to make this zero). Otherwise, if there are none, this
-                    # is a constant and we assume that it does not simplify
-                    # to zero XXX are there better (fast) ways to test this?
-                    # The .equals(0) method could be used but that can be
-                    # slow; numerical testing is prone to errors of scaling.
-                    if not matrix[i, m].free_symbols:
-                        return None  # no solution
-
-                    # A row of zeros with a non-zero rhs can only be accepted
-                    # if there is another equivalent row. Any such rows will
-                    # be deleted.
-                    nrows = matrix.rows
-                    rowi = matrix.row(i)
-                    ip = None
-                    j = i + 1
-                    while j < matrix.rows:
-                        # do we need to see if the rhs of j
-                        # is a constant multiple of i's rhs?
-                        rowj = matrix.row(j)
-                        if rowj == rowi:
-                            matrix.row_del(j)
-                        elif rowj[:-1] == rowi[:-1]:
-                            if ip is None:
-                                _, ip = rowi[-1].as_content_primitive()
-                            _, jp = rowj[-1].as_content_primitive()
-                            if not (simplify(jp - ip) or simplify(jp + ip)):
-                                matrix.row_del(j)
-
-                        j += 1
-
-                    if nrows == matrix.rows:
-                        # no solution
-                        return None
-                # zero row or was a linear combination of
-                # other rows or was a row with a symbolic
-                # expression that matched other rows, e.g. [0, 0, x - y]
-                # so now we can safely skip it
-                matrix.row_del(i)
-                if not matrix:
-                    # every choice of variable values is a solution
-                    # so we return an empty dict instead of None
-                    return dict()
-                continue
-
-            # we want to change the order of colums so
-            # the order of variables must also change
-            syms[i], syms[k] = syms[k], syms[i]
-            matrix.col_swap(i, k)
-
-        pivot_inv = S.One/matrix[i, i]
-
-        # divide all elements in the current row by the pivot
-        matrix.row_op(i, lambda x, _: x * pivot_inv)
-
-        for k in range(i + 1, matrix.rows):
-            if matrix[k, i]:
-                coeff = matrix[k, i]
-
-                # subtract from the current row the row containing
-                # pivot and multiplied by extracted coefficient
-                matrix.row_op(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
-
-        i += 1
-
-    # if there weren't any problems, augmented matrix is now
-    # in row-echelon form so we can check how many solutions
-    # there are and extract them using back substitution
-
-    if len(syms) == matrix.rows:
-        # this system is Cramer equivalent so there is
-        # exactly one solution to this system of equations
-        k, solutions = i - 1, {}
-
-        while k >= 0:
-            content = matrix[k, m]
-
-            # run back-substitution for variables
-            for j in range(k + 1, m):
-                content -= matrix[k, j]*solutions[syms[j]]
-
-            if do_simplify:
-                solutions[syms[k]] = simplify(content)
-            else:
-                solutions[syms[k]] = content
-
-            k -= 1
-
-        return solutions
-    elif len(syms) > matrix.rows:
-        # this system will have infinite number of solutions
-        # dependent on exactly len(syms) - i parameters
-        k, solutions = i - 1, {}
-
-        while k >= 0:
-            content = matrix[k, m]
-
-            # run back-substitution for variables
-            for j in range(k + 1, i):
-                content -= matrix[k, j]*solutions[syms[j]]
-
-            # run back-substitution for parameters
-            for j in range(i, m):
-                content -= matrix[k, j]*syms[j]
-
-            if do_simplify:
-                solutions[syms[k]] = simplify(content)
-            else:
-                solutions[syms[k]] = content
-
-            k -= 1
-
-        return solutions
-    else:
-        return []   # no solutions
+    from sympy.solvers.solveset import linsolve
+    return linsolve(system, symbols)
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
