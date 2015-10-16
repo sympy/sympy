@@ -309,9 +309,6 @@ def test_linear_system():
                 [n + 1, n + 1, -2*n - 1, -(n + 1), 0],
                 [-1, 0, 1, 0, 0]])
 
-    assert solve_linear_system(M, x, y, z, t) == \
-        {x: -t - t/n, z: -t - t/n, y: 0}
-
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
 
