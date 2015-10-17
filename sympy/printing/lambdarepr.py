@@ -109,14 +109,20 @@ class NumPyPrinter(LambdaPrinter):
 
     def _print_Relational(self, expr):
         "Relational printer for Equality and Unequality"
-        if expr.rel_op == '==':
+        op = {
+            '==' :'equal',
+            '!=' :'not_equal',
+            '<'  :'less',
+            '<=' :'less_equal',
+            '>'  :'greater',
+            '>=' :'greater_equal',
+        }
+        if expr.rel_op in op:
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
-            return 'equal({0}, {1})'.format(lhs, rhs)
-        elif expr.rel_op == '!=':
-            lhs = self._print(expr.lhs)
-            rhs = self._print(expr.rhs)
-            return 'not_equal({0}, {1})'.format(lhs, rhs)
+            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
+                                               lhs=lhs,
+                                               rhs=rhs)
         return super(NumPyPrinter, self)._print_Relational(expr)
 
     def _print_And(self, expr):
