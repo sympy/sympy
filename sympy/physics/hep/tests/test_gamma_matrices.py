@@ -1,7 +1,7 @@
 from sympy.tensor.tensor import tensor_indices, tensorhead, get_lines, TensExpr
 from sympy import simplify
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinorIndex, LorentzIndex, simplify_lines, \
-    _kahane_simplify, GammaMatrix, _trace_single_line, gamma_trace, _simplify_single_line
+    _kahane_simplify, GammaMatrix, _trace_single_line, gamma_trace, _simplify_single_line, simplify_gamma_expression
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -272,14 +272,14 @@ def test_gamma_matrix_class():
     A = tensorhead('A', [LorentzIndex], [[1]])
 
     t = A(k)*G(i)*G(-i)
-    ts = simplify(t)
+    ts = simplify_gamma_expression(t)
     assert _is_tensor_eq(ts, 4*A(k)*DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right))
 
     t = G(i)*A(k)*G(j)
-    ts = simplify(t)
+    ts = simplify_gamma_expression(t)
     assert _is_tensor_eq(ts, A(k)*G(i)*G(j))
 
-    execute_gamma_simplify_tests_for_function(simplify, D=4)
+    execute_gamma_simplify_tests_for_function(simplify_gamma_expression, D=4)
 
 
 def test_gamma_matrix_trace():

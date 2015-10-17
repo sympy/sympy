@@ -1,8 +1,5 @@
 """
-WARNING: This module has not been updated to the latest tensor engine. It
-is expected not to work.  A complete rewriting of this module is expected as
-soon as the new tensor engine will be finished.
-
+    Module to handle gamma matrices expressed as tensor objects.
 
     Examples
     ========
@@ -30,9 +27,7 @@ soon as the new tensor engine will be finished.
 """
 from sympy import S, Mul
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
-    TensMul, TensorHead, tensorsymmetry, TensorType,\
-    TensAdd, tensor_mul, get_lines, Tensor, get_indices, get_index_structure, tensorhead
-from sympy.core.containers import Tuple
+    TensMul, TensAdd, tensor_mul, get_lines, Tensor, tensorhead
 from sympy.core.compatibility import range
 
 
@@ -45,13 +40,13 @@ LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
 GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex, DiracSpinorIndex, DiracSpinorIndex], [[1], [1], [1]], matrix_behavior=True)
 
 
-def extract_type_tens(expression):
+def extract_type_tens(expression, component):
     """
-    Extract from a ``TensExpr`` all elements of this type.
+    Extract from a ``TensExpr`` all tensors with `component`.
 
     Returns two tensor expressions:
 
-    * the first contains all ``TensorHead`` of this type.
+    * the first contains all ``Tensor`` of having `component`.
     * the second contains all remaining.
 
 
@@ -67,14 +62,15 @@ def extract_type_tens(expression):
     new_expr = S.One
     residual_expr = S.One
     for i in sp:
-        if isinstance(i, Tensor) and i.component == GammaMatrix:
+        if isinstance(i, Tensor) and i.component == component:
             new_expr *= i
         else:
             residual_expr *= i
     return new_expr, residual_expr
 
-def simplify_this_type(expression):
-    extracted_expr, residual_expr = extract_type_tens(expression)
+
+def simplify_gamma_expression(expression):
+    extracted_expr, residual_expr = extract_type_tens(expression, GammaMatrix)
     res_expr = _simplify_single_line(extracted_expr)
     return res_expr * residual_expr
 
@@ -92,17 +88,19 @@ def simplify_gpgp(ex, sort=True):
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)    
     >>> ps = p(i0)*G(-i0)    
     >>> qs = q(i0)*G(-i0)    
-    >>> G.simplify_gpgp(ps*qs*qs)    
+    >>> simplify_gpgp(ps*qs*qs)
     gamma(-L_0, auto_left, -auto_right)*p(L_0)*q(L_1)*q(-L_1)
     """
     def _simplify_gpgp(ex):
-        tids = ex._tids
-        components = tids.components
+        components = ex.components
         a = []
+        comp_map = []
+        for i, comp in enumerate(components):
+            comp_map.extend([i]*comp.rank)
+        dum = [(i[0], i[1], comp_map[i[0]], comp_map[i[1]]) for i in ex.dum]
         for i in range(len(components)):
-            if not isinstance(components[i], GammaMatrix):
+            if components[i] != GammaMatrix:
                 continue
-            dum = tids.dum
             for dx in dum:
                 if dx[2] == i:
                     p_pos1 = dx[3]
@@ -156,6 +154,7 @@ def simplify_gpgp(ex, sort=True):
 
     if sort:
         ex = ex.sorted_components()
+    # this would be better off with pattern matching
     while 1:
         t = _simplify_gpgp(ex)
         if t != ex:
@@ -172,12 +171,12 @@ def simplify_lines(ex):
     ========
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix, DiracSpinorIndex    
-    >>> from sympy.tensor.tensor import tensor_indices    
-    >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', GammaMatrix.LorentzIndex)    
-    >>> s0,s1,s2,s3,s4,s5,s6,s7 = tensor_indices('s0:8', DiracSpinorIndex)    
-    >>> G = GammaMatrix    
-    >>> t = G(i1,s1,-s2)*G(i4,s7,-s6)*G(i2,s2,-s3)*G(i3,s4,-s5)*G(i5,s6,-s7)    
-    >>> G.simplify_lines(t)    
+    >>> from sympy.tensor.tensor import tensor_indices
+    >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', GammaMatrix.LorentzIndex)
+    >>> s0,s1,s2,s3,s4,s5,s6,s7 = tensor_indices('s0:8', DiracSpinorIndex)
+    >>> G = GammaMatrix
+    >>> t = G(i1,s1,-s2)*G(i4,s7,-s6)*G(i2,s2,-s3)*G(i3,s4,-s5)*G(i5,s6,-s7)
+    >>> simplify_lines(t)
     4*gamma(i3, s4, -s5)*gamma(i1, s1, -S_0)*gamma(i2, S_0, -s3)*metric(i4, i5)
 
     """
@@ -193,37 +192,37 @@ def simplify_lines(ex):
         tx = tensor_mul(*[x for i, x in enumerate(a) if i  in line])
         tx1 = _simplify_single_line(tx)
         tlines.append(tx1)
-    traces = [GammaMatrix._trace_single_line(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
+    traces = [_trace_single_line(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
     res = tensor_mul(*([trest] + tlines + traces))
     return res
 
-def gamma_trace(self, t):
+
+def gamma_trace(t):
     """
     trace of a single line of gamma matrices
 
     Examples
     ========
 
-    >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G    
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead    
+    >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, gamma_trace
+    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
     >>> p, q = tensorhead('p, q', [LorentzIndex], [[1]])    
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)    
     >>> ps = p(i0)*G(-i0)    
     >>> qs = q(i0)*G(-i0)    
-    >>> G.gamma_trace(G(i0)*G(i1))    
+    >>> gamma_trace(G(i0)*G(i1))
     4*metric(i0, i1)
-    >>> G.gamma_trace(ps*ps) - 4*p(i0)*p(-i0)    
+    >>> gamma_trace(ps*ps) - 4*p(i0)*p(-i0)
     0
-    >>> G.gamma_trace(ps*qs + ps*ps) - 4*p(i0)*p(-i0) - 4*p(i0)*q(-i0)    
+    >>> gamma_trace(ps*qs + ps*ps) - 4*p(i0)*p(-i0) - 4*p(i0)*q(-i0)
     0
 
     """
-    #assert any(x == DiracSpinorIndex.auto_right for x, p, c, in t._tids.free)
     if isinstance(t, TensAdd):
-        res = TensAdd(*[self._trace_single_line(x) for x in t.args])
+        res = TensAdd(*[_trace_single_line(x) for x in t.args])
         return res
-    t = self._simplify_single_line(t)
-    res = self._trace_single_line(t)
+    t = _simplify_single_line(t)
+    res = _trace_single_line(t)
     return res
 
 
@@ -238,17 +237,18 @@ def _simplify_single_line(expression):
     >>> from sympy.tensor.tensor import tensor_indices, tensorhead    
     >>> p = tensorhead('p', [LorentzIndex], [[1]])    
     >>> i0,i1 = tensor_indices('i0:2', LorentzIndex)    
-    >>> G._simplify_single_line(G(i0)*G(i1)*p(-i1)*G(-i0)) + 2*G(i0)*p(-i0)    
+    >>> _simplify_single_line(G(i0)*G(i1)*p(-i1)*G(-i0)) + 2*G(i0)*p(-i0)
     0
 
     """
-    t1, t2 = extract_type_tens(expression)
+    t1, t2 = extract_type_tens(expression, GammaMatrix)
     if t1 != 1:
-        t1 = _kahane_simplify(expression)
+        t1 = _kahane_simplify(t1)
     res = t1*t2
     return res
 
-def _trace_single_line(self, t):
+
+def _trace_single_line(t):
     """
     Evaluate the trace of a single gamma matrix line inside a ``TensExpr``.
 
@@ -266,9 +266,9 @@ def _trace_single_line(self, t):
     >>> from sympy.tensor.tensor import tensor_indices, tensorhead    
     >>> p = tensorhead('p', [LorentzIndex], [[1]])    
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)    
-    >>> G._trace_single_line(G(i0)*G(i1))    
+    >>> _trace_single_line(G(i0)*G(i1))
     4*metric(i0, i1)
-    >>> G._trace_single_line(G(i0)*p(-i0)*G(i1)*p(-i1)) - 4*p(i0)*p(-i0)    
+    >>> _trace_single_line(G(i0)*p(-i0)*G(i1)*p(-i1)) - 4*p(i0)*p(-i0)
     0
 
     """
@@ -276,26 +276,29 @@ def _trace_single_line(self, t):
         t = t.sorted_components()
         components = t.components
         ncomps = len(components)
-        g = self.LorentzIndex.metric
+        g = LorentzIndex.metric
         sg = DiracSpinorIndex.delta
         # gamma matirices are in a[i:j]
         hit = 0
         for i in range(ncomps):
-            if isinstance(components[i], GammaMatrix):
+            if components[i] == GammaMatrix:
                 hit = 1
                 break
 
         for j in range(i + hit, ncomps):
-            if not isinstance(components[j], GammaMatrix):
+            if components[j] != GammaMatrix:
                 break
         else:
             j = ncomps
         numG = j - i
         if numG == 0:
-            spinor_free = [_[0] for _ in t._tids.free if _[0].tensortype is DiracSpinorIndex]
+            spinor_free = [_[0] for _ in t.free if _[0].tensortype is DiracSpinorIndex]
             tcoeff = t.coeff
-            if spinor_free == [DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right]:
-                t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
+            if spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
+                # t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
+                # TODO: add procedure to close matrix indices.
+                t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
+                TensMul(t, DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0]))
                 t = t.contract_metric(sg)
                 return t/tcoeff if tcoeff else t
             else:
@@ -303,7 +306,7 @@ def _trace_single_line(self, t):
         if numG % 2 == 1:
             return TensMul.from_data(S.Zero, [], [], [])
         elif numG > 4:
-            t = t.substitute_indices((-DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_index), (DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_index))
+            #t = t.substitute_indices((-DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_index), (DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_index))
             a = t.split()
             ind1, lind1, rind1 = a[i].args[-1]
             ind2, lind2, rind2 = a[i + 1].args[-1]
@@ -325,16 +328,14 @@ def _trace_single_line(self, t):
                 args.append(t2)
             t3 = TensAdd(*args)
 
-            #aa = _tensorlist_contract_metric(aa, g(ind1, ind2))
-            #t3 = t3.canon_bp()
-            t3 = self._trace_single_line(t3)
+            t3 = _trace_single_line(t3)
             return t3
         else:
             a = t.split()
             if len(t.components) == 1:
                 if t.components[0] is DiracSpinorIndex.delta:
                     return 4  # FIXME only for D=4
-            t1 = self._gamma_trace1(*a[i:j])
+            t1 = _gamma_trace1(*a[i:j])
             a2 = a[:i] + a[j:]
             t2 = tensor_mul(*a2)
             t3 = t1*t2
@@ -352,9 +353,10 @@ def _trace_single_line(self, t):
     else:
         return t
 
-def _gamma_trace1(self, *a):
+
+def _gamma_trace1(*a):
     gctr = 4  # FIXME specific for d=4
-    g = self.LorentzIndex.metric
+    g = LorentzIndex.metric
     if not a:
         return gctr
     n = len(a)
@@ -414,63 +416,57 @@ def _kahane_simplify(expression):
     When using, always remember that the original expression coefficient
     has to be handled separately
 
-    >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinorIndex as DS    
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead, TensMul, TensAdd    
+    >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G
+    >>> from sympy.physics.hep.gamma_matrices import DiracSpinorIndex as DS,
+    >>> from sympy.physics.hep.gamma_matrices import _kahane_simplify
+    >>> from sympy.tensor.tensor import tensor_indices, TensAdd
     >>> i0, i1, i2 = tensor_indices('i0:3', LorentzIndex)    
     >>> s0,s1,s2,s3,s4,s5 = tensor_indices('s0:6', DS)    
     >>> ta = G(i0)*G(-i0)    
-    >>> G._kahane_simplify(ta.coeff, ta._tids) - 4*DS.delta(DS.auto_left, -DS.auto_right)    
+    >>> _kahane_simplify(ta) - 4*DS.delta(DS.auto_left, -DS.auto_right)
     0
     >>> tb = G(i0)*G(i1)*G(-i0)    
-    >>> G._kahane_simplify(tb.coeff, tb._tids)    
+    >>> _kahane_simplify(tb)
     -2*gamma(i1, auto_left, -auto_right)
     >>> t = G(i0, s0, -s1)*G(-i0,s1,-s2)    
-    >>> G._kahane_simplify(t.coeff, t._tids) - 4*DS.delta(s0, -s2)    
+    >>> _kahane_simplify(t) - 4*DS.delta(s0, -s2)
     0
     >>> t = G(i0, s0, -s1)*G(-i0,s1,-s0)    
-    >>> G._kahane_simplify(t.coeff, t._tids)    
+    >>> _kahane_simplify(t)
     16
 
     If there are no contractions, the same expression is returned
 
-    >>> tc = 3*G(i0)*G(i1)    
-    >>> G._kahane_simplify(tc.coeff, tc._tids)    
-    3*gamma(i0, auto_left, S_0)*gamma(i1, -S_0, -auto_right)
+    >>> tc = G(i0)*G(i1)
+    >>> _kahane_simplify(tc)
+    gamma(i0, auto_left, S_0)*gamma(i1, -S_0, -auto_right)
 
     References
     ==========
 
-    [1] Algorithm for Reducing Contracted Products of gamma Matrices, Joseph Kahane, Journal of Mathematical Physics, Vol. 9, No. 10, October 1968.
+    [1] Algorithm for Reducing Contracted Products of gamma Matrices,
+    Joseph Kahane, Journal of Mathematical Physics, Vol. 9, No. 10, October 1968.
     """
-
-    # how to modify it:
-    # * remove coeff
-    # * remove tids
-    # input has to be an expression... extract all gamma matrices.
 
     if isinstance(expression, Mul):
         return expression
     if isinstance(expression, TensAdd):
         return TensAdd(*[_kahane_simplify(arg) for arg in expression.args])
 
+    if isinstance(expression, Tensor):
+        return expression
+
     assert isinstance(expression, TensMul)
 
-    gammas = [g for g in expression.args if isinstance(g, Tensor) and g.args[0] == GammaMatrix]
-    notgammas = [g for g in expression.args if g not in gammas]
+    gammas = expression.args
 
-    # checking that all gamma matrices are in the correct matrix multiplication order:
-    # TODO
+    for gamma in gammas:
+        assert gamma.component == GammaMatrix
 
-    # n = len(tids.components)
-    # for p0, p1, c0, c1 in tids.dum:
-    #     if p0 == 0:
-    #         continue
-    #     dc = abs(c0 - c1)
-    #     if dc not in (1, n - 1):
-    #         raise ValueError('wrong gamma matrix ordering')
-
-    free = [get_indices(g)[0] for g in gammas]
-    #index_structure = get_index_structure(reduce(lambda x, y: x*y, gammas))
+    free = []
+    for g, pos in expression._iterate_free_indices:
+        if pos[2] == 0:
+            free.append((g, pos[0]))
 
     spinor_free = []
     for (indx, pos) in expression._iterate_free_indices:
@@ -482,14 +478,7 @@ def _kahane_simplify(expression):
             continue
         # (index, index of component, position of component):
         spinor_free.append((indx, pos[2], pos[0]))
-    # for pos, g in enumerate(gammas):
-    #     for f in get_index_structure(g).free:
-    #         if f[1] == 0:
-    #             continue  # this means, f[0] is a Lorentz index
-    #         spinor_free.append((f[0], f[1], pos))
 
-    #free = [_ for _ in tids.free if _[1] == 0]
-    #spinor_free = [_ for _ in tids.free if _[1] != 0]
     if len(spinor_free) == 2:
         spinor_free.sort(key=lambda x: x[2])
         assert spinor_free[0][1] == 1 and spinor_free[-1][1] == 2
@@ -498,16 +487,11 @@ def _kahane_simplify(expression):
         raise ValueError('spinor indices do not match')
 
     dum = []
-    gamma_expr = TensMul(*gammas)  # TODO: this should be handled before calling this gunction
-    for g, pos in gamma_expr._iterate_dummy_indices:
-        pass
-        # TODO iterate over dummy indices.
-    for pos, g in enumerate(gammas):
-        for dm in get_index_structure(g).dum:
-            if dm[0] != 0 or dm[1] != 0:
-                dum.append(dm)
+    for dum_pair in expression.dum:
+        if expression.index_types[dum_pair[0]] == LorentzIndex:
+            dum.append((dum_pair[0]/3, dum_pair[1]/3))
+
     dum = sorted(dum)
-    #dum = sorted([_ for _ in tids.dum if _[0] == 0 and _[1] == 0])
 
     if len(dum) == 0:  # or GammaMatrixHead:
         # no contractions in `expression`, just return it.
@@ -518,24 +502,28 @@ def _kahane_simplify(expression):
     # gamma matrix expression to start with a contracted gamma matrix, this is
     # a workaround which ignores possible initial free indices, and re-adds
     # them later.
-    dum_zip = list(zip(*dum))[2:]
-    first_dum_pos = min(min(dum_zip[0]), min(dum_zip[1]))
+    first_dum_pos = None
+    for g, pos in expression._iterate_dummy_indices:
+        if pos[2] == 0:
+            first_dum_pos = pos[0]
+            break
+
+    # dum_zip = list(zip(*dum))
+    # first_dum_pos = min(min(dum_zip[0]), min(dum_zip[1]))
 
     total_number = len(free) + len(dum)*2
     number_of_contractions = len(dum)
 
     free_pos = [None]*total_number
     for i in free:
-        free_pos[i[2]] = i[0]
+        free_pos[i[1]] = i[0]
 
     # `index_is_free` is a list of booleans, to identify index position
     # and whether that index is free or dummy.
     index_is_free = [False]*total_number
 
     for i, indx in enumerate(free):
-        if indx[1] != 0:
-            raise ValueError("indx[1] should be equal to 0")
-        index_is_free[indx[2]] = True
+        index_is_free[indx[1]] = True
 
     # `links` is a dictionary containing the graph described in Kahane's paper,
     # to every key correspond one or two values, representing the linked indices.
@@ -554,7 +542,7 @@ def _kahane_simplify(expression):
 
     # multiply `resulting_coeff` by the coefficient parameter, the rest
     # of the algorithm ignores a scalar coefficient.
-    resulting_coeff = S.One * (reduce(lambda x, y: x*y, notgammas))
+    resulting_coeff = S.One
 
     # initialize a lisf of lists of indices. The outer list will contain all
     # additive tensor expressions, while the inner list will contain the
@@ -616,13 +604,9 @@ def _kahane_simplify(expression):
     # separated by free indices, hinting that free indices can be added without
     # altering the expression result).
     for i in dum:
-        if i[0] != 0:
-            raise ValueError("i[0] should be 0")
-        if i[1] != 0:
-            raise ValueError("i[1] should be 0")
         # get the positions of the two contracted indices:
-        pos1 = i[2]
-        pos2 = i[3]
+        pos1 = i[0]
+        pos2 = i[1]
 
         # create Kahane's upper links, i.e. the upper arcs between dummy
         # (i.e. contracted) indices:
@@ -774,17 +758,19 @@ def _kahane_simplify(expression):
     elif isinstance(t, TensMul):
         t1 = t
     if t1:
-        spinor_free1 = [_ for _ in t1._tids.free if _[1] != 0]
+        spinor_free1 = [_ for _ in t1.free if _[1] % 3 != 0]
         if spinor_free1:
             if spinor_free:
-                t = t.substitute_indices((DiracSpinorIndex.auto_left, spinor_free[0][0]), (-DiracSpinorIndex.auto_right, spinor_free[-1][0]))
+                pass
+                # t = t.substitute_indices((DiracSpinorIndex.auto_left, spinor_free[0][0]), (-DiracSpinorIndex.auto_right, spinor_free[-1][0]))
             else:
                 # FIXME trace
                 t = t*DiracSpinorIndex.delta(DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
                 t = GammaMatrix.simplify_lines(t)
         else:
             if spinor_free:
-                t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
+                pass
+                # t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
             else:
                 t = t*4
     else:

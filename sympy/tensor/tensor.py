@@ -2945,19 +2945,6 @@ class TensExpr(Basic):
             raise NotImplementedError(
                 "missing multidimensional reduction to matrix.")
 
-    def _eval_simplify(self, ratio, measure):
-        # this is a way to simplify a tensor expression.
-
-        # This part walks for all `TensorHead`s appearing in the tensor expr
-        # and looks for `simplify_this_type`, to specifically act on a subexpr
-        # containing one type of `TensorHead` instance only:
-        expr = self
-        for i in list(set(self.components)):
-            if hasattr(i, 'simplify_this_type'):
-                expr = i.simplify_this_type(expr)
-        # TODO: missing feature, perform metric contraction.
-        return expr
-
     def _get_free_indices_set(self):
         indset = set([])
         for arg in self.args:
@@ -4076,13 +4063,7 @@ class TensMul(TensExpr):
             assert not self.components
             return self._coeff == other
 
-        def _get_compar_comp(self):
-            t = self.canon_bp()
-            r = (get_coeff(t), tuple(t.components), \
-                    tuple(sorted(t.free)), tuple(sorted(t.dum)))
-            return r
-
-        return _get_compar_comp(self) == _get_compar_comp(other)
+        return self.canon_bp() == other.canon_bp()
 
     def get_indices(self):
         """
