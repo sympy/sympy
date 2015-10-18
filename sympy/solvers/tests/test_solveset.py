@@ -1017,3 +1017,9 @@ def test_issue_9849():
 
 def test_issue_9953():
     assert linsolve([ ], x) == S.EmptySet
+
+
+def test_issue_9913():
+    assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
+        FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
+                (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)

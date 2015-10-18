@@ -344,8 +344,6 @@ def signsimp(expr, evaluate=None):
 
     >>> n**i
     (-1 + 1/x)**i
-    >>> signsimp(_)
-    -(1 - 1/x)**i
 
     By default, signsimp doesn't leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the

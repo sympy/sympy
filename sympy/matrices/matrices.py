@@ -519,7 +519,8 @@ class MatrixBase(object):
         return self._new(self.rows, self.cols, [a*i for i in self._mat])
 
     def __pow__(self, num):
-        from sympy.matrices import eye
+        from sympy.matrices import eye, diag, MutableMatrix
+        from sympy import binomial
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -538,18 +539,27 @@ class MatrixBase(object):
                 s *= s
                 n //= 2
             return self._new(a)
-        elif isinstance(num, Rational):
-            try:
-                P, D = self.diagonalize()
-            except MatrixError:
-                raise NotImplementedError(
-                    "Implemented only for diagonalizable matrices")
-            for i in range(D.rows):
-                D[i, i] = D[i, i]**num
-            return self._new(P*D*P.inv())
+        elif isinstance(num, (Expr, float)):
+
+            def jordan_cell_power(jc, n):
+                N = jc.shape[0]
+                l = jc[0, 0]
+                for i in range(N):
+                        for j in range(N-i):
+                                bn = binomial(n, i)
+                                if isinstance(bn, binomial):
+                                        bn = bn._eval_expand_func()
+                                jc[j, i+j] = l**(n-i)*bn
+
+            P, jordan_cells = self.jordan_cells()
+            # Make sure jordan_cells matrices are mutable:
+            jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+            for j in jordan_cells:
+                jordan_cell_power(j, num)
+            return self._new(P*diag(*jordan_cells)*P.inv())
         else:
-            raise NotImplementedError(
-                "Only integer and rational values are supported")
+            raise TypeError(
+                "Only SymPy expressions or int objects are supported as exponent for matrices")
 
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
