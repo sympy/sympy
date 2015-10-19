@@ -42,14 +42,16 @@ class LambdaPrinter(StrPrinter):
         return ''.join(result)
 
     def _print_Sum(self, expr):
-        template = '(builtins.sum({expr} for {i} in range({a}, {b}+1)))'
+        loops = (
+            'for {i} in range({a}, {b}+1)'.format(
+                i=self._print(i),
+                a=self._print(a),
+                b=self._print(b))
+            for i, a, b in expr.limits)
         out=self._print(expr.function)
-        for i, a, b in expr.limits:
-            out = template.format(expr=out,
-                                  i=self._print(i),
-                                  a=self._print(a),
-                                  b=self._print(b))
-        return out
+        return '(builtins.sum({function} {loops}))'.format(
+            function=expr.function,
+            loops=' '.join(loops))
 
     def _print_And(self, expr):
         result = ['(']

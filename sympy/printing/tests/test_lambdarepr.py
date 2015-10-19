@@ -172,8 +172,7 @@ def test_multiple_sums():
     s = Sum(i * x + j, (i, a, b), (j, c, d))
 
     l = lambdarepr(s)
-    assert l == "(builtins.sum((builtins.sum(i*x + j for i in range(a, b+1))) " \
-                "for j in range(c, d+1)))"
+    assert l == "(builtins.sum(i*x + j for i in range(a, b+1) for j in range(c, d+1)))"
 
     assert (lambdify((x, a, b, c, d), s)(2, 3, 4, 5, 6) ==
             s.subs([(x, 2), (a, 3), (b, 4), (c, 5), (d, 6)]).doit())
