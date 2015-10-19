@@ -41,6 +41,17 @@ class LambdaPrinter(StrPrinter):
         result.append(')'*(2*i - 2))
         return ''.join(result)
 
+    def _print_Sum(self, expr):
+        loops = (
+            'for {i} in range({a}, {b}+1)'.format(
+                i=self._print(i),
+                a=self._print(a),
+                b=self._print(b))
+            for i, a, b in expr.limits)
+        return '(builtins.sum({function} {loops}))'.format(
+            function=self._print(expr.function),
+            loops=' '.join(loops))
+
     def _print_And(self, expr):
         result = ['(']
         for arg in sorted(expr.args, key=default_sort_key):
