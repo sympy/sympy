@@ -38,7 +38,7 @@ def test_multiple_sums():
     c_, d_ = 11, 21
     x_ = np.linspace(-1, +1, 10)
     assert np.allclose(f(a_, b_, c_, d_, x_),
-                       sum(sum((x_ + j_) * i_ for i_ in range(a_, b_ + 1)) for j_ in range(c_, d_ + 1)))
+                       sum((x_ + j_) * i_ for i_ in range(a_, b_ + 1) for j_ in range(c_, d_ + 1)))
 
 
 def test_relational():
