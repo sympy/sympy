@@ -300,6 +300,9 @@ class ContinuousPSpace(PSpace):
             rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
+            # return S.Zero if `domain` is empty set
+            if domain.set is S.EmptySet:
+                return S.Zero
             # Integrate out the last variable over the special domain
             return Integral(pdf(z), (z, domain.set), **kwargs)
 
