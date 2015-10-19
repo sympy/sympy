@@ -215,6 +215,44 @@ def gradient(scalar, coord_sys):
 
     return coord_sys.delop(scalar).doit()
 
+def laplacian(field, coord_sys):
+
+    """
+    Returns the laplacian of a scalar or vector field computed wrt the
+    base scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    field : Sympy Expr or Vector
+        The scalar or vector field to calculate the gradient of
+
+    coord_sys : CoordSystem3D
+        The coordinate system to calculate the system of 
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSystem3D, laplacian
+    >>> C = CoordSystem3D('C')
+    >>> vect = C.x * C.y * C.z * (C.i + C.j + C.k)
+    >>> laplacian(vect, C)
+    0
+    >>> scalar = C.x ** 2
+    >>> laplacian(scalar, C)
+    2
+
+    """
+
+    if field.is_Vector:
+        return gradient(divergence(field, coord_sys), coord_sys) - \
+        curl(curl(field, coord_sys), coord_sys)
+    else:
+        try:
+            return divergence(gradient(field, coord_sys), coord_sys)
+        except:
+            "Most likely a TypeError." # Will beef this up.
+
 
 def is_conservative(field):
     """
