@@ -15,21 +15,35 @@ def test_numpy_piecewise_regression():
 
 
 def test_sum():
-    k, k0, kN = symbols("k, k0, kN")
+    i, a, b = symbols("i, a, b")
 
-    s = Sum(x ** k, (k, k0, kN))
-    f = lambdify((k0, kN, x), s, 'numpy')
+    s = Sum(x ** i, (i, a, b))
+    f = lambdify((a, b, x), s, 'numpy')
 
-    k0_, kN_ = 0, 10
-    x_ = np.linspace(-1, +1, 100)
-    assert np.allclose(f(k0_, kN_, x_), sum(x_ ** k_ for k_ in range(k0_, kN_ + 1)))
+    a_, b_ = 0, 10
+    x_ = np.linspace(-1, +1, 10)
+    assert np.allclose(f(a_, b_, x_), sum(x_ ** i_ for i_ in range(a_, b_ + 1)))
 
-    s = Sum(k * x, (k, k0, kN))
-    f = lambdify((k0, kN, x), s, 'numpy')
+    s = Sum(i * x, (i, a, b))
+    f = lambdify((a, b, x), s, 'numpy')
 
-    k0_, kN_ = 0, 10
-    x_ = np.linspace(-1, +1, 100)
-    assert np.allclose(f(k0_, kN_, x_), sum(k_ * x_ for k_ in range(k0_, kN_ + 1)))
+    a_, b_ = 0, 10
+    x_ = np.linspace(-1, +1, 10)
+    assert np.allclose(f(a_, b_, x_), sum(i_ * x_ for i_ in range(a_, b_ + 1)))
+
+
+def test_multiple_sums():
+    i, a, b = symbols("i, a, b")
+    j, c, d = symbols("j, c, d")
+
+    s = Sum((x + j) * i, (i, a, b), (j, c, d))
+    f = lambdify((a, b, c, d, x), s, 'numpy')
+
+    a_, b_ = 0, 10
+    c_, d_ = 11, 21
+    x_ = np.linspace(-1, +1, 10)
+    assert np.allclose(f(a_, b_, c_, d_, x_),
+                       sum(sum((x_ + j_) * i_ for i_ in range(a_, b_ + 1)) for j_ in range(c_, d_ + 1)))
 
 
 def test_relational():
