@@ -1,5 +1,5 @@
-from sympy import Piecewise, lambdify, Equality, Unequality, symbols, Sum
-from sympy.abc import x
+from sympy import Piecewise, lambdify, Equality, Unequality, Sum
+from sympy.abc import x, i, j, a, b, c, d
 from sympy.printing.lambdarepr import NumPyPrinter
 import numpy as np
 
@@ -15,8 +15,6 @@ def test_numpy_piecewise_regression():
 
 
 def test_sum():
-    i, a, b = symbols("i, a, b")
-
     s = Sum(x ** i, (i, a, b))
     f = lambdify((a, b, x), s, 'numpy')
 
@@ -33,9 +31,6 @@ def test_sum():
 
 
 def test_multiple_sums():
-    i, a, b = symbols("i, a, b")
-    j, c, d = symbols("j, c, d")
-
     s = Sum((x + j) * i, (i, a, b), (j, c, d))
     f = lambdify((a, b, c, d, x), s, 'numpy')
 
