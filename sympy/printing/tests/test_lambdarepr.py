@@ -4,6 +4,8 @@ from sympy.utilities.pytest import raises
 from sympy.printing.lambdarepr import lambdarepr
 
 x, y, z = symbols("x,y,z")
+i, a, b = symbols("i,a,b")
+j, c, d = symbols("j,c,d")
 
 
 def test_basic():
@@ -149,23 +151,32 @@ def test_sum():
     # In each case, test eval() the lambdarepr() to make sure that
     # it evaluates to the same results as the symbolic expression
 
-    k, k0, kN = symbols("k, k0, kN")
-
-    s = Sum(x ** k, (k, k0, kN))
+    s = Sum(x ** i, (i, a, b))
 
     l = lambdarepr(s)
-    assert l == "(builtins.sum(x**k for k in range(k0, kN+1)))"
+    assert l == "(builtins.sum(x**i for i in range(a, b+1)))"
 
-    assert (lambdify((x, k0, kN), s)(2, 3, 8) ==
-            s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
+    assert (lambdify((x, a, b), s)(2, 3, 8) ==
+            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
 
-    s = Sum(k * x, (k, k0, kN))
+    s = Sum(i * x, (i, a, b))
 
     l = lambdarepr(s)
-    assert l == "(builtins.sum(k*x for k in range(k0, kN+1)))"
+    assert l == "(builtins.sum(i*x for i in range(a, b+1)))"
 
-    assert (lambdify((x, k0, kN), s)(2, 3, 8) ==
-            s.subs([(x, 2), (k0, 3), (kN, 8)]).doit())
+    assert (lambdify((x, a, b), s)(2, 3, 8) ==
+            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+
+
+def test_multiple_sums():
+    s = Sum(i * x + j, (i, a, b), (j, c, d))
+
+    l = lambdarepr(s)
+    assert l == "(builtins.sum((builtins.sum(i*x + j for i in range(a, b+1))) " \
+                "for j in range(c, d+1)))"
+
+    assert (lambdify((x, a, b, c, d), s)(2, 3, 4, 5, 6) ==
+            s.subs([(x, 2), (a, 3), (b, 4), (c, 5), (d, 6)]).doit())
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
