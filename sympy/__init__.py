@@ -18,7 +18,8 @@ except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
     "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
 
-from sympy.release import __version__
+from .version import git_revision as __git_revision__
+from .version import version as __version__
 
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:
