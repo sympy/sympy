@@ -425,7 +425,7 @@ def lens_formula(focal_length=None, u=None, v=None):
             return Limit(u*_f/(u + _f), _f, oo).doit()
         return u*focal_length/(u + focal_length)
 
-def hyperfocal_distance(f = None, N = None, c = None):
+def hyperfocal_distance(f, N, c):
     """
 
     Parameters
