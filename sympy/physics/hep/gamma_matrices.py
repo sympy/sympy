@@ -297,9 +297,10 @@ def _trace_single_line(t):
             if spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
                 # t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
                 # TODO: add procedure to close matrix indices.
-                t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
-                TensMul(t, DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0]))
-                t = t.contract_metric(sg)
+                t = t.replace(lambda x: x.component == DiracSpinorIndex.delta, lambda x: DiracSpinorIndex.dim)
+                # t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
+                # TensMul(t, DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0]))
+                # t = t.contract_metric(sg)
                 return t/tcoeff if tcoeff else t
             else:
                 return t/tcoeff if tcoeff else t
