@@ -1,8 +1,9 @@
 from sympy.vector.coordsysrect import CoordSystem3D
 from sympy.vector.dyadic import Dyadic
-from sympy.vector.vector import Vector, BaseVector
+from sympy.vector.vector import Vector, BaseVector, VectorZero
 from sympy.vector.scalar import BaseScalar
-from sympy import sympify, diff, integrate, S
+from sympy import sympify, diff, integrate, S, Expr
+from sympy.core.numbers import Zero
 
 
 def express(expr, system, system2=None, variables=False):
@@ -123,7 +124,7 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
 
-def curl(vect, coord_sys):
+def curl(vect):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -134,27 +135,37 @@ def curl(vect, coord_sys):
     vect : Vector
         The vector operand
 
-    coord_sys : CoordSystem3D
-        The coordinate system to calculate the curl in
-
     Examples
     ========
 
     >>> from sympy.vector import CoordSystem3D, curl
     >>> R = CoordSystem3D('R')
     >>> v1 = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> curl(v1, R)
+    >>> curl(v1)
     0
     >>> v2 = R.x*R.y*R.z*R.i
-    >>> curl(v2, R)
+    >>> curl(v2)
     R.x*R.y*R.j + (-R.x*R.z)*R.k
 
     """
 
-    return coord_sys.delop.cross(vect).doit()
+    # Check input.
+    if isinstance(vect, VectorZero):
+        return Vector.zero
+
+    if not vect.is_Vector:
+        raise TypeError("Your input should be a vector.")
+
+    # Get system.
+    for atom in vect.atoms():
+        if isinstance(atom, BaseVector):
+            system = atom.system
+            break
+
+    return system.delop.cross(vect).doit()
 
 
-def divergence(vect, coord_sys):
+def divergence(vect):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -165,27 +176,36 @@ def divergence(vect, coord_sys):
     vect : Vector
         The vector operand
 
-    coord_sys : CoordSystem3D
-        The cooordinate system to calculate the divergence in
-
     Examples
     ========
 
     >>> from sympy.vector import CoordSystem3D, divergence
     >>> R = CoordSystem3D('R')
     >>> v1 = R.x*R.y*R.z * (R.i+R.j+R.k)
-    >>> divergence(v1, R)
+    >>> divergence(v1)
     R.x*R.y + R.x*R.z + R.y*R.z
     >>> v2 = 2*R.y*R.z*R.j
-    >>> divergence(v2, R)
+    >>> divergence(v2)
     2*R.z
 
     """
 
-    return coord_sys.delop.dot(vect).doit()
+    # Check input
+    if isinstance(vect, VectorZero):
+        return Zero()
+
+    if not vect.is_Vector:
+        raise TypeError("Your input should be a vector.")
+
+    for atom in vect.atoms():
+        if isinstance(atom, BaseVector):
+            system = atom.system
+            break
+
+    return system.delop.dot(vect).doit()
 
 
-def gradient(scalar, coord_sys):
+def gradient(scalar):
     """
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
@@ -196,26 +216,35 @@ def gradient(scalar, coord_sys):
     scalar : SymPy Expr
         The scalar field to compute the gradient of
 
-    coord_sys : CoordSystem3D
-        The coordinate system to calculate the gradient in
-
     Examples
     ========
 
     >>> from sympy.vector import CoordSystem3D, gradient
     >>> R = CoordSystem3D('R')
     >>> s1 = R.x*R.y*R.z
-    >>> gradient(s1, R)
+    >>> gradient(s1)
     R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
     >>> s2 = 5*R.x**2*R.z
-    >>> gradient(s2, R)
+    >>> gradient(s2)
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
+    # Check input
+    if isinstance(scalar, Zero):
+        return Vector.zero
 
-    return coord_sys.delop(scalar).doit()
+    if not issubclass(type(scalar), Expr) or scalar.is_Vector:
+        raise TypeError("Your input should be a scalar field.")
 
-def laplacian(field, coord_sys):
+    for atom in scalar.atoms():
+        if isinstance(atom, BaseScalar):
+            system = atom.system
+            break
+
+    return system.delop(scalar).doit()
+
+
+def laplacian(field):
 
     """
     Returns the laplacian of a scalar or vector field computed wrt the
@@ -225,10 +254,7 @@ def laplacian(field, coord_sys):
     ==========
 
     field : Sympy Expr or Vector
-        The scalar or vector field to calculate the gradient of
-
-    coord_sys : CoordSystem3D
-        The coordinate system to calculate the system of 
+        The scalar or vector field to calculate the laplacian of
 
     Examples
     ========
@@ -236,22 +262,22 @@ def laplacian(field, coord_sys):
     >>> from sympy.vector import CoordSystem3D, laplacian
     >>> C = CoordSystem3D('C')
     >>> vect = C.x * C.y * C.z * (C.i + C.j + C.k)
-    >>> laplacian(vect, C)
+    >>> laplacian(vect)
     0
     >>> scalar = C.x ** 2
-    >>> laplacian(scalar, C)
+    >>> laplacian(scalar)
     2
 
     """
 
-    if field.is_Vector:
-        return gradient(divergence(field, coord_sys), coord_sys) - \
-        curl(curl(field, coord_sys), coord_sys)
+    if isinstance(field, Zero):
+        return Zero()
+    elif isinstance(field, VectorZero):
+        return Vector.zero
+    elif field.is_Vector:
+        return gradient(divergence(field)) - curl(curl(field))
     else:
-        try:
-            return divergence(gradient(field, coord_sys), coord_sys)
-        except:
-            "Most likely a TypeError." # Will beef this up.
+        return divergence(gradient(field))
 
 
 def is_conservative(field):
@@ -285,7 +311,7 @@ def is_conservative(field):
     if field == Vector.zero:
         return True
     coord_sys = list(field.separate())[0]
-    return curl(field, coord_sys).simplify() == Vector.zero
+    return curl(field).simplify() == Vector.zero
 
 
 def is_solenoidal(field):
@@ -319,7 +345,7 @@ def is_solenoidal(field):
     if field == Vector.zero:
         return True
     coord_sys = list(field.separate())[0]
-    return divergence(field, coord_sys).simplify() == S(0)
+    return divergence(field).simplify() == S(0)
 
 
 def scalar_potential(field, coord_sys):
@@ -346,7 +372,7 @@ def scalar_potential(field, coord_sys):
     >>> scalar_potential(R.k, R) == R.z
     True
     >>> scalar_field = 2*R.x**2*R.y*R.z
-    >>> grad_field = gradient(scalar_field, R)
+    >>> grad_field = gradient(scalar_field)
     >>> scalar_potential(grad_field, R)
     2*R.x**2*R.y*R.z
 
