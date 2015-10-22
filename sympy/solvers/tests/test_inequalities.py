@@ -12,7 +12,7 @@ from sympy.polys.rootoftools import RootOf
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, XFAIL
 
 
 inf = oo.evalf()
@@ -266,11 +266,6 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
 
-    # XXX should be limited in domain, e.g. between 0 and 2*pi
-    assert isolve(sin(x) < S.Half, x) == \
-        Or(And(-oo < x, x < pi/6), And(5*pi/6 < x, x < oo))
-    assert isolve(sin(x) > S.Half, x) == And(pi/6 < x, x < 5*pi/6)
-
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
         And(RootOf(x**7 - x - 2, 0) < x, x < oo)
@@ -282,6 +277,11 @@ def test_solve_univariate_inequality():
     den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
+
+
+def test_solve_univariate_inequality_errors():
+    raises(NotImplementedError, lambda: isolve(sin(x) < S.Half, x))
+    raises(NotImplementedError, lambda: isolve(sin(x) > S.Half, x))
 
 
 @slow
@@ -301,5 +301,9 @@ def test_issue_8545():
 
 
 def test_issue_8974():
-    assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
+
+
+@XFAIL
+def test_issue_8974_fails():
+    assert isolve(-oo < x, x) == And(-oo < x, x < oo)

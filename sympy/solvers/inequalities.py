@@ -396,7 +396,17 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     """
 
-    from sympy.solvers.solvers import solve, denoms
+    from sympy.solvers.solvers import denoms
+    from sympy.solvers.solveset import solveset
+
+    def solve_replacement(f_x, x):
+        solns = solveset(f_x, x, domain=S.Reals)
+        if type(solns) is FiniteSet:
+            return list(solns)
+        elif solns is S.EmptySet:
+            return []
+        else:
+            raise NotImplementedError
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -409,13 +419,13 @@ def solve_univariate_inequality(expr, gen, relational=True):
     e = expr.lhs - expr.rhs
     parts = n, d = e.as_numer_denom()
     if all(i.is_polynomial(gen) for i in parts):
-        solns = solve(n, gen, check=False)
-        singularities = solve(d, gen, check=False)
+        solns = solve_replacement(n, gen)
+        singularities = solve_replacement(d, gen)
     else:
-        solns = solve(e, gen, check=False)
+        solns = solve_replacement(e, gen)
         singularities = []
         for d in denoms(e):
-            singularities.extend(solve(d, gen))
+            singularities.extend(solve_replacement(d, gen))
 
     include_x = expr.func(0, 0)
 
