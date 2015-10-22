@@ -190,6 +190,8 @@ class TheanoPrinter(Printer):
 global_cache = {}
 
 def theano_code(expr, cache=global_cache, **kwargs):
+    if not theano:
+        raise ImportError("theano is required for theano_code")
     return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
@@ -212,6 +214,8 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
 
 def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
     """ Create Theano function from SymPy expressions """
+    if not theano:
+        raise ImportError("theano is required for theano_function")
     cache = {} if cache == None else cache
     broadcastables = dim_handling(inputs, **kwargs)
 
