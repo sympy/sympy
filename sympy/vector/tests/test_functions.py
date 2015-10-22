@@ -1,13 +1,22 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSystem3D
-from sympy.vector.functions import express, matrix_to_vector
-from sympy import symbols, S, sin, cos, ImmutableMatrix as Matrix
+from sympy.vector.functions import express, matrix_to_vector, laplacian
+from sympy import Function, Lambda, symbols, S, sin, cos, \
+                  ImmutableMatrix as Matrix
 
 N = CoordSystem3D('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
+f, g = symbols('f g', cls=Function)
 A = N.orient_new_axis('A', q1, N.k)
 B = A.orient_new_axis('B', q2, A.i)
 C = B.orient_new_axis('C', q3, B.j)
+
+r, theta, phi = symbols('r theta phi')
+spherical = CoordSystem3D('spherical',
+                          Lambda((r, theta, phi), (1, 1/r, 1/(r * sin(theta)))),
+                          variable_names=['r', 'theta', 'phi'])
+r, theta, phi = spherical.base_scalars()
+dr, dtheta, dphi = spherical.base_vectors()
 
 
 def test_express():
@@ -147,6 +156,28 @@ def test_express():
             cos(q2)*cos(q3)*A.k), C).simplify()
     assert C.i == express((cos(q3)*B.i - sin(q3)*B.k), C).simplify()
     assert C.k == express((sin(q3)*B.i + cos(q3)*B.k), C).simplify()
+
+
+def test_laplacian():
+    assert laplacian(0) == S(0)
+    assert laplacian(Vector.zero) == Vector.zero
+    assert laplacian(N.x * N.i) == Vector.zero
+
+    assert laplacian(N.x * N.y * N.z) == S(0)
+    assert laplacian(N.x*N.y*N.z * (N.i + N.j + N.k)) == S(0)
+
+    assert laplacian(N.x ** 2) == S(2)
+    assert laplacian(N.x ** 2 * N.i) == S(2) * N.i
+    assert laplacian(N.y ** 2 * N.i) == S(2) * N.i
+
+    n = symbols('n', integer=True)
+    assert laplacian(r ** n) == n * (n+1) * r**(n-2)
+
+    lhs = laplacian(f(r, theta, phi) * g(r, theta, phi))
+    rhs = f(r, theta, phi) * laplacian(g(r, theta, phi)) + \
+          2 * (gradient(f(r, theta, phi)) & gradient(g(r, theta, phi))) + \
+          g(r, theta, phi) * laplacian(f(r, theta, phi))
+    assert lhs.expand().simplify() == rhs.expand().simplify()
 
 
 def test_matrix_to_vector():
