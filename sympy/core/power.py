@@ -80,7 +80,7 @@ class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"
 
-    Singleton definitions involving (0, 1, -1, oo, -oo):
+    Singleton definitions involving (0, 1, -1, oo, -oo, I, -I):
 
     +--------------+---------+-----------------------------------------------+
     | expr         | value   | reason                                        |
@@ -124,6 +124,15 @@ class Pow(Expr):
     | (-oo)**oo    | nan     |                                               |
     | (-oo)**-oo   |         |                                               |
     +--------------+---------+-----------------------------------------------+
+    | oo**I        | nan     |                                               |
+    | (-oo)**I     |         |                                               |
+    +------------------------------------------------------------------------+
+    | oo**(1+I)    | zoo     |                                               |
+    | (-oo)**(1+I) |         |                                               |
+    +------------------------------------------------------------------------+
+    | oo**(-1+I)   | 0       |                                               |
+    | (-oo)**(-1+I)|         |                                               |
+    +------------------------------------------------------------------------+
 
     Because symbolic computations are more flexible that floating point
     calculations and we prefer to never return an incorrect answer,
