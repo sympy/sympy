@@ -1276,7 +1276,8 @@ def _solve(f, *symbols, **flags):
                 # no need to check but we should simplify if desired
                 if flags.get('simplify', True):
                     d = simplify(d)
-                if got_s and any([ss in d.free_symbols for ss in got_s]):
+                dfree = d.free_symbols
+                if got_s and any([ss in dfree for ss in got_s]):
                     # sol depends on previously solved symbols: discard it
                     continue
                 got_s.add(n)
