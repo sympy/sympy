@@ -1330,7 +1330,7 @@ def _solve(f, *symbols, **flags):
     elif f.is_Piecewise:
         result = set()
         for n, (expr, cond) in enumerate(f.args):
-            candidates = _solve(expr, *symbols, **flags)
+            candidates = _solve(expr, symbol, **flags)
             for candidate in candidates:
                 if candidate in result:
                     continue
