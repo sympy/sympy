@@ -1271,17 +1271,18 @@ def _solve(f, *symbols, **flags):
         got_s = set([])
         result = []
         for s in symbols:
-            n, d = solve_linear(f, symbols=[s])
-            if n.is_Symbol:
+            xi, v = solve_linear(f, symbols=[s])
+            if xi == s:
                 # no need to check but we should simplify if desired
                 if flags.get('simplify', True):
-                    d = simplify(d)
-                if got_s and any([ss in d.free_symbols for ss in got_s]):
+                    v = simplify(v)
+                vfree = v.free_symbols
+                if got_s and any([ss in vfree for ss in got_s]):
                     # sol depends on previously solved symbols: discard it
                     continue
-                got_s.add(n)
-                result.append({n: d})
-            elif n and d:  # otherwise there was no solution for s
+                got_s.add(xi)
+                result.append({xi: v})
+            elif xi:  # there might be a non-linear solution if xi is not 0
                 failed.append(s)
         if not failed:
             return result
@@ -1329,7 +1330,7 @@ def _solve(f, *symbols, **flags):
     elif f.is_Piecewise:
         result = set()
         for n, (expr, cond) in enumerate(f.args):
-            candidates = _solve(expr, *symbols, **flags)
+            candidates = _solve(expr, symbol, **flags)
             for candidate in candidates:
                 if candidate in result:
                     continue
@@ -1363,9 +1364,9 @@ def _solve(f, *symbols, **flags):
         check = False
     else:
         # first see if it really depends on symbol and whether there
-        # is a linear solution
+        # is only a linear solution
         f_num, sol = solve_linear(f, symbols=symbols)
-        if not symbol in f_num.free_symbols:
+        if f_num is S.Zero:
             return []
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
@@ -1821,36 +1822,52 @@ def _solve_system(exprs, symbols, **flags):
 
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
-    r""" Return a tuple derived from f = lhs - rhs that is either:
+    r""" Return a tuple derived from f = lhs - rhs that is one of
+    the following:
 
-        (numerator, denominator) of ``f``
-            If this comes back as (0, 1) it means
-            that ``f`` is independent of the symbols in ``symbols``, e.g::
+        (0, 1) meaning that ``f`` is independent of the symbols in
+        ``symbols`` that aren't in ``exclude``, e.g::
 
-                y*cos(x)**2 + y*sin(x)**2 - y = y*(0) = 0
-                cos(x)**2 + sin(x)**2 = 1
+            >>> from sympy.solvers.solvers import solve_linear
+            >>> from sympy.abc import x, y, z
+            >>> from sympy import cos, sin
+            >>> eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
+            >>> solve_linear(eq)
+            (0, 1)
+            >>> eq = cos(x)**2 + sin(x)**2  # = 1
+            >>> solve_linear(eq)
+            (0, 1)
+            >>> solve_linear(x, exclude=[x])
+            (0, 1)
 
-            If it comes back as (0, 0) there is no solution to the equation
-            amongst the symbols given.
+        (0, 0) meaning that there is no solution to the equation
+        amongst the symbols given.
 
-            If the numerator is not zero then the function is guaranteed
-            to be dependent on a symbol in ``symbols``.
+            (If the first element of the tuple is not zero then
+            the function is guaranteed to be dependent on a symbol
+            in ``symbols``.)
 
-        or
+        (symbol, solution) where symbol appears linearly in the
+        numerator of ``f``, is in ``symbols`` (if given) and is
+        not in ``exclude`` (if given). No simplification is done
+        to ``f`` other than a ``mul=True`` expansion, so the
+        solution will correspond strictly to a unique solution.
 
-        (symbol, solution) where symbol appears linearly in the numerator of
-        ``f``, is in ``symbols`` (if given) and is not in ``exclude`` (if given).
+        ``(n, d)`` where ``n`` and ``d`` are the numerator and
+        denominator of ``f`` when the numerator was not linear
+        in any symbol of interest; ``n`` will never be a symbol
+        unless a solution for that symbol was found (in which case
+        the second element is the solution, not the denominator).
 
-        No simplification is done to ``f`` other than and mul=True expansion,
-        so the solution will correspond strictly to a unique solution.
 
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import solve_linear
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.core.power import Pow
+    >>> from sympy.polys.polytools import cancel
 
-    These are linear in x and 1/x:
+    The variable ``x`` appears as a linear variable in each of the
+    following:
 
     >>> solve_linear(x + y**2)
     (x, -y**2)
@@ -1862,34 +1879,53 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     >>> solve_linear(x**2/y**2 - 3)
     (x**2 - 3*y**2, y**2)
 
-    If the numerator is a symbol then (0, 0) is returned if the solution for
-    that symbol would have set any denominator to 0:
+    If the numerator of the expression is a symbol then (0, 0) is
+    returned if the solution for that symbol would have set any
+    denominator to 0:
 
-    >>> solve_linear(1/(1/x - 2))
+    >>> eq = 1/(1/x - 2)
+    >>> eq.as_numer_denom()
+    (x, -2*x + 1)
+    >>> solve_linear(eq)
     (0, 0)
-    >>> 1/(1/x) # to SymPy, this looks like x ...
+
+    But automatic rewriting may cause a symbol in the denominator to
+    appear in the numerator so a solution will be returned:
+
+    >>> (1/x)**-1
     x
-    >>> solve_linear(1/(1/x)) # so a solution is given
+    >>> solve_linear((1/x)**-1)
     (x, 0)
 
-    If x is allowed to cancel, then this appears linear, but this sort of
-    cancellation is not done so the solution will always satisfy the original
-    expression without causing a division by zero error.
+    Use an unevaluated expression to avoid this:
 
-    >>> solve_linear(x**2*(1/x - z**2/x))
+    >>> solve_linear(Pow(1/x, -1, evaluate=False))
+    (0, 0)
+
+    If ``x`` is allowed to cancel in the following expression, then it
+    appears to be linear in ``x``, but this sort of cancellation is not
+    done by ``solve_linear`` so the solution will always satisfy the
+    original expression without causing a division by zero error.
+
+    >>> eq = x**2*(1/x - z**2/x)
+    >>> solve_linear(cancel(eq))
+    (x, 0)
+    >>> solve_linear(eq)
     (x**2*(-z**2 + 1), x)
 
-    You can give a list of what you prefer for x candidates:
+    A list of symbols for which a solution is desired may be given:
 
     >>> solve_linear(x + y + z, symbols=[y])
     (y, -x - z)
 
-    You can also indicate what variables you don't want to consider:
+    A list of symbols to ignore may also be given:
 
-    >>> solve_linear(x + y + z, exclude=[x, z])
+    >>> solve_linear(x + y + z, exclude=[x])
     (y, -x - z)
 
-    If only x was excluded then a solution for y or z might be obtained.
+    (A solution for ``y`` is obtained because it is the first variable
+    from the canonically sorted list of symbols that had a linear
+    solution.)
 
     """
     if isinstance(lhs, Equality):
@@ -1922,48 +1958,50 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                              ''' % (bad, eg)))
         symbols = free.intersection(symbols)
     symbols = symbols.difference(exclude)
+    if not symbols:
+        return S.Zero, S.One
     dfree = d.free_symbols
 
-    # derivatives are easy to do but tricky to analyze to see if they are going
-    # to disallow a linear solution, so for simplicity we just evaluate the
-    # ones that have the symbols of interest
+    # derivatives are easy to do but tricky to analyze to see if they
+    # are going to disallow a linear solution, so for simplicity we
+    # just evaluate the ones that have the symbols of interest
     derivs = defaultdict(list)
     for der in n.atoms(Derivative):
         csym = der.free_symbols & symbols
         for c in csym:
             derivs[c].append(der)
 
-    if symbols:
-        all_zero = True
-        for xi in symbols:
-            # if there are derivatives in this var, calculate them now
-            if type(derivs[xi]) is list:
-                derivs[xi] = dict([(der, der.doit()) for der in derivs[xi]])
-            nn = n.subs(derivs[xi])
-            dn = nn.diff(xi)
-            if dn:
-                all_zero = False
-                if dn is S.NaN:
-                    break
-                if not xi in dn.free_symbols:
-                    vi = -(nn.subs(xi, 0))/dn
-                    if dens is None:
-                        dens = _simple_dens(eq, symbols)
-                    if not any(checksol(di, {xi: vi}, minimal=True) is True
-                              for di in dens):
-                        # simplify any trivial integral
-                        irep = [(i, i.doit()) for i in vi.atoms(Integral) if
-                                i.function.is_number]
-                        # do a slight bit of simplification
-                        vi = expand_mul(vi.subs(irep))
-                        if not d.has(xi) or not (d/xi).has(xi):
-                            return xi, vi
-
-        if all_zero:
-            return S.Zero, S.One
-    if n.is_Symbol:  # there was no valid solution
-        n = d = S.Zero
-    return n, d  # should we cancel now?
+    all_zero = True
+    for xi in sorted(symbols, key=default_sort_key):  # canonical order
+        # if there are derivatives in this var, calculate them now
+        if type(derivs[xi]) is list:
+            derivs[xi] = dict([(der, der.doit()) for der in derivs[xi]])
+        newn = n.subs(derivs[xi])
+        dnewn_dxi = newn.diff(xi)
+        # dnewn_dxi can be nonzero if it survives differentation by any
+        # of its free symbols
+        free = dnewn_dxi.free_symbols
+        if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free)):
+            all_zero = False
+            if dnewn_dxi is S.NaN:
+                break
+            if xi not in dnewn_dxi.free_symbols:
+                vi = -(newn.subs(xi, 0))/dnewn_dxi
+                if dens is None:
+                    dens = _simple_dens(eq, symbols)
+                if not any(checksol(di, {xi: vi}, minimal=True) is True
+                          for di in dens):
+                    # simplify any trivial integral
+                    irep = [(i, i.doit()) for i in vi.atoms(Integral) if
+                            i.function.is_number]
+                    # do a slight bit of simplification
+                    vi = expand_mul(vi.subs(irep))
+                    return xi, vi
+    if all_zero:
+        return S.Zero, S.One
+    if n.is_Symbol: # no solution for this symbol was found
+        return S.Zero, S.Zero
+    return n, d
 
 
 def minsolve_linear_system(system, *symbols, **flags):
@@ -1971,9 +2009,8 @@ def minsolve_linear_system(system, *symbols, **flags):
     Find a particular solution to a linear system.
 
     In particular, try to find a solution with the minimal possible number
-    of non-zero variables. This is a very computationally hard prolem.
-    If ``quick=True``, a heuristic is used. Otherwise a naive algorithm with
-    exponential complexity is used.
+    of non-zero variables using a naive algorithm with exponential complexity.
+    If ``quick=True``, a heuristic is used.
     """
     quick = flags.get('quick', False)
     # Check if there are any non-zero solutions at all
