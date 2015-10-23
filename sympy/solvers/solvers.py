@@ -2009,9 +2009,8 @@ def minsolve_linear_system(system, *symbols, **flags):
     Find a particular solution to a linear system.
 
     In particular, try to find a solution with the minimal possible number
-    of non-zero variables. This is a very computationally hard prolem.
-    If ``quick=True``, a heuristic is used. Otherwise a naive algorithm with
-    exponential complexity is used.
+    of non-zero variables using a naive algorithm with exponential complexity.
+    If ``quick=True``, a heuristic is used.
     """
     quick = flags.get('quick', False)
     # Check if there are any non-zero solutions at all
