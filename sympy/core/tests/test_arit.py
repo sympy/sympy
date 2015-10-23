@@ -1502,6 +1502,9 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
+    assert Mod(nan, 1) == nan
+    assert Mod(1, nan) == nan
+    assert Mod(nan, nan) == nan
 
     # Float handling
     point3 = Float(3.3) % 1
