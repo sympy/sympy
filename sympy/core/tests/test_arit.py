@@ -1603,7 +1603,6 @@ def test_Mod_is_integer():
     assert Mod(p, q1).is_integer is None
     assert Mod(x, q2).is_integer is None
     assert Mod(p, q2).is_integer
-    assert Mod(p, 1).is_zero
 
 
 def test_Mod_is_nonposneg():
