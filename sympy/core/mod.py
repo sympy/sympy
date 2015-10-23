@@ -143,7 +143,8 @@ class Mod(Function):
     def _eval_is_integer(self):
         from sympy.core.logic import fuzzy_and, fuzzy_not
         p, q = self.args
-        return fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)])
+        if fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)]):
+            return True
 
     def _eval_is_nonnegative(self):
         if self.args[1].is_positive:

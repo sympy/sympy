@@ -1594,6 +1594,9 @@ def test_Mod():
     n = Symbol('n', odd=True)
     assert Mod(n, 2) == 1
 
+    # issue 10024
+    assert Mod(x, 2*pi).is_zero == None
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
