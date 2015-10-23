@@ -230,7 +230,7 @@ def gradient(scalar):
 
     """
     # Check input
-    if isinstance(scalar, Zero):
+    if isinstance(scalar, Zero) or scalar == 0:
         return Vector.zero
 
     if not issubclass(type(scalar), Expr) or scalar.is_Vector:
@@ -270,7 +270,7 @@ def laplacian(field):
 
     """
 
-    if isinstance(field, Zero):
+    if isinstance(field, Zero) or field == 0:
         return Zero()
     elif isinstance(field, VectorZero):
         return Vector.zero
