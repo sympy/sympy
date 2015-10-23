@@ -1,4 +1,4 @@
-from sympy import Piecewise, lambdify, Equality, Unequality, Sum
+from sympy import Piecewise, lambdify, Equality, Unequality, Sum, Mod
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.printing.lambdarepr import NumPyPrinter
 import numpy as np
@@ -77,3 +77,20 @@ def test_relational():
     f = lambdify((x,), e)
     x_ = np.array([0, 1, 2])
     assert np.array_equal(f(x_), [False, True, True])
+
+
+def test_mod():
+    e = Mod(a, b)
+    f = lambdify((a, b), e)
+
+    a_ = np.array([0, 1, 2, 3])
+    b_ = 2
+    assert np.array_equal(f(a_, b_), [0, 1, 0, 1])
+
+    a_ = np.array([0, 1, 2, 3])
+    b_ = np.array([2, 2, 2, 2])
+    assert np.array_equal(f(a_, b_), [0, 1, 0, 1])
+
+    a_ = np.array([2, 3, 4, 5])
+    b_ = np.array([2, 3, 4, 5])
+    assert np.array_equal(f(a_, b_), [0, 0, 0, 0])
