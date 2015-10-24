@@ -894,3 +894,10 @@ def test_issue_9808():
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
     assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
         Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
+
+
+def test_issue_9577():
+    un = S.UniversalSet
+    assert Union(Complement(un, Interval(1, 2)), Interval(3, 4)) == \
+            Complement(un, Interval(1, 2))
+    assert Union(Complement(un, Interval(1, 2)), Interval(1, 3)) == un

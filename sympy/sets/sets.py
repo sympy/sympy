@@ -1574,6 +1574,14 @@ class Complement(Set, EvalfMixin):
         B = self.args[1]
         return And(A.contains(other), Not(B.contains(other)))
 
+    def _union(self, other):
+        if self.args[0] is S.UniversalSet:
+            if Intersection(self.args[1], other).is_EmptySet:
+                return self
+            if self.args[1].is_subset(other):
+                return S.UniversalSet
+        return None
+
 
 class EmptySet(with_metaclass(Singleton, Set)):
     """
