@@ -401,7 +401,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.
-    d = Dummy(real=True)
+    d = Dummy()
     expr = expr.subs(gen, d)
     _gen = gen
     gen = d
