@@ -211,7 +211,7 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) is not true])
+            return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     def symmetric_difference(self, other):
         return SymmetricDifference(self, other)
@@ -513,7 +513,7 @@ class Set(Basic):
 
     def __contains__(self, other):
         symb = self.contains(other)
-        if symb not in (true, false):
+        if symb not in (True, False):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return bool(symb)
 
@@ -950,8 +950,8 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is true) or
-                (self.right_open and other.contains(self.end) is true)):
+        if ((self.left_open and other.contains(self.start) == True) or
+                (self.right_open and other.contains(self.end) == True)):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -1002,7 +1002,7 @@ class Interval(Set, EvalfMixin):
             result = S.EmptySet
             domain_set = self
             for (p_expr, p_cond) in expr.args:
-                if p_cond is S.true:
+                if p_cond is true:
                     intrvl = domain_set
                 else:
                     intrvl = p_cond.as_set()
@@ -1248,8 +1248,7 @@ class Union(Set, EvalfMixin):
         return Max(*[set.sup for set in self.args])
 
     def _contains(self, other):
-        or_args = [the_set.contains(other) for the_set in self.args]
-        return Or(*or_args)
+        return Or(*[set.contains(other) for set in self.args])
 
     @property
     def _measure(self):
@@ -1426,7 +1425,6 @@ class Intersection(Set):
         return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
-        from sympy.logic.boolalg import And
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
@@ -1455,20 +1453,21 @@ class Intersection(Set):
         if any(s.is_EmptySet for s in args):
             return S.EmptySet
 
-        # If any FiniteSets see which elements of that finite set occur within
-        # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
+                # see which elements of the FiniteSet occur within
+                # all other sets in the intersection
                 other_args = [a for a in args if a != s]
-                res = FiniteSet(*[x for x in s
-                             if all(other.contains(x) is true for other in other_args)])
-                unk = [x for x in s
-                       if any(other.contains(x) not in (True, False) for other in other_args)]
+                res = FiniteSet(*[x for x in s if all(
+                    o.contains(x) == True for o in other_args)])
+                unk = [x for x in s if any(
+                    o.contains(x) not in (True, False) for o in other_args)]
                 if unk:
                     other_sets = Intersection(*other_args)
                     if other_sets.is_EmptySet:
                         return EmptySet()
-                    res += Intersection(s.func(*unk), other_sets, evaluate=False)
+                    res += Intersection(
+                        s.func(*unk), other_sets, evaluate=False)
                 return res
 
         # If any of the sets are unions, return a Union of Intersections
@@ -1785,10 +1784,12 @@ class FiniteSet(Set, EvalfMixin):
                 return None
 
         elif isinstance(other, FiniteSet):
-            elms_unknown = FiniteSet(*[el for el in self if other.contains(el) not in (True, False)])
-            if elms_unknown == self:
+            unk = FiniteSet(*[el for el in self if other.contains(el)
+                not in (True, False)])
+            if unk == self:
                 return
-            return Complement(FiniteSet(*[el for el in other if self.contains(el) is not true]), elms_unknown)
+            return Complement(FiniteSet(*[el for el in other if
+                self.contains(el) != True]), unk)
 
         return Set._complement(self, other)
 
@@ -1803,10 +1804,10 @@ class FiniteSet(Set, EvalfMixin):
             return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) is true for x in self):
+        if any(other.contains(x) == True for x in self):
             return set((
-                FiniteSet(*[x for x in self if other.contains(x) is not true]),
-                other))
+                FiniteSet(*[x for x in self
+                    if other.contains(x) != True]), other))
 
         return None
 
