@@ -693,18 +693,23 @@ def _solve_radical(f, symbol, solveset_solver):
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 
+def _isolve(expr, symbol, relational=False):
+    from sympy.solvers.inequalities import reduce_inequalities
+    rv = reduce_inequalities(expr, symbols=[symbol])
+    if relational:
+        return rv
+    return rv.as_set()
+
+
 def _solve_abs(f, symbol):
     """ Helper function to solve equation involving absolute value function """
-    from sympy.solvers.inequalities import solve_univariate_inequality
     assert f.has(Abs)
     p, q, r = Wild('p'), Wild('q'), Wild('r')
     pattern_match = f.match(p*Abs(q) + r)
     if not pattern_match[p].is_zero:
         f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
-        q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
-                                                 relational=False)
-        q_neg_cond = solve_univariate_inequality(f_q < 0, symbol,
-                                                 relational=False)
+        q_pos_cond = _isolve(f_q >= 0, symbol)
+        q_neg_cond = _isolve(f_q < 0, symbol)
 
         sols_q_pos = solveset_real(f_p*f_q + f_r,
                                            symbol).intersect(q_pos_cond)
@@ -902,8 +907,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     """
 
-    from sympy.solvers.inequalities import solve_univariate_inequality
-
     if symbol is None:
         free_symbols = f.free_symbols
         if len(free_symbols) == 1:
@@ -934,8 +937,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 not supported. Try the real domain by
                 setting domain=S.Reals'''))
         try:
-            result = solve_univariate_inequality(
-            f, symbol, relational=False).intersection(domain)
+            result = _isolve(f, symbol).intersection(domain)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
