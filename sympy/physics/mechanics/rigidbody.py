@@ -224,24 +224,23 @@ class RigidBody(object):
         return self.mass * self.masscenter.vel(frame)
 
     def angular_momentum(self, point, frame):
-        """ Angular momentum of the rigid body.
+        """Returns the angular momentum of the rigid body about a point in the
+        given frame.
 
-        The angular momentum H, about some point O, of a rigid body B, in a
-        frame N is given by
+        The angular momentum H of a rigid body B about some point O in a frame
+        N is given by:
 
-        H = I* . omega + r* x (M * v)
+            H = I.w + r x Mv
 
-        where I* is the central inertia dyadic of B, omega is the angular
-        velocity of body B in the frame, N, r* is the position vector from
-        point O to the mass center of B, and v is the velocity of point O in
-        the frame, N.
+        where I is the central inertia dyadic of B, w is the angular velocity
+        of body B in the frame, N, r is the position vector from point O to the
+        mass center of B, and v is the velocity of the mass center in the
+        frame, N.
 
         Parameters
         ==========
-
         point : Point
             The point about which angular momentum is desired.
-
         frame : ReferenceFrame
             The frame in which angular momentum is desired.
 
@@ -256,17 +255,19 @@ class RigidBody(object):
         >>> b.set_ang_vel(N, omega * b.x)
         >>> P = Point('P')
         >>> P.set_vel(N, 1 * N.x)
-        >>> I = outer (b.x, b.x)
-        >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> I = outer(b.x, b.x)
+        >>> B = RigidBody('B', P, b, M, (I, P))
         >>> B.angular_momentum(P, N)
         omega*b.x
 
         """
+        I = self.central_inertia
+        w = self.frame.ang_vel_in(frame)
+        m = self.mass
+        r = self.masscenter.pos_from(point)
+        v = self.masscenter.vel(frame)
 
-        return ((self.central_inertia & self.frame.ang_vel_in(frame)) +
-                (point.vel(frame) ^ -self.masscenter.pos_from(point)) *
-                self.mass)
+        return I.dot(w) + r.cross(m * v)
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the rigid body
