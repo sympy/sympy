@@ -1268,6 +1268,9 @@ def linsolve(system, *symbols):
 
 
 def solve(f_x, x, **kwargs):
+    """
+    Emulates `sympy.solvers.solvers.solve` using `solveset`.
+    """
     solns = solveset(f_x, x, domain=S.Reals)
     if type(solns) is FiniteSet:
         return list(solns)
