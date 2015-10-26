@@ -80,6 +80,7 @@ NUMPY_TRANSLATIONS = {
     "ln": "log",
     "Max": "amax",
     "Min": "amin",
+    "Mod": "mod",
     "oo": "inf",
     "re": "real",
     "SparseMatrix": "array",
