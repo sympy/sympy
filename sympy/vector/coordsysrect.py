@@ -7,31 +7,22 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-def build_instance_from_lambda(fun=lambda x, y, z: (x, y, z)):
-    dv = symbols('d1, d2, d3', cls=Dummy, positive=True)
-    mv = fun(*dv)
+@SymPyDeprecationWarning
+class CoordSysCartesian(Basic):
+    """
+    Depreciated class for Cartesian coordinate system instance.
+    """
 
-    # get jacobian matrix
-    jacobian = Matrix([[miter.diff(diter) for diter in dv] for miter in mv])
+    def __new__(cls, name, location=None, rotation_matrix=None, 
+                parent=None, vector_names=None, variable_names=None):
 
-    # invert the jacobian
-    inverse_jacobian = simplify(jacobian.inv())
-
-    # get the metric in this new coordinate system:
-    metric = simplify(inverse_jacobian * inverse_jacobian.T)
-
-    # scale factors for the metric (i.e. normalize its diagonal):
-    scale_factors = [sqrt(metric[i, i]) for i in range(3)]
-
-    # get the unscaled coefficients:
-    unscaled_grad = metric * Matrix([1, 1, 1])
-
-    # These are the coefficients to the derivation operations for the gradient:
-    scaled_grad_coeff = tuple(unscaled_grad[i] / scale_factors[i] for i in range(3))
-
-    return Lambda(dv, scaled_grad_coeff)
+        return CoordSystem3D(name, differential_class=None, location=location,
+                             rotation_matrix=rotation_matrix, parent=parent,
+                             vector_names=vector_names,
+                             variable_names=variable_names)
 
 
 class CoordSystem3D(Basic):
@@ -39,8 +30,9 @@ class CoordSystem3D(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, differential_class=None, location=None, rotation_matrix=None,
-                parent=None, vector_names=None, variable_names=None):
+    def __new__(cls, name, differential_class=None, location=None, 
+                rotation_matrix=None, parent=None, vector_names=None, 
+                variable_names=None):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
