@@ -24,7 +24,6 @@ access any SymPy module, or use this contens:
    evalf.rst
    numeric-computation.rst
    functions/index.rst
-   galgebra/index.rst
    geometry/index.rst
    integrals/integrals.rst
    logic.rst
