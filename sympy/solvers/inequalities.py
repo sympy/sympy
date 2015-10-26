@@ -396,7 +396,8 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     """
 
-    from sympy.solvers.solvers import solve, denoms
+    from sympy.solvers.solvers import denoms
+    from sympy.solvers.solveset import solve
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
