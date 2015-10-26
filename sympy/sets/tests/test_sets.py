@@ -894,3 +894,8 @@ def test_issue_9808():
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
     assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
         Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
+
+
+def test_issue_9956():
+    assert Union(Interval(-oo, oo), FiniteSet(1)) == Interval(-oo, oo)
+    assert Interval(-oo, oo).contains(1) is S.true

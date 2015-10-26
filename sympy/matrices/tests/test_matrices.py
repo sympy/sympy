@@ -1,4 +1,5 @@
 import collections
+import random
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -496,11 +497,18 @@ def test_expand():
 def test_random():
     M = randMatrix(3, 3)
     M = randMatrix(3, 3, seed=3)
+    assert M == randMatrix(3, 3, seed=3)
+
     M = randMatrix(3, 4, 0, 150)
-    M = randMatrix(3, symmetric=True)
+    M = randMatrix(3, seed=4, symmetric=True)
+    assert M == randMatrix(3, seed=4, symmetric=True)
+
     S = M.copy()
     S.simplify()
     assert S == M  # doesn't fail when elements are Numbers, not int
+
+    rng = random.Random(4)
+    assert M == randMatrix(3, symmetric=True, prng=rng)
 
 
 def test_LUdecomp():

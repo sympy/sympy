@@ -867,6 +867,7 @@ def test_is_convergent():
     assert Sum(3**(-2*n - 1)*n**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false

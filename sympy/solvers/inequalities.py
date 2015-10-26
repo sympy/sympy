@@ -396,17 +396,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     """
 
-    from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solveset
-
-    def solve_replacement(f_x, x):
-        solns = solveset(f_x, x, domain=S.Reals)
-        if type(solns) is FiniteSet:
-            return list(solns)
-        elif solns is S.EmptySet:
-            return []
-        else:
-            raise NotImplementedError
+    from sympy.solvers.solvers import solve, denoms
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -416,65 +406,71 @@ def solve_univariate_inequality(expr, gen, relational=True):
     _gen = gen
     gen = d
 
-    e = expr.lhs - expr.rhs
-    parts = n, d = e.as_numer_denom()
-    if all(i.is_polynomial(gen) for i in parts):
-        solns = solve_replacement(n, gen)
-        singularities = solve_replacement(d, gen)
+    if expr is S.true:
+        rv = S.Reals
+    elif expr is S.false:
+        rv = S.EmptySet
     else:
-        solns = solve_replacement(e, gen)
-        singularities = []
-        for d in denoms(e):
-            singularities.extend(solve_replacement(d, gen))
-
-    include_x = expr.func(0, 0)
-
-    def valid(x):
-        v = e.subs(gen, x)
-        try:
-            r = expr.func(v, 0)
-        except TypeError:
-            r = S.false
-        if r in (S.true, S.false):
-            return r
-        if v.is_real is False:
-            return S.false
+        e = expr.lhs - expr.rhs
+        parts = n, d = e.as_numer_denom()
+        if all(i.is_polynomial(gen) for i in parts):
+            solns = solve(n, gen, check=False)
+            singularities = solve(d, gen, check=False)
         else:
-            v = v.n(2)
-            if v.is_comparable:
-                return expr.func(v, 0)
-            return S.false
+            solns = solve(e, gen, check=False)
+            singularities = []
+            for d in denoms(e):
+                singularities.extend(solve(d, gen))
 
-    start = S.NegativeInfinity
-    sol_sets = [S.EmptySet]
-    try:
-        reals = _nsort(set(solns + singularities), separated=True)[0]
-    except NotImplementedError:
-        raise NotImplementedError('sorting of these roots is not supported')
-    for x in reals:
-        end = x
+        include_x = expr.func(0, 0)
 
-        if end in [S.NegativeInfinity, S.Infinity]:
-            if valid(S(0)):
-                sol_sets.append(Interval(start, S.Infinity, True, True))
-                break
+        def valid(x):
+            v = e.subs(gen, x)
+            try:
+                r = expr.func(v, 0)
+            except TypeError:
+                r = S.false
+            if r in (S.true, S.false):
+                return r
+            if v.is_real is False:
+                return S.false
+            else:
+                v = v.n(2)
+                if v.is_comparable:
+                    return expr.func(v, 0)
+                return S.false
 
-        if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
+        start = S.NegativeInfinity
+        sol_sets = [S.EmptySet]
+        try:
+            reals = _nsort(set(solns + singularities), separated=True)[0]
+        except NotImplementedError:
+            raise NotImplementedError('sorting of these roots is not supported')
+        for x in reals:
+            end = x
+
+            if end in [S.NegativeInfinity, S.Infinity]:
+                if valid(S(0)):
+                    sol_sets.append(Interval(start, S.Infinity, True, True))
+                    break
+
+            if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
+                sol_sets.append(Interval(start, end, True, True))
+
+            if x in singularities:
+                singularities.remove(x)
+            elif include_x:
+                sol_sets.append(FiniteSet(x))
+
+            start = end
+
+        end = S.Infinity
+
+        if valid(start + 1):
             sol_sets.append(Interval(start, end, True, True))
 
-        if x in singularities:
-            singularities.remove(x)
-        elif include_x:
-            sol_sets.append(FiniteSet(x))
+        rv = Union(*sol_sets).subs(gen, _gen)
 
-        start = end
-
-    end = S.Infinity
-
-    if valid(start + 1):
-        sol_sets.append(Interval(start, end, True, True))
-
-    rv = Union(*sol_sets).subs(gen, _gen)
     return rv if not relational else rv.as_relational(_gen)
 
 
