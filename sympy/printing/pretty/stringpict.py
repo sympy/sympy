@@ -66,10 +66,8 @@ class stringPict(object):
 
         #make a list of pictures, with equal height and baseline
         newBaseline = max(obj.baseline for obj in objects)
-        newHeightBelowBaseline = max(
-            obj.height() - obj.baseline
-            for obj in objects:
-	        newHeight = newBaseline + newHeightBelowBaseline
+        newHeightBelowBaseline = max(obj.height() - obj.baseline for obj in objects)
+	newHeight = newBaseline + newHeightBelowBaseline
 
         pictures = []
         for obj in objects:
