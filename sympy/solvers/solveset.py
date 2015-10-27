@@ -469,14 +469,19 @@ def solveset_real(f, symbol):
         return S.Reals
     elif not f.has(symbol):
         return EmptySet()
-    elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
-        # if f(x) and g(x) are both finite we can say that the solution of
-        # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
-        # general. g(x) can grow to infinitely large for the values where
-        # f(x) == 0. To be sure that we are not silently allowing any
-        # wrong solutions we are using this technique only if both f and g are
-        # finite for a finite input.
-        result = Union(*[solveset_real(m, symbol) for m in f.args])
+    elif f.is_Mul:
+        if all([_is_finite_with_finite_vars(m) for m in f.args]):
+            # if f(x) and g(x) are both finite we can say that the solution of
+            # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
+            # general. g(x) can grow to infinitely large for the values where
+            # f(x) == 0. To be sure that we are not silently allowing any
+            # wrong solutions we are using this technique only if both f and g are
+            # finite for a finite input.
+            result = Union(*[solveset_real(m, symbol) for m in f.args])
+        else:
+            numer, denom = f.as_numer_denom()
+            result = solveset_real(numer, symbol) - solveset_real(denom, symbol)
+
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_real_trig(f, symbol)
