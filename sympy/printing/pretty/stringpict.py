@@ -68,8 +68,8 @@ class stringPict(object):
         newBaseline = max(obj.baseline for obj in objects)
         newHeightBelowBaseline = max(
             obj.height() - obj.baseline
-            for obj in objects)
-        newHeight = newBaseline + newHeightBelowBaseline
+            for obj in objects:
+	        newHeight = newBaseline + newHeightBelowBaseline
 
         pictures = []
         for obj in objects:
