@@ -70,24 +70,27 @@ def test_linear_momentum():
 
 
 def test_angular_momentum_and_linear_momentum():
-    m, M, l1 = symbols('m M l1')
-    q1d = dynamicsymbols('q1d')
+    """A rod with length 2l, centroidal inertia I, and mass M along with a
+    particle of mass m fixed to the end of the rod rotate with an angular rate
+    of omega about point O which is fixed to the non-particle end of the rod.
+    The rod's reference frame is A and the inertial frame is N."""
+    m, M, l, I = symbols('m, M, l, I')
+    omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
-    O = Point('O')
-    O.set_vel(N, 0 * N.x)
-    Ac = O.locatenew('Ac', l1 * N.x)
-    P = Ac.locatenew('P', l1 * N.x)
     a = ReferenceFrame('a')
-    a.set_ang_vel(N, q1d * N.z)
+    O = Point('O')
+    Ac = O.locatenew('Ac', l * N.x)
+    P = Ac.locatenew('P', l * N.x)
+    O.set_vel(N, 0 * N.x)
+    a.set_ang_vel(N, omega * N.z)
     Ac.v2pt_theory(O, N, a)
     P.v2pt_theory(O, N, a)
     Pa = Particle('Pa', P, m)
-    I = outer(N.z, N.z)
-    A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert linear_momentum(
-        N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angular_momentum(
-        O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+    A = RigidBody('A', Ac, a, M, (I * outer(N.z, N.z), Ac))
+    expected = 2 * m * omega * l * N.y + M * l * omega * N.y
+    assert (linear_momentum(N, A, Pa) - expected) == Vector(0)
+    expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
+    assert (angular_momentum(O, N, A, Pa) - expected).simplify() == Vector(0)
 
 
 def test_kinetic_energy():
