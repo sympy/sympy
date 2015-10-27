@@ -179,8 +179,7 @@ class Reals(with_metaclass(Singleton, Interval)):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 
     def __eq__(self, other):
-        if other == Interval(-S.Infinity, S.Infinity):
-            return True
+        return other == Interval(-S.Infinity, S.Infinity)
 
     def __hash__(self):
         return hash(Interval(-S.Infinity, S.Infinity))
@@ -544,7 +543,7 @@ def normalize_theta_set(theta):
         raise ValueError(" %s is not a real set" % (theta))
 
 
-class ComplexPlane(Set):
+class ComplexRegion(Set):
     """
     Represents the Set of all Complex Numbers. It can represent a
     region of Complex Plane in both the standard forms Polar and
@@ -566,23 +565,23 @@ class ComplexPlane(Set):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexPlane
+    >>> from sympy.sets.fancysets import ComplexRegion
     >>> from sympy.sets import Interval
     >>> from sympy import S, I, Union
     >>> a = Interval(2, 3)
     >>> b = Interval(4, 6)
     >>> c = Interval(1, 8)
-    >>> c1 = ComplexPlane(a*b)  # Rectangular Form
+    >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexPlane(Lambda((x, y), x + I*y), [2, 3] x [4, 6])
+    ComplexRegion(Lambda((_x, _y), _x + _y*I), [2, 3] x [4, 6])
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
       (2, 6), of the four vertices.
 
-    >>> c2 = ComplexPlane(Union(a*b, b*c))
+    >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexPlane(Lambda((x, y), x + I*y),
+    ComplexRegion(Lambda((_x, _y), _x + _y*I),
                  [2, 3] x [4, 6] U [4, 6] x [1, 8])
 
     * c2 represents the Union of two rectangular regions in complex
@@ -597,9 +596,9 @@ class ComplexPlane(Set):
 
     >>> r = Interval(0, 1)
     >>> theta = Interval(0, 2*S.Pi)
-    >>> c2 = ComplexPlane(r*theta, polar=True)  # Polar Form
+    >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))),
+    ComplexRegion(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))),
                  [0, 1] x [0, 2*pi))
 
     * c2 represents the region in complex plane inside the
@@ -610,11 +609,11 @@ class ComplexPlane(Set):
     >>> 1 + 2*I in c2
     False
 
-    >>> unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
-    >>> upper_half_unit_disk = ComplexPlane(Interval(0, 1)*Interval(0, S.Pi), polar=True)
+    >>> unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexPlane(Lambda((r, theta), r*(I*sin(theta) + cos(theta))), [0, 1] x [0, pi])
+    ComplexRegion(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))), [0, 1] x [0, pi])
     >>> intersection == upper_half_unit_disk
     True
 
@@ -624,12 +623,12 @@ class ComplexPlane(Set):
     Reals
 
     """
-    is_ComplexPlane = True
+    is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols
+        from sympy import symbols, Dummy
 
-        x, y, r, theta = symbols('x, y, r, theta')
+        x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
 
         # Rectangular Form
@@ -638,7 +637,7 @@ class ComplexPlane(Set):
             if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
 
                 # ** ProductSet of FiniteSets in the Complex Plane. **
-                # For Cases like ComplexPlane({2, 4}*{3}), It
+                # For Cases like ComplexRegion({2, 4}*{3}), It
                 # would return {2 + 3*I, 4 + 3*I}
                 complex_num = []
                 for x in sets.args[0]:
@@ -683,14 +682,14 @@ class ComplexPlane(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ComplexPlane, Union
+        >>> from sympy import Interval, ComplexRegion, Union
         >>> a = Interval(2, 3)
         >>> b = Interval(4, 5)
         >>> c = Interval(1, 7)
-        >>> C1 = ComplexPlane(a*b)
+        >>> C1 = ComplexRegion(a*b)
         >>> C1.sets
         [2, 3] x [4, 5]
-        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.sets
         [2, 3] x [4, 5] U [4, 5] x [1, 7]
 
@@ -705,14 +704,14 @@ class ComplexPlane(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ComplexPlane, Union
+        >>> from sympy import Interval, ComplexRegion, Union
         >>> a = Interval(2, 3)
         >>> b = Interval(4, 5)
         >>> c = Interval(1, 7)
-        >>> C1 = ComplexPlane(a*b)
+        >>> C1 = ComplexRegion(a*b)
         >>> C1.psets
         ([2, 3] x [4, 5],)
-        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.psets
         ([2, 3] x [4, 5], [4, 5] x [1, 7])
 
@@ -734,14 +733,14 @@ class ComplexPlane(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ComplexPlane, Union
+        >>> from sympy import Interval, ComplexRegion, Union
         >>> a = Interval(2, 3)
         >>> b = Interval(4, 5)
         >>> c = Interval(1, 7)
-        >>> C1 = ComplexPlane(a*b)
+        >>> C1 = ComplexRegion(a*b)
         >>> C1.a_interval
         [2, 3]
-        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.a_interval
         [2, 3] U [4, 5]
 
@@ -763,14 +762,14 @@ class ComplexPlane(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ComplexPlane, Union
+        >>> from sympy import Interval, ComplexRegion, Union
         >>> a = Interval(2, 3)
         >>> b = Interval(4, 5)
         >>> c = Interval(1, 7)
-        >>> C1 = ComplexPlane(a*b)
+        >>> C1 = ComplexRegion(a*b)
         >>> C1.b_interval
         [4, 5]
-        >>> C2 = ComplexPlane(Union(a*b, b*c))
+        >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.b_interval
         [1, 7]
 
@@ -790,14 +789,14 @@ class ComplexPlane(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ComplexPlane, Union, S
+        >>> from sympy import Interval, ComplexRegion, Union, S
         >>> a = Interval(2, 3)
         >>> b = Interval(4, 5)
         >>> theta = Interval(0, 2*S.Pi)
-        >>> C1 = ComplexPlane(a*b)
+        >>> C1 = ComplexRegion(a*b)
         >>> C1.polar
         False
-        >>> C2 = ComplexPlane(a*theta, polar=True)
+        >>> C2 = ComplexRegion(a*theta, polar=True)
         >>> C2.polar
         True
         """
@@ -811,13 +810,13 @@ class ComplexPlane(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ComplexPlane, S
+        >>> from sympy import Interval, ComplexRegion, S
         >>> a, b = Interval(2, 5), Interval(4, 8)
         >>> c = Interval(0, 2*S.Pi)
-        >>> c1 = ComplexPlane(a*b)
+        >>> c1 = ComplexRegion(a*b)
         >>> c1.measure
         12
-        >>> c2 = ComplexPlane(a*c, polar=True)
+        >>> c2 = ComplexRegion(a*c, polar=True)
         >>> c2.measure
         6*pi
 
@@ -850,10 +849,10 @@ class ComplexPlane(Set):
 
     def _intersect(self, other):
 
-        if other.is_ComplexPlane:
+        if other.is_ComplexRegion:
             # self in rectangular form
             if (not self.polar) and (not other.polar):
-                return ComplexPlane(Intersection(self.sets, other.sets))
+                return ComplexRegion(Intersection(self.sets, other.sets))
 
             # self in polar form
             elif self.polar and other.polar:
@@ -867,7 +866,7 @@ class ComplexPlane(Set):
                    (2*S.Pi in theta2 and S(0) in theta1)):
                     new_theta_interval = Union(new_theta_interval,
                                                FiniteSet(0))
-                return ComplexPlane(new_r_interval*new_theta_interval,
+                return ComplexRegion(new_r_interval*new_theta_interval,
                                     polar=True)
 
         if other is S.Reals:
@@ -894,30 +893,30 @@ class ComplexPlane(Set):
 
     def _union(self, other):
 
-        if other.is_ComplexPlane:
+        if other.is_ComplexRegion:
 
             # self in rectangular form
             if (not self.polar) and (not other.polar):
-                return ComplexPlane(Union(self.sets, other.sets))
+                return ComplexRegion(Union(self.sets, other.sets))
 
             # self in polar form
             elif self.polar and other.polar:
-                return ComplexPlane(Union(self.sets, other.sets), polar=True)
+                return ComplexRegion(Union(self.sets, other.sets), polar=True)
 
-        if other is S.Reals:
+        if other.is_subset(S.Reals):
             return self
 
         return None
 
 
-class Complexes(with_metaclass(Singleton, ComplexPlane)):
+class Complexes(with_metaclass(Singleton, ComplexRegion)):
 
     def __new__(cls):
-        return ComplexPlane.__new__(cls, S.Reals*S.Reals)
+        return ComplexRegion.__new__(cls, S.Reals*S.Reals)
 
     def __eq__(self, other):
-        if other == ComplexPlane(S.Reals*S.Reals):
+        if other == ComplexRegion(S.Reals*S.Reals):
             return True
 
     def __hash__(self):
-        return hash(ComplexPlane(S.Reals*S.Reals))
+        return hash(ComplexRegion(S.Reals*S.Reals))

@@ -585,14 +585,12 @@ def probability(condition, given_condition=None, numsamples=None,
     Parameters
     ==========
 
-    expr : Relational containing RandomSymbols
+    condition : Relational containing RandomSymbols
         The condition of which you want to compute the probability
     given_condition : Relational containing RandomSymbols
         A conditional expression. P(X>1, X>0) is expectation of X>1 given X>0
     numsamples : int
         Enables sampling and approximates the probability with this many samples
-    evalf : Bool (defaults to True)
-        If sampling return a number rather than a complex expression
     evaluate : Bool (defaults to True)
         In case of continuous systems return unevaluated integral
 
@@ -602,11 +600,11 @@ def probability(condition, given_condition=None, numsamples=None,
     >>> from sympy.stats import P, Die
     >>> from sympy import Eq
     >>> X, Y = Die('X', 6), Die('Y', 6)
-    >>> P(X>3)
+    >>> P(X > 3)
     1/2
-    >>> P(Eq(X, 5), X>2) # Probability that X == 5 given that X > 2
+    >>> P(Eq(X, 5), X > 2) # Probability that X == 5 given that X > 2
     1/4
-    >>> P(X>Y)
+    >>> P(X > Y)
     5/12
     """
 

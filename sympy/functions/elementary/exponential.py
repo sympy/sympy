@@ -205,8 +205,29 @@ class exp(ExpBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_refine(self):
+        from sympy.assumptions import ask, Q
+        arg = self.args[0]
+        if arg.is_Mul:
+            Ioo = S.ImaginaryUnit*S.Infinity
+            if arg in [Ioo, -Ioo]:
+                return S.NaN
+
+            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            if coeff:
+                if ask(Q.integer(2*coeff)):
+                    if ask(Q.even(coeff)):
+                        return S.One
+                    elif ask(Q.odd(coeff)):
+                        return S.NegativeOne
+                    elif ask(Q.even(coeff + S.Half)):
+                        return -S.ImaginaryUnit
+                    elif ask(Q.odd(coeff + S.Half)):
+                        return S.ImaginaryUnit
+
     @classmethod
     def eval(cls, arg):
+        from sympy.assumptions import ask, Q
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -221,21 +242,18 @@ class exp(ExpBase):
         elif arg.func is log:
             return arg.args[0]
         elif arg.is_Mul:
-            Ioo = S.ImaginaryUnit*S.Infinity
-            if arg in [Ioo, -Ioo]:
-                return S.NaN
-
-            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
-            if coeff:
-                if (2*coeff).is_integer:
-                    if coeff.is_even:
-                        return S.One
-                    elif coeff.is_odd:
-                        return S.NegativeOne
-                    elif (coeff + S.Half).is_even:
-                        return -S.ImaginaryUnit
-                    elif (coeff + S.Half).is_odd:
-                        return S.ImaginaryUnit
+            if arg.is_number or arg.is_Symbol:
+                coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+                if coeff:
+                    if ask(Q.integer(2*coeff)):
+                        if ask(Q.even(coeff)):
+                            return S.One
+                        elif ask(Q.odd(coeff)):
+                            return S.NegativeOne
+                        elif ask(Q.even(coeff + S.Half)):
+                            return -S.ImaginaryUnit
+                        elif ask(Q.odd(coeff + S.Half)):
+                            return S.ImaginaryUnit
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).

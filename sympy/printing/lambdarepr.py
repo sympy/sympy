@@ -41,6 +41,17 @@ class LambdaPrinter(StrPrinter):
         result.append(')'*(2*i - 2))
         return ''.join(result)
 
+    def _print_Sum(self, expr):
+        loops = (
+            'for {i} in range({a}, {b}+1)'.format(
+                i=self._print(i),
+                a=self._print(a),
+                b=self._print(b))
+            for i, a, b in expr.limits)
+        return '(builtins.sum({function} {loops}))'.format(
+            function=self._print(expr.function),
+            loops=' '.join(loops))
+
     def _print_And(self, expr):
         result = ['(']
         for arg in sorted(expr.args, key=default_sort_key):
@@ -68,6 +79,14 @@ class LambdaPrinter(StrPrinter):
 
     def _print_BooleanFalse(self, expr):
         return "False"
+
+    def _print_ITE(self, expr):
+        result = [
+            '((', self._print(expr.args[1]),
+            ') if (', self._print(expr.args[0]),
+            ') else (', self._print(expr.args[2]), '))'
+        ]
+        return ''.join(result)
 
 class NumPyPrinter(LambdaPrinter):
     """
@@ -98,6 +117,24 @@ class NumPyPrinter(LambdaPrinter):
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
         return 'select({0}, {1}, default=nan)'.format(conds, exprs)
+
+    def _print_Relational(self, expr):
+        "Relational printer for Equality and Unequality"
+        op = {
+            '==' :'equal',
+            '!=' :'not_equal',
+            '<'  :'less',
+            '<=' :'less_equal',
+            '>'  :'greater',
+            '>=' :'greater_equal',
+        }
+        if expr.rel_op in op:
+            lhs = self._print(expr.lhs)
+            rhs = self._print(expr.rhs)
+            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
+                                               lhs=lhs,
+                                               rhs=rhs)
+        return super(NumPyPrinter, self)._print_Relational(expr)
 
     def _print_And(self, expr):
         "Logical And printer"

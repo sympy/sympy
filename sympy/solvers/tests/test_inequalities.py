@@ -284,6 +284,13 @@ def test_solve_univariate_inequality():
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
 
 
+def test_issue_9954():
+    assert isolve(x**2 >= 0, x, relational=False) == S.Reals
+    assert isolve(x**2 >= 0, x, relational=True) == S.Reals.as_relational(x)
+    assert isolve(x**2 < 0, x, relational=False) == S.EmptySet
+    assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
+
+
 @slow
 def test_slow_general_univariate():
     r = RootOf(x**5 - x**2 + 1, 0)
@@ -292,11 +299,12 @@ def test_slow_general_univariate():
 
 
 def test_issue_8545():
+    from sympy import refine
     eq = 1 - x - abs(1 - x)
     ans = And(Lt(1, x), Lt(x, oo))
     assert reduce_abs_inequality(eq, '<', x) == ans
     eq = 1 - x - sqrt((1 - x)**2)
-    assert reduce_inequalities(eq < 0) == ans
+    assert reduce_inequalities(refine(eq) < 0) == ans
 
 
 def test_issue_8974():

@@ -18,7 +18,7 @@ class BaseScalar(Symbol):
             raise TypeError("system should be a CoordSysCartesian")
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
-        #The _id is used for equating purposes, and for hashing
+        # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
         obj._name = name
         obj._pretty_form = u(pretty_str)
@@ -38,8 +38,8 @@ class BaseScalar(Symbol):
         return self._system
 
     def __eq__(self, other):
-        #Check if the other object is a BaseScalar of same index
-        #and coordinate system
+        # Check if the other object is a BaseScalar of same index
+        # and coordinate system
         if isinstance(other, BaseScalar):
             if other._id == self._id:
                 return True

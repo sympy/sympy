@@ -933,5 +933,9 @@ class Add(Expr, AssocOp):
         from sympy.core.compatibility import default_sort_key
         return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
 
+    def _eval_difference_delta(self, n, step):
+        from sympy.series.limitseq import difference_delta as dd
+        return self.func(*[dd(a, n, step) for a in self.args])
+
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

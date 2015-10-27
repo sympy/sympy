@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
+from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -93,6 +94,7 @@ class PrettyPrinter(Printer):
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet = _print_Atom
     _print_Naturals = _print_Atom
+    _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
     _print_Complexes = _print_Atom
@@ -1522,13 +1524,25 @@ class PrettyPrinter(Printer):
         else:
             inn = 'in'
             _and = 'and'
-        variables = self._print_seq(ts.condition.variables)
-        cond = self._print(ts.condition.expr)
+        variables = self._print_seq(Tuple(ts.sym))
+        cond = self._print(ts.condition.as_expr())
         bar = self._print("|")
         base = self._print(ts.base_set)
 
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
+
+    def _print_ComplexRegion(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+        else:
+            inn = 'in'
+        variables = self._print_seq(ts.args[0].variables)
+        expr = self._print(ts.args[0].expr)
+        bar = self._print("|")
+        prodsets = self._print(ts.sets)
+
+        return self._print_seq((expr, bar, variables, inn, prodsets), "{", "}", ' ')
 
     def _print_Contains(self, e):
         var, set = e.args

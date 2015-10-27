@@ -9,6 +9,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
+from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
@@ -1552,6 +1553,9 @@ class LatexPrinter(Printer):
     def _print_Naturals(self, n):
         return r"\mathbb{N}"
 
+    def _print_Naturals0(self, n):
+        return r"\mathbb{N_0}"
+
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
@@ -1568,12 +1572,19 @@ class LatexPrinter(Printer):
             self._print(s.base_set))
 
     def _print_ConditionSet(self, s):
-        vars_print = ', '.join([self._print(var) for var in s.condition.variables])
+        vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
-            self._print(s.condition.expr))
+            self._print(s.condition.as_expr()))
+
+    def _print_ComplexRegion(self, s):
+        vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
+        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+            self._print(s.args[0].expr),
+            vars_print,
+            self._print(s.sets))
 
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
@@ -1895,6 +1906,12 @@ def latex(expr, **settings):
 
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
+
+    Not using a print statement for printing, results in double backslashes for
+    latex commands since that's the way Python escapes backslashes in strings.
+
+    >>> latex((2*tau)**Rational(7,2))
+    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
 
     order: Any of the supported monomial orderings (currently "lex", "grlex", or
     "grevlex"), "old", and "none". This parameter does nothing for Mul objects.

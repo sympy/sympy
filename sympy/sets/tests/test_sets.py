@@ -2,7 +2,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference)
+    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -736,6 +736,13 @@ def test_image_interval():
             ImageSet(Lambda(x, sin(cos(x))), Interval(0, 1))
 
 
+def test_image_piecewise():
+    f = Piecewise((x, x <= -1), (1/x**2, x <= 5), (x**3, True))
+    f1 = Piecewise((0, x <= 1), (1, x <= 2), (2, True))
+    assert imageset(x, f, Interval(-5, 5)) == Union(Interval(-5, -1), Interval(S(1)/25, oo))
+    assert imageset(x, f1, Interval(1, 2)) == FiniteSet(0, 1)
+
+
 @XFAIL  # See: https://github.com/sympy/sympy/pull/2723#discussion_r8659826
 def test_image_Intersection():
     x = Symbol('x', real=True)
@@ -869,3 +876,26 @@ def test_issue_9536():
     from sympy.functions.elementary.exponential import log
     a = Symbol('a', real=True)
     assert FiniteSet(log(a)).intersect(S.Reals) == Intersection(S.Reals, FiniteSet(log(a)))
+
+
+def test_issue_9637():
+    n = Symbol('n')
+    a = FiniteSet(n)
+    b = FiniteSet(2, n)
+    assert Complement(S.Reals, a) == Complement(S.Reals, a, evaluate=False)
+    assert Complement(Interval(1, 3), a) == Complement(Interval(1, 3), a, evaluate=False)
+    assert Complement(Interval(1, 3), b) == \
+        Complement(Union(Interval(1, 2, False, True), Interval(2, 3, True, False)), a)
+    assert Complement(a, S.Reals) == Complement(a, S.Reals, evaluate=False)
+    assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
+
+
+def test_issue_9808():
+    assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
+    assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
+        Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
+
+
+def test_issue_9956():
+    assert Union(Interval(-oo, oo), FiniteSet(1)) == Interval(-oo, oo)
+    assert Interval(-oo, oo).contains(1) is S.true

@@ -14,6 +14,7 @@ from sympy.core.sympify import sympify
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.relational import Eq
 from sympy.core.numbers import Rational
+from sympy.core.compatibility import iterable
 from sympy.sets.sets import Interval
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.piecewise import Piecewise
@@ -34,15 +35,20 @@ def rational_algorithm(f, x, k, order=4, full=False):
     is a rational function in x.
 
     :func:`rational_algorithm` uses :func:`apart` function for partial fraction
-    decomposition. :func`apart` by default uses 'undetermined coefficients
+    decomposition. :func:`apart` by default uses 'undetermined coefficients
     method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
     This can be overriden using order option.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -62,11 +68,11 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Notes
     =====
 
-    By setting full=True, range of admissible functions to be solved using
-    rational_algorithm can be increased. This option should be used carefully
-    as it can signifcantly slow down the computation as ``doit`` is performed
-    on the :class:`RootSum` object returned by the ``apart`` function.
-    Use full=False whenever possible.
+    By setting ``full=True``, range of admissible functions to be solved using
+    ``rational_algorithm`` can be increased. This option should be used
+    carefully as it can signifcantly slow down the computation as ``doit`` is
+    performed on the :class:`RootSum` object returned by the ``apart`` function.
+    Use ``full=False`` whenever possible.
 
     See Also
     ========
@@ -183,7 +189,7 @@ def simpleDE(f, x, g, order=4):
     DE is of the form
 
     .. math::
-        f^k(x) + \sum\limits\_{j=0}^{k-1} A_j f^j(x) = 0
+        f^k(x) + \sum\limits_{j=0}^{k-1} A_j f^j(x) = 0
 
     where :math:`A_j` should be rational function in x.
 
@@ -193,7 +199,7 @@ def simpleDE(f, x, g, order=4):
 
     Yields a tuple of (DE, order).
     """
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     a = symbols('a:%d' % (order))
 
@@ -211,10 +217,10 @@ def simpleDE(f, x, g, order=4):
         terms = eq.as_ordered_terms()
         ind = rational_independent(terms, x)
         if found or len(ind) == k:
-            sol = solve(ind, a, dict=True)
+            sol = dict(zip(a, (i for s in linsolve(ind, a[:k]) for i in s)))
             if sol:
                 found = True
-                DE = DE.subs(sol[0])
+                DE = DE.subs(sol)
             DE = DE.as_numer_denom()[0]
             DE = DE.factor().as_coeff_mul(Derivative)[1][0]
             yield DE.collect(Derivative(g(x))), k
@@ -223,8 +229,12 @@ def simpleDE(f, x, g, order=4):
 def exp_re(DE, r, k):
     """Converts a DE with constant coefficients (explike) into a RE.
 
-    Substitutes :math:`f^j(x) \to r(k + j)`. Normalises the terms
-    so that lowest order of a term is always r(k).
+    Performs the substitution:
+
+    .. math::
+        f^j(x) \\to r(k + j)
+
+    Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
     ========
@@ -266,7 +276,11 @@ def exp_re(DE, r, k):
 def hyper_re(DE, r, k):
     """Converts a DE into a RE.
 
-    Substitutes :math:`x^l f^j(x) \to (k + 1 - l)_j . a_{k + j - l}`.
+    Performs the substitution:
+
+    .. math::
+        x^l f^j(x) \\to (k + 1 - l)_j . a_{k + j - l}
+
     Normalises the terms so that lowest order of a term is always r(k).
 
     Examples
@@ -459,8 +473,13 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
 
     Some of these transformations have been used to solve the RE.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -581,7 +600,7 @@ def _solve_simple(f, x, DE, g, k):
 
 def _transform_explike_DE(DE, g, x, order, syms):
     """Converts DE with free parameters into DE with constant coefficients."""
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     eq = []
     highest_coeff = DE.coeff(Derivative(g(x), x, order))
@@ -589,19 +608,27 @@ def _transform_explike_DE(DE, g, x, order, syms):
         coeff = DE.coeff(Derivative(g(x), x, i))
         coeff = (coeff / highest_coeff).expand().collect(x)
         for t in Add.make_args(coeff):
-            if t.has(x):
-                eq.append(t)
-    sol = solve(eq, syms, dict=True)
-    if sol:
-        DE = DE.subs(sol[0])
-        DE = DE.factor().as_coeff_mul(Derivative)[1][0]
-        DE = DE.collect(Derivative(g(x)))
+            eq.append(t)
+    temp = []
+    for e in eq:
+        if e.has(x):
+            break
+        elif e.has(Symbol):
+            temp.append(e)
+    else:
+        eq = temp
+    if eq:
+        sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
+        if sol:
+            DE = DE.subs(sol)
+            DE = DE.factor().as_coeff_mul(Derivative)[1][0]
+            DE = DE.collect(Derivative(g(x)))
     return DE
 
 
 def _transform_DE_RE(DE, g, k, order, syms):
     """Converts DE with free parameters into RE of hypergeometric type."""
-    from sympy.solvers import solve
+    from sympy.solvers.solveset import linsolve
 
     RE = hyper_re(DE, g, k)
 
@@ -609,10 +636,10 @@ def _transform_DE_RE(DE, g, k, order, syms):
     for i in range(1, order):
         coeff = RE.coeff(g(k + i))
         eq.append(coeff)
-    sol = solve(eq, syms, dict=True)
+    sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
     if sol:
         m = Wild('m')
-        RE = RE.subs(sol[0])
+        RE = RE.subs(sol)
         RE = RE.factor().as_numer_denom()[0].collect(g(k + m))
         RE = RE.as_coeff_mul(g)[1][0]
         for i in range(order):  # smallest order should be g(k)
@@ -628,8 +655,13 @@ def solve_de(f, x, DE, order, g, k):
     Tries to solve DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
 
-    Returns a Tuple of (formula, series independent terms, order) if successful
-    otherwise ``None``.
+    Returns
+    =======
+
+    formula : Expr
+    ind : Expr
+        Independent terms.
+    order : int
 
     Examples
     ========
@@ -717,7 +749,7 @@ def hyper_algorithm(f, x, k, order=4):
             return sol
 
 
-def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
+def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     """Recursive wrapper to compute fps.
 
     See :func:`compute_fps` for details.
@@ -728,8 +760,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
         result = _compute_fps(temp, x, 0, dir, hyper, order, rational, full)
         if result is None:
             return None
-        return (result[0], result[1].subs(x, 1/x), result[2].subs(x, 1/x),
-                result[3].subs(x, 1/x))
+        return (result[0], result[1].subs(x, 1/x), result[2].subs(x, 1/x))
     elif x0 or dir == -S.One:
         if dir == -S.One:
             rep = -x + x0
@@ -744,27 +775,10 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
         if result is None:
             return None
         return (result[0], result[1].subs(x, rep2 + rep2b),
-                result[2].subs(x, rep2 + rep2b),
-                result[3].subs(x, rep2 + rep2b))
+                result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
         return None
-
-    #  extract x**n from f(x)
-    mul = S.One
-    if extract and f.free_symbols.difference(set([x])):
-        m = Wild('m')
-        n = Wild('n', exclude=[m])
-        f = f.factor().powsimp()
-        s = f.match(x**n*m)
-        if s[n]:
-            for t in Add.make_args(s[n]):
-                if t.has(Symbol):
-                    mul *= (x)**t
-        if mul is not S.One:
-            f = (f / mul)
-
-    f = f.expand()
 
     #  Break instances of Add
     #  this allows application of different
@@ -775,8 +789,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
         ak = sequence(S.Zero, (0, oo))
         ind, xk = S.Zero, None
         for t in Add.make_args(f):
-            res = _compute_fps(t, x, 0, S.One, hyper, order, rational, full,
-                               False)
+            res = _compute_fps(t, x, 0, S.One, hyper, order, rational, full)
             if res:
                 if not result:
                     result = True
@@ -793,7 +806,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
             else:
                 ind += t
         if result:
-            return ak, xk, ind, mul
+            return ak, xk, ind
         return None
 
     result = None
@@ -813,18 +826,15 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full, extract=True):
     xk = sequence(x**k, (k, 0, oo))
     ind = result[1]
 
-    return ak, xk, ind, mul
+    return ak, xk, ind
 
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
                 full=False):
     """Computes the formula for Formal Power Series of a function.
 
-    Returns (sequence of coefficients, sequence of x, independent terms,
-    common terms).
-
     Tries to compute the formula by applying the following techniques
-    (in order)
+    (in order):
 
     * rational_algorithm
     * Hypergeomitric algorithm
@@ -852,11 +862,23 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
         See :func:`rational_algorithm` for details. By default it is set to
         False.
 
+    Returns
+    =======
+
+    ak : sequence
+        Sequence of coefficients.
+    xk : sequence
+        Sequence of powers of x.
+    ind : Expr
+        Independent terms.
+    mul : Pow
+        Common terms.
+
     See Also
     ========
 
-    sympy.series.rational_algorithm
-    sympy.series.hyper_algorithm
+    sympy.series.formal.rational_algorithm
+    sympy.series.formal.hyper_algorithm
     """
     f = sympify(f)
     x = sympify(x)
@@ -908,6 +930,10 @@ class FormalPowerSeries(SeriesBase):
         return self.args[2]
 
     @property
+    def dir(self):
+        return self.args[3]
+
+    @property
     def ak(self):
         return self.args[4][0]
 
@@ -918,10 +944,6 @@ class FormalPowerSeries(SeriesBase):
     @property
     def ind(self):
         return self.args[4][2]
-
-    @property
-    def mul(self):
-        return self.args[4][3]
 
     @property
     def interval(self):
@@ -945,11 +967,9 @@ class FormalPowerSeries(SeriesBase):
         from sympy.concrete import Sum
         ak, xk = self.ak, self.xk
         k = ak.variables[0]
-        ind = (self.ind * self.mul).expand()
-        inf_sum = Sum(ak.formula * xk.formula * self.mul,
-                      (k, ak.start, ak.stop))
+        inf_sum = Sum(ak.formula * xk.formula, (k, ak.start, ak.stop))
 
-        return ind + inf_sum
+        return self.ind + inf_sum
 
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
@@ -972,7 +992,7 @@ class FormalPowerSeries(SeriesBase):
             elif xp.is_integer is True and i == n + 1:
                 break
             elif t is not S.Zero:
-                terms.append(t * self.mul)
+                terms.append(t)
 
         return Add(*terms)
 
@@ -992,17 +1012,16 @@ class FormalPowerSeries(SeriesBase):
         if x0 is S.NegativeInfinity:
             x0 = S.Infinity
 
-        return self.polynomial(n) + self.mul * Order(pt_xk, (x, x0))
+        return self.polynomial(n) + Order(pt_xk, (x, x0))
 
     def _eval_term(self, pt):
-        pt_xk = self.xk.coeff(pt)
-
         try:
+            pt_xk = self.xk.coeff(pt)
             pt_ak = self.ak.coeff(pt).simplify()  # Simplify the coefficients
         except IndexError:
-            pt_ak = S.Zero
-
-        term = (pt_ak * pt_xk)
+            term = S.Zero
+        else:
+            term = (pt_ak * pt_xk)
 
         if self.ind:
             ind = S.Zero
@@ -1025,6 +1044,139 @@ class FormalPowerSeries(SeriesBase):
         for t in self:
             if t is not S.Zero:
                 return t
+
+    def _eval_derivative(self, x):
+        f = self.function.diff(x)
+        ind = self.ind.diff(x)
+
+        pow_xk = self._get_pow_x(self.xk.formula)
+        ak = self.ak
+        k = ak.variables[0]
+        if ak.formula.has(x):
+            form = []
+            for e, c in ak.formula.args:
+                temp = S.Zero
+                for t in Add.make_args(e):
+                    pow_x = self._get_pow_x(t)
+                    temp += t * (pow_xk + pow_x)
+                form.append((temp, c))
+            form = Piecewise(*form)
+            ak = sequence(form.subs(k, k + 1), (k, ak.start - 1, ak.stop))
+        else:
+            ak = sequence((ak.formula * pow_xk).subs(k, k + 1),
+                          (k, ak.start - 1, ak.stop))
+
+        return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def integrate(self, x=None):
+        """Integrate Formal Power Series.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin
+        >>> from sympy.abc import x
+        >>> f = fps(sin(x))
+        >>> f.integrate(x).truncate()
+        -1 + x**2/2 - x**4/24 + O(x**6)
+        >>> f.integrate((x, 0, 1))
+        -cos(1) + 1
+        """
+        from sympy.integrals import integrate
+
+        if x is None:
+            x = self.x
+        elif iterable(x):
+            return integrate(self.function, x)
+
+        f = integrate(self.function, x)
+        ind = integrate(self.ind, x)
+        ind += (f - ind).limit(x, 0)  # constant of integration
+
+        pow_xk = self._get_pow_x(self.xk.formula)
+        ak = self.ak
+        k = ak.variables[0]
+        if ak.formula.has(x):
+            form = []
+            for e, c in ak.formula.args:
+                temp = S.Zero
+                for t in Add.make_args(e):
+                    pow_x = self._get_pow_x(t)
+                    temp += t / (pow_xk + pow_x + 1)
+                form.append((temp, c))
+            form = Piecewise(*form)
+            ak = sequence(form.subs(k, k - 1), (k, ak.start + 1, ak.stop))
+        else:
+            ak = sequence((ak.formula / (pow_xk + 1)).subs(k, k - 1),
+                          (k, ak.start + 1, ak.stop))
+
+        return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def __add__(self, other):
+        other = sympify(other)
+
+        if isinstance(other, FormalPowerSeries):
+            if self.dir != other.dir:
+                raise ValueError("Both series should be calculated from the"
+                                 " same direction.")
+            elif self.x0 != other.x0:
+                raise ValueError("Both series should be calculated about the"
+                                 " same point.")
+
+            x, y = self.x, other.x
+            f = self.function + other.function.subs(y, x)
+
+            if self.x not in f.free_symbols:
+                return f
+
+            ak = self.ak + other.ak
+            if self.ak.start > other.ak.start:
+                seq = other.ak
+                s, e = other.ak.start, self.ak.start
+            else:
+                seq = self.ak
+                s, e = self.ak.start, other.ak.start
+            save = Add(*[z[0]*z[1] for z in zip(seq[0:(e - s)], self.xk[s:e])])
+            ind = self.ind + other.ind + save
+
+            return self.func(f, x, self.x0, self.dir, (ak, self.xk, ind))
+
+        elif not other.has(self.x):
+            f = self.function + other
+            ind = self.ind + other
+
+            return self.func(f, self.x, self.x0, self.dir,
+                             (self.ak, self.xk, ind))
+
+        return Add(self, other)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __neg__(self):
+        return self.func(-self.function, self.x, self.x0, self.dir,
+                         (-self.ak, self.xk, -self.ind))
+
+    def __sub__(self, other):
+        return self.__add__(-other)
+
+    def __rsub__(self, other):
+        return (-self).__add__(other)
+
+    def __mul__(self, other):
+        other = sympify(other)
+
+        if other.has(self.x):
+            return Mul(self, other)
+
+        f = self.function * other
+        ak = self.ak.coeff_mul(other)
+        ind = self.ind * other
+
+        return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
