@@ -228,6 +228,7 @@ class exp(ExpBase):
     @classmethod
     def eval(cls, arg):
         from sympy.assumptions import ask, Q
+        from sympy.calculus import Limits
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -241,6 +242,8 @@ class exp(ExpBase):
                 return S.Zero
         elif arg.func is log:
             return arg.args[0]
+        elif isinstance(arg, Limits):
+            return Limits(exp(arg.start), exp(arg.end))
         elif arg.is_Mul:
             if arg.is_number or arg.is_Symbol:
                 coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -483,6 +486,7 @@ class log(Function):
     @classmethod
     def eval(cls, arg, base=None):
         from sympy import unpolarify
+        from sympy.calculus import Limits
         arg = sympify(arg)
 
         if base is not None:
@@ -530,6 +534,11 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
+        elif isinstance(arg, Limits):
+            if arg.start.is_positive:
+                return Limits(log(arg.start), log(arg.end))
+            else:
+                return
 
         if arg.is_number:
             if arg.is_negative:

@@ -315,7 +315,7 @@ def test_atoms():
     assert Rational(1, 2).atoms() == set([S.Half])
     assert Rational(1, 2).atoms(Symbol) == set([])
 
-    assert sin(oo).atoms(oo) == set([oo])
+    assert sin(oo).atoms(oo) == set()
 
     assert Poly(0, x).atoms() == set([S.Zero])
     assert Poly(1, x).atoms() == set([S.One])

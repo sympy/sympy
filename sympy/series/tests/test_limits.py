@@ -3,12 +3,16 @@ from itertools import product as cartes
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols, binomial)
+    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
+    binomial, simplify)
 
+from sympy.calculus.util import Limits
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
+
+from sympy.abc import x, y, z, k
+n = Symbol('n', integer=True, positive=True)
 
 
 def test_basic1():
@@ -172,7 +176,7 @@ def test_abs():
 
 def test_heuristic():
     x = Symbol("x", real=True)
-    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == sin(oo)
+    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == Limits(-1, 1)
     assert limit(log(2 + sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 
@@ -203,6 +207,20 @@ def test_doit():
     f = Integral(2 * x, x)
     l = Limit(f, x, oo)
     assert l.doit() == oo
+
+
+def test_Limits():
+    assert limit(sin(k) - sin(k + 1), k, oo) == Limits(-2, 2)
+    assert limit(cos(k) - cos(k + 1) + 1, k, oo) == Limits(-1, 3)
+
+    # not the exact bound
+    assert limit(sin(k) - sin(k)*cos(k), k, oo) == Limits(-2, 2)
+
+    #assert limit(tan(k)/3 - tan(k + 1), k, oo) == Limits(-oo, oo)
+
+    # test for issue #9934
+    assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == \
+        Limits(-3 + cos(1)/(2*(-1 + cos(1))), 1 + cos(1)/(2*(-1 + cos(1))))
 
 
 @XFAIL

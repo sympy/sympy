@@ -171,6 +171,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
+        from sympy.calculus.util import Limits
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -265,6 +266,10 @@ class Mul(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, Limits):
+                coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
