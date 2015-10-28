@@ -142,7 +142,7 @@ class CoordSysCartesian(Basic):
 
         #Assign a Del operator instance
         from sympy.vector.deloperator import Del
-        obj._del = Del(obj)
+        obj._delop = Del(obj)
 
         #Assign params
         obj._parent = parent
@@ -172,7 +172,7 @@ class CoordSysCartesian(Basic):
 
     @property
     def delop(self):
-        return self._del
+        return self._delop
 
     @property
     def i(self):
