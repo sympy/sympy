@@ -8,7 +8,7 @@ Implementation in sympy.vector
 Scalar and vector fields
 ------------------------
 
-In :mod:`sympy.vector`, every ``CoordSysCartesian`` instance is assigned basis
+In :mod:`sympy.vector`, every ``CoordSystem3D`` instance is assigned basis
 vectors corresponding to the :math:`X`, :math:`Y` and
 :math:`Z` axes. These can be accessed using the properties
 named ``i``, ``j`` and ``k`` respectively. Hence, to define a vector
@@ -16,8 +16,8 @@ named ``i``, ``j`` and ``k`` respectively. Hence, to define a vector
 :math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with
 respect to a given frame :math:`\mathbf{R}`, you would do
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D
+  >>> R = CoordSystem3D('R')
   >>> v = 3*R.i + 4*R.j + 5*R.k
 
 Vector math and basic calculus operations with respect to vectors have
@@ -36,8 +36,8 @@ and ``R.z`` expressions respectively.
 Therefore, to generate the expression for the aforementioned electric
 potential field :math:`2{x}^{2}y`, you would have to do
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D
+  >>> R = CoordSystem3D('R')
   >>> electric_potential = 2*R.x**2*R.y
   >>> electric_potential
   2*R.x**2*R.y
@@ -51,8 +51,8 @@ for any math/calculus functionality. Hence, to differentiate the above
 electric potential with respect to :math:`x` (i.e. ``R.x``), you would
 use the ``diff`` method.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D
+  >>> R = CoordSystem3D('R')
   >>> electric_potential = 2*R.x**2*R.y
   >>> from sympy import diff
   >>> diff(electric_potential, R.x)
@@ -66,8 +66,8 @@ constant.
 Like scalar fields, vector fields that vary with position can also be 
 constructed using ``BaseScalar`` s in the measure-number expressions.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D
+  >>> R = CoordSystem3D('R')
   >>> v = R.x**2*R.i + 2*R.x*R.z*R.k
 
 The Del operator
@@ -84,7 +84,7 @@ but a convenient mathematical notation to denote any one of the
 aforementioned field operations.
 
 In :mod:`sympy.vector`, :math:`\mathbf{\nabla}` has been implemented
-as the ``delop`` property of the ``CoordSysCartesian`` class.
+as the ``delop`` property of the ``CoordSystem3D`` class.
 Hence, assuming ``C`` is a coordinate system, the 
 :math:`\mathbf{\nabla}` operator corresponding to the vector
 differentials wrt ``C``'s coordinate variables and basis vectors
@@ -92,8 +92,8 @@ would be accessible as ``C.delop``.
 
 Given below is an example of usage of the ``delop`` object.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSystem3D
+  >>> C = CoordSystem3D('C')
   >>> gradient_field = C.delop(C.x*C.y*C.z)
   >>> gradient_field
   (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j + (Derivative(C.x*C.y*C.z, C.z))*C.k
@@ -137,8 +137,8 @@ accomplished in two ways.
 
 One, by using the ``delop`` property
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSystem3D
+  >>> C = CoordSystem3D('C')
   >>> C.delop.cross(C.x*C.y*C.z*C.i).doit()
   C.x*C.y*C.j + (-C.x*C.z)*C.k
   >>> (C.delop ^ C.x*C.y*C.z*C.i).doit()
@@ -174,8 +174,8 @@ accomplished in two ways.
 
 One, by using the ``delop`` property
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSystem3D
+  >>> C = CoordSystem3D('C')
   >>> C.delop.dot(C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
   >>> (C.delop & C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
@@ -207,8 +207,8 @@ accomplished in two ways.
 
 One, by using the ``delop`` property
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSystem3D
+  >>> C = CoordSystem3D('C')
   >>> C.delop.gradient(C.x*C.y*C.z).doit()
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
   >>> C.delop(C.x*C.y*C.z).doit()
@@ -235,10 +235,10 @@ velocity :math:`v`. It is represented mathematically as:
 
 Directional derivatives of vector and scalar fields can be computed in
 :mod:`sympy.vector` using the ``delop`` property of
-``CoordSysCartesian``.
+``CoordSystem3D``.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSystem3D
+  >>> C = CoordSystem3D('C')
   >>> vel = C.i + C.j + C.k
   >>> scalar_field = C.x*C.y*C.z
   >>> vector_field = C.x*C.y*C.z*C.i
@@ -263,8 +263,8 @@ energy is conserved.
 To check if a vector field is conservative in :mod:`sympy.vector`, the 
 ``is_conservative`` function can be used.
 
-  >>> from sympy.vector import CoordSysCartesian, is_conservative
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D, is_conservative
+  >>> R = CoordSystem3D('R')
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_conservative(field)
   True
@@ -277,8 +277,8 @@ is zero at all points in space.
 To check if a vector field is solenoidal in :mod:`sympy.vector`, the 
 ``is_solenoidal`` function can be used.
 
-  >>> from sympy.vector import CoordSysCartesian, is_solenoidal
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D, is_solenoidal
+  >>> R = CoordSystem3D('R')
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_solenoidal(field)
   True
@@ -298,8 +298,8 @@ scalar potential field corresponding to a given conservative vector field in
 
 Example of usage -
 
-  >>> from sympy.vector import CoordSysCartesian, scalar_potential
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSystem3D, scalar_potential
+  >>> R = CoordSystem3D('R')
   >>> conservative_field = 4*R.x*R.y*R.z*R.i + 2*R.x**2*R.z*R.j + 2*R.x**2*R.y*R.k
   >>> scalar_potential(conservative_field, R)
   2*R.x**2*R.y*R.z
@@ -315,9 +315,9 @@ function, since it depends only on the endpoints of the path.
 
 This computation is performed as follows in :mod:`sympy.vector`.
 
-  >>> from sympy.vector import CoordSysCartesian, Point
+  >>> from sympy.vector import CoordSystem3D, Point
   >>> from sympy.vector import scalar_potential_difference
-  >>> R = CoordSysCartesian('R')
+  >>> R = CoordSystem3D('R')
   >>> P = R.origin.locate_new('P', 1*R.i + 2*R.j + 3*R.k)
   >>> vectfield = 4*R.x*R.y*R.i + 2*R.x**2*R.j
   >>> scalar_potential_difference(vectfield, R, R.origin, P)

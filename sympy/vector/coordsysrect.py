@@ -1,19 +1,45 @@
+import types
+from sympy.simplify import simplify
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, symbols, sqrt, Lambda, Dummy
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import sympy.vector
 
 
-class CoordSysCartesian(Basic):
+def build_instance_from_lambda(fun=lambda x, y, z: (x, y, z)):
+    dv = symbols('d1, d2, d3', cls=Dummy, positive=True)
+    mv = fun(*dv)
+
+    # get jacobian matrix
+    jacobian = Matrix([[miter.diff(diter) for diter in dv] for miter in mv])
+
+    # invert the jacobian
+    inverse_jacobian = simplify(jacobian.inv())
+
+    # get the metric in this new coordinate system:
+    metric = simplify(inverse_jacobian * inverse_jacobian.T)
+
+    # scale factors for the metric (i.e. normalize its diagonal):
+    scale_factors = [sqrt(metric[i, i]) for i in range(3)]
+
+    # get the unscaled coefficients:
+    unscaled_grad = metric * Matrix([1, 1, 1])
+
+    # These are the coefficients to the derivation operations for the gradient:
+    scaled_grad_coeff = tuple(unscaled_grad[i] / scale_factors[i] for i in range(3))
+
+    return Lambda(dv, scaled_grad_coeff)
+
+
+class CoordSystem3D(Basic):
     """
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, location=None, rotation_matrix=None,
+    def __new__(cls, name, differential_class=None, location=None, rotation_matrix=None,
                 parent=None, vector_names=None, variable_names=None):
         """
         The orientation/location parameters are necessary if this system
@@ -23,7 +49,7 @@ class CoordSysCartesian(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSystem3D instance.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -34,7 +60,7 @@ class CoordSysCartesian(Basic):
             to the parent. In other words, the output of
             new_system.rotation_matrix(parent).
 
-        parent : CoordSysCartesian
+        parent : CoordSystem3D
             The coordinate system wrt which the orientation/location
             (or both) is being defined.
 
@@ -44,10 +70,8 @@ class CoordSysCartesian(Basic):
             Used for simple str printing.
 
         """
+        from sympy.vector import Vector, BaseVector, Point
 
-        Vector = sympy.vector.Vector
-        BaseVector = sympy.vector.BaseVector
-        Point = sympy.vector.Point
         if not isinstance(name, string_types):
             raise TypeError("name should be a string")
 
@@ -64,9 +88,9 @@ class CoordSysCartesian(Basic):
         #If location information is not given, adjust the default
         #location as Vector.zero
         if parent is not None:
-            if not isinstance(parent, CoordSysCartesian):
+            if not isinstance(parent, CoordSystem3D):
                 raise TypeError("parent should be a " +
-                                "CoordSysCartesian/None")
+                                "CoordSystem3D/None")
             if location is None:
                 location = Vector.zero
             else:
@@ -85,19 +109,6 @@ class CoordSysCartesian(Basic):
             arg_parent = Symbol('default')
             arg_self = Symbol(name)
 
-        #All systems that are defined as 'roots' are unequal, unless
-        #they have the same name.
-        #Systems defined at same orientation/position wrt the same
-        #'parent' are equal, irrespective of the name.
-        #This is true even if the same orientation is provided via
-        #different methods like Axis/Body/Space/Quaternion.
-        #However, coincident systems may be seen as unequal if
-        #positioned/oriented wrt different parents, even though
-        #they may actually be 'coincident' wrt the root system.
-        obj = super(CoordSysCartesian, cls).__new__(
-            cls, arg_self, parent_orient, origin, arg_parent)
-        obj._name = name
-
         #Initialize the base vectors
         if vector_names is None:
             vector_names = (name + '.i', name + '.j', name + '.k')
@@ -112,13 +123,6 @@ class CoordSysCartesian(Basic):
                            x in vector_names]
             pretty_vects = [(name + '_' + x) for x in vector_names]
 
-        obj._i = BaseVector(vector_names[0], 0, obj,
-                            pretty_vects[0], latex_vects[0])
-        obj._j = BaseVector(vector_names[1], 1, obj,
-                            pretty_vects[1], latex_vects[1])
-        obj._k = BaseVector(vector_names[2], 2, obj,
-                            pretty_vects[2], latex_vects[2])
-
         #Initialize the base scalars
         if variable_names is None:
             variable_names = (name + '.x', name + '.y', name + '.z')
@@ -130,8 +134,38 @@ class CoordSysCartesian(Basic):
             _check_strings('variable_names', vector_names)
             variable_names = list(variable_names)
             latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
-                           x in variable_names]
+                             x in variable_names]
             pretty_scalars = [(name + '_' + x) for x in variable_names]
+
+        if differential_class is None:
+            # If not specified, assume it's cartesian, i.e. that
+            # its differential factors are 1.
+            from sympy.abc import x, y, z
+            differential_class = Lambda((x, y, z), (1, 1, 1))
+        elif not isinstance(differential_class, Lambda):
+            raise TypeError("expected Lambda expression")
+
+        #All systems that are defined as 'roots' are unequal, unless
+        #they have the same name.
+        #Systems defined at same orientation/position wrt the same
+        #'parent' are equal, irrespective of the name.
+        #This is true even if the same orientation is provided via
+        #different methods like Axis/Body/Space/Quaternion.
+        #However, coincident systems may be seen as unequal if
+        #positioned/oriented wrt different parents, even though
+        #they may actually be 'coincident' wrt the root system.
+
+        obj = super(CoordSystem3D, cls).__new__(
+            cls, differential_class, arg_self, parent_orient, origin, arg_parent)
+        obj._name = name
+        obj._differential_class = differential_class
+
+        obj._i = BaseVector(vector_names[0], 0, obj,
+                            pretty_vects[0], latex_vects[0])
+        obj._j = BaseVector(vector_names[1], 1, obj,
+                            pretty_vects[1], latex_vects[1])
+        obj._k = BaseVector(vector_names[2], 2, obj,
+                            pretty_vects[2], latex_vects[2])
 
         obj._x = BaseScalar(variable_names[0], 0, obj,
                             pretty_scalars[0], latex_scalars[0])
@@ -220,16 +254,16 @@ class CoordSysCartesian(Basic):
         Parameters
         ==========
 
-        other : CoordSysCartesian
+        other : CoordSystem3D
             The system which the DCM is generated to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
         >>> A = N.orient_new_axis('A', q1, N.i)
         >>> N.rotation_matrix(A)
         Matrix([
@@ -240,9 +274,9 @@ class CoordSysCartesian(Basic):
         """
 
         from sympy.vector.functions import _path
-        if not isinstance(other, CoordSysCartesian):
+        if not isinstance(other, CoordSystem3D):
             raise TypeError(str(other) +
-                            " is not a CoordSysCartesian")
+                            " is not a CoordSystem3D")
         #Handle special cases
         if other == self:
             return eye(3)
@@ -266,12 +300,12 @@ class CoordSysCartesian(Basic):
     def position_wrt(self, other):
         """
         Returns the position vector of the origin of this coordinate
-        system with respect to another Point/CoordSysCartesian.
+        system with respect to another Point/CoordSystem3D.
 
         Parameters
         ==========
 
-        other : Point/CoordSysCartesian
+        other : Point/CoordSystem3D
             If other is a Point, the position of this system's origin
             wrt it is returned. If its an instance of CoordSyRect,
             the position wrt its origin is returned.
@@ -279,8 +313,8 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSystem3D
+        >>> N = CoordSystem3D('N')
         >>> N1 = N.locate_new('N1', 10 * N.i)
         >>> N.position_wrt(N1)
         (-10)*N.i
@@ -297,15 +331,15 @@ class CoordSysCartesian(Basic):
         Parameters
         ==========
 
-        otherframe : CoordSysCartesian
+        otherframe : CoordSystem3D
             The other system to map the variables to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import Symbol
-        >>> A = CoordSysCartesian('A')
+        >>> A = CoordSystem3D('A')
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
@@ -328,14 +362,14 @@ class CoordSysCartesian(Basic):
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):
         """
-        Returns a CoordSysCartesian with its origin located at the given
+        Returns a CoordSystem3D with its origin located at the given
         position wrt this coordinate system's origin.
 
         Parameters
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSystem3D instance.
 
         position : Vector
             The position vector of the new system's origin wrt this
@@ -349,23 +383,24 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> A = CoordSysCartesian('A')
+        >>> from sympy.vector import CoordSystem3D
+        >>> A = CoordSystem3D('A')
         >>> B = A.locate_new('B', 10 * A.i)
         >>> B.origin.position_wrt(A.origin)
         10*A.i
 
         """
 
-        return CoordSysCartesian(name, location=position,
-                                 vector_names=vector_names,
-                                 variable_names=variable_names,
-                                 parent=self)
+        return CoordSystem3D(name, self._differential_class,
+                             location=position,
+                             vector_names=vector_names,
+                             variable_names=variable_names,
+                             parent=self)
 
     def orient_new(self, name, orienters, location=None,
                    vector_names=None, variable_names=None):
         """
-        Creates a new CoordSysCartesian oriented in the user-specified way
+        Creates a new CoordSystem3D oriented in the user-specified way
         with respect to this system.
 
         Please refer to the documentation of the orienter classes
@@ -375,7 +410,7 @@ class CoordSysCartesian(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSystem3D instance.
 
         orienters : iterable/Orienter
             An Orienter or an iterable of Orienters for orienting the
@@ -398,10 +433,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
 
         Using an AxisOrienter
 
@@ -442,11 +477,12 @@ class CoordSysCartesian(Basic):
                 else:
                     final_matrix *= orienter.rotation_matrix()
 
-        return CoordSysCartesian(name, rotation_matrix=final_matrix,
-                                 vector_names=vector_names,
-                                 variable_names=variable_names,
-                                 location = location,
-                                 parent=self)
+        return CoordSystem3D(name, self._differential_class,
+                             rotation_matrix=final_matrix,
+                             vector_names=vector_names,
+                             variable_names=variable_names,
+                             location=location,
+                             parent=self)
 
     def orient_new_axis(self, name, angle, axis, location=None,
                         vector_names=None, variable_names=None):
@@ -480,10 +516,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
         >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
 
         """
@@ -529,10 +565,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
 
         A 'Body' fixed rotation is described by three angles and
         three body-fixed rotation axes. To orient a coordinate system D
@@ -597,16 +633,16 @@ class CoordSysCartesian(Basic):
         See Also
         ========
 
-        CoordSysCartesian.orient_new_body : method to orient via Euler
+        CoordSystem3D.orient_new_body : method to orient via Euler
             angles
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
 
         To orient a coordinate system D with respect to N, each
         sequential rotation is always about N's orthogonal unit vectors.
@@ -633,7 +669,7 @@ class CoordSysCartesian(Basic):
     def orient_new_quaternion(self, name, q0, q1, q2, q3, location=None,
                               vector_names=None, variable_names=None):
         """
-        Quaternion orientation orients the new CoordSysCartesian with
+        Quaternion orientation orients the new CoordSystem3D with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
@@ -671,10 +707,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSystem3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSystem3D('N')
         >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
 
         """
@@ -685,12 +721,13 @@ class CoordSysCartesian(Basic):
                                vector_names=vector_names,
                                variable_names=variable_names)
 
-    def __init__(self, name, location=None, rotation_matrix=None,
+    def __init__(self, name, differential_class=None, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
                  pretty_scalars=None):
         #Dummy initializer for setting docstring
         pass
+
     __init__.__doc__ = __new__.__doc__
 
 

@@ -2,13 +2,13 @@
 Essential Classes in sympy.vector (doctrings)
 =============================================
 
-CoordSysCartesian
-=================
+CoordSystem3D
+=============
 
-.. autoclass:: sympy.vector.coordsysrect.CoordSysCartesian
+.. autoclass:: sympy.vector.coordsysrect.CoordSystem3D
    :members:
 
-   .. automethod:: sympy.vector.coordsysrect.CoordSysCartesian.__init__
+   .. automethod:: sympy.vector.coordsysrect.CoordSystem3D.__init__
 
 
 Vector
