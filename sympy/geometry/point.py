@@ -269,6 +269,36 @@ class Point(GeometryEntity):
         p = Point(p)
         return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
 
+    def manhattan_distance(self, p):
+        """The Manhattan distance from self to point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        manhattan_distance : number or symbolic expression.
+
+        See Also
+        ========
+
+        sympy.geometry.Point.distance
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> p1.manhattan_distance(p2)
+        7
+
+        """
+        p = Point(p)
+        return sum(abs(a-b) for a,b in zip(self.args, p.args))
+
     def midpoint(self, p):
         """The midpoint between self and point p.
 
