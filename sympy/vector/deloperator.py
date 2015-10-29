@@ -19,7 +19,7 @@ class Del(Basic):
         obj._x, obj._y, obj._z = system.x, system.y, system.z
         obj._i, obj._j, obj._k = system.i, system.j, system.k
         obj._system = system
-        obj._name = system.__str__() + ".del"
+        obj._name = system.__str__() + ".delop"
         return obj
 
     @property
