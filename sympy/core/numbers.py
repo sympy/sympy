@@ -1869,7 +1869,7 @@ class Integer(Rational):
                 return (-self)**expt
         if isinstance(expt, Float):
             # Rational knows how to exponentiate by a Float
-            return Rational._eval_power(self, expt)
+            return super(Integer, self)._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
