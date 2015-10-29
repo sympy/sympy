@@ -269,8 +269,10 @@ class Point(GeometryEntity):
         p = Point(p)
         return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
 
-    def manhattan_distance(self, p):
-        """The Manhattan distance from self to point p.
+    def taxicab_distance(self, p):
+        """The Taxicab Distance from self to point p.
+
+        http://mathworld.wolfram.com/TaxicabMetric.html
 
         Parameters
         ==========
@@ -280,7 +282,7 @@ class Point(GeometryEntity):
         Returns
         =======
 
-        manhattan_distance : number or symbolic expression.
+        taxicab_distance : number or symbolic expression.
 
         See Also
         ========
@@ -292,7 +294,7 @@ class Point(GeometryEntity):
 
         >>> from sympy.geometry import Point
         >>> p1, p2 = Point(1, 1), Point(4, 5)
-        >>> p1.manhattan_distance(p2)
+        >>> p1.taxicab_distance(p2)
         7
 
         """
