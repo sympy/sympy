@@ -69,7 +69,7 @@ containers in Mathematics such as:
    Represents a finite set of discrete numbers.
 
 
- * ``Interval`` 
+ * ``Interval``
 
    Represents a real interval as a set.
 
@@ -85,7 +85,6 @@ containers in Mathematics such as:
 
     >>> from sympy import ImageSet, S, Lambda
     >>> from sympy.abc import x
-    >>> from sympy.sets import ImageSet
     >>> squares = ImageSet(Lambda(x, x**2), S.Naturals)  # {x**2 for x in N}
     >>> 4 in squares
     True
@@ -181,7 +180,7 @@ For example:
 
  >>> from sympy import FiniteSet
  >>> FiniteSet(1, 2, 3)   # Unordered
- {1, 2, 3}   
+ {1, 2, 3}
  >>> FiniteSet((1, 2, 3))  # Ordered
  {(1, 2, 3)}
 
@@ -250,9 +249,8 @@ What is this domain argument about?
  or ``solveset_complex``. It's unlike the old ``solve`` which considers the
  assumption on the variable.
 
-    >>> from sympy.solvers.solveset import solveset
+    >>> from sympy import solveset, S
     >>> from sympy.abc import x
-    >>> from sympy import S
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
     {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
@@ -397,8 +395,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
  ``{-n, n}`` can be its solution if and only if ``n`` is positive.
  Solveset returns this information as well to ensure correctness.
 
-    >>> from sympy.solvers.solveset import solveset
-    >>> from sympy import symbols, S, pprint
+    >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
     ([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})
@@ -429,7 +426,7 @@ Search based solver and step-by-step solution
 
  * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S, y \in \{z|f(z)=0; z \in S\}\}`
 
- * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} ∩ S` 
+ * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} ∩ S`
                       `\text{ where } `x_i` `\text{ are roots of } P(x)`
 
  * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| \text{ all g such that } f(g(x)) = x\}`
@@ -537,7 +534,7 @@ References
  .. [5] http://iamit.in/blog/
  .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
  .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
- .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR 
+ .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR
  .. [9] https://groups.google.com/forum/#!topic/sympy/-SIbX0AFL3Q
  .. [10] https://github.com/sympy/sympy/pull/9696
  .. [11] https://en.wikipedia.org/wiki/Richardson%27s_theorem
@@ -549,7 +546,7 @@ Solveset Module Reference
 Use :func:`solveset` to solve equations or expressions (assumed to be equal to 0) for a single variable.
 Solving an equation like `x^2 == 1` can be done as follows::
 
-    >>> from sympy.solvers.solveset import *
+    >>> from sympy import solveset
     >>> from sympy import Symbol, Eq
     >>> x = Symbol('x')
     >>> solveset(Eq(x**2, 1), x)

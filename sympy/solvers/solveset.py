@@ -875,8 +875,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy import exp, Symbol, Eq, pprint, S
-    >>> from sympy.solvers.solveset import solveset
+    >>> from sympy import exp, Symbol, Eq, pprint, S, solveset
     >>> from sympy.abc import x
 
     * The default domain is complex. Not specifying a domain will lead to the
@@ -982,8 +981,7 @@ def linear_eq_to_matrix(equations, *symbols):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import linear_eq_to_matrix
-    >>> from sympy import symbols
+    >>> from sympy import linear_eq_to_matrix, symbols
     >>> x, y, z = symbols('x, y, z')
     >>> eqns = [x + 2*y + 3*z - 1, 3*x + y + z + 6, 2*x + 4*y + 9*z - 2]
     >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
@@ -1139,9 +1137,7 @@ def linsolve(system, *symbols):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import linsolve
-    >>> from sympy import Matrix, S
-    >>> from sympy import symbols
+    >>> from sympy import Matrix, S, linsolve, symbols
     >>> x, y, z = symbols("x, y, z")
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
     >>> b = Matrix([3, 6, 9])
