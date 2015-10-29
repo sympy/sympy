@@ -272,7 +272,7 @@ class Point(GeometryEntity):
     def taxicab_distance(self, p):
         """The Taxicab Distance from self to point p.
 
-        http://mathworld.wolfram.com/TaxicabMetric.html
+        Returns the sum of the horizontal and vertical distances to point p.
 
         Parameters
         ==========
@@ -282,7 +282,8 @@ class Point(GeometryEntity):
         Returns
         =======
 
-        taxicab_distance : number or symbolic expression.
+        taxicab_distance : The sum of the horizontal
+        and vertical distances to point p.
 
         See Also
         ========
@@ -299,7 +300,7 @@ class Point(GeometryEntity):
 
         """
         p = Point(p)
-        return sum(abs(a-b) for a,b in zip(self.args, p.args))
+        return sum(abs(a - b) for a, b in zip(self.args, p.args))
 
     def midpoint(self, p):
         """The midpoint between self and point p.
