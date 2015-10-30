@@ -2,7 +2,9 @@ import types
 from sympy.simplify import simplify
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, symbols, sqrt, Lambda, Dummy
+from sympy import (eye, trigsimp, ImmutableMatrix as Matrix, Symbol, symbols,
+                   sqrt, Lambda, MutableDenseMatrix as DMatrix, sin, cos,
+                   sinh, cosh, S)
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -10,7 +12,11 @@ from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-@SymPyDeprecationWarning
+SymPyDeprecationWarning(
+    feature="CoordSysCartesian",
+    useinstead="CoordSystem3D",
+    deprecated_since_version="0.7.6"
+)
 class CoordSysCartesian(Basic):
     """
     Depreciated class for Cartesian coordinate system instance.
@@ -19,9 +25,10 @@ class CoordSysCartesian(Basic):
     def __new__(cls, name, location=None, rotation_matrix=None, 
                 parent=None, vector_names=None, variable_names=None):
 
-        return CoordSystem3D(name, differential_class=None, location=location,
-                             rotation_matrix=rotation_matrix, parent=parent,
-                             vector_names=vector_names,
+        return CoordSystem3D(name, coord_relations=None,
+                             location=location,
+                             rotation_matrix=rotation_matrix,
+                             parent=parent, vector_names=vector_names,
                              variable_names=variable_names)
 
 
@@ -30,8 +37,8 @@ class CoordSystem3D(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, differential_class=None, location=None, 
-                rotation_matrix=None, parent=None, vector_names=None, 
+    def __new__(cls, name, coord_relations=None, location=None,
+                rotation_matrix=None, parent=None, vector_names=None,
                 variable_names=None):
         """
         The orientation/location parameters are necessary if this system
@@ -42,6 +49,28 @@ class CoordSystem3D(Basic):
 
         name : str
             The name of the new CoordSystem3D instance.
+
+        coord_relations : str or Lambda
+            The transformation set from cartesian coordinate system to another.
+            It is ALWAYS assumed that the transformation set is from Cartesian.
+            Process can be slow for less common coordinate systems, use
+            built-in systems when you can.
+
+            built-in : 'cartesian', 'spherical', 'cylindrical',
+                       'parabolic cylindrical', 'paraboloidal',
+                       'elliptic cylindrical', 'prolate spheroidal',
+                       'oblate spheroidal', 'bipolar' and 'toroidal'
+
+                       See https://en.wikipedia.org/wiki/Orthogonal_coordinates
+                       for conventions.
+
+            useage : coord_relations='spherical' or
+                     coord_relations=Lambda((r, theta, phi),
+                        (r*sin(theta)*cos(phi),
+                         r*sin(theta)*sin(phi),
+                         r*cos(theta)))
+                     Note: Using the keyword would be much faster, use for
+                           all built-in systems.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -63,6 +92,7 @@ class CoordSystem3D(Basic):
 
         """
         from sympy.vector import Vector, BaseVector, Point
+        from sympy.abc import a, x, y, z
 
         if not isinstance(name, string_types):
             raise TypeError("name should be a string")
@@ -88,8 +118,8 @@ class CoordSystem3D(Basic):
             else:
                 #Check that location does not contain base
                 #scalars
-                for x in location.free_symbols:
-                    if isinstance(x, BaseScalar):
+                for arg in location.args:
+                    if isinstance(arg, BaseScalar):
                         raise ValueError("location should not contain" +
                                          " BaseScalars")
             origin = parent.origin.locate_new(name + '.origin',
@@ -129,13 +159,96 @@ class CoordSystem3D(Basic):
                              x in variable_names]
             pretty_scalars = [(name + '_' + x) for x in variable_names]
 
-        if differential_class is None:
-            # If not specified, assume it's cartesian, i.e. that
-            # its differential factors are 1.
-            from sympy.abc import x, y, z
-            differential_class = Lambda((x, y, z), (1, 1, 1))
-        elif not isinstance(differential_class, Lambda):
-            raise TypeError("expected Lambda expression")
+        # Handling for different coordinate systems
+        coord_type_map = {
+            'cartesian': [
+                Lambda((x, y, z), (1, 1, 1)),
+                Lambda((x, y, z), (1, 1, 1))
+            ],
+            'spherical': [
+                Lambda((x, y, z), (x*sin(y)*cos(z), 
+                                   x*sin(y)*sin(z),
+                                   x*cos(y))),
+                Lambda((x, y, z), (1, x, x*sin(y)))
+            ],
+            'cylindrical': [
+                Lambda((x, y, z), (x*cos(y), x*sin(y), z)),
+                Lambda((x, y, z), (1, x, 1))
+            ],
+            'paraboloidal': [
+                Lambda((x, y, z), (x*y*cos(z), x*y*sin(z),
+                                   S(1)/2 * sqrt(x**2 - y**2))),
+                Lambda((x, y, z), (sqrt(x**2 + y**2), sqrt(x**2 + y**2), x*y))
+            ],
+            'parabolic cylindrical': [
+                Lambda((x, y, z), (S(1)/2 * sqrt(x**2 - y**2), x*y, z)),
+                Lambda((x, y, z), (sqrt(x**2 + y**2), sqrt(x**2 + y**2), 1))
+            ],
+            'elliptic cylindrical': [
+                Lambda((a, x, y, z), (a*cosh(x)*cos(y), a*sinh(x)*sin(y), z)),
+                Lambda((a, x, y, z), (a*sqrt(sinh(x)**2 + sin(y)**2),
+                                      a*sqrt(sinh(x)**2 + sin(y)**2),
+                                      1))
+            ],
+            'prolate spheroidal': [
+                Lambda((a, x, y, z), (a*sinh(x)*sin(y)*cos(z),
+                                      a*sinh(x)*sin(y)*sin(z),
+                                      a*cosh(x)*cos(y))),
+                Lambda((a, x, y, z), (a*sqrt(sinh(x)**2 + sin(y)**2),
+                                      a*sqrt(sinh(x)**2 + sin(y)**2),
+                                      a*sinh(x)*sin(y)))
+            ],
+            'oblate spheroidal': [
+                Lambda((a, x, y, z), (a*cosh(x)*cos(y)*cos(z),
+                                      a*cosh(x)*cos(y)*sin(z),
+                                      a*sinh(x)*sin(y))),
+                Lambda((a, x, y, z), (a*sqrt(sinh(x)**2 + sin(y)**2),
+                                      a*sqrt(sinh(x)**2 + sin(y)**2),
+                                      a*cosh(x)*cos(y)))
+            ],
+            'bipolar': [
+                Lambda((a, x, y, z), (a*sinh(y)/(cosh(y) - cos(x)),
+                                      a*sin(x)/(cosh(y) - cos(x)),
+                                      z)),
+                Lambda((a, x, y, z), (a/(cosh(y) - cos(x)), 
+                                      a/(cosh(y) - cos(x)), 
+                                      1))
+            ],
+            'toroidal': [
+                Lambda((a, x, y, z), (a*sinh(y)*cos(z)/(cosh(y) - cos(x)),
+                                      a*sinh(y)*sin(z)/(cosh(y) - cos(x)),
+                                      a*sin(x)/(cosh(y) - cos(x)))),
+                Lambda((a, x, y, z), (a/(cosh(y) - cos(x)),
+                                      a/(cosh(y) - cos(x)),
+                                      a*sinh(y)/(cosh(y) - cos(x))))
+            ]
+        }
+
+        if coord_relations is None:
+            # If not specified, assume it's cartesian.
+            coord_relations = coord_type_map['cartesian'][0]
+            lame_lambda = coord_type_map['cartesian'][1]
+            coord_sys_type = 'cartesian'
+        else:
+            # Define the Lame Lambda from coord_relations Lambda.
+            if isinstance(coord_relations, string_types):
+                try:
+                    coord_sys_type = coord_relations
+                    lame_lambda = coord_type_map[coord_relations.lower()][1]
+                    coord_relations = coord_type_map[coord_relations.lower()][0]
+                except KeyError:
+                    if parent is not None and parent._name == coord_relations:
+                        coord_relations = parent._coord_relations
+                        lame_lambda = parent._lame_lambda
+                        coord_sys_type = parent.coord_sys_type
+                    else:
+                        raise ValueError("expected build-in transformation, " +
+                                         "provide the transformation set")
+            elif isinstance(coord_relations, Lambda):
+                lame_lambda = get_lame_lambda(coord_relations)
+                coord_sys_type = name
+            else:
+                raise TypeError("see the docs for proper useage")
 
         #All systems that are defined as 'roots' are unequal, unless
         #they have the same name.
@@ -148,9 +261,13 @@ class CoordSystem3D(Basic):
         #they may actually be 'coincident' wrt the root system.
 
         obj = super(CoordSystem3D, cls).__new__(
-            cls, differential_class, arg_self, parent_orient, origin, arg_parent)
+            cls, coord_relations, arg_self, parent_orient, origin,
+            arg_parent)
+
         obj._name = name
-        obj._differential_class = differential_class
+        obj._coord_relations = coord_relations
+        obj._lame_lambda = lame_lambda
+        obj._coord_sys_type = coord_sys_type
 
         obj._i = BaseVector(vector_names[0], 0, obj,
                             pretty_vects[0], latex_vects[0])
@@ -224,11 +341,57 @@ class CoordSystem3D(Basic):
     def z(self):
         return self._z
 
+    @property
+    def coord_sys_type(self):
+        return self._coord_sys_type
+
     def base_vectors(self):
         return (self._i, self._j, self._k)
 
     def base_scalars(self):
         return (self._x, self._y, self._z)
+
+    @cacheit
+    def lame_parameters(self, scalar_vars=None):
+        if scalar_vars is None:
+            from sympy.abc import a, x, y, z
+            if len(self._lame_lambda.args[0]) == 3:
+                return self._lame_lambda(x, y, z)
+            elif len(self._lame_lambda.args[0]) == 4:
+                return self._lame_lambda(a, x, y, z)
+        elif isinstance(scalar_vars, tuple) and \
+                all([isinstance(elem, Symbol) for elem in scalar_vars]):
+            if len(self._lame_lambda.args[0]) == 3:
+                return self._lame_lambda(*scalar_vars)
+            elif len(self._lame_lambda.args[0]) == 4:
+                return self._lame_lambda(*scalar_vars)
+            else:
+                raise ValueError("fix length for scale parameter")
+        else:
+            raise TypeError("expected input tuple of symbols")
+        
+    @cacheit
+    def coordinate_relations(self, scalar_vars=None):
+        if scalar_vars is None:
+            from sympy.abc import a, x, y, z
+            if len(self._coord_relations.args[0]) == 3:
+                return self._coord_relations(x, y, z)
+            elif len(self._coord_relations.args[0]) == 4:
+                return self._coord_relations(a, x, y, z)
+        elif isinstance(scalar_vars, tuple) and \
+                all([isinstance(elem, Symbol) for elem in scalar_vars]):
+            if len(self._coord_relations.args[0]) == 3:
+                return self._coord_relations(*scalar_vars)
+            elif len(self._coord_relations.args[0]) == 4:
+                return self._coord_relations(*scalar_vars)
+            else:
+                raise ValueError("fix length of input")
+        else:
+            raise TypeError("expected input tuple of symbols")
+
+    @cacheit
+    def coordinate_metric(self):
+        return get_metric(self._tranformation_to)
 
     @cacheit
     def rotation_matrix(self, other):
@@ -383,7 +546,7 @@ class CoordSystem3D(Basic):
 
         """
 
-        return CoordSystem3D(name, self._differential_class,
+        return CoordSystem3D(name, coord_relations=self._coord_sys_type,
                              location=position,
                              vector_names=vector_names,
                              variable_names=variable_names,
@@ -469,7 +632,7 @@ class CoordSystem3D(Basic):
                 else:
                     final_matrix *= orienter.rotation_matrix()
 
-        return CoordSystem3D(name, self._differential_class,
+        return CoordSystem3D(name, coord_relations=self._coord_sys_type,
                              rotation_matrix=final_matrix,
                              vector_names=vector_names,
                              variable_names=variable_names,
@@ -713,7 +876,7 @@ class CoordSystem3D(Basic):
                                vector_names=vector_names,
                                variable_names=variable_names)
 
-    def __init__(self, name, differential_class=None, location=None, rotation_matrix=None,
+    def __init__(self, name, coord_relations=None, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
                  pretty_scalars=None):
