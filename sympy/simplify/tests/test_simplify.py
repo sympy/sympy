@@ -419,10 +419,12 @@ def test_posify():
         x +
         Symbol('p', positive=True) +
         Symbol('n', negative=True))) == '(_x + n + p, {_x: x})'
+    assert str(posify(
+        x +
+        Symbol('p', positive=True) +
+        Symbol('n', negative=True),
+        restore_dict=False)) == '(_x + n + p, {x: _x})'
 
-    # log(1/x).expand() should be log(1/x) but it comes back as -log(x)
-    # when it is corrected, posify will allow the change to be made. The
-    # force=True option can do so as well when it is implemented.
     eq, rep = posify(1/x)
     assert log(eq).expand().subs(rep) == -log(x)
     assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
