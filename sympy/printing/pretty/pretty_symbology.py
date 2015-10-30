@@ -468,9 +468,12 @@ atoms_table = {
     'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet':                U('EMPTY SET'),
     'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Naturals0':               (U('DOUBLE-STRUCK CAPITAL N') and
+                                (U('DOUBLE-STRUCK CAPITAL N') +
+                                 U('SUBSCRIPT ZERO'))),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
-    'Complex':                 U('DOUBLE-STRUCK CAPITAL C'),
+    'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),

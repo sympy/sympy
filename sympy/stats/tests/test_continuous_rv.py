@@ -633,3 +633,10 @@ def test_difficult_univariate():
     assert density(x**3)
     assert density(exp(x**2))
     assert density(log(x))
+
+
+def test_issue_10003():
+    X = Exponential('x', 3)
+    G = Gamma('g', 1, 2)
+    assert P(X < -1) == S.Zero
+    assert P(G < -1) == S.Zero

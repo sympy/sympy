@@ -47,7 +47,7 @@ def test_DiracDelta():
 
 
 def test_heaviside():
-    assert Heaviside(0) == 0.5
+    assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
     assert Heaviside(nan) == nan

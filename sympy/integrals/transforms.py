@@ -469,6 +469,8 @@ def _rewrite_gamma(f, s, a, b):
         """
         # heuristically, this is the best chance for us to solve the inequalities
         c = expand(re(c))
+        if a_ is None and b_ is oo:
+            return True
         if a_ is None:
             return c < b_
         if b_ is None:

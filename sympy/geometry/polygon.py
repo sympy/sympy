@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Expr, S, sympify, oo, pi, Symbol
+from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -10,7 +10,7 @@ from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_variety, has_dups, uniq
+from sympy.utilities.iterables import has_dups, has_variety, uniq
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
@@ -516,7 +516,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] http://www.ariel.com.au/a/python-point-int-poly.html
+        [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p)
@@ -559,8 +559,8 @@ class Polygon(GeometrySet):
                     if 0 <= max(p1x, p2x):
                         if p1y != p2y:
                             xinters = (-p1y)*(p2x - p1x)/(p2y - p1y) + p1x
-                        if p1x == p2x or 0 <= xinters:
-                            hit_odd = not hit_odd
+                            if p1x == p2x or 0 <= xinters:
+                                hit_odd = not hit_odd
             p1x, p1y = p2x, p2y
         return hit_odd
 

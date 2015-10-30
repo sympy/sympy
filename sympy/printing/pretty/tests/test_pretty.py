@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral,
@@ -7,7 +6,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -397,7 +396,7 @@ x    \
     assert upretty(expr) == ucode_str
 
     # see issue #2860
-    expr = S(2)**-1.0
+    expr = Pow(S(2), -1.0, evaluate=False)
     ascii_str = \
 """\
  -1.0\n\
@@ -3101,6 +3100,23 @@ def test_pretty_sets():
     assert upretty(Range(-2, -oo, -1)) == ucode_str
 
 
+def test_pretty_ConditionSet():
+    from sympy import ConditionSet
+    ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
+    ucode_str = u('{x | x ∊ ℝ ∧ sin(x) = 0}')
+    assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
+    assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
+
+
+def test_pretty_ComplexRegion():
+    from sympy import ComplexRegion
+    ucode_str = u('{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}')
+    assert upretty(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == ucode_str
+
+    ucode_str = u('{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}')
+    assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
+
+
 def test_ProductSet_paranthesis():
     from sympy import Interval, Union, FiniteSet
     ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')
@@ -3189,6 +3205,50 @@ def test_pretty_sequences():
     assert upretty(SeqMul(s5, s6)) == ucode_str
 
 
+def test_pretty_FourierSeries():
+    f = fourier_series(x, (x, -pi, pi))
+
+    ascii_str = \
+"""\
+                      2*sin(3*x)      \n\
+2*sin(x) - sin(2*x) + ---------- + ...\n\
+                          3           \
+"""
+
+    ucode_str = \
+u("""\
+                      2⋅sin(3⋅x)    \n\
+2⋅sin(x) - sin(2⋅x) + ────────── + …\n\
+                          3         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
+
+
+def test_pretty_FormalPowerSeries():
+    f = fps(log(1 + x))
+
+    ascii_str = \
+"""\
+     2    3    4    5        \n\
+    x    x    x    x     / 6\\\n\
+x - -- + -- - -- + -- + O\\x /\n\
+    2    3    4    5         \
+"""
+
+    ucode_str = \
+u("""\
+     2    3    4    5        \n\
+    x    x    x    x     ⎛ 6⎞\n\
+x - ── + ── - ── + ── + O⎝x ⎠\n\
+    2    3    4    5         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
+
+
 def test_pretty_limits():
     expr = Limit(x, x, oo)
     ascii_str = \
@@ -3268,6 +3328,19 @@ x─→0⁻  x   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Limit(x + sin(x), x, 0)
+    ascii_str = \
+"""\
+ lim (x + sin(x))\n\
+x->0+            \
+"""
+    ucode_str = \
+u("""\
+ lim (x + sin(x))\n\
+x─→0⁺            \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_RootOf():
     expr = RootOf(x**5 + 11*x - 2, 0)
@@ -4979,6 +5052,8 @@ def test_issue_7180():
 def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ Naturals0()'
+    assert upretty(S.Reals - S.Naturals0) == u('ℝ \ ℕ₀')
 
 
 def test_pretty_SymmetricDifference():

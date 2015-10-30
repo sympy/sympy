@@ -6,31 +6,30 @@ Contains
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, sympify, pi
+from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo, Rational
+from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
-from sympy.polys import Poly, PolynomialError, DomainError
-from sympy.polys.polyutils import _nsort, _not_a_coeff
+from sympy.polys import DomainError, Poly, PolynomialError
+from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
+from sympy.utilities.decorator import doctest_depends_on
+
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
-from .line import LinearEntity, Line
+from .line import Line, LinearEntity
 from .util import _symbol, idiff
 
-
 import random
-
-from sympy.utilities.decorator import doctest_depends_on
 
 
 class Ellipse(GeometrySet):
@@ -744,6 +743,8 @@ class Ellipse(GeometrySet):
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
+
+            # TODO: Replace solve with solveset, when this line is tested
             tangent_points = solve([slope - dydx, eq], [x, y])
 
             # handle horizontal and vertical tangent lines
@@ -874,6 +875,8 @@ class Ellipse(GeometrySet):
         norm = -1/dydx
         slope = Line(p, (x, y)).slope
         seq = slope - norm
+
+        # TODO: Replace solve with solveset, when this line is tested
         yis = solve(seq, y)[0]
         xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
         if len(xeq.free_symbols) == 1:
@@ -881,6 +884,7 @@ class Ellipse(GeometrySet):
                 # this is so much faster, it's worth a try
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
+                # TODO: Replace solve with solveset, when these lines are tested
                 xsol = _nsort(solve(xeq, x), separated=True)[0]
             points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
         else:
@@ -1125,6 +1129,8 @@ class Ellipse(GeometrySet):
         y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
+
+        # TODO: Replace solve with solveset, when this line is tested
         result = solve([seq, oeq], [x, y])
         return [Point(*r) for r in list(uniq(result))]
 

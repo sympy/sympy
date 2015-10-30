@@ -2,13 +2,14 @@ from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root,
-    Min, Max, real_root)
+from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
+                                                      Max, real_root)
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.pytest import raises
+
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -20,6 +21,7 @@ def test_Min():
     p_ = Symbol('p_', positive=True)
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
+    r = Symbol('r', real=True)
 
     assert Min(5, 4) == 4
     assert Min(-oo, -oo) == -oo
@@ -115,6 +117,27 @@ def test_Min():
     assert e.evalf == e.n
     assert e.n().args == (0, x)
 
+    # issue 8643
+    m = Min(n, p_, n_, r)
+    assert m.is_positive is False
+    assert m.is_nonnegative is False
+    assert m.is_negative is True
+
+    m = Min(p, p_)
+    assert m.is_positive is True
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Min(p, nn_, p_)
+    assert m.is_positive is None
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Min(nn, p, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is None
+    assert m.is_negative is None
+
 
 def test_Max():
     from sympy.abc import x, y, z
@@ -170,6 +193,27 @@ def test_Max():
     e = Max(0, x)
     assert e.evalf == e.n
     assert e.n().args == (0, x)
+
+    # issue 8643
+    m = Max(p, p_, n, r)
+    assert m.is_positive is True
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Max(n, n_)
+    assert m.is_positive is False
+    assert m.is_nonnegative is False
+    assert m.is_negative is True
+
+    m = Max(n, n_, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is None
+    assert m.is_negative is None
+
+    m = Max(n, nn, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
 
 
 def test_issue_8413():
@@ -241,7 +285,6 @@ def test_rewrite_MaxMin_as_Heaviside():
     assert Max(0, x+2, 2*x).rewrite(Heaviside) == \
         2*x*Heaviside(2*x)*Heaviside(x - 2) + \
         (x + 2)*Heaviside(-x + 2)*Heaviside(x + 2)
-
 
     assert Min(0, x).rewrite(Heaviside) == x*Heaviside(-x)
     assert Min(3, x).rewrite(Heaviside) == x*Heaviside(-x + 3) + \

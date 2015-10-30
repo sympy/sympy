@@ -6,13 +6,14 @@ Curve
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import sympify
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
+
 from .util import _symbol
 
 

@@ -1,4 +1,5 @@
 import collections
+import random
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -174,6 +175,20 @@ def test_power():
     assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
     A = Matrix([[0, 4], [-1, 5]])
     assert (A**(S(1)/2))**2 == A
+
+    assert Matrix([[1, 0], [1, 1]])**(S(1)/2) == Matrix([[1, 0], [S.Half, 1]])
+    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
+    from sympy.abc import a, b, n
+    assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
+    assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
+    assert Matrix([[a, 1, 0], [0, a, 1], [0, 0, a]])**n == Matrix([
+        [a**n, a**(n-1)*n, a**(n-2)*(n-1)*n/2],
+        [0, a**n, a**(n-1)*n],
+        [0, 0, a**n]])
+    assert Matrix([[a, 1, 0], [0, a, 0], [0, 0, b]])**n == Matrix([
+        [a**n, a**(n-1)*n, 0],
+        [0, a**n, 0],
+        [0, 0, b**n]])
 
 
 def test_creation():
@@ -482,11 +497,18 @@ def test_expand():
 def test_random():
     M = randMatrix(3, 3)
     M = randMatrix(3, 3, seed=3)
+    assert M == randMatrix(3, 3, seed=3)
+
     M = randMatrix(3, 4, 0, 150)
-    M = randMatrix(3, symmetric=True)
+    M = randMatrix(3, seed=4, symmetric=True)
+    assert M == randMatrix(3, seed=4, symmetric=True)
+
     S = M.copy()
     S.simplify()
     assert S == M  # doesn't fail when elements are Numbers, not int
+
+    rng = random.Random(4)
+    assert M == randMatrix(3, symmetric=True, prng=rng)
 
 
 def test_LUdecomp():
@@ -806,6 +828,11 @@ def test_eigen():
                  Matrix([0, 1, 0]),
                  Matrix([0, 0, 1])])])
 
+    assert M.left_eigenvects() == (
+        [(1, 3, [Matrix([[1, 0, 0]]),
+                 Matrix([[0, 1, 0]]),
+                 Matrix([[0, 0, 1]])])])
+
     M = Matrix([[0, 1, 1],
                 [1, 0, 0],
                 [1, 1, 1]])
@@ -819,6 +846,13 @@ def test_eigen():
             ( 2, 1, [Matrix([R(2, 3), R(1, 3), 1])])
         ])
 
+    assert M.left_eigenvects() == (
+        [
+            (-1, 1, [Matrix([[-2, 1, 1]])]),
+            (0, 1, [Matrix([[-1, -1, 1]])]),
+            (2, 1, [Matrix([[1, 1, 1]])])
+        ])
+
     a = Symbol('a')
     M = Matrix([[a, 0],
                 [0, 1]])
@@ -828,6 +862,7 @@ def test_eigen():
     M = Matrix([[1, -1],
                 [1,  3]])
     assert M.eigenvects() == ([(2, 2, [Matrix(2, 1, [-1, 1])])])
+    assert M.left_eigenvects() == ([(2, 2, [Matrix([[1, 1]])])])
 
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     a = R(15, 2)
@@ -861,6 +896,12 @@ def test_eigen():
         [
             ( 0, 1, [Matrix([[-I*eps/abs(eps)], [1]])]),
             ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)], [1]]) ] ),
+        ])
+
+    assert M.left_eigenvects() == (
+        [
+            (0, 1, [Matrix([[I*eps/Abs(eps), 1]])]),
+            (2*Abs(eps), 1, [Matrix([[-I*eps/Abs(eps), 1]])])
         ])
 
     M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -1677,9 +1718,6 @@ def test_errors():
     raises(ValueError,
         lambda: Matrix([[5, 10, 7], [0, -1, 2], [8, 3, 4]]
         ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x) <= 4))
-    raises(NotImplementedError, lambda: Matrix([[1, 0], [1, 1]])**(S(1)/2))
-    raises(NotImplementedError,
-        lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])**(0.5))
     raises(IndexError, lambda: eye(3)[5, 2])
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
@@ -2430,6 +2468,110 @@ def test_pinv_rank_deficient():
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
 
+
+def test_gauss_jordan_solve():
+
+    # Square, full rank, unique solution
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    b = Matrix([3, 6, 9])
+    sol, params = A.gauss_jordan_solve(b)
+    assert sol == Matrix([[-1], [2], [0]])
+    assert params == Matrix(0, 1, [])
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    b = Matrix([3, 6, 9])
+    sol, params, freevar = A.gauss_jordan_solve(b, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
+    assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[-2*w['tau0'] - 3*w['tau1']],
+                         [w['tau0']], [w['tau1']]])
+    assert params == Matrix([[w['tau0']], [w['tau1']]])
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    b = Matrix([0, 0, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0']], [w['tau1']], [w['tau2']]])
+    assert params == Matrix([[w['tau0']], [w['tau1']], [w['tau2']]])
+
+    # Square, reduced rank, no solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, unique solution
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 1, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    assert sol == Matrix([[-S(1)/2], [0], [S(1)/6]])
+    assert params == Matrix(0, 1, [])
+
+    # Rectangular, tall, full rank, no solution
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 0, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, reduced rank, parametrized solution
+    A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 0, 1])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[-3*w['tau0'] + 5], [-1], [w['tau0']]])
+    assert params == Matrix([[w['tau0']]])
+
+    # Rectangular, tall, reduced rank, no solution
+    A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 1, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, wide, full rank, parametrized solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 1, 12]])
+    b = Matrix([1, 1, 1])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[2*w['tau0'] - 1], [-3*w['tau0'] + 1], [0],
+                         [w['tau0']]])
+    assert params == Matrix([[w['tau0']]])
+
+    # Rectangular, wide, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
+    b = Matrix([0, 1, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] + 2*w['tau1'] + 1/S(2)],
+                         [-2*w['tau0'] - 3*w['tau1'] - 1/S(4)],
+                         [w['tau0']], [w['tau1']]])
+    assert params == Matrix([[w['tau0']], [w['tau1']]])
+
+    # Rectangular, wide, reduced rank, no solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
+    b = Matrix([1, 1, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])
@@ -2468,7 +2610,7 @@ def test_doit():
     assert a[0] != 2*x
     assert a.doit() == Matrix([[2*x]])
 
-def test_issue_9457_9467():
+def test_issue_9457_9467_9876():
     # for row_del(index)
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     M.row_del(1)
@@ -2476,6 +2618,9 @@ def test_issue_9457_9467():
     N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     N.row_del(-2)
     assert N == Matrix([[1, 2, 3], [3, 4, 5]])
+    O = Matrix([[1, 2, 3], [5, 6, 7], [9, 10, 11]])
+    O.row_del(-1)
+    assert O == Matrix([[1, 2, 3], [5, 6, 7]])
     P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: P.row_del(10))
     Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
@@ -2492,3 +2637,14 @@ def test_issue_9457_9467():
     raises(IndexError, lambda: P.col_del(10))
     Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: Q.col_del(-10))
+
+def test_issue_9422():
+    x, y = symbols('x y', commutative=False)
+    a, b = symbols('a b')
+    M = eye(2)
+    M1 = Matrix(2, 2, [x, y, y, z])
+    assert y*x*M != x*y*M
+    assert b*a*M == a*b*M
+    assert x*M1 != M1*x
+    assert a*M1 == M1*a
+    assert y*x*M == Matrix([[y*x, 0], [0, y*x]])

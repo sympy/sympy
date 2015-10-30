@@ -259,7 +259,8 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, posify, cse
-from sympy.simplify.simplify import collect_const, powdenest
+from sympy.simplify.powsimp import powdenest
+from sympy.simplify.radsimp import collect_const
 from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 

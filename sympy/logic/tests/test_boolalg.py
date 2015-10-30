@@ -1,4 +1,4 @@
-from sympy import (symbols, sympify, Dummy, simplify, Equality, S, Interval,
+from sympy import (symbols, Dummy, simplify, Equality, S, Interval,
                    oo, EmptySet, Q)
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
@@ -173,6 +173,7 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1, 0) is false
     assert Equivalent(A < 1, A >= 1, 1) is false
     assert Equivalent(A < 1, S(1) > A) == Equivalent(1, 1) == Equivalent(0, 0)
+    assert Equivalent(Equality(A, B), Equality(B, A)) is true
 
 
 def test_equals():
@@ -191,24 +192,24 @@ def test_simplification():
     set1 = [[0, 0, 1], [0, 1, 1], [1, 0, 0], [1, 1, 0]]
     set2 = [[0, 0, 0], [0, 1, 0], [1, 0, 1], [1, 1, 1]]
     from sympy.abc import w, x, y, z
-    assert SOPform('xyz', set1) == Or(And(Not(x), z), And(Not(z), x))
-    assert Not(SOPform('xyz', set2)) == Not(Or(And(Not(x), Not(z)), And(x, z)))
-    assert POSform('xyz', set1 + set2) is true
-    assert SOPform('xyz', set1 + set2) is true
+    assert SOPform([x, y, z], set1) == Or(And(Not(x), z), And(Not(z), x))
+    assert Not(SOPform([x, y, z], set2)) == Not(Or(And(Not(x), Not(z)), And(x, z)))
+    assert POSform([x, y, z], set1 + set2) is true
+    assert SOPform([x, y, z], set1 + set2) is true
     assert SOPform([Dummy(), Dummy(), Dummy()], set1 + set2) is true
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     assert (
-        SOPform('wxyz', minterms, dontcares) ==
+        SOPform([w, x, y, z], minterms, dontcares) ==
         Or(And(Not(w), z), And(y, z)))
-    assert POSform('wxyz', minterms, dontcares) == And(Or(Not(w), y), z)
+    assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     # test simplification
     ans = And(A, Or(B, C))
-    assert simplify_logic('A & (B | C)') == ans
-    assert simplify_logic('(A & B) | (A & C)') == ans
+    assert simplify_logic(A & (B | C)) == ans
+    assert simplify_logic((A & B) | (A & C)) == ans
     assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
     assert simplify_logic(Equivalent(A, B)) == \
            Or(And(A, B), And(Not(A), Not(B)))
@@ -222,22 +223,22 @@ def test_simplification():
     assert simplify_logic(e, deep=False) == e
 
     # check input
-    ans = SOPform('xy', [[1, 0]])
+    ans = SOPform([x, y], [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans
-    assert POSform(['x', 'y'], [[1, 0]]) == ans
+    assert POSform([x, y], [[1, 0]]) == ans
 
-    raises(ValueError, lambda: SOPform('x', [[1]], [[1]]))
-    assert SOPform('x', [[1]], [[0]]) is true
-    assert SOPform('x', [[0]], [[1]]) is true
-    assert SOPform('x', [], []) is false
+    raises(ValueError, lambda: SOPform([x], [[1]], [[1]]))
+    assert SOPform([x], [[1]], [[0]]) is true
+    assert SOPform([x], [[0]], [[1]]) is true
+    assert SOPform([x], [], []) is false
 
-    raises(ValueError, lambda: POSform('x', [[1]], [[1]]))
-    assert POSform('x', [[1]], [[0]]) is true
-    assert POSform('x', [[0]], [[1]]) is true
-    assert POSform('x', [], []) is false
+    raises(ValueError, lambda: POSform([x], [[1]], [[1]]))
+    assert POSform([x], [[1]], [[0]]) is true
+    assert POSform([x], [[0]], [[1]]) is true
+    assert POSform([x], [], []) is false
 
     # check working of simplify
-    assert simplify('(A & B) | (A & C)') == sympify('And(A, Or(B, C))')
+    assert simplify((A & B) | (A & C)) == And(A, Or(B, C))
     assert simplify(And(x, Not(x))) == False
     assert simplify(Or(x, Not(x))) == True
 
@@ -249,15 +250,15 @@ def test_bool_map():
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
-    from sympy.abc import a, b, w, x, y, z
+    from sympy.abc import a, b, c, w, x, y, z
     assert bool_map(Not(Not(a)), a) == (a, {a: a})
-    assert bool_map(SOPform(['w', 'x', 'y', 'z'], minterms),
-        POSform(['w', 'x', 'y', 'z'], minterms)) == \
+    assert bool_map(SOPform([w, x, y, z], minterms),
+        POSform([w, x, y, z], minterms)) == \
         (And(Or(Not(w), y), Or(Not(x), y), z), {x: x, w: w, z: z, y: y})
-    assert bool_map(SOPform(['x', 'z', 'y'],[[1, 0, 1]]),
-        SOPform(['a', 'b', 'c'],[[1, 0, 1]])) != False
-    function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
-    function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
+    assert bool_map(SOPform([x, z, y],[[1, 0, 1]]),
+        SOPform([a, b, c],[[1, 0, 1]])) != False
+    function1 = SOPform([x,z,y],[[1, 0, 1], [0, 0, 1]])
+    function2 = SOPform([a,b,c],[[1, 0, 1], [1, 0, 0]])
     assert bool_map(function1, function2) == \
         (function1, {y: a, z: b})
 
@@ -707,4 +708,4 @@ def test_truth_table():
     x, y = symbols('x,y')
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
-    assert list(truth_table('x >> y', ['x', 'y'], input=False)) == [True, True, False, True]
+    assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]

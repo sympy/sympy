@@ -8,20 +8,22 @@ Point3D
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.compatibility import iterable, range
 from sympy.core.containers import Tuple
-from sympy.simplify import simplify, nsimplify
+from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
-from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.core.evaluate import global_evaluate
 from sympy.core.add import Add
+
+from .entity import GeometryEntity
+
 
 class Point(GeometryEntity):
     """A point in a n-dimensional Euclidean space.
@@ -100,6 +102,8 @@ class Point(GeometryEntity):
             return Point3D(coords, **kwargs)
 
         return GeometryEntity.__new__(cls, *coords)
+
+    is_Point = True
 
     def __contains__(self, item):
         return item == self
@@ -265,6 +269,39 @@ class Point(GeometryEntity):
         p = Point(p)
         return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
 
+    def taxicab_distance(self, p):
+        """The Taxicab Distance from self to point p.
+
+        Returns the sum of the horizontal and vertical distances to point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        taxicab_distance : The sum of the horizontal
+        and vertical distances to point p.
+
+        See Also
+        ========
+
+        sympy.geometry.Point.distance
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> p1.taxicab_distance(p2)
+        7
+
+        """
+        p = Point(p)
+        return sum(abs(a - b) for a, b in zip(self.args, p.args))
+
     def midpoint(self, p):
         """The midpoint between self and point p.
 
@@ -378,6 +415,17 @@ class Point(GeometryEntity):
 
     def __iter__(self):
         return self.args.__iter__()
+
+    def __eq__(self, other):
+        if not isinstance(other, Point) or len(self.args) != len(other.args):
+            return False
+        return self.args == other.args
+
+    def __hash__(self):
+        return hash(self.args)
+
+    def __getitem__(self, key):
+        return self.args[key]
 
     def __add__(self, other):
         """Add other to self by incrementing self's coordinates by those of other.
@@ -728,8 +776,6 @@ class Point3D(Point):
     Raises
     ======
 
-    NotImplementedError
-        When trying to create a point other than 2 or 3 dimensions.
     TypeError
         When trying to add or subtract points with different dimensions.
         When `intersection` is called with object other than a Point.

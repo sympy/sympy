@@ -42,7 +42,7 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
-    is_ComplexPlane = False
+    is_ComplexRegion = False
 
     @staticmethod
     def _infimum_key(expr):
@@ -211,7 +211,7 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) != True])
+            return FiniteSet(*[el for el in other if self.contains(el) is not true])
 
     def symmetric_difference(self, other):
         return SymmetricDifference(self, other)
@@ -278,10 +278,10 @@ class Set(Basic):
 
         """
         other = sympify(other, strict=True)
-        ret = self._contains(other)
+        ret = sympify(self._contains(other))
         if ret is None:
             if all(Eq(i, other) == False for i in self):
-                return False
+                return false
             ret = Contains(other, self, evaluate=False)
         return ret
 
@@ -910,11 +910,16 @@ class Interval(Set, EvalfMixin):
 
 
     def _complement(self, other):
-        if other is S.Reals:
+        if other == S.Reals:
             a = Interval(S.NegativeInfinity, self.start,
                          True, not self.left_open)
             b = Interval(self.end, S.Infinity, not self.right_open, True)
             return Union(a, b)
+
+        if isinstance(other, FiniteSet):
+            nums = [m for m in other.args if m.is_number]
+            if nums == []:
+                return None
 
         return Set._complement(self, other)
 
@@ -981,11 +986,10 @@ class Interval(Set, EvalfMixin):
 
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
-        from sympy.solvers import solve
-        from sympy.core.function import diff
+        from sympy.solvers.solveset import solveset
+        from sympy.core.function import diff, Lambda
         from sympy.series import limit
         from sympy.calculus.singularities import singularities
-        # TODO: handle piecewise defined functions
         # TODO: handle functions with infinitely many solutions (eg, sin, tan)
         # TODO: handle multivariate functions
 
@@ -993,6 +997,28 @@ class Interval(Set, EvalfMixin):
         if len(expr.free_symbols) > 1 or len(f.variables) != 1:
             return
         var = f.variables[0]
+
+        if expr.is_Piecewise:
+            result = S.EmptySet
+            domain_set = self
+            for (p_expr, p_cond) in expr.args:
+                if p_cond is S.true:
+                    intrvl = domain_set
+                else:
+                    intrvl = p_cond.as_set()
+                    intrvl = Intersection(domain_set, intrvl)
+
+                if p_expr.is_Number:
+                    image = FiniteSet(p_expr)
+                else:
+                    image = imageset(Lambda(var, p_expr), intrvl)
+                result = Union(result, image)
+
+                # remove the part which has been `imaged`
+                domain_set = Complement(domain_set, intrvl)
+                if domain_set.is_EmptySet:
+                    break
+            return result
 
         if not self.start.is_comparable or not self.end.is_comparable:
             return
@@ -1013,7 +1039,7 @@ class Interval(Set, EvalfMixin):
             _end = f(self.end)
 
         if len(sing) == 0:
-            solns = solve(diff(expr, var), var)
+            solns = list(solveset(diff(expr, var), var))
 
             extr = [_start, _end] + [f(x) for x in solns
                                      if x.is_real and x in self]
@@ -1374,11 +1400,13 @@ class Intersection(Set):
         if len(args) == 0:
             raise TypeError("Intersection expected at least one argument")
 
+        # args can't be ordered for Partition see issue #9608
+        if 'Partition' not in [type(a).__name__ for a in args]:
+            args = list(ordered(args, Set._infimum_key))
+
         # Reduce sets using known rules
         if evaluate:
             return Intersection.reduce(args)
-
-        args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
 
@@ -1431,8 +1459,17 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.func(*[x for x in s
-                    if all(other.contains(x) == True for other in args)])
+                other_args = [a for a in args if a != s]
+                res = FiniteSet(*[x for x in s
+                             if all(other.contains(x) is true for other in other_args)])
+                unk = [x for x in s
+                       if any(other.contains(x) not in (True, False) for other in other_args)]
+                if unk:
+                    other_sets = Intersection(*other_args)
+                    if other_sets.is_EmptySet:
+                        return EmptySet()
+                    res += Intersection(s.func(*unk), other_sets, evaluate=False)
+                return res
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1727,23 +1764,31 @@ class FiniteSet(Set, EvalfMixin):
         return self.__class__(el for el in self if el in other)
 
     def _complement(self, other):
-        if other is S.Reals:
+        if isinstance(other, Interval):
             nums = sorted(m for m in self.args if m.is_number)
-            syms = [m for m in self.args if m.is_Symbol]
-            # Reals cannot contain elements other than numbers and symbols.
+            if other == S.Reals and nums != []:
+                syms = [m for m in self.args if m.is_Symbol]
+                # Reals cannot contain elements other than numbers and symbols.
 
-            intervals = []  # Build up a list of intervals between the elements
-            if nums != []:
+                intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
                 for a, b in zip(nums[:-1], nums[1:]):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
-            if syms != []:
-                return Complement(Union(intervals, evaluate=False),
-                    FiniteSet(*syms), evaluate=False)
-            else:
-                return Union(intervals, evaluate=False)
+                if syms != []:
+                    return Complement(Union(intervals, evaluate=False),
+                            FiniteSet(*syms), evaluate=False)
+                else:
+                    return Union(intervals, evaluate=False)
+            elif nums == []:
+                return None
+
+        elif isinstance(other, FiniteSet):
+            elms_unknown = FiniteSet(*[el for el in self if other.contains(el) not in (True, False)])
+            if elms_unknown == self:
+                return
+            return Complement(FiniteSet(*[el for el in other if self.contains(el) is not true]), elms_unknown)
 
         return Set._complement(self, other)
 

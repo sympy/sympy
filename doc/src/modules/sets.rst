@@ -87,7 +87,9 @@ Range
 .. autoclass:: Range
    :members:
 
-ComplexPlane
-^^^^^^^^^^^^
-.. autoclass:: ComplexPlane
+ComplexRegion
+^^^^^^^^^^^^^
+.. autoclass:: ComplexRegion
    :members:
+
+.. autofunction:: normalize_theta_set

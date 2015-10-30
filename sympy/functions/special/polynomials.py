@@ -952,8 +952,6 @@ class hermite(OrthogonalPolynomial):
     hermite(n, x)
     >>> diff(hermite(n,x), x)
     2*n*hermite(n - 1, x)
-    >>> diff(hermite(n,x), x)
-    2*n*hermite(n - 1, x)
     >>> hermite(n, -x)
     (-1)**n*hermite(n, x)
 
