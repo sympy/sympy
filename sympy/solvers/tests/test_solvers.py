@@ -1782,3 +1782,11 @@ def test_issue_2840_8155():
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
+
+
+def test_force():
+    assert solve(x**2 - 1, force=True) == [1]
+    assert solve([x**2 - 1], force=True) == [(1,)]
+    assert solve([x**2 - 1], x, force=True) == [{x: y}]
+    assert solve(x**2 - y, x, force=True, dict=True) == [
+        {x: -sqrt(y)}, {x: sqrt(y)}]

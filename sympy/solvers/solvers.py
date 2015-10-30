@@ -866,6 +866,26 @@ def solve(f, *symbols, **flags):
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
+    # make symbols positive if so desired
+    if flags.get('force', None):
+        flags.pop('force')
+        recast = dict([(i, Dummy(positive=True))
+            for i in symbols if i.is_positive is None])
+        f = [i.xreplace(recast) for i in f]
+        symbols = list(set([i.xreplace(recast) for i in symbols]))
+        if bare_f:
+            rv = solve(f[0], *symbols, **flags)
+        else:
+            rv = solve(f, *symbols, **flags)
+        reps = dict([(v, k) for k, v in recast.items()])
+        def restore(rv):
+            if isinstance(rv, dict):
+                return dict([(k.subs(reps), v.subs(reps)) for k, v in rv.items()])
+            elif iterable(rv):
+                return type(rv)([restore(i) for i in rv])
+            return rv.subs(reps)
+        return restore(rv) if isinstance(rv, dict) else [restore(i) for i in rv]
+
     # real/imag handling -----------------------------
     w = Dummy('w')
     piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
