@@ -1,4 +1,4 @@
-from sympy.vector.coordsysrect import CoordSystem3D
+from sympy.vector.coordsysrect import CoordSystem3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
      symbols, simplify, zeros
@@ -10,6 +10,11 @@ from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
 
 a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
+
+
+def test_deprecation_of_CoordSysCartesian():
+    C = CoordSysCartesian('C')
+    assert isinstance(C, CoordSystem3D)
 
 
 def test_coordsyscartesian_equivalence():

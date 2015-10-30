@@ -15,13 +15,24 @@ SymPyDeprecationWarning(
     feature="CoordSysCartesian",
     useinstead="CoordSystem3D",
     deprecated_since_version="0.7.6"
-)
+).warn()
+
+
 class CoordSysCartesian(Basic):
     """
-    Depreciated class for Cartesian coordinate system instance.
+    Depreciated class for Cartesian coordinate system. Returns a
+    CoordSystem3D instance.
+
+    Examples
+    ========
+    >>> from sympy.vector.coordsysrect import CoordSystem3D, CoordSysCartesian
+    >>> C = CoordSysCartesian('C')
+    >>> isinstance(C, CoordSystem3D)
+    True
+
     """
 
-    def __new__(cls, name, location=None, rotation_matrix=None, 
+    def __new__(cls, name, location=None, rotation_matrix=None,
                 parent=None, vector_names=None, variable_names=None):
 
         return CoordSystem3D(name, coord_relations=None,
