@@ -280,8 +280,6 @@ class Set(Basic):
         other = sympify(other, strict=True)
         ret = sympify(self._contains(other))
         if ret is None:
-            if all(Eq(i, other) == False for i in self):
-                return false
             ret = Contains(other, self, evaluate=False)
         return ret
 
