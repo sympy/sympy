@@ -142,12 +142,12 @@ before_install:
       pip install "sphinx==1.3.1";
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
-      pip install "numpy==1.7.1";
-      pip install --allow-external "matplotlib==1.2.1";
+      pip install "numpy";
+      pip install --allow-external "matplotlib";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
-      pip install "numpy==1.7.1";
-      pip install "scipy==0.12.0";
+      pip install "numpy";
+      pip install "scipy";
       pip install --no-deps https://github.com/Theano/Theano/archive/rel-0.6.zip;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
