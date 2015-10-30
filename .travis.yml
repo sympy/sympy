@@ -19,6 +19,7 @@ python:
   - 3.5
 
 matrix:
+  include:
     - python: 2.7
       env:
         - TEST_GMPY="true"
