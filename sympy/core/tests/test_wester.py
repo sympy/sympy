@@ -75,7 +75,7 @@ def test_B2():
     d, e = FiniteSet(i), FiniteSet(j, k, l)
 
     assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
-            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, e))))
+            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, FiniteSet(l)))))
     # {j} U Intersection({m}, {j, k} U Intersection({i}, {j, k, l}))
 
 
