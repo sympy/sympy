@@ -2,9 +2,8 @@ import types
 from sympy.simplify import simplify
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy import (eye, trigsimp, ImmutableMatrix as Matrix, Symbol, symbols,
-                   sqrt, Lambda, MutableDenseMatrix as DMatrix, sin, cos,
-                   sinh, cosh, S)
+from sympy import (eye, trigsimp, ImmutableMatrix as Matrix, Symbol,
+                   sqrt, Lambda, sin, cos, sinh, cosh, S)
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -245,7 +244,7 @@ class CoordSystem3D(Basic):
                         raise ValueError("expected build-in transformation, " +
                                          "provide the transformation set")
             elif isinstance(coord_relations, Lambda):
-                lame_lambda = get_lame_lambda(coord_relations)
+                lame_lambda = _get_lame_lambda(coord_relations)
                 coord_sys_type = name
             else:
                 raise TypeError("see the docs for proper useage")
@@ -353,6 +352,25 @@ class CoordSystem3D(Basic):
 
     @cacheit
     def lame_parameters(self, scalar_vars=None):
+        """
+        Returns a tuple of the Lame parameters for the given CoordSystem3D
+        instance.
+
+        Parameters
+        ==========
+
+        scalar_vars : Symbol tuple
+            Optionally return the Lame parameters with the Symbols you want
+            to express them in.
+
+        Examples
+        ========
+        >>> from sympy.vector import CoordSystem3D
+        >>> S = CoordSystem3D('S', coord_relations='spherical')
+        >>> S.lame_parameters()
+        (1, x, x*sin(y))
+
+        """
         if scalar_vars is None:
             from sympy.abc import a, x, y, z
             if len(self._lame_lambda.args[0]) == 3:
@@ -372,6 +390,25 @@ class CoordSystem3D(Basic):
         
     @cacheit
     def coordinate_relations(self, scalar_vars=None):
+        """
+        Returns a tuple of the coordinate transformation relations for a given
+        CoordSystem3D instance.
+
+        Parameters
+        ==========
+
+        scalar_vars : Symbol tuple
+            Optionally return the coordinate relations with the Symbols you
+            want to express them in.
+
+        Examples
+        ========
+        >>> from sympy.vector import CoordSystem3D
+        >>> S = CoordSystem3D('S', coord_relations='spherical')
+        >>> S.coordinate_relations()
+        (x*sin(y)*cos(z), x*sin(y)*sin(z), x*cos(y))
+
+        """
         if scalar_vars is None:
             from sympy.abc import a, x, y, z
             if len(self._coord_relations.args[0]) == 3:
@@ -391,7 +428,21 @@ class CoordSystem3D(Basic):
 
     @cacheit
     def coordinate_metric(self):
-        return get_metric(self._coord_relations)
+        """
+        Returns the metric matrix for a given CoordSystem3D instance.
+
+        Examples
+        ========
+        >>> from sympy.vector import CoordSystem3D
+        >>> S = CoordSystem3D('S', coord_relations='spherical')
+        >>> S.coordinate_metric()
+        Matrix([
+        [1,    0,              0],
+        [0, x**2,              0],
+        [0,    0, x**2*sin(y)**2]])
+
+        """
+        return _get_metric(self._coord_relations)
 
     @cacheit
     def rotation_matrix(self, other):
@@ -898,7 +949,15 @@ def _check_strings(arg_name, arg):
         raise TypeError(errorstr)
 
 
-def get_metric(relation_lambda):
+def _get_metric(relation_lambda):
+    """
+    This function calculates the metric for any coordinate system.
+
+    relation_lambda: Lambda
+        The Lambda instance describing the coordinate transformation from
+        Cartesian.
+
+    """
     from sympy.abc import a, x, y, z
 
     variables = x, y, z
@@ -910,10 +969,19 @@ def get_metric(relation_lambda):
     jacobian = Matrix([[relation.diff(var) for var in variables]
                        for relation in relations])
 
-    return simplify(jacobian.T * eye(3) * jacobian)
+    return simplify(jacobian.T * eye(jacobian.shape[0]) * jacobian)
 
 
-def get_lame_lambda(relation_lambda):
+def _get_lame_lambda(relation_lambda):
+    """
+    This function calculates the Lame parameters for any given curvilinear
+    coordinate system.
+
+    relation_lambda: Lambda
+        The Lambda instance describing the coordinate transformation from
+        Cartesian.
+
+    """
     from sympy.abc import a, x, y, z
 
     metric = get_metric(relation_lambda)
