@@ -56,10 +56,10 @@ class Del(Basic):
 
         scalar_field = express(scalar_field, self.system,
                                variables=True)
-        grad_coeff = self.system._differential_class(*self.system.base_scalars())
-        vx = grad_coeff[0]*Derivative(scalar_field, self._x)
-        vy = grad_coeff[1]*Derivative(scalar_field, self._y)
-        vz = grad_coeff[2]*Derivative(scalar_field, self._z)
+        lame_params = self.system.coordinate_relations()
+        vx = 1/lame_params[0]*Derivative(scalar_field, self._x)
+        vy = 1/lame_params[1]*Derivative(scalar_field, self._y)
+        vz = 1/lame_params[2]*Derivative(scalar_field, self._z)
 
         if doit:
             return (vx*self._i + vy*self._j + vz*self._k).doit()
@@ -97,11 +97,14 @@ class Del(Basic):
 
         """
 
-        diff_coeff = self.system._differential_class(*self.system.base_scalars())
-        dprod = diff_coeff[0] * diff_coeff[1] * diff_coeff[2]
-        vx = dprod*_diff_conditional(diff_coeff[0]/dprod*vect.dot(self._i), self._x)
-        vy = dprod*_diff_conditional(diff_coeff[1]/dprod*vect.dot(self._j), self._y)
-        vz = dprod*_diff_conditional(diff_coeff[2]/dprod*vect.dot(self._k), self._z)
+        lame_params = self.system.coordinate_relations()
+        dprod = lame_params[0] * lame_params[1] * lame_params[2]
+        vx = 1/dprod*_diff_conditional(dprod/lame_params[0]*vect.dot(self._i),
+                                       self._x)
+        vy = 1/dprod*_diff_conditional(dprod/lame_params[1]*vect.dot(self._j),
+                                       self._y)
+        vz = 1/dprod*_diff_conditional(dprod/lame_params[2]*vect.dot(self._k),
+                                       self._z)
 
         if doit:
             return (vx + vy + vz).doit()
@@ -139,18 +142,21 @@ class Del(Basic):
 
         """
 
-        diff_coeff = self.system._differential_class(*self.system.base_scalars())
-        dprod = diff_coeff[0] * diff_coeff[1] * diff_coeff[2]
-        vectx = express(vect.dot(self._i), self.system, variables=True)/diff_coeff[0]
-        vecty = express(vect.dot(self._j), self.system, variables=True)/diff_coeff[1]
-        vectz = express(vect.dot(self._k), self.system, variables=True)/diff_coeff[2]
+        lame_params = self.system.coordinate_relations()
+        dprod = lame_params[0] * lame_params[1] * lame_params[2]
+        vectx = express(vect.dot(self._i), self.system, variables=True) * \
+                lame_params[0]
+        vecty = express(vect.dot(self._j), self.system, variables=True) * \
+                lame_params[1]
+        vectz = express(vect.dot(self._k), self.system, variables=True) * \
+                lame_params[2]
         outvec = Vector.zero
         # assert dprod == 1
-        outvec += dprod/diff_coeff[0]*(Derivative(vectz, self._y) -
+        outvec += lame_params[0]/dprod*(Derivative(vectz, self._y) -
                    Derivative(vecty, self._z)) * self._i
-        outvec += dprod/diff_coeff[1]*(Derivative(vectx, self._z) -
+        outvec += lame_params[1]/dprod*(Derivative(vectx, self._z) -
                    Derivative(vectz, self._x)) * self._j
-        outvec += dprod/diff_coeff[2]*(Derivative(vecty, self._x) -
+        outvec += lame_params[2]/dprod*(Derivative(vecty, self._x) -
                    Derivative(vectx, self._y)) * self._k
 
         if doit:

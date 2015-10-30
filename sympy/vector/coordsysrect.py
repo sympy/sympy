@@ -141,9 +141,9 @@ class CoordSystem3D(Basic):
         else:
             _check_strings('vector_names', vector_names)
             vector_names = list(vector_names)
-            latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
-                           x in vector_names]
-            pretty_vects = [(name + '_' + x) for x in vector_names]
+            latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (vec, name)) for
+                           vec in vector_names]
+            pretty_vects = [(name + '_' + vec) for vec in vector_names]
 
         #Initialize the base scalars
         if variable_names is None:
@@ -155,9 +155,9 @@ class CoordSystem3D(Basic):
         else:
             _check_strings('variable_names', vector_names)
             variable_names = list(variable_names)
-            latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
-                             x in variable_names]
-            pretty_scalars = [(name + '_' + x) for x in variable_names]
+            latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (scal, name)) for
+                             scal in variable_names]
+            pretty_scalars = [(name + '_' + var) for var in variable_names]
 
         # Handling for different coordinate systems
         coord_type_map = {
