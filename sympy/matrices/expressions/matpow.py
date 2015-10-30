@@ -59,7 +59,7 @@ class MatPow(MatrixExpr):
         if exp.is_zero and base.is_square:
             try:
                 b = base.__class__(Identity(base.shape[0]))
-                if b == Identity(base.shape[0]).as_explicit():
+                if isinstance(b, MatrixBase):
                     return b
                 else:
                     return Identity(base.shape[0])
