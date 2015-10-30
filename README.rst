@@ -184,7 +184,7 @@ from Google Summer of Code students.
 In 2011, Ondřej Čertík stepped down as lead developer, with Aaron Meurer, who
 also started as a Google Summer of Code student, taking his place. Ondřej
 Čertík is still active in the community, but is too busy with work and family
-to play a lead development role
+to play a lead development role.
 
 Since then, a lot more people have joined the development and some people have
 also left. You can see the full list in doc/src/aboutus.rst, or online at:
