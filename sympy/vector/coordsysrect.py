@@ -15,7 +15,7 @@ SymPyDeprecationWarning(
     feature="CoordSysCartesian",
     useinstead="CoordSystem3D",
     deprecated_since_version="0.7.6"
-).warn()
+)
 
 
 class CoordSysCartesian(Basic):
@@ -995,7 +995,7 @@ def _get_lame_lambda(relation_lambda):
     """
     from sympy.abc import a, x, y, z
 
-    metric = get_metric(relation_lambda)
+    metric = _get_metric(relation_lambda)
     lame_params = tuple([sqrt(metric[i, i]) for i in range(3)])
 
     if len(relation_lambda.args[0]) == 3:

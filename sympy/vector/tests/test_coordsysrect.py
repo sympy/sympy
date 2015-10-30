@@ -12,7 +12,7 @@ a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
-def test_deprecation_of_CoordSysCartesian():
+def test_deprecation_of_cartesian_class():
     C = CoordSysCartesian('C')
     assert isinstance(C, CoordSystem3D)
 
