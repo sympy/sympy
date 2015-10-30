@@ -20,11 +20,14 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     sage -python bin/test sympy/external/tests/test_sage.py
 fi
 
+# We change directories to make sure that we test the installed version of
+# sympy.
+mkdir empty
+cd empty
+
 if [[ "${TEST_ASCII}" == "true" ]]; then
     export OLD_LANG=$LANG
     export LANG=c
-    mkdir empty
-    cd empty
     cat <<EOF | python
 import sympy
 sympy.test('print')
@@ -33,11 +36,6 @@ EOF
     bin/doctest
     export LANG=$OLD_LANG
 fi
-
-# We change directories to make sure that we test the installed version of
-# sympy.
-mkdir empty
-cd empty
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
     cat << EOF | python
