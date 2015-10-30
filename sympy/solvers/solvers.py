@@ -866,6 +866,26 @@ def solve(f, *symbols, **flags):
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
+    # make symbols positive if so desired
+    if flags.get('force', None):
+        flags.pop('force')
+        recast = dict([(i, Dummy(positive=True))
+            for i in symbols if i.is_positive is None])
+        f = [i.xreplace(recast) for i in f]
+        symbols = list(set([i.xreplace(recast) for i in symbols]))
+        if bare_f:
+            rv = solve(f[0], *symbols, **flags)
+        else:
+            rv = solve(f, *symbols, **flags)
+        reps = dict([(v, k) for k, v in recast.items()])
+        def restore(rv):
+            if isinstance(rv, dict):
+                return dict([(k.subs(reps), v.subs(reps)) for k, v in rv.items()])
+            elif iterable(rv):
+                return type(rv)([restore(i) for i in rv])
+            return rv.subs(reps)
+        return restore(rv) if isinstance(rv, dict) else [restore(i) for i in rv]
+
     # real/imag handling -----------------------------
     w = Dummy('w')
     piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
@@ -2507,7 +2527,7 @@ def _tsolve(eq, sym, **flags):
             if f.is_Mul:
                 return _solve(f, sym, **flags)
             if rhs:
-                f = logcombine(lhs, force=flags.get('force', True))
+                f = logcombine(lhs)
                 if f.count(log) != lhs.count(log):
                     if f.func is log:
                         return _solve(f.args[0] - exp(rhs), sym, **flags)
@@ -2594,23 +2614,6 @@ def _tsolve(eq, sym, **flags):
                         pass
                 else:
                     pass
-
-    if flags.pop('force', True):
-        flags['force'] = False
-        pos, reps = posify(lhs - rhs)
-        for u, s in reps.items():
-            if s == sym:
-                break
-        else:
-            u = sym
-        if pos.has(u):
-            try:
-                soln = _solve(pos, u, **flags)
-                return list(ordered([s.subs(reps) for s in soln]))
-            except NotImplementedError:
-                pass
-        else:
-            pass  # here for coverage
 
     return  # here for coverage
 
