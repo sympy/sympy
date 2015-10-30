@@ -391,7 +391,7 @@ class CoordSystem3D(Basic):
 
     @cacheit
     def coordinate_metric(self):
-        return get_metric(self._tranformation_to)
+        return get_metric(self._coord_relations)
 
     @cacheit
     def rotation_matrix(self, other):
@@ -896,3 +896,30 @@ def _check_strings(arg_name, arg):
                 raise TypeError(errorstr)
     except:
         raise TypeError(errorstr)
+
+
+def get_metric(relation_lambda):
+    from sympy.abc import a, x, y, z
+
+    variables = x, y, z
+    if len(relation_lambda.args[0]) == 3:
+        relations = relation_lambda(x, y, z)
+    elif len(relation_lambda.args[0]) == 4:
+        relations = relation_lambda(a, x, y, z)
+
+    jacobian = Matrix([[relation.diff(var) for var in variables]
+                       for relation in relations])
+
+    return simplify(jacobian.T * eye(3) * jacobian)
+
+
+def get_lame_lambda(relation_lambda):
+    from sympy.abc import a, x, y, z
+
+    metric = get_metric(relation_lambda)
+    lame_params = tuple([sqrt(metric[i, i]) for i in range(3)])
+
+    if len(relation_lambda.args[0]) == 3:
+        return Lambda((x, y, z), lame_params)
+    elif len(relation_lambda.args[0]) == 4:
+        return Lambda((a, x, y, z), lame_params)
