@@ -1351,6 +1351,11 @@ def test_sympy__functions__special__bessel__SphericalBesselBase():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__functions__special__bessel__SphericalHankelBase():
+    pass
+
+
 def test_sympy__functions__special__bessel__besseli():
     from sympy.functions.special.bessel import besseli
     assert _test_args(besseli(x, 1))
@@ -1389,6 +1394,16 @@ def test_sympy__functions__special__bessel__jn():
 def test_sympy__functions__special__bessel__yn():
     from sympy.functions.special.bessel import yn
     assert _test_args(yn(0, x))
+
+
+def test_sympy__functions__special__bessel__hn1():
+    from sympy.functions.special.bessel import hn1
+    assert _test_args(hn1(0, x))
+
+
+def test_sympy__functions__special__bessel__hn2():
+    from sympy.functions.special.bessel import hn2
+    assert _test_args(hn2(0, x))
 
 
 def test_sympy__functions__special__bessel__AiryBase():
