@@ -929,9 +929,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if f.is_Relational:
         if not domain.is_subset(S.Reals):
-            raise NotImplementedError("Inequalities in the complex domain are "
-                                      "not supported. Try the real domain by"
-                                      "setting domain=S.Reals")
+            raise NotImplementedError(filldedent('''
+                Inequalities in the complex domain are
+                not supported. Try the real domain by
+                setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
