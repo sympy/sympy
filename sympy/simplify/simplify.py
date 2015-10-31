@@ -203,31 +203,41 @@ def _is_sum_surds(p):
     return True
 
 
-def posify(eq):
-    """Return eq (with generic symbols made positive) and a restore
-    dictionary.
+def posify(eq, restore_dict=True):
+    """Return eq (with generic symbols made positive) and a
+    dictionary containing the mapping between the old and new
+    symbols.
 
     Any symbol that has positive=None will be replaced with a positive dummy
     symbol having the same name. This replacement will allow more symbolic
     processing of expressions, especially those involving powers and
     logarithms.
 
-    A dictionary that can be sent to subs to restore eq to its original
-    symbols is also returned.
+    By default, a dictionary that can be sent to subs to restore eq to its
+    original symbols is returned. If ``restore_dict`` is not True then the
+    keys of the dictionary returned will map the original symbols to the
+    new symbols.
 
     >>> from sympy import posify, Symbol, log
     >>> from sympy.abc import x
-    >>> posify(x + Symbol('p', positive=True) + Symbol('n', negative=True))
+    >>> sum = x + Symbol('p', positive=True) + Symbol('n', negative=True)
+    >>> posify(sum)
     (_x + n + p, {_x: x})
+    >>> posify(sum, restore_dict=False)
+    (_x + n + p, {x: _x})
 
-    >> log(1/x).expand() # should be log(1/x) but it comes back as -log(x)
+    >>> eq = 1/x
+    >>> log(eq).expand()
     log(1/x)
-
-    >>> log(posify(1/x)[0]).expand() # take [0] and ignore replacements
+    >>> log(posify(eq)[0]).expand()
     -log(_x)
-    >>> eq, rep = posify(1/x)
-    >>> log(eq).expand().subs(rep)
+    >>> p, rep = posify(eq)
+    >>> log(p).expand().subs(rep)
     -log(x)
+
+    It is possible to apply the same transformations to an iterable
+    of expressions:
+
     >>> posify([x, 1 + x])
     ([_x, _x + 1], {_x: x})
     """
@@ -248,7 +258,8 @@ def posify(eq):
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.free_symbols if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.items()])
+    return eq, (reps if not restore_dict else
+        dict([(r, s) for s, r in reps.items()]))
 
 
 def hypersimp(f, k):

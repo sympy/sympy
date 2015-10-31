@@ -1,7 +1,7 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
+    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi, Not,
     Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise)
 from mpmath import mpi
 
@@ -452,6 +452,12 @@ def test_contains():
 
     assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
     assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+
+    # non-bool results
+    assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
+        Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
+    assert Intersection(Interval(1,x),Interval(2,3)).contains(y) == \
+        And(y <= 3, y <= x, y >= 1, y >= 2)
 
 
 def test_interval_symbolic():
