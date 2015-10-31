@@ -1465,29 +1465,34 @@ class Intersection(Set):
                 unk = [x for x in s
                        if any(other.contains(x) not in (True, False) for other in other_args)]
                 if unk:
-                    for val in other_args:
+                    new_other = []
+                    del_other = []
+                    for ival, val in enumerate(other_args):
                         if val.is_FiniteSet:
-                            # all values from val which are contained in `s`
-                            # and don't have a Symbol
-                            fin = FiniteSet(*[x for x in s
-                                    if val.contains(x) is true and x.atoms(Symbol)])
                             # collect the non-numbers from `s` and `val`
-                            symbol_in_val = [x for x in val if x.atoms(Symbol)]
-                            symbol_in_s = [x for x in s if x.atoms(Symbol)]
+                            symbol_in_val = [x for x in val if x.has(Symbol)]
+                            symbol_in_s = [x for x in s if x.has(Symbol)]
                             # remove `val` from other_args
-                            other_args.remove(val)
+                            del_other.append(ival)
                             if symbol_in_s == symbol_in_val:
-                                non_symbol_in_s = FiniteSet(*[x for x in s
-                                                    if not x.atoms(Symbol)])
-                                s = s - non_symbol_in_s
+                                syms = FiniteSet(*symbol_in_s, evaluate=False)
+                                non_symbol_in_s = s - syms
+                                s = syms
                                 for x in non_symbol_in_s:
                                     if x in unk:
                                         unk.remove(x)
-                            elif s != fin:
-                                val = val - fin
-                                other_args.append(val)
+                            else:
+                                fin = FiniteSet(*
+                                    [x for x in symbol_in_s
+                                    if val.contains(x) == True],
+                                    evaluate=False)
+                                if s != fin:
+                                    val = val - fin
+                                    new_other.append(val)
 
-                    other_sets = Intersection(*other_args)
+                    for i in reversed(del_other):
+                        other_args.pop(i)
+                    other_sets = Intersection(*(other_args + new_other))
                     if other_sets.is_EmptySet:
                         return EmptySet()
                     res += Intersection(s.func(*unk), other_sets, evaluate=False)
