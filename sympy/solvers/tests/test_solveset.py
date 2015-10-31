@@ -567,6 +567,9 @@ def test_solve_abs():
         ) == Interval(-1, 2)
     # issue 10023
     assert solveset_real(Abs(1/(x - 1)) - 1, x) == FiniteSet(0, 2)
+    # issue #10069
+    assert solveset_real(abs(1/(x - 1)) - 1 > 0, x) == \
+        ConditionSet(x, Eq(Abs(1/(x - 1)) - 1 > 0, 0), S.Reals)
 
 
 @XFAIL
