@@ -649,10 +649,10 @@ def _has_rational_power(expr, symbol):
     (False, 1)
     """
     a, p, q = Wild('a'), Wild('p'), Wild('q')
-    pattern_match = expr.match(a*p**q)
-    if pattern_match is None or pattern_match[a] is S.Zero:
+    pattern_match = expr.match(a*p**q) or {}
+    if pattern_match.get(a, S.Zero) is S.Zero:
         return (False, S.One)
-    elif p not in pattern_match.keys() or a not in pattern_match.keys():
+    elif p not in pattern_match.keys():
         return (False, S.One)
     elif isinstance(pattern_match[q], Rational) \
             and pattern_match[p].has(symbol):
@@ -700,10 +700,9 @@ def _isolve(expr, symbol, relational=False):
 
 def _solve_abs(f, symbol):
     """ Helper function to solve equation involving absolute value function """
-    assert f.has(Abs)
     p, q, r = Wild('p'), Wild('q'), Wild('r')
-    pattern_match = f.match(p*Abs(q) + r)
-    if not pattern_match[p].is_zero:
+    pattern_match = f.match(p*Abs(q) + r) or {}
+    if not pattern_match.get(p, S.Zero).is_zero:
         f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
         q_pos_cond = _isolve(f_q >= 0, symbol)
         q_neg_cond = _isolve(f_q < 0, symbol)
