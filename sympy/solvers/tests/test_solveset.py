@@ -5,7 +5,7 @@ from sympy import (
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
-    oo)
+    oo, zoo)
 
 from sympy.core.function import nfloat
 from sympy.core.relational import Unequality as Ne
@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.sets import (FiniteSet, ConditionSet)
+from sympy.sets import (FiniteSet, ConditionSet, Complement)
 
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
@@ -440,11 +440,11 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 +
-        (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) -
-        1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2
-        )*Abs(q))/Abs(q), 0), S.Reals)
-    assert solveset_real(eq, q) == unsolved_object
+    ans = Complement(
+        ConditionSet(q, Eq(16*q**2*(m - q)**2 - q**2*(-2*m**2 - sqrt(4*m**4 -
+        4*m**2 + 8*m + 1) - 1)**2 - q**2*(2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2
+        + 8*m + 1) - 1)**2 + 4*(-m + q)**2, 0), S.Reals), FiniteSet(0))
+    assert solveset_real(eq, q) == ans
 
 
 def test_solve_polynomial_symbolic_param():
@@ -558,11 +558,15 @@ def test_solve_abs():
         FiniteSet(-1, Rational(1, 3))
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
+    # issue 10023
+    assert solveset_real(Abs(1/(x - 1)) - 1, x) == FiniteSet(0, 2)
 
     # issue 9565. Note: solveset_real does not solve this as it is
     # solveset's job to handle Relationals
     assert solveset(Abs((x - 1)/(x - 5)) <= S(1)/3, domain=S.Reals
         ) == Interval(-1, 2)
+    # issue 10023
+    assert solveset_real(Abs(1/(x - 1)) - 1, x) == FiniteSet(0, 2)
 
 
 @XFAIL
@@ -591,8 +595,7 @@ def test_units():
 def test_solve_only_exp_1():
     y = Symbol('y', positive=True, finite=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
-    assert solveset_real(exp(x) + exp(-x) - 4, x) == \
-        FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
+    assert solveset_real(exp(x) + exp(-x) - 4, x) == FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
 
 
@@ -895,7 +898,7 @@ def test_improve_coverage():
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
     unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
-    assert solution == unsolved_object
+    assert solution == Complement(unsolved_object, FiniteSet(0))
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
     assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
