@@ -25,6 +25,7 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
+from sympy.utilities.iterables import iterable
 from sympy.utilities import filldedent
 
 import warnings
@@ -374,7 +375,7 @@ def _is_function_class_equation(func_class, f, symbol):
         return False
 
 
-def solveset_real(f, symbol):
+def solveset_real(f, symbol, _first=True):
     """ Solves a real valued equation.
 
     Parameters
@@ -445,26 +446,31 @@ def solveset_real(f, symbol):
     (-oo, oo)
 
     """
-    if not symbol.is_Symbol:
-        raise ValueError(" %s is not a symbol" % (symbol))
+    if _first:
+        if not symbol.is_Symbol:
+            raise ValueError(" %s is not a symbol" % (symbol))
 
-    f = sympify(f)
-    if not isinstance(f, (Expr, Number)):
-        raise ValueError(" %s is not a valid sympy expression" % (f))
+        f = sympify(f)
+        if not isinstance(f, (Expr, Number)):
+            raise ValueError(" %s is not a valid sympy expression" % (f))
 
-    original_eq = f
-    f = together(f)
+        try:
+            result = solveset_real(f, symbol, _first=False)
 
-    # In this, unlike in solveset_complex, expression should only
-    # be expanded when fraction(f)[1] does not contain the symbol
-    # for which we are solving
-    if not symbol in fraction(f)[1].free_symbols and f.is_rational_function():
-        f = expand(f)
+            if isinstance(result, FiniteSet):
+                result = FiniteSet(*[s for s in result
+                          if isinstance(s, RootOf)
+                          or domain_check(f, symbol, s)])
+
+            return result.intersect(S.Reals)
+        except NotImplementedError:
+            return ConditionSet(symbol, Eq(f, 0), S.Reals)
+
 
     if f.has(Piecewise):
         f = piecewise_fold(f)
-    result = EmptySet()
 
+    result = EmptySet()
     if f.expand().is_zero:
         return S.Reals
     elif not f.has(symbol):
@@ -476,15 +482,14 @@ def solveset_real(f, symbol):
         # f(x) == 0. To be sure that we are not silently allowing any
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
-        result = Union(*[solveset_real(m, symbol) for m in f.args])
+        result = Union(*[solveset_real(m, symbol, _first=False) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_real_trig(f, symbol)
     elif f.is_Piecewise:
-        result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs()
         for (expr, in_set) in expr_set_pairs:
-            solns = solveset_real(expr, symbol).intersect(in_set)
+            solns = solveset_real(expr, symbol, _first=False).intersect(in_set)
             result = result + solns
     else:
         lhs, rhs_s = invert_real(f, 0, symbol)
@@ -506,18 +511,8 @@ def solveset_real(f, symbol):
                                                      solveset_solver=solveset_real,
                                                      as_poly_solver=_solve_as_poly_real)
                 else:
-                    result += solveset_real(equation, symbol)
-        else:
-            result = ConditionSet(symbol, Eq(f, 0), S.Reals)
-
-    if isinstance(result, FiniteSet):
-        result = [s for s in result
-                  if isinstance(s, RootOf)
-                  or domain_check(original_eq, symbol, s)]
-        return FiniteSet(*result).intersect(S.Reals)
-    else:
-        return result.intersect(S.Reals)
-
+                    result += solveset_real(equation, symbol, _first=False)
+    return result
 
 def _solve_as_rational(f, symbol, solveset_solver, as_poly_solver):
     """ solve rational functions"""
@@ -690,7 +685,9 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
+    return FiniteSet(
+        *[s for s in result if checksol(f, symbol, s) is True]) if \
+        iterable(result) else result
 
 
 def _isolve(expr, symbol, relational=False):
@@ -720,7 +717,7 @@ def _solve_abs(f, symbol):
         return ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
 
-def solveset_complex(f, symbol):
+def solveset_complex(f, symbol, _first=True):
     """ Solve a complex valued equation.
 
     Parameters
@@ -776,26 +773,30 @@ def solveset_complex(f, symbol):
     ImageSet(Lambda(_n, 2*_n*I*pi), Integers())
 
     """
-    if not symbol.is_Symbol:
-        raise ValueError(" %s is not a symbol" % (symbol))
+    if _first:
+        if not symbol.is_Symbol:
+            raise ValueError(" %s is not a symbol" % (symbol))
 
-    f = sympify(f)
-    original_eq = f
-    if not isinstance(f, (Expr, Number)):
-        raise ValueError(" %s is not a valid sympy expression" % (f))
+        f = sympify(f)
+        original_eq = f
+        if not isinstance(f, (Expr, Number)):
+            raise ValueError(" %s is not a valid sympy expression" % (f))
 
-    f = together(f)
-    # Without this equations like a + 4*x**2 - E keep oscillating
-    # into form  a/4 + x**2 - E/4 and (a + 4*x**2 - E)/4
-    if not fraction(f)[1].has(symbol):
-        f = expand(f)
+        f = together(f)
+        # Without this equations like a + 4*x**2 - E keep oscillating
+        # into form  a/4 + x**2 - E/4 and (a + 4*x**2 - E)/4
+        if not fraction(f)[1].has(symbol):
+            f = expand(f)
+
+
+        return solveset_complex(f, symbol, _first=False)
 
     if f.is_zero:
         return S.Complexes
     elif not f.has(symbol):
         result = EmptySet()
     elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
-        result = Union(*[solveset_complex(m, symbol) for m in f.args])
+        result = Union(*[solveset_complex(m, symbol, _first=False) for m in f.args])
     else:
         lhs, rhs_s = invert_complex(f, 0, symbol)
         if lhs == symbol:
@@ -815,20 +816,20 @@ def solveset_complex(f, symbol):
                                                  solveset_solver=solveset_complex,
                                                  as_poly_solver=_solve_as_poly_complex)
                 else:
-                    result += solveset_complex(equation, symbol)
+                    result += solveset_complex(equation, symbol, _first=False)
         else:
             result = ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
     if isinstance(result, FiniteSet):
         result = [s for s in result
                   if isinstance(s, RootOf)
-                  or domain_check(original_eq, symbol, s)]
+                  or domain_check(f, symbol, s)]
         return FiniteSet(*result)
     else:
         return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
+def solveset(f, symbol=None, domain=S.Complexes, _first=True):
     """Solves a given inequality or equation with set as output
 
     Parameters
@@ -906,29 +907,35 @@ def solveset(f, symbol=None, domain=S.Complexes):
     (0, oo)
 
     """
+    if _first:
+        if symbol is None:
+            free_symbols = f.free_symbols
+            if len(free_symbols) == 1:
+                symbol = free_symbols.pop()
+            else:
+                raise ValueError(filldedent('''
+                    The independent variable must be specified for a
+                    multivariate equation.'''))
+        elif not symbol.is_Symbol:
+            raise ValueError('A Symbol must be given, not type %s: %s' % (type(symbol), symbol))
 
-    if symbol is None:
-        free_symbols = f.free_symbols
-        if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
-    elif not symbol.is_Symbol:
-        raise ValueError('A Symbol must be given, not type %s: %s' % (type(symbol), symbol))
+        f = sympify(f)
 
-    f = sympify(f)
+        if f is S.false:
+            return EmptySet()
 
-    if f is S.false:
-        return EmptySet()
+        if f is S.true:
+            return domain
 
-    if f is S.true:
-        return domain
+        if isinstance(f, Eq):
+            from sympy.core import Add
+            f = Add(f.lhs, - f.rhs, evaluate=False)
 
-    if isinstance(f, Eq):
-        from sympy.core import Add
-        f = Add(f.lhs, - f.rhs, evaluate=False)
+        n, d = fraction(together(f))
+        rv = solveset(n, symbol, domain, _first=False)
+        for d in denoms(f):
+            rv -= solveset(d, symbol, domain, _first=False)
+        return rv
 
     if f.is_Relational:
         if not domain.is_subset(S.Reals):
