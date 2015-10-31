@@ -564,7 +564,9 @@ def test_solve_abs():
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
     # issue 10042
     assert solveset_real(Abs(1/(x - 1)) - 1, x) == FiniteSet(0, 2)
-
+    # issue 9565
+    assert solveset_real(abs((x - 1)/(x - 5)) <= S(1)/3
+        ) == Interval(-1, 2)
 
 @XFAIL
 def test_rewrite_trigh():
