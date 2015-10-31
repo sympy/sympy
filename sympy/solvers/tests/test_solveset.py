@@ -559,6 +559,11 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
+    # issue 9565. Note: solveset_real does not solve this as it is
+    # solveset's job to handle Relationals
+    assert solveset(Abs((x - 1)/(x - 5)) <= S(1)/3, domain=S.Reals
+        ) == Interval(-1, 2)
+
 
 @XFAIL
 def test_rewrite_trigh():
