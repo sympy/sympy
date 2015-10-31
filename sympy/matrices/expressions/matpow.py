@@ -57,14 +57,9 @@ class MatPow(MatrixExpr):
         base = args[0]
         exp = args[1]
         if exp.is_zero and base.is_square:
-            try:
-                b = base.func(Identity(base.shape[0]))
-                if isinstance(b, MatrixBase):
-                    return b
-                else:
-                    return Identity(base.shape[0])
-            except TypeError:
-                return Identity(base.shape[0])
+            if isinstance(base, MatrixBase):
+                return base.func(Identity(base.shape[0]))
+            return Identity(base.shape[0])
         elif isinstance(base, ZeroMatrix) and exp.is_negative:
             raise ValueError("Matrix det == 0; not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
