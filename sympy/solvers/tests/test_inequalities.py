@@ -324,3 +324,7 @@ def test_issue_9451():
         And(-oo < x, x < -sqrt(2) + 1),
         And(-sqrt(5)/2 + S(3)/2 < x, x < 2),
         And(sqrt(5)/2 + S(3)/2 < x, x < oo))
+
+
+def test_issue_10047():
+    assert solve(sin(x) < 2) == And(-oo < x, x < oo)
