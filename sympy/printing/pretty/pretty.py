@@ -1590,6 +1590,9 @@ class PrettyPrinter(Printer):
         s = None
 
         for item in seq:
+	    if str(type(item))=="<class 'sympy.vector.vector.BaseVector'>" :
+	    	item=str(item)	
+	    
             pform = self._print(item)
 
             if parenthesize(item):
