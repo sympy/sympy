@@ -484,9 +484,6 @@ def test_puiseux():
     r = rs_LambertW(p, x, 1)
     assert r == -x**QQ(4,5) + x**QQ(2,3) + x**QQ(2,5)
 
-    r = rs_exp(p, x, 1)
-    assert r == x**QQ(4,5)/2 + x**QQ(2,3) + x**QQ(2,5) + 1
-
     p1 = x + x**QQ(1,5)*y
     r = rs_exp(p1, x, 1)
     assert r == x**QQ(4,5)*y**4/24 + x**QQ(3,5)*y**3/6 + x**QQ(2,5)*y**2/2 + \
@@ -504,23 +501,10 @@ def test_puiseux():
     assert r == x**QQ(9,5)/2 + x**QQ(26,15)/2 + x**QQ(22,15)/2 + \
         x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
 
-
-    r = rs_tan(p, x, 2)
-    assert r == x**QQ(9,5) + x**QQ(26,15) + x**QQ(22,15) + x**QQ(6,5)/3 + \
-        x + x**QQ(2,3) + x**QQ(2,5)
-
     r = rs_cot(p, x, 1)
     assert r == -x**QQ(14,15) + x**QQ(4,5) - 3*x**QQ(11,15) + \
         2*x**QQ(2,3)/3 + 2*x**QQ(7,15) - 4*x**QQ(2,5)/3 - x**QQ(1,5) + \
         x**QQ(2,15) - x**QQ(-2,15) + x**QQ(-2,5)
-
-    r = rs_sin(p, x, 2)
-    assert r == -x**QQ(9,5)/2 - x**QQ(26,15)/2 - x**QQ(22,15)/2 - \
-        x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
-
-    r = rs_cos(p, x, 2)
-    assert r == x**QQ(28,15)/6 - x**QQ(5,3) + x**QQ(8,5)/24 - x**QQ(7,5) - \
-        x**QQ(4,3)/2 - x**QQ(16,15) - x**QQ(4,5)/2 + 1
 
     r = rs_cos_sin(p, x, 2)
     assert r[0] == x**QQ(28,15)/6 - x**QQ(5,3) + x**QQ(8,5)/24 - x**QQ(7,5) - \
@@ -584,7 +568,6 @@ def test_rs_series():
     x, a, b, c = symbols('x, a, b, c')
 
     assert rs_series(a, a, 5).as_expr() == a
-    assert rs_series(sin(1/a), a, 5).as_expr() == sin(1/a)
     assert rs_series(sin(a), a, 5).as_expr() == (sin(a).series(a, 0,
         5)).removeO()
     assert rs_series(sin(a) + cos(a), a, 5).as_expr() == ((sin(a) +
@@ -623,12 +606,12 @@ def test_rs_series():
         a + a**QQ(2,3) + a**QQ(2,5)
 
     r = rs_series(exp(p), a, 1)
-    assert r == a**QQ(4,5)/2 + a**QQ(2,3) + a**QQ(2,5) + 1
+    assert r.as_expr() == a**QQ(4,5)/2 + a**QQ(2,3) + a**QQ(2,5) + 1
 
     r = rs_series(sin(p), a, 2)
-    assert r == -a**QQ(9,5)/2 - a**QQ(26,15)/2 - a**QQ(22,15)/2 - \
+    assert r.as_expr() == -a**QQ(9,5)/2 - a**QQ(26,15)/2 - a**QQ(22,15)/2 - \
         a**QQ(6,5)/6 + a + a**QQ(2,3) + a**QQ(2,5)
 
     r = rs_series(cos(p), a, 2)
-    assert r == a**QQ(28,15)/6 - a**QQ(5,3) + a**QQ(8,5)/24 - a**QQ(7,5) - \
+    assert r.as_expr() == a**QQ(28,15)/6 - a**QQ(5,3) + a**QQ(8,5)/24 - a**QQ(7,5) - \
         a**QQ(4,3)/2 - a**QQ(16,15) - a**QQ(4,5)/2 + 1
