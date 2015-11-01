@@ -1961,12 +1961,16 @@ def rs_series(expr, a, prec):
     >>> from sympy.polys.ring_series import rs_series
     >>> from sympy.functions import sin, cos, exp, tan
     >>> from sympy.core import symbols
+    >>> from sympy.polys.domains import QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1
     >>> series = rs_series(tan(a + b)*cos(a + c), a, 2)
     >>> series.as_expr()
     -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
+    >>> series = rs_series(exp(a**QQ(1,3) + a**QQ(2, 5)), a, 1)
+    >>> series.as_expr()
+    a**(11/15) + a**(4/5)/2 + a**(2/5) + a**(2/3)/2 + a**(1/3) + 1
 
     """
     R, series = sring(expr, domain=QQ, expand=False, series=True)
