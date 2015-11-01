@@ -1456,7 +1456,6 @@ class Intersection(Set):
 
         # If any FiniteSets see which elements of that finite set occur within
         # all other sets in the intersection
-        from sympy import Symbol
         for s in args:
             if s.is_FiniteSet:
                 other_args = [a for a in args if a != s]
@@ -1469,11 +1468,14 @@ class Intersection(Set):
                     del_other = []
                     for ival, val in enumerate(other_args):
                         if val.is_FiniteSet:
-                            # collect the non-numbers from `s` and `val`
+                            # collect expressions having symbols
+                            # from `val` and `s`
                             symbol_in_val = [x for x in val if x.has(Symbol)]
                             symbol_in_s = [x for x in s if x.has(Symbol)]
-                            # remove `val` from other_args
                             del_other.append(ival)
+                            # if expression with symbols are same in `s` and `val`
+                            # then remove the non-symbol containing expressions
+                            # from `unk`, since they can not be contained
                             if symbol_in_s == symbol_in_val:
                                 syms = FiniteSet(*symbol_in_s, evaluate=False)
                                 non_symbol_in_s = s - syms
@@ -1497,6 +1499,7 @@ class Intersection(Set):
                         return EmptySet()
                     res += Intersection(s.func(*unk), other_sets, evaluate=False)
                 return res
+
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
             if s.is_Union:
