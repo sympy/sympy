@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from sympy import Add, Pow, Mul
+from sympy import Add, Pow, Mul, sin
 
 from sympy.physics.unitsystems.simplifiers import dim_simplify, qsimplify
 from sympy.physics.unitsystems.quantities import Quantity as Q
@@ -25,6 +25,9 @@ def test_dim_simplify_pow():
 
 def test_dim_simplify_rec():
     assert dim_simplify(Mul(Add(L, L), T)) == L.mul(T)
+
+def test_dim_simplify_dimless():
+    assert dim_simplify(Mul(Pow(sin(Mul(L, Pow(L,-1))), 2),L)) == L
 
 
 m, s = mks["m"], mks["s"]
