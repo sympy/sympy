@@ -401,6 +401,30 @@ def solve_univariate_inequality(expr, gen, relational=True):
     from sympy.polys.polytools import real_roots
     from sympy.utilities.iterables import sift
 
+    expr = expr.canonical
+    if expr.lhs == gen and expr.rhs.is_number:
+        op = expr.rel_op
+        rv = None
+        if '<' in op:
+            rv = Interval(
+                S.NegativeInfinity,
+                expr.rhs, True, bool('=' not in op))
+        elif '>' in op:
+            rv = Interval(
+                expr.rhs,
+                S.Infinity, bool('=' not in op), True)
+        elif op == '==':
+            rv = FiniteSet(expr.rhs)
+        elif op == '!=':
+            rv = Union(
+                Interval.Ropen(S.NegativeInfinity, expr.rhs),
+                Interval.Lopen(expr.rhs, S.Infinity))
+        else:
+            pass  # let the general routine handle it
+        if rv is not None:
+            return rv.as_relational(gen) if relational else rv
+
+    # general Relationals that need solving
     e = expr.lhs - expr.rhs
     parts = n, d = e.as_numer_denom()
     if all(i.is_polynomial(gen) for i in parts):
@@ -426,7 +450,10 @@ def solve_univariate_inequality(expr, gen, relational=True):
         for d in denoms(e):
             singularities.extend(solve(d, gen))
 
-    include_x = expr.func(0, 0)
+    try:
+        reals = _nsort(set(solns + singularities), separated=True)[0]
+    except NotImplementedError:
+        raise NotImplementedError('sorting of these roots is not supported')
 
     def valid(x):
         v = e.subs(gen, x)
@@ -444,12 +471,9 @@ def solve_univariate_inequality(expr, gen, relational=True):
                 return expr.func(v, 0)
             return S.false
 
+    include_x = expr.func(0, 0)
     start = S.NegativeInfinity
     sol_sets = [S.EmptySet]
-    try:
-        reals = _nsort(set(solns + singularities), separated=True)[0]
-    except NotImplementedError:
-        raise NotImplementedError('sorting of these roots is not supported')
     for x in reals:
         end = x
 
@@ -458,7 +482,8 @@ def solve_univariate_inequality(expr, gen, relational=True):
                 sol_sets.append(Interval(start, S.Infinity, True, True))
                 break
 
-        if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
+        v = (start + end)/2 if start is not S.NegativeInfinity else (end - 1)
+        if valid(v):
             sol_sets.append(Interval(start, end, True, True))
 
         if x in singularities:
@@ -474,7 +499,8 @@ def solve_univariate_inequality(expr, gen, relational=True):
     # check a point between -oo and oo (e.g. 0) else pick a point
     # past the last solution (which is start after the end of the
     # for-loop above
-    if valid(start + 1 if start is not S.NegativeInfinity else 0):
+    v = start + 1 if start is not S.NegativeInfinity else 0
+    if valid(v):
         sol_sets.append(Interval(start, end, True, True))
 
     rv = Union(*sol_sets)

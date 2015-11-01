@@ -1045,3 +1045,16 @@ def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
                 (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+
+
+def test_issue_10071():
+    x = Symbol('x', real=True)
+    eq = x**3 - 17*x**2 + 81*x - 118
+    assert solveset(eq > 0, x, domain=S.Reals) == Union(
+        Interval.open(RootOf(eq, 0), RootOf(eq, 1)),
+        Interval.Lopen(RootOf(eq, 2), oo))
+    x = Symbol('x')
+    eq = x**3 - 17*x**2 + 81*x - 118
+    assert solveset(eq > 0, x, domain=S.Reals) == Union(
+        Interval.open(RootOf(eq, 0), RootOf(eq, 1)),
+        Interval.Lopen(RootOf(eq, 2), oo))
