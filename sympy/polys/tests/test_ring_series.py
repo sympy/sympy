@@ -615,3 +615,20 @@ def test_rs_series():
     p = tan(sin(a**2 + 4) + b + c)
     assert expand(rs_series(p, a, 6).as_expr()) == expand(p.series(a, 0,
         6).removeO())
+
+    p = a**QQ(2,5) + a**QQ(2,3) + a
+
+    r = rs_series(tan(p), a, 2)
+    assert r.as_expr() == a**QQ(9,5) + a**QQ(26,15) + a**QQ(22,15) + a**QQ(6,5)/3 + \
+        a + a**QQ(2,3) + a**QQ(2,5)
+
+    r = rs_series(exp(p), a, 1)
+    assert r == a**QQ(4,5)/2 + a**QQ(2,3) + a**QQ(2,5) + 1
+
+    r = rs_series(sin(p), a, 2)
+    assert r == -a**QQ(9,5)/2 - a**QQ(26,15)/2 - a**QQ(22,15)/2 - \
+        a**QQ(6,5)/6 + a + a**QQ(2,3) + a**QQ(2,5)
+
+    r = rs_series(cos(p), a, 2)
+    assert r == a**QQ(28,15)/6 - a**QQ(5,3) + a**QQ(8,5)/24 - a**QQ(7,5) - \
+        a**QQ(4,3)/2 - a**QQ(16,15) - a**QQ(4,5)/2 + 1
