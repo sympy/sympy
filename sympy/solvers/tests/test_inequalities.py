@@ -251,6 +251,17 @@ def test_issue_5526():
 
 
 def test_solve_univariate_inequality():
+    # trivial relationals
+    assert isolve(x > 1, x) == And(Lt(1, x), x < oo)
+    assert isolve(x > 1, x, False) == Interval.Lopen(1, oo)
+    assert isolve(x < 1, x, False) == Interval.Ropen(-oo, 1)
+    assert isolve(x >= 1, x, False) == Interval(1, oo)
+    assert isolve(x <= 1, x, False) == Interval(-oo, 1)
+    assert isolve(Eq(x, 1), x, False) == FiniteSet(1)
+    assert isolve(Ne(x, 1), x, False) == Union(
+        Interval.Ropen(-oo, 1),
+        Interval.Lopen(1, oo))
+    # others
     assert isolve(x**2 >= 4, x, relational=False) == Union(Interval(-oo, -2),
         Interval(2, oo))
     assert isolve(x**2 >= 4, x) == Or(And(Le(2, x), Lt(x, oo)), And(Le(x, -2),
