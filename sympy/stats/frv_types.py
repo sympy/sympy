@@ -14,11 +14,11 @@ Hypergeometric
 
 from __future__ import print_function, division
 
+from sympy.core.cache import cached_property
 from sympy.core.compatibility import as_int, range
 from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic)
+from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDistribution
+from sympy import S, sympify, Rational, binomial, Integer, Dict, Basic
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
         'Binomial', 'Hypergeometric']
@@ -59,8 +59,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     def p(self):
         return Rational(1, len(self.args))
 
-    @property
-    @cacheit
+    @cached_property
     def dict(self):
         return dict((k, self.p) for k in self.set)
 
@@ -110,8 +109,7 @@ class DieDistribution(SingleFiniteDistribution):
         else:
             return super(DieDistribution, cls).__new__(cls, sides)
 
-    @property
-    @cacheit
+    @cached_property
     def dict(self):
         sides = as_int(self.sides)
         return super(DieDistribution, self).dict
@@ -151,8 +149,7 @@ def Die(name, sides=6):
 class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
 
-    @property
-    @cacheit
+    @cached_property
     def dict(self):
         return {self.succ: self.p, self.fail: 1 - self.p}
 
@@ -216,8 +213,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         else:
             return super(BinomialDistribution, cls).__new__(cls, *args)
 
-    @property
-    @cacheit
+    @cached_property
     def dict(self):
         n, p, succ, fail = self.n, self.p, self.succ, self.fail
         n = as_int(n)
@@ -248,8 +244,7 @@ def Binomial(name, n, p, succ=1, fail=0):
 class HypergeometricDistribution(SingleFiniteDistribution):
     _argnames = ('N', 'm', 'n')
 
-    @property
-    @cacheit
+    @cached_property
     def dict(self):
         N, m, n = self.N, self.m, self.n
         N, m, n = list(map(sympify, (N, m, n)))
@@ -280,8 +275,8 @@ def Hypergeometric(name, N, m, n):
 
 
 class RademacherDistribution(SingleFiniteDistribution):
-    @property
-    @cacheit
+
+    @cached_property
     def dict(self):
         return {-1: S.Half, 1: S.Half}
 

@@ -11,7 +11,8 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (Basic, Symbol, cacheit, sympify, Mul,
+from sympy.core.cache import cached_property, cacheit
+from sympy import (Basic, Symbol, sympify, Mul,
         And, Or, Tuple, Piecewise, Eq, Lambda)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
@@ -170,8 +171,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
-    @property
-    @cacheit
+    @cached_property
     def dict(self):
         return dict((k, self.pdf(k)) for k in self.set)
 
@@ -316,8 +316,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     def domain(self):
         return SingleFiniteDomain(self.symbol, self.distribution.set)
 
-    @property
-    @cacheit
+    @cached_property
     def _density(self):
         return dict((frozenset(((self.symbol, val),)), prob)
                     for val, prob in self.distribution.dict.items())
@@ -331,8 +330,7 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
 
-    @property
-    @cacheit
+    @cached_property
     def _density(self):
         proditer = product(*[iter(space._density.items())
             for space in self.spaces])
@@ -344,7 +342,6 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
             d[elem] = d.get(elem, 0) + prob
         return Dict(d)
 
-    @property
-    @cacheit
+    @cached_property
     def density(self):
         return Dict(self._density)

@@ -2,8 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
-                   Tuple)
+from sympy.core.cache import cached_property
+from sympy import conjugate, Expr, Function, integrate, oo, sqrt, Tuple
 from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -869,8 +869,7 @@ class Wavefunction(Function):
 
         return (self.norm == 1.0)
 
-    @property
-    @cacheit
+    @cached_property
     def norm(self):
         """
         Return the normalization of the specified functional form.
