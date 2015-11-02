@@ -18,7 +18,7 @@ tutorial that symbolic equations in SymPy are not represented by ``=`` or
     x = y
 
 
-However, there is an even easier way.  In SymPy, any expression is not in an
+However, there is an even easier way.  In SymPy, any expression not in an
 ``Eq`` is automatically assumed to equal 0 by the solving functions.  Since `a
 = b` if and only if `a - b = 0`, this means that instead of using ``x == y``,
 you can just use ``x - y``.  For example
