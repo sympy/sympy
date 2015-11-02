@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from .matexpr import MatrixExpr, ShapeError, Identity
+from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.matrices import MatrixBase
@@ -56,7 +56,8 @@ class MatPow(MatrixExpr):
             args = self.args
         base = args[0]
         exp = args[1]
-        if isinstance(base, MatrixBase) and exp.is_number:
+        if (isinstance(base, (MatrixBase, Identity, ZeroMatrix)) and
+            exp.is_number):
             if exp is S.One:
                 return base
             return base**exp

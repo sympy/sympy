@@ -415,6 +415,11 @@ class Identity(MatrixExpr):
     def shape(self):
         return (self.args[0], self.args[0])
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        return self
+
     def _eval_transpose(self):
         return self
 
