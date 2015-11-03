@@ -6284,6 +6284,12 @@ def cancel(f, *gens, **args):
             return f
         f = factor_terms(f, radical=True)
         p, q = f.as_numer_denom()
+        # Integer unity is the multiplication unit in both the ring of
+        # integers and the ring of polynomials, hence cannot possibly be
+        # canceled.
+        one = Integer(1)
+        if p == one or q == one:
+            return p / q
 
     elif len(f) == 2:
         p, q = f
