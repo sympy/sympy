@@ -1258,7 +1258,7 @@ class SymPyDocTests(object):
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
                 if not self._process_dependencies(test.globs['_doctest_depends_on']):
-                    self._reporter.test_skip()
+                    self._reporter.test_skip(v="\nDoctest depends on {}".format(test.globs['_doctest_depends_on']['modules']))
                     continue
 
             if self._reporter._verbose:
@@ -2178,11 +2178,12 @@ class PyTestReporter(Reporter):
                 char = "T"
             elif message == "Slow":
                 char = "w"
-        self.write(char, "Blue")
         if self._verbose:
-            self.write(" - ", "Blue")
             if v is not None:
-                self.write(message, "Blue")
+                self.write(message + ' ', "Blue")
+            else:
+                self.write(" - ", "Blue")
+        self.write(char, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
