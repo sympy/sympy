@@ -1261,6 +1261,9 @@ class SymPyDocTests(object):
                     self._reporter.test_skip()
                     continue
 
+            if self._reporter._verbose:
+                self._reporter.write("\n{} ".format(test.name))
+
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
