@@ -168,10 +168,10 @@ def rs_puiseux(f, p, x, prec):
         power = k[index]
         if isinstance(power, Rational):
             num, den = power.as_numer_denom()
-            n = n*den // igcd(n, den)
+            n = int(n*den // igcd(n, den))
         elif power != int(power):
             num, den = power.numerator, power.denominator
-            n = n*den // igcd(n, den)
+            n = int(n*den // igcd(n, den))
     if n != 1:
         p1 = pow_xin(p, index, n)
         r = f(p1, x, prec*n)
