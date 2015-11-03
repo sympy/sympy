@@ -92,7 +92,7 @@ fi
 if [[ "${TEST_SYMPY}" == "true" ]]; then
     cat << EOF | python
 import sympy
-    if not sympy.test(split='${SPLIT}'):
-       raise Exception('Tests failed')
+if not sympy.test(split='${SPLIT}'):
+   raise Exception('Tests failed')
 EOF
 fi
