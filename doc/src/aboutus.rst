@@ -425,6 +425,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Devyani Kota: Fixed issue 9953: linsolve([ ], ...) now returns S.EmptySet
 #. Keval Shah: Union with subset of S.Complexes now evaluated
 #. Dzhelil Rufat: Make it possible to lambdify expressions that contain sums
+#. Jacob Garber: Correct Polygon.encloses_point in geometry and update references
 #. Matthew Davis: Fixed documentation typos
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
