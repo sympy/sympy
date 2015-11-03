@@ -57,7 +57,6 @@ matrix:
 
     - python: "pypy"
       env:
-        - TEST_SYMPY="true"
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
     - python: "pypy"
