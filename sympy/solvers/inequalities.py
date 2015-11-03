@@ -467,7 +467,11 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
         end = S.Infinity
 
-        if valid(start + 1):
+        # in case start == -oo then there were no solutions so we just
+        # check a point between -oo and oo (e.g. 0) else pick a point
+        # past the last solution (which is start after the end of the
+        # for-loop above
+        if valid(start + 1 if start is not S.NegativeInfinity else 0):
             sol_sets.append(Interval(start, end, True, True))
 
         rv = Union(*sol_sets).subs(gen, _gen)

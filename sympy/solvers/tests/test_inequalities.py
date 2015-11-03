@@ -308,9 +308,5 @@ def test_issue_8545():
 
 
 def test_issue_8974():
-    assert isolve(oo > x, x) == And(-oo < x, x < oo)
-
-
-@XFAIL
-def test_issue_8974_fails():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
+    assert isolve(oo > x, x) == And(-oo < x, x < oo)
