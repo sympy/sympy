@@ -1257,8 +1257,10 @@ class SymPyDocTests(object):
 
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
-                if not self._process_dependencies(test.globs['_doctest_depends_on']):
-                    self._reporter.test_skip(v="\nDoctest depends on {}".format(test.globs['_doctest_depends_on']['modules']))
+                has_dependencies = self._process_dependencies(test.globs['_doctest_depends_on'])
+                if has_dependencies is not True:
+                    # has_dependencies is either True or a message
+                    self._reporter.test_skip(v="\n" + has_dependencies)
                     continue
 
             if self._reporter._verbose:
@@ -1345,7 +1347,7 @@ class SymPyDocTests(object):
             for ex in executables:
                 found = find_executable(ex)
                 if found is None:
-                    return False
+                    return "Could not find {}".format(ex)
         if moduledeps is not None:
             for extmod in moduledeps:
                 if extmod == 'matplotlib':
@@ -1357,7 +1359,7 @@ class SymPyDocTests(object):
                     if matplotlib is not None:
                         pass
                     else:
-                        return False
+                        return "Could not import matplotlib"
                 else:
                     # TODO min version support
                     mod = import_module(extmod)
@@ -1366,7 +1368,7 @@ class SymPyDocTests(object):
                         if hasattr(mod, '__version__'):
                             version = mod.__version__
                     else:
-                        return False
+                        return "Could not import {}".format(mod)
         if viewers is not None:
             import tempfile
             tempdir = tempfile.mkdtemp()
