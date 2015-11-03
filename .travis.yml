@@ -3,10 +3,10 @@ sudo: false
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false"
-  - SPLIT="1/4"
-  - SPLIT="2/4"
-  - SPLIT="3/4"
-  - SPLIT="4/4"
+  - SPLIT="1/4" TEST_SYMPY="true"
+  - SPLIT="2/4" TEST_SYMPY="true"
+  - SPLIT="3/4" TEST_SYMPY="true"
+  - SPLIT="4/4" TEST_SYMPY="true"
   global:
     secure: "SyoeHaDi9vRPJ5X0JFY5/nQif66u+fehtqUg7F8ILoNrwugJcs+u4VZm1sJ7Cv2h6uGoNRAfkkrahxxj2mKCgpqbY2MdDAZ+ru5wn5R0NjYjTpEz7ET4Xq5o+gca+mhFMkiutYihM73+AaIKCX0vfC9yb8WBPXzbbrv8vVvQr6Y="
 
