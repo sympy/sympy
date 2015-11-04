@@ -347,6 +347,11 @@ class ResultBase(object):
         self.expr = expr
         self.result_var = result_var
 
+    def __str__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine."""
@@ -388,6 +393,11 @@ class OutputArgument(Argument, ResultBase):
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
 
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine."""
@@ -399,6 +409,12 @@ class InOutArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
     __init__.__doc__ = OutputArgument.__init__.__doc__
 
+
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class Result(Variable, ResultBase):
     """An expression for a return value.
