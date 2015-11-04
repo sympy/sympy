@@ -12,6 +12,7 @@ from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
 from sympy.sets.contains import Contains
 
 from mpmath import mpi, mpf
@@ -1463,7 +1464,37 @@ class Intersection(Set):
                 unk = [x for x in s
                        if any(other.contains(x) not in (True, False) for other in other_args)]
                 if unk:
-                    other_sets = Intersection(*other_args)
+                    new_other = []
+                    del_other = []
+                    for ival, val in enumerate(other_args):
+                        if val.is_FiniteSet:
+                            # collect expressions having symbols
+                            # from `val` and `s`
+                            symbol_in_val = [x for x in val if x.has(Symbol)]
+                            symbol_in_s = [x for x in s if x.has(Symbol)]
+                            del_other.append(ival)
+                            # if expression with symbols are same in `s` and `val`
+                            # then remove the non-symbol containing expressions
+                            # from `unk`, since they can not be contained
+                            if symbol_in_s == symbol_in_val:
+                                syms = FiniteSet(*symbol_in_s, evaluate=False)
+                                non_symbol_in_s = s - syms
+                                s = syms
+                                for x in non_symbol_in_s:
+                                    if x in unk:
+                                        unk.remove(x)
+                            else:
+                                fin = FiniteSet(*
+                                    [x for x in symbol_in_s
+                                    if val.contains(x) == True],
+                                    evaluate=False)
+                                if s != fin:
+                                    val = val - fin
+                                    new_other.append(val)
+
+                    for i in reversed(del_other):
+                        other_args.pop(i)
+                    other_sets = Intersection(*(other_args + new_other))
                     if other_sets.is_EmptySet:
                         return EmptySet()
                     res += Intersection(s.func(*unk), other_sets, evaluate=False)
