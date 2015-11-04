@@ -301,7 +301,7 @@ class Variable(object):
         return self._name
 
     def get_datatype(self, language):
-        """Returns the datatype string for the requested langage.
+        """Returns the datatype string for the requested language.
 
         Examples
         ========
