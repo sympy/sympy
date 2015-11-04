@@ -874,6 +874,9 @@ def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
 
+def test_sympy__stats__crv_types__GompertzDistribution():
+    from sympy.stats.crv_types import GompertzDistribution
+    assert _test_args(GompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__KumaraswamyDistribution():
     from sympy.stats.crv_types import KumaraswamyDistribution
