@@ -186,6 +186,11 @@ class Routine(object):
         self.local_vars = local_vars
         self.global_vars = global_vars
 
+    def __str__(self):
+        return self.__class__.__name__ + "({name!r}, {arguments}, {results}, {local_vars}, {global_vars})".format(**self.__dict__)
+
+    __repr__ = __str__
+
     @property
     def variables(self):
         """Returns a set of all variables possibly used in the routine.
@@ -285,6 +290,11 @@ class Variable(object):
         }
         self.dimensions = dimensions
         self.precision = precision
+
+    def __str__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.name)
+
+    __repr__ = __str__
 
     @property
     def name(self):
