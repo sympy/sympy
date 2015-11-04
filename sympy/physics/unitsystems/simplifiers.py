@@ -27,17 +27,25 @@ def dim_simplify(expr):
             arg = dim_simplify(arg)
         args.append(arg)
 
+    if all([arg.is_number or (isinstance(arg, Dimension) and arg.is_dimensionless) for arg in args]):
+        return Dimension({})
+
     if isinstance(expr, Pow):
-        return args[0].pow(args[1])
+        if isinstance(args[0], Dimension):
+            return args[0].pow(args[1])
+        else:
+            raise ValueError("Basis of Pow is not a Dimension: %s" % args[0])
     elif isinstance(expr, Add):
-        args = [arg for arg in args if isinstance(arg, Dimension)]
-        return reduce(lambda x, y: x.add(y), args)
+        if (all(isinstance(arg, Dimension) for arg in args) or
+            all(arg.is_dimensionless() for arg in args if isinstance(arg, Dimension))):
+            return reduce(lambda x, y: x.add(y), args)
+        else:
+            raise ValueError("Dimensions cannot be added: %s" % expr)
     elif isinstance(expr, Mul):
         args = [arg for arg in args if isinstance(arg, Dimension)]
         return reduce(lambda x, y: x.mul(y), args)
-    else:
-        return expr
 
+    raise ValueError("Cannot be simplifed: %s", expr)
 
 def qsimplify(expr):
     """
