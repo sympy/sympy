@@ -83,6 +83,8 @@ class Assignment(Relational):
             raise ValueError("Cannot assign a matrix to a scalar.")
         return Relational.__new__(cls, lhs, rhs, **assumptions)
 
+# XXX: This should be handled better
+Relational.ValidRelationOperator[':='] = Assignment
 
 class CodePrinter(StrPrinter):
     """

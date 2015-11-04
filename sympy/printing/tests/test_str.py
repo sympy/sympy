@@ -490,7 +490,7 @@ def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
     assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
-
+    assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
 
 def test_RootOf():
     assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"

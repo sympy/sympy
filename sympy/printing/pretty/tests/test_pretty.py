@@ -14,6 +14,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
+from sympy.printing.codeprinter import Assignment
+
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
@@ -1049,6 +1051,18 @@ y + 1     \
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+def test_Assignment():
+    expr = Assignment(x, y)
+    ascii_str = \
+"""\
+x := y\
+"""
+    ucode_str = \
+u("""\
+x := y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_issue_7117():
     # See also issue #5031 (hence the evaluate=False in these).
