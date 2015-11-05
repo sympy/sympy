@@ -14,6 +14,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
@@ -2572,7 +2574,6 @@ u("""\
 
 
 def test_Adjoint():
-    from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert pretty(Adjoint(X)) == " +\nX "
@@ -3118,7 +3119,6 @@ def test_pretty_ComplexRegion():
 
 
 def test_ProductSet_paranthesis():
-    from sympy import Interval, Union, FiniteSet
     ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')
 
     a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
