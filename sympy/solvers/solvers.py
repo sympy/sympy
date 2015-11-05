@@ -2047,7 +2047,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             bestsol = thissol
         return bestsol
 
-@deprecated(useinstead="linsolve", issue=10001, deprecated_since_version="0.7.6")
+@deprecated(useinstead="linsolve", issue=10001, deprecated_since_version="1.0")
 def solve_linear_system(system, *symbols, **flags):
     r"""
     Solve system of N linear equations with M variables, which means
@@ -2085,11 +2085,13 @@ def solve_linear_system(system, *symbols, **flags):
 
     >>> system = Matrix(( (0,0,0), (0,0,0) ))
     >>> solve_linear_system(system, x, y)
-    {}
+    {x: x, y: y}
 
     """
     from sympy.solvers.solveset import linsolve
-    return linsolve(system, *symbols)
+    sol = linsolve(system, *symbols)
+    sol_dict = dict(zip(symbols, sol.args[0]))
+    return sol_dict
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
