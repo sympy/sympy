@@ -2089,7 +2089,7 @@ def solve_linear_system(system, *symbols, **flags):
 
     """
     from sympy.solvers.solveset import linsolve
-    return linsolve(system, symbols)
+    return linsolve(system, *symbols)
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
