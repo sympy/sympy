@@ -955,8 +955,7 @@ def test_linsolve():
     A = Matrix([[a, b], [c, d]])
     B = Matrix([[e], [f]])
     system2 = (A, B)
-    sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
-                    (f - c*e/a)/(d - b*c/a)))
+    sol = FiniteSet(((-b*f + d*e)/(a*d - b*c), (a*f - c*e)/(a*d - b*c)))
     assert linsolve(system2, [x, y]) == sol
 
     # Test for Dummy Symbols issue #9667
@@ -971,6 +970,17 @@ def test_linsolve():
     A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
     b = Matrix([0, 0, 1])
     assert linsolve((A, b), (x, y, z)) == EmptySet()
+
+    # Issue #10056
+    A, B, J1, J2 = symbols('A B J1 J2')
+    Augmatrix = Matrix([
+        [2*I*J1, 2*I*J2, -2/J1],
+        [-2*I*J2, -2*I*J1, 2/J2],
+        [0, 2, 2*I/(J1*J2)],
+        [2, 0,  0],
+        ])
+
+    assert linsolve(Augmatrix, A, B) == FiniteSet((0, I/(J1*J2)))
 
 
 def test_issue_9556():

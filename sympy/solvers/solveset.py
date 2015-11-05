@@ -12,7 +12,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import fraction, trigsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acsc, asec, arg,
                              Piecewise, piecewise_fold)
@@ -1256,7 +1256,7 @@ def linsolve(system, *symbols):
 
     else:
         for s in sol:
-            solution.append(s)
+            solution.append(simplify(s))
 
     # Return solutions
     solution = FiniteSet(tuple(solution))
