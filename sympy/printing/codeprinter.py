@@ -44,15 +44,15 @@ class Assignment(Relational):
     >>> from sympy.printing.codeprinter import Assignment
     >>> x, y, z = symbols('x, y, z')
     >>> Assignment(x, y)
-    x := y
+    Assignment(x, y)
     >>> Assignment(x, 0)
-    x := 0
+    Assignment(x, 0)
     >>> A = MatrixSymbol('A', 1, 3)
     >>> mat = Matrix([x, y, z]).T
     >>> Assignment(A, mat)
-    A := Matrix([[x, y, z]])
+    Assignment(A, Matrix([[x, y, z]]))
     >>> Assignment(A[0, 1], x)
-    A[0, 1] := x
+    Assignment(A[0, 1], x)
     """
 
     rel_op = ':='
