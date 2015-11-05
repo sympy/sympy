@@ -147,7 +147,10 @@ to isolate the ``series`` and ``polys`` behaviour from one another. We
 introduce a boolean flag ``series`` in the list of allowed ``Options`` for
 polynomials (see :class:`sympy.polys.polyoptions.Options`). Thus, when we want
 ``sring`` to allow rational exponents we supply a ``series=True`` flag to
-``sring``.
+``sring``::
+
+    >>> rs_series(sin(a**QQ(1, 2)), a, 3) # doctest: +SKIP
+    -1/5040*a**(7/3) + 1/120*a**(5/3) - 1/6*a + a**(1/3)
 
 Contribute
 ==========
