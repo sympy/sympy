@@ -1187,7 +1187,7 @@ def linsolve(system, *symbols):
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {(-b*(f - c*d/a)/(a*(e - b*d/a)) + c/a, (f - c*d/a)/(e - b*d/a))}
+    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
