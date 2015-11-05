@@ -2047,7 +2047,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             bestsol = thissol
         return bestsol
 
-@deprecated(useinstead="linsolve", issue=10001, deprecated_since_version="1.0")
+@deprecated(useinstead="linsolve(system, *symbols)", issue=10001, deprecated_since_version="1.0")
 def solve_linear_system(system, *symbols, **flags):
     r"""
     Solve system of N linear equations with M variables, which means
