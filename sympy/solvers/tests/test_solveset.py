@@ -17,7 +17,7 @@ from sympy.polys.rootoftools import RootOf
 
 from sympy.sets import (FiniteSet, ConditionSet)
 
-from sympy.utilities.pytest import XFAIL, raises, skip
+from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -421,6 +421,7 @@ def test_solve_sqrt_fail():
     assert solveset_real(eq, x) == FiniteSet(S(1)/3)
 
 
+@slow
 def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
@@ -439,7 +440,10 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 + (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2)*Abs(q))/Abs(q), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 +
+        (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) -
+        1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2
+        )*Abs(q))/Abs(q), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
