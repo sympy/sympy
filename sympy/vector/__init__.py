@@ -16,5 +16,5 @@ from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.vector.printing import (VectorStrPrinter, VectorStrReprPrinter,
                                    VectorLatexPrinter, VectorPrettyPrinter,
-								   vprint, vsstrrepr, vsprint, vpprint,
-								   vlatex, init_vprinting)
+                                   vprint, vsstrrepr, vsprint, vpprint,
+                                   vlatex, init_vprinting)

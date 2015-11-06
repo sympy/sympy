@@ -2,7 +2,7 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
-from sympy import sympify, diff, integrate, S, Symbol, symbols
+from sympy import sympify, diff, integrate, S, Symbol, symbols, Function
 
 
 def express(expr, system, system2=None, variables=False):
