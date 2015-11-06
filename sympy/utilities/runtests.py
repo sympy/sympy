@@ -1347,7 +1347,7 @@ class SymPyDocTests(object):
             for ex in executables:
                 found = find_executable(ex)
                 if found is None:
-                    return "Could not find {}".format(ex)
+                    return "Could not find %s" % ex
         if moduledeps is not None:
             for extmod in moduledeps:
                 if extmod == 'matplotlib':
@@ -1368,7 +1368,7 @@ class SymPyDocTests(object):
                         if hasattr(mod, '__version__'):
                             version = mod.__version__
                     else:
-                        return "Could not import {}".format(mod)
+                        return "Could not import %s" % mod
         if viewers is not None:
             import tempfile
             tempdir = tempfile.mkdtemp()
