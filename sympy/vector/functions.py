@@ -3,6 +3,8 @@ from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
 from sympy import sympify, diff, integrate, S, Symbol, symbols, Function
+from sympy.utilities.iterables import iterable
+from sympy.core.compatibility import reduce
 
 
 def express(expr, system, system2=None, variables=False):
