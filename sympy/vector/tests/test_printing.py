@@ -126,6 +126,8 @@ def test_pretty_print_unicode():
     assert upretty(v[0]) == u('0')
     assert upretty(v[1]) == u('N_i')
     assert upretty(v[5]) == u('(a) N_i + (-b) N_j')
+    # Make sure the printing works in other objects
+    assert upretty(v[5].args) == u('((a) N_i, (-b) N_j)')
     assert upretty(v[8]) == upretty_v_8
     assert upretty(v[2]) == u('(-1) N_i')
     assert upretty(v[11]) == upretty_v_11
