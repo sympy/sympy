@@ -1,9 +1,10 @@
-from sympy.core.symbol import Symbol
+from sympy.core import Expr
+from sympy.core.sympify import _sympify
 from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import prettyForm
 
 
-class BaseScalar(Symbol):
+class BaseScalar(Expr):
     """
     A coordinate symbol/base scalar.
 
@@ -13,7 +14,9 @@ class BaseScalar(Symbol):
 
     def __new__(cls, name, index, system, pretty_str, latex_str):
         from sympy.vector.coordsysrect import CoordSysCartesian
-        obj = super(BaseScalar, cls).__new__(cls, name)
+        index = _sympify(index)
+        system = _sympify(system)
+        obj = super(BaseScalar, cls).__new__(cls, index, system)
         if not isinstance(system, CoordSysCartesian):
             raise TypeError("system should be a CoordSysCartesian")
         if index not in range(0, 3):
@@ -27,6 +30,12 @@ class BaseScalar(Symbol):
 
         return obj
 
+    @property
+    def free_symbols(self):
+        return set([self])
+
+    _diff_wrt = True
+
     def _latex(self, printer=None):
         return self._latex_form
 
@@ -36,20 +45,6 @@ class BaseScalar(Symbol):
     @property
     def system(self):
         return self._system
-
-    def __eq__(self, other):
-        # Check if the other object is a BaseScalar of same index
-        # and coordinate system
-        if isinstance(other, BaseScalar):
-            if other._id == self._id:
-                return True
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return self._id.__hash__()
 
     def __str__(self, printer=None):
         return self._name

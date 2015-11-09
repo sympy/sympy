@@ -61,6 +61,7 @@ def test_coordinate_vars():
     reorientation of coordinate systems.
     """
     A = CoordSysCartesian('A')
+    # Note that the name given on the lhs is different from A.x._name
     assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
     assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
     assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
