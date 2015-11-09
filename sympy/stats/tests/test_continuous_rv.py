@@ -5,7 +5,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Kumaraswamy, Laplace, Logistic,
+                         Gompertz, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, StudentT,
                          Triangular, Uniform, UniformSum, VonMises, Weibull,
@@ -317,6 +317,13 @@ def test_gamma_inverse():
 
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
+
+def test_gompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+
+    X = Gompertz("x", b, eta)
+    assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
 
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
