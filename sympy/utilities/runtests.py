@@ -1059,6 +1059,9 @@ class SymPyTests(object):
             except ImportError:
                 reporter.import_error(filename, sys.exc_info())
                 return
+            except Exception:
+                reporter.test_exception(sys.exc_info())
+
             clear_cache()
             self._count += 1
             random.seed(self._seed)
