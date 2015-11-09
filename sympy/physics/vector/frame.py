@@ -45,7 +45,11 @@ class CoordinateSym(Symbol):
     """
 
     def __new__(cls, name, frame, index):
-        obj = super(CoordinateSym, cls).__new__(cls, name)
+        # We can't use the cached Symbol.__new__ because this class depends on
+        # frame and index, which are not passed to Symbol.__xnew__.
+        assumptions = {}
+        super(CoordinateSym, cls)._sanitize(assumptions, cls)
+        obj = super(CoordinateSym, cls).__xnew__(cls, name, **assumptions)
         _check_frame(frame)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified")
