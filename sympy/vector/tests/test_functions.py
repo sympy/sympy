@@ -1,9 +1,9 @@
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSystem3D
 from sympy.vector.functions import express, matrix_to_vector
 from sympy import symbols, S, sin, cos, ImmutableMatrix as Matrix
 
-N = CoordSysCartesian('N')
+N = CoordSystem3D('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 A = N.orient_new_axis('A', q1, N.k)
 B = A.orient_new_axis('B', q2, A.i)

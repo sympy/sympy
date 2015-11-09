@@ -1,4 +1,4 @@
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSystem3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
      symbols, simplify, zeros
@@ -12,11 +12,16 @@ a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
+def test_deprecation_of_cartesian_class():
+    C = CoordSysCartesian('C')
+    assert isinstance(C, CoordSystem3D)
+
+
 def test_coordsyscartesian_equivalence():
-    A = CoordSysCartesian('A')
-    A1 = CoordSysCartesian('A')
+    A = CoordSystem3D('A')
+    A1 = CoordSystem3D('A')
     assert A1 == A
-    B = CoordSysCartesian('B')
+    B = CoordSystem3D('B')
     assert A != B
     assert A.locate_new('C1', A.i) == A.locate_new('C2', A.i)
     assert A.orient_new_axis('C1', a, A.i) == \
@@ -24,7 +29,7 @@ def test_coordsyscartesian_equivalence():
 
 
 def test_orienters():
-    A = CoordSysCartesian('A')
+    A = CoordSystem3D('A')
     axis_orienter = AxisOrienter(a, A.k)
     body_orienter = BodyOrienter(a, b, c, '123')
     space_orienter = SpaceOrienter(a, b, c, '123')
@@ -60,7 +65,7 @@ def test_coordinate_vars():
     Tests the coordinate variables functionality with respect to
     reorientation of coordinate systems.
     """
-    A = CoordSysCartesian('A')
+    A = CoordSystem3D('A')
     assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
     assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
     assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
@@ -117,7 +122,7 @@ def test_coordinate_vars():
 
 
 def test_rotation_matrix():
-    N = CoordSysCartesian('N')
+    N = CoordSystem3D('N')
     A = N.orient_new_axis('A', q1, N.k)
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
@@ -171,7 +176,7 @@ def test_vector():
     Tests the effects of orientation of coordinate systems on
     basic vector operations.
     """
-    N = CoordSysCartesian('N')
+    N = CoordSystem3D('N')
     A = N.orient_new_axis('A', q1, N.k)
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
@@ -231,7 +236,7 @@ def test_vector():
     assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
 
 def test_orient_new_methods():
-    N = CoordSysCartesian('N')
+    N = CoordSystem3D('N')
     orienter1 = AxisOrienter(q4, N.j)
     orienter2 = SpaceOrienter(q1, q2, q3, '123')
     orienter3 = QuaternionOrienter(q1, q2, q3, q4)
@@ -248,9 +253,9 @@ def test_orient_new_methods():
 
 def test_locatenew_point():
     """
-    Tests Point class, and locate_new method in CoordSysCartesian.
+    Tests Point class, and locate_new method in CoordSystem3D.
     """
-    A = CoordSysCartesian('A')
+    A = CoordSystem3D('A')
     assert isinstance(A.origin, Point)
     v = a*A.i + b*A.j + c*A.k
     C = A.locate_new('C', v)
@@ -274,7 +279,7 @@ def test_locatenew_point():
 
 
 def test_evalf():
-    A = CoordSysCartesian('A')
+    A = CoordSystem3D('A')
     v = 3*A.i + 4*A.j + a*A.k
     assert v.n() == v.evalf()
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()

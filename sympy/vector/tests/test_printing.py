@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import Integral, latex, Function
 from sympy import pretty as xpretty
-from sympy.vector import CoordSysCartesian, Vector, express
+from sympy.vector import CoordSystem3D, Vector, express
 from sympy.abc import a, b, c
 from sympy.core.compatibility import u_decode as u
 from sympy.utilities.pytest import XFAIL
@@ -19,7 +19,7 @@ def upretty(expr):
 #needed for testing.
 #Some of the pretty forms shown denote how the expressions just
 #above them should look with pretty printing.
-N = CoordSysCartesian('N')
+N = CoordSystem3D('N')
 C = N.orient_new_axis('C', a, N.k)
 v = []
 d = []
@@ -161,7 +161,7 @@ def test_latex_printing():
 
 
 def test_custom_names():
-    A = CoordSysCartesian('A', vector_names=['x', 'y', 'z'],
+    A = CoordSystem3D('A', vector_names=['x', 'y', 'z'],
                           variable_names=['i', 'j', 'k'])
     assert A.i.__str__() == 'x'
     assert A.x.__str__() == 'i'
