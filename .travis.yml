@@ -75,7 +75,7 @@ matrix:
         - SPLIT="3/4"
         - FASTCACHE="false"
 
-    - python: 2.7
+    - python: 3.5
       env:
         - TEST_SPHINX="true"
         - FASTCACHE="false"
