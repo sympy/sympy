@@ -79,12 +79,15 @@ class CoordSysCartesian(Basic):
                                          " BaseScalars")
             origin = parent.origin.locate_new(name + '.origin',
                                               location)
-            arg_parent = parent
-            arg_self = Symbol('default')
         else:
             origin = Point(name + '.origin')
-            arg_parent = Symbol('default')
-            arg_self = Symbol(name)
+
+        #Parent_arg to be passed to superclass
+        if parent is not None:
+            arg_parent = parent
+        else:
+            location = Vector.zero
+            arg_parent = None
 
         #All systems that are defined as 'roots' are unequal, unless
         #they have the same name.
@@ -96,7 +99,7 @@ class CoordSysCartesian(Basic):
         #positioned/oriented wrt different parents, even though
         #they may actually be 'coincident' wrt the root system.
         obj = super(CoordSysCartesian, cls).__new__(
-            cls, Symbol(name), location, parent_orient, parent)
+            cls, Symbol(name), location, parent_orient, arg_parent)
         obj._name = name
 
         #Initialize the base vectors
