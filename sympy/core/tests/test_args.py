@@ -929,6 +929,9 @@ def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
 
+def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
+    from sympy.stats.crv_types import ShiftedGompertzDistribution
+    assert _test_args(ShiftedGompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
