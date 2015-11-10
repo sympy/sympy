@@ -77,6 +77,7 @@ def test_coordinate_vars():
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)
+    assert A.x*A.y == A.y*A.x
     assert A.scalar_map(A) == {A.x: A.x, A.y: A.y, A.z: A.z}
     assert A.x.system == A
     B = A.orient_new_axis('B', q, A.k)

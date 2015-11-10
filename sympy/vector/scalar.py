@@ -37,6 +37,8 @@ class BaseScalar(Expr):
 
         return obj
 
+    is_commutative = True
+
     @property
     def free_symbols(self):
         return set([self])
