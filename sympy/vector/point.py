@@ -13,24 +13,18 @@ class Point(Basic):
     """
 
     def __new__(cls, name, position=Vector.zero, parent_point=None):
+        name = str(name)
         #Check the args first
         if not isinstance(position, Vector):
             raise TypeError("position should be a Vector instance")
         if (not isinstance(parent_point, Point)
                 and parent_point is not None):
             raise TypeError("parent_point should be a Point instance")
-        #Create an object
-        if parent_point is None:
-            arg_parent = Symbol('default')
-            arg_self = Symbol(name)
-        else:
-            arg_parent = parent_point
-            arg_self = Symbol('default')
         #All points that are defined as 'roots' are unequal.
         #Points defined at same position wrt the same
         #'parent' are equal, irrespective of the names.
-        obj = super(Point, cls).__new__(cls, arg_self,
-                                        position, arg_parent)
+        obj = super(Point, cls).__new__(cls, Symbol(name),
+                                        position, parent_point)
         #Decide the object parameters
         obj._name = name
         obj._pos = position

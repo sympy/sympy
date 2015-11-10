@@ -45,6 +45,7 @@ class CoordSysCartesian(Basic):
 
         """
 
+        name = str(name)
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
@@ -95,7 +96,7 @@ class CoordSysCartesian(Basic):
         #positioned/oriented wrt different parents, even though
         #they may actually be 'coincident' wrt the root system.
         obj = super(CoordSysCartesian, cls).__new__(
-            cls, arg_self, parent_orient, origin, arg_parent)
+            cls, Symbol(name), location, parent_orient, parent)
         obj._name = name
 
         #Initialize the base vectors
