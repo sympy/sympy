@@ -120,13 +120,13 @@ matrix:
     - python: 2.7
       env:
         - TEST_AUTOWRAP="true"
-       addons:
-         apt:
-           packages:
-             - gfortran
-             - gcc
-             - python-numpy
-             - cython
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - gcc
+            - python-numpy
+            - cython
       virtualenv:
         system_site_packages: true
 
