@@ -424,6 +424,11 @@ want to be mentioned here, so see our repository history for a full list).
 #. Shashank Kumar: Fixed indenation error in summations.py and added test for issue #9908
 #. Devyani Kota: Fixed issue 9953: linsolve([ ], ...) now returns S.EmptySet
 #. Keval Shah: Union with subset of S.Complexes now evaluated
+#. Dzhelil Rufat: Make it possible to lambdify expressions that contain sums
+#. Jacob Garber: Correct Polygon.encloses_point in geometry and update references
+#. Vinay: sympy.vector .del print changed to .delop as it is accesed
+#. Prashant Tyagi: remove wrong logic lines in sets.py
+#. Matthew Davis: Fixed documentation typos
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

@@ -204,8 +204,9 @@ def _is_sum_surds(p):
 
 
 def posify(eq):
-    """Return eq (with generic symbols made positive) and a restore
-    dictionary.
+    """Return eq (with generic symbols made positive) and a
+    dictionary containing the mapping between the old and new
+    symbols.
 
     Any symbol that has positive=None will be replaced with a positive dummy
     symbol having the same name. This replacement will allow more symbolic
@@ -215,21 +216,30 @@ def posify(eq):
     A dictionary that can be sent to subs to restore eq to its original
     symbols is also returned.
 
-    >>> from sympy import posify, Symbol, log
+    >>> from sympy import posify, Symbol, log, solve
     >>> from sympy.abc import x
     >>> posify(x + Symbol('p', positive=True) + Symbol('n', negative=True))
     (_x + n + p, {_x: x})
 
-    >> log(1/x).expand() # should be log(1/x) but it comes back as -log(x)
+    >>> eq = 1/x
+    >>> log(eq).expand()
     log(1/x)
-
-    >>> log(posify(1/x)[0]).expand() # take [0] and ignore replacements
+    >>> log(posify(eq)[0]).expand()
     -log(_x)
-    >>> eq, rep = posify(1/x)
-    >>> log(eq).expand().subs(rep)
+    >>> p, rep = posify(eq)
+    >>> log(p).expand().subs(rep)
     -log(x)
-    >>> posify([x, 1 + x])
-    ([_x, _x + 1], {_x: x})
+
+    It is possible to apply the same transformations to an iterable
+    of expressions:
+
+    >>> eq = x**2 - 4
+    >>> solve(eq, x)
+    [-2, 2]
+    >>> eq_x, reps = posify([eq, x]); eq_x
+    [_x**2 - 4, _x]
+    >>> solve(*eq_x)
+    [2]
     """
     eq = sympify(eq)
     if iterable(eq):

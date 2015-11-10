@@ -213,3 +213,32 @@ def test_MatrixElement_doit():
     u = MatrixSymbol('u', 2, 1)
     v = ImmutableMatrix([3, 5])
     assert u[0, 0].subs(u, v).doit() == v[0, 0]
+
+
+def test_identity_powers():
+    M = Identity(n)
+    assert MatPow(M, 3).doit() == M**3
+    assert M**n == M
+    assert MatPow(M, 0).doit() == M**2
+    assert M**-2 == M
+    assert MatPow(M, -2).doit() == M**0
+    N = Identity(3)
+    assert MatPow(N, 2).doit() == N**n
+    assert MatPow(N, 3).doit() == N
+    assert MatPow(N, -2).doit() == N**4
+    assert MatPow(N, 2).doit() == N**0
+
+
+def test_Zero_power():
+    z1 = ZeroMatrix(n, n)
+    assert z1**4 == z1
+    raises(ValueError, lambda:z1**-2)
+    assert z1**0 == Identity(n)
+    assert MatPow(z1, 2).doit() == z1**2
+    raises(ValueError, lambda:MatPow(z1, -2).doit())
+    z2 = ZeroMatrix(3, 3)
+    assert MatPow(z2, 4).doit() == z2**4
+    raises(ValueError, lambda:z2**-3)
+    assert z2**3 == MatPow(z2, 3).doit()
+    assert z2**0 == Identity(3)
+    raises(ValueError, lambda:MatPow(z2, -1).doit())
