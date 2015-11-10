@@ -113,8 +113,8 @@ def express(expr, system, system2=None, variables=False):
             system_set = set([])
             expr = sympify(expr)
             #Subsitute all the coordinate variables
-            for x in expr.atoms():
-                if isinstance(x, BaseScalar)and x.system != system:
+            for x in expr.atoms(BaseScalar):
+                if x.system != system:
                     system_set.add(x.system)
             subs_dict = {}
             for f in system_set:

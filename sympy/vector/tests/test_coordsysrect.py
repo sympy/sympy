@@ -1,7 +1,7 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros
+     symbols, simplify, zeros, expand
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
@@ -88,8 +88,8 @@ def test_coordinate_vars():
     assert express(B.x, A, variables=True) == A.x*cos(q) + A.y*sin(q)
     assert express(B.y, A, variables=True) == -A.x*sin(q) + A.y*cos(q)
     assert express(B.z, A, variables=True) == A.z
-    assert express(B.x*B.y*B.z, A, variables=True) == \
-           A.z*(-A.x*sin(q) + A.y*cos(q))*(A.x*cos(q) + A.y*sin(q))
+    assert expand(express(B.x*B.y*B.z, A, variables=True)) == \
+           expand(A.z*(-A.x*sin(q) + A.y*cos(q))*(A.x*cos(q) + A.y*sin(q)))
     assert express(B.x*B.i + B.y*B.j + B.z*B.k, A) == \
            (B.x*cos(q) - B.y*sin(q))*A.i + (B.x*sin(q) + \
            B.y*cos(q))*A.j + B.z*A.k
