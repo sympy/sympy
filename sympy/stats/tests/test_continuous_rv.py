@@ -7,10 +7,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, StudentT,
-                         Triangular, Uniform, UniformSum, VonMises, Weibull,
-                         WignerSemicircle, correlation, moment, cmoment,
-                         smoment)
+                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
+                         StudentT, Triangular, Uniform, UniformSum,
+                         VonMises, Weibull, WignerSemicircle, correlation,
+                         moment, cmoment, smoment)
 
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
@@ -437,6 +437,11 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+def test_shiftedgompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+    X = ShiftedGompertz("x", b, eta)
+    assert density(X)(x) == b*(eta*(1 - exp(-b*z)) + 1)*exp(-b*z)*exp(-eta*exp(-b*z))
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
