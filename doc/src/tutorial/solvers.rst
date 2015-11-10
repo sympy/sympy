@@ -45,11 +45,18 @@ We encourage our user to use ``solveset`` as shown above, the syntax for
 
 .. TODO: This is a mess, because solve() has such a complicated interface.
 
-When solving a single equation, the output of ``solveset`` is a ``FiniteSet``
-of the solutions.
+When solving a single equation, the output of ``solveset`` is a ``FiniteSet`` or
+an ``Interval`` of the solutions.
 
     >>> solveset(x**2 - x, x)
     {0, 1}
+
+	>>> solveset(sin(x) - 1, x, domain=S.Reals)
+	⎧        π        ⎫
+	⎨2⋅n⋅π + ─ | n ∊ ℤ⎬
+	⎩        2        ⎭
+
+
 
 If there are no solutions, an ``EmptySet`` is returned and if it
 is not able to find solutions then a ``ConditionSet`` is returned.
