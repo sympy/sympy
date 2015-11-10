@@ -20,11 +20,12 @@ class Point(Basic):
         if (not isinstance(parent_point, Point)
                 and parent_point is not None):
             raise TypeError("parent_point should be a Point instance")
-        #All points that are defined as 'roots' are unequal.
-        #Points defined at same position wrt the same
-        #'parent' are equal, irrespective of the names.
-        obj = super(Point, cls).__new__(cls, Symbol(name),
-                                        position, parent_point)
+        #Super class construction
+        if parent_point is None:
+            obj = super(Point, cls).__new__(cls, Symbol(name), position)
+        else:
+            obj = super(Point, cls).__new__(cls, Symbol(name),
+                                            position, parent_point)
         #Decide the object parameters
         obj._name = name
         obj._pos = position
