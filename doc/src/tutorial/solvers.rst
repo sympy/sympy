@@ -23,38 +23,41 @@ However, there is an even easier way.  In SymPy, any expression not in an
 = b` if and only if `a - b = 0`, this means that instead of using ``x == y``,
 you can just use ``x - y``.  For example
 
-    >>> solve(Eq(x**2, 1), x)
-    [-1, 1]
-    >>> solve(Eq(x**2 - 1, 0), x)
-    [-1, 1]
-    >>> solve(x**2 - 1, x)
-    [-1, 1]
+    >>> solveset(Eq(x**2, 1), x)
+    {-1, 1}
+    >>> solveset(Eq(x**2 - 1, 0), x)
+    {-1, 1}
+    >>> solveset(x**2 - 1, x)
+    {-1, 1}
 
 This is particularly useful if the equation you wish to solve is already equal
-to 0.  Instead of typing ``solve(Eq(expr, 0), x)``, you can just use
-``solve(expr, x)``.
+to 0. Instead of typing ``solveset(Eq(expr, 0), x)``, you can just use
+``solveset(expr, x)``.
 
 Solving Equations Algebraically
 ===============================
 
-The main function for solving algebraic equations, as we saw above, is
-``solve``.  The syntax is ``solve(equations, variables)``, where, as we saw
-above, ``equations`` may be in the form of ``Eq`` instances or expressions
-that are assumed to be equal to zero.
+The main function for solving algebraic equations as of now is ``solve``.
+The syntax is ``solve(equations, variables)``, ``equations`` may be in the
+form of ``Eq`` instances or expressions that are assumed to be equal to zero.
+We encourage our user to use ``solveset`` as shown above, the syntax for
+``solveset`` is ``solveset(equation, variable=None, domain=S.Complexes)``
 
 .. TODO: This is a mess, because solve() has such a complicated interface.
 
-When solving a single equation, the output of ``solve`` is a list of the
-solutions.
+When solving a single equation, the output of ``solveset`` is a ``FiniteSet``
+of the solutions.
 
-    >>> solve(x**2 - x, x)
-    [0, 1]
+    >>> solveset(x**2 - x, x)
+    {0, 1}
 
-If no solutions are found, an empty list is returned, or
-``NotImplementedError`` is raised.
+If there are no solutions, an ``EmptySet`` is returned and if it
+is not able to find solutions then a ``ConditionSet`` is returned.
 
-    >>> solve(exp(x), x)
-    []
+    >>> solveset(exp(x), x)     # No solution exists
+    ∅
+    >>> solveset(Abs(x) - 1, x) # Not able to find solution
+    {x | x ∊ ℂ ∧ │x│ - 1 = 0}
 
 .. note::
 
@@ -93,18 +96,50 @@ list of variables to solve for.
    >>> solve([x*y - 7, x + y - 6], [x, y], dict=True)
    [{x: -√2 + 3, y: √2 + 3}, {x: √2 + 3, y: -√2 + 3}]
 
+
+In ``solveset`` module, the linear system of equations is solved using ``linsolve``.
+In future we would be able to use linsolve directly from ``solveset``. Following
+is an example of the syntax of ``linsolve``. 
+
+* List of Equations Form:
+
+	>>> linsolve([x + y + z - 1, x + y + 2*z - 3 ], (x, y, z))
+	{(-y - 1, y, 2)}
+
+* Augmented Matrix Form:
+
+	>>> linsolve(Matrix(([1, 1, 1, 1], [1, 1, 2, 3])), (x, y, z))
+	{(-y - 1, y, 2)}
+
+* A*x = b Form
+
+	>>> M = Matrix(((1, 1, 1, 1), (1, 1, 2, 3)))
+	>>> system = A, b = M[:, :-1], M[:, -1]
+	>>> linsolve(system, x, y, z)
+	{(-y - 1, y, 2)}
+
+.. note::
+
+   Order of solution corresponds the order of given symbols.
+
 .. _tutorial-roots:
 
-``solve`` reports each solution only once.  To get the solutions of a
+``solveset`` reports each solution only once.  To get the solutions of a
 polynomial including multiplicity use ``roots``.
 
-    >>> solve(x**3 - 6*x**2 + 9*x, x)
-    [0, 3]
+    >>> solveset(x**3 - 6*x**2 + 9*x, x)
+    {0, 3}
     >>> roots(x**3 - 6*x**2 + 9*x, x)
     {0: 1, 3: 2}
 
 The output ``{0: 1, 3: 2}`` of ``roots`` means that ``0`` is a root of
 multiplicity 1 and ``3`` is a root of multiplicity 2.
+
+.. note::
+
+   Currently ``solveset`` is not capable of solving the following types of equations:
+   * Non-linear multivariate system
+   * Equations solvable by LambertW (Transcendental equation solver).
 
 .. _tutorial-dsolve:
 
