@@ -2095,16 +2095,16 @@ def ShiftedGompertz(name, b, eta):
 
     Examples
     ========
-    >>> from sympy.stats import Gompertz, density, E, variance
+    >>> from sympy.stats import ShiftedGompertz, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> b = Symbol("b", positive=True)
     >>> eta = Symbol("eta", positive=True)
-    >>> z = Symbol("z")
+    >>> x = Symbol("x")
 
     >>> X = ShiftedGompertz("x", b, eta)
 
-    >>> density(X)(z)
+    >>> density(X)(x)
     b*(eta*(1 - exp(-b*z)) + 1)*exp(-b*z)*exp(-eta*exp(-b*z))
 
     References
