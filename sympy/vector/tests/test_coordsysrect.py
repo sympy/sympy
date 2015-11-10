@@ -70,10 +70,10 @@ def test_coordinate_vars():
     """
     A = CoordSysCartesian('A')
     # Note that the name given on the lhs is different from A.x._name
-    assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
-    assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
-    assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
-    assert BaseScalar('Ax', 0, A, ' ', ' ').__hash__() == A.x.__hash__()
+    assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
+    assert BaseScalar('A.y', 1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
+    assert BaseScalar('A.z', 2, A, 'A_z', r'\mathbf{{z}_{A}}') == A.z
+    assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)
