@@ -37,25 +37,26 @@ to 0. Instead of typing ``solveset(Eq(expr, 0), x)``, you can just use
 Solving Equations Algebraically
 ===============================
 
-The main function for solving algebraic equations as of now is ``solve``.
-The syntax is ``solve(equations, variables)``, ``equations`` may be in the
-form of ``Eq`` instances or expressions that are assumed to be equal to zero.
-We encourage our user to use ``solveset`` as shown above, the syntax for
-``solveset`` is ``solveset(equation, variable=None, domain=S.Complexes)``
+The main function for solving algebraic equations is ``solveset``.
+The syntax for ``solveset`` is ``solveset(equation, variable=None, domain=S.Complexes)``
+Where ``equations`` may be in the form of ``Eq`` instances or expressions
+that are assumed to be equal to zero.
 
-.. TODO: This is a mess, because solve() has such a complicated interface.
+Please note that there is an another function called as ``solve`` which
+can also be used to solve equations. The syntax is ``solve(equations, variables)``
+However, it is recommended to use ``solveset`` instead.
 
 When solving a single equation, the output of ``solveset`` is a ``FiniteSet`` or
-an ``Interval`` of the solutions.
+an ``Interval`` or ``ImageSet`` of the solutions.
 
     >>> solveset(x**2 - x, x)
     {0, 1}
-
-	>>> solveset(sin(x) - 1, x, domain=S.Reals)
-	⎧        π        ⎫
-	⎨2⋅n⋅π + ─ | n ∊ ℤ⎬
-	⎩        2        ⎭
-
+    >>> solveset(x - x, x, domain=S.Reals)
+    ℝ
+    >>> solveset(sin(x) - 1, x, domain=S.Reals)
+    ⎧        π        ⎫
+    ⎨2⋅n⋅π + ─ | n ∊ ℤ⎬
+    ⎩        2        ⎭
 
 
 If there are no solutions, an ``EmptySet`` is returned and if it
@@ -66,45 +67,8 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(Abs(x) - 1, x) # Not able to find solution
     {x | x ∊ ℂ ∧ │x│ - 1 = 0}
 
-.. note::
 
-   If ``solve`` returns ``[]`` or raises ``NotImplementedError``, it doesn't
-   mean that the equation has no solutions.  It just means that it couldn't
-   find any.  Often this means that the solutions cannot be represented
-   symbolically.  For example, the equation `x = \cos(x)` has a solution, but
-   it cannot be represented symbolically using standard functions.
-
-   >>> solve(x - cos(x), x)
-   Traceback (most recent call last):
-   ...
-   NotImplementedError: multiple generators [x, exp(I*x)]
-   No algorithms are implemented to solve equation exp(I*x)
-
-   In fact, ``solve`` makes *no guarantees whatsoever* about the completeness
-   of the solutions it finds.  Much of ``solve`` is heuristics, which may find
-   some solutions to an equation or system of equations, but not all of them.
-
-``solve`` can also solve systems of equations.  Pass a list of equations and a
-list of variables to solve for.
-
-    >>> solve([x - y + 2, x + y - 3], [x, y])
-    {x: 1/2, y: 5/2}
-    >>> solve([x*y - 7, x + y - 6], [x, y])
-    [(-√2 + 3, √2 + 3), (√2 + 3, -√2 + 3)]
-
-.. note::
-
-   The type of the output of ``solve`` when solving systems of equations
-   varies depending on the type of the input.  If you want a consistent
-   interface, pass ``dict=True``.
-
-   >>> solve([x - y + 2, x + y - 3], [x, y], dict=True)
-   [{x: 1/2, y: 5/2}]
-   >>> solve([x*y - 7, x + y - 6], [x, y], dict=True)
-   [{x: -√2 + 3, y: √2 + 3}, {x: √2 + 3, y: -√2 + 3}]
-
-
-In ``solveset`` module, the linear system of equations is solved using ``linsolve``.
+In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
 In future we would be able to use linsolve directly from ``solveset``. Following
 is an example of the syntax of ``linsolve``. 
 
@@ -127,7 +91,7 @@ is an example of the syntax of ``linsolve``.
 
 .. note::
 
-   Order of solution corresponds the order of given symbols.
+   The order of solution corresponds the order of given symbols.
 
 .. _tutorial-roots:
 
@@ -145,8 +109,17 @@ multiplicity 1 and ``3`` is a root of multiplicity 2.
 .. note::
 
    Currently ``solveset`` is not capable of solving the following types of equations:
+
    * Non-linear multivariate system
    * Equations solvable by LambertW (Transcendental equation solver).
+
+   ``solve`` can be used for such cases:
+
+   >>> solve([x*y - 1, x - 2], x, y)
+   [(2, 1/2)]
+   >>> solve(x*exp(x) - 1, x )
+   [LambertW(1)]
+
 
 .. _tutorial-dsolve:
 
