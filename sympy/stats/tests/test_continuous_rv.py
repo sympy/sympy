@@ -441,7 +441,7 @@ def test_shiftedgompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
     X = ShiftedGompertz("x", b, eta)
-    assert density(X)(x) == b*(eta*(1 - exp(-b*z)) + 1)*exp(-b*z)*exp(-eta*exp(-b*z))
+    assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
