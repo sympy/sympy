@@ -330,11 +330,11 @@ def sqrt_mod_iter(a, p, domain=int):
             if a % px == 0:
                 rx = _sqrt_mod1(a, px, ex)
                 if not rx:
-                    raise StopIteration
+                    return
             else:
                 rx = _sqrt_mod_prime_power(a, px, ex)
                 if not rx:
-                    raise StopIteration
+                    return
             v.append(rx)
             pv.append(px**ex)
         mm, e, s = gf_crt1(pv, ZZ)
