@@ -8,9 +8,9 @@ The *solvers* module in SymPy implements methods for solving equations.
 .. note::
 
    It is recommended to use :func:`solveset` to solve univariate equations and
-   :func:`linsolve` to solve system of linear equations instead of :func:`solve`,
-   since sooner or later the ``solveset`` will take over ``solve`` either
-   internally or externally.
+   :func:`sympy.solvers.solveset.linsolve` to solve system of linear equations
+   instead of :func:`solve`, since sooner or later the ``solveset`` will take
+   over ``solve`` either internally or externally.
 
 
 Algebraic equations
