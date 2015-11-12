@@ -138,7 +138,7 @@ class NDimArray(object):
         return self._rank
 
     def __str__(self):
-        """Returns string, allows to use standart functions print() and str().
+        """Returns string, allows to use standard functions print() and str().
 
         Examples
         ========
