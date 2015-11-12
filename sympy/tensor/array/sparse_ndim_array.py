@@ -59,7 +59,7 @@ class SparseNDimArray(NDimArray):
         [1, 1, 1]])
         """
         if self.rank() != 2:
-            raise ValueError('Dimensions must be of size of 2')
+            raise ValueError('Only rank 2 arrays can be converted to matrices')
 
         mat_sparse = {}
         for key, value in self._sparse_array.items():
