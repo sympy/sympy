@@ -414,4 +414,4 @@ def test_issue_9192():
 def test_issue_9910():
     assert Order(x*log(x) + sin(x), (x, oo)) == Order(x*log(x), (x, oo))
     assert Order(x*log(x) + sin(x) + y*log(y) + sin(y), (x, oo), (y,oo)) == Order(x*log(x) + y*log(y), (x, oo), (y,oo))
-    assert Order(x*log(x) + x**2*sin(x), (x, oo)) == Order(x*log(x), (x, oo))
+    assert Order(x*log(x) + x**2*sin(x), (x, oo)) == Order(x*log(x)+ x**2*sin(x), (x, oo))
