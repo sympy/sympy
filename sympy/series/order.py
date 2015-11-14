@@ -211,6 +211,9 @@ class Order(Expr):
 
             if expr.is_Add:
                 lst = expr.extract_leading_order(args)
+                if point[0] is S.Infinity:
+                    if any(f.expr.subs(value,S.Infinity)==S.Infinity for (e,f) in lst for value in s.itervalues()):
+                        lst = [(e,f) for (e,f) in lst for value in s.itervalues() if f.expr.subs(value,S.Infinity) == S.Infinity]
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
