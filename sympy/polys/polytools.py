@@ -5620,6 +5620,14 @@ def _symbolic_factor_list(expr, opt, method):
             if base.is_Number:
                 factors.append((base, exp))
                 continue
+        elif hasattr(arg, '_eval_factor'):
+            subfactors = arg._eval_factor()
+            if subfactors.is_Mul:
+                factors.extend([(i,1) for i in Mul.make_args(subfactors)])
+                continue
+            else:
+                factors.append((subfactors,1))
+                continue
         else:
             base, exp = arg, S.One
 
