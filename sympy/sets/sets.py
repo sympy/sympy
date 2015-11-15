@@ -799,6 +799,35 @@ class Interval(Set, EvalfMixin):
         """Return an interval not including the right boundary."""
         return cls(a, b, False, True)
 
+    @classmethod
+    def map(cls, i, ii):
+        """
+        Return an expression that maps the first interval
+        into the second.
+
+        Examples
+        ========
+
+        >> from sympy import Interval
+        >> from sympy.abc import a, b, x
+        >> from sympy import factor
+        >> e = Interval.map(Interval(10, 12), Interval(-1, 1))
+        >> print(e.subs(x, 10))
+        0
+        >> e = Interval.map(Interval(a, b), Interval(-1, 1))
+        >> print(factor(e))
+        -(-a - b + 2*x)/(a - b)
+
+        """
+        # let i = [a, b], ii = [c, d]
+        # a < x < b
+        # 0 < x - a < b - a
+        # 0 < (x - a) / (b - a) < 1
+        # 0 < (d - c) * (x - a) / (b - a) < d - c
+        # c < c + (d - c) * (x - a) / (b - a) < d
+        a, b, c, d = i.start, i.end, ii.start, ii.end
+        return c + (d - c) * (Symbol('x') - a) / (b - a)
+
     @property
     def end(self):
         """
