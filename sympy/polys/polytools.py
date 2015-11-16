@@ -5611,22 +5611,22 @@ def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
 
-    for arg in Mul.make_args(expr):
+    args = list(Mul.make_args(expr))
+    for arg in args:
         if arg.is_Number:
             coeff *= arg
+            continue
+        elif hasattr(arg, '_eval_factor'):
+            for i in Mul.make_args(arg._eval_factor()):
+                if hasattr(i, '_eval_factor'):
+                    factors.append( (i, 1) )
+                else:
+                    args.append(i)
             continue
         elif arg.is_Pow:
             base, exp = arg.args
             if base.is_Number:
                 factors.append((base, exp))
-                continue
-        elif hasattr(arg, '_eval_factor'):
-            subfactors = arg._eval_factor()
-            if subfactors.is_Mul:
-                factors.extend([(i,1) for i in Mul.make_args(subfactors)])
-                continue
-            else:
-                factors.append((subfactors,1))
                 continue
         else:
             base, exp = arg, S.One
