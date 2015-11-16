@@ -21,6 +21,9 @@ def dim_simplify(expr):
     behavior when Add(L, L) be transformed into Mul(2, L).
     """
 
+    if isinstance(expr, Dimension):
+        return expr
+
     args = []
     for arg in expr.args:
         if isinstance(arg, (Mul, Pow, Add)):
