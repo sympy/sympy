@@ -40,7 +40,7 @@ def dim_simplify(expr):
             raise ValueError("Basis of Pow is not a Dimension: %s" % args[0])
     elif isinstance(expr, Add):
         if (all(isinstance(arg, Dimension) for arg in args) or
-            all(arg.is_dimensionless() for arg in args if isinstance(arg, Dimension))):
+            all(arg.is_dimensionless for arg in args if isinstance(arg, Dimension))):
             return reduce(lambda x, y: x.add(y), args)
         else:
             raise ValueError("Dimensions cannot be added: %s" % expr)
