@@ -84,6 +84,9 @@ class Assignment(Relational):
         return Relational.__new__(cls, lhs, rhs, **assumptions)
 
 
+class CodeBlock(Basic):
+    pass
+
 class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
@@ -316,6 +319,10 @@ class CodePrinter(StrPrinter):
         of codelines"""
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
+
+
+    def _print_CodeBlock(self, expr):
+        return '\n'.join([self._print(i) for i in expr.args])
 
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
