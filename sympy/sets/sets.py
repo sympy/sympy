@@ -800,7 +800,7 @@ class Interval(Set, EvalfMixin):
         return cls(a, b, False, True)
 
     @classmethod
-    def map(cls, i, ii, x = None):
+    def map(cls, i, ii, x):
         """
         Return an expression that maps the first interval
         into the second.
@@ -811,10 +811,10 @@ class Interval(Set, EvalfMixin):
         >> from sympy import Interval
         >> from sympy.abc import a, b, x
         >> from sympy import factor
-        >> e = Interval.map(Interval(10, 12), Interval(-1, 1))
+        >> e = Interval.map(Interval(10, 12), Interval(-1, 1), x)
         >> print(e.subs(x, 10))
         -1
-        >> e = Interval.map(Interval(a, b), Interval(-1, 1))
+        >> e = Interval.map(Interval(a, b), Interval(-1, 1), x)
         >> print(factor(e))
         -(-a - b + 2*x)/(a - b)
 
