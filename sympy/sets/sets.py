@@ -813,7 +813,7 @@ class Interval(Set, EvalfMixin):
         >> from sympy import factor
         >> e = Interval.map(Interval(10, 12), Interval(-1, 1))
         >> print(e.subs(x, 10))
-        0
+        -1
         >> e = Interval.map(Interval(a, b), Interval(-1, 1))
         >> print(factor(e))
         -(-a - b + 2*x)/(a - b)
