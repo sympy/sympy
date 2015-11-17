@@ -155,6 +155,6 @@ def rebuild(expr):
     Basic.__new__
     """
     try:
-        return type(expr)(*list(map(rebuild, expr.args)))
+        return expr.func(*list(map(rebuild, expr.args)))
     except Exception:
         return expr
