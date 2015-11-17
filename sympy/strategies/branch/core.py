@@ -85,7 +85,7 @@ def do_one(*brules):
                 yielded = True
                 yield nexpr
             if yielded:
-                return()
+                return
     return do_one_brl
 
 def chain(*brules):
@@ -95,7 +95,7 @@ def chain(*brules):
     def chain_brl(expr):
         if not brules:
             yield expr
-            return()
+            return
 
         head, tail = brules[0], brules[1:]
         for nexpr in head(expr):
