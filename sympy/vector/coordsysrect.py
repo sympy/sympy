@@ -438,6 +438,7 @@ class CoordSysCartesian(Basic):
                 final_matrix = orienters.rotation_matrix(self)
             else:
                 final_matrix = orienters.rotation_matrix()
+            final_matrix = trigsimp(final_matrix)
         else:
             final_matrix = Matrix(eye(3))
             for orienter in orienters:
