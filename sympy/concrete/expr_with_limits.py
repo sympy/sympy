@@ -10,6 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
@@ -286,7 +287,7 @@ class ExprWithLimits(Expr):
         ========
 
         variables : Lists the integration variables
-        transform : Perform mapping on the dummy variable for intgrals
+        transform : Perform mapping on the dummy variable for integrals
         change_index : Perform mapping on the sum and product dummy variables
 
         """
@@ -340,6 +341,12 @@ class ExprWithLimits(Expr):
 
         return self.func(func, *limits)
 
+    def _hashable_content(self):
+        # should return a single tuple, not nested
+        # If explicit limits are not given, we default to reusing the dummy index in
+        # content so expressions with limits should be distinct in this case.
+        F = Lambda(self.variables, self.function)
+        return tuple([ F ] + [ ( i[1:] if len(i) > 1 else i[0] ) for i in self.limits ])
 
 class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.

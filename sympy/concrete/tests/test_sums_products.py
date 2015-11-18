@@ -513,8 +513,8 @@ def test_equality():
             pass
         assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
         assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
-        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
-        assert F(1, (x, 1, x)) != F(1, (y, 1, x))
+        assert F(x, (x, 1, 2)) == F(r, (r, 1, 2))
+        assert F(1, (x, 1, x)) == F(1, (y, 1, x))
         assert F(1, (x, 1, x)) != F(1, (y, 1, y))
 
     # issue 5265
@@ -822,6 +822,9 @@ def test_factor_expand_subs():
     assert Sum(1/x,(x,1,10)).subs([(x,(3+n)**3)]) == Sum(1/x,(x,1,10))
     assert Sum(1/x,(x,1,10)).subs([(x,3*x-2)]) == Sum(1/x,(x,1,10))
 
+def test_pow_simp():
+    for F in (Sum, Integral, Product):
+        assert F(x, (x, 1, n))*F(y, (y, 1, n)) == F(x, (x, 1, n))**2
 
 def test_distribution_over_equality():
     assert Product(Eq(x*2, f(x)), (x, 1, 3)).doit() == Eq(48, f(1)*f(2)*f(3))
