@@ -80,6 +80,7 @@ def test_coordinate_vars():
     assert A.x*A.y == A.y*A.x
     assert A.scalar_map(A) == {A.x: A.x, A.y: A.y, A.z: A.z}
     assert A.x.system == A
+    assert A.x.diff(A.x) == 1
     B = A.orient_new_axis('B', q, A.k)
     assert B.scalar_map(A) == {B.z: A.z, B.y: -A.x*sin(q) + A.y*cos(q),
                                  B.x: A.x*cos(q) + A.y*sin(q)}

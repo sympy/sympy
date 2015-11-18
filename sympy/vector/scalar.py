@@ -1,4 +1,4 @@
-from sympy.core import Expr, Symbol
+from sympy.core import Expr, Symbol, S
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import prettyForm
@@ -44,6 +44,11 @@ class BaseScalar(Expr):
         return set([self])
 
     _diff_wrt = True
+
+    def _eval_derivative(self, s):
+        if self == s:
+            return S.One
+        return S.Zero
 
     def _latex(self, printer=None):
         return self._latex_form
