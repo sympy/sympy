@@ -167,7 +167,7 @@ class Unit(Expr):
             else:
                 factor = (self.factor**other).evalf()
                 dim = self.dim.pow(other)
-                if dim == 1:
+                if dim.is_dimensionless:
                     return factor
                 else:
                     return Unit(dim, factor=factor)
@@ -182,7 +182,7 @@ class Unit(Expr):
         elif isinstance(other, Unit):
             factor = self.factor * other.factor
             dim = self.dim.mul(other.dim)
-            if dim == 1:
+            if dim.is_dimensionless:
                 return factor
             else:
                 return Unit(dim, factor=factor)
@@ -204,7 +204,7 @@ class Unit(Expr):
         elif isinstance(other, Unit):
             factor = self.factor / other.factor
             dim = self.dim.div(other.dim)
-            if dim == 1:
+            if dim.is_dimensionless:
                 return factor
             else:
                 return Unit(dim, factor=factor)
