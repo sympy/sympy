@@ -427,24 +427,25 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_refine(self):
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask, Q
         arg = self.args[0]
-        if arg.is_zero:
+        if ask(Q.zero(arg), assumptions):
             return S.Zero
-        if arg.is_nonnegative:
+        if ask(Q.nonnegative(arg), assumptions):
             return arg
-        if arg.is_nonpositive:
+        if ask(Q.nonpositive(arg), assumptions):
             return -arg
         if arg.is_Add:
             expr_list = []
             for _arg in Add.make_args(arg):
-                if _arg.is_negative or _arg.is_negative is None:
+                if ask(Q.negative(_arg), assumptions) or ask(Q.negative(_arg), assumptions) is None:
                     return None
-                if _arg.is_zero:
+                if ask(Q.zero(_arg), assumptions):
                     expr_list.append(S.Zero)
-                elif _arg.is_nonnegative:
+                elif ask(Q.nonnegative(_arg), assumptions):
                     expr_list.append(_arg)
-                elif _arg.is_nonpositive:
+                elif ask(Q.nonpositive(_arg), assumptions):
                     expr_list.append(-_arg)
             if expr_list:
                 return Add(*expr_list)
