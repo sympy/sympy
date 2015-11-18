@@ -5616,14 +5616,12 @@ def _symbolic_factor_list(expr, opt, method):
         if arg.is_Number:
             coeff *= arg
             continue
-        elif hasattr(arg, '_eval_factor'):
-            for i in Mul.make_args(arg._eval_factor()):
-                if hasattr(i, '_eval_factor'):
-                    factors.append( (i, 1) )
-                else:
-                    args.append(i)
-            continue
-        elif arg.is_Pow:
+        if hasattr(arg, '_eval_factor'):
+            arg = arg._eval_factor()
+            if arg.is_Mul:
+                args.extend(arg.args)
+                continue
+        if arg.is_Pow:
             base, exp = arg.args
             if base.is_Number:
                 factors.append((base, exp))
