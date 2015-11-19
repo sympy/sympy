@@ -17,7 +17,7 @@ def sub_pre(e):
     # make it canonical
     reps.sort(key=default_sort_key)
 
-    e = e.subs([(a, Mul._from_args([S.NegativeOne, -a])) for a in reps])
+    e = e.xreplace({a: Mul._from_args([S.NegativeOne, -a]) for a in reps})
     # repeat again for persisting Adds but mark these with a leading 1, -1
     # e.g. y - x -> 1*-1*(x - y)
     if isinstance(e, Basic):
