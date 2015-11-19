@@ -438,6 +438,11 @@ class CoordSysCartesian(Basic):
                 final_matrix = orienters.rotation_matrix(self)
             else:
                 final_matrix = orienters.rotation_matrix()
+            # TODO: trigsimp is needed here so that the matrix becomes
+            # canonical (scalar_map also calls trigsimp; without this, you can
+            # end up with the same CoordinateSystem that compares differently
+            # due to a differently formatted matrix). However, this is
+            # probably not so good for performance.
             final_matrix = trigsimp(final_matrix)
         else:
             final_matrix = Matrix(eye(3))
