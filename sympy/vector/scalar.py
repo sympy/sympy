@@ -2,6 +2,7 @@ from sympy.core import Expr, Symbol, S
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.printing.precedence import PRECEDENCE
 
 
 class BaseScalar(Expr):
@@ -55,6 +56,8 @@ class BaseScalar(Expr):
 
     def _pretty(self, printer=None):
         return prettyForm(self._pretty_form)
+
+    precedence = PRECEDENCE['Atom']
 
     @property
     def system(self):
