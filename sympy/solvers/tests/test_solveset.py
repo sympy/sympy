@@ -976,6 +976,11 @@ def test_linsolve():
     b = Matrix([0, 0, 1])
     assert linsolve((A, b), (x, y, z)) == EmptySet()
 
+    # Issue #10121 - Assignment of free variables
+    a, b, c, d, e = symbols('a, b, c, d, e')
+    Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
+    assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
+
 
 def test_issue_9556():
     x = Symbol('x')

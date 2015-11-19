@@ -4336,11 +4336,8 @@ class MatrixBase(object):
         if not v[rank:, 0].is_zero:
             raise ValueError("Linear system has no solution")
 
-        # Get index of free symbols (free parameter)
-        free_var_index = []
-        for r in range(col):
-            if r not in pivots:
-                free_var_index.append(r)  # non-pivots columns are free variables
+        # Get index of free symbols (free parameters)
+        free_var_index = permutation[len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
         dummygen = numbered_symbols("tau", Dummy)
