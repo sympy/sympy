@@ -433,12 +433,9 @@ class LatexPrinter(Printer):
                     #the result comes with a minus and a space, so we remove
                     if tex[:1] == "-":
                         return tex[1:].strip()
-                if self._needs_brackets(expr.base):
-                    tex = r"\left(%s\right)^{%s}"
-                else:
-                    tex = r"%s^{%s}"
+                tex = r"%s^{%s}"
 
-                return tex % (self._print(expr.base),
+                return tex % (self.parenthesize(expr.base, PRECEDENCE['Pow']),
                               self._print(expr.exp))
 
     def _print_Sum(self, expr):
