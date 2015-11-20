@@ -31,7 +31,7 @@ class BaseScalar(Expr):
             raise ValueError("Invalid index specified.")
         # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
-        obj._name = name
+        obj._name = obj.name = name
         obj._pretty_form = u(pretty_str)
         obj._latex_form = latex_str
         obj._system = system
