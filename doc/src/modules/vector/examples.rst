@@ -11,8 +11,8 @@ Quadrilateral problem
 The Problem
 -----------
 
-*OABC is any quadrilateral in 3D space. P is the 
-midpoint of OA, Q is the midpoint of AB, R is the midpoint of BC 
+*OABC is any quadrilateral in 3D space. P is the
+midpoint of OA, Q is the midpoint of AB, R is the midpoint of BC
 and S is the midpoint of OC. Prove that PQ is parallel to SR*
 
 Solution
@@ -80,7 +80,7 @@ See
 The Problem
 -----------
 
-Prove the third rule - 
+Prove the third rule -
 :math:`\nabla \cdot (f \vec v) = f (\nabla \cdot \vec v) + \vec v \cdot (\nabla f)`
 
 Solution
@@ -91,15 +91,15 @@ Start with a coordinate system
   >>> from sympy.vector import CoordSysCartesian
   >>> C = CoordSysCartesian('C')
 
-The scalar field :math:`f` and the measure numbers of the vector field 
-:math:`\vec v` are all functions of the coordinate variables of the 
+The scalar field :math:`f` and the measure numbers of the vector field
+:math:`\vec v` are all functions of the coordinate variables of the
 coordinate system in general.
 Hence, define SymPy functions that way.
 
   >>> from sympy import symbols
   >>> v1, v2, v3, f = symbols('v1 v2 v3 f', type="Function")
 
-``v1``, ``v2`` and ``v3`` are the :math:`X`, :math:`Y` and :math:`Z` 
+``v1``, ``v2`` and ``v3`` are the :math:`X`, :math:`Y` and :math:`Z`
 components of the vector field respectively.
 
 Define the vector field as ``vfield`` and the scalar field as ``sfield``.
@@ -115,7 +115,7 @@ Similarly, the RHS would be defined.
 
   >>> rhs = ((vfield.dot(C.delop(ffield))) + (ffield * (C.delop.dot(vfield)))).doit()
 
-Now, to prove the product rule, we would just need to equate the expanded and 
+Now, to prove the product rule, we would just need to equate the expanded and
 simplified versions of the lhs and the rhs, so that the SymPy expressions match.
 
   >>> lhs.expand().simplify() == rhs.expand().simplify()
