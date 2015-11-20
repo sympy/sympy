@@ -46,7 +46,7 @@ def express(expr, system, system2=None, variables=False):
     >>> express(B.i, N)
     (cos(q))*N.i + (sin(q))*N.j
     >>> express(N.x, B, variables=True)
-    B.x*cos(q) - B.y*sin(q)
+    -sin(q)*B.y + cos(q)*B.x
     >>> d = N.i.outer(N.i)
     >>> express(d, B, N) == (cos(q))*(B.i|N.i) + (-sin(q))*(B.j|N.i)
     True
