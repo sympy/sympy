@@ -1686,7 +1686,13 @@ def test_issue_6325():
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
 
+
 def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) == False
+
+
+def test_issue_10161():
+    x = symbols('x', real=True)
+    assert x*abs(x)*abs(x) == x**3
