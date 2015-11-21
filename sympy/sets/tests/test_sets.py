@@ -919,7 +919,7 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(m, n, x), FiniteSet(m, z), r) == \
         Intersection(r, FiniteSet(m, z), FiniteSet(n, x))
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, x), r) == \
-        Intersection(r, FiniteSet(x), FiniteSet(3, m, n), evaluate=False)
+        Intersection(r, FiniteSet(3, m, n), evaluate=False)
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, 2, 3), r) == \
         Union(FiniteSet(3), Intersection(r, FiniteSet(m, n)))
     assert Intersection(r, FiniteSet(mat, 2, n), FiniteSet(0, mat, n)) == \

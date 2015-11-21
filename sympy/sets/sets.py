@@ -1396,7 +1396,7 @@ class Intersection(Set):
         args = flatten(args)
 
         if len(args) == 0:
-            raise TypeError("Intersection expected at least one argument")
+            return S.EmptySet
 
         # args can't be ordered for Partition see issue #9608
         if 'Partition' not in [type(a).__name__ for a in args]:
@@ -1436,6 +1436,72 @@ class Intersection(Set):
         raise ValueError("None of the constituent sets are iterable")
 
     @staticmethod
+    def _handle_finite_sets(args):
+        from sympy.core.logic import fuzzy_and, fuzzy_bool
+        from sympy.core.compatibility import zip_longest
+
+        new_args = []
+        fs_args = []
+        for s in args:
+            if s.is_FiniteSet:
+                fs_args.append(s)
+            else:
+                new_args.append(s)
+        if not fs_args:
+            return
+        s = fs_args[0]
+        fs_args = fs_args[1:]
+        res = []
+        unk = []
+        for x in s:
+            c = fuzzy_and(fuzzy_bool(o.contains(x))
+                for o in fs_args + new_args)
+            if c:
+                res.append(x)
+            elif c is None:
+                unk.append(x)
+            else:
+                pass  # drop arg
+        res = FiniteSet(
+            *res, evaluate=False) if res else S.EmptySet
+        if unk:
+            symbolic_s_list = [x for x in s if x.has(Symbol)]
+            non_symbolic_s = s - FiniteSet(
+                *symbolic_s_list, evaluate=False)
+            while fs_args:
+                v = fs_args.pop()
+                if all(i == j for i, j in zip_longest(
+                        symbolic_s_list,
+                        (x for x in v if x.has(Symbol)))):
+                    # all the symbolic elements of `v` are the same
+                    # as in `s` so remove the non-symbol containing
+                    # expressions from `unk`, since they cannot be
+                    # contained
+                    for x in non_symbolic_s:
+                        if x in unk:
+                            unk.remove(x)
+                else:
+                    # if only a subset of elements in `s` are
+                    # contained in `v` then remove them from `v`
+                    # and add this as a new arg
+                    contained = [x for x in symbolic_s_list
+                        if v.contains(x) == True]
+                    if contained != symbolic_s_list:
+                        new_args.append(
+                            v - FiniteSet(
+                            *contained, evaluate=False))
+                    else:
+                        pass  # for coverage
+
+            other_sets = Intersection(*new_args)
+            if not other_sets:
+                return S.EmptySet  # b/c we use evaluate=False below
+            res += Intersection(
+                FiniteSet(*unk),
+                other_sets, evaluate=False)
+        return res
+
+    @staticmethod
     def reduce(args):
         """
         Simplify an intersection using known rules
@@ -1452,52 +1518,10 @@ class Intersection(Set):
         if any(s.is_EmptySet for s in args):
             return S.EmptySet
 
-        for s in args:
-            if s.is_FiniteSet:
-                # see which elements of the FiniteSet occur within
-                # all other sets in the intersection
-                other_args = [a for a in args if a != s]
-                res = FiniteSet(*[x for x in s if all(
-                    o.contains(x) == True for o in other_args)])
-                unk = [x for x in s if any(
-                    o.contains(x) not in (True, False) for o in other_args)]
-                if unk:
-                    new_other = []
-                    del_other = []
-                    for ival, val in enumerate(other_args):
-                        if val.is_FiniteSet:
-                            # collect expressions having symbols
-                            # from `val` and `s`
-                            symbol_in_val = [x for x in val if x.has(Symbol)]
-                            symbol_in_s = [x for x in s if x.has(Symbol)]
-                            del_other.append(ival)
-                            # if expression with symbols are same in `s` and `val`
-                            # then remove the non-symbol containing expressions
-                            # from `unk`, since they can not be contained
-                            if symbol_in_s == symbol_in_val:
-                                syms = FiniteSet(*symbol_in_s, evaluate=False)
-                                non_symbol_in_s = s - syms
-                                s = syms
-                                for x in non_symbol_in_s:
-                                    if x in unk:
-                                        unk.remove(x)
-                            else:
-                                fin = FiniteSet(*
-                                    [x for x in symbol_in_s
-                                    if val.contains(x) == True],
-                                    evaluate=False)
-                                if s != fin:
-                                    val = val - fin
-                                    new_other.append(val)
-
-                    for i in reversed(del_other):
-                        other_args.pop(i)
-                    other_sets = Intersection(*(other_args + new_other))
-                    if other_sets.is_EmptySet:
-                        return EmptySet()
-                    res += Intersection(
-                        s.func(*unk), other_sets, evaluate=False)
-                return res
+        # Handle Finite sets
+        rv = Intersection._handle_finite_sets(args)
+        if rv is not None:
+            return rv
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
