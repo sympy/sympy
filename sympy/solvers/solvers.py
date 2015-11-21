@@ -868,7 +868,7 @@ def solve(f, *symbols, **flags):
 
     # real/imag handling -----------------------------
     w = Dummy('w')
-    piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
+    piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True), evaluate=False))  # not necessary if trivial inequalities are solved outright in solve_univariate_inequality(?)
     for i, fi in enumerate(f):
         # Abs
         reps = []
