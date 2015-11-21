@@ -222,6 +222,7 @@ def test_intersect():
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
         Union(Interval(0, 1), Interval(2, 2))
 
+    assert FiniteSet(1, 2)._intersect((1, 2, 3)) == FiniteSet(1, 2)
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
     assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
         FiniteSet('ham')

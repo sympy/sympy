@@ -1813,7 +1813,7 @@ class FiniteSet(Set, EvalfMixin):
         """
         if isinstance(other, self.__class__):
             return self.__class__(*(self._elements & other._elements))
-        return self.__class__(el for el in self if el in other)
+        return self.__class__(*[el for el in self if el in other])
 
     def _complement(self, other):
         if isinstance(other, Interval):
