@@ -284,6 +284,21 @@ class BooleanFunction(Application, Boolean):
                 argset.add(arg)
         return cls(*argset)
 
+def _linear_set(eq, real=False):
+    if eq.is_Relational:
+        free = eq.free_symbols
+        if len(free) == 1:
+            x = free.pop()
+            c = eq.canonical
+            # Relational.as_set returns a real set, but
+            # x might not be real, so we don't assume so
+            # unless is_real is True or the `real` flag
+            # is true.
+            if not c.is_Relational or c.lhs.is_Symbol and (
+                    real or x.is_real):
+                return x, c.as_set()
+    raise NotImplementedError
+
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -322,6 +337,7 @@ class And(LatticeOp, BooleanFunction):
     def _new_args_filter(cls, args):
         newargs = []
         rel = []
+        rel_set = []
         for x in reversed(list(args)):
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
@@ -333,8 +349,36 @@ class And(LatticeOp, BooleanFunction):
                 nc = (~c).canonical
                 if any(r == nc for r in rel):
                     return [S.false]
+                # check overlap of relationals
+                try:
+                    free, s = _linear_set(c)
+                except NotImplementedError:
+                    free = s = None
+                else:
+                    if any(
+                            v == free and
+                            r.is_subset(s) for v, r in rel_set):
+                        continue
+                    for i, (v, r) in enumerate(reversed(rel_set)):
+                        if v == free and s.is_subset(r):
+                            rel_set.remove((v, r))
+                            newargs.remove(rel[i])
+                            del rel[i]
+                    if any(
+                            s is not None and
+                            v == free and
+                            r.intersection(s) is S.EmptySet
+                            for v, r in rel_set):
+                        return [S.false]
+                rel_set.append((free,s))
                 rel.append(c)
             newargs.append(x)
+        if len(newargs) == 1:
+            try:
+                if _linear_set(newargs[0]) == S.Reals:
+                    return [S.true]
+            except NotImplementedError:
+                pass
         return LatticeOp._new_args_filter(newargs, And)
 
     def as_set(self):
@@ -346,7 +390,7 @@ class And(LatticeOp, BooleanFunction):
 
         >>> from sympy import And, Symbol
         >>> x = Symbol('x', real=True)
-        >>> And(x<2, x>-2).as_set()
+        >>> And(x < 2, x > -2).as_set()
         (-2, 2)
         """
         from sympy.sets.sets import Intersection
@@ -393,6 +437,7 @@ class Or(LatticeOp, BooleanFunction):
     def _new_args_filter(cls, args):
         newargs = []
         rel = []
+        rel_set = []
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
@@ -404,6 +449,19 @@ class Or(LatticeOp, BooleanFunction):
                 nc = (~c).canonical
                 if any(r == nc for r in rel):
                     return [S.true]
+                # check overlap of relationals
+                try:
+                    free, s = _linear_set(c)
+                except NotImplementedError:
+                    free = s = None
+                else:
+                    if any(
+                            s is not None and
+                            v == free and
+                            r.union(s) == S.Reals
+                            for v, r in rel_set):
+                        return [S.true]
+                rel_set.append((free, s))
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
@@ -417,7 +475,7 @@ class Or(LatticeOp, BooleanFunction):
 
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
-        >>> Or(x>2, x<-2).as_set()
+        >>> Or(x > 2, x < -2).as_set()
         (-oo, -2) U (2, oo)
         """
         from sympy.sets.sets import Union
