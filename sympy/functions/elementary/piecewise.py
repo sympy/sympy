@@ -120,47 +120,97 @@ class Piecewise(Function):
     def eval(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
-        # 2) Hit a true condition -> return that expr
+        # 2) Hit a true condition with no preceding unevaluated conditions -> return that expr
         # 3) Remove false conditions, if no conditions left -> raise ValueError
         all_conds_evaled = True    # Do all conds eval to a bool?
-        piecewise_again = False    # Should we pass args to Piecewise again?
         non_false_ecpairs = []
-        or1 = Or(*[cond for (_, cond) in args if cond != true])
-        for expr, cond in args:
-            # Check here if expr is a Piecewise and collapse if one of
-            # the conds in expr matches cond. This allows the collapsing
-            # of Piecewise((Piecewise(x,x<0),x<0)) to Piecewise((x,x<0)).
-            # This is important when using piecewise_fold to simplify
-            # multiple Piecewise instances having the same conds.
-            # Eventually, this code should be able to collapse Piecewise's
-            # having different intervals, but this will probably require
-            # using the new assumptions.
-            if isinstance(expr, Piecewise):
-                or2 = Or(*[c for (_, c) in expr.args if c != true])
-                for e, c in expr.args:
-                    # Don't collapse if cond is "True" as this leads to
-                    # incorrect simplifications with nested Piecewises.
-                    if c == cond and (or1 == or2 or cond != true):
-                        expr = e
-                        piecewise_again = True
+        args = list(args)
+        canonical_args = [(e, getattr(c, 'canonical', c)) for e, c in args]
+        conds = []
+        def cond_subset(a, b):
+            if a == b: return True
+            if not a.free_symbols == b.free_symbols:
+                #print ('no',a,b)
+                return
+            try: return a.as_set().is_subset(b.as_set())
+            except: pass#print('oops',a,b)
+        def cond_equals(a, b):
+            if a == b: return True
+            if not a.free_symbols == b.free_symbols:
+                #print ('no',a,b)
+                return
+            try: return a.equals(b)
+            except: pass#print('oops2',a,b)
+        for expr, cond in canonical_args:
             cond_eval = cls.__eval_cond(cond)
             if cond_eval is None:
                 all_conds_evaled = False
             elif cond_eval:
                 if all_conds_evaled:
+                    #print("X")
                     return expr
-            if len(non_false_ecpairs) != 0:
-                if non_false_ecpairs[-1].cond == cond:
+            # E
+            if any(cond_subset(cond, i) for i in conds):
+                #print("E")
+                continue
+            # Check here if expr is a Piecewise and collapse if one of
+            # the conds in expr matches cond. This allows the collapsing
+            # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).
+            # This is important when using piecewise_fold to simplify
+            # multiple Piecewise instances having the same conds.
+            if isinstance(expr, Piecewise):
+                def cond_intersection(a, b):
+                    if a == b:return a
+                    if not a.free_symbols == b.free_symbols:
+                        #print ('no',a,b)
+                        return
+                    try: return a.as_set().intersection(b.as_set())
+                    except: pass#print('oops3',a,b)
+                pargs = []
+                for e, c in expr.args:
+                    # A
+                    if any(cond_subset(c, i) for i in conds):
+                        #print("A")
+                        continue
+                    # D
+                    if cond_intersection(c, cond) is S.EmptySet:
+                        print("D")
+                        continue
+                    # B
+                    if cond_subset(cond, c):
+                        #print("B")
+                        c = cond
+                    pargs.append(ExprCondPair(e, c))
+                    # C
+                    if cond_equals(c, cond):
+                        #print("C")
+                        break
+                expr = Piecewise(*pargs)
+                if len(expr.args) == 1:
+                    ec = expr.args[0]
+                    # F
+                    if cond_equals(ec.cond, cond):
+                        #print("F")
+                        expr = ec.expr
+                # G
+                if not pargs:
+                    print('G')
                     continue
-                elif non_false_ecpairs[-1].expr == expr:
-                    newcond = Or(cond, non_false_ecpairs[-1].cond)
-                    if isinstance(newcond, (And, Or)):
-                        newcond = distribute_and_over_or(newcond)
-                    non_false_ecpairs[-1] = ExprCondPair(expr, newcond)
+            conds.append(cond)
+            if non_false_ecpairs:
+                last = non_false_ecpairs[-1]
+                if last.expr == expr:
+                    cond = Or(cond, last.cond)
+                    if isinstance(cond, (And, Or)):
+                        cond = distribute_and_over_or(cond)
+                    non_false_ecpairs[-1] = ExprCondPair(expr, cond)
                     continue
             non_false_ecpairs.append(ExprCondPair(expr, cond))
-        if len(non_false_ecpairs) != len(args) or piecewise_again:
-            return cls(*non_false_ecpairs)
+            if cond_eval:
+                break
+
+        if non_false_ecpairs != args:
+            return cls(*non_false_ecpairs, evaluate=False)
 
         return None
 
@@ -270,7 +320,6 @@ class Piecewise(Function):
 
         # Determine what intervals the expr,cond pairs affect.
         int_expr = self._sort_expr_cond(sym, a, b)
-
         # Finally run through the intervals and sum the evaluation.
         ret_fun = 0
         for int_a, int_b, expr in int_expr:
@@ -299,28 +348,44 @@ class Piecewise(Function):
         is given, we return a list of (lowerbound, upperbound) pairs for
         this condition."""
         from sympy.solvers.inequalities import _solve_inequality
+
+        def _canonical(c, sym):
+            if c.is_Relational and sym in c.free_symbols:
+                if sym not in c.args:
+                    c = _solve_inequality(c, sym)
+                if c.lhs != sym:
+                    c = c.reversed
+                if c.lhs != sym:
+                    raise NotImplementedError(
+                        "Unable to isolate %s for interval evaluation of expression." % sym)
+            return c
+
+        expr_cond = []
+        for expr, cond in self.args:
+            if isinstance(cond, Or):
+                # XXX `Or` conditions are sorted with sym on the left.
+                # Is this sufficient to gurantee that they will be sorted
+                # correctly so the lower and upper calculation below works?
+                or_args = [_canonical(c, sym) for c in cond.args]
+                if True in or_args:
+                    expr_cond.append((expr, S.true))
+                else:
+                    expr_cond.extend([(expr, c) for c in sorted(or_args, key=default_sort_key)])
+            else:
+                expr_cond.append((expr, _canonical(cond, sym)))
+
         default = None
         int_expr = []
-        expr_cond = []
         or_cond = False
         or_intervals = []
         independent_expr_cond = []
-        for expr, cond in self.args:
-            if isinstance(cond, Or):
-                for cond2 in sorted(cond.args, key=default_sort_key):
-                    expr_cond.append((expr, cond2))
-            else:
-                expr_cond.append((expr, cond))
-            if cond == True:
-                break
         for expr, cond in expr_cond:
-            if cond == True:
-                independent_expr_cond.append((expr, cond))
-                default = self.func(*independent_expr_cond)
-                break
             orig_cond = cond
             if sym not in cond.free_symbols:
                 independent_expr_cond.append((expr, cond))
+                if cond == True:
+                    default = self.func(*independent_expr_cond)
+                    break
                 continue
             elif isinstance(cond, Equality):
                 continue
@@ -328,26 +393,18 @@ class Piecewise(Function):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
                 for cond2 in cond.args:
-                    if sym not in [cond2.lts, cond2.gts]:
-                        cond2 = _solve_inequality(cond2, sym)
+                    cond2 = _canonical(cond2, sym)
                     if cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
-                    else:
-                        raise NotImplementedError(
-                            "Unable to handle interval evaluation of expression.")
             else:
-                if sym not in [cond.lts, cond.gts]:
-                    cond = _solve_inequality(cond, sym)
+                cond = _canonical(cond, sym)
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
                 elif cond.gts == sym:            # part 1a: ... that can be expanded
                     upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
-                else:
-                    raise NotImplementedError(
-                        "Unable to handle interval evaluation of expression.")
 
             # part 1b: Reduce (-)infinity to what was passed in.
             lower, upper = Max(a, lower), Min(b, upper)
