@@ -298,17 +298,6 @@ def rational_interpolate(data, degnum, X='x'):
     >>> rational_interpolate([-210, -35, 105, 231, 350, 465], 2, X='z')
     (105*z**2 - 525)/(z + 1)
 
-    Issues
-    ======
-    The code relies on the ``nullspace`` function (on matrices) and this
-    function doesn't always behave as expected. For instance,
-
-    >>> rational_interpolate([120, 150, 200, 255, 312, 370], 2)
-    60*x
-
-    instead of:
-    (60*x**2+60)/x
-
     References
     ==========
     Algorithm is adapted from:
@@ -337,10 +326,18 @@ def rational_interpolate(data, degnum, X='x'):
     for j in range(k+1):
         for i in range(m+k+1):
             c[i,m+k+1-j] = -c[i,k+1-j]*ydata[i]
-    r = c.nullspace()[0]
+    res = c.nullspace()
     z = symbols(X)
-    return ( sum( r[i+1] * z**i for i in range(m))
-            / sum( r[i+m+1] * z**i for i in range(k) ) )
+    for r in res:
+        e =( sum( r[i+1] * z**i for i in range(m))
+             / sum( r[i+m+1] * z**i for i in range(k) ) )
+        valid = True
+        for i, j in zip(xdata, ydata):
+            if e.subs(z,i) != j:
+                valid = False
+                break
+        if valid: return e
+    return None
              
 
 @public
