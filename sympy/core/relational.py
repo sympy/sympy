@@ -5,6 +5,7 @@ from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
 from .function import _coeff_isneg
+from .mul import Mul
 from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
@@ -115,14 +116,38 @@ class Relational(Boolean, Expr, EvalfMixin):
             pass
         elif r.func in (Eq, Ne):
             r = r.func(*ordered(r.args), evaluate=False)
+            if r.lhs.is_zero and r.rhs.is_Mul:
+                rhs = []
+                for i in r.rhs.args:
+                    if i.is_zero:
+                        rhs = [S.Zero]
+                        break
+                    elif i.is_zero is False:
+                        continue
+                    rhs.append(i)
+                rhs = Mul(*rhs)
+                if rhs != r.rhs:
+                    r = r.func(r.lhs, rhs, evaluate=not rhs.is_Mul)
         else:
-            raise NotImplemented
-        if r.lhs.is_Number and not r.rhs.is_Number:
+            raise NotImplementedError
+        # get symbol on the left
+        if r.is_Relational and r.lhs.is_Number and not r.rhs.is_Number:
             r = r.reversed
-        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
-            r = r.reversed
-        if _coeff_isneg(r.lhs):
+        while r.is_Relational and (r.lhs.is_Mul or r.lhs.is_Add):
+            a = r.lhs.args[0]
+            if not a.is_Number or r.lhs.is_Mul and a is S.NegativeOne:
+                break
+            if r.lhs.is_Add:
+                r = r.func(r.lhs - a, r.rhs - a, evaluate=False)
+            else:
+                a = abs(a)
+                r = r.func(r.lhs/a, r.rhs/a, evaluate=False)
+        if r.is_Relational and _coeff_isneg(r.lhs):
             r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
+            if r.rhs.is_Symbol and r.func in (Ge, Gt):
+                r = r.reversed
+        if r != self:
+            r = r.func(*r.args)
         return r
 
     def equals(self, other, failing_expression=False):
@@ -211,8 +236,8 @@ class Relational(Boolean, Expr, EvalfMixin):
         ========
 
         >>> from sympy import Symbol, Eq
-        >>> x = Symbol('x', real=True)
-        >>> (x>0).as_set()
+        >>> x = Symbol('x')
+        >>> (x > 0).as_set()
         (0, oo)
         >>> Eq(x, 0).as_set()
         {0}

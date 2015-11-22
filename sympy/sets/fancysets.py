@@ -119,7 +119,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def _intersect(self, other):
         from sympy.functions.elementary.integers import floor, ceiling
-        if other is Interval(S.NegativeInfinity, S.Infinity) or other is S.Reals:
+        if other is Interval(S.NegativeInfinity, S.Infinity) or other is S.Reals:  # XXX first condition should not be necessary
             return self
         elif other.is_Interval:
             s = Range(ceiling(other.left), floor(other.right) + 1)

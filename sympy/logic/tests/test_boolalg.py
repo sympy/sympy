@@ -666,7 +666,7 @@ def test_all_or_nothing():
     if v.func is And:
         assert len(v.args) == len(args) - args.count(S.true)
     else:
-        assert v == True
+        assert v == (x <= oo)
     v = Or(*args)
     if v.func is Or:
         assert len(v.args) == 2
@@ -709,3 +709,10 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]
+
+
+def test_simplification2():
+    x = symbols('x', real=True)
+    assert Or(x > 0, x < 1) == True
+    ans = (x > 0).as_set().union((x < 1).as_set())
+    assert ans == S.Reals

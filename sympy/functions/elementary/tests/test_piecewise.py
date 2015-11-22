@@ -134,7 +134,6 @@ def test_piecewise_free_symbols():
 def test_piecewise_integrate():
     x, y = symbols('x y', real=True, finite=True)
 
-    # XXX Use '<=' here! '>=' is not yet implemented ..
     f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
     assert integrate(f, (x, -2, 2)) == Rational(14, 3)
 
@@ -230,12 +229,14 @@ def test_piecewise_integrate_symbolic_conditions():
     y = Symbol('y', real=True, finite=True)
     p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
     p1 = Piecewise((0, x < a), (0, x > b), (1, True))
+    p1b = Piecewise((0, x < b), (0, x > a), (1, True))
     p2 = Piecewise((0, x > b), (0, x < a), (1, True))
     p3 = Piecewise((0, x < a), (1, x < b), (0, True))
     p4 = Piecewise((0, x > b), (1, x > a), (0, True))
     p5 = Piecewise((1, And(a < x, x < b)), (0, True))
     assert integrate(p0, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
     assert integrate(p1, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p1b, (x, -oo, y)) == Min(a, y) - Min(a, b, y)
     assert integrate(p2, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
     assert integrate(p3, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
     assert integrate(p4, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
@@ -248,8 +249,8 @@ def test_piecewise_integrate_symbolic_conditions():
     assert integrate(p5, (x, y, oo)) == Max(a, b, y) - Max(a, y)
 
     assert integrate(p0, x) == Piecewise((0, Or(x < a, x > b)), (x, True))
-    assert integrate(p1, x) == Piecewise((0, Or(x < a, x > b)), (x, True))
-    assert integrate(p2, x) == Piecewise((0, Or(x < a, x > b)), (x, True))
+    assert integrate(p1, x) == Piecewise((0, Or(b < x, x < a)), (x, True))
+    assert integrate(p2, x) == Piecewise((0, Or(b < x, x < a)), (x, True))
 
     p1 = Piecewise((0, x < a), (0.5, x > b), (1, True))
     p2 = Piecewise((0.5, x > b), (0, x < a), (1, True))
@@ -332,6 +333,7 @@ def test_piecewise_fold():
 
 
 def test_piecewise_fold_piecewise_in_cond():
+    x = symbols('x')
     p1 = Piecewise((cos(x), x < 0), (0, True))
     p2 = Piecewise((0, Eq(p1, 0)), (p1 / Abs(p1), True))
     p3 = piecewise_fold(p2)
@@ -347,8 +349,12 @@ def test_piecewise_fold_piecewise_in_cond():
 
     p5 = Piecewise((1, x < 0), (3, True))
     p6 = Piecewise((1, x < 1), (3, True))
-    p7 = piecewise_fold(Piecewise((1, p5 < p6), (0, True)))
-    assert(Piecewise((1, And(Not(x < 1), x < 0)), (0, True)))
+    assert piecewise_fold(Piecewise((1, p5 < p6), (0, True))) == \
+        Piecewise((1, And(x < 0, x >= 1)), (0, True))
+    x = symbols('x', real=True)
+    p5 = Piecewise((1, x < 0), (3, True))
+    p6 = Piecewise((1, x < 1), (3, True))
+    assert piecewise_fold(Piecewise((1, p5 < p6), (0, True))) == 0
 
 
 @XFAIL
@@ -364,8 +370,7 @@ def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = piecewise_fold(expand((1 - x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)),
-        (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
+    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = expand(piecewise_fold((1 - x)*p1))
     assert p2 == Piecewise(

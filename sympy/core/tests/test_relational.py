@@ -632,6 +632,13 @@ def test_canonical():
     assert (-x < 1).canonical == (x > -1)
     assert isreversed(-x > y)
 
+    z = symbols('z', zero=True)
+    assert Eq(z*x, 0).canonical is S.true
+    nz = symbols('z', zero=False)
+    assert Eq(nz*x, 0).canonical == Eq(x, 0)
+    nz = symbols('z', positive=True)
+    assert Eq(nz*x, 0).canonical == Eq(x, 0)
+
 
 @XFAIL
 def test_issue_8444():
