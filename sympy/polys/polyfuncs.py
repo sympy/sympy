@@ -277,8 +277,8 @@ def rational_interpolate(data, degnum, X='x'):
 
     This can be made explicit by giving a list of coordinates:
 
-    >>> rational_interpolate([ (1,-210), (2,-35), (3,105),
-                               (4,231), (5,350), (6,465)], 2)
+    >>> y = [ (1,-210), (2,-35), (3,105), (4,231), (5,350), (6,465)]
+    >>> rational_interpolate(y, 2)
     (105*x**2 - 525)/(x + 1)
 
     The (x, y) coordinates can also be given as keys and values of a
