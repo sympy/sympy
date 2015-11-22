@@ -330,7 +330,7 @@ def rational_interpolate(data, degnum, X='x'):
     z = symbols(X)
     return ( sum( r[i] * z**i for i in range(m+1))
             / sum( r[i+m+1] * z**i for i in range(k+1) ) )
-             
+
 
 @public
 def viete(f, roots=None, *gens, **args):
