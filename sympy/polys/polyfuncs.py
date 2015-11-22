@@ -325,19 +325,11 @@ def rational_interpolate(data, degnum, X='x'):
             c[i,j+1] = c[i,j]*xdata[i]
     for j in range(k+1):
         for i in range(m+k+1):
-            c[i,m+k+1-j] = -c[i,k+1-j]*ydata[i]
-    res = c.nullspace()
+            c[i,m+k+1-j] = -c[i,k-j]*ydata[i]
+    r = c.nullspace()[0]
     z = symbols(X)
-    for r in res:
-        e =( sum( r[i+1] * z**i for i in range(m))
-             / sum( r[i+m+1] * z**i for i in range(k) ) )
-        valid = True
-        for i, j in zip(xdata, ydata):
-            if e.subs(z,i) != j:
-                valid = False
-                break
-        if valid: return e
-    return None
+    return ( sum( r[i] * z**i for i in range(m+1))
+            / sum( r[i+m+1] * z**i for i in range(k+1) ) )
              
 
 @public
