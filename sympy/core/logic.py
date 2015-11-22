@@ -60,7 +60,6 @@ def _fuzzy_group(args, quick_exit=False):
     return not saw_other
 
 
-
 def fuzzy_bool(x):
     """Return True, False or None according to x.
 
