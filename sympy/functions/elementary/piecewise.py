@@ -210,7 +210,7 @@ class Piecewise(Function):
                 break
 
         if non_false_ecpairs != args:
-            return cls(*non_false_ecpairs, evaluate=False)
+            return cls(*non_false_ecpairs, evaluate=len(non_false_ecpairs) == 1)
 
         return None
 
