@@ -11,11 +11,11 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
-    MultivariatePolynomialError)
+    MultivariatePolynomialError, OptionError)
 
 from sympy.utilities import numbered_symbols, take, public
 
-from sympy.core import S, Basic, Add, Mul
+from sympy.core import S, Basic, Add, Mul, symbols
 
 from sympy.core.compatibility import range
 
@@ -253,6 +253,96 @@ def interpolate(data, x):
 
     return poly.expand()
 
+
+# TODO: Change the Error type
+@public
+def rational_interpolate(data, degnum, X='x'):
+    """
+    Returns a rational interpolation, where the data points are element of
+    any integral domain.
+
+    The first argument  contains the data (either as a list or as a dictionary
+    (see examples below). The  ``degnum`` argument is the degree in the
+    numerator of the rational function. Setting it too high will decrease the
+    maximal degree in the denominator for the same amount of data.
+
+    Example:
+    ========
+    >>> from sympy.polys.polyfuncs import rational_interpolate
+
+    A list is interpreted as though it were paired with a range starting
+    from 1:
+
+    >>> rational_interpolate([-210, -35, 105, 231, 350, 465], 2)
+    (105*x**2 - 525)/(x + 1)
+
+    This can be made explicit by giving a list of coordinates:
+
+    >>> rational_interpolate([ (1,-210), (2,-35), (3,105),
+                               (4,231), (5,350), (6,465)], 2)
+    (105*x**2 - 525)/(x + 1)
+
+    The (x, y) coordinates can also be given as keys and values of a
+    dictionary (and the points need not be equispaced):
+
+    >>> rational_interpolate({1:-210, 2:-35, 3:105, 4:231, 5:350, 6:465}, 2)
+    (105*x**2 - 525)/(x + 1)
+
+    Values do not need to be integers:
+
+    >>> from sympy import sympify
+    >>> y = list(map(lambda x: sympify(x), ["-1","0","2","22/5","7","68/7"]))
+    >>> rational_interpolate(y, 2)
+    (3*x**2 - 7*x + 2)/(x + 1)
+
+    The symbol for the variable can be changed if needed:
+    >>> rational_interpolate([-210, -35, 105, 231, 350, 465], 2, X='z')
+    (105*z**2 - 525)/(z + 1)
+
+    Issues
+    ======
+    The code relies on the ``nullspace`` function (on matrices) and this
+    function doesn't always behave as expected. For instance,
+
+    >>> rational_interpolate([120, 150, 200, 255, 312, 370], 2)
+    60*x
+
+    instead of:
+    (60*x**2+60)/x
+
+    References
+    ==========
+    Algorithm is adapted from:
+        http://axiom-wiki.newsynthesis.org/RationalInterpolation
+
+    """
+    from sympy.matrices.dense import ones
+
+    if isinstance(data, dict):
+        xdata, ydata = list(zip(*data.items()))
+    else:
+        if isinstance(data[0], tuple):
+            xdata, ydata = list(zip(*data))
+        else:
+            xdata = list(range(1, len(data) + 1))
+            ydata = list(data)
+
+    m = degnum + 1
+    k = len(xdata) - m - 1
+    if k<1:
+        raise OptionError("Too few values for the required degree.")
+    c = ones(m+k+1, m+k+2)
+    for j in range(max(m,k)):
+        for i in range(m+k+1):
+            c[i,j+1] = c[i,j]*xdata[i]
+    for j in range(k+1):
+        for i in range(m+k+1):
+            c[i,m+k+1-j] = -c[i,k+1-j]*ydata[i]
+    r = c.nullspace()[0]
+    z = symbols(X)
+    return ( sum( r[i+1] * z**i for i in range(m))
+            / sum( r[i+m+1] * z**i for i in range(k) ) )
+             
 
 @public
 def viete(f, roots=None, *gens, **args):
