@@ -254,7 +254,6 @@ def interpolate(data, x):
     return poly.expand()
 
 
-# TODO: Change the Error type
 @public
 def rational_interpolate(data, degnum, X='x'):
     """
