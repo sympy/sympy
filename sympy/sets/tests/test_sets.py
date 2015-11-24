@@ -928,3 +928,10 @@ def test_issue_Symbol_inter():
         Intersection(r, FiniteSet(sin(x), cos(x)))
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
+
+
+def test_issue_10113():
+    f = x**2/(x**2 - 4)
+    assert imageset(x, f, S.Reals) == Union(Interval(-oo, 0), Interval(1, oo, True, True))
+    assert imageset(x, f, Interval(-2, 2)) == Interval(-oo, 0)
+    assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(S(9)/5, oo))

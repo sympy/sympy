@@ -558,6 +558,7 @@ class StrPrinter(Printer):
         charmap = {
             "==": "Eq",
             "!=": "Ne",
+            ":=": "Assignment",
         }
 
         if expr.rel_op in charmap:

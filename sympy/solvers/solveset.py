@@ -1251,7 +1251,7 @@ def linsolve(system, *symbols):
     if params:
         for s in sol:
             for k, v in enumerate(params):
-                s = s.subs(v, symbols[free_syms[k]])
+                s = s.xreplace({v: symbols[free_syms[k]]})
             solution.append(s)
 
     else:
