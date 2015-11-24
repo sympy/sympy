@@ -100,6 +100,21 @@ class CodeBlock(Basic):
 
         return Basic.__new__(cls, *assignments)
 
+    def cse(self, symbols=None, optimizations=None, postprocess=None,
+        order='canonical'):
+        """
+        Return a new code block with common subexpressions eliminated
+
+        See the docstring of :func:`sympy.simplify.cse_main.cse` for more information.
+        """
+        # TODO: Check that the symbols are new
+        from sympy.simplify.cse_main import cse
+        replacements, reduced_exprs = cse(self, symbols=symbols,
+            optimizations=optimizations, postprocess=postprocess, order=order)
+        assert len(reduced_exprs) == 1
+        new_block = reduced_exprs[0]
+        new_assignments = tuple(Assignment(*i) for i in replacements)
+        return CodeBlock(*(new_assignments + new_block.args))
 
 class CodePrinter(StrPrinter):
     """
