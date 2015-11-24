@@ -1,6 +1,6 @@
-from sympy import Symbol, S, exp, log, sqrt, oo, E
+from sympy import Symbol, S, exp, log, sqrt, oo, E, zoo
 from sympy.calculus.util import not_empty_in, Limits
-from sympy.core.add import Add
+from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
 from sympy.abc import x
@@ -82,35 +82,52 @@ def test_Limits_mul():
     assert Limits(1, 2)*Limits(2, 3) == Limits(2, 6)
 
     assert Limits(1, 2)*0 == 0
-    assert Limits(1, oo)*0 == 0
-    assert Limits(-oo, 1)*0 == 0
-    assert Limits(-oo, oo)*0 == 0
+    assert Limits(1, oo)*0 == Limits(0, oo)
+    assert Limits(-oo, 1)*0 == Limits(-oo, 0)
+    assert Limits(-oo, oo)*0 == Limits(-oo, oo)
 
     assert Limits(1, 2)*x == Mul(Limits(1, 2), x, evaluate=False)
 
+    assert Limits(0, 2)*oo == Limits(0, oo)
+    assert Limits(-2, 0)*oo == Limits(-oo, 0)
+    assert Limits(0, 2)*(-oo) == Limits(-oo, 0)
+    assert Limits(-2, 0)*(-oo) == Limits(0, oo)
+    assert Limits(-1, 1)*oo == Limits(-oo, oo)
+    assert Limits(-1, 1)*(-oo) == Limits(-oo, oo)
+    assert Limits(-oo, oo) == Limits(-oo, oo)
+
 
 def test_Limits_div():
-    assert Limits(1, 2)/Limits(2, 3) == Limits(S(1)/3, 1)
+    assert Limits(-1, 3)/Limits(3, 4) == Limits(-S(1)/3, 1)
+    assert Limits(-2, 4)/Limits(-3, 4) == Limits(-oo, oo)
+    assert Limits(-3, -2)/Limits(-4, 0) == Limits(S(1)/2, oo)
+    assert Limits(-3, -2)/Limits(-2, 1) == Union(Limits(-oo, -2), Limits(1, oo))
+    assert Limits(-3, -2)/Limits(0, 4) == Limits(-oo, -S(1)/2)
+    assert Limits(2, 4)/Limits(-3, 0) == Limits(-oo, -S(2)/3)
+    assert Limits(2, 3)/Limits(-2, 2) == Union(Limits(-oo, -1), Limits(1, oo))
+    assert Limits(2, 4)/Limits(0, 3) == Limits(S(2)/3, oo)
 
-    assert Limits(-3, -2)/Limits(0, 3) == Limits(-oo, -S(2)/3)
-    assert Limits(-3, 2)/Limits(0, 3) == Limits(-oo, oo)
-    assert Limits(2, 3)/Limits(0, 3) == Limits(S(2)/3, oo)
-
-    assert Limits(-3, -2)/Limits(-3, 0) == Limits(S(2)/3, oo)
-    assert Limits(-3, 2)/Limits(-3, 0) == Limits(-oo, oo)
-    assert Limits(2, 3)/Limits(-3, 0) == Limits(-oo, -S(2)/3)
-
-    assert Limits(0, 3)/Limits(0, 2) == Limits(0, oo)
-    assert Limits(-3, 0)/Limits(0, 2) == Limits(-oo, 0)
-    assert Limits(0, 3)/Limits(-2, 0) == Limits(-oo, 0)
-    assert Limits(-3, 0)/Limits(-2, 0) == Limits(0, oo)
-
-    assert Limits(-2, -1)/Limits(-2, 3) == Limits(-oo, oo)
-    assert Limits(-2, 1)/Limits(-2, 3) == Limits(-oo, oo)
+    assert Limits(0, 1)/Limits(0, 1) == Limits(0, oo)
+    assert Limits(-1, 0)/Limits(0, 1) == Limits(-oo, 0)
+    assert Limits(-1, 2)/Limits(-2, 2) == Limits(-oo, oo)
 
     assert 1/Limits(-1, 2) == Limits(-oo, oo)
     assert 1/Limits(0, 2) == Limits(S(1)/2, oo)
     assert (-1)/Limits(0, 2) == Limits(-oo, -S(1)/2)
+
+    assert Limits(1, 2)/a == Mul(Limits(1, 2), 1/a, evaluate=False)
+
+    assert Limits(1, 2)/0 == Limits(1, 2)*zoo
+    assert Limits(1, oo)/oo == Limits(0, oo)
+    assert Limits(1, oo)/(-oo) == Limits(-oo, 0)
+    assert Limits(-oo, -1)/oo == Limits(-oo, 0)
+    assert Limits(-oo, -1)/(-oo) == Limits(0, oo)
+    assert Limits(-oo, oo)/oo == Limits(-oo, oo)
+    assert Limits(-oo, oo)/(-oo) == Limits(-oo, oo)
+    assert Limits(-1, oo)/oo == Limits(0, oo)
+    assert Limits(-1, oo)/(-oo) == Limits(-oo, 0)
+    assert Limits(-oo, 1)/oo == Limits(-oo, 0)
+    assert Limits(-oo, 1)/(-oo) == Limits(0, oo)
 
 
 def test_Limits_subs():
@@ -133,9 +150,9 @@ def test_Limits_pow():
 
     assert Limits(-4, 2)**(S(2)/3) == Limits(0, 2*2**(S(1)/3))
 
-    raises(ValueError, lambda: Limits(-1, 5)**(S(1)/2))
-    raises(ValueError, lambda: Limits(-oo, 2)**(S(1)/2))
-    raises(ValueError, lambda:Limits(-2, 3)**(S(-1)/4))
+    assert Limits(-1, 5)**(S(1)/2) == Limits(0, sqrt(5))
+    assert Limits(-oo, 2)**(S(1)/2) == Limits(0, sqrt(2))
+    assert Limits(-2, 3)**(S(-1)/4) == Limits(0, oo)
 
     assert Limits(1, 5)**(-2) == Limits(S(1)/25, 1)
     assert Limits(-1, 3)**(-2) == Limits(0, oo)
@@ -148,3 +165,5 @@ def test_Limits_pow():
     assert Limits(-2, 3)**(-S(1)/3) == Limits(-oo, oo)
     assert Limits(-oo, 0)**(-2) == Limits(0, oo)
     assert Limits(-2, 0)**(-2) == Limits(S(1)/4, oo)
+
+    assert Limits(1, 2)**x == Pow(Limits(1, 2), x, evaluate=False)

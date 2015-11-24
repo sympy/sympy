@@ -234,20 +234,20 @@ class sin(TrigonometricFunction):
                 return Limits(-1, 1)
 
         if isinstance(arg, Limits):
-            start, end = arg.start, arg.end
-            if arg.start is not S.NegativeInfinity:
-                start = arg.start - floor(arg.start/(2*S.Pi))*2*S.Pi
-            if arg.end is not S.Infinity:
-                end = arg.end - floor(arg.start/(2*S.Pi))*2*S.Pi
-            if Limits(start, end).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not S.EmptySet \
-                    and Limits(start, end).intersect(FiniteSet(3*S.Pi/2, 7*S.Pi/2)) is not S.EmptySet:
+            min, max = arg.min, arg.max
+            if arg.min is not S.NegativeInfinity:
+                min = arg.min - floor(arg.min/(2*S.Pi))*2*S.Pi
+            if arg.max is not S.Infinity:
+                max = arg.max - floor(arg.min/(2*S.Pi))*2*S.Pi
+            if Limits(min, max).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not S.EmptySet \
+                    and Limits(min, max).intersect(FiniteSet(3*S.Pi/2, 7*S.Pi/2)) is not S.EmptySet:
                 return Limits(-1, 1)
-            elif Limits(start, end).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not S.EmptySet:
-                return Limits(Min(sin(start), sin(end)), 1)
-            elif Limits(start, end).intersect(FiniteSet(3*S.Pi/2, 8*S.Pi/2)) is not S.EmptySet:
-                return Limits(-1, Max(sin(start), sin(end)))
+            elif Limits(min, max).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not S.EmptySet:
+                return Limits(Min(sin(min), sin(max)), 1)
+            elif Limits(min, max).intersect(FiniteSet(3*S.Pi/2, 8*S.Pi/2)) is not S.EmptySet:
+                return Limits(-1, Max(sin(min), sin(max)))
             else:
-                return Limits(Min(sin(start), sin(end)), Max(sin(start), sin(end)))
+                return Limits(Min(sin(min), sin(max)), Max(sin(min), sin(max)))
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -884,17 +884,17 @@ class tan(TrigonometricFunction):
                 return Limits(S.NegativeInfinity, S.Infinity)
 
         if isinstance(arg, Limits):
-            start, end = arg.start, arg.end
-            if arg.start is not S.NegativeInfinity:
-                start = arg.start - floor(arg.start/S.Pi)*S.Pi
+            min, max = arg.min, arg.max
+            if arg.min is not S.NegativeInfinity:
+                min = arg.min - floor(arg.min/S.Pi)*S.Pi
 
-            if arg.end is not S.Infinity:
-                end = arg.end - floor(arg.start/S.Pi)*S.Pi
+            if arg.max is not S.Infinity:
+                max = arg.max - floor(arg.min/S.Pi)*S.Pi
 
-            if Limits(start, end).intersect(FiniteSet(S.Pi/2, 3*S.Pi/2)):
+            if Limits(min, max).intersect(FiniteSet(S.Pi/2, 3*S.Pi/2)):
                 return Limits(S.NegativeInfinity, S.Infinity)
             else:
-                return Limits(tan(start), tan(end))
+                return Limits(tan(min), tan(max))
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)

@@ -243,7 +243,7 @@ class exp(ExpBase):
         elif arg.func is log:
             return arg.args[0]
         elif isinstance(arg, Limits):
-            return Limits(exp(arg.start), exp(arg.end))
+            return Limits(exp(arg.min), exp(arg.max))
         elif arg.is_Mul:
             if arg.is_number or arg.is_Symbol:
                 coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -535,8 +535,8 @@ class log(Function):
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
         elif isinstance(arg, Limits):
-            if arg.start.is_positive:
-                return Limits(log(arg.start), log(arg.end))
+            if arg.min.is_positive:
+                return Limits(log(arg.min), log(arg.max))
             else:
                 return
 

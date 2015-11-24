@@ -1,6 +1,6 @@
-from sympy import S
+from sympy import Order, S
 from sympy.core.basic import Basic
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, Pow
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
@@ -121,31 +121,44 @@ def not_empty_in(finset_intersection, *syms):
 
 class Limits(Interval, AtomicExpr):
     """
-    Limits represents an interval `[a, b]` that is an arbitary real number
-    greater than equal to `a` and less than equal to `b` where `a` and `b`
-    are real numbers and finite.
+    Limits represent an interval `[a, b]`, which is always closed at the
+    ends. Here `a` and `b` can be any value from extended real numbers.
 
-    `[a, b] = \{x \in \mathbb{R} \,|\, a \le x \le b\}`
+    In many cases it would suffice to know that the limit set is bounded.
+    However, in some other cases more exact information could be useful.
+    For example, that all accumulation values of cos(x) + 1 are non-negative.
+    (Limits(-1, 1) + 1 = Limits(0, 2))
 
-    `(-oo, b] = \{x \in \mathbb{R} \,|\, x \le b\}`
+    Let `a` and `b` be reals such that a <= b.
 
-    `[a, -oo) = \{x \in \mathbb{R} \,|\, a \le x}`
+    `\langle a, b\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
-    `(-oo, oo) = \mathbb{R}`
+    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\}`
 
-    Operation on intervals are defined as:
+    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid, a \le x\}`
 
-    `[a, b] + [c, d] = \{ x+y| a\le x \le b, c \le y \le d}`
+    `\langle -\infty, \infty \rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
-    `[a, b] - [c, d] = \{ x-y| a\le x \le b, c \le y \le d}`
+    A Limits object is defined to be real Limits, if its end points are finite
+    reals.
 
-    `[a, b] * [c, d] = \{ x*y | a \le x \le b, c \le y \le d\}`
+    Let `X`, `Y` be real Limits, then their sum, difference, product are
+    defined to be the following sets:
+
+    `X + Y = \{ x+y \mid x \in X \cap y \in Y\}`
+
+    `X - Y = \{ x-y \mid x \in X \cap y \in Y\}`
+
+    `X * Y = \{ x*y \mid x \in X \cap y \in Y\}`
 
     There is, however, no consensus on interval division.
 
-    `[a, b] / [c, d] = \{ x/y | a \le x \le b, c \le y \le d\}`
+    `X / Y = \{ z| \exists x \in X, y \in Y \mid y \neq 0, z = x/y\}`
 
-    `[a, b]^n = \{ x^n | a \le x \le b}`
+    Note: According to this definition the quotient of two Limits may not
+    be a Limits object but may be a union of Limits.
+
+    `X^n = \{ x^n \mid x \in X\}`
 
     Note
     ====
@@ -162,40 +175,40 @@ class Limits(Interval, AtomicExpr):
     >>> from sympy.abc import x
 
     >>> Limits(0, 1) + Limits(1, 2)
-    [1, 3]
+    <1, 3>
 
     >>> Limits(0, 1) - Limits(0, 2)
-    [-2, 2]
+    <-2, 1>
 
     >>> Limits(-2, 3)*Limits(-1, 1)
-    [-3, 3]
+    <-3, 3>
 
     >>> Limits(1, 2)*Limits(3, 5)
-    [3, 10]
+    <3, 10>
 
-    Note: `[a, b]^2` is not same as `[a, b]*[a, b]`
+    Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
 
     >>> Limits(-1, 1)**2
-    [0, 1]
+    <0, 1>
 
     Some elementary functions can also take intervals as input.
-    A function `f` evaluated for some interval `[a, b]` is defined as
-    `f([a, b]) = \{ f(x) | a \le x \le b \}`
+    A function `f` evaluated for some interval `<a, b>` is defined as
+    `f(<a, b>) = \{ f(x) | a \le x \le b \}`
 
     >>> sin(Limits(pi/6, pi/3))
-    [1/2, sqrt(3)/2]
+    <1/2, sqrt(3)/2>
 
     >>> exp(Limits(0, 1))
-    [1, E]
+    <1, E>
 
     >>> log(Limits(1, E))
-    [0, 1]
+    <0, 1>
 
     Some symbol in an experession can be substituted for an Interval.
     But it doesn't necessarily evaluate the Interval for that expression.
 
     >>> (x**2 + 2*x + 1).subs(x, Limits(-1, 1))
-    [-1, 4]
+    <-1, 4>
 
     References
     ==========
@@ -308,14 +321,31 @@ class Limits(Interval, AtomicExpr):
                             Mul(self.min, other.max),
                             Mul(self.max, other.min),
                             Mul(self.max, other.max)))
-
-            elif other.is_real:
+            if other is S.Infinity:
+                if self.min.is_zero:
+                    return Limits(0, oo)
+                if self.max.is_zero:
+                    return Limits(-oo, 0)
+            if other is S.NegativeInfinity:
+                if self.min.is_zero:
+                    return Limits(-oo, 0)
+                if self.max.is_zero:
+                    return Limits(0, oo)
+            if other.is_real:
                 if other.is_zero:
+                    if self == Limits(-oo, oo):
+                        return Limits(-oo, oo)
+                    if self.max is S.Infinity:
+                        return Limits(0, oo)
+                    if self.min is S.NegativeInfinity:
+                        return Limits(-oo, 0)
                     return S.Zero
                 if other.is_positive:
                     return Limits(Mul(self.min, other), Mul(self.max, other))
                 elif other.is_negative:
                     return Limits(Mul(self.max, other), Mul(self.min, other))
+            if isinstance(other, Order):
+                return other
             return Mul(self, other, evaluate=False)
         return NotImplemented
 
@@ -326,38 +356,53 @@ class Limits(Interval, AtomicExpr):
         from sympy.functions.elementary.miscellaneous import Min, Max
         if isinstance(other, Expr):
             if isinstance(other, Limits):
-                if S.Zero in other:
-                    if other.min == S.Zero:
-                        if self.max.is_nonpositive:
-                            return Limits(-oo, Mul(self.max, 1/other.max))
-                        if self.min.is_nonnegative:
-                            return Limits(Mul(self.min, 1/other.max), oo)
-                    if other.max == S.Zero:
-                        if self.max.is_nonpositive:
-                            return Limits(Mul(self.max, 1/other.min), oo)
-                        if self.min.is_nonnegative:
-                            return Limits(-oo, Mul(self.min, 1/other.min))
+                if not S.Zero in other:
+                    return self*Limits(1/other.max, 1/other.min)
+
+                if S.Zero in self and S.Zero in other:
+                    if self.min.is_zero and other.min.is_zero:
+                        return Limits(0, oo)
+                    if self.max.is_zero and other.min.is_zero:
+                        return Limits(-oo, 0)
                     return Limits(-oo, oo)
-                else:
-                    return Limits(Min(Mul(self.min, 1/other.min),
-                                Mul(self.min, 1/other.max),
-                                Mul(self.max, 1/other.min),
-                                Mul(self.max, 1/other.max)),
-                            Max(Mul(self.min, 1/other.min),
-                                Mul(self.min, 1/other.max),
-                                Mul(self.max, 1/other.min),
-                                Mul(self.max, 1/other.max)))
+
+                if self.max.is_negative:
+                    if other.min.is_negative:
+                        if other.max.is_zero:
+                            return Limits(self.max/other.min, oo)
+                        if other.max.is_positive:
+                            return Union(Limits(-oo, self.max/other.max),
+                                    Limits(self.max/other.min, oo))
+
+                    if other.min.is_zero and other.max.is_positive:
+                        return Limits(-oo, self.max/other.max)
+
+                if self.min.is_positive:
+                    if other.min.is_negative:
+                        if other.max.is_zero:
+                            return Limits(-oo, self.min/other.min)
+                        if other.max.is_positive:
+                            return Union(Limits(-oo, self.min/other.min),
+                                    Limits(self.min/other.max, oo))
+
+                    if other.min.is_zero and other.max.is_positive:
+                        return Limits(self.min/other.max, oo)
 
             elif other.is_real:
+                if other is S.Infinity or other is S.NegativeInfinity:
+                    if self == Limits(-oo, oo):
+                        return Limits(-oo, oo)
+                    if self.max is S.Infinity:
+                        return Limits(Min(0, other), Max(0, other))
+                    if self.min is S.NegativeInfinity:
+                        return Limits(Min(0, -other), Max(0, -other))
                 if other.is_positive:
                     return Limits(self.min/other, self.max/other)
                 elif other.is_negative:
                     return Limits(self.max/other, self.min/other)
-                else:
-                    return NotImplemented
             return Mul(self, 1/other, evaluate=False)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __truediv__ = __div__
 
@@ -388,39 +433,41 @@ class Limits(Interval, AtomicExpr):
     def __pow__(self, other):
         from sympy.functions.elementary.miscellaneous import Max, Min
         from sympy.functions.elementary.miscellaneous import real_root
-        if other.is_real:
-            if other.is_zero:
-                return S.One
-            if other.is_Rational:
-                if other.is_Integer:
-                    if self.min.is_positive or self.max.is_negative:
-                        return Limits(Min(self.min**other, self.max**other),
-                                Max(self.min**other, self.max**other))
-                    else:
-                        if self.min.is_zero:
-                            return Limits(self.max**other, S.Infinity)
-                        if self.max.is_zero:
+        if isinstance(other, Expr):
+            if other.is_real:
+                if other.is_zero:
+                    return S.One
+                if other.is_Rational:
+                    if other.is_Integer:
+                        if self.min.is_positive or self.max.is_negative:
+                            return Limits(Min(self.min**other, self.max**other),
+                                    Max(self.min**other, self.max**other))
+                        else:
+                            if self.min.is_zero:
+                                return Limits(self.max**other, S.Infinity)
+                            if self.max.is_zero:
+                                if other % 2 == 0:
+                                    return Limits(self.min**other, S.Infinity)
+                                return Limits(-oo, self.min**other)
+                            if other.is_negative:
+                                if other % 2 == 0:
+                                    return Limits(S.Zero, oo)
+                                return Limits(-oo, oo)
                             if other % 2 == 0:
-                                return Limits(self.min**other, S.Infinity)
-                            return Limits(S.NegativeInfinity, self.min**other)
-                        if other.is_negative:
-                            if other % 2 == 0:
-                                return Limits(S.Zero, S.Infinity)
-                            return Limits(S.NegativeInfinity, S.Infinity)
-                        if other % 2 == 0:
-                            return Limits(S.Zero,
-                                Max(self.min**other, self.max**other))
-                        return Limits(self.min**other, self.max**other)
+                                return Limits(S.Zero,
+                                    Max(self.min**other, self.max**other))
+                            return Limits(self.min**other, self.max**other)
 
-                num, den = other.as_numer_denom()
-                if num == S(1):
-                    if den % 2 == 0:
-                        if S.Zero in self:
-                            if self.min.is_negative:
-                                raise ValueError("real values")
-                    return Limits(real_root(self.min, den), real_root(self.max, den))
-                num_pow = self**num
-                return num_pow**(1/den)
+                    num, den = other.as_numer_denom()
+                    if num == S(1):
+                        if den % 2 == 0:
+                            if S.Zero in self:
+                                if self.min.is_negative:
+                                    return Limits(0, real_root(self.max, den))
+                        return Limits(real_root(self.min, den), real_root(self.max, den))
+                    num_pow = self**num
+                    return num_pow**(1/den)
+            return Pow(self, other, evaluate=False)
 
         return NotImplemented
 

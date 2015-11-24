@@ -26,7 +26,6 @@ def test_sin():
     assert sin(oo) - sin(oo) == Limits(-2, 2)
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
-    assert sin(oo) == Limits(-1, 1)
     assert 0*sin(oo) == S.Zero
     assert 0/sin(oo) == S.Zero
     assert 0 + sin(oo) == Limits(-1, 1)

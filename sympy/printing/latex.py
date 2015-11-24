@@ -1541,6 +1541,10 @@ class LatexPrinter(Printer):
             return r"\left%s%s, %s\right%s" % \
                    (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_Limits(self, i):
+        return r"\langle %s, %s\rangle" % \
+                (self._print(i.min), self._print(i.max))
+
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
 
