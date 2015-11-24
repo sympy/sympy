@@ -85,7 +85,21 @@ class Assignment(Relational):
 
 
 class CodeBlock(Basic):
-    pass
+    def __new__(cls, *assignments):
+        if not all(isinstance(i, Assignment) for i in assignments):
+            # Will support more things later
+            raise TypeError("CodeBlock inputs must be Assignments")
+
+        left_hand_sides = set()
+        for i in assignments:
+            lhs = i.args[0]
+            if lhs in left_hand_sides:
+                raise NotImplementedError("Duplicate assignments to the same "
+                "variable are not yet supported (%s)" % lhs)
+            left_hand_sides.add(lhs)
+
+        return Basic.__new__(cls, *assignments)
+
 
 class CodePrinter(StrPrinter):
     """
