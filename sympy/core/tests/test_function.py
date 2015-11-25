@@ -230,8 +230,9 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x + 1), x, 1) not in [ e1, e2 ]
-    assert Derivative(
-        f(x), x).subs(x, g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert Derivative(f(x), x).subs(x, g(x)) == Derivative(f(g(x)), g(x))
+    assert Derivative(f(x), x).subs(x, x + y) == Subs(Derivative(f(x), x),
+        (x,), (x + y))
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)

@@ -118,7 +118,7 @@ Similarly, the RHS would be defined.
 Now, to prove the product rule, we would just need to equate the expanded and
 simplified versions of the lhs and the rhs, so that the SymPy expressions match.
 
-  >>> lhs.expand().simplify() == rhs.expand().simplify()
+  >>> lhs.expand().simplify() == rhs.expand().doit().simplify()
   True
 
 Thus, the general form of the third product rule mentioned above can be proven
