@@ -85,7 +85,7 @@ u("""\
 """)
     assert pretty(ac_tall) == ascii_str
     assert upretty(ac_tall) == ucode_str
-    assert latex(ac_tall) == r'\left\{\left(A\right)^{2},B\right\}'
+    assert latex(ac_tall) == r'\left\{A^{2},B\right\}'
     sT(ac_tall, "AntiCommutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
 
@@ -194,7 +194,7 @@ u("""\
 """)
     assert pretty(c_tall) == ascii_str
     assert upretty(c_tall) == ucode_str
-    assert latex(c_tall) == r'\left[\left(A\right)^{2},B\right]'
+    assert latex(c_tall) == r'\left[A^{2},B\right]'
     sT(c_tall, "Commutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
 
@@ -529,7 +529,7 @@ A  \
 """)
     assert pretty(inv) == ascii_str
     assert upretty(inv) == ucode_str
-    assert latex(inv) == r'\left(A\right)^{-1}'
+    assert latex(inv) == r'A^{-1}'
     sT(inv, "Pow(Operator(Symbol('A')), Integer(-1))")
     assert str(d) == 'DifferentialOperator(Derivative(f(x), x),f(x))'
     ascii_str = \
