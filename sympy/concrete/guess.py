@@ -86,13 +86,15 @@ def rationalize(x, maxcoeff=10000):
       * fractions.Fraction.from_decimal
       * fractions.Fraction.from_float
       * mpmath.pslq by using the following syntax: mpmath.pslq([x, 1])
+      * sympy.simplify.nsimplify (which is a more general function)
 
     The main difference between the current function and all these variants is
     that control focuses on magnitude of partial quotients here rather than on
     global precision of the approximation. If the real is "known to be" a
     rational number, the current function should be able to detect it correctly
     with the default settings even when denominator is great (unless its
-    expansion contains unusually big partial quotients). If the user cares more
+    expansion contains unusually big partial quotients) which may occur
+    when studying sequences of increasing numbers. If the user cares more
     on getting simple fractions, other methods may be more convenient.
 
     """
@@ -108,3 +110,6 @@ def rationalize(x, maxcoeff=10000):
         x = 1/(x-a)
         a = floor(x)
     return sympify(p) / q
+
+
+# TODO: Pade approximants
