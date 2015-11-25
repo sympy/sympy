@@ -112,4 +112,8 @@ def rationalize(x, maxcoeff=10000):
     return sympify(p) / q
 
 
-# TODO: Pade approximants
+#
+# TODO
+# ====
+# Roadmap: add a function for guessing a generating function by using
+# Pade approximants

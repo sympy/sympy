@@ -24,4 +24,5 @@ def test_rationalize():
     from mpmath import cos, pi, mpf
     assert rationalize( cos(pi/3) ) == sympify("1/2")
     assert rationalize( mpf("0.333333333333333") ) == sympify("1/3")
+    assert rationalize( mpf("-0.333333333333333") ) == sympify("-1/3")
     assert rationalize( pi, maxcoeff = 250 ) == sympify("355/113")
