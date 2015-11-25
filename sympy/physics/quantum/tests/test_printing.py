@@ -822,7 +822,7 @@ u("""\
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
     assert latex(e1) == \
-        r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+        r'{J_z^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
     sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \
@@ -840,7 +840,7 @@ u("""\
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
     assert latex(e2) == \
-        r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
+        r'\left[J_z^{2},A + B\right] \left\{E^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
     sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
     assert str(e3) == \
         "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
