@@ -1,7 +1,8 @@
 from sympy.concrete.guess import (
             find_simple_recurrence_vector,
             find_simple_recurrence,
-            rationalize
+            rationalize,
+            guess_generating_function
         )
 from sympy import Function, var, sympify
 from sympy.core.numbers import Zero
@@ -33,3 +34,9 @@ def test_rationalize():
     assert rationalize( mpf("0.333333333333333") ) == sympify("1/3")
     assert rationalize( mpf("-0.333333333333333") ) == sympify("-1/3")
     assert rationalize( pi, maxcoeff = 250 ) == sympify("355/113")
+
+
+def test_gauss_generating_function():
+    x = var('x')
+    assert guess_generating_function([ int(fib(k)) for k in range(5,15) ]) == (
+       (3*x + 5)/(-x**2 - x + 1) )

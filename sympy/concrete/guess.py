@@ -23,10 +23,19 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
     If the returned vector has a length 1, then the returned value is also [0],
     which means that no relation has been found.
 
+    Examples
+    ========
+
     >>> from sympy.concrete.guess import find_simple_recurrence_vector
     >>> from mpmath import fib
     >>> find_simple_recurrence_vector( [ fib(k) for k in range(12) ] )
     [1, -1, -1]
+
+    See also
+    ========
+
+    See the function sympy.concrete.guess.find_simple_recurrence which is more
+    user-friendly.
 
     """
     l = len(v)>>1
@@ -76,7 +85,7 @@ def find_simple_recurrence(v, A=Function('a'), N=var('n'), maxcoeff=1024):
     n = len(p)
     if n <= 1: return Zero()
 
-    rel = 0
+    rel = Zero()
     for k in range(n):
         rel += A(N+n-1-k)*p[k]
 
@@ -144,8 +153,32 @@ def rationalize(x, maxcoeff=10000):
     return sympify(p) / q
 
 
-#
-# TODO
-# ====
-# Roadmap: add a function for guessing a generating function by using
-# Pade approximants
+@public
+def guess_generating_function(v, X=var('x'), maxcoeff=1024):
+    """
+    Tries to "guess" a generating function for a sequence of rational numbers v.
+    Currently only rational generating functions are guessed.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.guess import guess_generating_function as ggf
+    >>> from mpmath import fib
+    >>> ggf( [ int(fib(k)) for k in range(5,15) ] )
+    (3*x + 5)/(-x**2 - x + 1)
+
+    References
+    ==========
+    "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
+
+    """
+    # Guess a rational function p/q
+    #   a) compute the denominator as q
+    q = find_simple_recurrence_vector(v, maxcoeff=maxcoeff)
+    n = len(q)
+    if n <= 1: return None
+    #   b) compute the numerator as p
+    p = [ sum(  v[i-k]*q[k] for k in range(min(i+1,n)) )
+            for i in range(len(v)) ] # TODO: maybe better with:  len(v)>>1
+    return ( sum( p[k]*X**k for k in range(len(p)))
+            / sum( q[k]*X**k for k in range(n)) )
