@@ -4,11 +4,53 @@ from __future__ import print_function, division
 from sympy.utilities import public
 
 from sympy.core import Function, var
+from sympy.core.numbers import Zero
 from sympy import sympify, floor
 from mpmath import pslq, sqrt, mp
 
 @public
-def find_simple_recurrence(v, A=Function('a'), N=var('n'), maxcoeff=1000):
+def find_simple_recurrence_vector(v, maxcoeff=1024):
+    """
+    This function is used internally by other functions from the
+    sympy.concrete.guess module. While most users may want to rather use the
+    function find_simple_recurrence when looking for recurrence relations
+    among rational numbers, the current function may still be useful when
+    some post-proecessing has to be done.
+
+    The function returns a vector of length n when a recurrence relation of
+    order n is detected in the sequence of rational numbers v.
+
+    If the returned vector has a length 1, then the returned value is also [0],
+    which means that no relation has been found.
+
+    >>> from sympy.concrete.guess import find_simple_recurrence_vector
+    >>> from mpmath import fib
+    >>> find_simple_recurrence_vector( [ fib(k) for k in range(12) ] )
+    [1, -1, -1]
+
+    """
+    l = len(v)>>1
+
+    previous = mp.prec # save current precision
+    mp.prec = 128
+    b = [ sum( sqrt((l>>1)**2 + k)*v[-1-k-i] for k in range(l) )
+          for i in range(l) ]
+    p = pslq(   b,
+                maxcoeff = maxcoeff,
+                maxsteps = 128 + 4*l
+            )
+    mp.prec = previous # restore current precision
+    if p == None: return [0]
+
+    first, last = 0, l-1
+    while p[first]==0: first += 1
+    while p[last]==0:
+        last -= 1
+        if first == last: return [0] # TODO: probably never occuring
+    return p[first:last+1]
+
+@public
+def find_simple_recurrence(v, A=Function('a'), N=var('n'), maxcoeff=1024):
     """
     Detects and returns a recurrence relation from a sequence of several integer
     (or rational) terms. The name of the function in the returned expression is
@@ -30,25 +72,13 @@ def find_simple_recurrence(v, A=Function('a'), N=var('n'), maxcoeff=1000):
     -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3)
 
     """
-    l = len(v)>>1
-
-    previous = mp.prec # save current precision
-    mp.prec = 128
-    b = [ sum( sqrt((l>>1)**2 + k)*v[-1-k-i] for k in range(l) )
-          for i in range(l) ]
-    p = pslq(   b,
-                maxcoeff = maxcoeff,
-                maxsteps = 128 + 4*l
-            )
-    mp.prec = previous # restore current precision
-
-    first, last = 0, l-1
-    while p[first]==0: first +=1
-    while p[last]==0: last -=1
+    p = find_simple_recurrence_vector(v, maxcoeff=maxcoeff)
+    n = len(p)
+    if n <= 1: return Zero()
 
     rel = 0
-    for k in range(first, last+1):
-        rel += A(N+last-k)*p[k]
+    for k in range(n):
+        rel += A(N+n-1-k)*p[k]
 
     return rel
 
@@ -85,7 +115,9 @@ def rationalize(x, maxcoeff=10000):
 
       * fractions.Fraction.from_decimal
       * fractions.Fraction.from_float
+      * mpmath.identify
       * mpmath.pslq by using the following syntax: mpmath.pslq([x, 1])
+      * mpmath.findpoly by using the following syntax: mpmath.findpoly(x,1)
       * sympy.simplify.nsimplify (which is a more general function)
 
     The main difference between the current function and all these variants is

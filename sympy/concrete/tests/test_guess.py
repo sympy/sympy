@@ -1,12 +1,17 @@
 from sympy.concrete.guess import (
+            find_simple_recurrence_vector,
             find_simple_recurrence,
             rationalize
         )
 from sympy import Function, var, sympify
+from sympy.core.numbers import Zero
+from mpmath import fib
 
+def test_find_simple_recurrence_vector():
+    assert find_simple_recurrence_vector( [ fib(k) for k in range(12) ] ) == (
+        [1, -1, -1] )
 
 def test_find_simple_recurrence():
-    from mpmath import fib
     a = Function('a')
     n = var('n')
     assert find_simple_recurrence( [ fib(k) for k in range(12) ] ) == (
@@ -18,6 +23,8 @@ def test_find_simple_recurrence():
     for k in range(15): a.append(5*a[-1]-3*a[-2]+8*a[-3])
     assert find_simple_recurrence(a, A=f, N=i) == (
         -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3) )
+    assert find_simple_recurrence( [ 0,2,15,74,12,3,0,1,2,85,4,5,63] ) == (
+        Zero() )
 
 
 def test_rationalize():
