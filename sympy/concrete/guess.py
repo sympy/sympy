@@ -82,7 +82,7 @@ def rationalize(x, maxcoeff=10000):
     See also
     ========
     Several other methods can approximate a real number as a rational, like:
-    
+
       * fractions.Fraction.from_decimal
       * fractions.Fraction.from_float
       * mpmath.pslq by using the following syntax: mpmath.pslq([x, 1])
