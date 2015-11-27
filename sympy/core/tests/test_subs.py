@@ -2,7 +2,7 @@ from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo, Subs, RootOf, Limits)
+        factor, nsimplify, zoo, Subs, RootOf, AccumBounds)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y, z
@@ -20,18 +20,18 @@ def test_subs():
     assert e == Rational(6)
 
 
-def test_subs_Limits():
+def test_subs_AccumBounds():
     e = x
-    e = e.subs(x, Limits(1, 3))
-    assert e == Limits(1, 3)
+    e = e.subs(x, AccumBounds(1, 3))
+    assert e == AccumBounds(1, 3)
 
     e = 2*x
-    e = e.subs(x, Limits(1, 3))
-    assert e == Limits(2, 6)
+    e = e.subs(x, AccumBounds(1, 3))
+    assert e == AccumBounds(2, 6)
 
     e = x + x**2
-    e = e.subs(x, Limits(-1, 1))
-    assert e == Limits(-1, 2)
+    e = e.subs(x, AccumBounds(-1, 1))
+    assert e == AccumBounds(-1, 2)
 
 
 def test_trigonometric():

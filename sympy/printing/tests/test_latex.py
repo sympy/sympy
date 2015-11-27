@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    Limits)
+    AccumBounds)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -564,11 +564,11 @@ def test_latex_intervals():
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
 
 
-def test_latex_Limits():
+def test_latex_AccumuBounds():
     a = Symbol('a', real=True)
-    assert latex(Limits(0, 1)) == r"\langle 0, 1\rangle"
-    assert latex(Limits(0, a)) == r"\langle 0, a\rangle"
-    assert latex(Limits(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
+    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
+    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
 
 
 def test_latex_emptyset():

@@ -1,11 +1,13 @@
 from sympy import Order, S
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
+from sympy.logic.boolalg import And
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
+from sympy.functions.elementary.miscellaneous import Min, Max
 
 
 def not_empty_in(finset_intersection, *syms):
@@ -119,31 +121,44 @@ def not_empty_in(finset_intersection, *syms):
         return _domain
 
 
-class Limits(Interval, AtomicExpr):
+class AccumulationBounds(AtomicExpr):
     """
-    Limits represent an interval `[a, b]`, which is always closed at the
-    ends. Here `a` and `b` can be any value from extended real numbers.
+    # Note AccumulationBounds has an alias: AccumBounds
 
-    In many cases it would suffice to know that the limit set is bounded.
-    However, in some other cases more exact information could be useful.
-    For example, that all accumulation values of cos(x) + 1 are non-negative.
-    (Limits(-1, 1) + 1 = Limits(0, 2))
+    AccumulationBounds represent an interval `[a, b]`, which is always closed
+    at the ends. Here `a` and `b` can be any value from extended real numbers.
+
+    The intended meaning of AccummulationBounds is to give an approximate
+    location of the accumulation points of a real function at a limit point.
 
     Let `a` and `b` be reals such that a <= b.
 
     `\langle a, b\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
-    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\}`
+    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
 
-    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid, a \le x\}`
+    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
 
     `\langle -\infty, \infty \rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
-    A Limits object is defined to be real Limits, if its end points are finite
-    reals.
+    `oo` and `-oo` are added to the second and third definition respectively,
+    since if either `-oo` or `oo` is an argument, then the other one should
+    be included (though not as an end point). This is forced, since we have,
+    for example, `1/AccumBounds(0, 1) = AccumBounds(1, oo)`, and the limit at
+    `0` is not one-sided. As x tends to `0-`, then `1/x -> -oo`, so `-oo`
+    should be interpreted as belonging to `AccumBounds(1, oo)` though it need
+    not appear explicitly.
 
-    Let `X`, `Y` be real Limits, then their sum, difference, product are
-    defined to be the following sets:
+    In many cases it suffices to know that the limit set is bounded.
+    However, in some other cases more exact information could be useful.
+    For example, all accumulation values of cos(x) + 1 are non-negative.
+    (AccumBounds(-1, 1) + 1 = AccumBounds(0, 2))
+
+    A AccumulationBounds object is defined to be real AccumulationBounds,
+    if its end points are finite reals.
+
+    Let `X`, `Y` be real AccumulationBounds, then their sum, difference,
+    product are defined to be the following sets:
 
     `X + Y = \{ x+y \mid x \in X \cap y \in Y\}`
 
@@ -151,14 +166,13 @@ class Limits(Interval, AtomicExpr):
 
     `X * Y = \{ x*y \mid x \in X \cap y \in Y\}`
 
-    There is, however, no consensus on interval division.
+    There is, however, no consensus on Interval division.
 
-    `X / Y = \{ z| \exists x \in X, y \in Y \mid y \neq 0, z = x/y\}`
+    `X / Y = \{ z \mid \exists x \in X, y \in Y \mid y \neq 0, z = x/y\}`
 
-    Note: According to this definition the quotient of two Limits may not
-    be a Limits object but may be a union of Limits.
-
-    `X^n = \{ x^n \mid x \in X\}`
+    Note: According to this definition the quotient of two AccumulationBounds
+    may not be a AccumulationBounds object but rather a union of
+    AccumulationBounds.
 
     Note
     ====
@@ -171,44 +185,80 @@ class Limits(Interval, AtomicExpr):
     Examples
     ========
 
-    >>> from sympy import Limits, sin, exp, log, pi, E
+    >>> from sympy import AccumBounds, sin, exp, log, pi, E, S, oo
     >>> from sympy.abc import x
 
-    >>> Limits(0, 1) + Limits(1, 2)
+    >>> AccumBounds(0, 1) + AccumBounds(1, 2)
     <1, 3>
 
-    >>> Limits(0, 1) - Limits(0, 2)
+    >>> AccumBounds(0, 1) - AccumBounds(0, 2)
     <-2, 1>
 
-    >>> Limits(-2, 3)*Limits(-1, 1)
+    >>> AccumBounds(-2, 3)*AccumBounds(-1, 1)
     <-3, 3>
 
-    >>> Limits(1, 2)*Limits(3, 5)
+    >>> AccumBounds(1, 2)*AccumBounds(3, 5)
     <3, 10>
+
+    The exponentiation of AccumulationBounds is defined
+    as follows:
+
+    If 0 does not belong to `X` or `n > 0` then
+
+    `X^n = \{ x^n \mid x \in X\}`
+
+    otherwise
+
+    `X^n = \{ x^n \mid x \neq 0, x \in X\} \cup \{-\infty, \infty\}`
+
+    Here for fractional `n`, the part of `X` resulting in a complex
+    AccumulationBounds object is neglected.
+
+    >>> AccumBounds(-1, 4)**(S(1)/2)
+    <0, 2>
+
+    >>> AccumBounds(1, 2)**2
+    <1, 4>
+
+    >>> AccumBounds(-1, oo)**(-1)
+    <-oo, oo>
 
     Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
 
-    >>> Limits(-1, 1)**2
+    >>> AccumBounds(-1, 1)**2
     <0, 1>
 
-    Some elementary functions can also take intervals as input.
-    A function `f` evaluated for some interval `<a, b>` is defined as
-    `f(<a, b>) = \{ f(x) | a \le x \le b \}`
+    >>> AccumBounds(1, 3) < 4
+    True
 
-    >>> sin(Limits(pi/6, pi/3))
+    >>> AccumBounds(1, 3) < -1
+    False
+
+    Some elementary functions can also take AccumulationBounds as input.
+    A function `f` evaluated for some real AccumulationBounds `<a, b>`
+    is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
+
+    >>> sin(AccumBounds(pi/6, pi/3))
     <1/2, sqrt(3)/2>
 
-    >>> exp(Limits(0, 1))
+    >>> exp(AccumBounds(0, 1))
     <1, E>
 
-    >>> log(Limits(1, E))
+    >>> log(AccumBounds(1, E))
     <0, 1>
 
-    Some symbol in an experession can be substituted for an Interval.
-    But it doesn't necessarily evaluate the Interval for that expression.
+    Some symbol in an expression can be substituted for a AccumulationBounds
+    object. But it doesn't necessarily evaluate the AccumulationBounds for
+    that expression.
 
-    >>> (x**2 + 2*x + 1).subs(x, Limits(-1, 1))
+    Same expression can be evaluated to different values depending upon
+    the form it is used for substituion. For example:
+
+    >>> (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1))
     <-1, 4>
+
+    >>> ((x + 1)**2).subs(x, AccumBounds(-1, 1))
+    <0, 4>
 
     References
     ==========
@@ -220,9 +270,11 @@ class Limits(Interval, AtomicExpr):
     Notes
     =====
 
-    Do not use ``Limits`` for floating point interval arithmetic calculations
-    use ``mpmath.iv`` instead.
+    Do not use ``AccumulationBounds`` for floating point interval arithmetic
+    calculations, use ``mpmath.iv`` instead.
     """
+
+    is_real = True
 
     def __new__(cls, min, max):
 
@@ -233,9 +285,9 @@ class Limits(Interval, AtomicExpr):
         # Only allow real intervals (use symbols with 'is_real=True').
         if not (min.is_real or min in inftys) \
            or not (max.is_real or max in inftys):
-            raise ValueError("Only real intervals are supported")
+            raise ValueError("Only real AccumulationBounds are supported")
 
-        # Make sure that the created interval will be valid.
+        # Make sure that the created AccumBounds object will be valid.
         if max.is_comparable and min.is_comparable:
             if max < min:
                 raise ValueError("Lower limit should be smaller than upper limit")
@@ -243,23 +295,40 @@ class Limits(Interval, AtomicExpr):
         if max == min:
             return max
 
-        return Basic.__new__(cls, min, max, S.false, S.false)
+        return Basic.__new__(cls, min, max)
 
     # setting the operation priority
     _op_priority = 11.0
 
-    def _intersect(self, other):
-        res = Interval(self.min, self.max).intersect(
-            Interval(other.min, other.max))
-        return Limits(res.min, res.max)
-
     @property
     def min(self):
-        return self.start
+        """
+        Returns the minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).min
+        1
+
+        """
+        return self.args[0]
 
     @property
     def max(self):
-        return self.end
+        """
+        Returns the maximum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).max
+        3
+
+        """
+        return self.args[1]
 
     @property
     def delta(self):
@@ -276,31 +345,31 @@ class Limits(Interval, AtomicExpr):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Expr):
-            if isinstance(other, Limits):
-                return Limits(Add(self.min, other.min), Add(self.max, other.max))
+            if isinstance(other, AccumBounds):
+                return AccumBounds(Add(self.min, other.min), Add(self.max, other.max))
             if other is S.Infinity and self.min is S.NegativeInfinity or \
                     other is S.NegativeInfinity and self.max is S.Infinity:
-                return Limits(-oo, oo)
+                return AccumBounds(-oo, oo)
             elif other.is_real:
-                return Limits(Add(self.min, other), Add(self.max, other))
+                return AccumBounds(Add(self.min, other), Add(self.max, other))
             return Add(self, other, evaluate=False)
         return NotImplemented
 
     __radd__ = __add__
 
     def __neg__(self):
-        return Limits(-self.max, -self.min)
+        return AccumBounds(-self.max, -self.min)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Expr):
-            if isinstance(other, Limits):
-                return Limits(Add(self.min, -other.max), Add(self.max, -other.min))
+            if isinstance(other, AccumBounds):
+                return AccumBounds(Add(self.min, -other.max), Add(self.max, -other.min))
             if other is S.NegativeInfinity and self.min is S.NegativeInfinity or \
                     other is S.Infinity and self.max is S.Infinity:
-                return Limits(-oo, oo)
+                return AccumBounds(-oo, oo)
             elif other.is_real:
-                return Limits(Add(self.min, -other), Add(self.max, - other))
+                return AccumBounds(Add(self.min, -other), Add(self.max, - other))
             return Add(self, -other, evaluate=False)
         return NotImplemented
 
@@ -310,10 +379,9 @@ class Limits(Interval, AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        from sympy.functions.elementary.miscellaneous import Min, Max
         if isinstance(other, Expr):
-            if isinstance(other, Limits):
-                return Limits(Min(Mul(self.min, other.min),
+            if isinstance(other, AccumBounds):
+                return AccumBounds(Min(Mul(self.min, other.min),
                             Mul(self.min, other.max),
                             Mul(self.max, other.min),
                             Mul(self.max, other.max)),
@@ -323,27 +391,27 @@ class Limits(Interval, AtomicExpr):
                             Mul(self.max, other.max)))
             if other is S.Infinity:
                 if self.min.is_zero:
-                    return Limits(0, oo)
+                    return AccumBounds(0, oo)
                 if self.max.is_zero:
-                    return Limits(-oo, 0)
+                    return AccumBounds(-oo, 0)
             if other is S.NegativeInfinity:
                 if self.min.is_zero:
-                    return Limits(-oo, 0)
+                    return AccumBounds(-oo, 0)
                 if self.max.is_zero:
-                    return Limits(0, oo)
+                    return AccumBounds(0, oo)
             if other.is_real:
                 if other.is_zero:
-                    if self == Limits(-oo, oo):
-                        return Limits(-oo, oo)
+                    if self == AccumBounds(-oo, oo):
+                        return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
-                        return Limits(0, oo)
+                        return AccumBounds(0, oo)
                     if self.min is S.NegativeInfinity:
-                        return Limits(-oo, 0)
+                        return AccumBounds(-oo, 0)
                     return S.Zero
                 if other.is_positive:
-                    return Limits(Mul(self.min, other), Mul(self.max, other))
+                    return AccumBounds(Mul(self.min, other), Mul(self.max, other))
                 elif other.is_negative:
-                    return Limits(Mul(self.max, other), Mul(self.min, other))
+                    return AccumBounds(Mul(self.max, other), Mul(self.min, other))
             if isinstance(other, Order):
                 return other
             return Mul(self, other, evaluate=False)
@@ -353,53 +421,56 @@ class Limits(Interval, AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        from sympy.functions.elementary.miscellaneous import Min, Max
         if isinstance(other, Expr):
-            if isinstance(other, Limits):
+            if isinstance(other, AccumBounds):
                 if not S.Zero in other:
-                    return self*Limits(1/other.max, 1/other.min)
+                    return self*AccumBounds(1/other.max, 1/other.min)
 
                 if S.Zero in self and S.Zero in other:
                     if self.min.is_zero and other.min.is_zero:
-                        return Limits(0, oo)
+                        return AccumBounds(0, oo)
                     if self.max.is_zero and other.min.is_zero:
-                        return Limits(-oo, 0)
-                    return Limits(-oo, oo)
+                        return AccumBounds(-oo, 0)
+                    return AccumBounds(-oo, oo)
 
                 if self.max.is_negative:
                     if other.min.is_negative:
                         if other.max.is_zero:
-                            return Limits(self.max/other.min, oo)
+                            return AccumBounds(self.max/other.min, oo)
                         if other.max.is_positive:
-                            return Union(Limits(-oo, self.max/other.max),
-                                    Limits(self.max/other.min, oo))
+                            # the actual answer is a Union of AccumBounds,
+                            # Union(AccumBounds(-oo, self.max/other.max),
+                            #       AccumBounds(self.max/other.min, oo))
+                            return AccumBounds(-oo, oo)
 
                     if other.min.is_zero and other.max.is_positive:
-                        return Limits(-oo, self.max/other.max)
+                        return AccumBounds(-oo, self.max/other.max)
 
                 if self.min.is_positive:
                     if other.min.is_negative:
                         if other.max.is_zero:
-                            return Limits(-oo, self.min/other.min)
+                            return AccumBounds(-oo, self.min/other.min)
                         if other.max.is_positive:
-                            return Union(Limits(-oo, self.min/other.min),
-                                    Limits(self.min/other.max, oo))
+                            # the actual answer is a Union of AccumBounds,
+                            # Union(AccumBounds(-oo, self.min/other.min),
+                            #       AccumBounds(self.min/other.max, oo))
+                            return AccumBounds(-oo, oo)
 
                     if other.min.is_zero and other.max.is_positive:
-                        return Limits(self.min/other.max, oo)
+                        return AccumBounds(self.min/other.max, oo)
 
             elif other.is_real:
                 if other is S.Infinity or other is S.NegativeInfinity:
-                    if self == Limits(-oo, oo):
-                        return Limits(-oo, oo)
+                    if self == AccumBounds(-oo, oo):
+                        return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
-                        return Limits(Min(0, other), Max(0, other))
+                        return AccumBounds(Min(0, other), Max(0, other))
                     if self.min is S.NegativeInfinity:
-                        return Limits(Min(0, -other), Max(0, -other))
+                        return AccumBounds(Min(0, -other), Max(0, -other))
                 if other.is_positive:
-                    return Limits(self.min/other, self.max/other)
+                    return AccumBounds(self.min/other, self.max/other)
                 elif other.is_negative:
-                    return Limits(self.max/other, self.min/other)
+                    return AccumBounds(self.max/other, self.min/other)
             return Mul(self, 1/other, evaluate=False)
 
         return NotImplemented
@@ -408,7 +479,6 @@ class Limits(Interval, AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
-        from sympy.functions.elementary.miscellaneous import Min, Max
         if isinstance(other, Expr):
             if other.is_real:
                 if other.is_zero:
@@ -416,12 +486,17 @@ class Limits(Interval, AtomicExpr):
                 if S.Zero in self:
                     if self.min == S.Zero:
                         if other.is_positive:
-                            return Limits(Mul(other, 1/self.max), oo)
+                            return AccumBounds(Mul(other, 1/self.max), oo)
                         if other.is_negative:
-                            return Limits(-oo, Mul(other, 1/self.max))
-                    return Limits(-oo, oo)
+                            return AccumBounds(-oo, Mul(other, 1/self.max))
+                    if self.max == S.Zero:
+                        if other.is_positive:
+                            return AccumBounds(-oo, Mul(other, 1/self.min))
+                        if other.is_negative:
+                            return AccumBounds(Mul(other, 1/self.min), oo)
+                    return AccumBounds(-oo, oo)
                 else:
-                    return Limits(Min(other/self.min, other/self.max),
+                    return AccumBounds(Min(other/self.min, other/self.max),
                             Max(other/self.min, other/self.max))
             return Mul(other, 1/self, evaluate=False)
         else:
@@ -431,51 +506,326 @@ class Limits(Interval, AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
-        from sympy.functions.elementary.miscellaneous import Max, Min
         from sympy.functions.elementary.miscellaneous import real_root
         if isinstance(other, Expr):
-            if other.is_real:
+            if other is S.Infinity:
+                if self.min.is_nonnegative:
+                    if self.max < 1:
+                        return S.Zero
+                    if self.min > 1:
+                        return S.Infinity
+                    return AccumBounds(0, oo)
+                elif self.max.is_negative:
+                    if self.min > -1:
+                        return S.Zero
+                    if self.max < -1:
+                        return FiniteSet(-oo, oo)
+                    return AccumBounds(-oo, oo)
+                else:
+                    if self.min > -1:
+                        if self.max < 1:
+                            return S.Zero
+                        return AccumBounds(0, oo)
+                    return AccumBounds(-oo, oo)
+
+            if other is S.NegativeInfinity:
+                return (1/self)**oo
+
+            if other.is_real and other.is_number:
                 if other.is_zero:
                     return S.One
-                if other.is_Rational:
-                    if other.is_Integer:
-                        if self.min.is_positive or self.max.is_negative:
-                            return Limits(Min(self.min**other, self.max**other),
-                                    Max(self.min**other, self.max**other))
-                        else:
-                            if self.min.is_zero:
-                                return Limits(self.max**other, S.Infinity)
-                            if self.max.is_zero:
-                                if other % 2 == 0:
-                                    return Limits(self.min**other, S.Infinity)
-                                return Limits(-oo, self.min**other)
-                            if other.is_negative:
-                                if other % 2 == 0:
-                                    return Limits(S.Zero, oo)
-                                return Limits(-oo, oo)
-                            if other % 2 == 0:
-                                return Limits(S.Zero,
-                                    Max(self.min**other, self.max**other))
-                            return Limits(self.min**other, self.max**other)
 
-                    num, den = other.as_numer_denom()
-                    if num == S(1):
-                        if den % 2 == 0:
-                            if S.Zero in self:
-                                if self.min.is_negative:
-                                    return Limits(0, real_root(self.max, den))
-                        return Limits(real_root(self.min, den), real_root(self.max, den))
-                    num_pow = self**num
-                    return num_pow**(1/den)
+                if other.is_Integer:
+                    if self.min.is_positive:
+                        return AccumBounds(Min(self.min**other, self.max**other),
+                            Max(self.min**other, self.max**other))
+                    elif self.max.is_negative:
+                        return AccumBounds(Min(self.max**other, self.min**other),
+                                    Max(self.max**other, self.min**other))
+
+                    if other % 2 == 0:
+                        if other.is_negative:
+                            if self.min.is_zero:
+                                return AccumBounds(self.max**other, oo)
+                            if self.max.is_zero:
+                                return AccumBounds(self.min**other, oo)
+                            return AccumBounds(0, oo)
+                        return AccumBounds(S.Zero,
+                            Max(self.min**other, self.max**other))
+                    else:
+                        if other.is_negative:
+                            if self.min.is_zero:
+                                return AccumBounds(self.max**other, oo)
+                            if self.max.is_zero:
+                                return AccumBounds(-oo, self.min**other)
+                            return AccumBounds(-oo, oo)
+                        return AccumBounds(self.min**other, self.max**other)
+
+                num, den = other.as_numer_denom()
+                if num == S(1):
+                    if den % 2 == 0:
+                        if S.Zero in self:
+                            if self.min.is_negative:
+                                return AccumBounds(0, real_root(self.max, den))
+                    return AccumBounds(real_root(self.min, den),
+                                    real_root(self.max, den))
+                num_pow = self**num
+                return num_pow**(1/den)
             return Pow(self, other, evaluate=False)
 
         return NotImplemented
 
     def __abs__(self):
-        from sympy.functions.elementary.miscellaneous import Max
         if self.max.is_negative:
             return self.__neg__()
         elif self.min.is_negative:
-            return Limits(S.Zero, Max(abs(self.min), self.max))
+            return AccumBounds(S.Zero, Max(abs(self.min), self.max))
         else:
             return self
+
+    def __lt__(self, other):
+        """
+        Returns True if range of values attained by `self` AccumulationBounds
+        object is less than the range of values attained by `other`, where other
+        may be any value of type AccumulationBounds object or extended real
+        number value, False is returned if `other` satisfies the same property,
+        None if the values attained by AccumulationBounds object intersect.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, oo
+        >>> AccumBounds(1, 3) < AccumBounds(4, oo)
+        True
+        >>> AccumBounds(1, 4) < AccumBounds(3, 4)
+
+        >>> AccumBounds(1, oo) < -1
+        False
+
+        """
+        other = _sympify(other)
+        if isinstance(other, AccumBounds):
+            if self.max < other.min:
+                return True
+            if self.min >= other.max:
+                return False
+            return None
+
+        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
+            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
+
+        if other.is_comparable:
+            if self.max < other:
+                return True
+            if self.min >= other:
+                return False
+        return None
+
+    def __le__(self, other):
+        """
+        Returns True if range of values attained by `self` AccumulationBounds
+        object is less than or equal to the range of values attained by `other`,
+        where other may be any value of type AccumulationBounds object or extended
+        real number value, AccumulationBounds object, False is returned if `other`
+        satisfies the same property, None if the values attained by AccumulationBounds
+        object intersect.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, oo
+        >>> AccumBounds(1, 3) <= AccumBounds(4, oo)
+        True
+        >>> AccumBounds(1, 4) <= AccumBounds(3, 4)
+
+        >>> AccumBounds(1, 3) <= 3
+        True
+
+        """
+        other = _sympify(other)
+        if isinstance(other, AccumBounds):
+            if self.max <= other.min:
+                return True
+            if self.min > other.max:
+                return False
+            return None
+
+        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
+            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
+
+        if other.is_comparable:
+            if self.max <= other:
+                return True
+            if self.min > other:
+                return False
+        return None
+
+    def __gt__(self, other):
+        """
+        Returns True if range of values attained by `self` AccumulationBounds
+        object is greater than the range of values attained by `other`, where other
+        may be any value of type AccumulationBounds object or extended real
+        number value, False is returned if `other` satisfies the same property,
+        None if the values attained by AccumulationBounds object intersect.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, oo
+        >>> AccumBounds(1, 3) > AccumBounds(4, oo)
+        False
+        >>> AccumBounds(1, 4) > AccumBounds(3, 4)
+
+        >>> AccumBounds(1, oo) > -1
+        True
+
+        """
+        other = _sympify(other)
+        if isinstance(other, AccumBounds):
+            if self.min > other.max:
+                return True
+            if self.max <= other.min:
+                return False
+            return
+
+        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
+            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
+
+        if other.is_comparable:
+            if self.min > other:
+                return True
+            if self.max <= other:
+                return False
+        return None
+
+    def __ge__(self, other):
+        """
+        Returns True if range of values attained by `self` AccumulationBounds
+        object is less that the range of values attained by `other`, where other
+        may be any value of type AccumulationBounds object or extended real
+        number value, False is returned if `other` satisfies the same property,
+        None if the values attained by AccumulationBounds object intersect.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, oo
+        >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
+        False
+        >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
+
+        >>> AccumBounds(1, oo) >= 1
+        True
+
+        """
+        other = _sympify(other)
+        if isinstance(other, AccumBounds):
+            if self.min >= other.max:
+                return True
+            if self.max < other.min:
+                return False
+            return None
+
+        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
+            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
+
+        if other.is_comparable:
+            if self.min >= other:
+                return True
+            if self.max < other:
+                return False
+        return None
+
+    def __contains__(self, other):
+        """
+        Returns True if other is contained in self, where other
+        belongs to extended real numbers, False if not contained,
+        otherwise TypeError is raised.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, oo
+        >>> 1 in AccumBounds(-1, 3)
+        True
+
+        -oo and oo go together as limits (in AccumulationBounds).
+
+        >>> -oo in AccumBounds(1, oo)
+        True
+
+        >>> oo in AccumBounds(-oo, 0)
+        True
+
+        """
+        other = _sympify(other)
+        if not (other.is_Symbol or other.is_number):
+            raise TypeError("Input of type real symbol or Number expected")
+
+        if other is S.Infinity or other is S.NegativeInfinity:
+            if self.min is S.NegativeInfinity or self.max is S.Infinity:
+                return True
+            return False
+
+        return And(self.min <= other and self.max >= other)
+
+    def intersection(self, other):
+        """
+        Returns the intersection of 'self' and 'other'.
+        Here other can be an instance of FiniteSet or AccumulationBounds.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, FiniteSet
+        >>> AccumBounds(1, 3).intersection(AccumBounds(2, 4))
+        <2, 3>
+
+        >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
+        EmptySet()
+
+        >>> AccumBounds(1, 4).intersection(FiniteSet(1, 2, 5))
+        {1, 2}
+
+        """
+        if not isinstance(other, (AccumBounds, FiniteSet)):
+            raise TypeError("Input must be AccumulationBounds or FiniteSet object")
+
+        if isinstance(other, FiniteSet):
+            fin_set = S.EmptySet
+            for i in other:
+                if i in self:
+                    fin_set = fin_set + FiniteSet(i)
+            return fin_set
+
+        if self.max < other.min or self.min > other.max:
+            return S.EmptySet
+
+        if self.min <= other.min:
+            if self.max <= other.max:
+                return AccumBounds(other.min, self.max)
+            if self.max > other.max:
+                return other
+
+        if other.min <= self.min:
+            if other.max < self.max:
+                return AccumBounds(self.min, other.max)
+            if other.max > self.max:
+                return self
+
+    def union(self, other):
+        # TODO : Devise a better method for Union of AccumBounds
+        # this method is not actually correct and
+        # can be made better
+        if not isinstance(other, AccumBounds):
+            raise TypeError("Input must be AccumulationBounds or FiniteSet object")
+
+        if self.min <= other.min and self.max >= other.min:
+            return AccumBounds(self.min, Max(self.max, other.max))
+
+        if other.min <= self.min and other.max >= self.min:
+            return AccumBounds(other.min, Max(self.max, other.max))
+
+
+# setting an alias for AccumulationBounds
+AccumBounds = AccumulationBounds

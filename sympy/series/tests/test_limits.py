@@ -4,10 +4,11 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify)
+    binomial, simplify, frac)
 
-from sympy.calculus.util import Limits
+from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.utilities.pytest import XFAIL, raises
@@ -177,7 +178,7 @@ def test_abs():
 
 def test_heuristic():
     x = Symbol("x", real=True)
-    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == Limits(-1, 1)
+    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == AccumBounds(-1, 1)
     assert limit(log(2 + sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 
@@ -210,16 +211,22 @@ def test_doit():
     assert l.doit() == oo
 
 
-def test_Limits():
-    assert limit(sin(k) - sin(k + 1), k, oo) == Limits(-2, 2)
-    assert limit(cos(k) - cos(k + 1) + 1, k, oo) == Limits(-1, 3)
+def test_AccumBounds():
+    assert limit(sin(k) - sin(k + 1), k, oo) == AccumBounds(-2, 2)
+    assert limit(cos(k) - cos(k + 1) + 1, k, oo) == AccumBounds(-1, 3)
 
     # not the exact bound
-    assert limit(sin(k) - sin(k)*cos(k), k, oo) == Limits(-2, 2)
+    assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    # assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == \
-        #(Add(cos(1), Limits(-3, 1), evaluate=False))/(2*(-1 + cos(1)))
+    t1 = Mul(S(1)/2, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
+    assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
+
+    t2 = Mul(Add(AccumBounds(-2, 2), sin(1)), 1/(-2*cos(1) + 2))
+    assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
+
+    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
+    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
 
 
 @XFAIL

@@ -224,30 +224,36 @@ class sin(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus import Limits
+        from sympy.calculus import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.Infinity or arg is S.NegativeInfinity:
-                return Limits(-1, 1)
+                return AccumBounds(-1, 1)
 
-        if isinstance(arg, Limits):
+        if isinstance(arg, AccumBounds):
             min, max = arg.min, arg.max
-            if arg.min is not S.NegativeInfinity:
-                min = arg.min - floor(arg.min/(2*S.Pi))*2*S.Pi
-            if arg.max is not S.Infinity:
-                max = arg.max - floor(arg.min/(2*S.Pi))*2*S.Pi
-            if Limits(min, max).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not S.EmptySet \
-                    and Limits(min, max).intersect(FiniteSet(3*S.Pi/2, 7*S.Pi/2)) is not S.EmptySet:
-                return Limits(-1, 1)
-            elif Limits(min, max).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not S.EmptySet:
-                return Limits(Min(sin(min), sin(max)), 1)
-            elif Limits(min, max).intersect(FiniteSet(3*S.Pi/2, 8*S.Pi/2)) is not S.EmptySet:
-                return Limits(-1, Max(sin(min), sin(max)))
+            d = floor(min/(2*S.Pi))
+            if min is not S.NegativeInfinity:
+                min = min - d*2*S.Pi
+            if max is not S.Infinity:
+                max = max - d*2*S.Pi
+            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, 5*S.Pi/2)) \
+                    is not S.EmptySet and \
+                    AccumBounds(min, max).intersection(FiniteSet(3*S.Pi/2,
+                        7*S.Pi/2)) is not S.EmptySet:
+                return AccumBounds(-1, 1)
+            elif AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, 5*S.Pi/2)) \
+                    is not S.EmptySet:
+                return AccumBounds(Min(sin(min), sin(max)), 1)
+            elif AccumBounds(min, max).intersection(FiniteSet(3*S.Pi/2, 8*S.Pi/2)) \
+                        is not S.EmptySet:
+                return AccumBounds(-1, Max(sin(min), sin(max)))
             else:
-                return Limits(Min(sin(min), sin(max)), Max(sin(min), sin(max)))
+                return AccumBounds(Min(sin(min), sin(max)),
+                                Max(sin(min), sin(max)))
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -469,20 +475,20 @@ class cos(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.functions.special.polynomials import chebyshevt
-        from sympy.calculus.util import Limits
+        from sympy.calculus.util import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
                 return S.One
             elif arg is S.Infinity or arg is S.NegativeInfinity:
-                # In this case it is better to return Limits(-1, 1)
-                # rather than returning S.NaN, since Limits(-1, 1)
+                # In this case it is better to return AccumBounds(-1, 1)
+                # rather than returning S.NaN, since AccumBounds(-1, 1)
                 # preserves the information that sin(oo) is between
                 # -1 and 1, where S.NaN does not do that.
-                return Limits(-1, 1)
+                return AccumBounds(-1, 1)
 
-        if isinstance(arg, Limits):
+        if isinstance(arg, AccumBounds):
             return sin(arg + S.Pi/2)
 
         if arg.could_extract_minus_sign():
@@ -874,27 +880,26 @@ class tan(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus.util import Limits
+        from sympy.calculus.util import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.Infinity or arg is S.NegativeInfinity:
-                return Limits(S.NegativeInfinity, S.Infinity)
+                return AccumBounds(S.NegativeInfinity, S.Infinity)
 
-        if isinstance(arg, Limits):
+        if isinstance(arg, AccumBounds):
             min, max = arg.min, arg.max
-            if arg.min is not S.NegativeInfinity:
-                min = arg.min - floor(arg.min/S.Pi)*S.Pi
-
-            if arg.max is not S.Infinity:
-                max = arg.max - floor(arg.min/S.Pi)*S.Pi
-
-            if Limits(min, max).intersect(FiniteSet(S.Pi/2, 3*S.Pi/2)):
-                return Limits(S.NegativeInfinity, S.Infinity)
+            d = floor(min/S.Pi)
+            if min is not S.NegativeInfinity:
+                min = min - d*S.Pi
+            if max is not S.Infinity:
+                max = max - d*S.Pi
+            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, 3*S.Pi/2)):
+                return AccumBounds(S.NegativeInfinity, S.Infinity)
             else:
-                return Limits(tan(min), tan(max))
+                return AccumBounds(tan(min), tan(max))
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -1149,14 +1154,14 @@ class cot(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus.util import Limits
+        from sympy.calculus.util import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             if arg is S.Zero:
                 return S.ComplexInfinity
 
-        if isinstance(arg, Limits):
+        if isinstance(arg, AccumBounds):
             return -tan(arg + S.Pi/2)
 
         if arg.could_extract_minus_sign():

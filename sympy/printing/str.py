@@ -186,7 +186,7 @@ class StrPrinter(Printer):
         return "%s%s, %s%s" % \
                (left, self._print(i.start), self._print(i.end), right)
 
-    def _print_Limits(self, i):
+    def _print_AccumulationBounds(self, i):
         left = '<'
         right = '>'
 

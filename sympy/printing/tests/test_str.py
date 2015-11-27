@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    Limits)
+    AccumBounds)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -163,10 +163,10 @@ def test_Interval():
     assert str(Interval(0, a, True, True)) == "(0, a)"
 
 
-def test_Limits():
+def test_AccumBounds():
     a = Symbol('a', real=True)
-    assert str(Limits(0, a)) == "<0, a>"
-    assert str(Limits(0, 1)) == "<0, 1>"
+    assert str(AccumBounds(0, a)) == "<0, a>"
+    assert str(AccumBounds(0, 1)) == "<0, 1>"
 
 
 def test_Lambda():

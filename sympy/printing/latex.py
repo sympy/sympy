@@ -1541,7 +1541,7 @@ class LatexPrinter(Printer):
             return r"\left%s%s, %s\right%s" % \
                    (left, self._print(i.start), self._print(i.end), right)
 
-    def _print_Limits(self, i):
+    def _print_AccumulationBounds(self, i):
         return r"\langle %s, %s\rangle" % \
                 (self._print(i.min), self._print(i.max))
 

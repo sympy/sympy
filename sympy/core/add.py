@@ -89,7 +89,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
-        from sympy.calculus.util import Limits
+        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -137,7 +137,7 @@ class Add(Expr, AssocOp):
                         return [S.NaN], [], None
                 continue
 
-            elif isinstance(o, Limits):
+            elif isinstance(o, AccumBounds):
                 coeff = o.__add__(coeff)
                 continue
 

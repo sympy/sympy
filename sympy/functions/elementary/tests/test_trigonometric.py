@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
-        Limits)
+        AccumBounds)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
 
@@ -22,14 +22,14 @@ def test_sin():
     assert sin.nargs == FiniteSet(1)
     assert sin(nan) == nan
 
-    assert sin(oo) == Limits(-1, 1)
-    assert sin(oo) - sin(oo) == Limits(-2, 2)
+    assert sin(oo) == AccumBounds(-1, 1)
+    assert sin(oo) - sin(oo) == AccumBounds(-2, 2)
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
     assert 0*sin(oo) == S.Zero
     assert 0/sin(oo) == S.Zero
-    assert 0 + sin(oo) == Limits(-1, 1)
-    assert 5 + sin(oo) == Limits(4, 6)
+    assert 0 + sin(oo) == AccumBounds(-1, 1)
+    assert 5 + sin(oo) == AccumBounds(4, 6)
 
     assert sin(0) == 0
 
@@ -180,15 +180,15 @@ def test_sin_expansion():
     assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
 
 
-def test_sin_Limits():
-    assert sin(Limits(-oo, oo)) == Limits(-1, 1)
-    assert sin(Limits(0, oo)) == Limits(-1, 1)
-    assert sin(Limits(-oo, 0)) == Limits(-1, 1)
-    assert sin(Limits(0, 2*S.Pi)) == Limits(-1, 1)
-    assert sin(Limits(0, 3*S.Pi/4)) == Limits(0, 1)
-    assert sin(Limits(3*S.Pi/4, 7*S.Pi/4)) == Limits(-1, sin(3*S.Pi/4))
-    assert sin(Limits(S.Pi/4, S.Pi/3)) == Limits(sin(S.Pi/4), sin(S.Pi/3))
-    assert sin(Limits(3*S.Pi/4, 5*S.Pi/6)) == Limits(sin(5*S.Pi/6), sin(3*S.Pi/4))
+def test_sin_AccumBounds():
+    assert sin(AccumBounds(-oo, oo)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, oo)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, 3*S.Pi/4)) == AccumBounds(0, 1)
+    assert sin(AccumBounds(3*S.Pi/4, 7*S.Pi/4)) == AccumBounds(-1, sin(3*S.Pi/4))
+    assert sin(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(sin(S.Pi/4), sin(S.Pi/3))
+    assert sin(AccumBounds(3*S.Pi/4, 5*S.Pi/6)) == AccumBounds(sin(5*S.Pi/6), sin(3*S.Pi/4))
 
 
 def test_trig_symmetry():
@@ -234,8 +234,8 @@ def test_cos():
     assert cos.nargs == FiniteSet(1)
     assert cos(nan) == nan
 
-    assert cos(oo) == Limits(-1, 1)
-    assert cos(oo) - cos(oo) == Limits(-2, 2)
+    assert cos(oo) == AccumBounds(-1, 1)
+    assert cos(oo) - cos(oo) == AccumBounds(-2, 2)
     assert cos(oo*I) == oo
     assert cos(-oo*I) == oo
 
@@ -374,22 +374,22 @@ def test_cos_expansion():
     assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 
 
-def test_cos_Limits():
-    assert cos(Limits(-oo, oo)) == Limits(-1, 1)
-    assert cos(Limits(0, oo)) == Limits(-1, 1)
-    assert cos(Limits(-oo, 0)) == Limits(-1, 1)
-    assert cos(Limits(0, 2*S.Pi)) == Limits(-1, 1)
-    assert cos(Limits(-S.Pi/3, S.Pi/4)) == Limits(cos(-S.Pi/3), 1)
-    assert cos(Limits(3*S.Pi/4, 5*S.Pi/4)) == Limits(-1, cos(3*S.Pi/4))
-    assert cos(Limits(5*S.Pi/4, 4*S.Pi/3)) == Limits(cos(5*S.Pi/4), cos(4*S.Pi/3))
-    assert cos(Limits(S.Pi/4, S.Pi/3)) == Limits(cos(S.Pi/3), cos(S.Pi/4))
+def test_cos_AccumBounds():
+    assert cos(AccumBounds(-oo, oo)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(0, oo)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(-S.Pi/3, S.Pi/4)) == AccumBounds(cos(-S.Pi/3), 1)
+    assert cos(AccumBounds(3*S.Pi/4, 5*S.Pi/4)) == AccumBounds(-1, cos(3*S.Pi/4))
+    assert cos(AccumBounds(5*S.Pi/4, 4*S.Pi/3)) == AccumBounds(cos(5*S.Pi/4), cos(4*S.Pi/3))
+    assert cos(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(cos(S.Pi/3), cos(S.Pi/4))
 
 
 def test_tan():
     assert tan(nan) == nan
 
-    assert tan(oo) == Limits(-oo, oo)
-    assert tan(oo) - tan(oo) == Limits(-oo, oo)
+    assert tan(oo) == AccumBounds(-oo, oo)
+    assert tan(oo) - tan(oo) == AccumBounds(-oo, oo)
     assert tan.nargs == FiniteSet(1)
     assert tan(oo*I) == I
     assert tan(-oo*I) == -I
@@ -522,10 +522,10 @@ def test_tan_expansion():
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
 
 
-def test_tan_Limits():
-    assert tan(Limits(-oo, oo)) == Limits(-oo, oo)
-    assert tan(Limits(S.Pi/3, 2*S.Pi/3)) == Limits(-oo, oo)
-    assert tan(Limits(S.Pi/6, S.Pi/3)) == Limits(tan(S.Pi/6), tan(S.Pi/3))
+def test_tan_AccumBounds():
+    assert tan(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/3, 2*S.Pi/3)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(tan(S.Pi/6), tan(S.Pi/3))
 
 
 def test_cot():
@@ -665,10 +665,10 @@ def test_cot_expansion():
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
 
 
-def test_cot_Limits():
-    assert cot(Limits(-oo, oo)) == Limits(-oo, oo)
-    assert cot(Limits(-S.Pi/3, S.Pi/3)) == Limits(-oo, oo)
-    assert cot(Limits(S.Pi/6, S.Pi/3)) == Limits(cot(S.Pi/3), cot(S.Pi/6))
+def test_cot_AccumBounds():
+    assert cot(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
+    assert cot(AccumBounds(-S.Pi/3, S.Pi/3)) == AccumBounds(-oo, oo)
+    assert cot(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(cot(S.Pi/3), cot(S.Pi/6))
 
 
 def test_sinc():
