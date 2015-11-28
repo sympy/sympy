@@ -1,11 +1,17 @@
 from __future__ import print_function, division
 import functools
-from sympy import sympify, Matrix, S, Dict, flatten, SparseMatrix
+
+from sympy.core.sympify import _sympify
+
+from sympy import S, Dict, flatten, SparseMatrix, Expr
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
 
 class SparseNDimArray(NDimArray):
+
+    def __new__(self, *args, **kwargs):
+        return ImmutableSparseNDimArray(*args, **kwargs)
 
     def __getitem__(self, index):
         """
@@ -59,7 +65,7 @@ class SparseNDimArray(NDimArray):
         [1, 1, 1]])
         """
         if self.rank() != 2:
-            raise ValueError('Only rank 2 arrays can be converted to matrices')
+            raise ValueError('Dimensions must be of size of 2')
 
         mat_sparse = {}
         for key, value in self._sparse_array.items():
@@ -81,6 +87,35 @@ class SparseNDimArray(NDimArray):
         return type(self)(*(newshape + (self._array,)))
 
 
+class ImmutableSparseNDimArray(SparseNDimArray, Expr):
+
+    def __new__(cls, *args, **kwargs):
+
+        shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
+        shape = tuple(map(_sympify, shape))
+        loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+
+        # Sparse array:
+        if isinstance(flat_list, (dict, Dict)):
+            sparse_array = args[-1]
+        else:
+            sparse_array = {}
+            for i, el in enumerate(flatten(flat_list)):
+                if el != 0:
+                    sparse_array[i] = _sympify(el)
+
+        sparse_array = Dict(sparse_array)
+
+        self = Expr.__new__(cls, *(shape + (sparse_array,)), **kwargs)
+        self._shape = shape
+        self._rank = len(shape)
+        self._loop_size = loop_size
+        self._sparse_array = sparse_array
+
+        return self
+
+    def __setitem__(self, index, value):
+        raise TypeError("immutable N-dim array")
 
 
 class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
@@ -102,7 +137,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
         for i, el in enumerate(flatten(flat_list)):
             if el != 0:
-                self._sparse_array[i] = sympify(el)
+                self._sparse_array[i] = _sympify(el)
 
         return self
 
@@ -123,7 +158,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         """
         index = self._parse_index(index)
         if not isinstance(value, MutableNDimArray):
-            value = sympify(value)
+            value = _sympify(value)
 
         if isinstance(value, NDimArray):
             return NotImplementedError

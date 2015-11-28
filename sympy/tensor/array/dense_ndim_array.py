@@ -1,11 +1,17 @@
 from __future__ import print_function, division
 import functools
-from sympy import sympify, Matrix, flatten
+
+from sympy.core.sympify import _sympify
+
+from sympy import Matrix, flatten, Expr, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
 
 class DenseNDimArray(NDimArray):
+
+    def __new__(self, *args, **kwargs):
+        return ImmutableDenseNDimArray(*args, **kwargs)
 
     def __getitem__(self, index):
         """
@@ -50,7 +56,7 @@ class DenseNDimArray(NDimArray):
 
         """
         if self.rank() != 2:
-            raise ValueError('Only rank 2 arrays can be converted to matrices')
+            raise ValueError('Dimensions must be of size of 2')
 
         return Matrix(self.shape[0], self.shape[1], self._array)
 
@@ -83,7 +89,30 @@ class DenseNDimArray(NDimArray):
         if new_total_size != self._loop_size:
             raise ValueError("Invalid reshape parameters " + newshape)
 
+        # there is no `.func` as this class does not subtype `Basic`:
         return type(self)(*(newshape + (self._array,)))
+
+
+class ImmutableDenseNDimArray(DenseNDimArray, Expr):
+
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
+        shape = tuple(map(_sympify, shape))
+        flat_list = flatten(flat_list)
+        flat_list = Tuple(*flat_list)
+        self = Expr.__new__(cls, *(shape + (flat_list,)), **kwargs)
+        self._shape = shape
+        self._array = list(flat_list)
+        self._rank = len(shape)
+        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+        return self
+
+    def __setitem__(self, index, value):
+        raise TypeError('immutable N-dim array')
 
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
@@ -118,6 +147,6 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         """
         index = self._parse_index(index)
         self._setter_iterable_check(value)
-        value = sympify(value)
+        value = _sympify(value)
 
         self._array[index] = value
