@@ -5,7 +5,7 @@ from sympy.utilities import public
 
 from sympy.core import Function, var
 from sympy.core.numbers import Zero
-from sympy import sympify, floor
+from sympy import sympify, floor, sqrt
 from mpmath import pslq, sqrt, mp
 
 @public
@@ -15,7 +15,7 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
     sympy.concrete.guess module. While most users may want to rather use the
     function find_simple_recurrence when looking for recurrence relations
     among rational numbers, the current function may still be useful when
-    some post-proecessing has to be done.
+    some post-processing has to be done.
 
     The function returns a vector of length n when a recurrence relation of
     order n is detected in the sequence of rational numbers v.
@@ -154,25 +154,20 @@ def rationalize(x, maxcoeff=10000):
 
 
 @public
-def guess_generating_function(v, X=var('x'), maxcoeff=1024):
+def guess_generating_function_rational(v, X=var('x'), maxcoeff=1024):
     """
-    Tries to "guess" a generating function for a sequence of rational numbers v.
-    Currently only rational generating functions are guessed.
+    Tries to "guess" a rational generating function for a sequence of rational
+    numbers v.
 
     Examples
     ========
 
-    >>> from sympy.concrete.guess import guess_generating_function as ggf
+    >>> from sympy.concrete.guess import guess_generating_function_rational
     >>> from mpmath import fib
-    >>> ggf( [ int(fib(k)) for k in range(5,15) ] )
+    >>> guess_generating_function_rational([ int(fib(k)) for k in range(5,15) ])
     (3*x + 5)/(-x**2 - x + 1)
 
-    References
-    ==========
-    "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
-
     """
-    # Guess a rational function p/q
     #   a) compute the denominator as q
     q = find_simple_recurrence_vector(v, maxcoeff=maxcoeff)
     n = len(q)
@@ -182,3 +177,39 @@ def guess_generating_function(v, X=var('x'), maxcoeff=1024):
             for i in range(len(v)) ] # TODO: maybe better with:  len(v)>>1
     return ( sum( p[k]*X**k for k in range(len(p)))
             / sum( q[k]*X**k for k in range(n)) )
+
+
+@public
+def guess_generating_function(v, X=var('x'), maxcoeff=1024, maxsqrtn=2):
+    """
+    Tries to "guess" a generating function for a sequence of rational numbers v.
+    Only a few patterns are implemented yet.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.guess import guess_generating_function as ggf
+    >>> from mpmath import fib
+    >>> ggf( [ int(fib(k)) for k in range(5,15) ] )
+    (3*x + 5)/(-x**2 - x + 1)
+
+    N-th root of a rational function can also be detected (below is an example
+    coming from the sequence A108626 from http://oeis.org ).
+    The greatest n-th root to be tested is specified as maxsqrtn (default 2).
+
+    >>> ggf( [1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919] )
+    sqrt(1/(x**4 + 2*x**2 - 4*x + 1))
+
+    References
+    ==========
+    "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
+
+    """
+    from sympy.concrete.guess import guess_generating_function_rational
+
+    # Perform some convolutions of the sequence with itself
+    t = [ 1 if k==0 else 0 for k in range(len(v)) ]
+    for d in range(max(1, maxsqrtn)):
+      t = [ sum( t[n-i]*v[i] for i in range(n+1) ) for n in range(len(v)) ]
+      g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+      if g: return g**( sympify(1)/sympify(d+1) )

@@ -2,6 +2,7 @@ from sympy.concrete.guess import (
             find_simple_recurrence_vector,
             find_simple_recurrence,
             rationalize,
+            guess_generating_function_rational,
             guess_generating_function
         )
 from sympy import Function, var, sympify
@@ -36,7 +37,16 @@ def test_rationalize():
     assert rationalize( pi, maxcoeff = 250 ) == sympify("355/113")
 
 
-def test_gauss_generating_function():
+def test_guess_generating_function_rational():
     x = var('x')
-    assert guess_generating_function([ int(fib(k)) for k in range(5,15) ]) == (
-       (3*x + 5)/(-x**2 - x + 1) )
+    assert guess_generating_function_rational([ int(fib(k))
+        for k in range(5,15) ]) == ( (3*x + 5)/(-x**2 - x + 1) )
+
+
+def test_guess_generating_function():
+    x = var('x')
+    assert guess_generating_function([ int(fib(k))
+        for k in range(5,15) ]) == ( (3*x + 5)/(-x**2 - x + 1) )
+    assert guess_generating_function(
+     [1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919] ) == (
+       (1/(x**4 + 2*x**2 - 4*x + 1))**(sympify("1/2") ) )
