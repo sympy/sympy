@@ -30,6 +30,7 @@ from sympy.utilities.iterables import is_sequence
 LG10 = math.log(10, 2)
 rnd = round_nearest
 
+
 def bitcount(n):
     return mpmath_bitcount(int(n))
 
@@ -1172,11 +1173,11 @@ def evalf_symbol(x, prec, options):
         if not '_cache' in options:
             options['_cache'] = {}
         cache = options['_cache']
-        cached, cached_prec = cache.get(x.name, (None, MINUS_INF))
+        cached, cached_prec = cache.get(x, (None, MINUS_INF))
         if cached_prec >= prec:
             return cached
         v = evalf(sympify(val), prec, options)
-        cache[x.name] = (v, prec)
+        cache[x] = (v, prec)
         return v
 
 evalf_table = None
@@ -1211,7 +1212,7 @@ def _create_evalf_table():
         Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
         ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
-        NaN : lambda x, prec, options: (fnan, None, prec, None),
+        NaN: lambda x, prec, options: (fnan, None, prec, None),
 
         exp: lambda x, prec, options: evalf_pow(
             Pow(S.Exp1, x.args[0], evaluate=False), prec, options),
@@ -1272,7 +1273,7 @@ def evalf(x, prec, options):
     if options.get("verbose"):
         print("### input", x)
         print("### output", to_str(r[0] or fzero, 50))
-        print("### raw", r ) # r[0], r[2]
+        print("### raw", r) # r[0], r[2]
         print()
     chop = options.get('chop', False)
     if chop:

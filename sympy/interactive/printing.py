@@ -87,7 +87,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         # replace them with suitable subs
         o = o.replace(r'\operatorname', '')
         o = o.replace(r'\overline', r'\bar')
-        return latex_to_png(o)
+        # mathtext can't render some LaTeX commands. For example, it can't
+        # render any LaTeX environments such as array or matrix. So here we
+        # ensure that if mathtext fails to render, we return None.
+        try:
+            return latex_to_png(o)
+        except ValueError as e:
+            debug('matplotlib exception caught:', repr(e))
+            return None
 
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
@@ -121,7 +128,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             s = latex(o, mode=latex_mode)
             try:
                 return _preview_wrapper(s)
-            except RuntimeError:
+            except RuntimeError as e:
+                debug('preview failed with:', repr(e),
+                      ' Falling back to matplotlib backend')
                 if latex_mode != 'inline':
                     s = latex(o, mode='inline')
                 return _matplotlib_wrapper(s)
@@ -132,12 +141,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode='inline')
-            try:
-                return _matplotlib_wrapper(s)
-            except Exception:
-                # Matplotlib.mathtext cannot render some things (like
-                # matrices)
-                return None
+            return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
         """

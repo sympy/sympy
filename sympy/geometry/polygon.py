@@ -516,7 +516,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] http://www.ariel.com.au/a/python-point-int-poly.html
+        [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p)
@@ -559,8 +559,8 @@ class Polygon(GeometrySet):
                     if 0 <= max(p1x, p2x):
                         if p1y != p2y:
                             xinters = (-p1y)*(p2x - p1x)/(p2y - p1y) + p1x
-                        if p1x == p2x or 0 <= xinters:
-                            hit_odd = not hit_odd
+                            if p1x == p2x or 0 <= xinters:
+                                hit_odd = not hit_odd
             p1x, p1y = p2x, p2y
         return hit_odd
 

@@ -16,11 +16,12 @@ def refine(expr, assumptions=True):
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Q.real(x))
+        >>> from sympy import Symbol, refine, sqrt, Q
+        >>> x = Symbol('x', real=True)
+        >>> refine(sqrt(x**2))
         Abs(x)
-        >>> refine(sqrt(x**2), Q.positive(x))
+        >>> x = Symbol('x', positive=True)
+        >>> refine(sqrt(x**2))
         x
 
     """
@@ -30,6 +31,10 @@ def refine(expr, assumptions=True):
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
         expr = expr.func(*args)
+    if hasattr(expr, '_eval_refine'):
+        ref_expr = expr._eval_refine()
+        if ref_expr is not None:
+            return ref_expr
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
     if handler is None:
@@ -40,32 +45,6 @@ def refine(expr, assumptions=True):
     if not isinstance(new_expr, Expr):
         return new_expr
     return refine(new_expr, assumptions)
-
-
-def refine_abs(expr, assumptions):
-    """
-    Handler for the absolute value.
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, Q, refine, Abs
-    >>> from sympy.assumptions.refine import refine_abs
-    >>> from sympy.abc import x
-    >>> refine_abs(Abs(x), Q.real(x))
-    >>> refine_abs(Abs(x), Q.positive(x))
-    x
-    >>> refine_abs(Abs(x), Q.negative(x))
-    -x
-
-    """
-    arg = expr.args[0]
-    if ask(Q.real(arg), assumptions) and \
-            fuzzy_not(ask(Q.negative(arg), assumptions)):
-        # if it's nonnegative
-        return arg
-    if ask(Q.negative(arg), assumptions):
-        return -arg
 
 
 def refine_Pow(expr, assumptions):
@@ -166,33 +145,6 @@ def refine_Pow(expr, assumptions):
                     return expr
 
 
-def refine_exp(expr, assumptions):
-    """
-    Handler for exponential function.
-
-    >>> from sympy import Symbol, Q, exp, I, pi
-    >>> from sympy.assumptions.refine import refine_exp
-    >>> from sympy.abc import x
-    >>> refine_exp(exp(pi*I*2*x), Q.real(x))
-    >>> refine_exp(exp(pi*I*2*x), Q.integer(x))
-    1
-
-    """
-    arg = expr.args[0]
-    if arg.is_Mul:
-        coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
-        if coeff:
-            if ask(Q.integer(2*coeff), assumptions):
-                if ask(Q.even(coeff), assumptions):
-                    return S.One
-                elif ask(Q.odd(coeff), assumptions):
-                    return S.NegativeOne
-                elif ask(Q.even(coeff + S.Half), assumptions):
-                    return -S.ImaginaryUnit
-                elif ask(Q.odd(coeff + S.Half), assumptions):
-                    return S.ImaginaryUnit
-
-
 def refine_atan2(expr, assumptions):
     """
     Handler for the atan2 function
@@ -209,6 +161,14 @@ def refine_atan2(expr, assumptions):
     atan(y/x) - pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.negative(x))
     atan(y/x) + pi
+    >>> refine_atan2(atan2(y,x), Q.zero(y) & Q.negative(x))
+    pi
+    >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.zero(x))
+    pi/2
+    >>> refine_atan2(atan2(y,x), Q.negative(y) & Q.zero(x))
+    -pi/2
+    >>> refine_atan2(atan2(y,x), Q.zero(y) & Q.zero(x))
+    nan
     """
     from sympy.functions.elementary.trigonometric import atan
     from sympy.core import S
@@ -219,6 +179,14 @@ def refine_atan2(expr, assumptions):
         return atan(y / x) - S.Pi
     elif ask(Q.positive(y) & Q.negative(x), assumptions):
         return atan(y / x) + S.Pi
+    elif ask(Q.zero(y) & Q.negative(x), assumptions):
+        return S.Pi
+    elif ask(Q.positive(y) & Q.zero(x), assumptions):
+        return S.Pi/2
+    elif ask(Q.negative(y) & Q.zero(x), assumptions):
+        return -S.Pi/2
+    elif ask(Q.zero(y) & Q.zero(x), assumptions):
+        return S.NaN
     else:
         return expr
 
@@ -237,9 +205,7 @@ def refine_Relational(expr, assumptions):
 
 
 handlers_dict = {
-    'Abs': refine_abs,
     'Pow': refine_Pow,
-    'exp': refine_exp,
     'atan2': refine_atan2,
     'Equality': refine_Relational,
     'Unequality': refine_Relational,

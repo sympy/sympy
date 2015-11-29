@@ -29,6 +29,7 @@ def _base_ordering(base, degree):
 
     A list ``base_ordering`` such that ``base_ordering[point]`` is the
     number of ``point`` in the ordering.
+
     Examples
     ========
 

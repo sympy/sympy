@@ -192,7 +192,7 @@ def _old_assump_replacer(obj):
     if obj.func == Q.nonpositive:
         ret = fuzzy_and([e.is_finite, e.is_nonpositive])
     if obj.func == Q.nonzero:
-        ret = fuzzy_and([e.is_real, e.is_finite, e.is_nonzero])
+        ret = fuzzy_and([e.is_nonzero, e.is_finite])
     if obj.func == Q.nonnegative:
         ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]),
         e.is_nonnegative])

@@ -393,7 +393,7 @@ class StrPrinter(Printer):
             (", ".join(map(self._print, field.symbols)), field.domain, field.order)
 
     def _print_PolyElement(self, poly):
-        return poly.str(self, PRECEDENCE, "%s**%d", "*")
+        return poly.str(self, PRECEDENCE, "%s**%s", "*")
 
     def _print_FracElement(self, frac):
         if frac.denom == 1:
@@ -558,6 +558,7 @@ class StrPrinter(Printer):
         charmap = {
             "==": "Eq",
             "!=": "Ne",
+            ":=": "Assignment",
         }
 
         if expr.rel_op in charmap:

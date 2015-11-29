@@ -105,7 +105,6 @@ def get_known_facts_dict():
         Q.hermitian: set([Q.hermitian]),
         Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary]),
         Q.infinite: set([Q.extended_real, Q.infinite]),
-        Q.infinitesimal: set([Q.infinitesimal]),
         Q.integer: set([Q.algebraic, Q.complex, Q.extended_real, Q.hermitian,
         Q.integer, Q.rational, Q.real]),
         Q.integer_elements: set([Q.complex_elements, Q.integer_elements,

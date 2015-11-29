@@ -89,7 +89,6 @@ modules = [
     'sympy.liealgebras',
     'sympy.logic',
     'sympy.logic.algorithms',
-    'sympy.logic.benchmarks',
     'sympy.logic.utilities',
     'sympy.matrices',
     'sympy.matrices.benchmarks',

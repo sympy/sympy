@@ -1480,17 +1480,8 @@ class Basic(with_metaclass(ManagedProperties)):
         {p_: 2/x**2}
 
         """
-        from sympy import signsimp
         pattern = sympify(pattern)
-        s = signsimp(self)
-        p = signsimp(pattern)
-        # if we still have the same relationship between the types of
-        # input, then use the sign simplified forms
-        if (pattern.func == self.func) and (s.func == p.func):
-            rv = p.matches(s, old=old)
-        else:
-            rv = pattern.matches(self, old=old)
-        return rv
+        return pattern.matches(self, old=old)
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""

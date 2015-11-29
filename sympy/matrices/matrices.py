@@ -519,7 +519,8 @@ class MatrixBase(object):
         return self._new(self.rows, self.cols, [a*i for i in self._mat])
 
     def __pow__(self, num):
-        from sympy.matrices import eye
+        from sympy.matrices import eye, diag, MutableMatrix
+        from sympy import binomial
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -538,18 +539,27 @@ class MatrixBase(object):
                 s *= s
                 n //= 2
             return self._new(a)
-        elif isinstance(num, Rational):
-            try:
-                P, D = self.diagonalize()
-            except MatrixError:
-                raise NotImplementedError(
-                    "Implemented only for diagonalizable matrices")
-            for i in range(D.rows):
-                D[i, i] = D[i, i]**num
-            return self._new(P*D*P.inv())
+        elif isinstance(num, (Expr, float)):
+
+            def jordan_cell_power(jc, n):
+                N = jc.shape[0]
+                l = jc[0, 0]
+                for i in range(N):
+                        for j in range(N-i):
+                                bn = binomial(n, i)
+                                if isinstance(bn, binomial):
+                                        bn = bn._eval_expand_func()
+                                jc[j, i+j] = l**(n-i)*bn
+
+            P, jordan_cells = self.jordan_cells()
+            # Make sure jordan_cells matrices are mutable:
+            jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+            for j in jordan_cells:
+                jordan_cell_power(j, num)
+            return self._new(P*diag(*jordan_cells)*P.inv())
         else:
-            raise NotImplementedError(
-                "Only integer and rational values are supported")
+            raise TypeError(
+                "Only SymPy expressions or int objects are supported as exponent for matrices")
 
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
@@ -3084,6 +3094,44 @@ class MatrixBase(object):
                 out.append((r, k, [mat._new(b) for b in basis]))
         return out
 
+    def left_eigenvects(self, **flags):
+        """Returns left eigenvectors and eigenvalues.
+
+        This function returns the list of triples (eigenval, multiplicity,
+        basis) for the left eigenvectors. Options are the same as for
+        eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
+        eigenvects().
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
+        >>> M.eigenvects()
+        [(-1, 1, [Matrix([
+        [-1],
+        [ 1],
+        [ 0]])]), (0, 1, [Matrix([
+        [ 0],
+        [-1],
+        [ 1]])]), (2, 1, [Matrix([
+        [2/3],
+        [1/3],
+        [  1]])])]
+        >>> M.left_eigenvects()
+        [(-1, 1, [Matrix([[-2, 1, 1]])]), (0, 1, [Matrix([[-1, -1, 1]])]), (2,
+        1, [Matrix([[1, 1, 1]])])]
+
+        """
+        mat = self
+        left_transpose = mat.transpose().eigenvects(**flags)
+
+        left = []
+        for (ev, mult, ltmp) in left_transpose:
+            left.append( (ev, mult, [l.transpose() for l in ltmp]) )
+
+        return left
+
     def singular_values(self):
         """Compute the singular values of a Matrix
 
@@ -4288,11 +4336,8 @@ class MatrixBase(object):
         if not v[rank:, 0].is_zero:
             raise ValueError("Linear system has no solution")
 
-        # Get index of free symbols (free parameter)
-        free_var_index = []
-        for r in range(col):
-            if r not in pivots:
-                free_var_index.append(r)  # non-pivots columns are free variables
+        # Get index of free symbols (free parameters)
+        free_var_index = permutation[len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
         dummygen = numbered_symbols("tau", Dummy)

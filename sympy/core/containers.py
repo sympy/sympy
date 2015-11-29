@@ -32,9 +32,9 @@ class Tuple(Basic):
 
     """
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         args = [ sympify(arg) for arg in args ]
-        obj = Basic.__new__(cls, *args, **assumptions)
+        obj = Basic.__new__(cls, *args)
         return obj
 
     def __getitem__(self, i):

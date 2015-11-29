@@ -58,7 +58,7 @@ from .crv_types import (
     ContinuousRV,
     Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell,
+    GammaInverse, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell,
     Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     StudentT, Triangular, Uniform, UniformSum, VonMises, Weibull,
     WignerSemicircle

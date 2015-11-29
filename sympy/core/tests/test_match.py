@@ -434,7 +434,7 @@ def test_issue_3883():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: -S(1)/2, b: -(mu - x)**2/2, c: log(2*pi)/2}
+        {a: -S(1)/2, b: -(x - mu)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
     g1 = Wild('g1', exclude=[gamma])
@@ -549,7 +549,10 @@ def test_issue_4559():
     assert (-e).match(sqrt(a)) is None
     assert (-e).match(a**2) == {a: I*sqrt(pi)}
 
-
+# The pattern matcher doesn't know how to handle (x - a)**2 == (a - x)**2. To
+# avoid ambiguity in actual applications, don't put a coefficient (including a
+# minus sign) in front of a wild.
+@XFAIL
 def test_issue_4883():
     a = Wild('a')
     x = Symbol('x')

@@ -6,6 +6,7 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
+from sympy.logic.boolalg import conjuncts
 from sympy.functions.elementary.exponential import exp, log
 from sympy import I
 
@@ -17,7 +18,7 @@ class AskIntegerHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_integer
 
     @staticmethod
@@ -84,10 +85,6 @@ class AskIntegerHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Float(expr, assumptions):
-        return int(expr) == expr
-
-    @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
 
@@ -106,7 +103,7 @@ class AskRationalHandler(CommonHandler):
 
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_rational
 
     @staticmethod
@@ -168,7 +165,7 @@ class AskIrrationalHandler(CommonHandler):
 
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_irrational
 
     @staticmethod
@@ -190,7 +187,7 @@ class AskRealHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_real
 
     @staticmethod
@@ -398,7 +395,7 @@ class AskComplexHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_complex
 
     @staticmethod
@@ -427,7 +424,7 @@ class AskImaginaryHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_imaginary
 
     @staticmethod

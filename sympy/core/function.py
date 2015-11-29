@@ -391,13 +391,20 @@ class Function(Application, Expr):
         By default (in this implementation), this happens if (and only if) the
         ARG is a floating point number.
         This function is used by __new__.
+
+        Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
+        from sympy.core.symbol import Wild
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
-        re, im = arg.as_real_imag()
-        l = [a._prec for a in [re, im] if a.is_Float]
+        # Don't use as_real_imag() here, that's too much work
+        a, b = Wild('a'), Wild('b')
+        m = arg.match(a + b*S.ImaginaryUnit)
+        if not m or not (m[a].is_Float or m[b].is_Float):
+            return -1
+        l = [m[i]._prec for i in m if m[i].is_Float]
         l.append(-1)
         return max(l)
 
@@ -1104,14 +1111,19 @@ class Derivative(Expr):
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i)
                     new_v.dummy_index = hash(v)
-                    expr = expr.subs(v, new_v)
+                    expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative(v)
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
-                        obj = obj.subs(v, old_v)
+                        if not old_v.is_Symbol and obj.is_Derivative:
+                            # Derivative evaluated at a point that is not a
+                            # symbol
+                            obj = Subs(obj, v, old_v)
+                        else:
+                            obj = obj.xreplace({v: old_v})
                     v = old_v
 
             if obj is None:

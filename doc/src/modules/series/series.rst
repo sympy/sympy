@@ -1,11 +1,6 @@
 Series Expansions
 =================
 
-.. module:: sympy.series
-
-The series module implements series expansions as a function and many related
-functions.
-
 Limits
 ------
 
@@ -79,7 +74,6 @@ Using these results yields the following strategy for computing
 4. Apply the theorem and conclude the computation of
    `\lim_{x \to \infty} f(x)`, possibly by recursively working on `g_1(x)`.
 
-
 Notes
 """""
 
@@ -123,7 +117,6 @@ Reference
 
 .. autoclass:: sympy.series.gruntz.SubsSet
    :members:
-
 
 More Intuitive Series Expansion
 -------------------------------

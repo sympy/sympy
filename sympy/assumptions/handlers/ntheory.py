@@ -6,7 +6,7 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
-from sympy.core import S
+from sympy.core import S, Float
 
 
 class AskPrimeHandler(CommonHandler):
@@ -18,7 +18,7 @@ class AskPrimeHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_prime
 
     @staticmethod
@@ -30,7 +30,7 @@ class AskPrimeHandler(CommonHandler):
                 raise TypeError
         except TypeError:
             return False
-        return isprime(i)
+        return isprime(expr)
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -82,7 +82,7 @@ class AskPrimeHandler(CommonHandler):
 class AskCompositeHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_composite
 
     @staticmethod
@@ -108,7 +108,7 @@ class AskCompositeHandler(CommonHandler):
 class AskEvenHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_even
 
     @staticmethod
@@ -119,6 +119,8 @@ class AskEvenHandler(CommonHandler):
             if not (expr - i).equals(0):
                 raise TypeError
         except TypeError:
+            return False
+        if isinstance(expr, (float, Float)):
             return False
         return i % 2 == 0
 
@@ -208,10 +210,6 @@ class AskEvenHandler(CommonHandler):
     Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
 
     @staticmethod
-    def Float(expr, assumptions):
-        return expr % 2 == 0
-
-    @staticmethod
     def NumberSymbol(expr, assumptions):
         return AskEvenHandler._number(expr, assumptions)
 
@@ -238,7 +236,7 @@ class AskOddHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_odd
 
     @staticmethod

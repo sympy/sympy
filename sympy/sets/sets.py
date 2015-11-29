@@ -12,6 +12,7 @@ from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
 from sympy.sets.contains import Contains
 
 from mpmath import mpi, mpf
@@ -42,7 +43,7 @@ class Set(Basic):
     is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
-    is_ComplexPlane = False
+    is_ComplexRegion = False
 
     @staticmethod
     def _infimum_key(expr):
@@ -278,10 +279,8 @@ class Set(Basic):
 
         """
         other = sympify(other, strict=True)
-        ret = self._contains(other)
+        ret = sympify(self._contains(other))
         if ret is None:
-            if all(Eq(i, other) == False for i in self):
-                return False
             ret = Contains(other, self, evaluate=False)
         return ret
 
@@ -513,7 +512,7 @@ class Set(Basic):
 
     def __contains__(self, other):
         symb = self.contains(other)
-        if symb not in (true, false):
+        if symb not in (True, False):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return bool(symb)
 
@@ -910,11 +909,16 @@ class Interval(Set, EvalfMixin):
 
 
     def _complement(self, other):
-        if other is S.Reals:
+        if other == S.Reals:
             a = Interval(S.NegativeInfinity, self.start,
                          True, not self.left_open)
             b = Interval(self.end, S.Infinity, not self.right_open, True)
             return Union(a, b)
+
+        if isinstance(other, FiniteSet):
+            nums = [m for m in other.args if m.is_number]
+            if nums == []:
+                return None
 
         return Set._complement(self, other)
 
@@ -945,8 +949,8 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is true) or
-                (self.right_open and other.contains(self.end) is true)):
+        if ((self.left_open and other.contains(self.start) == True) or
+                (self.right_open and other.contains(self.end) == True)):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -981,11 +985,10 @@ class Interval(Set, EvalfMixin):
 
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
-        from sympy.solvers import solve
-        from sympy.core.function import diff
+        from sympy.solvers.solveset import solveset
+        from sympy.core.function import diff, Lambda
         from sympy.series import limit
         from sympy.calculus.singularities import singularities
-        # TODO: handle piecewise defined functions
         # TODO: handle functions with infinitely many solutions (eg, sin, tan)
         # TODO: handle multivariate functions
 
@@ -993,6 +996,28 @@ class Interval(Set, EvalfMixin):
         if len(expr.free_symbols) > 1 or len(f.variables) != 1:
             return
         var = f.variables[0]
+
+        if expr.is_Piecewise:
+            result = S.EmptySet
+            domain_set = self
+            for (p_expr, p_cond) in expr.args:
+                if p_cond is true:
+                    intrvl = domain_set
+                else:
+                    intrvl = p_cond.as_set()
+                    intrvl = Intersection(domain_set, intrvl)
+
+                if p_expr.is_Number:
+                    image = FiniteSet(p_expr)
+                else:
+                    image = imageset(Lambda(var, p_expr), intrvl)
+                result = Union(result, image)
+
+                # remove the part which has been `imaged`
+                domain_set = Complement(domain_set, intrvl)
+                if domain_set.is_EmptySet:
+                    break
+            return result
 
         if not self.start.is_comparable or not self.end.is_comparable:
             return
@@ -1013,7 +1038,7 @@ class Interval(Set, EvalfMixin):
             _end = f(self.end)
 
         if len(sing) == 0:
-            solns = solve(diff(expr, var), var)
+            solns = list(solveset(diff(expr, var), var))
 
             extr = [_start, _end] + [f(x) for x in solns
                                      if x.is_real and x in self]
@@ -1038,8 +1063,8 @@ class Interval(Set, EvalfMixin):
         else:
             return imageset(f, Interval(self.start, sing[0],
                                         self.left_open, True)) + \
-                Union(*[imageset(f, Interval(sing[i], sing[i + 1]), True, True)
-                        for i in range(1, len(sing) - 1)]) + \
+                Union(*[imageset(f, Interval(sing[i], sing[i + 1], True, True))
+                        for i in range(0, len(sing) - 1)]) + \
                 imageset(f, Interval(sing[-1], self.end, True, self.right_open))
 
     @property
@@ -1222,8 +1247,7 @@ class Union(Set, EvalfMixin):
         return Max(*[set.sup for set in self.args])
 
     def _contains(self, other):
-        or_args = [the_set.contains(other) for the_set in self.args]
-        return Or(*or_args)
+        return Or(*[set.contains(other) for set in self.args])
 
     @property
     def _measure(self):
@@ -1400,7 +1424,6 @@ class Intersection(Set):
         return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
-        from sympy.logic.boolalg import And
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
@@ -1429,17 +1452,51 @@ class Intersection(Set):
         if any(s.is_EmptySet for s in args):
             return S.EmptySet
 
-        # If any FiniteSets see which elements of that finite set occur within
-        # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
+                # see which elements of the FiniteSet occur within
+                # all other sets in the intersection
                 other_args = [a for a in args if a != s]
-                res = FiniteSet(*[x for x in s
-                             if all(other.contains(x) == True for other in other_args)])
-                unk = [x for x in s
-                       if any(other.contains(x) not in (True, False) for other in other_args)]
+                res = FiniteSet(*[x for x in s if all(
+                    o.contains(x) == True for o in other_args)])
+                unk = [x for x in s if any(
+                    o.contains(x) not in (True, False) for o in other_args)]
                 if unk:
-                    res += Intersection(*([s.func(*unk)] + other_args), evaluate=False)
+                    new_other = []
+                    del_other = []
+                    for ival, val in enumerate(other_args):
+                        if val.is_FiniteSet:
+                            # collect expressions having symbols
+                            # from `val` and `s`
+                            symbol_in_val = [x for x in val if x.has(Symbol)]
+                            symbol_in_s = [x for x in s if x.has(Symbol)]
+                            del_other.append(ival)
+                            # if expression with symbols are same in `s` and `val`
+                            # then remove the non-symbol containing expressions
+                            # from `unk`, since they can not be contained
+                            if symbol_in_s == symbol_in_val:
+                                syms = FiniteSet(*symbol_in_s, evaluate=False)
+                                non_symbol_in_s = s - syms
+                                s = syms
+                                for x in non_symbol_in_s:
+                                    if x in unk:
+                                        unk.remove(x)
+                            else:
+                                fin = FiniteSet(*
+                                    [x for x in symbol_in_s
+                                    if val.contains(x) == True],
+                                    evaluate=False)
+                                if s != fin:
+                                    val = val - fin
+                                    new_other.append(val)
+
+                    for i in reversed(del_other):
+                        other_args.pop(i)
+                    other_sets = Intersection(*(other_args + new_other))
+                    if other_sets.is_EmptySet:
+                        return EmptySet()
+                    res += Intersection(
+                        s.func(*unk), other_sets, evaluate=False)
                 return res
 
         # If any of the sets are unions, return a Union of Intersections
@@ -1735,23 +1792,33 @@ class FiniteSet(Set, EvalfMixin):
         return self.__class__(el for el in self if el in other)
 
     def _complement(self, other):
-        if other is S.Reals:
+        if isinstance(other, Interval):
             nums = sorted(m for m in self.args if m.is_number)
-            syms = [m for m in self.args if m.is_Symbol]
-            # Reals cannot contain elements other than numbers and symbols.
+            if other == S.Reals and nums != []:
+                syms = [m for m in self.args if m.is_Symbol]
+                # Reals cannot contain elements other than numbers and symbols.
 
-            intervals = []  # Build up a list of intervals between the elements
-            if nums != []:
+                intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
                 for a, b in zip(nums[:-1], nums[1:]):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
-            if syms != []:
-                return Complement(Union(intervals, evaluate=False),
-                    FiniteSet(*syms), evaluate=False)
-            else:
-                return Union(intervals, evaluate=False)
+                if syms != []:
+                    return Complement(Union(intervals, evaluate=False),
+                            FiniteSet(*syms), evaluate=False)
+                else:
+                    return Union(intervals, evaluate=False)
+            elif nums == []:
+                return None
+
+        elif isinstance(other, FiniteSet):
+            unk = FiniteSet(*[el for el in self if other.contains(el)
+                not in (True, False)])
+            if unk == self:
+                return
+            return Complement(FiniteSet(*[el for el in other if
+                self.contains(el) != True]), unk)
 
         return Set._complement(self, other)
 
@@ -1766,10 +1833,10 @@ class FiniteSet(Set, EvalfMixin):
             return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) is true for x in self):
+        if any(other.contains(x) == True for x in self):
             return set((
-                FiniteSet(*[x for x in self if other.contains(x) is not true]),
-                other))
+                FiniteSet(*[x for x in self
+                    if other.contains(x) != True]), other))
 
         return None
 

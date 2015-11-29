@@ -1867,6 +1867,9 @@ class Integer(Rational):
             # (-2)**k --> 2**k
             if self.is_negative and expt.is_even:
                 return (-self)**expt
+        if isinstance(expt, Float):
+            # Rational knows how to exponentiate by a Float
+            return super(Integer, self)._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -2508,7 +2511,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonpositive:
                 return S.false
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.true
         return Expr.__le__(self, other)
 
@@ -2522,7 +2525,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonpositive:
                 return S.true
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.false
         return Expr.__gt__(self, other)
 
@@ -2710,7 +2713,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonnegative:
                 return S.true
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.false
         return Expr.__lt__(self, other)
 
@@ -2742,7 +2745,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonnegative:
                 return S.false
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.true
         return Expr.__ge__(self, other)
 

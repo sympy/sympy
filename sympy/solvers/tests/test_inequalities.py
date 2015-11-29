@@ -284,7 +284,13 @@ def test_solve_univariate_inequality():
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
 
 
-@slow
+def test_issue_9954():
+    assert isolve(x**2 >= 0, x, relational=False) == S.Reals
+    assert isolve(x**2 >= 0, x, relational=True) == S.Reals.as_relational(x)
+    assert isolve(x**2 < 0, x, relational=False) == S.EmptySet
+    assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
+
+
 def test_slow_general_univariate():
     r = RootOf(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \

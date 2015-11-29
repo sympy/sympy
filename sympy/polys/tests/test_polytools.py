@@ -51,7 +51,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative, Sum,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
@@ -2397,6 +2397,10 @@ def test_factor():
     assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
 
     assert factor(sqrt(x**2)) == sqrt(x**2)
+
+    # issue 7902
+    assert (2*Sum(3*x, (x, 1, 9))).factor() == 6*Sum(x, (x, 1, 9))
+    assert (2*Sum(x**2, (x, 1, 9))).factor() == 2*Sum(x**2, (x, 1, 9))
 
 
 def test_factor_large():

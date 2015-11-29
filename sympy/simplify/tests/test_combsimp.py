@@ -1,7 +1,7 @@
 from sympy import (
     Rational, combsimp, factorial, gamma, binomial, Symbol, pi, S,
     sin, exp, powsimp, sqrt, sympify, FallingFactorial, RisingFactorial,
-    simplify, symbols, cos)
+    simplify, symbols, cos, rf)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -21,7 +21,7 @@ def test_combsimp():
     assert combsimp(factorial(n)**2/factorial(n - 3)) == \
         factorial(n)*n*(-1 + n)*(-2 + n)
     assert combsimp(factorial(n)*binomial(n + 1, k + 1)/binomial(n, k)) == \
-        factorial(n)*(1 + n)/(1 + k)
+        factorial(n + 1)/(1 + k)
 
     assert combsimp(binomial(n - 1, k)) == -((-n + k)*binomial(n, k))/n
 
@@ -124,3 +124,12 @@ def test_combsimp_gamma():
     assert combsimp(
         gamma(k)*gamma(k + R(1, 3))*gamma(k + R(2, 3))/gamma(3*k/2)) == (
         3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
+
+
+def test_issue_9699():
+    n, k = symbols('n k', real=True)
+    x, y = symbols('x, y')
+    assert combsimp((n + 1)*factorial(n)) == factorial(n + 1)
+    assert combsimp((x + 1)*factorial(x)/gamma(y)) == gamma(x + 2)/gamma(y)
+    assert combsimp(factorial(n)/n) == factorial(n - 1)
+    assert combsimp(rf(x + n, k)*binomial(n, k)) == binomial(n, k)*gamma(k + n + x)/gamma(n + x)

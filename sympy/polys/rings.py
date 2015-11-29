@@ -508,6 +508,19 @@ class PolyRing(DefaultPrinting, IPolys):
         else:
             return self.clone(symbols=symbols, domain=self.drop(*gens))
 
+    def compose(self, other):
+        """Add the generators of ``other`` to ``self``"""
+        if self != other:
+            syms = set(self.symbols).union(set(other.symbols))
+            return self.clone(symbols=list(syms))
+        else:
+            return self
+
+    def add_gens(self, symbols):
+        """Add the elements of ``symbols`` as generators to ``self``"""
+        syms = set(self.symbols).union(set(symbols))
+        return self.clone(symbols=list(syms))
+
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
@@ -773,7 +786,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     continue
                 symbol = printer.parenthesize(symbols[i], prec_atom-1)
                 if exp != 1:
-                    sexpv.append(exp_pattern % (symbol, exp))
+                    if exp != int(exp) or exp < 0:
+                        sexp = printer.parenthesize(exp, prec_atom)
+                    else:
+                        sexp = exp
+                    sexpv.append(exp_pattern % (symbol, sexp))
                 else:
                     sexpv.append('%s' % symbol)
             if scoeff:
@@ -1112,11 +1129,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         ring = self.ring
-        n = int(n)
 
-        if n < 0:
-            raise ValueError("negative exponent")
-        elif not n:
+        if not n:
             if self:
                 return ring.one
             else:
@@ -1124,8 +1138,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif len(self) == 1:
             monom, coeff = list(self.items())[0]
             p = ring.zero
-            p[ring.monomial_pow(monom, n)] = coeff**n
+            if coeff == 1:
+                p[ring.monomial_pow(monom, n)] = coeff
+            else:
+                p[ring.monomial_pow(monom, n)] = coeff**n
             return p
+
+        # For ring series, we need negative and rational exponent support only
+        # with monomials.
+        n = int(n)
+        if n < 0:
+            raise ValueError("Negative exponent")
+
         elif n == 1:
             return self.copy()
         elif n == 2:
@@ -1277,7 +1301,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             raise ZeroDivisionError("polynomial division")
         elif isinstance(p2, ring.dtype):
-            return p1.quo(p2)
+            if p2.is_monomial:
+                return p1*(p2**(-1))
+            else:
+                return p1.quo(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
