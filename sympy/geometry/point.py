@@ -106,7 +106,7 @@ class Point(GeometryEntity):
     is_Point = True
 
     def __contains__(self, item):
-        return item == self
+        return item in self.args
 
     def is_concyclic(*args):
         # Coincident points are irrelevant and can confuse this algorithm.
@@ -305,6 +305,11 @@ class Point(GeometryEntity):
         where the coordinates are evaluated as floating point numbers to
         the precision indicated (default=15).
 
+        Parameters
+        ==========
+
+        prec : int
+
         Returns
         =======
 
@@ -327,7 +332,7 @@ class Point(GeometryEntity):
     n = evalf
 
     def intersection(self, o):
-        """The intersection between this point and another point.
+        """The intersection between this point and another GeometryEntity.
 
         Parameters
         ==========
