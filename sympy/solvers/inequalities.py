@@ -1,8 +1,13 @@
-"""Tools for solving inequalities and systems of inequalities. """
+"""Tools for solving inequalities and systems of inequalities.
+
+The main function to call is reduce_inequalities which will then
+handle replacing symbols with real-valued symbols and dispatch to
+the appropriate helper function.
+"""
 
 from __future__ import print_function, division
 
-from sympy.core import Symbol, Dummy
+from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable, reduce
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
@@ -14,6 +19,7 @@ from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.utilities.misc import filldedent
+
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
@@ -289,10 +295,6 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
-    if gen.is_real is False:
-         raise TypeError(filldedent('''
-            can't solve inequalities with absolute
-            values containing non-real variables'''))
 
     def _bottom_up_scan(expr):
         exprs = []
@@ -395,83 +397,115 @@ def solve_univariate_inequality(expr, gen, relational=True):
     (-oo, -2] U [2, oo)
 
     """
+    from sympy.solvers.solvers import solve, denoms, unrad, checksol
+    from sympy.polys.polytools import real_roots
+    from sympy.utilities.iterables import sift
 
-    from sympy.solvers.solvers import solve, denoms
-
-    # This keeps the function independent of the assumptions about `gen`.
-    # `solveset` makes sure this function is called only when the domain is
-    # real.
-    d = Dummy(real=True)
-    expr = expr.subs(gen, d)
-    _gen = gen
-    gen = d
-
-    if expr is S.true:
-        rv = S.Reals
-    elif expr is S.false:
-        rv = S.EmptySet
-    else:
-        e = expr.lhs - expr.rhs
-        parts = n, d = e.as_numer_denom()
-        if all(i.is_polynomial(gen) for i in parts):
-            solns = solve(n, gen, check=False)
-            singularities = solve(d, gen, check=False)
+    expr = expr.canonical
+    if expr.lhs == gen and expr.rhs.is_number:
+        op = expr.rel_op
+        rv = None
+        if '<' in op:
+            rv = Interval(
+                S.NegativeInfinity,
+                expr.rhs, True, bool('=' not in op))
+        elif '>' in op:
+            rv = Interval(
+                expr.rhs,
+                S.Infinity, bool('=' not in op), True)
+        elif op == '==':
+            rv = FiniteSet(expr.rhs)
+        elif op == '!=':
+            rv = Union(
+                Interval.Ropen(S.NegativeInfinity, expr.rhs),
+                Interval.Lopen(expr.rhs, S.Infinity))
         else:
-            solns = solve(e, gen, check=False)
-            singularities = []
-            for d in denoms(e):
-                singularities.extend(solve(d, gen))
+            pass  # let the general routine handle it
+        if rv is not None:
+            return rv.as_relational(gen) if relational else rv
 
-        include_x = expr.func(0, 0)
+    # general Relationals that need solving
+    e = expr.lhs - expr.rhs
+    parts = n, d = e.as_numer_denom()
+    if all(i.is_polynomial(gen) for i in parts):
+        # we can turn off checking and solve quickly for key pts
+        solns = solve(n, gen, check=False)
+        singularities = solve(d, gen, check=False)
+    else:
+        u = unrad(e)
+        if u:
+            eq, cov = u
+            solns = real_roots(eq)
+            if cov:
+                isym, ieq = cov
+                inv = solve(ieq, gen)[0]
+                solns = set([inv.subs(isym, xi) for xi in solns])
+            sifted = sift(solns, lambda i: checksol(e, gen, i))
+            if None in sifted:
+                raise NotImplementedError('cannot tell which potential solutions satisfy original equation')
+            solns = sifted[True]
+        else:
+            solns = solve(e, gen)
+        singularities = []
+        for d in denoms(e):
+            singularities.extend(solve(d, gen))
 
-        def valid(x):
-            v = e.subs(gen, x)
-            try:
-                r = expr.func(v, 0)
-            except TypeError:
-                r = S.false
-            if r in (S.true, S.false):
-                return r
-            if v.is_real is False:
-                return S.false
-            else:
-                v = v.n(2)
-                if v.is_comparable:
-                    return expr.func(v, 0)
-                return S.false
+    try:
+        reals = _nsort(set(solns + singularities), separated=True)[0]
+    except NotImplementedError:
+        raise NotImplementedError('sorting of these roots is not supported')
 
-        start = S.NegativeInfinity
-        sol_sets = [S.EmptySet]
+    def valid(x):
+        v = e.subs(gen, x)
         try:
-            reals = _nsort(set(solns + singularities), separated=True)[0]
-        except NotImplementedError:
-            raise NotImplementedError('sorting of these roots is not supported')
-        for x in reals:
-            end = x
+            r = expr.func(v, 0)
+        except TypeError:
+            r = S.false
+        if r in (S.true, S.false):
+            return r
+        if v.is_real is False:
+            return S.false
+        else:
+            v = v.n(2)
+            if v.is_comparable:
+                return expr.func(v, 0)
+            return S.false
 
-            if end in [S.NegativeInfinity, S.Infinity]:
-                if valid(S(0)):
-                    sol_sets.append(Interval(start, S.Infinity, True, True))
-                    break
+    include_x = expr.func(0, 0)
+    start = S.NegativeInfinity
+    sol_sets = [S.EmptySet]
+    for x in reals:
+        end = x
 
-            if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
-                sol_sets.append(Interval(start, end, True, True))
+        if end in [S.NegativeInfinity, S.Infinity]:
+            if valid(S(0)):
+                sol_sets.append(Interval(start, S.Infinity, True, True))
+                break
 
-            if x in singularities:
-                singularities.remove(x)
-            elif include_x:
-                sol_sets.append(FiniteSet(x))
-
-            start = end
-
-        end = S.Infinity
-
-        if valid(start + 1):
+        v = (start + end)/2 if start is not S.NegativeInfinity else (end - 1)
+        if valid(v):
             sol_sets.append(Interval(start, end, True, True))
 
-        rv = Union(*sol_sets).subs(gen, _gen)
+        if x in singularities:
+            singularities.remove(x)
+        elif include_x:
+            sol_sets.append(FiniteSet(x))
 
-    return rv if not relational else rv.as_relational(_gen)
+        start = end
+
+    end = S.Infinity
+
+    # in case start == -oo then there were no solutions so we just
+    # check a point between -oo and oo (e.g. 0) else pick a point
+    # past the last solution (which is start after the end of the
+    # for-loop above
+    v = start + 1 if start is not S.NegativeInfinity else 0
+    if valid(v):
+        sol_sets.append(Interval(start, end, True, True))
+
+    rv = Union(*sol_sets)
+
+    return rv if not relational else rv.as_relational(gen)
 
 
 def _solve_inequality(ie, s):
@@ -500,7 +534,7 @@ def _solve_inequality(ie, s):
 
 
 def _reduce_inequalities(inequalities, symbols):
-    # helper for reduce_inequalities
+    # helper for reduce_inequalities; input should only be inequalities
 
     poly_part, abs_part = {}, {}
     other = []
@@ -533,7 +567,9 @@ def _reduce_inequalities(inequalities, symbols):
             components = expr.find(lambda u:
                 u.has(gen) and (
                 u.is_Function or u.is_Pow and not u.exp.is_Integer))
-            if components and all(isinstance(i, Abs) for i in components):
+            if (components and
+                    all(isinstance(i, Abs) for i in components) and
+                    gen not in expr.as_numer_denom()[1].free_symbols):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
                 other.append(_solve_inequality(Relational(expr, 0, rel), gen))
@@ -568,6 +604,20 @@ def reduce_inequalities(inequalities, symbols=[]):
     """
     if not iterable(inequalities):
         inequalities = [inequalities]
+    inequalities = [sympify(i) for i in inequalities]
+
+    if not iterable(symbols):
+        symbols = [symbols]
+    gens = reduce(set.union, [i.free_symbols for i in inequalities], set())
+    symbols = set(symbols) & gens or gens
+    if any(i.is_real is False for i in symbols):
+        raise TypeError('non-real symbols are not supported in inequalities')
+
+    # make vanilla symbol real
+    recast = dict([(i, Dummy(i.name, real=True))
+        for i in symbols if i.is_real is None])
+    inequalities = [i.xreplace(recast) for i in inequalities]
+    symbols = set(recast.values())
 
     # prefilter
     keep = []
@@ -587,20 +637,11 @@ def reduce_inequalities(inequalities, symbols=[]):
     inequalities = keep
     del keep
 
-    gens = reduce(set.union, [i.free_symbols for i in inequalities], set())
-
-    if not iterable(symbols):
-        symbols = [symbols]
-    symbols = set(symbols) or gens
-
-    # make vanilla symbol real
-    recast = dict([(i, Dummy(i.name, real=True))
-        for i in gens if i.is_real is None])
-    inequalities = [i.xreplace(recast) for i in inequalities]
-    symbols = set([i.xreplace(recast) for i in symbols])
-
-    # solve system
-    rv = _reduce_inequalities(inequalities, symbols)
+    if not inequalities:
+        return S.true
+    else:
+        # solve system
+        rv = _reduce_inequalities(inequalities, symbols)
 
     # restore original symbols and return
     return rv.xreplace(dict([(v, k) for k, v in recast.items()]))

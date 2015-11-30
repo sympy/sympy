@@ -185,6 +185,7 @@ def test_reduce_abs_inequalities():
 
     nr = Symbol('nr', real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
+    assert reduce_inequalities(e, symbols=[x, nr]) == ans
 
 
 def test_reduce_inequalities_general():
@@ -250,6 +251,17 @@ def test_issue_5526():
 
 
 def test_solve_univariate_inequality():
+    # trivial relationals
+    assert isolve(x > 1, x) == And(Lt(1, x), x < oo)
+    assert isolve(x > 1, x, False) == Interval.Lopen(1, oo)
+    assert isolve(x < 1, x, False) == Interval.Ropen(-oo, 1)
+    assert isolve(x >= 1, x, False) == Interval(1, oo)
+    assert isolve(x <= 1, x, False) == Interval(-oo, 1)
+    assert isolve(Eq(x, 1), x, False) == FiniteSet(1)
+    assert isolve(Ne(x, 1), x, False) == Union(
+        Interval.Ropen(-oo, 1),
+        Interval.Lopen(1, oo))
+    # others
     assert isolve(x**2 >= 4, x, relational=False) == Union(Interval(-oo, -2),
         Interval(2, oo))
     assert isolve(x**2 >= 4, x) == Or(And(Le(2, x), Lt(x, oo)), And(Le(x, -2),
@@ -286,15 +298,22 @@ def test_solve_univariate_inequality():
 
 def test_issue_9954():
     assert isolve(x**2 >= 0, x, relational=False) == S.Reals
-    assert isolve(x**2 >= 0, x, relational=True) == S.Reals.as_relational(x)
+    assert isolve(x**2 >= 0, x, relational=True) == \
+        S.Reals.as_relational(x)
     assert isolve(x**2 < 0, x, relational=False) == S.EmptySet
-    assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
+    assert isolve(x**2 < 0, x, relational=True) == \
+        S.EmptySet.as_relational(x)
+    assert reduce_inequalities(x**2 >= 0) == S.true
+    assert reduce_inequalities(x**2 < 0) == S.false
 
 
-def test_slow_general_univariate():
-    r = RootOf(x**5 - x**2 + 1, 0)
-    assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
-        Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
+def test_radical_univariate():
+    assert str(solve(sqrt(x) + 1/root(x, 3) - 2 > 0
+        ).as_set().n(3)) == "(0, 0.373) U (1.0, +inf)"
+    assert str(solve(sqrt(x - 2) + 1/(x - 3) - 3 > 0
+        ).as_set().n(3)) == '(3.0, 3.57) U (10.2, +inf)'
+    assert str(solve(sqrt(x - 1) - 3 + 1/root(x - 2, 3) > 0
+        ).as_set().n(3)) == '(2.0, 2.14) U (6.79, +inf)'
 
 
 def test_issue_8545():
@@ -308,3 +327,15 @@ def test_issue_8545():
 def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
+
+
+def test_issue_9451():
+    assert solve(abs(1/x) < 1).as_set() == Union(Interval.Ropen(-oo, -1), Interval.Lopen(1, oo))
+    assert solve(1/abs(x) + 1/(x - 2) < 2) == Or(
+        And(-oo < x, x < -sqrt(2) + 1),
+        And(-sqrt(5)/2 + S(3)/2 < x, x < 2),
+        And(sqrt(5)/2 + S(3)/2 < x, x < oo))
+
+
+def test_issue_10047():
+    assert solve(sin(x) < 2) == And(-oo < x, x < oo)
