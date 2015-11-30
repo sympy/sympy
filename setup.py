@@ -122,6 +122,7 @@ modules = [
     'sympy.strategies',
     'sympy.strategies.branch',
     'sympy.tensor',
+    'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
