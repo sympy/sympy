@@ -160,7 +160,7 @@ before_install:
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       pip install "numpy";
-      pip install -v "scipy";
+      pip install -vvv "scipy";
       pip install "theano";
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
