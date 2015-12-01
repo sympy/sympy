@@ -54,6 +54,7 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
+            - python-scipy
 
     - python: "pypy"
       env:
@@ -160,7 +161,6 @@ before_install:
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       pip install "numpy";
-      pip install -vvv "scipy";
       pip install "theano";
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
