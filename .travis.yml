@@ -160,7 +160,7 @@ before_install:
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       pip install "numpy";
       pip install "scipy";
-      pip install --no-deps https://github.com/Theano/Theano/archive/rel-0.6.zip;
+      pip install "theano";
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
       sudo apt-add-repository -y ppa:aims/sagemath;
