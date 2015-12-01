@@ -90,7 +90,8 @@ matrix:
             - texlive-latex-extra
             - lmodern
             - librsvg2-bin
-            - imagemagick docbook2x;
+            - imagemagick
+            - docbook2x
 
     - python: 2.7
       env:
