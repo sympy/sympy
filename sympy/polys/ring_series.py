@@ -1898,8 +1898,9 @@ def _rs_series(expr, series_rs, a, prec):
     elif expr.is_Mul:
         n = len(args)
         for arg in args:    # XXX Looks redundant
-            R1, _ = sring(arg, expand=False, series=True)
-            R = R.compose(R1)
+            if not arg.is_Number:
+                R1, _ = sring(arg, expand=False, series=True)
+                R = R.compose(R1)
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
             [a]*len(args)))
         sum_pows = sum(min_pows)
