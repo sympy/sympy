@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
@@ -92,15 +93,22 @@ class CodeBlock(Basic):
             # Will support more things later
             raise TypeError("CodeBlock inputs must be Assignments")
 
-        left_hand_sides = set()
+        left_hand_sides = []
+        right_hand_sides = []
         for i in assignments:
-            lhs = i.args[0]
+            lhs, rhs = i.args
             if lhs in left_hand_sides:
                 raise NotImplementedError("Duplicate assignments to the same "
                 "variable are not yet supported (%s)" % lhs)
-            left_hand_sides.add(lhs)
+            left_hand_sides.append(lhs)
+            right_hand_sides.append(rhs)
 
-        return Basic.__new__(cls, *assignments)
+        obj = Basic.__new__(cls, *assignments)
+
+        obj.left_hand_sides = Tuple(*left_hand_sides)
+        obj.right_hand_sides = Tuple(*right_hand_sides)
+
+        return obj
 
     @classmethod
     def topological_sort(cls, assignments):
