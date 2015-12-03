@@ -177,7 +177,7 @@ class CodeBlock(Basic):
         new_block = tuple(Assignment(var, expr) for var, expr in
             zip(self.left_hand_sides, reduced_exprs[0]))
         new_assignments = tuple(Assignment(*i) for i in replacements)
-        return CodeBlock(*(new_assignments + new_block.args))
+        return self.topological_sort(new_assignments + new_block)
 
 class CodePrinter(StrPrinter):
     """
