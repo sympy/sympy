@@ -308,3 +308,7 @@ def test_issue_8545():
 def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
+
+
+def test_issue_10047():
+    assert solve(sin(x) < 2) == And(-oo < x, x < oo)
