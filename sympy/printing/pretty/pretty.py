@@ -1478,14 +1478,16 @@ class PrettyPrinter(Printer):
         delimiter = ' %s ' % pretty_atom('Intersection')
 
         return self._print_seq(u.args, None, None, delimiter,
-                parenthesize=lambda set: set.is_ProductSet or set.is_Union)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Union or set.is_Complement)
 
     def _print_Union(self, u):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-             parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Intersection or set.is_Complement)
 
     def _print_SymmetricDifference(self, u):
         if not self._use_unicode:
