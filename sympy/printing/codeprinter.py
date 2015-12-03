@@ -102,6 +102,58 @@ class CodeBlock(Basic):
 
         return Basic.__new__(cls, *assignments)
 
+    @classmethod
+    def topological_sort(cls, assignments):
+        """
+        Return a CodeBlock with topologically sorted assignments so that
+        variables are assigned before they are used.
+
+        The existing order of assignments is preserved as much as possible.
+
+        This is a class constructor so that the default constructor for
+        CodeBlock can error when variables are used before they are assigned.
+        """
+        from sympy.utilities.iterables import topological_sort
+        # Create a graph where the nodes are assignments and there is a directed edge
+        # between nodes that use a variable and nodes that assign that
+        # variable, like
+
+        # [(x := 1, y := x + 1), (x := 1, z := y + z), (y := x + 1, z := y + z)]
+
+        # If we then topologically sort these nodes, they will be in
+        # assignment order, like
+
+        # x := 1
+        # y := x + 1
+        # z := y + z
+
+        # The nodes
+        #
+        # enumerate keeps nodes in the same order they are already in if
+        # possible. It will also allow us to handle duplicate assignments to
+        # the same variable when those are implemented.
+        A = list(enumerate(assignments))
+
+        # {variable: [assignments using variable]}
+        # like {x: [y := x + 1, z := y + x], ...}
+        var_map = {}
+
+        # Edges in the graph
+        E = []
+        for i in A:
+            if i[1].lhs in var_map:
+                E.append((var_map[i[1].lhs], i))
+            var_map[i[1].lhs] = i
+        for i in A:
+            for x in i[1].rhs.free_symbols:
+                if x not in var_map:
+                    raise ValueError("Undefined variable %s" % x)
+                E.append((var_map[x], i))
+
+        ordered_assignments = topological_sort([A, E])
+        # De-enumerate the result
+        return cls(*list(zip(*ordered_assignments))[1])
+
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
         """
