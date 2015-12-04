@@ -21,7 +21,7 @@ class DenseNDimArray(NDimArray):
         ========
 
         >>> from sympy.tensor.array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray(2, 2, [0, 1, 2, 3])
+        >>> a = MutableDenseNDimArray([0, 1, 2, 3], (2, 2))
         >>> a
         [[0, 1], [2, 3]]
         >>> a[0, 0]
@@ -36,7 +36,7 @@ class DenseNDimArray(NDimArray):
     @classmethod
     def zeros(cls, *shape):
         list_length = functools.reduce(lambda x, y: x*y, shape)
-        return cls._new(*(shape + ([0]*list_length,)))
+        return cls._new(([0]*list_length,), shape)
 
     def tomatrix(self):
         """
@@ -46,7 +46,7 @@ class DenseNDimArray(NDimArray):
         ========
 
         >>> from sympy.tensor.array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray(3, 3, [1 for i in range(9)])
+        >>> a = MutableDenseNDimArray([1 for i in range(9)], (3, 3))
         >>> b = a.tomatrix()
         >>> b
         Matrix([
@@ -73,7 +73,7 @@ class DenseNDimArray(NDimArray):
         ========
 
         >>> from sympy.tensor.array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray(2, 3, [1, 2, 3, 4, 5, 6])
+        >>> a = MutableDenseNDimArray([1, 2, 3, 4, 5, 6], (2, 3))
         >>> a.shape
         (2, 3)
         >>> a
@@ -90,7 +90,7 @@ class DenseNDimArray(NDimArray):
             raise ValueError("Invalid reshape parameters " + newshape)
 
         # there is no `.func` as this class does not subtype `Basic`:
-        return type(self)(*(newshape + (self._array,)))
+        return type(self)(self._array, newshape)
 
 
 class ImmutableDenseNDimArray(DenseNDimArray, Expr):
@@ -101,10 +101,10 @@ class ImmutableDenseNDimArray(DenseNDimArray, Expr):
     @classmethod
     def _new(cls, *args, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
-        shape = tuple(map(_sympify, shape))
+        shape = Tuple(*map(_sympify, shape))
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)
-        self = Expr.__new__(cls, *(shape + (flat_list,)), **kwargs)
+        self = Expr.__new__(cls, flat_list, shape, **kwargs)
         self._shape = shape
         self._array = list(flat_list)
         self._rank = len(shape)
@@ -138,7 +138,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         ========
 
         >>> from sympy.tensor.array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray.zeros(2,2)
+        >>> a = MutableDenseNDimArray.zeros(2,  2)
         >>> a[0,0] = 1
         >>> a[1,1] = 1
         >>> a

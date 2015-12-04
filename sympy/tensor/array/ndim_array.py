@@ -28,7 +28,7 @@ class NDimArray(object):
 
     Create an N-dim array from a flat list with dimension shape:
 
-    >>> a = MutableDenseNDimArray(2, 3, [1, 2, 3, 4, 5, 6])
+    >>> a = MutableDenseNDimArray([1, 2, 3, 4, 5, 6], (2, 3))
     >>> a
     [[1, 2, 3], [4, 5, 6]]
 
@@ -46,8 +46,8 @@ class NDimArray(object):
 
     Arithmetic operations on N-dim arrays
 
-    >>> a = MutableDenseNDimArray(2, 2, [1, 1, 1, 1])
-    >>> b = MutableDenseNDimArray(2, 2, [4, 4, 4, 4])
+    >>> a = MutableDenseNDimArray([1, 1, 1, 1], (2, 2))
+    >>> b = MutableDenseNDimArray([4, 4, 4, 4], (2, 2))
     >>> c = a + b
     >>> c
     [[5, 5], [5, 5]]
@@ -56,8 +56,8 @@ class NDimArray(object):
 
     """
     def __new__(cls, *args, **kwargs):
-        from sympy.tensor.array import MutableDenseNDimArray
-        return MutableDenseNDimArray(*args, **kwargs)
+        from sympy.tensor.array import ImmutableDenseNDimArray
+        return ImmutableDenseNDimArray(*args, **kwargs)
 
     def _parse_index(self, index):
 
@@ -107,37 +107,35 @@ class NDimArray(object):
         return f(iterable)
 
     @classmethod
-    def _handle_ndarray_creation_inputs(cls, *args, **kwargs):
+    def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
 
-        # Construct N-dim array from an iterable (numpy arrays included):
-        if len(args) == 1 and isinstance(args[0], collections.Iterable):
-            iterable, shape = cls._scan_iterable_shape(args[0])
-
-        # Construct N-dim array from a Matrix:
-        elif len(args) == 1 and isinstance(args[0], Matrix):
-            shape = args[0].shape
-            iterable = args[0]
-
-        # Construct N-dim array from another N-dim array:
-        elif len(args) == 1 and isinstance(args[0], NDimArray):
-            shape = args[0].shape
-            iterable = args[0]
-
-        # Construct NDimArray(dim1, dim2, dim3, ... , optional_iterable)
-        elif len(args) > 1:
-            shape = []
-            for arg in args:
-                if not isinstance(arg, (int, Integer)):
-                    iterable = arg
-                    break
-                shape.append(arg)
-            assert len(args) == len(shape) + 1
-
-        elif len(args) == 0:
+        if shape is None and iterable is None:
             shape = ()
             iterable = ()
+        # Construct N-dim array from an iterable (numpy arrays included):
+        elif shape is None and isinstance(iterable, collections.Iterable):
+            iterable, shape = cls._scan_iterable_shape(iterable)
+
+        # Construct N-dim array from a Matrix:
+        elif shape is None and isinstance(iterable, Matrix):
+            shape = iterable.shape
+
+        # Construct N-dim array from another N-dim array:
+        elif shape is None and isinstance(iterable, NDimArray):
+            shape = iterable.shape
+
+        # Construct NDimArray(iterable, shape)
+        elif shape is not None:
+            pass
+
         else:
             raise TypeError("Data type not understood")
+
+        if isinstance(shape, (int, Integer)):
+            shape = (shape,)
+
+        if any([not isinstance(dim, (int, Integer)) for dim in shape]):
+            raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable
 
@@ -148,7 +146,7 @@ class NDimArray(object):
         ========
 
         >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray.zeros(3,3)
+        >>> a = MutableDenseNDimArray.zeros(3, 3)
         >>> a
         [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         >>> len(a)
@@ -166,7 +164,7 @@ class NDimArray(object):
         ========
 
         >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray.zeros(3,3)
+        >>> a = MutableDenseNDimArray.zeros(3, 3)
         >>> a.shape
         (3, 3)
 
@@ -234,7 +232,7 @@ class NDimArray(object):
         ========
 
         >>> from sympy.tensor.array import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray(2, 2, [1, 2, 3, 4])
+        >>> a = MutableDenseNDimArray([1, 2, 3, 4], (2, 2))
         >>> a
         [[1, 2], [3, 4]]
         >>> b = a.tolist()
@@ -261,7 +259,7 @@ class NDimArray(object):
             raise ValueError("array shape mismatch")
         result_list = [i+j for i,j in zip(self, other)]
 
-        return type(self)(*(self.shape + (result_list,)))
+        return type(self)(result_list, self.shape)
 
     def __sub__(self, other):
         if not isinstance(other, NDimArray):
@@ -271,28 +269,28 @@ class NDimArray(object):
             raise ValueError("array shape mismatch")
         result_list = [i-j for i,j in zip(self, other)]
 
-        return type(self)(*(self.shape + (result_list,)))
+        return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [i*other for i in self]
-        return type(self)(*(self.shape + (result_list,)))
+        return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [other*i for i in self]
-        return type(self)(*(self.shape + (result_list,)))
+        return type(self)(result_list, self.shape)
 
     def __div__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [i/other for i in self]
-        return type(self)(*(self.shape + (result_list,)))
+        return type(self)(result_list, self.shape)
 
     def __rdiv__(self, other):
         raise TypeError('unsupported operation on NDimArray')

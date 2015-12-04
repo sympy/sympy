@@ -3189,13 +3189,13 @@ def test_sympy__simplify__hyperexpand__G_Function():
 
 def test_sympy__tensor__array__dense_ndim_array__ImmutableDenseNDimArray():
     from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-    densarr = ImmutableDenseNDimArray(2, 3, 4, range(10, 34))
+    densarr = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
     assert _test_args(densarr)
 
 
 def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
     from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
-    sparr = ImmutableSparseNDimArray(2, 3, 4, range(10, 34))
+    sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert _test_args(sparr)
 
 

@@ -3,7 +3,7 @@ import functools
 
 from sympy.core.sympify import _sympify
 
-from sympy import S, Dict, flatten, SparseMatrix, Expr
+from sympy import S, Dict, flatten, SparseMatrix, Expr, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
@@ -21,7 +21,7 @@ class SparseNDimArray(NDimArray):
         ========
 
         >>> from sympy.tensor.array import MutableSparseNDimArray
-        >>> a = MutableSparseNDimArray(2, 2, range(4))
+        >>> a = MutableSparseNDimArray(range(4), (2, 2))
         >>> a
         [[0, 1], [2, 3]]
         >>> a[0, 0]
@@ -46,7 +46,7 @@ class SparseNDimArray(NDimArray):
         """
         Return a sparse N-dim array of zeros.
         """
-        return cls(*(shape + ({},)))
+        return cls({}, shape)
 
     def tomatrix(self):
         """
@@ -56,7 +56,7 @@ class SparseNDimArray(NDimArray):
         ========
 
         >>> from sympy.tensor.array import MutableSparseNDimArray
-        >>> a = MutableSparseNDimArray(3, 3, [1 for i in range(9)])
+        >>> a = MutableSparseNDimArray([1 for i in range(9)], (3, 3))
         >>> b = a.tomatrix()
         >>> b
         Matrix([
@@ -92,12 +92,12 @@ class ImmutableSparseNDimArray(SparseNDimArray, Expr):
     def __new__(cls, *args, **kwargs):
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
-        shape = tuple(map(_sympify, shape))
+        shape = Tuple(*map(_sympify, shape))
         loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
 
         # Sparse array:
         if isinstance(flat_list, (dict, Dict)):
-            sparse_array = args[-1]
+            sparse_array = Dict(flat_list)
         else:
             sparse_array = {}
             for i, el in enumerate(flatten(flat_list)):
@@ -106,7 +106,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, Expr):
 
         sparse_array = Dict(sparse_array)
 
-        self = Expr.__new__(cls, *(shape + (sparse_array,)), **kwargs)
+        self = Expr.__new__(cls, sparse_array, shape, **kwargs)
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size
@@ -130,7 +130,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
         # Sparse array:
         if isinstance(flat_list, (dict, Dict)):
-            self._sparse_array = args[-1]
+            self._sparse_array = dict(flat_list)
             return self
 
         self._sparse_array = {}

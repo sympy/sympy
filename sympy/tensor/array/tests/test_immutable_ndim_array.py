@@ -30,7 +30,7 @@ def test_ndim_array_initiation():
     assert vector._sparse_array == Dict()
     assert vector.rank() == 1
 
-    n_dim_array = ImmutableDenseNDimArray(3, 3, 3, 3, range(3**4))
+    n_dim_array = ImmutableDenseNDimArray(range(3**4), (3, 3, 3, 3,))
     assert len(n_dim_array) == 3 * 3 * 3 * 3
     assert n_dim_array.shape == (3, 3, 3, 3)
     assert n_dim_array.rank() == 4
@@ -57,7 +57,7 @@ def test_ndim_array_initiation():
 
 
 def test_reshape():
-    array = ImmutableDenseNDimArray(50, range(50))
+    array = ImmutableDenseNDimArray(range(50), 50)
     assert array.shape == (50,)
     assert array.rank() == 1
 
@@ -68,7 +68,7 @@ def test_reshape():
 
 
 def test_iterator():
-    array = ImmutableDenseNDimArray(2, 2, range(4))
+    array = ImmutableDenseNDimArray(range(4), (2, 2))
     j = 0
     for i in array:
         assert i == j
@@ -82,7 +82,7 @@ def test_iterator():
 
 
 def test_sparse():
-    sparse_array = ImmutableSparseNDimArray(2, 2, [0, 0, 0, 1])
+    sparse_array = ImmutableSparseNDimArray([0, 0, 0, 1], (2, 2))
     assert len(sparse_array) == 2 * 2
     # dictionary where all data is, only non-zero entries are actually stored:
     assert len(sparse_array._sparse_array) == 1
@@ -103,26 +103,26 @@ def test_sparse():
 
 def test_calculation():
 
-    a = ImmutableDenseNDimArray(3, 3, [1]*9)
-    b = ImmutableDenseNDimArray(3, 3, [9]*9)
+    a = ImmutableDenseNDimArray([1]*9, (3, 3))
+    b = ImmutableDenseNDimArray([9]*9, (3, 3))
 
     c = a + b
     for i in c:
         assert i == 10
 
-    assert c == ImmutableDenseNDimArray(3, 3, [10]*9)
-    assert c == ImmutableSparseNDimArray(3, 3, [10]*9)
+    assert c == ImmutableDenseNDimArray([10]*9, (3, 3))
+    assert c == ImmutableSparseNDimArray([10]*9, (3, 3))
 
     c = b - a
     for i in c:
         assert i == 8
 
-    assert c == ImmutableDenseNDimArray(3, 3, [8]*9)
-    assert c == ImmutableSparseNDimArray(3, 3, [8]*9)
+    assert c == ImmutableDenseNDimArray([8]*9, (3, 3))
+    assert c == ImmutableSparseNDimArray([8]*9, (3, 3))
 
 
 def test_ndim_array_converting():
-    dense_array = ImmutableDenseNDimArray(2, 2, [1, 2, 3, 4])
+    dense_array = ImmutableDenseNDimArray([1, 2, 3, 4], (2, 2))
     alist = dense_array.tolist()
 
     alist == [[1, 2], [3, 4]]
@@ -134,7 +134,7 @@ def test_ndim_array_converting():
         assert dense_array[i] == matrix[i]
     assert matrix.shape == dense_array.shape
 
-    sparse_array = ImmutableSparseNDimArray(2, 2, [1, 2, 3, 4])
+    sparse_array = ImmutableSparseNDimArray([1, 2, 3, 4], (2, 2))
     alist = sparse_array.tolist()
 
     assert alist == [[1, 2], [3, 4]]
@@ -152,7 +152,7 @@ def test_converting_functions():
     arr_matrix = Matrix(((1, 2), (3, 4)))
 
     # list
-    arr_ndim_array = ImmutableDenseNDimArray(2, 2, arr_list)
+    arr_ndim_array = ImmutableDenseNDimArray(arr_list, (2, 2))
     assert (isinstance(arr_ndim_array, ImmutableDenseNDimArray))
     assert arr_matrix.tolist() == arr_ndim_array.tolist()
 
@@ -170,9 +170,9 @@ def test_equality():
     assert first_list == second_list
     assert first_list != third_list
 
-    first_ndim_array = ImmutableDenseNDimArray(2, 2, first_list)
-    second_ndim_array = ImmutableDenseNDimArray(2, 2, second_list)
-    fourth_ndim_array = ImmutableDenseNDimArray(2, 2, first_list)
+    first_ndim_array = ImmutableDenseNDimArray(first_list, (2, 2))
+    second_ndim_array = ImmutableDenseNDimArray(second_list, (2, 2))
+    fourth_ndim_array = ImmutableDenseNDimArray(first_list, (2, 2))
 
     assert first_ndim_array == second_ndim_array
 
@@ -185,8 +185,8 @@ def test_equality():
 
 
 def test_arithmetic():
-    a = ImmutableDenseNDimArray(3, 3, [3 for i in range(9)])
-    b = ImmutableDenseNDimArray(3, 3, [7 for i in range(9)])
+    a = ImmutableDenseNDimArray([3 for i in range(9)], (3, 3))
+    b = ImmutableDenseNDimArray([7 for i in range(9)], (3, 3))
 
     c1 = a + b
     c2 = b + a
@@ -214,7 +214,7 @@ def test_arithmetic():
 
 
 def test_higher_dimenions():
-    m3 = ImmutableDenseNDimArray(2, 3, 4, range(10, 34))
+    m3 = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
 
     assert m3.tolist() == [[[10, 11, 12, 13],
             [14, 15, 16, 17],
@@ -234,14 +234,14 @@ def test_higher_dimenions():
     m3_rebuilt = ImmutableDenseNDimArray([[[10, 11, 12, 13], [14, 15, 16, 17], [18, 19, 20, 21]], [[22, 23, 24, 25], [26, 27, 28, 29], [30, 31, 32, 33]]])
     assert m3 == m3_rebuilt
 
-    m3_other = ImmutableDenseNDimArray(2, 3, 4, [[[10, 11, 12, 13], [14, 15, 16, 17], [18, 19, 20, 21]], [[22, 23, 24, 25], [26, 27, 28, 29], [30, 31, 32, 33]]])
+    m3_other = ImmutableDenseNDimArray([[[10, 11, 12, 13], [14, 15, 16, 17], [18, 19, 20, 21]], [[22, 23, 24, 25], [26, 27, 28, 29], [30, 31, 32, 33]]], (2, 3, 4))
 
     assert m3 == m3_other
 
 
 def test_rebuild_immutable_arrays():
-    sparr = ImmutableSparseNDimArray(2, 3, 4, range(10, 34))
-    densarr = ImmutableDenseNDimArray(2, 3, 4, range(10, 34))
+    sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
+    densarr = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
 
     assert sparr == sparr.func(*sparr.args)
     assert densarr == densarr.func(*densarr.args)
