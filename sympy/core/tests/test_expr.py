@@ -1690,3 +1690,10 @@ def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) == False
+
+
+def test_subclass_add_evalf():
+    class Add2(Add):
+        pass
+    assert Add2(3,2,evaluate=False).evalf() == 5.0
+    assert Add2(3,2,evaluate=False).as_independent(Symbol, AppliedUndef) == (5,0)
