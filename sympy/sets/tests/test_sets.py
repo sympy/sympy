@@ -936,3 +936,8 @@ def test_issue_10113():
     assert imageset(x, f, S.Reals) == Union(Interval(-oo, 0), Interval(1, oo, True, True))
     assert imageset(x, f, Interval(-2, 2)) == Interval(-oo, 0)
     assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(S(9)/5, oo))
+
+
+def test_issue_10248():
+    assert list(Intersection(S.Reals, FiniteSet(x))) == [
+        And(x < oo, x > -oo)]

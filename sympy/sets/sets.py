@@ -1427,13 +1427,23 @@ class Intersection(Set):
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
+        no_iter = True
         for s in self.args:
             if s.is_iterable:
+                no_iter = False
                 other_sets = set(self.args) - set((s,))
                 other = Intersection(other_sets, evaluate=False)
-                return (x for x in s if x in other)
+                for x in s:
+                    c = other.contains(x)
+                    if c == True:
+                        yield x
+                    elif c == False:
+                        pass
+                    else:
+                        yield c
 
-        raise ValueError("None of the constituent sets are iterable")
+        if no_iter:
+            raise ValueError("None of the constituent sets are iterable")
 
     @staticmethod
     def _handle_finite_sets(args):
