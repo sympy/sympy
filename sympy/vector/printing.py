@@ -107,7 +107,7 @@ def vprint(expr, **settings):
     ========
 
     >>> from sympy.vector import vprint, CoordSysCartesian, Vector
-	>>> N = CoordSysCartesian('N')
+    >>> N = CoordSysCartesian('N')
     >>> u1 = N.i + N.j + Vector.zero
     >>> vprint(u1)
     N.i + N.j
@@ -157,11 +157,11 @@ def vsprint(expr, **settings):
     ========
 
     >>> from sympy.vector import vsprint, CoordSysCartesian
-	>>> from sympy.core.symbol import Symbol
-	>>> N = CoordSysCartesian('N')
+    >>> from sympy.core.symbol import Symbol
+    >>> N = CoordSysCartesian('N')
     >>> u1, u2, u3 = Symbol('x')*N.i, Symbol('y')*N.j, Symbol('z')*N.i
     >>> print("%s = %s" % (vsprint(u1), vsprint(u2 + u3)))
-    'u1 = u2 + u2'
+    x*N.i = z*N.i + y*N.j
 
     """
 
