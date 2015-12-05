@@ -29,7 +29,6 @@ class VectorLatexPrinter(LatexPrinter):
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
-        
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
@@ -225,5 +224,4 @@ def vlatex(expr, **settings):
     '\\mathbf{\\hat{i}_{N}} + \\mathbf{\\hat{j}_{N}}'
     """
     latex_printer = VectorLatexPrinter(settings)
-
     return latex_printer.doprint(expr)
