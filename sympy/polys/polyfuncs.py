@@ -269,7 +269,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     ========
     >>> from sympy.polys.polyfuncs import rational_interpolate
 
-    >>> data = [ (1,-210), (2,-35), (3,105), (4,231), (5,350), (6,465) ]
+    >>> data = [(1, -210), (2, -35), (3, 105), (4, 231), (5, 350), (6, 465)]
     >>> rational_interpolate(data, 2)
     (105*x**2 - 525)/(x + 1)
 
@@ -278,7 +278,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     >>> from sympy import sympify
     >>> x = [1, 2, 3, 4, 5, 6]
     >>> y = sympify("[-1, 0, 2, 22/5, 7, 68/7]")
-    >>> rational_interpolate(zip(x,y), 2)
+    >>> rational_interpolate(zip(x, y), 2)
     (3*x**2 - 7*x + 2)/(x + 1)
 
     The symbol for the variable can be changed if needed:
@@ -302,15 +302,15 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     if k<1:
         raise OptionError("Too few values for the required degree.")
     c = ones(m+k+1, m+k+2)
-    for j in range(max(m,k)):
+    for j in range(max(m, k)):
         for i in range(m+k+1):
-            c[i,j+1] = c[i,j]*xdata[i]
+            c[i, j+1] = c[i, j]*xdata[i]
     for j in range(k+1):
         for i in range(m+k+1):
-            c[i,m+k+1-j] = -c[i,k-j]*ydata[i]
+            c[i, m+k+1-j] = -c[i, k-j]*ydata[i]
     r = c.nullspace()[0]
-    return ( sum( r[i] * X**i for i in range(m+1))
-            / sum( r[i+m+1] * X**i for i in range(k+1) ) )
+    return (sum(r[i] * X**i for i in range(m+1))
+            / sum(r[i+m+1] * X**i for i in range(k+1)))
 
 
 @public
