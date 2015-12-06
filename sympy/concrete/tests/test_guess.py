@@ -10,43 +10,43 @@ from sympy.core.numbers import Zero
 from mpmath import fib
 
 def test_find_simple_recurrence_vector():
-    assert find_simple_recurrence_vector( [ fib(k) for k in range(12) ] ) == (
-        [1, -1, -1] )
+    assert find_simple_recurrence_vector([fib(k) for k in range(12)]) == (
+        [1, -1, -1])
 
 def test_find_simple_recurrence():
     a = Function('a')
     n = var('n')
-    assert find_simple_recurrence( [ fib(k) for k in range(12) ] ) == (
-        -a(n) - a(n + 1) + a(n + 2) )
+    assert find_simple_recurrence([fib(k) for k in range(12)]) == (
+        -a(n) - a(n + 1) + a(n + 2))
 
     f = Function('a')
     i = var('n')
     a = [1, 1, 1]
     for k in range(15): a.append(5*a[-1]-3*a[-2]+8*a[-3])
     assert find_simple_recurrence(a, A=f, N=i) == (
-        -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3) )
-    assert find_simple_recurrence( [ 0,2,15,74,12,3,0,1,2,85,4,5,63] ) == (
-        Zero() )
+        -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3))
+    assert find_simple_recurrence([0, 2, 15, 74, 12, 3, 0,
+                                    1, 2, 85, 4, 5, 63]) == Zero()
 
 
 def test_rationalize():
     from mpmath import cos, pi, mpf
-    assert rationalize( cos(pi/3) ) == sympify("1/2")
-    assert rationalize( mpf("0.333333333333333") ) == sympify("1/3")
-    assert rationalize( mpf("-0.333333333333333") ) == sympify("-1/3")
-    assert rationalize( pi, maxcoeff = 250 ) == sympify("355/113")
+    assert rationalize(cos(pi/3)) == sympify("1/2")
+    assert rationalize(mpf("0.333333333333333")) == sympify("1/3")
+    assert rationalize(mpf("-0.333333333333333")) == sympify("-1/3")
+    assert rationalize(pi, maxcoeff = 250) == sympify("355/113")
 
 
 def test_guess_generating_function_rational():
     x = var('x')
-    assert guess_generating_function_rational([ int(fib(k))
-        for k in range(5,15) ]) == ( (3*x + 5)/(-x**2 - x + 1) )
+    assert guess_generating_function_rational([int(fib(k))
+        for k in range(5, 15)]) == ((3*x + 5)/(-x**2 - x + 1))
 
 
 def test_guess_generating_function():
     x = var('x')
-    assert guess_generating_function([ int(fib(k))
-        for k in range(5,15) ]) == ( (3*x + 5)/(-x**2 - x + 1) )
+    assert guess_generating_function([int(fib(k))
+        for k in range(5, 15)]) == ((3*x + 5)/(-x**2 - x + 1))
     assert guess_generating_function(
-     [1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919] ) == (
-       (1/(x**4 + 2*x**2 - 4*x + 1))**(sympify("1/2") ) )
+     [1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919]) == (
+       (1/(x**4 + 2*x**2 - 4*x + 1))**(sympify("1/2")))

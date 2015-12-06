@@ -126,7 +126,7 @@ def rationalize(x, maxcoeff=10000):
       * fractions.Fraction.from_float
       * mpmath.identify
       * mpmath.pslq by using the following syntax: mpmath.pslq([x, 1])
-      * mpmath.findpoly by using the following syntax: mpmath.findpoly(x,1)
+      * mpmath.findpoly by using the following syntax: mpmath.findpoly(x, 1)
       * sympy.simplify.nsimplify (which is a more general function)
 
     The main difference between the current function and all these variants is
@@ -164,7 +164,7 @@ def guess_generating_function_rational(v, X=var('x'), maxcoeff=1024):
 
     >>> from sympy.concrete.guess import guess_generating_function_rational
     >>> from mpmath import fib
-    >>> guess_generating_function_rational([ int(fib(k)) for k in range(5,15) ])
+    >>> guess_generating_function_rational([int(fib(k)) for k in range(5, 15)])
     (3*x + 5)/(-x**2 - x + 1)
 
     """
@@ -173,7 +173,7 @@ def guess_generating_function_rational(v, X=var('x'), maxcoeff=1024):
     n = len(q)
     if n <= 1: return None
     #   b) compute the numerator as p
-    p = [ sum(  v[i-k]*q[k] for k in range(min(i+1,n)) )
+    p = [ sum(  v[i-k]*q[k] for k in range(min(i+1, n)) )
             for i in range(len(v)) ] # TODO: maybe better with:  len(v)>>1
     return ( sum( p[k]*X**k for k in range(len(p)))
             / sum( q[k]*X**k for k in range(n)) )
@@ -190,7 +190,7 @@ def guess_generating_function(v, X=var('x'), maxcoeff=1024, maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> from mpmath import fib
-    >>> ggf( [ int(fib(k)) for k in range(5,15) ] )
+    >>> ggf( [ int(fib(k)) for k in range(5, 15) ] )
     (3*x + 5)/(-x**2 - x + 1)
 
     N-th root of a rational function can also be detected (below is an example
