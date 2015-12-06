@@ -225,6 +225,7 @@ def test_is_function_class_equation():
 
 
 def test_garbage_input():
+    raises(ValueError, lambda: solveset_real(x, 1))
     raises(ValueError, lambda: solveset_real([x], x))
     raises(ValueError, lambda: solveset_real(x, pi))
     raises(ValueError, lambda: solveset_real(x, x**2))
@@ -743,6 +744,7 @@ def test_solve_complex_unsolvable():
     solution = solveset_complex(cos(x) - S.Half, x)
     assert solution == unsolved_object
 
+
 @XFAIL
 def test_solve_trig_simplified():
     from sympy.abc import n
@@ -852,6 +854,12 @@ def test_solve_lambert():
 def test_solveset():
     x = Symbol('x')
     raises(ValueError, lambda: solveset(x + y))
+    raises(ValueError, lambda: solveset(x, 1))
+
+    assert solveset(0, domain=S.Reals) == S.Reals
+    assert solveset(1) == S.EmptySet
+    assert solveset(True, domain=S.Reals) == S.Reals  # issue 10197
+    assert solveset(False, domain=S.Reals) == S.EmptySet
 
     assert solveset(exp(x) - 1, domain=S.Reals) == FiniteSet(0)
     assert solveset(exp(x) - 1, x, S.Reals) == FiniteSet(0)

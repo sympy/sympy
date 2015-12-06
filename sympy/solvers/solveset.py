@@ -12,6 +12,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acsc, asec, arg,
@@ -183,6 +184,7 @@ def _invert_real(f, g_ys, symbol):
             tan_cot_invs = Union(*[imageset(Lambda(n, n*pi + f.inverse()(g_y)), \
                                         S.Integers) for g_y in g_ys])
             return _invert_real(f.args[0], tan_cot_invs, symbol)
+
     return (f, g_ys)
 
 
@@ -446,12 +448,13 @@ def solveset_real(f, symbol):
     (-oo, oo)
 
     """
-    if not symbol.is_Symbol:
-        raise ValueError(" %s is not a symbol" % (symbol))
+    if not getattr(symbol, 'is_Symbol', False):
+        raise ValueError('A Symbol must be given, not type %s: %s' %
+            (type(symbol), symbol))
 
     f = sympify(f)
     if not isinstance(f, (Expr, Number)):
-        raise ValueError(" %s is not a valid sympy expression" % (f))
+        raise ValueError("%s is not a valid SymPy expression" % (f))
 
     original_eq = f
     f = together(f)
@@ -462,8 +465,8 @@ def solveset_real(f, symbol):
     if not symbol in fraction(f)[1].free_symbols and f.is_rational_function():
         f = expand(f)
 
-    if f.has(Piecewise):
-        f = piecewise_fold(f)
+    f = piecewise_fold(f)
+
     result = EmptySet()
 
     if f.expand().is_zero:
@@ -770,8 +773,9 @@ def solveset_complex(f, symbol):
     ImageSet(Lambda(_n, 2*_n*I*pi), Integers())
 
     """
-    if not symbol.is_Symbol:
-        raise ValueError(" %s is not a symbol" % (symbol))
+    if not getattr(symbol, 'is_Symbol', False):
+        raise ValueError('A Symbol must be given, not type %s: %s' %
+            (type(symbol), symbol))
 
     f = sympify(f)
     original_eq = f
@@ -840,7 +844,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     Set
         A set of values for `symbol` for which `f` is True or is equal to
-        zero. An `EmptySet` is returned if no solution is found.
+        zero. An `EmptySet` is returned if `f` is False or nonzero.
         A `ConditionSet` is returned as unsolved object if algorithms
         to evaluatee complete solution are not yet implemented.
 
@@ -863,6 +867,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
     complex domain respectively. `solveset` ignores the assumptions on the
     variable being solved for and instead, uses the `domain` parameter to
     decide which solver to use.
+
+    Notes
+    =====
+
+    N.B. Python interprets 0 and 1 as False and True, respectively, but
+    in this function they refer to solutions of an expression. So 0 and 1
+    return the Domain and EmptySet, respectively, while True and False
+    return the opposite (as they are assumed to be solutions of relational
+    expressions).
 
 
     See Also
@@ -901,26 +914,36 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     """
 
-    from sympy.solvers.inequalities import solve_univariate_inequality
+    f = sympify(f)
+
+    if f is S.true:
+        return domain
+
+    if f is S.false:
+        return S.EmptySet
+
+    free_symbols = f.free_symbols
+
+    if not free_symbols:
+        b = Eq(f, 0)
+        if b is S.true:
+            return domain
+        elif b is S.false:
+            return S.EmptySet
+        else:
+            raise NotImplementedError(filldedent('''
+                relationship between value and 0 is unknown: %s''' % b))
 
     if symbol is None:
-        free_symbols = f.free_symbols
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
         else:
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
-    elif not symbol.is_Symbol:
-        raise ValueError('A Symbol must be given, not type %s: %s' % (type(symbol), symbol))
-
-    f = sympify(f)
-
-    if f is S.false:
-        return EmptySet()
-
-    if f is S.true:
-        return domain
+    elif not getattr(symbol, 'is_Symbol', False):
+        raise ValueError('A Symbol must be given, not type %s: %s' %
+            (type(symbol), symbol))
 
     if isinstance(f, Eq):
         from sympy.core import Add
