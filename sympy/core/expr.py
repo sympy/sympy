@@ -2603,7 +2603,6 @@ class Expr(Basic, EvalfMixin):
             else:
                 yield series
             raise StopIteration
-
         while series.is_Order:
             n += 1
             series = self._eval_nseries(x, n=n, logx=logx)
