@@ -5,7 +5,7 @@ from sympy.concrete.guess import (
             guess_generating_function_rational,
             guess_generating_function
         )
-from sympy import Function, var, sympify
+from sympy import Function, Symbol, sympify
 from sympy.core.numbers import Zero
 from mpmath import fib
 
@@ -15,12 +15,12 @@ def test_find_simple_recurrence_vector():
 
 def test_find_simple_recurrence():
     a = Function('a')
-    n = var('n')
+    n = Symbol('n')
     assert find_simple_recurrence([fib(k) for k in range(12)]) == (
         -a(n) - a(n + 1) + a(n + 2))
 
     f = Function('a')
-    i = var('n')
+    i = Symbol('n')
     a = [1, 1, 1]
     for k in range(15): a.append(5*a[-1]-3*a[-2]+8*a[-3])
     assert find_simple_recurrence(a, A=f, N=i) == (
@@ -38,13 +38,13 @@ def test_rationalize():
 
 
 def test_guess_generating_function_rational():
-    x = var('x')
+    x = Symbol('x')
     assert guess_generating_function_rational([int(fib(k))
         for k in range(5, 15)]) == ((3*x + 5)/(-x**2 - x + 1))
 
 
 def test_guess_generating_function():
-    x = var('x')
+    x = Symbol('x')
     assert guess_generating_function([int(fib(k))
         for k in range(5, 15)]) == ((3*x + 5)/(-x**2 - x + 1))
     assert guess_generating_function(

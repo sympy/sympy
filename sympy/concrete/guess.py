@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from sympy.utilities import public
 
-from sympy.core import Function, var
+from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
 from sympy import sympify, floor, sqrt
 from mpmath import pslq, sqrt, mp
@@ -28,7 +28,7 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
 
     >>> from sympy.concrete.guess import find_simple_recurrence_vector
     >>> from mpmath import fib
-    >>> find_simple_recurrence_vector( [ fib(k) for k in range(12) ] )
+    >>> find_simple_recurrence_vector([fib(k) for k in range(12)])
     [1, -1, -1]
 
     See also
@@ -42,12 +42,11 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
 
     previous = mp.prec # save current precision
     mp.prec = 128
-    b = [ sum( sqrt((l>>1)**2 + k)*v[-1-k-i] for k in range(l) )
-          for i in range(l) ]
-    p = pslq(   b,
-                maxcoeff = maxcoeff,
-                maxsteps = 128 + 4*l
-            )
+    b = [sum(sqrt((l>>1)**2 + k)*v[-1-k-i] for k in range(l))
+          for i in range(l)]
+    p = pslq(b,
+             maxcoeff = maxcoeff,
+             maxsteps = 128 + 4*l)
     mp.prec = previous # restore current precision
     if p == None: return [0]
 
@@ -59,7 +58,7 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
     return p[first:last+1]
 
 @public
-def find_simple_recurrence(v, A=Function('a'), N=var('n'), maxcoeff=1024):
+def find_simple_recurrence(v, A=Function('a'), N=Symbol('n'), maxcoeff=1024):
     """
     Detects and returns a recurrence relation from a sequence of several integer
     (or rational) terms. The name of the function in the returned expression is
@@ -71,13 +70,13 @@ def find_simple_recurrence(v, A=Function('a'), N=var('n'), maxcoeff=1024):
 
     >>> from sympy.concrete.guess import find_simple_recurrence
     >>> from mpmath import fib
-    >>> find_simple_recurrence( [ fib(k) for k in range(12) ] )
+    >>> find_simple_recurrence([fib(k) for k in range(12)])
     -a(n) - a(n + 1) + a(n + 2)
 
-    >>> from sympy import Function, var
+    >>> from sympy import Function, Symbol
     >>> a = [1, 1, 1]
     >>> for k in range(15): a.append(5*a[-1]-3*a[-2]+8*a[-3])
-    >>> find_simple_recurrence(a, A=Function('f'), N=var('i'))
+    >>> find_simple_recurrence(a, A=Function('f'), N=Symbol('i'))
     -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3)
 
     """
@@ -104,18 +103,18 @@ def rationalize(x, maxcoeff=10000):
 
     >>> from sympy.concrete.guess import rationalize
     >>> from mpmath import cos, pi
-    >>> rationalize( cos(pi/3) )
+    >>> rationalize(cos(pi/3))
     1/2
 
     >>> from mpmath import mpf
-    >>> rationalize( mpf("0.333333333333333") )
+    >>> rationalize(mpf("0.333333333333333"))
     1/3
 
     While the function is rather intended to help 'identifying' rational
     values, it may be used in some cases for approximating real numbers.
     (Though other functions may be more relevant in that case.)
 
-    >>> rationalize( pi, maxcoeff = 250 )
+    >>> rationalize(pi, maxcoeff = 250)
     355/113
 
     See also
@@ -154,7 +153,7 @@ def rationalize(x, maxcoeff=10000):
 
 
 @public
-def guess_generating_function_rational(v, X=var('x'), maxcoeff=1024):
+def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
     """
     Tries to "guess" a rational generating function for a sequence of rational
     numbers v.
@@ -173,14 +172,14 @@ def guess_generating_function_rational(v, X=var('x'), maxcoeff=1024):
     n = len(q)
     if n <= 1: return None
     #   b) compute the numerator as p
-    p = [ sum(  v[i-k]*q[k] for k in range(min(i+1, n)) )
-            for i in range(len(v)) ] # TODO: maybe better with:  len(v)>>1
-    return ( sum( p[k]*X**k for k in range(len(p)))
-            / sum( q[k]*X**k for k in range(n)) )
+    p = [sum(v[i-k]*q[k] for k in range(min(i+1, n)))
+            for i in range(len(v))] # TODO: maybe better with:  len(v)>>1
+    return (sum(p[k]*X**k for k in range(len(p)))
+            / sum(q[k]*X**k for k in range(n)))
 
 
 @public
-def guess_generating_function(v, X=var('x'), maxcoeff=1024, maxsqrtn=2):
+def guess_generating_function(v, X=Symbol('x'), maxcoeff=1024, maxsqrtn=2):
     """
     Tries to "guess" a generating function for a sequence of rational numbers v.
     Only a few patterns are implemented yet.
@@ -190,14 +189,14 @@ def guess_generating_function(v, X=var('x'), maxcoeff=1024, maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> from mpmath import fib
-    >>> ggf( [ int(fib(k)) for k in range(5, 15) ] )
+    >>> ggf([int(fib(k)) for k in range(5, 15)])
     (3*x + 5)/(-x**2 - x + 1)
 
     N-th root of a rational function can also be detected (below is an example
     coming from the sequence A108626 from http://oeis.org ).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
-    >>> ggf( [1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919] )
+    >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])
     sqrt(1/(x**4 + 2*x**2 - 4*x + 1))
 
     References
@@ -208,8 +207,8 @@ def guess_generating_function(v, X=var('x'), maxcoeff=1024, maxsqrtn=2):
     from sympy.concrete.guess import guess_generating_function_rational
 
     # Perform some convolutions of the sequence with itself
-    t = [ 1 if k==0 else 0 for k in range(len(v)) ]
+    t = [1 if k==0 else 0 for k in range(len(v))]
     for d in range(max(1, maxsqrtn)):
-      t = [ sum( t[n-i]*v[i] for i in range(n+1) ) for n in range(len(v)) ]
+      t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
       g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
-      if g: return g**( sympify(1)/sympify(d+1) )
+      if g: return g**(sympify(1)/sympify(d+1))
