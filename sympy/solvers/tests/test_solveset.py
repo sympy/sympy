@@ -346,6 +346,7 @@ def test_solveset_sqrt_1():
     assert solveset_real(sqrt(x - 1), x) == FiniteSet(1)
 
 
+@slow
 def test_solveset_sqrt_2():
     # http://tutorial.math.lamar.edu/Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
     assert solveset_real(sqrt(2*x - 1) - sqrt(x - 4) - 2, x) == \
@@ -566,11 +567,9 @@ def test_solve_abs():
         ) == Interval(-1, 2)
 
     # issue #10069
-    assert solveset_real(abs(1/(x - 1)) - 1 > 0, x) == \
-        ConditionSet(x, Eq((1 - Abs(x - 1))/Abs(x - 1) > 0, 0),
-            S.Reals)
-    assert solveset(abs(1/(x - 1)) - 1 > 0, x, domain=S.Reals
-        ) == Union(Interval.open(0, 1), Interval.open(1, 2))
+    ans = Union(Interval.open(0, 1), Interval.open(1, 2))
+    assert solveset_real(abs(1/(x - 1)) - 1 > 0, x) == ans
+    assert solveset(abs(1/(x - 1)) - 1 > 0, x, domain=S.Reals) == ans
 
 
 @XFAIL
@@ -1052,3 +1051,8 @@ def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
                 (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+
+
+def test_issue_10023():
+    assert solveset(-1 + 1/Abs(x - 1), x, domain=S.Reals) == \
+        FiniteSet(0, 2)

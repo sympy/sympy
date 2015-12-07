@@ -490,6 +490,8 @@ def solveset_real(f, symbol):
         for (expr, in_set) in expr_set_pairs:
             solns = solveset_real(expr, symbol).intersect(in_set)
             result = result + solns
+    elif f.is_Relational:
+        return solveset(f, symbol, domain=S.Reals)
     else:
         lhs, rhs_s = invert_real(f, 0, symbol)
         if lhs == symbol:
@@ -742,20 +744,15 @@ def _solve_radical(f, symbol, solveset_solver):
 
 def _solve_abs(f, symbol):
     """ Helper function to solve equation involving absolute value function """
-    p, q, r = Wild('p'), Wild('q'), Wild('r')
-    pattern_match = f.match(p*Abs(q) + r) or {}
-    if not pattern_match.get(p, S.Zero).is_zero:
-        f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
-        q_pos_cond = reduce_inequalities(f_q >= 0, symbol).as_set()
-        q_neg_cond = reduce_inequalities(f_q < 0, symbol).as_set()
+    from sympy.solvers.inequalities import reduce_abs_inequality
+    abs_rad = f.find(lambda u:
+        u.has(symbol) and (
+        u.is_Function or u.is_Pow and not u.exp.is_Integer))
 
-        sols_q_pos = solveset_real(f_p*f_q + f_r,
-                                           symbol).intersect(q_pos_cond)
-        sols_q_neg = solveset_real(f_p*(-f_q) + f_r,
-                                           symbol).intersect(q_neg_cond)
-        return Union(sols_q_pos, sols_q_neg)
-    else:
-        return ConditionSet(symbol, Eq(f, 0), S.Complexes)
+    if abs_rad and all(isinstance(i, Abs) for i in abs_rad):
+        return reduce_abs_inequality(f, '==', symbol).as_set()
+
+    return ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
 
 def solveset_complex(f, symbol):

@@ -182,6 +182,9 @@ def test_reduce_abs_inequalities():
         3*x - 5) < 7) == And(Lt(S(1)/2, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
         Or(And(S(-2) < x, x < -1), And(S(1)/2 < x, x < 4))
+    # issue 10198
+    assert reduce_inequalities(-1 + 1/abs(1/x - 1) < 0) == \
+        Or(And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2))
 
     nr = Symbol('nr', real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
@@ -295,10 +298,14 @@ def test_issue_9954():
     assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
 
 
-def test_slow_general_univariate():
-    r = RootOf(x**5 - x**2 + 1, 0)
-    assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
-        Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
+@slow
+def test_general_univariate():
+    ans = solve(sqrt(x) + 1/root(x, 3) - 2 >= 0)
+    assert str(ans.as_set().n(3)) == '(0, 0.376] U [1.0, +inf)'
+    # XX it won't be slow when RootOf are returned instead of
+    # expressions for the roots
+    ## r = RootOf(x**4 + x**3 + x**2 - x - 1, 1)
+    ## assert ans == Or(And(S(0) < x, x <= r**6), And(S(1) <= x, x < oo))
 
 
 def test_issue_8545():
