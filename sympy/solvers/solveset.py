@@ -26,7 +26,7 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms
-from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.solvers.inequalities import reduce_inequalities
 from sympy.utilities import filldedent
 
 import warnings
@@ -703,10 +703,8 @@ def _solve_abs(f, symbol):
     pattern_match = f.match(p*Abs(q) + r) or {}
     if not pattern_match.get(p, S.Zero).is_zero:
         f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
-        q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
-                                                 relational=False)
-        q_neg_cond = solve_univariate_inequality(f_q < 0, symbol,
-                                                 relational=False)
+        q_pos_cond = reduce_inequalities(f_q >= 0, symbol).as_set()
+        q_neg_cond = reduce_inequalities(f_q < 0, symbol).as_set()
 
         sols_q_pos = solveset_real(f_p*f_q + f_r,
                                            symbol).intersect(q_pos_cond)
@@ -956,8 +954,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 not supported. Try the real domain by
                 setting domain=S.Reals'''))
         try:
-            result = solve_univariate_inequality(
-            f, symbol, relational=False).intersection(domain)
+            result = reduce_inequalities(
+            f, symbol).as_set().intersection(domain)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result

@@ -290,11 +290,6 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
-    if gen.is_real is False:
-         raise TypeError(filldedent('''
-            can't solve inequalities with absolute
-            values containing non-real variables'''))
-
     def _bottom_up_scan(expr):
         exprs = []
 
@@ -316,10 +311,6 @@ def reduce_abs_inequality(expr, rel, gen):
                     exprs = args
         elif expr.is_Pow:
             n = expr.exp
-
-            if not n.is_Integer or n < 0:
-                raise ValueError(
-                    "only non-negative integer powers are allowed")
 
             _exprs = _bottom_up_scan(expr.base)
 
@@ -387,16 +378,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
     (-oo, -2] U [2, oo)
 
     """
-
     from sympy.solvers.solvers import solve, denoms
-
-    # This keeps the function independent of the assumptions about `gen`.
-    # `solveset` makes sure this function is called only when the domain is
-    # real.
-    d = Dummy(real=True)
-    expr = expr.subs(gen, d)
-    _gen = gen
-    gen = d
 
     if expr is S.true:
         rv = S.Reals
@@ -417,6 +399,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
         include_x = expr.func(0, 0)
 
         def valid(x):
+            # /!\ uses global variables e, expr and gen
             v = e.subs(gen, x)
             try:
                 r = expr.func(v, 0)
@@ -465,9 +448,9 @@ def solve_univariate_inequality(expr, gen, relational=True):
         if valid(start + 1 if start is not S.NegativeInfinity else 0):
             sol_sets.append(Interval(start, end, True, True))
 
-        rv = Union(*sol_sets).subs(gen, _gen)
+        rv = Union(*sol_sets)
 
-    return rv if not relational else rv.as_relational(_gen)
+    return rv if not relational else rv.as_relational(gen)
 
 
 def _solve_inequality(ie, s):
