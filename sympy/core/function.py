@@ -2300,7 +2300,8 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            if isinstance(a, str):
+            # XXX: This is a hack to support non-Basic args
+            if isinstance(a, string_types):
                 continue
 
             if a.is_Rational:
