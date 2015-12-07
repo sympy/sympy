@@ -171,6 +171,9 @@ def opt_cse(exprs, order='canonical'):
 
     def _find_opts(expr):
 
+        if not isinstance(expr, Basic):
+            return
+
         if expr.is_Atom or expr.is_Order:
             return
 
@@ -286,6 +289,9 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     seen_subexp = set()
 
     def _find_repeated(expr):
+        if not isinstance(expr, Basic):
+            return
+
         if expr.is_Atom or expr.is_Order:
             return
 
@@ -317,6 +323,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     subs = dict()
 
     def _rebuild(expr):
+        if not isinstance(expr, Basic):
+            return expr
 
         if not expr.args:
             return expr

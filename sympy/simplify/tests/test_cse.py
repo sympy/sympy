@@ -9,6 +9,7 @@ from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
     MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.matrices.expressions import MatrixSymbol
 
 from sympy.core.compatibility import range
 
@@ -293,8 +294,17 @@ def test_cse_Indexed():
     assert len(replacements) > 0
 
 
-@XFAIL
 def test_cse_MatrixSymbol():
+    # MatrixSymbols have non-Basic args, so make sure that works
+    A = MatrixSymbol("A", 3, 3)
+    assert cse(A) == ([], [A])
+
+    n = symbols('n', integer=True)
+    B = MatrixSymbol("B", n, n)
+    assert cse(B) == ([], [B])
+
+@XFAIL
+def test_cse_MatrixExpr():
     from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
