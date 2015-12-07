@@ -1166,7 +1166,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             # We'll be happy with low precision if a simple fraction
             if not (tolerance or full):
                 mpmath.mp.dps = 15
-                rat = mpmath.findpoly(xv, 1)
+                rat = mpmath.pslq([xv, 1])
                 if rat is not None:
                     return Rational(-int(rat[1]), int(rat[0]))
             mpmath.mp.dps = prec
