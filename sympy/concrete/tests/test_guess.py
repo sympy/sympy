@@ -6,7 +6,6 @@ from sympy.concrete.guess import (
             guess_generating_function
         )
 from sympy import Function, Symbol, sympify
-from sympy.core.numbers import Zero
 from mpmath import fib
 
 def test_find_simple_recurrence_vector():
@@ -26,7 +25,7 @@ def test_find_simple_recurrence():
     assert find_simple_recurrence(a, A=f, N=i) == (
         -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3))
     assert find_simple_recurrence([0, 2, 15, 74, 12, 3, 0,
-                                    1, 2, 85, 4, 5, 63]) == Zero()
+                                    1, 2, 85, 4, 5, 63]) == 0
 
 
 def test_rationalize():
