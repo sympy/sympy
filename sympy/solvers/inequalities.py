@@ -241,7 +241,8 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             except PolynomialError:
                 raise PolynomialError(filldedent('''
                     only polynomials and
-                    rational functions are supported in this context'''))
+                    rational functions are supported in this context,
+                    not %s''' % expr))
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -337,16 +338,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     exprs = _bottom_up_scan(expr)
 
-    mapping = {'<': '>', '<=': '>='}
-    inequalities = []
-
-    for expr, conds in exprs:
-        if rel not in mapping.keys():
-            expr = Relational( expr, 0, rel)
-        else:
-            expr = Relational(-expr, 0, mapping[rel])
-
-        inequalities.append([expr] + conds)
+    inequalities = [[(e, rel)] + c for e, c in exprs]
 
     return reduce_rational_inequalities(inequalities, gen)
 
