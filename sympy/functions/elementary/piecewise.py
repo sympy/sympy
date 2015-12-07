@@ -298,7 +298,7 @@ class Piecewise(Function):
         along the real axis corresponding to the symbol sym.  If targetcond
         is given, we return a list of (lowerbound, upperbound) pairs for
         this condition."""
-        from sympy.solvers.inequalities import _solve_inequality
+        from sympy.solvers.inequalities import solve_linear_inequality
         default = None
         int_expr = []
         expr_cond = []
@@ -329,7 +329,7 @@ class Piecewise(Function):
                 upper = S.Infinity
                 for cond2 in cond.args:
                     if sym not in [cond2.lts, cond2.gts]:
-                        cond2 = _solve_inequality(cond2, sym)
+                        cond2 = solve_linear_inequality(cond2, sym)
                     if cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
@@ -339,7 +339,7 @@ class Piecewise(Function):
                             "Unable to handle interval evaluation of expression.")
             else:
                 if sym not in [cond.lts, cond.gts]:
-                    cond = _solve_inequality(cond, sym)
+                    cond = solve_linear_inequality(cond, sym)
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
