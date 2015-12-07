@@ -24,7 +24,7 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
+                         RootOf, NotAlgebraic)
 from sympy.solvers.solvers import checksol, denoms
 from sympy.solvers.inequalities import reduce_inequalities
 from sympy.utilities import filldedent
@@ -678,6 +678,7 @@ def _has_rational_power(expr, symbol):
 def _solve_radical(f, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
     from sympy.solvers.solvers import unrad
+    from sympy import minpoly
     eq, cov = unrad(f)
     if not cov:
         result = solveset_solver(eq, symbol) - \
@@ -694,7 +695,49 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
+    unverified = []
+    verified = []
+    for s in result:
+        v = f.subs(symbol, s)
+        c = v.is_zero
+        if c is False:
+            continue
+        if c:
+            verified.append(s)
+            continue
+
+        c = checksol(f, symbol, v, numerical=False)
+        if c is False:
+            continue
+        if c:
+            verified.append(s)
+            continue
+
+        # minpoly will be used in equals after other simplification
+        # so rather than redo what's been done, try minpoly now;
+        # we might also try sqrtdenest(v).as_numer_denom()[0].expand() == 0 first
+        try:
+            c = minpoly(v).is_Symbol
+            if c:  # XX if c is False is that proof that v is not zero or is it a minpoly insufficiency?
+                verified.append(s)
+                continue
+        except NotAlgebraic:
+            pass
+
+        c = v.equals(0)
+        if c is False:
+            continue
+        elif c:
+            verified.append(s)
+            continue
+
+        unverified.append(s)
+
+    if not unverified:
+        return FiniteSet(*verified)
+    raise NotImplementedError(filldedent('''
+        Verified %s but could not verify the following solutions
+        to %s: %s''' % (verified, f, unverified)))
 
 
 def _solve_abs(f, symbol):

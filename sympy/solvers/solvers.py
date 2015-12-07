@@ -256,8 +256,7 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 7:
             val = powsimp(val)
         else:
-            # if there are no radicals and no functions then this can't be
-            # zero anymore -- can it?
+            # check for radicals and functions
             pot = preorder_traversal(expand_mul(val))
             seen = set()
             saw_pow_func = False
@@ -274,6 +273,8 @@ def checksol(f, symbol, sol=None, **flags):
                 if saw_pow_func:
                     break
             if saw_pow_func is False:
+                # if there are no radicals and no functions then this can't be
+                # zero anymore -- can it?
                 return False
             if flags.get('force', True):
                 # don't do a zero check with the positive assumptions in place
@@ -292,7 +293,7 @@ def checksol(f, symbol, sol=None, **flags):
 
                 # add other HACKs here if necessary, otherwise we assume
                 # the nz value is correct
-                return not nz
+                return fuzzy_not(nz)
             break
 
         if val == was:
