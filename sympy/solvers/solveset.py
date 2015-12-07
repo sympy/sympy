@@ -871,7 +871,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Notes
     =====
 
-    N.B. Python interprets 0 and 1 as False and True, respectively, but
+    Python interprets 0 and 1 as False and True, respectively, but
     in this function they refer to solutions of an expression. So 0 and 1
     return the Domain and EmptySet, respectively, while True and False
     return the opposite (as they are assumed to be solutions of relational
