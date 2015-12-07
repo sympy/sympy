@@ -185,6 +185,7 @@ def test_reduce_abs_inequalities():
 
     nr = Symbol('nr', real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
+    assert reduce_inequalities(x < 3, symbols=[x, nr]) == And(-oo < x, x < 3)
 
 
 def test_reduce_inequalities_general():
