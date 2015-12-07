@@ -481,8 +481,6 @@ def solve_univariate_inequality(expr, gen, relational=True):
 def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
-    if not ie.rel_op in ('>', '>=', '<', '<='):
-        raise NotImplementedError
     expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
@@ -490,15 +488,14 @@ def _solve_inequality(ie, s):
             raise NotImplementedError
     except (PolynomialError, NotImplementedError):
         try:
-            n, d = expr.as_numer_denom()
             return reduce_rational_inequalities([[ie]], s)
         except PolynomialError:
             return solve_univariate_inequality(ie, s)
     a, b = p.all_coeffs()
-    if a.is_positive:
+    if a.is_positive or ie.rel_op in ('!=', '=='):
         return ie.func(s, -b/a)
     elif a.is_negative:
-        return ie.func(-b/a, s)
+        return ie.reversed.func(s, -b/a)
     else:
         raise NotImplementedError
 
