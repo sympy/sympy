@@ -209,6 +209,12 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     You can also set the _iterable attribute to True or False on your class,
     which will override the checks here, including the exclude test.
 
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
+
     See also: is_sequence
 
     Examples
