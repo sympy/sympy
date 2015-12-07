@@ -293,8 +293,23 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Cycle(self, dc):
-        from sympy.combinatorics.permutations import Permutation
-        return self._print_tuple(Permutation(dc.as_list()).cyclic_form)
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        # for Empty Cycle
+        if dc == Cycle():
+            cyc = stringPict('')
+            return prettyForm(*cyc.parens())
+
+        dc_list = Permutation(dc.list()).cyclic_form
+        # for Identity Cycle
+        if dc_list == []:
+            cyc = self._print(dc.size - 1)
+            return prettyForm(*cyc.parens())
+
+        cyc = stringPict('')
+        for i in dc_list:
+            l = self._print(str(tuple(i)).replace(',', ''))
+            cyc = prettyForm(*cyc.right(l))
+        return cyc
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
