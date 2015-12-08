@@ -194,7 +194,8 @@ def test_ccode_ITE():
     assert ccode(expr) == (
             "((x < 1) ? (\n"
             "   x\n"
-            ") : (\n"
+            ")\n"
+            ": (\n"
             "   pow(x, 2)\n"
             "))")
 
