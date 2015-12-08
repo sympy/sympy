@@ -303,7 +303,6 @@ def test_cse_MatrixSymbol():
     B = MatrixSymbol("B", n, n)
     assert cse(B) == ([], [B])
 
-@XFAIL
 def test_cse_MatrixExpr():
     from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
@@ -314,6 +313,11 @@ def test_cse_MatrixExpr():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
+    replacements, reduced_exprs = cse([expr1 + expr2, expr1])
+    assert replacements
+
+    replacements, reduced_exprs = cse([A**2, A + A**2])
+    assert replacements
 
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
