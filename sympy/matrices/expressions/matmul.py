@@ -36,6 +36,8 @@ class MatMul(MatrixExpr):
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
+        if not matrices:
+            return factor
         return obj
 
     @property
