@@ -10,12 +10,13 @@ from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
       lfsr_connection_polynomial, lfsr_autocorrelation, lfsr_sequence,
       encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
-      encipher_elgamal, decipher_elgamal)
+      encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
+      dh_shared_key)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 from sympy.utilities.pytest import raises
-
+from random import randrange
 
 def test_alphabet_of_cipher():
     assert alphabet_of_cipher()[0] == "A"
@@ -254,3 +255,23 @@ def test_elgamal():
     ek = elgamal_public_key(dk)
     m = 12345
     assert m == decipher_elgamal(encipher_elgamal(m, ek), dk)
+
+def test_dh_private_key():
+    p, g, _ = dh_private_key(digit = 100)
+    assert isprime(p)
+    assert is_primitive_root(g, p)
+    assert len(bin(p)) >= 102
+
+def test_dh_public_key():
+    p1, g1, a = dh_private_key(digit = 100)
+    p2, g2, ga = dh_public_key((p1, g1, a))
+    assert p1 == p2
+    assert g1 == g2
+    assert ga == pow(g1, a, p1)
+
+def test_dh_shared_key():
+    prk = dh_private_key(digit = 100)
+    p, _, ga = dh_public_key(prk)
+    b = randrange(2, p)
+    sk = dh_shared_key((p, _, ga), b)
+    assert sk == pow(ga, b, p)
