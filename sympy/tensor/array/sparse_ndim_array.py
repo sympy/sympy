@@ -3,7 +3,7 @@ import functools
 
 from sympy.core.sympify import _sympify
 
-from sympy import S, Dict, flatten, SparseMatrix, Expr, Tuple
+from sympy import S, Dict, flatten, SparseMatrix, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
@@ -87,7 +87,7 @@ class SparseNDimArray(NDimArray):
         return type(self)(*(newshape + (self._array,)))
 
 
-class ImmutableSparseNDimArray(SparseNDimArray, Expr):
+class ImmutableSparseNDimArray(SparseNDimArray, Basic):
 
     def __new__(cls, *args, **kwargs):
 
@@ -106,7 +106,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, Expr):
 
         sparse_array = Dict(sparse_array)
 
-        self = Expr.__new__(cls, sparse_array, shape, **kwargs)
+        self = Basic.__new__(cls, sparse_array, shape, **kwargs)
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size

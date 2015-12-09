@@ -3,7 +3,7 @@ import functools
 
 from sympy.core.sympify import _sympify
 
-from sympy import Matrix, flatten, Expr, Tuple
+from sympy import Matrix, flatten, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
@@ -93,7 +93,7 @@ class DenseNDimArray(NDimArray):
         return type(self)(self._array, newshape)
 
 
-class ImmutableDenseNDimArray(DenseNDimArray, Expr):
+class ImmutableDenseNDimArray(DenseNDimArray, Basic):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
@@ -104,7 +104,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, Expr):
         shape = Tuple(*map(_sympify, shape))
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)
-        self = Expr.__new__(cls, flat_list, shape, **kwargs)
+        self = Basic.__new__(cls, flat_list, shape, **kwargs)
         self._shape = shape
         self._array = list(flat_list)
         self._rank = len(shape)
