@@ -6,20 +6,15 @@ from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.pytest import raises
 
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-x1 = Symbol('x1', real=True)
-x2 = Symbol('x2', real=True)
-x3 = Symbol('x3', real=True)
-y1 = Symbol('y1', real=True)
-y2 = Symbol('y2', real=True)
-y3 = Symbol('y3', real=True)
-half = Rational(1, 2)
-
 
 def test_point():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    x1 = Symbol('x1', real=True)
+    x2 = Symbol('x2', real=True)
+    y1 = Symbol('y1', real=True)
+    y2 = Symbol('y2', real=True)
+    half = Rational(1, 2)
     p1 = Point(x1, x2)
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
@@ -113,6 +108,15 @@ def test_point():
 
 
 def test_point3D():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    x1 = Symbol('x1', real=True)
+    x2 = Symbol('x2', real=True)
+    x3 = Symbol('x3', real=True)
+    y1 = Symbol('y1', real=True)
+    y2 = Symbol('y2', real=True)
+    y3 = Symbol('y3', real=True)
+    half = Rational(1, 2)
     p1 = Point3D(x1, x2, x3)
     p2 = Point3D(y1, y2, y3)
     p3 = Point3D(0, 0, 0)
@@ -235,6 +239,10 @@ def test_transform():
     assert p.transform(rotate(pi/2)) == Point(-1, 1)
     assert p.transform(scale(3, 2)) == Point(3, 2)
     assert p.transform(translate(1, 2)) == Point(2, 3)
+    assert Point(1, 1).scale(2, 3, (4, 5)) == \
+        Point(-2, -7)
+    assert Point(1, 1).translate(4, 5) == \
+        Point(5, 6)
 
 
 def test_concyclic_doctest_bug():

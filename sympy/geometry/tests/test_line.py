@@ -10,15 +10,6 @@ from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises
 
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-k = Symbol('k', real=True)
-x1 = Symbol('x1', real=True)
-y1 = Symbol('y1', real=True)
-half = Rational(1, 2)
-
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
@@ -27,6 +18,11 @@ def feq(a, b):
 
 
 def test_line_geom():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    x1 = Symbol('x1', real=True)
+    y1 = Symbol('y1', real=True)
+    half = Rational(1, 2)
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p3 = Point(x1, x1)
@@ -328,6 +324,12 @@ def test_line_geom():
 
 
 def test_line3d():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    z = Symbol('z', real=True)
+    k = Symbol('k', real=True)
+    x1 = Symbol('x1', real=True)
+    y1 = Symbol('y1', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(x1, x1, x1)
@@ -632,6 +634,10 @@ def test_issue_2941():
 
 
 def test_symbolic_intersect():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    z = Symbol('z', real=True)
+    k = Symbol('k', real=True)
     # Issue 7814.
     circle = Circle(Point(x, 0), y)
     line = Line(Point(k, z), slope=0)
