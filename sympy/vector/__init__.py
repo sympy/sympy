@@ -13,3 +13,7 @@ from sympy.vector.functions import (express, matrix_to_vector,
 from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+from sympy.vector.printing import (VectorStrPrinter, VectorStrReprPrinter,
+                                   VectorLatexPrinter, VectorPrettyPrinter,
+                                   vprint, vsstrrepr, vsprint, vpprint,
+                                   vlatex)
