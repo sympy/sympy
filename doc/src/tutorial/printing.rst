@@ -120,7 +120,7 @@ exactly the same as the expression as you would enter it.
     Integral(sqrt(1/x), x)
 
 srepr
-----
+-----
 
 The srepr form of an expression is designed to show the exact form of an
 expression.  It will be discussed more in the :ref:`tutorial-manipulation`
