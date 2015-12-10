@@ -12,6 +12,7 @@ from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
+t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
@@ -1503,3 +1504,13 @@ def test_issue_9491():
 
 def test_issue_10063():
     assert 2**Float(3) == Float(8)
+
+
+def test_issue_10020():
+    assert oo**I is S.NaN
+    assert oo**(1 + I) is S.ComplexInfinity
+    assert oo**(-1 + I) is S.Zero
+    assert (-oo)**I is S.NaN
+    assert (-oo)**(-1 + I) is S.Zero
+    assert oo**t == Pow(oo, t, evaluate=False)
+    assert (-oo)**t == Pow(-oo, t, evaluate=False)
