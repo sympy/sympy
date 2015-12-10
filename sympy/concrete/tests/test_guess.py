@@ -6,16 +6,16 @@ from sympy.concrete.guess import (
             guess_generating_function
         )
 from sympy import Function, Symbol, sympify
-from mpmath import fib
+from sympy import fibonacci
 
 def test_find_simple_recurrence_vector():
-    assert find_simple_recurrence_vector([fib(k) for k in range(12)]) == (
-        [1, -1, -1])
+    assert find_simple_recurrence_vector(
+            [fibonacci(k) for k in range(12)]) == [1, -1, -1]
 
 def test_find_simple_recurrence():
     a = Function('a')
     n = Symbol('n')
-    assert find_simple_recurrence([fib(k) for k in range(12)]) == (
+    assert find_simple_recurrence([fibonacci(k) for k in range(12)]) == (
         -a(n) - a(n + 1) + a(n + 2))
 
     f = Function('a')
@@ -38,14 +38,17 @@ def test_rationalize():
 
 def test_guess_generating_function_rational():
     x = Symbol('x')
-    assert guess_generating_function_rational([int(fib(k))
+    assert guess_generating_function_rational([fibonacci(k)
         for k in range(5, 15)]) == ((3*x + 5)/(-x**2 - x + 1))
 
 
 def test_guess_generating_function():
     x = Symbol('x')
-    assert guess_generating_function([int(fib(k))
+    assert guess_generating_function([fibonacci(k)
         for k in range(5, 15)]) == ((3*x + 5)/(-x**2 - x + 1))
     assert guess_generating_function(
      [1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919]) == (
        (1/(x**4 + 2*x**2 - 4*x + 1))**(sympify("1/2")))
+    assert guess_generating_function(sympify(
+     "[3/2, 11/2, 0, -121/2, -363/2, 121, 4719/2, 11495/2, -8712, -178717/2]")
+     ) == (x + sympify("3/2"))/(11*x**2 - 3*x + 1)

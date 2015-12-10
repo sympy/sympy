@@ -3,9 +3,10 @@ from __future__ import print_function, division
 
 from sympy.utilities import public
 
+from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
-from sympy import sympify, floor, sqrt
+from sympy import sympify, floor, sqrt, Rational
 from mpmath import pslq, sqrt, mp
 
 @public
@@ -20,15 +21,20 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
     The function returns a vector of length n when a recurrence relation of
     order n is detected in the sequence of rational numbers v.
 
-    If the returned vector has a length 1, then the returned value is also [0],
-    which means that no relation has been found.
+    If the returned vector has a length 1, then the returned value is always
+    the list [0], which means that no relation has been found.
+
+    While the functions is intended to be used with rational numbers, it should
+    work for other kinds of real numbers except for some cases involving
+    quadratic numbers; for that reason it should be used with some caution when
+    the argument is not a list of rational numbers.
 
     Examples
     ========
 
     >>> from sympy.concrete.guess import find_simple_recurrence_vector
-    >>> from mpmath import fib
-    >>> find_simple_recurrence_vector([fib(k) for k in range(12)])
+    >>> from sympy import fibonacci
+    >>> find_simple_recurrence_vector([fibonacci(k) for k in range(12)])
     [1, -1, -1]
 
     See also
@@ -69,8 +75,8 @@ def find_simple_recurrence(v, A=Function('a'), N=Symbol('n'), maxcoeff=1024):
     ========
 
     >>> from sympy.concrete.guess import find_simple_recurrence
-    >>> from mpmath import fib
-    >>> find_simple_recurrence([fib(k) for k in range(12)])
+    >>> from sympy import fibonacci
+    >>> find_simple_recurrence([fibonacci(k) for k in range(12)])
     -a(n) - a(n + 1) + a(n + 2)
 
     >>> from sympy import Function, Symbol
@@ -141,7 +147,7 @@ def rationalize(x, maxcoeff=10000):
     p0, p1 = 0, 1
     q0, q1 = 1, 0
     a = floor(x)
-    while a < maxcoeff:
+    while a < maxcoeff or q1==0:
         p = a*p1 + p0
         q = a*q1 + q0
         p0, p1 = p1, p
@@ -162,8 +168,9 @@ def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
     ========
 
     >>> from sympy.concrete.guess import guess_generating_function_rational
-    >>> from mpmath import fib
-    >>> guess_generating_function_rational([int(fib(k)) for k in range(5, 15)])
+    >>> from sympy import fibonacci
+    >>> l = [fibonacci(k) for k in range(5,15)]
+    >>> guess_generating_function_rational(l)
     (3*x + 5)/(-x**2 - x + 1)
 
     """
@@ -188,9 +195,14 @@ def guess_generating_function(v, X=Symbol('x'), maxcoeff=1024, maxsqrtn=2):
     ========
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
-    >>> from mpmath import fib
-    >>> ggf([int(fib(k)) for k in range(5, 15)])
+    >>> from sympy import fibonacci
+    >>> ggf([fibonacci(k) for k in range(5, 15)])
     (3*x + 5)/(-x**2 - x + 1)
+
+    >>> from sympy import sympify
+    >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
+    >>> ggf(l)
+    (x + 3/2)/(11*x**2 - 3*x + 1)
 
     N-th root of a rational function can also be detected (below is an example
     coming from the sequence A108626 from http://oeis.org ).
@@ -204,11 +216,9 @@ def guess_generating_function(v, X=Symbol('x'), maxcoeff=1024, maxsqrtn=2):
     "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
 
     """
-    from sympy.concrete.guess import guess_generating_function_rational
-
     # Perform some convolutions of the sequence with itself
     t = [1 if k==0 else 0 for k in range(len(v))]
     for d in range(max(1, maxsqrtn)):
       t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
       g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
-      if g: return g**(sympify(1)/sympify(d+1))
+      if g: return g**Rational(1, d+1)
