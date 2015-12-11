@@ -32,7 +32,7 @@ try:
 except AttributeError:
     pass
 
-git_command = """git log --reverse --format="%aN <%aE>" | awk ' !x[$0]++'"""
+git_command = """git log --topo-order --reverse --format="%aN <%aE>" | awk ' !x[$0]++'"""
 
 git_people = unicode(local(git_command, capture=True), 'utf-8').strip().split("\n")
 
@@ -64,10 +64,9 @@ move(git_people, 58, 57) # Andrew Docherty
 move(git_people, 67, 66) # Chris Smith
 move(git_people, 79, 76) # Kevin Goodsell
 git_people.insert(84, "*Chu-Ching Huang <cchuang@mail.cgu.edu.tw>")
-move(git_people, 94, 92) # James Pearson
-move(git_people, 94, 93) # Matthew Brett
+move(git_people, 93, 92) # James Pearson
 
-git_people.pop(229) # Sergey B Kirpichev
+git_people.pop(226) # Sergey B Kirpichev
 
 
 header = """\
