@@ -431,6 +431,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matthew Davis: Fixed documentation typos
 #. Jack Kemp: Fix incorrect assignment of free variables in linsolve
 #. Kshitij Saraogi: Parenthesized printing of Intersections
+#. Nicolás Guarín-Zapata: Typo in de docs of 3D harmonic oscillator
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
