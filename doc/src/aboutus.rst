@@ -430,6 +430,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Prashant Tyagi: remove wrong logic lines in sets.py
 #. Matthew Davis: Fixed documentation typos
 #. Jack Kemp: Fix incorrect assignment of free variables in linsolve
+#. Kshitij Saraogi: Parenthesized printing of Intersections
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
