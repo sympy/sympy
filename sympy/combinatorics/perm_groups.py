@@ -121,10 +121,10 @@ class PermutationGroup(Basic):
         """The default constructor. Accepts Cycle and Permutation forms.
         Removes duplicates unless ``dups`` keyword is False.
         """
-        args = list(args[0] if is_sequence(args[0]) else args)
         if not args:
             raise ValueError('must supply one or more permutations '
             'to define the group')
+        args = list(args[0] if is_sequence(args[0]) else args)
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):

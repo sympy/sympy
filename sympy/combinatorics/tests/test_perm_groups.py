@@ -8,6 +8,7 @@ from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
+from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
 
@@ -691,3 +692,7 @@ def test_make_perm():
         Permutation([4, 7, 6, 5, 0, 3, 2, 1])
     assert cube.pgroup.make_perm(7, seed=list(range(7))) == \
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])
+
+
+def test_PermutationGroup():
+    raises(ValueError, lambda: PermutationGroup())
