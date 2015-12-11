@@ -334,7 +334,7 @@ def test_issue_7638():
     assert sqrt(e**6) == e**3
     assert sqrt((1 + I*r)**6) != (1 + I*r)**3
 
-@XFAIL
+
 def test_issue_8582():
     assert 1**oo is nan
     assert 1**(-oo) is nan
