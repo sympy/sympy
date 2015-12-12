@@ -471,11 +471,13 @@ class Basic(with_metaclass(ManagedProperties)):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
-        else:
-            types = (Atom,)
+
         result = set()
         for expr in preorder_traversal(self):
-            if isinstance(expr, types):
+            if not (types or expr.args):
+                result.add(expr)
+
+            elif isinstance(expr, types):
                 result.add(expr)
         return result
 

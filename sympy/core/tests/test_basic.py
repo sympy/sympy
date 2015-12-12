@@ -70,7 +70,7 @@ def test_subs():
 
 
 def test_atoms():
-    assert b21.atoms() == set()
+    assert b21.atoms() == set([Basic()])
 
 
 def test_free_symbols_empty():
