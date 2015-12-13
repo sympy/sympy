@@ -5,12 +5,14 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     mpf_norm, comp)
 from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
+t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
@@ -66,6 +68,14 @@ def test_mod():
     assert (a % .2) == 0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
+
+    p = Symbol('p', infinite=True)
+
+    assert zoo % 0 == nan
+    assert oo % oo == nan
+    assert zoo % oo == nan
+    assert 5 % oo == nan
+    assert p % 5 == nan
 
     # In these two tests, if the precision of m does
     # not match the precision of the ans, then it is
@@ -453,6 +463,9 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
+    assert Float(decimal.Decimal('nan')) == S.NaN
+    assert Float(decimal.Decimal('Infinity')) == S.Infinity
+    assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
@@ -727,6 +740,10 @@ def test_Infinity_inequations():
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
+    assert (-oo < -Float('inf')) ==  False
+    assert (oo > Float('inf')) == False
+    assert -oo >= -Float('inf')
+    assert oo <= Float('inf')
 
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)
@@ -1286,7 +1303,7 @@ def test_zoo():
             assert (zoo + i) is S.NaN
             assert (zoo - i) is S.NaN
 
-        if i.is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not(i.is_zero) and (i.is_real or i.is_imaginary):
             assert i*zoo is zoo
             assert zoo*i is zoo
         elif i.is_zero:
@@ -1296,7 +1313,7 @@ def test_zoo():
             assert (i*zoo).is_Mul
             assert (zoo*i).is_Mul
 
-        if (1/i).is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not((1/i).is_zero) and (i.is_real or i.is_imaginary):
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN
@@ -1479,3 +1496,21 @@ def test_comp():
     assert comp(sqrt(2).n(2), Float(1.4, 2), '')
     raises(ValueError, lambda: comp(sqrt(2).n(2), 1.4, ''))
     assert comp(sqrt(2).n(2), Float(1.4, 3), '') is False
+
+
+def test_issue_9491():
+    assert oo**zoo == nan
+
+
+def test_issue_10063():
+    assert 2**Float(3) == Float(8)
+
+
+def test_issue_10020():
+    assert oo**I is S.NaN
+    assert oo**(1 + I) is S.ComplexInfinity
+    assert oo**(-1 + I) is S.Zero
+    assert (-oo)**I is S.NaN
+    assert (-oo)**(-1 + I) is S.Zero
+    assert oo**t == Pow(oo, t, evaluate=False)
+    assert (-oo)**t == Pow(-oo, t, evaluate=False)

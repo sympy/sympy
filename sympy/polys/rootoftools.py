@@ -397,7 +397,7 @@ class RootOf(Expr):
 
     @classmethod
     def _count_roots(cls, roots):
-        """Count the number of real or complex roots including multiplicites. """
+        """Count the number of real or complex roots including multiplicities."""
         return sum([ k for _, _, k in roots ])
 
     @classmethod
@@ -529,6 +529,10 @@ class RootOf(Expr):
         else:
             reals_count = len(_reals_cache[self.poly])
             _complexes_cache[self.poly][self.index - reals_count] = interval
+
+    def _eval_subs(self, old, new):
+        # don't allow subs to change anything
+        return self
 
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """

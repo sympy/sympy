@@ -47,21 +47,21 @@ def test_Idx_bounds():
 
 
 def test_Idx_fixed_bounds():
-    i, a, b = symbols('i a b', integer=True)
-    assert Idx(2).lower is None
-    assert Idx(2).upper is None
-    assert Idx(2, a).lower == 0
-    assert Idx(2, a).upper == a - 1
-    assert Idx(2, 5).lower == 0
-    assert Idx(2, 5).upper == 4
-    assert Idx(2, oo).lower == 0
-    assert Idx(2, oo).upper == oo
-    assert Idx(2, (a, b)).lower == a
-    assert Idx(2, (a, b)).upper == b
-    assert Idx(2, (1, 5)).lower == 1
-    assert Idx(2, (1, 5)).upper == 5
-    assert Idx(2, (-oo, oo)).lower == -oo
-    assert Idx(2, (-oo, oo)).upper == oo
+    i, a, b, x = symbols('i a b x', integer=True)
+    assert Idx(x).lower is None
+    assert Idx(x).upper is None
+    assert Idx(x, a).lower == 0
+    assert Idx(x, a).upper == a - 1
+    assert Idx(x, 5).lower == 0
+    assert Idx(x, 5).upper == 4
+    assert Idx(x, oo).lower == 0
+    assert Idx(x, oo).upper == oo
+    assert Idx(x, (a, b)).lower == a
+    assert Idx(x, (a, b)).upper == b
+    assert Idx(x, (1, 5)).lower == 1
+    assert Idx(x, (1, 5)).upper == 5
+    assert Idx(x, (-oo, oo)).lower == -oo
+    assert Idx(x, (-oo, oo)).upper == oo
 
 
 def test_Idx_func_args():
@@ -97,10 +97,12 @@ def test_IndexedBase_sugar():
 
 def test_IndexedBase_subs():
     i, j, k = symbols('i j k', integer=True)
-    a, b = symbols('a b')
+    a, b, c = symbols('a b c')
     A = IndexedBase(a)
     B = IndexedBase(b)
+    C = IndexedBase(c)
     assert A[i] == B[i].subs(b, a)
+    assert isinstance(C[1].subs(C, {1: 2}), type(A[1]))
 
 
 def test_IndexedBase_shape():
@@ -176,6 +178,7 @@ def test_complex_indices():
     A = Indexed('A', i, i + j)
     assert A.rank == 2
     assert A.indices == (i, i + j)
+
 
 def test_not_interable():
     i, j = symbols('i j', integer=True)

@@ -187,7 +187,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Swapnil Agarwal: added See Also documentation to ntheory, functions
 #. Kendhia: Add XFAIL tests
 #. jerryma1121: See Also documentation for geometry
-#. Joachim Durchholz: corrected spacing issues identified by PyDev
+#. Joachim Durchholz: Improvements to the software infrastructure
 #. Martin Povišer: fix problem with rationaltools
 #. Siddhant Jain: See Also documentation for functions/special
 #. Kevin Hunter: Improvements to the inequality classes
@@ -235,9 +235,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Huijun Mai: Chinese translation of the tutorial
 #. Marek Šuppa: Improvements to symbols, tests
 #. Prasoon Shukla: Bug fixes
-#. Sergey B Kirpichev: Bug fixes
 #. Stefen Yin: Fixes to the mechanics module
-#. Thomas Hisch: Improvements to the printing module
+#. Thomas Hisch: Spherical Hankel functions, Improvements to the printing module, Improvements to the doctesting system
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
 #. Case Van Horsen: Fixes to gmpy support
@@ -378,7 +377,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Akshat Jain: nsimplify returns ints quickly
 #. Shivam Vats: Added ReciprocalHyperbolicFunction class and misc bug fixes
 #. Cody Herbst: modified Euler-MacLaurin to not exit when term == 0
-#. AMiT Kumar: fix sign error in unrad
+#. AMiT Kumar: Improvements to the equation solvers
 #. Nishith Shah: fix solving of Piecewise functions
 #. Guillaume Gay: bugfix for LagrangesMethod
 #. Ray Cathcart: improve error handling in _random
@@ -392,8 +391,46 @@ want to be mentioned here, so see our repository history for a full list).
 #. Lokesh Sharma: reorder setup.py file imports to correct NameError
 #. Sartaj Singh: use \left \| instead of \lvert for latex Abs
 #. Chris Swierczewski: RootOf.evalf watches for root on interval boundary
+#. Sumith: implemented columnspace of a matrix
 #. Konstantin Togoi: added truth_table and binary digit utilities to boolalg
 #. Param Singh: added missing units from mks system
+#. Philippe Bouafia: Fixed a typo.
+#. Lucas Jones: Add a test in integrals
+#. Peter Schmidt: Removed duplicate tests
+#. Jiaxing Liang: Fix infinite recursion issue in test_f
+#. Juha Remes: Fixed a typo in qubit_to_matrix documentation
+#. Gregory Ashton: Fix dsolve to allow symbols in systems of equations
+#. Renato Orsino: Add `applyfunc` to Dyadic and Vector
+#. Jennifer White: Added checks into polynomials.py
+#. Alistair Lynn: Removed duplicate classifiers list in setup.py
+#. Govind Sahai: Fixed some typos
+#. Adam Bloomston: Improve conversion of Decimal to Float
+#. Kyle McDaniel: Fixes to Point3D
+#. Nguyen Truong Duy: Fix a bug in cancelling MatrixElement expressions
+#. Alex Lindsay: Fix typos in documentation
+#. Mathew Chong: Improve Mul handling of positive/negative assumptions.
+#. Gaurav Dhingra: M.row_del(index) and M.col_del(index) raise IndexError for out of bound Index
+#. Kevin Ventullo: Fix some problems with matrix expressions
+#. Longqi Wang: Fix for plotting of piecewise functions
+#. Isuru Fernando: Use docker for travis testing
+#. Shivam Tyagi: solveset_complex(0, x) now returns S.Complex
+#. Rich LaSota: Removed redundant doctest in polys
+#. Anton Akhmerov: fixed the zero matrix printing
+#. Richard Otis: Improved lambdify support for numpy
+#. Michael Zingale: add a left_eigenvectors() method
+#. Kumar Krishna Agrawal: UnXFAIL tests in solveset
+#. Dustin Gadal: Replace linear diophantine solver to resolve issue #9539
+#. Yu Kobayashi: Tuple constructor should not take the argument `**assumptions`
+#. Shashank Kumar: Fixed indenation error in summations.py and added test for issue #9908
+#. Devyani Kota: Fixed issue 9953: linsolve([ ], ...) now returns S.EmptySet
+#. Keval Shah: Union with subset of S.Complexes now evaluated
+#. Dzhelil Rufat: Make it possible to lambdify expressions that contain sums
+#. Jacob Garber: Correct Polygon.encloses_point in geometry and update references
+#. Vinay: sympy.vector .del print changed to .delop as it is accesed
+#. Prashant Tyagi: remove wrong logic lines in sets.py
+#. Matthew Davis: Fixed documentation typos
+#. Jack Kemp: Fix incorrect assignment of free variables in linsolve
+#. Kshitij Saraogi: Parenthesized printing of Intersections
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -414,6 +451,7 @@ Financial and Infrastructure Support
   * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
   * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
+  * in 2014 for 10 students (`GSoC 2014 <https://github.com/sympy/sympy/wiki/Gsoc-2014-report>`_)
 
 * `Python Software Foundation (PSF) <https://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:

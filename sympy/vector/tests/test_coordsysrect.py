@@ -12,15 +12,23 @@ a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
+def test_func_args():
+    A = CoordSysCartesian('A')
+    assert A.x.func(*A.x.args) == A.x
+    expr = 3*A.x + 4*A.y
+    assert expr.func(*expr.args) == expr
+    assert A.i.func(*A.i.args) == A.i
+    v = A.x*A.i + A.y*A.j + A.z*A.k
+    assert v.func(*v.args) == v
+    assert A.origin.func(*A.origin.args) == A.origin
+
+
 def test_coordsyscartesian_equivalence():
     A = CoordSysCartesian('A')
     A1 = CoordSysCartesian('A')
     assert A1 == A
     B = CoordSysCartesian('B')
     assert A != B
-    assert A.locate_new('C1', A.i) == A.locate_new('C2', A.i)
-    assert A.orient_new_axis('C1', a, A.i) == \
-           A.orient_new_axis('C2', a, A.i)
 
 
 def test_orienters():
@@ -97,12 +105,15 @@ def test_coordinate_vars():
            {N.x: A.x, N.z: A.z, N.y: A.y}
     C = A.orient_new_axis('C', q, A.i + A.j + A.k)
     mapping = A.scalar_map(C)
-    assert mapping[A.x] == 2*C.x*cos(q)/3 + C.x/3 - \
-           2*C.y*sin(q + pi/6)/3 + C.y/3 - 2*C.z*cos(q + pi/3)/3 + C.z/3
-    assert mapping[A.y] == -2*C.x*cos(q + pi/3)/3 + \
-           C.x/3 + 2*C.y*cos(q)/3 + C.y/3 - 2*C.z*sin(q + pi/6)/3 + C.z/3
-    assert mapping[A.z] == -2*C.x*sin(q + pi/6)/3 + C.x/3 - \
-           2*C.y*cos(q + pi/3)/3 + C.y/3 + 2*C.z*cos(q)/3 + C.z/3
+    assert mapping[A.x] == (C.x*(2*cos(q) + 1)/3 +
+                            C.y*(-2*sin(q + pi/6) + 1)/3 +
+                            C.z*(-2*cos(q + pi/3) + 1)/3)
+    assert mapping[A.y] == (C.x*(-2*cos(q + pi/3) + 1)/3 +
+                            C.y*(2*cos(q) + 1)/3 +
+                            C.z*(-2*sin(q + pi/6) + 1)/3)
+    assert mapping[A.z] == (C.x*(-2*sin(q + pi/6) + 1)/3 +
+                            C.y*(-2*cos(q + pi/3) + 1)/3 +
+                            C.z*(2*cos(q) + 1)/3)
     D = A.locate_new('D', a*A.i + b*A.j + c*A.k)
     assert D.scalar_map(A) == {D.z: A.z - c, D.x: A.x - a, D.y: A.y - b}
     E = A.orient_new_axis('E', a, A.k, a*A.i + b*A.j + c*A.k)

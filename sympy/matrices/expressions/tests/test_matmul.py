@@ -25,7 +25,7 @@ def test_adjoint():
     MA = Matrix(2, 2, [1, 3, 2 - I, 4])
     assert adjoint(M) == MA
     assert adjoint(2*M) == 2*MA
-    assert adjoint(MatMul(2, M)) == MatMul(2, MA)
+    assert adjoint(MatMul(2, M)) == MatMul(2, MA).doit()
 
 
 def test_transpose():
@@ -37,7 +37,7 @@ def test_transpose():
     MT = Matrix(2, 2, [1, 3, 2 + I, 4])
     assert transpose(M) == MT
     assert transpose(2*M) == 2*MT
-    assert transpose(MatMul(2, M)) == MatMul(2, MT)
+    assert transpose(MatMul(2, M)) == MatMul(2, MT).doit()
 
 
 def test_factor_in_front():
@@ -97,6 +97,12 @@ def test_doit_drills_down():
 def test_doit_deep_false_still_canonical():
     assert (MatMul(C, Transpose(D*C), 2).doit(deep=False).args ==
             (2, C, Transpose(D*C)))
+
+
+def test_matmul_scalar_Matrix_doit():
+    # Issue 9053
+    X = Matrix([[1, 2], [3, 4]])
+    assert MatMul(2, X).doit() == 2*X
 
 
 def test_matmul_sympify():

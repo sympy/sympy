@@ -122,7 +122,7 @@ class Routine(object):
 
     """
 
-    def __init__(self, name, arguments, results, local_vars):
+    def __init__(self, name, arguments, results, local_vars, global_vars):
         """Initialize a Routine instance.
 
         Parameters
@@ -146,6 +146,9 @@ class Routine(object):
 
         local_vars : list of Symbols
             These are used internally by the routine.
+
+        global_vars : list of Symbols
+            Variables which will not be passed into the function.
 
         """
 
@@ -171,7 +174,8 @@ class Routine(object):
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
-        notcovered = symbols.difference(input_symbols.union(local_vars))
+        notcovered = symbols.difference(
+            input_symbols.union(local_vars).union(global_vars))
         if notcovered != set([]):
             raise ValueError("Symbols needed for output are not in input " +
                              ", ".join([str(x) for x in notcovered]))
@@ -180,6 +184,12 @@ class Routine(object):
         self.arguments = arguments
         self.results = results
         self.local_vars = local_vars
+        self.global_vars = global_vars
+
+    def __str__(self):
+        return self.__class__.__name__ + "({name!r}, {arguments}, {results}, {local_vars}, {global_vars})".format(**self.__dict__)
+
+    __repr__ = __str__
 
     @property
     def variables(self):
@@ -265,7 +275,7 @@ class Variable(object):
         if datatype is None:
             datatype = get_default_datatype(name)
         elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) `datatype' argument must be an"
+            raise TypeError("The (optional) `datatype' argument must be an "
                             "instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError(
@@ -281,12 +291,17 @@ class Variable(object):
         self.dimensions = dimensions
         self.precision = precision
 
+    def __str__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.name)
+
+    __repr__ = __str__
+
     @property
     def name(self):
         return self._name
 
     def get_datatype(self, language):
-        """Returns the datatype string for the requested langage.
+        """Returns the datatype string for the requested language.
 
         Examples
         ========
@@ -332,6 +347,11 @@ class ResultBase(object):
         self.expr = expr
         self.result_var = result_var
 
+    def __str__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine."""
@@ -373,6 +393,11 @@ class OutputArgument(Argument, ResultBase):
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
 
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine."""
@@ -384,6 +409,12 @@ class InOutArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
     __init__.__doc__ = OutputArgument.__init__.__doc__
 
+
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class Result(Variable, ResultBase):
     """An expression for a return value.
@@ -465,7 +496,7 @@ class CodeGen(object):
         """
         self.project = project
 
-    def routine(self, name, expr, argument_sequence):
+    def routine(self, name, expr, argument_sequence, global_vars):
         """Creates an Routine object that is appropriate for this language.
 
         This implementation is appropriate for at least C/Fortran.  Subclasses
@@ -490,9 +521,11 @@ class CodeGen(object):
         # local variables
         local_vars = set([i.label for i in expressions.atoms(Idx)])
 
-        # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars
+        # global variables
+        global_vars = set() if global_vars is None else set(global_vars)
 
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_vars - global_vars
         # Decide whether to use output argument or return value
         return_val = []
         output_args = []
@@ -567,8 +600,9 @@ class CodeGen(object):
 
             missing = [x for x in arg_list if x.name not in argument_sequence]
             if missing:
-                raise CodeGenArgumentListError("Argument list didn't specify: "
-                        ", ".join([str(m.name) for m in missing]), missing)
+                msg = "Argument list didn't specify: {0} "
+                msg = msg.format(", ".join([str(m.name) for m in missing]))
+                raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
             name_arg_dict = dict([(x.name, x) for x in arg_list])
@@ -580,7 +614,7 @@ class CodeGen(object):
                     new_args.append(InputArgument(symbol))
             arg_list = new_args
 
-        return Routine(name, arg_list, return_val, local_vars)
+        return Routine(name, arg_list, return_val, local_vars, global_vars)
 
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
@@ -661,6 +695,7 @@ class CodeGen(object):
                 code_lines.append("\n")
             code_lines.extend(self._get_routine_opening(routine))
             code_lines.extend(self._declare_arguments(routine))
+            code_lines.extend(self._declare_globals(routine))
             code_lines.extend(self._declare_locals(routine))
             if empty:
                 code_lines.append("\n")
@@ -756,6 +791,10 @@ class CCodeGen(CodeGen):
 
     def _declare_arguments(self, routine):
         # arguments are declared in prototype
+        return []
+
+    def _declare_globals(self, routine):
+        # global variables are not explicitly declared within C functions
         return []
 
     def _declare_locals(self, routine):
@@ -961,6 +1000,11 @@ class FCodeGen(CodeGen):
 
         return code_list
 
+    def _declare_globals(self, routine):
+        # Global variables not explicitly declared within Fortran 90 functions.
+        # Note: a future F77 mode may need to generate "common" blocks.
+        return []
+
     def _declare_locals(self, routine):
         code_list = []
         for var in sorted(routine.local_vars, key=str):
@@ -1098,7 +1142,7 @@ class OctaveCodeGen(CodeGen):
 
     code_extension = "m"
 
-    def routine(self, name, expr, argument_sequence):
+    def routine(self, name, expr, argument_sequence, global_vars):
         """Specialized Routine creation for Octave."""
 
         # FIXME: this is probably general enough for other high-level
@@ -1114,8 +1158,11 @@ class OctaveCodeGen(CodeGen):
         # local variables
         local_vars = set([i.label for i in expressions.atoms(Idx)])
 
+        # global variables
+        global_vars = set() if global_vars is None else set(global_vars)
+
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars
+        symbols = expressions.free_symbols - local_vars - global_vars
 
         # Octave supports multiple return values
         return_vals = []
@@ -1163,8 +1210,9 @@ class OctaveCodeGen(CodeGen):
 
             missing = [x for x in arg_list if x.name not in argument_sequence]
             if missing:
-                raise CodeGenArgumentListError("Argument list didn't specify: %s" %
-                        ", ".join([str(m.name) for m in missing]), missing)
+                msg = "Argument list didn't specify: {0} "
+                msg = msg.format(", ".join([str(m.name) for m in missing]))
+                raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
             name_arg_dict = dict([(x.name, x) for x in arg_list])
@@ -1176,7 +1224,7 @@ class OctaveCodeGen(CodeGen):
                     new_args.append(InputArgument(symbol))
             arg_list = new_args
 
-        return Routine(name, arg_list, return_vals, local_vars)
+        return Routine(name, arg_list, return_vals, local_vars, global_vars)
 
     def _get_symbol(self, s):
         """Print the symbol appropriately."""
@@ -1234,6 +1282,12 @@ class OctaveCodeGen(CodeGen):
     def _declare_arguments(self, routine):
         return []
 
+    def _declare_globals(self, routine):
+        if not routine.global_vars:
+            return []
+        s = " ".join(sorted([self._get_symbol(g) for g in routine.global_vars]))
+        return ["global " + s + "\n"]
+
     def _declare_locals(self, routine):
         return []
 
@@ -1290,6 +1344,7 @@ class OctaveCodeGen(CodeGen):
                                       "  Autogenerated by sympy\n")
                     code_lines.append(''.join(self._get_header()))
             code_lines.extend(self._declare_arguments(routine))
+            code_lines.extend(self._declare_globals(routine))
             code_lines.extend(self._declare_locals(routine))
             if empty:
                 code_lines.append("\n")
@@ -1325,7 +1380,8 @@ def get_code_generator(language, project):
 
 
 def codegen(name_expr, language, prefix=None, project="project",
-            to_files=False, header=True, empty=True, argument_sequence=None):
+            to_files=False, header=True, empty=True, argument_sequence=None,
+            global_vars=None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -1371,6 +1427,10 @@ def codegen(name_expr, language, prefix=None, project="project",
         Redundant arguments are used without warning.  If omitted,
         arguments will be ordered alphabetically, but with all input
         aguments first, and then output or in-out arguments.
+
+    global_vars : iterable, optional
+        Sequence of global variables used by the routine.  Variables
+        listed here will not show up as function arguments.
 
     Examples
     ========
@@ -1420,6 +1480,23 @@ def codegen(name_expr, language, prefix=None, project="project",
        (*g) = y;
     }
 
+    If the generated function(s) will be part of a larger project where various
+    global variables have been defined, the 'global_vars' option can be used
+    to remove the specified variables from the function signature
+
+    >>> from sympy.utilities.codegen import codegen
+    >>> from sympy.abc import x, y, z
+    >>> [(f_name, f_code), header] = codegen(
+    ...     ("f", x+y*z), "F95", header=False, empty=False,
+    ...     argument_sequence=(x, y), global_vars=(z,))
+    >>> print(f_code)
+    REAL*8 function f(x, y)
+    implicit none
+    REAL*8, intent(in) :: x
+    REAL*8, intent(in) :: y
+    f = x + y*z
+    end function
+
     """
 
     # Initialize the code generator.
@@ -1435,13 +1512,15 @@ def codegen(name_expr, language, prefix=None, project="project",
     # Construct Routines appropriate for this code_gen from (name, expr) pairs.
     routines = []
     for name, expr in name_expr:
-        routines.append(code_gen.routine(name, expr, argument_sequence))
+        routines.append(code_gen.routine(name, expr, argument_sequence,
+                                         global_vars))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
 
 
-def make_routine(name, expr, argument_sequence=None, language="F95"):
+def make_routine(name, expr, argument_sequence=None,
+                 global_vars=None, language="F95"):
     """A factory that makes an appropriate Routine from an expression.
 
     Parameters
@@ -1459,6 +1538,10 @@ def make_routine(name, expr, argument_sequence=None, language="F95"):
         List arguments for the routine in a preferred order.  If omitted,
         the results are language dependent, for example, alphabetical order
         or in the same order as the given expressions.
+
+    global_vars : iterable, optional
+        Sequence of global variables used by the routine.  Variables
+        listed here will not show up as function arguments.
 
     language : string, optional
         Specify a target language.  The Routine itself should be
@@ -1522,4 +1605,4 @@ def make_routine(name, expr, argument_sequence=None, language="F95"):
     # initialize a new code generator
     code_gen = get_code_generator(language, "nothingElseMatters")
 
-    return code_gen.routine(name, expr, argument_sequence)
+    return code_gen.routine(name, expr, argument_sequence, global_vars)

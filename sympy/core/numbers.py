@@ -719,7 +719,17 @@ class Float(Number):
         elif isinstance(num, str):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
-            _mpf_ = mlib.from_str(str(num), prec, rnd)
+            if num.is_finite():
+                _mpf_ = mlib.from_str(str(num), prec, rnd)
+            elif num.is_nan():
+                _mpf_ = _mpf_nan
+            elif num.is_infinite():
+                if num > 0:
+                    _mpf_ = _mpf_inf
+                else:
+                    _mpf_ = _mpf_ninf
+            else:
+                raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
@@ -1150,7 +1160,6 @@ class Rational(Number):
                     neg_pow, digits, expt = decimal.Decimal(p).as_tuple()
                     p = [1, -1][neg_pow]*int("".join(str(x) for x in digits))
                     if expt > 0:
-                        # TODO: this branch needs a test
                         return Rational(p*Pow(10, expt), 1)
                     return Rational(p, Pow(10, -expt))
                 except decimal.InvalidOperation:
@@ -1857,6 +1866,9 @@ class Integer(Rational):
             # (-2)**k --> 2**k
             if self.is_negative and expt.is_even:
                 return (-self)**expt
+        if isinstance(expt, Float):
+            # Rational knows how to exponentiate by a Float
+            return super(Integer, self)._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -1965,7 +1977,7 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
-    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
+    def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
         from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
@@ -1987,7 +1999,7 @@ class AlgebraicNumber(Expr):
 
         dom = minpoly.get_domain()
 
-        if coeffs != Tuple():
+        if coeffs is not None:
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
                 scoeffs = Tuple(*coeffs)
@@ -1998,15 +2010,15 @@ class AlgebraicNumber(Expr):
             if rep.degree() >= minpoly.degree():
                 rep = rep.rem(minpoly.rep)
 
-            sargs = (root, scoeffs)
-
         else:
             rep = DMP.from_list([1, 0], 0, dom)
+            scoeffs = Tuple(1, 0)
 
             if root.is_negative:
                 rep = -rep
+                scoeffs = Tuple(-1, 0)
 
-            sargs = (root, coeffs)
+        sargs = (root, scoeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):
@@ -2451,14 +2463,25 @@ class Infinity(with_metaclass(Singleton, Number)):
         NegativeInfinity
 
         """
+        from sympy.functions import re
+
         if expt.is_positive:
             return S.Infinity
         if expt.is_negative:
             return S.Zero
         if expt is S.NaN:
             return S.NaN
+        if expt is S.ComplexInfinity:
+            return S.NaN
+        if expt.is_real is False and expt.is_number:
+            expt_real = re(expt)
+            if expt_real.is_positive:
+                return S.ComplexInfinity
+            if expt_real.is_negative:
+                return S.Zero
+            if expt_real.is_zero:
+                return S.NaN
 
-        if expt.is_number:
             return self**expt.evalf()
 
     def _as_mpf_val(self, prec):
@@ -2496,7 +2519,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonpositive:
                 return S.false
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.true
         return Expr.__le__(self, other)
 
@@ -2510,7 +2533,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonpositive:
                 return S.true
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.false
         return Expr.__gt__(self, other)
 
@@ -2658,7 +2681,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         NaN
 
         """
-        if isinstance(expt, Number):
+        if expt.is_number:
             if expt is S.NaN or \
                 expt is S.Infinity or \
                     expt is S.NegativeInfinity:
@@ -2698,7 +2721,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonnegative:
                 return S.true
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.false
         return Expr.__lt__(self, other)
 
@@ -2730,7 +2753,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonnegative:
                 return S.false
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.true
         return Expr.__ge__(self, other)
 

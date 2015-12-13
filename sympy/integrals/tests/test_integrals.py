@@ -11,7 +11,7 @@ from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow
-
+from sympy.utilities.randtest import verify_numerically
 
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
@@ -357,6 +357,7 @@ def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 
+@slow
 def test_evalf_integrals():
     assert NS(Integral(x, (x, 2, 5)), 15) == '10.5000000000000'
     gauss = Integral(exp(-x**2), (x, -oo, oo))
@@ -437,7 +438,6 @@ def test_integrate_DiracDelta():
     # This is here to check that deltaintegrate is being called, but also
     # to test definite integrals. More tests are in test_deltafunctions.py
     assert integrate(DiracDelta(x) * f(x), (x, -oo, oo)) == f(0)
-    assert integrate(DiracDelta(x) * f(x), (x, 0, oo)) == f(0)/2
     assert integrate(DiracDelta(x)**2, (x, -oo, oo)) == DiracDelta(0)
     # issue 4522
     assert integrate(integrate((4 - 4*x + x*y - 4*y) * \
@@ -822,7 +822,6 @@ def test_issue_4376():
                 (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
 
-@slow
 def test_issue_4517():
     assert integrate((sqrt(x) - x**3)/x**Rational(1, 3), x) == \
         6*x**Rational(7, 6)/7 - 3*x**Rational(11, 3)/11
@@ -849,6 +848,7 @@ def test_issue_4199():
         Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
 
 
+@slow
 def test_issue_3940():
     a, b, c, d = symbols('a:d', positive=True, finite=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
@@ -927,7 +927,7 @@ def test_atom_bug():
 
 
 def test_limit_bug():
-    z = Symbol('z', nonzero=True)
+    z = Symbol('z', zero=False)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
         (log(z**2) + 2*EulerGamma + 2*log(pi))/(2*z) - \
         (-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z + log(pi)/z
@@ -1025,12 +1025,9 @@ def test_risch_option():
     # TODO: How to test risch=False?
 
 def test_issue_6828():
-    # TODO: Currently `h' is the result (all three are equivalent). Improve
-    # simplify() to find the form with simplest real coefficients.
     f = 1/(1.08*x**2 - 4.3)
-    g = 300.0/(324.0*x**2 - 1290.0)
-    h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
-    assert integrate(f, x).diff(x).simplify().equals(f) is True
+    g = integrate(f, x).diff(x)
+    assert verify_numerically(f, g, tol=1e-12)
 
 @XFAIL
 def test_integrate_Piecewise_rational_over_reals():
@@ -1070,20 +1067,55 @@ def test_issue_2708():
 
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
-        Piecewise((pi*Piecewise((-s/(pi*(-s**2 + 1)), Abs(s**2) < 1),
-        (1/(pi*s*(1 - 1/s**2)), Abs(s**(-2)) < 1), (meijerg(((S(1)/2,), (0, 0)),
-        ((0, S(1)/2), (0,)), polar_lift(s)**2), True)),
-        And(Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
-        cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) -
-        1 > 0, Ne(s**2, 1))), (Integral(exp(-s*x)*cosh(x), (x, 0, oo)), True))
+        Piecewise(
+            (   pi*Piecewise(
+                    (   -s/(pi*(-s**2 + 1)),
+                        Abs(s**2) < 1),
+                    (   1/(pi*s*(1 - 1/s**2)),
+                        Abs(s**(-2)) < 1),
+                    (   meijerg(
+                            ((S(1)/2,), (0, 0)),
+                            ((0, S(1)/2), (0,)),
+                            polar_lift(s)**2),
+                        True)
+                ),
+                And(
+                    Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
+                    cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0,
+                    Ne(s**2, 1))
+            ),
+            (
+                Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
+                True))
     assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)) == \
-        Piecewise((-1/(s + 1)/2 - 1/(-s + 1)/2, And(Ne(1/s, 1),
-        Abs(periodic_argument(s, oo)) < pi/2, Abs(periodic_argument(s, oo)) <=
-        pi/2, cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
-        (Integral(exp(-s*x)*sinh(x), (x, 0, oo)), True))
+        Piecewise(
+            (   -1/(s + 1)/2 - 1/(-s + 1)/2,
+                And(
+                    Ne(1/s, 1),
+                    Abs(periodic_argument(s, oo)) < pi/2,
+                    Abs(periodic_argument(s, oo)) <= pi/2,
+                    cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
+            (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
+                True))
 
 
 def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
+
+
+@slow
+def test_issue_7130():
+    i, L, a, b = symbols('i L a b')
+    integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
+    assert x not in integrate(integrand, (x, 0, L)).free_symbols
+
+
+def test_issue_4950():
+    assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
+        -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_issue_4968():
+    assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5

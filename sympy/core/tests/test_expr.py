@@ -8,9 +8,10 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
     exp_polar, expand, diff, O, Heaviside, Si, Max)
 from sympy.core.function import AppliedUndef
+from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
-from sympy.core.compatibility import range
+from sympy.series.formal import FormalPowerSeries
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -241,6 +242,7 @@ def test_series_expansion_for_uniform_order():
     assert (1/x + y + y*x + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + y + y*x + x).series(x, 0, 1) == 1/x + y + O(x)
 
+
 def test_leadterm():
     assert (3 + 2*x**(log(3)/log(2) - 1)).leadterm(x) == (3, 0)
 
@@ -416,6 +418,11 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(y) is False
     assert (sin(y)/x).is_rational_function(x) is True
     assert (sin(y)/x).is_rational_function(x, y) is False
+
+    assert (S.NaN).is_rational_function() is False
+    assert (S.Infinity).is_rational_function() is False
+    assert (-S.Infinity).is_rational_function() is False
+    assert (S.ComplexInfinity).is_rational_function() is False
 
 
 def test_is_algebraic_expr():
@@ -1039,6 +1046,12 @@ def test_extractions():
     assert (-x + y).could_extract_minus_sign() is True
 
 
+def test_nan_extractions():
+    for r in (1, 0, I, nan):
+        assert nan.extract_additively(r) is None
+        assert nan.extract_multiplicatively(r) is None
+
+
 def test_coeff():
     assert (x + 1).coeff(x + 1) == 1
     assert (3*x).coeff(0) == 0
@@ -1458,7 +1471,6 @@ def test_is_constant():
     p = symbols('p', positive=True)
     assert Pow(x, S(0), evaluate=False).is_constant() is True  # == 1
     assert Pow(S(0), x, evaluate=False).is_constant() is False  # == 0 or 1
-    assert Pow(S(0), p, evaluate=False).is_constant() is True  # == 1
     assert (2**x).is_constant() is False
     assert Pow(S(2), S(3), evaluate=False).is_constant() is True
 
@@ -1674,7 +1686,13 @@ def test_issue_6325():
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
 
+
 def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) == False
+
+
+def test_issue_10161():
+    x = symbols('x', real=True)
+    assert x*abs(x)*abs(x) == x**3

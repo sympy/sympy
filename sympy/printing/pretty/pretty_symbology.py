@@ -208,8 +208,8 @@ modifier_dict = {
     'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
     'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
     'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
-    'prm': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
+    'prime': lambda s: s+u('\N{PRIME}'),
+    'prm': lambda s: s+u('\N{PRIME}'),
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -431,6 +431,7 @@ _xsym = {
     '<=':  ('<=', U('LESS-THAN OR EQUAL TO')),
     '>=':  ('>=', U('GREATER-THAN OR EQUAL TO')),
     '!=':  ('!=', U('NOT EQUAL TO')),
+    ':=':  (':=', ':='),
     '*':   ('*', U('DOT OPERATOR')),
     '-->': ('-->', U('EM DASH') + U('EM DASH') +
             U('BLACK RIGHT-POINTING TRIANGLE') if U('EM DASH')
@@ -468,8 +469,12 @@ atoms_table = {
     'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet':                U('EMPTY SET'),
     'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Naturals0':               (U('DOUBLE-STRUCK CAPITAL N') and
+                                (U('DOUBLE-STRUCK CAPITAL N') +
+                                 U('SUBSCRIPT ZERO'))),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
+    'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),

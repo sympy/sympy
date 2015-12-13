@@ -6,7 +6,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
 from sympy.sets.sets import FiniteSet
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
@@ -615,7 +615,7 @@ def test_nfloat():
 
     # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
-    assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
+    assert not any(a.free_symbols for a in solveset(f.subs(x, -0.139)))
 
     # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
@@ -686,3 +686,17 @@ def test_mexpand():
     assert _mexpand(None) is None
     assert _mexpand(1) is S.One
     assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+
+def test_issue_8469():
+    # This should not take forever to run
+    N = 40
+    def g(w, theta):
+        return 1/(1+exp(w-theta))
+
+    ws = symbols(['w%i'%i for i in range(N)])
+    import functools
+    expr = functools.reduce(g,ws)
+
+def test_should_evalf():
+    # This should not take forever to run (see #8506)
+    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)

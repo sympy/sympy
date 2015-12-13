@@ -9,7 +9,9 @@ import re
 import warnings
 import io
 
-from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
+from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
+                   Eq, log)
+
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -85,11 +87,51 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
 
-
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
+def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
+    from sympy.assumptions.sathandlers import UnevaluatedOnFree
+    from sympy import Q
+    assert _test_args(UnevaluatedOnFree(Q.positive))
+    assert _test_args(UnevaluatedOnFree(Q.positive(x)))
+    assert _test_args(UnevaluatedOnFree(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__AllArgs():
+    from sympy.assumptions.sathandlers import AllArgs
+    from sympy import Q
+    assert _test_args(AllArgs(Q.positive))
+    assert _test_args(AllArgs(Q.positive(x)))
+    assert _test_args(AllArgs(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__AnyArgs():
+    from sympy.assumptions.sathandlers import AnyArgs
+    from sympy import Q
+    assert _test_args(AnyArgs(Q.positive))
+    assert _test_args(AnyArgs(Q.positive(x)))
+    assert _test_args(AnyArgs(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__ExactlyOneArg():
+    from sympy.assumptions.sathandlers import ExactlyOneArg
+    from sympy import Q
+    assert _test_args(ExactlyOneArg(Q.positive))
+    assert _test_args(ExactlyOneArg(Q.positive(x)))
+    assert _test_args(ExactlyOneArg(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__CheckOldAssump():
+    from sympy.assumptions.sathandlers import CheckOldAssump
+    from sympy import Q
+    assert _test_args(CheckOldAssump(Q.positive))
+    assert _test_args(CheckOldAssump(Q.positive(x)))
+    assert _test_args(CheckOldAssump(Q.positive(x*y)))
+
+def test_sympy__assumptions__sathandlers__CheckIsPrime():
+    from sympy.assumptions.sathandlers import CheckIsPrime
+    from sympy import Q
+    # Input must be a number
+    assert _test_args(CheckIsPrime(Q.positive))
+    assert _test_args(CheckIsPrime(Q.positive(5)))
 
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
@@ -240,7 +282,6 @@ def test_sympy__core__function__Function():
 
 
 def test_sympy__core__function__Lambda():
-    from sympy.core.function import Lambda
     assert _test_args(Lambda((x, y), x + y + z))
 
 
@@ -496,9 +537,25 @@ def test_sympy__sets__fancysets__Reals():
     assert _test_args(Reals())
 
 
+def test_sympy__sets__fancysets__Complexes():
+    from sympy.sets.fancysets import Complexes
+    assert _test_args(Complexes())
+
+
+def test_sympy__sets__fancysets__ComplexRegion():
+    from sympy.sets.fancysets import ComplexRegion
+    from sympy import S
+    from sympy.sets import Interval
+    a = Interval(0, 1)
+    b = Interval(2, 3)
+    theta = Interval(0, 2*S.Pi)
+    assert _test_args(ComplexRegion(a*b))
+    assert _test_args(ComplexRegion(a*theta, polar=True))
+
+
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet
-    from sympy import S, Lambda, Symbol
+    from sympy import S, Symbol
     x = Symbol('x')
     assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
@@ -506,6 +563,13 @@ def test_sympy__sets__fancysets__ImageSet():
 def test_sympy__sets__fancysets__Range():
     from sympy.sets.fancysets import Range
     assert _test_args(Range(1, 5, 1))
+
+
+def test_sympy__sets__conditionset__ConditionSet():
+    from sympy.sets.conditionset import ConditionSet
+    from sympy import S, Symbol
+    x = Symbol('x')
+    assert _test_args(ConditionSet(x, Eq(x**2, 1), S.Reals))
 
 
 def test_sympy__sets__contains__Contains():
@@ -810,6 +874,9 @@ def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
 
+def test_sympy__stats__crv_types__GompertzDistribution():
+    from sympy.stats.crv_types import GompertzDistribution
+    assert _test_args(GompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__KumaraswamyDistribution():
     from sympy.stats.crv_types import KumaraswamyDistribution
@@ -862,6 +929,9 @@ def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
 
+def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
+    from sympy.stats.crv_types import ShiftedGompertzDistribution
+    assert _test_args(ShiftedGompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
@@ -1110,6 +1180,11 @@ def test_sympy__functions__elementary__hyperbolic__atanh():
     assert _test_args(atanh(2))
 
 
+def test_sympy__functions__elementary__hyperbolic__asech():
+    from sympy.functions.elementary.hyperbolic import asech
+    assert _test_args(asech(2))
+
+
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh
     assert _test_args(cosh(2))
@@ -1154,6 +1229,11 @@ def test_sympy__functions__elementary__integers__ceiling():
 def test_sympy__functions__elementary__integers__floor():
     from sympy.functions.elementary.integers import floor
     assert _test_args(floor(x))
+
+
+def test_sympy__functions__elementary__integers__frac():
+    from sympy.functions.elementary.integers import frac
+    assert _test_args(frac(x))
 
 
 def test_sympy__functions__elementary__miscellaneous__IdentityFunction():
@@ -1252,6 +1332,11 @@ def test_sympy__functions__elementary__trigonometric__sin():
     assert _test_args(sin(2))
 
 
+def test_sympy__functions__elementary__trigonometric__sinc():
+    from sympy.functions.elementary.trigonometric import sinc
+    assert _test_args(sinc(2))
+
+
 def test_sympy__functions__elementary__trigonometric__sec():
     from sympy.functions.elementary.trigonometric import sec
     assert _test_args(sec(2))
@@ -1269,6 +1354,11 @@ def test_sympy__functions__special__bessel__BesselBase():
 
 @SKIP("abstract class")
 def test_sympy__functions__special__bessel__SphericalBesselBase():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__functions__special__bessel__SphericalHankelBase():
     pass
 
 
@@ -1310,6 +1400,16 @@ def test_sympy__functions__special__bessel__jn():
 def test_sympy__functions__special__bessel__yn():
     from sympy.functions.special.bessel import yn
     assert _test_args(yn(0, x))
+
+
+def test_sympy__functions__special__bessel__hn1():
+    from sympy.functions.special.bessel import hn1
+    assert _test_args(hn1(0, x))
+
+
+def test_sympy__functions__special__bessel__hn2():
+    from sympy.functions.special.bessel import hn2
+    assert _test_args(hn2(0, x))
 
 
 def test_sympy__functions__special__bessel__AiryBase():
@@ -1491,6 +1591,30 @@ def test_sympy__functions__special__beta_functions__beta():
     assert _test_args(beta(x, x))
 
 
+def test_sympy__functions__special__mathieu_functions__MathieuBase():
+    pass
+
+
+def test_sympy__functions__special__mathieu_functions__mathieus():
+    from sympy.functions.special.mathieu_functions import mathieus
+    assert _test_args(mathieus(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieuc():
+    from sympy.functions.special.mathieu_functions import mathieuc
+    assert _test_args(mathieuc(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieusprime():
+    from sympy.functions.special.mathieu_functions import mathieusprime
+    assert _test_args(mathieusprime(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieucprime():
+    from sympy.functions.special.mathieu_functions import mathieucprime
+    assert _test_args(mathieucprime(1, 1, 1))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
     pass
@@ -1669,6 +1793,11 @@ def test_sympy__functions__special__zeta_functions__lerchphi():
 def test_sympy__functions__special__zeta_functions__polylog():
     from sympy.functions.special.zeta_functions import polylog
     assert _test_args(polylog(x, y))
+
+
+def test_sympy__functions__special__zeta_functions__stieltjes():
+    from sympy.functions.special.zeta_functions import stieltjes
+    assert _test_args(stieltjes(x, y))
 
 
 def test_sympy__integrals__integrals__Integral():
@@ -2050,7 +2179,7 @@ def test_sympy__matrices__expressions__determinant__Determinant():
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
-    from sympy import Lambda, symbols
+    from sympy import symbols
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
@@ -2672,7 +2801,6 @@ def test_sympy__physics__quantum__spin__JzOp():
 
 def test_sympy__physics__quantum__spin__Rotation():
     from sympy.physics.quantum.spin import Rotation
-    from sympy import pi
     assert _test_args(Rotation(pi, 0, pi/2))
 
 
@@ -2734,7 +2862,7 @@ def test_sympy__physics__quantum__state__TimeDepState():
 def test_sympy__physics__quantum__state__Wavefunction():
     from sympy.physics.quantum.state import Wavefunction
     from sympy.functions import sin
-    from sympy import Piecewise, pi
+    from sympy import Piecewise
     n = 1
     L = 1
     g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
@@ -2991,6 +3119,67 @@ def test_sympy__series__order__Order():
     assert _test_args(Order(1, x, y))
 
 
+@SKIP('Abstract Class')
+def test_sympy__series__sequences__SeqBase():
+    pass
+
+
+def test_sympy__series__sequences__EmptySequence():
+    from sympy.series.sequences import EmptySequence
+    assert _test_args(EmptySequence())
+
+
+@SKIP('Abstract Class')
+def test_sympy__series__sequences__SeqExpr():
+    pass
+
+
+def test_sympy__series__sequences__SeqPer():
+    from sympy.series.sequences import SeqPer
+    assert _test_args(SeqPer((1, 2, 3), (0, 10)))
+
+
+def test_sympy__series__sequences__SeqFormula():
+    from sympy.series.sequences import SeqFormula
+    assert _test_args(SeqFormula(x**2, (0, 10)))
+
+
+def test_sympy__series__sequences__SeqExprOp():
+    from sympy.series.sequences import SeqExprOp, sequence
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
+    assert _test_args(SeqExprOp(s1, s2))
+
+
+def test_sympy__series__sequences__SeqAdd():
+    from sympy.series.sequences import SeqAdd, sequence
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
+    assert _test_args(SeqAdd(s1, s2))
+
+
+def test_sympy__series__sequences__SeqMul():
+    from sympy.series.sequences import SeqMul, sequence
+    s1 = sequence((1, 2, 3))
+    s2 = sequence(x**2)
+    assert _test_args(SeqMul(s1, s2))
+
+
+@SKIP('Abstract Class')
+def test_sympy__series__series_class__SeriesBase():
+    pass
+
+
+def test_sympy__series__fourier__FourierSeries():
+    from sympy.series.fourier import fourier_series
+    assert _test_args(fourier_series(x, (x, -pi, pi)))
+
+
+def test_sympy__series__formal__FormalPowerSeries():
+    from sympy.series.formal import fps
+    assert _test_args(fps(log(1 + x), x))
+
+
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
@@ -2999,6 +3188,18 @@ def test_sympy__simplify__hyperexpand__Hyper_Function():
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
     assert _test_args(G_Function([2], [1], [], []))
+
+
+def test_sympy__tensor__array__dense_ndim_array__ImmutableDenseNDimArray():
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    densarr = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(densarr)
+
+
+def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
+    from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
+    sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(sparr)
 
 
 def test_sympy__tensor__indexed__Idx():
@@ -3111,8 +3312,13 @@ def test_sympy__geometry__point__Point():
     assert _test_args(Point(0, 1))
 
 
-def test_sympy__geometry__point3d__Point3D():
-    from sympy.geometry.point3d import Point3D
+def test_sympy__geometry__point__Point2D():
+    from sympy.geometry.point import Point2D
+    assert _test_args(Point2D(0, 1))
+
+
+def test_sympy__geometry__point__Point3D():
+    from sympy.geometry.point import Point3D
     assert _test_args(Point3D(0, 1, 2))
 
 
@@ -3191,6 +3397,9 @@ def test_sympy__geometry__entity__GeometryEntity():
     from sympy.geometry.point import Point
     assert _test_args(GeometryEntity(Point(1, 0), 1, [1, 2]))
 
+@SKIP("abstract class")
+def test_sympy__geometry__entity__GeometrySet():
+    pass
 
 def test_sympy__diffgeom__diffgeom__Manifold():
     from sympy.diffgeom import Manifold
@@ -3349,6 +3558,14 @@ def test_sympy__ntheory__factor___divisor_sigma():
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = divisor_sigma(n, k)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___udivisor_sigma():
+    from sympy.ntheory.factor_ import udivisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = udivisor_sigma(n, k)
     assert _test_args(t)
 
 
@@ -3527,3 +3744,7 @@ def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
     assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+
+def test_sympy__physics__wigner__Wigner3j():
+    from sympy.physics.wigner import Wigner3j
+    assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))

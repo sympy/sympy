@@ -45,6 +45,7 @@ class CoordSysCartesian(Basic):
 
         """
 
+        name = str(name)
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
@@ -70,6 +71,8 @@ class CoordSysCartesian(Basic):
             if location is None:
                 location = Vector.zero
             else:
+                if not isinstance(location, Vector):
+                    raise TypeError("location should be a Vector")
                 #Check that location does not contain base
                 #scalars
                 for x in location.free_symbols:
@@ -78,12 +81,9 @@ class CoordSysCartesian(Basic):
                                          " BaseScalars")
             origin = parent.origin.locate_new(name + '.origin',
                                               location)
-            arg_parent = parent
-            arg_self = Symbol('default')
         else:
+            location = Vector.zero
             origin = Point(name + '.origin')
-            arg_parent = Symbol('default')
-            arg_self = Symbol(name)
 
         #All systems that are defined as 'roots' are unequal, unless
         #they have the same name.
@@ -94,8 +94,12 @@ class CoordSysCartesian(Basic):
         #However, coincident systems may be seen as unequal if
         #positioned/oriented wrt different parents, even though
         #they may actually be 'coincident' wrt the root system.
-        obj = super(CoordSysCartesian, cls).__new__(
-            cls, arg_self, parent_orient, origin, arg_parent)
+        if parent is not None:
+            obj = super(CoordSysCartesian, cls).__new__(
+                cls, Symbol(name), location, parent_orient, parent)
+        else:
+            obj = super(CoordSysCartesian, cls).__new__(
+                cls, Symbol(name), location, parent_orient)
         obj._name = name
 
         #Initialize the base vectors
@@ -142,7 +146,7 @@ class CoordSysCartesian(Basic):
 
         #Assign a Del operator instance
         from sympy.vector.deloperator import Del
-        obj._del = Del(obj)
+        obj._delop = Del(obj)
 
         #Assign params
         obj._parent = parent
@@ -172,7 +176,7 @@ class CoordSysCartesian(Basic):
 
     @property
     def delop(self):
-        return self._del
+        return self._delop
 
     @property
     def i(self):
@@ -636,11 +640,17 @@ class CoordSysCartesian(Basic):
         Quaternion orientation orients the new CoordSysCartesian with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
+
         This orientation is described by four parameters:
+
         q0 = cos(theta/2)
+
         q1 = lambda_x sin(theta/2)
+
         q2 = lambda_y sin(theta/2)
+
         q3 = lambda_z sin(theta/2)
+
         Quaternion does not take in a rotation order.
 
         Parameters

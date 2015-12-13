@@ -12,6 +12,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
+from sympy.core.function import Derivative
 
 from sympy.logic.boolalg import BooleanAtom
 
@@ -2183,7 +2184,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'integrate')
 
-    def diff(f, *specs):
+    def diff(f, *specs, **kwargs):
         """
         Computes partial derivative of ``f``.
 
@@ -2200,6 +2201,9 @@ class Poly(Expr):
         Poly(2*x*y, x, y, domain='ZZ')
 
         """
+        if not kwargs.get('evaluate', True):
+            return Derivative(f, *specs, **kwargs)
+
         if hasattr(f.rep, 'diff'):
             if not specs:
                 return f.per(f.rep.diff(m=1))
@@ -2217,6 +2221,9 @@ class Poly(Expr):
             return f.per(rep)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'diff')
+
+    _eval_derivative = diff
+    _eval_diff = diff
 
     def eval(self, x, a=None, auto=True):
         """
@@ -4145,6 +4152,8 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
+    from sympy.functions.elementary.piecewise import Piecewise
+
     if len(exprs) == 2:
         f, g = exprs
 
@@ -5482,6 +5491,15 @@ def gff_list(f, *gens, **args):
     >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
     True
 
+    >>> f = x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
+        1401*x**6 + 1090*x**5 + 2715*x**4 - 6720*x**3 - 1092*x**2 + 5040*x
+
+    >>> gff_list(f)
+    [(x**3 + 7, 2), (x**2 + 5*x, 3)]
+
+    >>> ff(x**3 + 7, 2)*ff(x**2 + 5*x, 3) == f
+    True
+
     """
     options.allowed_flags(args, ['polys'])
 
@@ -5593,11 +5611,15 @@ def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
 
-    for arg in Mul.make_args(expr):
+    args = [i._eval_factor() if hasattr(i, '_eval_factor') else i for i in Mul.make_args(expr)]
+    for arg in args:
         if arg.is_Number:
             coeff *= arg
             continue
-        elif arg.is_Pow:
+        if arg.is_Mul:
+            args.extend(arg.args)
+            continue
+        if arg.is_Pow:
             base, exp = arg.args
             if base.is_Number:
                 factors.append((base, exp))
@@ -6256,6 +6278,7 @@ def cancel(f, *gens, **args):
     sqrt(6)/2
     """
     from sympy.core.exprtools import factor_terms
+    from sympy.functions.elementary.piecewise import Piecewise
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -6285,7 +6308,7 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative and not x.has(Piecewise))
+            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
             c, nc = sifted[True], sifted[False]
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
@@ -6799,5 +6822,3 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
-
-from sympy.functions import Piecewise

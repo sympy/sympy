@@ -110,7 +110,9 @@ class MatrixExpr(Basic):
     def __pow__(self, other):
         if not self.is_square:
             raise ShapeError("Power of non-square matrix %s" % self)
-        if other is S.NegativeOne:
+        elif self.is_Identity:
+            return self
+        elif other is S.NegativeOne:
             return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
@@ -322,6 +324,14 @@ class MatrixElement(Expr):
     j = property(lambda self: self.args[2])
     _diff_wrt = True
 
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return args[0][args[1], args[2]]
+
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
@@ -457,6 +467,8 @@ class ZeroMatrix(MatrixExpr):
             raise ShapeError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
+        if other < 1:
+            raise ValueError("Matrix det == 0; not invertible.")
         return self
 
     def _eval_transpose(self):

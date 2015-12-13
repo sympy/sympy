@@ -40,11 +40,6 @@ core
 ----
 .. module:: sympy.core.core
 
-C
-^
-.. autoclass:: C
-   :members:
-
 singleton
 ---------
 .. module:: sympy.core.singleton
@@ -471,8 +466,7 @@ PrecisionExhausted
 
 N
 ^
-.. autoclass:: N
-   :members:
+.. autofunction:: N
 
 containers
 ----------

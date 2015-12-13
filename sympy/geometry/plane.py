@@ -5,9 +5,9 @@ Contains
 Plane
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Dummy, Symbol, Rational
+from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
@@ -16,10 +16,10 @@ from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
-from .point3d import Point3D
-from .point import Point
-from .line3d import LinearEntity3D, Line3D, Segment3D, Ray3D
-from .line import Line, Segment, Ray
+from .point import Point, Point3D
+from .line3d import Line3D, LinearEntity3D, Ray3D, Segment3D
+from .line import Line, Ray, Segment
+
 
 class Plane(GeometryEntity):
     """
@@ -54,7 +54,7 @@ class Plane(GeometryEntity):
             p2 = Point3D(a)
             p3 = Point3D(b)
             if Point3D.are_collinear(p1, p2, p3):
-                raise NotImplementedError('Enter three non-collinear points')
+                raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
             b = p1.direction_ratio(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
@@ -76,7 +76,7 @@ class Plane(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.point3d.Point3D
+        sympy.geometry.point.Point3D
 
         Examples
         ========
@@ -442,11 +442,11 @@ class Plane(GeometryEntity):
 
         """
         planes = set(planes)
-        if len(planes) < 2:
-            return False
         for i in planes:
             if not isinstance(i, Plane):
                 raise ValueError('All objects should be Planes but got %s' % i.func)
+        if len(planes) < 2:
+            return False
         planes = list(planes)
         first = planes.pop(0)
         sol = first.intersection(planes[0])
@@ -627,6 +627,8 @@ class Plane(GeometryEntity):
             return Point3D(a, b + cos(t), c + sin(t))
         m = Dummy()
         p = self.projection(Point3D(self.p1.x + cos(t), self.p1.y + sin(t), 0)*m)
+
+        # TODO: Replace solve with solveset, when this line is tested
         return p.xreplace({m: solve(p.distance(self.p1) - 1, m)[0]})
 
     def intersection(self, o):
@@ -683,6 +685,8 @@ class Plane(GeometryEntity):
                 t = Dummy()  # unnamed else it may clash with a symbol in o
                 a = Point3D(o.arbitrary_point(t))
                 b = self.equation(x, y, z)
+
+                # TODO: Replace solve with solveset, when this line is tested
                 c = solve(b.subs(list(zip((x, y, z), a.args))), t)
                 if not c:
                     return []
@@ -702,12 +706,18 @@ class Plane(GeometryEntity):
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
+
+                # TODO: Replace solve with solveset, when this line is tested
                 f = solve((d.subs(z, 0), e.subs(z, 0)), [x, y])
                 if len(f) == 2:
                     return [Line3D(Point3D(f[x], f[y], 0), direction_ratio=c)]
+
+                # TODO: Replace solve with solveset, when this line is tested
                 g = solve((d.subs(y, 0), e.subs(y, 0)),[x, z])
                 if len(g) == 2:
                     return [Line3D(Point3D(g[x], 0, g[z]), direction_ratio=c)]
+
+                # TODO: Replace solve with solveset, when this line is tested
                 h = solve((d.subs(x, 0), e.subs(x, 0)),[y, z])
                 if len(h) == 2:
                     return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]

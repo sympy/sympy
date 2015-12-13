@@ -14,7 +14,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And
 
@@ -108,13 +108,11 @@ def sqrt(arg):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/Principal_value
-
+    .. [1] http://en.wikipedia.org/wiki/Square_root
+    .. [2] http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
     return Pow(arg, S.Half)
-
 
 
 def cbrt(arg):
@@ -456,6 +454,7 @@ class MinMaxBase(Expr, LatticeOp):
     def is_real(self):
         return fuzzy_and(arg.is_real for arg in self.args)
 
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
@@ -477,6 +476,10 @@ class Max(MinMaxBase, Application):
 
     Also, only comparable arguments are permitted.
 
+    It is named ``Max`` and not ``max`` to avoid conflicts
+    with the built-in function ``max``.
+
+
     Examples
     ========
 
@@ -487,29 +490,22 @@ class Max(MinMaxBase, Application):
 
     >>> Max(x, -2)                  #doctest: +SKIP
     Max(x, -2)
-
     >>> Max(x, -2).subs(x, 3)
     3
-
     >>> Max(p, -2)
     p
-
     >>> Max(x, y)                   #doctest: +SKIP
     Max(x, y)
-
     >>> Max(x, y) == Max(y, x)
     True
-
     >>> Max(x, Max(y, z))           #doctest: +SKIP
     Max(x, y, z)
-
     >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
     Max(8, p)
-
     >>> Max (1, x, oo)
     oo
 
-    Algorithm
+    * Algorithm
 
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
@@ -564,10 +560,21 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_is_positive(self):
+        return fuzzy_or(a.is_positive for a in self.args)
+
+    def _eval_is_nonnegative(self):
+        return fuzzy_or(a.is_nonnegative for a in self.args)
+
+    def _eval_is_negative(self):
+        return fuzzy_and(a.is_negative for a in self.args)
+
 
 class Min(MinMaxBase, Application):
     """
     Return, if possible, the minimum value of the list.
+    It is named ``Min`` and not ``min`` to avoid conflicts
+    with the built-in function ``min``.
 
     Examples
     ========
@@ -579,16 +586,12 @@ class Min(MinMaxBase, Application):
 
     >>> Min(x, -2)                  #doctest: +SKIP
     Min(x, -2)
-
     >>> Min(x, -2).subs(x, 3)
     -2
-
     >>> Min(p, -3)
     -3
-
     >>> Min(x, y)                   #doctest: +SKIP
     Min(x, y)
-
     >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
     Min(n, -7)
 
@@ -616,3 +619,12 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_is_positive(self):
+        return fuzzy_and(a.is_positive for a in self.args)
+
+    def _eval_is_nonnegative(self):
+        return fuzzy_and(a.is_nonnegative for a in self.args)
+
+    def _eval_is_negative(self):
+        return fuzzy_or(a.is_negative for a in self.args)

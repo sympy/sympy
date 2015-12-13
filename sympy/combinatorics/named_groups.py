@@ -25,8 +25,8 @@ def AbelianGroup(*cyclic_orders):
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([
-            Permutation(6)(0, 1, 2),
-            Permutation(3, 4, 5, 6)])
+            (6)(0 1 2),
+            (3 4 5 6)])
     >>> _.is_group()
     False
 
@@ -290,7 +290,8 @@ def SymmetricGroup(n):
 
 
 def RubikGroup(n):
-    """Return a group of Rubik's cube generators.
+    """Return a group of Rubik's cube generators
+
     >>> from sympy.combinatorics.named_groups import RubikGroup
     >>> RubikGroup(2).is_group()
     False

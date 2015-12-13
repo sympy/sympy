@@ -92,7 +92,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
+class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -391,13 +391,20 @@ class Function(Application, Expr):
         By default (in this implementation), this happens if (and only if) the
         ARG is a floating point number.
         This function is used by __new__.
+
+        Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
+        from sympy.core.symbol import Wild
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
-        re, im = arg.as_real_imag()
-        l = [a._prec for a in [re, im] if a.is_Float]
+        # Don't use as_real_imag() here, that's too much work
+        a, b = Wild('a'), Wild('b')
+        m = arg.match(a + b*S.ImaginaryUnit)
+        if not m or not (m[a].is_Float or m[b].is_Float):
+            return -1
+        l = [m[i]._prec for i in m if m[i].is_Float]
         l.append(-1)
         return max(l)
 
@@ -997,11 +1004,19 @@ class Derivative(Expr):
         if not variables:
             variables = expr.free_symbols
             if len(variables) != 1:
+                if expr.is_number:
+                    return S.Zero
                 from sympy.utilities.misc import filldedent
-                raise ValueError(filldedent('''
-                    Since there is more than one variable in the
-                    expression, the variable(s) of differentiation
-                    must be supplied to differentiate %s''' % expr))
+                if len(variables) == 0:
+                    raise ValueError(filldedent('''
+                        Since there are no variables in the expression,
+                        the variable(s) of differentiation must be supplied
+                        to differentiate %s''' % expr))
+                else:
+                    raise ValueError(filldedent('''
+                        Since there is more than one variable in the
+                        expression, the variable(s) of differentiation
+                        must be supplied to differentiate %s''' % expr))
 
         # Standardize the variables by sympifying them and making appending a
         # count of 1 if there is only one variable: diff(e,x)->diff(e,x,1).
@@ -1104,14 +1119,19 @@ class Derivative(Expr):
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i)
                     new_v.dummy_index = hash(v)
-                    expr = expr.subs(v, new_v)
+                    expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative(v)
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
-                        obj = obj.subs(v, old_v)
+                        if not old_v.is_Symbol and obj.is_Derivative:
+                            # Derivative evaluated at a point that is not a
+                            # symbol
+                            obj = Subs(obj, v, old_v)
+                        else:
+                            obj = obj.xreplace({v: old_v})
                     v = old_v
 
             if obj is None:
@@ -1151,7 +1171,7 @@ class Derivative(Expr):
         * Derivatives wrt symbols and non-symbols don't commute.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import Derivative, Function, symbols
         >>> vsort = Derivative._sort_variables
@@ -1937,8 +1957,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     kind of 'expansion'.  For hints that simply rewrite an expression, use the
     .rewrite() API.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Expr, sympify
     >>> class MyClass(Expr):
@@ -2273,7 +2293,7 @@ def count_ops(expr, visual=False):
 
     """
     from sympy import Integral, Symbol
-    from sympy.simplify.simplify import fraction
+    from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
 
     expr = sympify(expr)
@@ -2287,6 +2307,10 @@ def count_ops(expr, visual=False):
         ADD = Symbol('ADD')
         while args:
             a = args.pop()
+
+            if isinstance(a, str):
+                continue
+
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:

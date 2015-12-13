@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
-from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols
+from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
+                                  Point, dynamicsymbols)
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
@@ -321,8 +322,8 @@ def potential_energy(*body):
     >>> a = ReferenceFrame('a')
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, M, (I, Ac))
-    >>> Pa.set_potential_energy(m * g * h)
-    >>> A.set_potential_energy(M * g * h)
+    >>> Pa.potential_energy = m * g * h
+    >>> A.potential_energy = M * g * h
     >>> potential_energy(Pa, A)
     M*g*h + g*h*m
 
@@ -379,8 +380,8 @@ def Lagrangian(frame, *body):
     >>> a.set_ang_vel(N, 10 * N.z)
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, 20, (I, Ac))
-    >>> Pa.set_potential_energy(m * g * h)
-    >>> A.set_potential_energy(M * g * h)
+    >>> Pa.potential_energy = m * g * h
+    >>> A.potential_energy = M * g * h
     >>> Lagrangian(N, Pa, A)
     -M*g*h - g*h*m + 350
 
@@ -462,7 +463,7 @@ def msubs(expr, *sub_dicts, **kwargs):
         func = _smart_subs
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
-    if isinstance(expr, Matrix):
+    if isinstance(expr, (Matrix, Vector, Dyadic)):
         return expr.applyfunc(lambda x: func(x, sub_dict))
     else:
         return func(expr, sub_dict)

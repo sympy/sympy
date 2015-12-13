@@ -11,7 +11,7 @@ from sympy.galgebra.ga import MV, Nga, Com
 from sympy.galgebra.printing import GA_Printer
 from sympy.matrices import Matrix
 from sympy.simplify import collect, simplify
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
 
 
 def F(x, n, nbar):
@@ -193,6 +193,7 @@ def test_geometry():
     assert diff == S.Zero
 
 
+@slow
 def test_extract_plane_and_line():
     """
     Show that conformal trivector encodes planes and lines. See D&L section
@@ -379,6 +380,8 @@ def test_basic_multivector_operations():
 
     return
 
+
+@slow
 def test_check_generalized_BAC_CAB_formulas():
     with GA_Printer():
         (a, b, c, d, e) = MV.setup('a b c d e')
@@ -592,6 +595,8 @@ def test_conformal_representations_of_circles_lines_spheres_and_planes():
 
     return
 
+
+@slow
 def test_properties_of_geometric_objects():
     with GA_Printer():
         metric = '# # # 0 0,' + \

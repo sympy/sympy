@@ -321,30 +321,21 @@ class StrPrinter(Printer):
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
     def _print_Cycle(self, expr):
-        """We want it to print as Cycle in doctests for which a repr is required.
-
-        With __repr__ defined in Cycle, interactive output gives Cycle form but
-        during doctests, the dict's __repr__ form is used. Defining this _print
-        function solves that problem.
-
-        >>> from sympy.combinatorics import Cycle
-        >>> Cycle(1, 2) # will print as a dict without this method
-        Cycle(1, 2)
-        """
-        return expr.__repr__()
+        return expr.__str__()
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
         if Permutation.print_cyclic:
             if not expr.size:
-                return 'Permutation()'
+                return '()'
             # before taking Cycle notation, see if the last element is
             # a singleton and move it to the head of the string
             s = Cycle(expr)(expr.size - 1).__repr__()[len('Cycle'):]
             last = s.rfind('(')
             if not last == 0 and ',' not in s[last:]:
                 s = s[last:] + s[:last]
-            return 'Permutation%s' % s
+            s = s.replace(',', '')
+            return s
         else:
             s = expr.support()
             if not s:
@@ -393,7 +384,7 @@ class StrPrinter(Printer):
             (", ".join(map(self._print, field.symbols)), field.domain, field.order)
 
     def _print_PolyElement(self, poly):
-        return poly.str(self, PRECEDENCE, "%s**%d", "*")
+        return poly.str(self, PRECEDENCE, "%s**%s", "*")
 
     def _print_FracElement(self, frac):
         if frac.denom == 1:
@@ -558,6 +549,7 @@ class StrPrinter(Printer):
         charmap = {
             "==": "Eq",
             "!=": "Ne",
+            ":=": "Assignment",
         }
 
         if expr.rel_op in charmap:

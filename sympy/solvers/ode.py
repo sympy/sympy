@@ -259,7 +259,8 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, posify, cse
-from sympy.simplify.simplify import collect_const, powdenest
+from sympy.simplify.powsimp import powdenest
+from sympy.simplify.radsimp import collect_const
 from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 
@@ -373,7 +374,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 
     if isinstance(eq, Expr):
         eq = [eq]
-    elif not is_iterable(eq):
+    elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
     atom_set = set().union(*[i.free_symbols for i in eq])
@@ -1218,8 +1219,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 matching_hints[s + "_Integral"] = r
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_constant_coeff_undetermined_"
-                        "coefficients"] = r
+                    matching_hints[
+                        "nth_linear_constant_coeff_undetermined_coefficients"
+                            ] = r
+
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
@@ -1278,31 +1281,36 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
-    Returns a list of parameters defining the system of ordinary differential equations
-    in form of dictionary. The dictionary returned is further used in
-    :py:meth:`~sympy.solvers.ode.dsolve` for solving system of ODEs.
+    Returns a dictionary of parameter names and values that define the system
+    of ordinary differential equations in ``eq``.
+    The parameters are further used in
+    :py:meth:`~sympy.solvers.ode.dsolve` for solving that system.
 
-    It returns seven parameters, first parameter is 'is_linear' which tells
-    whether given equation is linear or Non-linear based on the coefficients
-    of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc
-    which itself is a parameter named 'func_coeff'.
-    If the coefficient is constant, then the equation is said to be linear and 'is_linear'
-    returns True otherwise 'is_linear' returns False.
-    Second parameter is order of equation, it provides information about order
-    of differential equations provided. The third parameters is the number of equation
-    in the system.
-    The forth parameter is 'func_coeff' which has list of coefficient of all function and its
-    differentials. Each is described by three elements, first is equation number,
-    second is function and third is order of function whose coefficients we are calculating.
-    The other two parameters are the equations of ODEs and its functions.
-    The other parameter which tells whether given system of ODEs are solvable by current
-    solving engine. If it returns a type the it is solvable and result can be obtained
-    using dsolve otherwise None is returned.
+    The parameter names and values are:
 
-    The type returned is just a number assigned to set of each equation classified under
-    common characteristics based on linearity, number of equation and order. Similarly
-    there are different sets based on above parameters. The type number sequence implemented
-    is same as is given references.
+    'is_linear' (boolean), which tells whether the given system is linear.
+    Note that "linear" here refers to the operator: terms such as ``x*diff(x,t)`` are
+    nonlinear, whereas terms like ``sin(t)*diff(x,t)`` are still linear operators.
+
+    'func' (list) contains the :py:class:`~sympy.core.function.Function`s that
+    appear with a derivative in the ODE, i.e. those that we are trying to solve
+    the ODE for.
+
+    'order' (dict) with the maximum derivative for each element of the 'func'
+    parameter.
+
+    'func_coeff' (dict) with the coefficient for each triple ``(equation number,
+    function, order)```. The coefficients are those subexpressions that do not
+    appear in 'func', and hence can be considered constant for purposes of ODE
+    solving.
+
+    'eq' (list) with the equations from ``eq``, sympified and transformed into
+    expressions (we are solving for these expressions to be zero).
+
+    'no_of_equations' (int) is the number of equations (same as ``len(eq)``).
+
+    'type_of_equation' (string) is an internal classification of the type of
+    ODE.
 
     References
     ==========
@@ -1346,8 +1354,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
     if i==0:
-        raise ValueError("classify_sysode() woks for systems of ODEs. For"
-        " single ODE equation solving classify_ode should be used")
+        raise ValueError("classify_sysode() works for systems of ODEs. "
+        "For scalar ODEs, classify_ode should be used")
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     # find all the functions if not given
@@ -1386,11 +1394,11 @@ def classify_sysode(eq, funcs=None, **kwargs):
         if isinstance(func, list):
             for func_elem in func:
                 if len(func_elem.args) != 1:
-                    raise ValueError("dsolve() and classify_sysode() work with"
+                    raise ValueError("dsolve() and classify_sysode() work with "
                     "functions of one variable only, not %s" % func)
         else:
             if func and len(func.args) != 1:
-                raise ValueError("dsolve() and classify_sysode() work with"
+                raise ValueError("dsolve() and classify_sysode() work with "
                 "functions of one variable only, not %s" % func)
 
     # find the order of all equation in system of odes
@@ -1495,13 +1503,18 @@ def check_linear_2eq_order1(eq, func, func_coef):
     r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
     r['b1'] = -fc[0,x(t),0]/fc[0,x(t),1] ; r['b2'] = -fc[1,x(t),0]/fc[1,y(t),1]
     r['c1'] = -fc[0,y(t),0]/fc[0,x(t),1] ; r['c2'] = -fc[1,y(t),0]/fc[1,y(t),1]
-    const = [S(0),S(0)]
+    forcing = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
-            if not j.has(t):
-                const[i] += j
-    r['d1'] = const[0]
-    r['d2'] = const[1]
+            if not j.has(x(t), y(t)):
+                forcing[i] += j
+    if not (forcing[0].has(t) or forcing[1].has(t)):
+        # We can handle homogeneous case and simple constant forcings
+        r['d1'] = forcing[0]
+        r['d2'] = forcing[1]
+    else:
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        return None
 
     # Conditions to check for type 6 whose equations are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and
     # Eq(diff(y(t),t), a*[f(t) + a*h(t)]x(t) + a*[g(t) - h(t)]*y(t))
@@ -1660,6 +1673,16 @@ def check_linear_3eq_order1(eq, func, func_coef):
     r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
     r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
     r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
+    forcing = [S(0), S(0), S(0)]
+    for i in range(3):
+        for j in Add.make_args(eq[i]):
+            if not j.has(x(t), y(t), z(t)):
+                forcing[i] += j
+    if forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t):
+        # We can handle homogeneous case and simple constant forcings.
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        return None
+
     if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
         if r['c1']==r['d1']==r['d2']==0:
             return 'type1'
@@ -1703,7 +1726,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     f = Wild('f')
     g = Wild('g')
-    u, v = symbols('u, v')
+    u, v = symbols('u, v', cls=Dummy)
     def check_type(x, y):
         r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
         r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
@@ -1778,7 +1801,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
     z = func[2].func
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    u, v, w = symbols('u, v, w')
+    u, v, w = symbols('u, v, w', cls=Dummy)
     a = Wild('a', exclude=[x(t), y(t), z(t), t])
     b = Wild('b', exclude=[x(t), y(t), z(t), t])
     c = Wild('c', exclude=[x(t), y(t), z(t), t])
@@ -5567,7 +5590,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 if xieta:
                     return xieta
                 else:
-                    raise NotImplementedError("Infinitesimals could not be found for"
+                    raise NotImplementedError("Infinitesimals could not be found for "
                         "the given ODE")
 
             elif hint == 'default':
@@ -6355,7 +6378,6 @@ def sysode_linear_2eq_order1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
-    l = Symbol('l')
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
@@ -6364,19 +6386,24 @@ def sysode_linear_2eq_order1(match_):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
 
-    # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
+    # for equations Eq(a1*diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
     r['a'] = -fc[0,x(t),0]/fc[0,x(t),1]
     r['c'] = -fc[1,x(t),0]/fc[1,y(t),1]
     r['b'] = -fc[0,y(t),0]/fc[0,x(t),1]
     r['d'] = -fc[1,y(t),0]/fc[1,y(t),1]
-    const = [S(0),S(0)]
+    forcing = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
-            if not j.has(t):
-                const[i] += j
-    r['k1'] = const[0]
-    r['k2'] = const[1]
+            if not j.has(x(t), y(t)):
+                forcing[i] += j
+    if not (forcing[0].has(t) or forcing[1].has(t)):
+        r['k1'] = forcing[0]
+        r['k2'] = forcing[1]
+    else:
+        raise NotImplementedError("Only homogeneous problems are supported" +
+                                  " (and constant inhomogeneity)")
+
     if match_['type_of_equation'] == 'type1':
         sol = _linear_2eq_order1_type1(x, y, t, r)
     if match_['type_of_equation'] == 'type2':
@@ -6425,7 +6452,7 @@ def _linear_2eq_order1_type1(x, y, t, r):
 
     .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t}
 
-    .. math:: y = c_1 (\lambda_1 - a) e^{\lambda_1 t} + c_2 (\lambda_2 - a) e^{\lambda_2 t}
+    .. math:: y = C_1 (\lambda_1 - a) e^{\lambda_1 t} + C_2 (\lambda_2 - a) e^{\lambda_2 t}
 
     where `C_1` and `C_2` being arbitary constants
 
@@ -6467,21 +6494,34 @@ def _linear_2eq_order1_type1(x, y, t, r):
     .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
-    l = Symbol('l')
+    # FIXME: at least some of these can fail to give two linearly
+    # independent solutions e.g., because they make assumptions about
+    # zero/nonzero of certain coefficients.  I've "fixed" one and
+    # raised NotImplementedError in another.  I think this should probably
+    # just be re-written in terms of eigenvectors...
+
+    l = Dummy('l')
     C1, C2, C3, C4 = symbols('C1:5')
-    l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], 0)
-    l2 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], 1)
+    l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
+    l2 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D > 0:
-            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
-            gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
+            if r['b'].is_zero:
+                # tempting to use this in all cases, but does not guarantee linearly independent eigenvectors
+                gsol1 = C1*(l1 - r['d'] + r['b'])*exp(l1*t) + C2*(l2 - r['d'] + r['b'])*exp(l2*t)
+                gsol2 = C1*(l1 - r['a'] + r['c'])*exp(l1*t) + C2*(l2 - r['a'] + r['c'])*exp(l2*t)
+            else:
+                gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
+                gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
         if D < 0:
             sigma = re(l1)
             if im(l1).is_positive:
                 beta = im(l1)
             else:
                 beta = im(l2)
+            if r['b'].is_zero:
+                raise NotImplementedError('b == 0 case not implemented')
             gsol1 = r['b']*exp(sigma*t)*(C1*sin(beta*t)+C2*cos(beta*t))
             gsol2 = exp(sigma*t)*(((C1*(sigma-r['a'])-C2*beta)*sin(beta*t)+(C1*beta+(sigma-r['a'])*C2)*cos(beta*t)))
         if D == 0:
@@ -6510,7 +6550,7 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
     .. math:: x' = ax + by + k1 , y' = cx + dy + k2
 
-    The general solution og this system is given by sum of its particular solution and the
+    The general solution of this system is given by sum of its particular solution and the
     general solution of the corresponding homogeneous system is obtained from type1.
 
     1. When `ad - bc \neq 0`. The particular solution will be
@@ -6536,17 +6576,18 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
     """
     r['k1'] = -r['k1']; r['k2'] = -r['k2']
-    x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
+        x0, y0 = symbols('x0, y0', cls=Dummy)
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
-    elif (r['a']*a[d] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
+    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
         k = r['c']/r['a']
         sigma = r['a'] + r['b']*k
         if sigma != 0:
             sol1 = r['b']*sigma**-1*(r['k1']*k-r['k2'])*t - sigma**-2*(r['a']*r['k1']+r['b']*r['k2'])
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         else:
+            # FIXME: a previous typo fix shows this is not covered by tests
             sol1 = r['b']*(r['k2']-r['k1']*k)*t**2 + r['k1']*t
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         psol = [sol1, sol2]
@@ -7057,6 +7098,8 @@ def _linear_2eq_order2_type4(x, y, t, r):
     peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
     peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
     peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
+    # FIXME: solve for what in what?  Ra, Rb, etc I guess
+    # but then psol not used for anything?
     psol = solve([peq1, peq2, peq3, peq4])
 
     chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)
@@ -7403,28 +7446,36 @@ def sysode_linear_3eq_order1(match_):
     eq = match_['eq']
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    for i in range(2):
+    for i in range(3):
         eqs = 0
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
-    # for equations Eq(diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
-    # Eq(diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2) and
-    # Eq(a2*diff(y(t),t,t), a3x(t)+b3*y(t)+c3*z(t)+d3)
+    # for equations:
+    #   Eq(g1*diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
+    #   Eq(g2*diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2), and
+    #   Eq(g3*diff(z(t),t), a3*x(t)+b3*y(t)+c3*z(t)+d3)
     r['a1'] = fc[0,x(t),0]/fc[0,x(t),1]; r['a2'] = fc[1,x(t),0]/fc[1,y(t),1];
     r['a3'] = fc[2,x(t),0]/fc[2,z(t),1]
     r['b1'] = fc[0,y(t),0]/fc[0,x(t),1]; r['b2'] = fc[1,y(t),0]/fc[1,y(t),1];
     r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
     r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
     r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    const = [S(0), S(0), S(0)]
-    for i in range(2):
+    forcing = [S(0), S(0), S(0)]
+    for i in range(3):
         for j in Add.make_args(eq[i]):
-            if not (j.has(x(t)) or j.has(y(t))):
-                const[i] += j
-    r['d1'] = -const[0]
-    r['d2'] = -const[1]
-    r['d3'] = -const[2]
+            if not j.has(x(t), y(t), z(t)):
+                forcing[i] += j
+    if not (forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t)):
+        # We can handle homogeneous case and simple constant forcings
+        r['d1'] = -forcing[0]
+        r['d2'] = -forcing[1]
+        r['d3'] = -forcing[2]
+    else:
+        # Issue #9244: nonhomogeneous linear systems are not supported
+        raise NotImplementedError("Only homogeneous problems are supported" +
+                                  " (and constant inhomogeneity)")
+
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r)
     if match_['type_of_equation'] == 'type2':

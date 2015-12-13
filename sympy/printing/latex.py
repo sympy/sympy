@@ -9,6 +9,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
+from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
@@ -1053,6 +1054,12 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_hn1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^{(1)}')
+
+    def _print_hn2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^{(2)}')
+
     def _hprint_airy(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
@@ -1393,7 +1400,7 @@ class LatexPrinter(Printer):
             return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_ZeroMatrix(self, Z):
-        return r"\bold{0}"
+        return r"\mathbb{0}"
 
     def _print_Identity(self, I):
         return r"\mathbb{I}"
@@ -1497,6 +1504,25 @@ class LatexPrinter(Printer):
               + r", ".join(self._print(el) for el in printset)
               + r"\right\}")
 
+    def _print_SeqFormula(self, s):
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = ('\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
+                s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append('\ldots')
+        else:
+            printset = tuple(s)
+
+        return (r"\left\["
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\]")
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
+
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left\{%s\right\}" % self._print(i.start)
@@ -1533,11 +1559,17 @@ class LatexPrinter(Printer):
     def _print_Naturals(self, n):
         return r"\mathbb{N}"
 
+    def _print_Naturals0(self, n):
+        return r"\mathbb{N_0}"
+
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
     def _print_Reals(self, i):
         return r"\mathbb{R}"
+
+    def _print_Complexes(self, i):
+        return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}" % (
@@ -1545,8 +1577,32 @@ class LatexPrinter(Printer):
             ', '.join([self._print(var) for var in s.lamda.variables]),
             self._print(s.base_set))
 
+    def _print_ConditionSet(self, s):
+        vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
+        return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
+            vars_print,
+            vars_print,
+            self._print(s.base_set),
+            self._print(s.condition.as_expr()))
+
+    def _print_ComplexRegion(self, s):
+        vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
+        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+            self._print(s.args[0].expr),
+            vars_print,
+            self._print(s.sets))
+
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
+
+    def _print_FourierSeries(self, s):
+        return self._print_Add(s.truncate()) + self._print(' + \ldots')
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.truncate())
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.truncate())
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1810,6 +1866,15 @@ class LatexPrinter(Printer):
             return r"\sigma^{%s}%s" % (self._print(exp), tex)
         return r"\sigma%s" % tex
 
+    def _print_udivisor_sigma(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_%s\left(%s\right)" % tuple(map(self._print,
+                                                (expr.args[1], expr.args[0])))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
+        return r"\sigma^*%s" % tex
 
 def translate(s):
     r'''
@@ -1847,6 +1912,12 @@ def latex(expr, **settings):
 
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
+
+    Not using a print statement for printing, results in double backslashes for
+    latex commands since that's the way Python escapes backslashes in strings.
+
+    >>> latex((2*tau)**Rational(7,2))
+    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
 
     order: Any of the supported monomial orderings (currently "lex", "grlex", or
     "grevlex"), "old", and "none". This parameter does nothing for Mul objects.

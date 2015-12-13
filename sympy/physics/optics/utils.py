@@ -6,6 +6,7 @@
 * lens_makers_formula
 * mirror_formula
 * lens_formula
+* hyperfocal_distance
 """
 
 from __future__ import division
@@ -14,7 +15,8 @@ __all__ = ['refraction_angle',
            'deviation',
            'lens_makers_formula',
            'mirror_formula',
-           'lens_formula'
+           'lens_formula',
+           'hyperfocal_distance'
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit
@@ -422,3 +424,31 @@ def lens_formula(focal_length=None, u=None, v=None):
         if focal_length == oo:
             return Limit(u*_f/(u + _f), _f, oo).doit()
         return u*focal_length/(u + focal_length)
+
+def hyperfocal_distance(f, N, c):
+    """
+
+    Parameters
+    ==========
+    f: sympifiable
+    Focal length of a given lens
+
+    N: sympifiable
+    F-number of a given lens
+
+    c: sympifiable
+    Circle of Confusion (CoC) of a given image format
+
+    Example
+    =======
+    >>> from sympy.physics.optics import hyperfocal_distance
+    >>> from sympy.abc import f, N, c
+    >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
+    9.47
+    """
+
+    f = sympify(f)
+    N = sympify(N)
+    c = sympify(c)
+
+    return (1/(N * c))*(f**2)

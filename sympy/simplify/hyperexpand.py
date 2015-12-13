@@ -75,7 +75,9 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
-from sympy.simplify import powdenest, simplify, polarify, unpolarify
+from sympy.simplify import simplify
+from sympy.functions.elementary.complexes import polarify, unpolarify
+from sympy.simplify.powsimp import powdenest
 from sympy.polys import poly, Poly
 from sympy.series import residue
 
@@ -531,6 +533,7 @@ class Hyper_Function(Expr):
                     n1 = 1, n2 = 1,   n2 = 2
              r = 1, t1 = 0
                     m1 = 2:
+
         >>> Hyper_Function(ap, bq).build_invariants()
         (1, ((0, 1), (1/3, 1), (1/2, 2)), ((0, 2),))
         """

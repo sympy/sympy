@@ -15,7 +15,8 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p, \
-    antidivisors, antidivisor_count, core, digits
+    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma, \
+    udivisor_count
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
@@ -64,6 +65,8 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
+    raises(ValueError, lambda: multiplicity(2, 0))
+    raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
     assert multiplicity(10, Rational(30, 7)) == 0
@@ -138,6 +141,7 @@ def test_isprime():
     assert _mr_safe_helper(
         "if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])") == \
         ' # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases'
+    assert isprime(5.0) is False
 
 
 def test_prime():
@@ -355,6 +359,7 @@ def test_factorint():
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
 
+
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
@@ -374,6 +379,29 @@ def test_divisors_and_divisor_count():
 
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
+
+
+def test_udivisors_and_udivisor_count():
+    assert udivisors(-1) == [1]
+    assert udivisors(0) == []
+    assert udivisors(1) == [1]
+    assert udivisors(2) == [1, 2]
+    assert udivisors(3) == [1, 3]
+    assert udivisors(17) == [1, 17]
+    assert udivisors(10) == [1, 2, 5, 10]
+    assert udivisors(100) == [1, 4, 25, 100]
+    assert udivisors(101) == [1, 101]
+    assert udivisors(1000) == [1, 8, 125, 1000]
+
+    assert udivisor_count(0) == 0
+    assert udivisor_count(-1) == 1
+    assert udivisor_count(1) == 1
+    assert udivisor_count(6) == 4
+    assert udivisor_count(12) == 4
+
+    assert udivisor_count(180) == 8
+    assert udivisor_count(2*3*5*7) == 16
+
 
 def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
@@ -415,6 +443,26 @@ def test_divisor_sigma():
     assert divisor_sigma(m).subs(m, 3**10) == 88573
     assert divisor_sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
     assert summation(divisor_sigma(m), (m, 1, 11)) == 99
+
+
+def test_udivisor_sigma():
+    assert [udivisor_sigma(k) for k in range(1, 12)] == \
+        [1, 3, 4, 5, 6, 12, 8, 9, 10, 18, 12]
+    assert [udivisor_sigma(k, 3) for k in range(1, 12)] == \
+        [1, 9, 28, 65, 126, 252, 344, 513, 730, 1134, 1332]
+    assert udivisor_sigma(23450) == 42432
+    assert udivisor_sigma(23450, 0) == 16
+    assert udivisor_sigma(23450, 1) == 42432
+    assert udivisor_sigma(23450, 2) == 702685000
+    assert udivisor_sigma(23450, 4) == 321426961814978248
+
+    m = Symbol("m", integer=True)
+    k = Symbol("k", integer=True)
+    assert udivisor_sigma(m)
+    assert udivisor_sigma(m, k)
+    assert udivisor_sigma(m).subs(m, 4**9) == 262145
+    assert udivisor_sigma(m, k).subs([(m, 4**9), (k, 2)]) == 68719476737
+    assert summation(udivisor_sigma(m), (m, 2, 15)) == 169
 
 
 def test_partitions():

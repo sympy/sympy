@@ -107,6 +107,7 @@ Riemann Zeta and Related Functions
 .. autoclass:: dirichlet_eta
 .. autoclass:: polylog
 .. autoclass:: lerchphi
+.. autoclass:: stieltjes
 
 Hypergeometric Functions
 ------------------------
@@ -124,6 +125,18 @@ Elliptic integrals
 .. autoclass:: elliptic_f
 .. autoclass:: elliptic_e
 .. autoclass:: elliptic_pi
+
+Mathieu Functions
+-----------------
+.. module:: sympy.functions.special.mathieu_functions
+
+.. autoclass:: sympy.functions.special.mathieu_functions.MathieuBase
+   :members:
+
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieus
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieuc
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieusprime
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieucprime
 
 Orthogonal Polynomials
 ----------------------

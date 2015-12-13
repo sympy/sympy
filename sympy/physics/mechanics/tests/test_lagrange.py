@@ -34,7 +34,7 @@ def test_disc_on_an_incline_plane():
     # To construct the Lagrangian, 'L', of the disc, we determine its kinetic
     # and potential energies, T and U, respectively. L is defined as the
     # difference between T and U.
-    D.set_potential_energy(m * g * (l - y) * sin(alpha))
+    D.potential_energy = m * g * (l - y) * sin(alpha)
     L = Lagrangian(N, D)
 
     # We then create the list of generalized coordinates and constraint
@@ -84,7 +84,7 @@ def test_simp_pen():
     # The 'Particle' which represents the bob is then created and its
     # Lagrangian generated.
     Pa = Particle('Pa', P, m)
-    Pa.set_potential_energy(- m * g * l * cos(q))
+    Pa.potential_energy = - m * g * l * cos(q)
     L = Lagrangian(N, Pa)
 
     # The 'LagrangesMethod' class is invoked to obtain equations of motion.
@@ -158,8 +158,8 @@ def test_dub_pen():
     ParP = Particle('ParP', P, m)
     ParR = Particle('ParR', R, m)
 
-    ParP.set_potential_energy(- m * g * l * cos(q1))
-    ParR.set_potential_energy(- m * g * l * cos(q1) - m * g * l * cos(q2))
+    ParP.potential_energy = - m * g * l * cos(q1)
+    ParR.potential_energy = - m * g * l * cos(q1) - m * g * l * cos(q2)
     L = Lagrangian(N, ParP, ParR)
     lm = LagrangesMethod(L, [q1, q2])
     lm.form_lagranges_equations()
@@ -207,7 +207,7 @@ def test_rolling_disc():
 
     # Finally we form the equations of motion, using the same steps we did
     # before. Supply the Lagrangian, the generalized speeds.
-    BodyD.set_potential_energy(- m * g * r * cos(q2))
+    BodyD.potential_energy = - m * g * r * cos(q2)
     Lag = Lagrangian(N, BodyD)
     q = [q1, q2, q3]
     q1 = Function('q1')

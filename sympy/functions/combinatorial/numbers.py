@@ -19,6 +19,7 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -96,6 +97,9 @@ class fibonacci(Function):
 
     @classmethod
     def eval(cls, n, sym=None):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             n = int(n)
             if n < 0:
@@ -107,6 +111,9 @@ class fibonacci(Function):
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
+
+    def _eval_rewrite_as_sqrt(self, n):
+        return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
 
 class lucas(Function):
@@ -142,9 +149,14 @@ class lucas(Function):
 
     @classmethod
     def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
+    def _eval_rewrite_as_sqrt(self, n):
+        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -948,7 +960,7 @@ class genocchi(Function):
 
     def _eval_rewrite_as_bernoulli(self, n):
         if n.is_integer and n.is_nonnegative:
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+            return (1 - S(2) ** n) * bernoulli(n) * 2
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_positive:
@@ -984,8 +996,9 @@ class genocchi(Function):
 
     def _eval_is_prime(self):
         n = self.args[0]
-        if (not n.is_integer) or (not n.is_positive):
-            return None
+        # only G_6 = -3 and G_8 = 17 are prime,
+        # but SymPy does not consider negatives as prime
+        # so only n=8 is tested
         return (n - 8).is_zero
 
 

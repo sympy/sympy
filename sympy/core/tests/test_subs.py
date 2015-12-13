@@ -2,7 +2,7 @@ from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo, Subs)
+        factor, nsimplify, zoo, Subs, RootOf)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y, z
@@ -640,3 +640,27 @@ def test_issue_5217():
     assert z.subs(sub) == 1 - s
     assert q == 4*x**2*y**2
     assert q.subs(sub) == 2*y**2*s
+
+
+def test_pow_eval_subs_no_cache():
+    # Tests pull request 9376 is working
+    from sympy.core.cache import clear_cache
+    from sympy.abc import x, y
+
+    s = 1/sqrt(x**2)
+    # This bug only appeared when the cache was turned off.
+    # We need to approximate running this test without the cache.
+    # This creates approximately the same situation.
+    clear_cache()
+
+    # This used to fail with a wrong result.
+    # It incorrectly returned 1/sqrt(x**2) before this pull request.
+    result = s.subs(sqrt(x**2), y)
+    assert result == 1/y
+
+
+def test_RootOf_issue_10092():
+    x = Symbol('x', real=True)
+    eq = x**3 - 17*x**2 + 81*x - 118
+    r = RootOf(eq, 0)
+    assert (x < r).subs(x, r) is S.false

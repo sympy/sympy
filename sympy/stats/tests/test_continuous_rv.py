@@ -5,12 +5,12 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Kumaraswamy, Laplace, Logistic,
+                         Gompertz, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, StudentT,
-                         Triangular, Uniform, UniformSum, VonMises, Weibull,
-                         WignerSemicircle, correlation, moment, cmoment,
-                         smoment)
+                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
+                         StudentT, Triangular, Uniform, UniformSum,
+                         VonMises, Weibull, WignerSemicircle, correlation,
+                         moment, cmoment, smoment)
 
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
@@ -73,6 +73,7 @@ def test_ContinuousDomain():
     assert Y.pspace.domain.set == Interval(0, oo)
 
 
+@slow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
 
@@ -317,6 +318,13 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
 
+def test_gompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+
+    X = Gompertz("x", b, eta)
+    assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
+
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
     b = Symbol("b", positive=True)
@@ -429,6 +437,11 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+def test_shiftedgompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+    X = ShiftedGompertz("x", b, eta)
+    assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
@@ -632,3 +645,10 @@ def test_difficult_univariate():
     assert density(x**3)
     assert density(exp(x**2))
     assert density(log(x))
+
+
+def test_issue_10003():
+    X = Exponential('x', 3)
+    G = Gamma('g', 1, 2)
+    assert P(X < -1) == S.Zero
+    assert P(G < -1) == S.Zero

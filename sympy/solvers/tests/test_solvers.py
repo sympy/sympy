@@ -16,7 +16,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import RootOf
 
-from sympy.utilities.pytest import slow, XFAIL, raises, skip, ON_TRAVIS
+from sympy.utilities.pytest import slow, XFAIL, SKIP, raises, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
@@ -501,6 +501,8 @@ def test_issue_3870():
 def test_solve_linear():
     w = Wild('w')
     assert solve_linear(x, x) == (0, 1)
+    assert solve_linear(x, exclude=[x]) == (0, 1)
+    assert solve_linear(x, symbols=[w]) == (0, 1)
     assert solve_linear(x, y - 2*x) in [(x, y/3), (y, 3*x)]
     assert solve_linear(x, y - 2*x, exclude=[x]) == (y, 3*x)
     assert solve_linear(3*x - y, 0) in [(x, y/3), (y, 3*x)]
@@ -513,10 +515,15 @@ def test_solve_linear():
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, symbols=[x]) == (0, 1)
     assert solve_linear(Eq(x, 3)) == (x, 3)
     assert solve_linear(1/(1/x - 2)) == (0, 0)
-    assert solve_linear((x + 1)*exp(-x), symbols=[x]) == (x + 1, exp(x))
+    assert solve_linear((x + 1)*exp(-x), symbols=[x]) == (x, -1)
     assert solve_linear((x + 1)*exp(x), symbols=[x]) == ((x + 1)*exp(x), 1)
-    assert solve_linear(x*exp(-x**2), symbols=[x]) == (0, 0)
+    assert solve_linear(x*exp(-x**2), symbols=[x]) == (x, 0)
     assert solve_linear(0**x - 1) == (0**x - 1, 1)
+    assert solve_linear(1 + 1/(x - 1)) == (x, 0)
+    eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
+    assert solve_linear(eq) == (0, 1)
+    eq = cos(x)**2 + sin(x)**2  # = 1
+    assert solve_linear(eq) == (0, 1)
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
 
 
@@ -743,8 +750,8 @@ def test_issue_5335():
     assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 
-@XFAIL
-def test_issue_5335_float():
+@SKIP("Hangs")
+def _test_issue_5335_float():
     # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
@@ -770,6 +777,7 @@ def test_polysys():
                  y - 3, x - y - 4], (y, x))
 
 
+@slow
 def test_unrad1():
     raises(NotImplementedError, lambda:
         unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
@@ -1770,3 +1778,7 @@ def test_issue_2840_8155():
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
+
+
+def test_issue_9567():
+    assert solve(1 + 1/(x - 1)) == [0]

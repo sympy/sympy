@@ -23,6 +23,7 @@ from collections import namedtuple
 import sympy
 
 from sympy.core.compatibility import reduce
+from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.strategies.core import switch, do_one, null_safe, condition
 
@@ -233,7 +234,7 @@ def power_rule(integral):
     elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
         rule = ExpRule(base, exp, integrand, symbol)
 
-        if sympy.log(base).is_nonzero:
+        if fuzzy_not(sympy.log(base).is_zero):
             return rule
         elif sympy.log(base).is_zero:
             return ConstantRule(1, 1, symbol)
@@ -772,7 +773,7 @@ def substitution_rule(integral):
                         could_be_zero.append(denom)
 
                     for expr in could_be_zero:
-                        if not expr.is_nonzero:
+                        if not fuzzy_not(expr.is_zero):
                             substep = integral_steps(integrand.subs(expr, 0), symbol)
 
                             if substep:
