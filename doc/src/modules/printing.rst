@@ -307,13 +307,28 @@ This class implements Python printing. Usage::
     x = Symbol('x')
     e = 5*x**3 + sin(x)
 
-ReprPrinter
------------
+Srepr
+-----
 
 .. module:: sympy.printing.repr
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
+
+``Srepr()`` gives more low level textual output than ``repr()``
+
+Example::
+
+  >>> repr(5*x**3 + sin(x))
+  '5*x**3 + sin(x)'
+
+  >>> srepr(5*x**3 + sin(x))
+  "Add(Mul(Integer(5), Pow(Symbol('x'), Integer(3))), sin(Symbol('x')))"
+
+``Srepr()`` gives the ``repr`` form, which is what reprwould normally give
+but for SymPy we don’t actually use ``Srepr()`` for ``__repr__`` because it’s 
+is so verbose, it is unlikely that anyone would want it called by default.
+
 
 .. autoclass:: ReprPrinter
    :members:
