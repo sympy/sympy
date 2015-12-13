@@ -511,8 +511,8 @@ class Set(Basic):
         return Complement(self, other)
 
     def __contains__(self, other):
-        symb = self.contains(other)
-        if symb not in (True, False):
+        symb = sympify(self.contains(other))
+        if not (symb is S.true or symb is S.false):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return bool(symb)
 
@@ -949,8 +949,8 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) == True) or
-                (self.right_open and other.contains(self.end) == True)):
+        if ((self.left_open and sympify(other.contains(self.start)) is S.true) or
+                (self.right_open and sympify(other.contains(self.end)) is S.true)):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -1434,10 +1434,10 @@ class Intersection(Set):
                 other_sets = set(self.args) - set((s,))
                 other = Intersection(other_sets, evaluate=False)
                 for x in s:
-                    c = other.contains(x)
-                    if c == True:
+                    c = sympify(other.contains(x))
+                    if c is S.true:
                         yield x
-                    elif c == False:
+                    elif c is S.false:
                         pass
                     else:
                         yield c
@@ -1495,7 +1495,7 @@ class Intersection(Set):
                     # contained in `v` then remove them from `v`
                     # and add this as a new arg
                     contained = [x for x in symbolic_s_list
-                        if v.contains(x) == True]
+                        if sympify(v.contains(x)) is S.true]
                     if contained != symbolic_s_list:
                         new_args.append(
                             v - FiniteSet(
@@ -1847,12 +1847,20 @@ class FiniteSet(Set, EvalfMixin):
                 return None
 
         elif isinstance(other, FiniteSet):
-            unk = FiniteSet(*[el for el in self if other.contains(el)
-                not in (True, False)])
+            unk = []
+            for i in self:
+                c = sympify(other.contains(i))
+                if c is not S.true and c is not S.false:
+                    unk.append(i)
+            unk = FiniteSet(*unk)
             if unk == self:
                 return
-            return Complement(FiniteSet(*[el for el in other if
-                self.contains(el) != True]), unk)
+            not_true = []
+            for i in other:
+                c = sympify(self.contains(i))
+                if c is not S.true:
+                    not_true.append(i)
+            return Complement(FiniteSet(*not_true), unk)
 
         return Set._complement(self, other)
 
@@ -1867,7 +1875,7 @@ class FiniteSet(Set, EvalfMixin):
             return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) == True for x in self):
+        if any(sympify(other.contains(x)) is S.true for x in self):
             return set((
                 FiniteSet(*[x for x in self
                     if other.contains(x) != True]), other))
