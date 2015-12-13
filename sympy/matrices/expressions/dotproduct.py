@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, sympify
-from sympy.matrices.expressions.matexpr import (MatrixExpr)
+from sympy.core import Basic
+from sympy.matrices.expressions.transpose import transpose
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
 class DotProduct(MatrixExpr):
@@ -9,48 +10,26 @@ class DotProduct(MatrixExpr):
         Dot Product of vector matrices
     """
 
-    def __new__(cls, *args):
-        args = list(map(sympify, args))
-        if validate(*args):
-            return Basic.__new__(cls, *args)
+    def __new__(cls, arg1, arg2):
+        if not arg1.is_Matrix:
+            raise TypeError("Input to Dot Product, %s, not a matrix" % str(arg1))
+        if not arg2.is_Matrix:
+            raise TypeError("Input to Dot Product, %s, not a matrix" % str(arg2))
+        if not (arg1.shape[0] == 1 or arg1.shape[1] == 1):
+            raise TypeError("Input to Dot Product, %s, not a vector" % str(arg1))
+        if not (arg2.shape[0] == 1 or arg2.shape[1] == 1):
+            raise TypeError("Input to Dot Product, %s, not a vector" % str(arg1))
 
-    @property
-    def args(self):
-        return self.args
+        if arg1.shape != arg2.shape:
+            raise TypeError("Input to Dot Product, %s and %s, are not of same dimensions" % (str(arg1), str(arg2)))
+
+        return Basic.__new__(cls, arg1, arg2)
 
     def doit(self, expand=False):
         try:
-            return dot_product(self.args)
+            if self.args[0].shape[0] == 1:
+                return (self.args[0]*transpose(self.args[1])).doit()[0]
+            else:
+                return (transpose(self.args[0])*self.args[1]).doit()[0]
         except (AttributeError, NotImplementedError):
             return self
-
-
-def dot_product(*args):
-    """
-    Calculates dot product of the arguments.
-    :param args: List of arguments for dot product.
-    :return: dot product of the arguments provided.
-    """
-    return True
-
-
-def validate(*args):
-    """
-    Validates the matrices for dot product.
-    :param args: List of matrices to be validated for being a vector
-    :return: True on being valid, else raises the error.
-    """
-    if len(args) != 2:
-        raise
-        # Only two vectors could be dot producted
-    for i in args:
-        if not i.is_Matrix:
-            raise
-            # Not Matrix
-        if not (i.shape[0] == 1 or i.shape[1] == 1):
-            raise
-            # Not a Vector
-    if args[0].shape != args[1].shape:
-        raise
-        # Vectors shape are not same
-    return True
