@@ -387,7 +387,8 @@ class ProductDomain(RandomDomain):
         for domain in self.domains:
             # Collect the parts of this event which associate to this domain
             elem = frozenset([item for item in other
-                              if sympify(domain.symbols.contains(item[0])) is S.true)
+                              if sympify(domain.symbols.contains(item[0]))
+                              is S.true])
             # Test this sub-event
             if elem not in domain:
                 return False
