@@ -12,8 +12,6 @@ from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
 
 
-
-
 def fac_multiplicity(n, p):
     """Return the power of the prime number p in the
     factorization of n!"""
