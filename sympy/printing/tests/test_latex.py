@@ -28,6 +28,7 @@ from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
+from sympy.combinatorics.permutations import Cycle, Permutation
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -126,6 +127,18 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_cycle():
+    assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Cycle(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Cycle()) == r"\left( \right)"
+
+
+def test_latex_permutation():
+    assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Permutation()) == r"\left( \right)"
 
 
 def test_latex_Float():
