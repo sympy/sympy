@@ -646,14 +646,23 @@ class Function(Application, Expr):
         """
         if not (1 <= argindex <= len(self.args)):
             raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex - 1].is_Symbol:
-            # See issue 4624 and issue 4719 and issue 5600
-            arg_dummy = Dummy('xi_%i' % argindex)
-            arg_dummy.dummy_index = hash(self.args[argindex - 1])
-            return Subs(Derivative(
-                self.subs(self.args[argindex - 1], arg_dummy),
-                arg_dummy), arg_dummy, self.args[argindex - 1])
-        return Derivative(self, self.args[argindex - 1], evaluate=False)
+
+        if self.args[argindex - 1].is_Symbol:
+            for i in range(len(self.args)):
+                if i == argindex - 1:
+                    continue
+                # See issue 8510
+                if self.args[argindex - 1] in self.args[i].free_symbols:
+                    break
+            else:
+                return Derivative(self, self.args[argindex - 1], evaluate=False)
+        # See issue 4624 and issue 4719 and issue 5600
+        arg_dummy = Dummy('xi_%i' % argindex)
+        arg_dummy.dummy_index = hash(self.args[argindex - 1])
+        new_args = [arg for arg in self.args]
+        new_args[argindex-1] = arg_dummy
+        return Subs(Derivative(self.func(*new_args), arg_dummy),
+            arg_dummy, self.args[argindex - 1])
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -1004,11 +1013,19 @@ class Derivative(Expr):
         if not variables:
             variables = expr.free_symbols
             if len(variables) != 1:
+                if expr.is_number:
+                    return S.Zero
                 from sympy.utilities.misc import filldedent
-                raise ValueError(filldedent('''
-                    Since there is more than one variable in the
-                    expression, the variable(s) of differentiation
-                    must be supplied to differentiate %s''' % expr))
+                if len(variables) == 0:
+                    raise ValueError(filldedent('''
+                        Since there are no variables in the expression,
+                        the variable(s) of differentiation must be supplied
+                        to differentiate %s''' % expr))
+                else:
+                    raise ValueError(filldedent('''
+                        Since there is more than one variable in the
+                        expression, the variable(s) of differentiation
+                        must be supplied to differentiate %s''' % expr))
 
         # Standardize the variables by sympifying them and making appending a
         # count of 1 if there is only one variable: diff(e,x)->diff(e,x,1).

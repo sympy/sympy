@@ -62,6 +62,20 @@ def test_order():
     assert g.order() == 1814400
 
 
+def test_equality():
+    p_1 = Permutation(0, 1, 3)
+    p_2 = Permutation(0, 2, 3)
+    p_3 = Permutation(0, 1, 2)
+    p_4 = Permutation(0, 1, 3)
+    g_1 = PermutationGroup(p_1, p_2)
+    g_2 = PermutationGroup(p_3, p_4)
+    g_3 = PermutationGroup(p_2, p_1)
+
+    assert g_1 == g_2
+    assert g_1.generators != g_2.generators
+    assert g_1 == g_3
+
+
 def test_stabilizer():
     S = SymmetricGroup(2)
     H = S.stabilizer(0)
@@ -196,6 +210,7 @@ def test_coset_factor():
     d = Permutation([1, 0, 2, 3, 4, 5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
+    assert Permutation(2) in G
     c = Permutation([1, 0, 2, 3, 5, 4])
     v = g.coset_factor(c, True)
     tr = g.basic_transversals
@@ -692,6 +707,16 @@ def test_make_perm():
         Permutation([4, 7, 6, 5, 0, 3, 2, 1])
     assert cube.pgroup.make_perm(7, seed=list(range(7))) == \
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])
+
+
+def test_elements():
+    p = Permutation(2, 3)
+    assert PermutationGroup(p).elements == set([Permutation(3), Permutation(2, 3)])
+
+
+def test_is_group():
+    assert PermutationGroup(Permutation(1,2), Permutation(2,4)).is_group == True
+    assert SymmetricGroup(4).is_group == True
 
 
 def test_PermutationGroup():
