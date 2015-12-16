@@ -3617,7 +3617,6 @@ class MatrixBase(object):
                 # `a_0` is `dim(Kernel(Ms[0]) = dim (Kernel(I)) = 0` since `I` is regular
 
                 l_jordan_chains={}
-                chain_vectors=[]
                 Ms = [I]
                 Ns = [[]]
                 a = [0]
@@ -3673,41 +3672,34 @@ class MatrixBase(object):
 
                 for s in reversed(range(1, smax+1)):
                     S = Ms[s]
-                    # We want the vectors in `Kernel((self-lI)^s)` (**),
-                    # but without those in `Kernel(self-lI)^s-1` so we will add these as additional equations
-                    # to the system formed by `S` (`S` will no longer be quadratic but this does no harm
-                    # since `S` is rank deficient).
+                    # We want the vectors in `Kernel((self-lI)^s)`,
+                    # but without those in `Kernel(self-lI)^s-1`
+                    # so we will add their adjoints as additional equations
+                    # to the system formed by `S` to get the orthogonal
+                    # complement.
+                    # (`S` will no longer be quadratic.)
+
                     exclude_vectors = Ns[s-1]
                     for k in range(0, a[s-1]):
                         S = S.col_join((exclude_vectors[k]).adjoint())
-                    # We also want to exclude the vectors in the chains for the bigger blocks
+
+                    # We also want to exclude the vectors
+                    # in the chains for the bigger blocks
                     # that we have already computed (if there are any).
                     # (That is why we start with the biggest s).
 
-                    ########   Implementation remark:   ########
+                    # Since Jordan blocks are not orthogonal in general
+                    # (in the original space), only those chain vectors
+                    # that are on level s (index `s-1` in a chain)
+                    # are added.
 
-                    # Doing so for *ALL* already computed chain vectors
-                    # we actually exclude some vectors twice because they are already excluded
-                    # by the condition (**).
-                    # This happens if there are more than one blocks attached to the same eigenvalue *AND*
-                    # the current blocksize is smaller than the block whose chain vectors we exclude.
-                    # If the current block has size `s_i` and the next bigger block has size `s_i-1` then
-                    # the first `s_i-s_i-1` chainvectors of the bigger block are already excluded by (**).
-                    # The unnecassary adding of these equations could be avoided if the algorithm would
-                    # take into account the lengths of the already computed chains which are already stored
-                    # and add only the last `s` items.
-                    # However the following loop would be a good deal more nested to do so.
-                    # Since adding a linear dependent equation does not change the result,
-                    # it can harm only in terms of efficiency.
-                    # So to be sure I left it there for the moment.
+                    for chain_list in l_jordan_chains.values():
+                        for chain in chain_list:
+                            S = S.col_join(chain[s-1].adjoint())
 
-                    l = len(chain_vectors)
-                    if l > 0:
-                        for k in range(0, l):
-                            old = chain_vectors[k].adjoint()
-                            S = S.col_join(old)
                     e0s = S.nullspace()
-                    # Determine the number of chain leaders which equals the number of blocks with that size.
+                    # Determine the number of chain leaders
+                    # for blocks of size `s`.
                     n_e0 = len(e0s)
                     s_chains = []
                     # s_cells=[]
@@ -3719,7 +3711,6 @@ class MatrixBase(object):
 
                         # We want the chain leader appear as the last of the block.
                         chain.reverse()
-                        chain_vectors += chain
                         s_chains.append(chain)
                     l_jordan_chains[s] = s_chains
             jordan_block_structures[eigenval] = l_jordan_chains
