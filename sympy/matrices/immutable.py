@@ -162,6 +162,8 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     subs = MatrixBase.subs
 
+    xreplace = MatrixBase.xreplace
+
     def __hash__(self):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
 
