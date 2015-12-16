@@ -1,4 +1,4 @@
-from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow
+from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, sin
 from sympy.logic import And
 from sympy.series import Limit
@@ -6,7 +6,7 @@ from sympy.utilities.pytest import raises
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
-    split_symbols, implicit_multiplication,
+    split_symbols, implicit_multiplication, convert_equals_signs,
 )
 
 
@@ -116,3 +116,13 @@ def test_match_parentheses_implicit_multiplication():
     transformations = standard_transformations + \
                       (implicit_multiplication,)
     raises(TokenError, lambda: parse_expr('(1,2),(3,4]',transformations=transformations))
+
+def test_convert_equals_signs():
+    transformations = standard_transformations + \
+                        (convert_equals_signs, )
+    x = Symbol('x')
+    y = Symbol('y')
+    assert parse_expr("1*2=x", transformations=transformations) == Eq(2, x)
+    assert parse_expr("y = x", transformations=transformations) == Eq(y, x)
+    assert parse_expr("(2*y = x) = False",
+        transformations=transformations) == Eq(Eq(2*y, x), False)
