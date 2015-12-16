@@ -11,8 +11,8 @@ class FreeGroup(Basic):
 
     def __new__(cls, rank, **kwargs):
 
-        # rank can be S.Infinity
-        if not isinstance(rank, int):
+        # rank can be Infinite
+        if not (isinstance(rank, int) or rank is S.Infinity):
             raise ValueError("Invalid arguments")
 
         obj = Basic.__new__(cls, rank, **kwargs)
@@ -20,27 +20,35 @@ class FreeGroup(Basic):
         if rank == 0:
             obj._is_abelian = True
             obj._order = 1
+            obj._generators = []
         else:
             obj._is_abelian = False
             obj._order = S.Infinity
 
-        obj._center = []
+        obj._center = [GroupIdentity()]
         obj._rank = rank
 
         return obj
 
-    def __init__(self, *args):
-        if isinstance(args[0], int):
-            self.gens_assign(*args)
+#    def __init__(self, *args):
+#        if isinstance(args[0], int):
+#            self.gens_assign(*args)
 
     def rank(self):
         return self._rank
 
+    @property
     def is_abelian(self):
         return self._is_abelian
 
     def order(self):
         return self._order
+
+    @property
+    def generators(self):
+        if self.rank() is S.Infinity:
+            return ListWithInfiniteGenerators()
+        return list(symbols('f0:%s' %n, cls=Dummy))
 
     def elements(self):
         if self.rank() == 0:
@@ -48,8 +56,9 @@ class FreeGroup(Basic):
         raise ValueError("Group contains infinite elements, hence can't be "
                          "represented")
 
-    def gens_assign(self, *args):
-        f = var('f0:%s' %args)
+    @property
+    def identity(self):
+        return GroupElm()
 
     def __repr__(self):
         str_form = '<free group on the generators [ '
@@ -63,7 +72,7 @@ class FreeGroup(Basic):
         if isinstance(self.args[0], int):
             return self.args[0]
 
-    def __getitem__(self):
+    def __getitem__(self, i):
         return self._generators[i]
 
 
@@ -77,9 +86,9 @@ class GroupElm(Basic):
 
     """
 
-    def __init__(self, elem, group):
-        if not isinstance(group, Group):
-            raise TypeError("group is not a Group")
+    def __init__(self, elem, group=None):
+        if group is None:
+            raise ValueError("")
         if not elem in group.Set:
             raise TypeError("elem is not an element of group")
         self.elem = elem
@@ -179,9 +188,9 @@ class GroupElm(Basic):
         return len(self.group.generate([self]))
 
 
-class GroupIdentity(GroupElm):
+class GroupIdentity(Basic):
     """
-    Represents the idenity for any Group
+    Represents the idenity for any Group.
     """
     is_Identity = True
     is_Abelian = True
@@ -191,3 +200,26 @@ class GroupIdentity(GroupElm):
 
     def order(self):
         return 1
+
+    def __mul__(self, other):
+        return other
+
+    __rmul__ = __mul__
+
+    def __pow__(self, other):
+        return self
+
+
+def One(group):
+    """
+    Returns the Identity Element of Group `group`.
+    """
+    pass
+
+class InfiniteGenerators(Basic):
+    """
+    Returns an InfiniteList of Generators.
+    It prints the Infinite list of generators in the form
+    of a limited with two elements [ f0, f1 ... ]
+    """
+    pass
