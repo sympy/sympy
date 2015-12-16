@@ -6,13 +6,11 @@ from sympy.geometry.util import idiff
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
 
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-
 
 def test_idiff():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    t = Symbol('t', real=True)
     # the use of idiff in ellipse also provides coverage
     circ = x**2 + y**2 - 4
     ans = -3*x*(x**2 + y**2)/y**5

@@ -5,14 +5,12 @@ from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Se
 from sympy.geometry.util import are_coplanar
 from sympy.utilities.pytest import raises, slow
 
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-
 
 @slow
 def test_plane():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    z = Symbol('z', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
