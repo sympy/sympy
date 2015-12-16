@@ -1,4 +1,4 @@
-class FreeGroup(Group):
+class FreeGroup(Basic):
     r"""
     Called  with  a  positive  integer rank, FreeGroup
     returns a free group on rank generators. If optional
@@ -15,7 +15,7 @@ class FreeGroup(Group):
         if not isinstance(rank, int):
             raise ValueError("Invalid arguments")
 
-        obj = Basic.__new__(cls, rank)
+        obj = Basic.__new__(cls, rank, **kwargs)
 
         if rank == 0:
             obj._is_abelian = True
@@ -43,7 +43,7 @@ class FreeGroup(Group):
         return self._order
 
     def elements(self):
-        if self.rank == 1:
+        if self.rank() == 0:
             return set(IdElm)
         raise ValueError("Group contains infinite elements, hence can't be "
                          "represented")
@@ -71,7 +71,7 @@ class Group(Basic):
     pass
 
 
-class GroupElem(Basic):
+class GroupElm(Basic):
     """
     Group element definition
 
@@ -177,3 +177,17 @@ class GroupElem(Basic):
     def order(self):
         """Returns the order of self in the Group"""
         return len(self.group.generate([self]))
+
+
+class GroupIdentity(GroupElm):
+    """
+    Represents the idenity for any Group
+    """
+    is_Identity = True
+    is_Abelian = True
+
+    def __repr__(self):
+        return "<identity ...>"
+
+    def order(self):
+        return 1
