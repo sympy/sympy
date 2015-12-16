@@ -1621,6 +1621,19 @@ def test_jordan_form_complex_issue_9274():
     assert J == Jmust1 or J == Jmust2
     assert simplify(P*J*P.inv()) == A
 
+def test_issue_10220():
+    # two non-orthogonal Jordan blocks with eigenvalue 1
+    M = Matrix([[1, 0, 0, 1],
+                [0, 1, 1, 0],
+                [0, 0, 1, 1],
+                [0, 0, 0, 1]])
+    P, C = M.jordan_cells()
+    assert P == Matrix([[0, 1, 0, 1],
+                        [1, 0, 0, 0],
+                        [0, 1, 0, 0],
+                        [0, 0, 1, 0]])
+    assert len(C) == 2
+
 
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
