@@ -536,3 +536,101 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         return replacements, reduced_exprs
 
     return postprocess(replacements, reduced_exprs)
+
+
+class Marker:
+    pass
+
+# XXX: Should this go in sympy.utilities.iterables?
+def shortest_repeated_subsequence(S, ignore=(Marker,)):
+    """
+    Given a sequence S, find the shortest repeated subsequence of length >= 2
+
+    A subsequence is only considered a repeated subsequence if it can't be
+    extended in every instance. For example, [a, b] is not a subsequence of
+    [a, b, c, a, b, c] because every occurrence of [a, b] can be extended to
+    [a, b, c].
+
+    If no repeated subsequence is found, returns None.
+
+    The input sequence should support iteration, indexing, and slicing.
+
+    To use concurrently with multiple sequences, concatenate them separated by
+    markers (custom markers can be pass in through the 'ignore' parameter').
+
+    Examples
+    ========
+
+    In the examples here, we use strings. A more common example for SymPy
+    would be the args of a noncommutative Mul.
+
+    >>> from sympy.simplify.cse_main import shortest_repeated_subsequence
+    >>> s = 'abcabc'
+    >>> shortest_repeated_subsequence(s)
+    'abc'
+    >>> print(shortest_repeated_subsequence('abc'))
+    None
+
+    >>> from itertools import chain
+    >>> from sympy.utilities.iterables import flatten
+    >>> s1, s2, s3 = 'abc', 'babc', 'abca'
+    >>> marker = '$'
+    >>> S = ''.join(chain(*flatten(zip([s1, s2, s3], '$$$'))))[:-1]
+    >>> S
+    'abc$babc$abca'
+    >>> shortest_repeated_subsequence(S, ignore=['$'])
+    'abc'
+    """
+    from sympy import oo
+
+    # This is based on the longest_common_substring algorithm, for instance,
+    # at
+    # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Longest_common_substring#Python3. We
+    # build a matrix to keep track of common subsequence of S with itself. For instance, for
+    # the sequence [a, b, c, a, b], we would have
+
+    #        a  b  c  a  b
+    #   [[0, 0, 0, 0, 0, 0],
+    # a  [0, 0, 0, 0, 1, 0],
+    # b  [0, 0, 0, 0, 0, 2],
+    # c  [0, 0, 0, 0, 0, 0],
+    # a  [0, 1, 0, 0, 0, 0],
+    # b  [0, 0, 2, 0, 0, 0]]
+
+    # (the leading row and column of 0s are used so we can always reference
+    # the previous row and column). Each entry in the matrix represents the
+    # longest subsequence ending in those two entries. We additionally keep
+    # the diagonal zero, so that we don't consider the entire sequence to be a
+    # common subsequence with itself.
+
+    m = [[0] * (1 + len(S)) for i in range(1 + len(S))]
+
+    shortest, x_shortest = oo, 0
+    for x in range(1, 1 + len(S)):
+        if S[x-1] in ignore:
+            continue
+        for y in range(1, 1 + len(S)):
+            if x == y:
+                continue
+            if S[x - 1] == S[y - 1]:
+                m[x][y] = (m[x-1][y-1] + 1)
+
+    # Now we traverse the matrix from the bottom up, keeping track diagonal
+    # "runs" (representing the same subsequence), and look for the shortest
+    # one that is >= 2 in length. If there are ties, the earliest one will be
+    # returned, but it would be easy to extend this to return all shortest
+    # subsequences.
+
+    seen = {}
+    for row in reversed(m):
+        seen = {i-1:seen[i]-1 for i in seen if seen[i]}
+        for x in range(len(row)):
+            if row[x] >= 2 and x not in seen:
+                if row[x] < shortest:
+                    shortest = row[x]
+                    x_shortest = x
+                seen[x] = row[x]
+
+    if shortest == oo:
+        return None
+    return S[x_shortest - shortest: x_shortest]
