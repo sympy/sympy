@@ -162,6 +162,7 @@ def opt_cse(exprs, order='canonical'):
     >>> print(opt_subs)
     {x**(-2): 1/(x**2)}
     """
+    from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     opt_subs = dict()
 
     adds = set()
@@ -170,6 +171,9 @@ def opt_cse(exprs, order='canonical'):
     seen_subexp = set()
 
     def _find_opts(expr):
+
+        if not isinstance(expr, Basic):
+            return
 
         if expr.is_Atom or expr.is_Order:
             return
@@ -191,13 +195,13 @@ def opt_cse(exprs, order='canonical'):
                 seen_subexp.add(neg_expr)
                 expr = neg_expr
 
-        if expr.is_Mul:
+        if isinstance(expr, (Mul, MatMul)):
             muls.add(expr)
 
-        elif expr.is_Add:
+        elif isinstance(expr, (Add, MatAdd)):
             adds.add(expr)
 
-        elif expr.is_Pow:
+        elif isinstance(expr, (Pow, MatPow)):
             if _coeff_isneg(expr.exp):
                 opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne,
                                      evaluate=False)
@@ -247,9 +251,13 @@ def opt_cse(exprs, order='canonical'):
     for m in muls:
         c, nc = m.args_cnc(cset=True)
         if c:
-            c_mul = Mul(*c)
+            c_mul = m.func(*c)
             if nc:
-                opt_subs[m] = Mul(c_mul, Mul(*nc), evaluate=False)
+                if c_mul == 1:
+                    new_obj = m.func(*nc)
+                else:
+                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
+                opt_subs[m] = new_obj
             if len(c) > 1:
                 comutative_muls.add(c_mul)
 
@@ -276,6 +284,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         The order by which Mul and Add arguments are processed. For large
         expressions where speed is a concern, use the setting order='none'.
     """
+    from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
+
     if opt_subs is None:
         opt_subs = dict()
 
@@ -286,6 +296,9 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     seen_subexp = set()
 
     def _find_repeated(expr):
+        if not isinstance(expr, Basic):
+            return
+
         if expr.is_Atom or expr.is_Order:
             return
 
@@ -317,6 +330,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     subs = dict()
 
     def _rebuild(expr):
+        if not isinstance(expr, Basic):
+            return expr
 
         if not expr.args:
             return expr
@@ -335,10 +350,13 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         # If enabled, parse Muls and Adds arguments by order to ensure
         # replacement order independent from hashes
         if order != 'none':
-            if expr.is_Mul:
+            if isinstance(expr, (Mul, MatMul)):
                 c, nc = expr.args_cnc()
-                args = list(ordered(c)) + nc
-            elif expr.is_Add:
+                if c == [1]:
+                    args = nc
+                else:
+                    args = list(ordered(c)) + nc
+            elif isinstance(expr, (Add, MatAdd)):
                 args = list(ordered(expr.args))
             else:
                 args = expr.args
@@ -356,6 +374,11 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
                 sym = next(symbols)
             except StopIteration:
                 raise ValueError("Symbols iterator ran out of symbols.")
+
+            if isinstance(orig_expr, MatrixExpr):
+                sym = MatrixSymbol(sym.name, orig_expr.rows,
+                    orig_expr.cols)
+
             subs[orig_expr] = sym
             replacements.append((sym, new_expr))
             return sym

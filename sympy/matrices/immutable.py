@@ -32,6 +32,10 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     TypeError: Cannot set values of ImmutableDenseMatrix
     """
 
+    # MatrixExpr is set as NotIterable, but we want explicit matrices to be
+    # iterable
+    _iterable = True
+
     _class_priority = 8
 
     @classmethod
