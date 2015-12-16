@@ -9,16 +9,23 @@ class FreeGroup(Group):
     """
     is_group = True
 
-    def __new__(cls, *args, **kwargs):
-        if not(len(args) == 1 or isinstance(args[0], int)):
-            raise ValueError("")
+    def __new__(cls, rank, **kwargs):
 
-        obj = Basic.__new__(cls, *args)
-        obj._generators = args
-        obj._order = S.Infinity
+        # rank can be S.Infinity
+        if not isinstance(rank, int):
+            raise ValueError("Invalid arguments")
+
+        obj = Basic.__new__(cls, rank)
+
+        if rank == 0:
+            obj._is_abelian = True
+            obj._order = 1
+        else:
+            obj._is_abelian = False
+            obj._order = S.Infinity
+
         obj._center = []
-        obj._degree = obj._generators
-        obj._is_abelian = False
+        obj._rank = rank
 
         return obj
 
@@ -26,11 +33,26 @@ class FreeGroup(Group):
         if isinstance(args[0], int):
             self.gens_assign(*args)
 
+    def rank(self):
+        return self._rank
+
+    def is_abelian(self):
+        return self._is_abelian
+
+    def order(self):
+        return self._order
+
+    def elements(self):
+        if self.rank == 1:
+            return set(IdElm)
+        raise ValueError("Group contains infinite elements, hence can't be "
+                         "represented")
+
     def gens_assign(self, *args):
         f = var('f0:%s' %args)
 
     def __repr__(self):
-        str_form = '<free group on the generators[ '
+        str_form = '<free group on the generators [ '
         for i in range(len(self)):
             str_form += 'f%s, ' %i
         str_form = str_form[:-2]
