@@ -280,6 +280,19 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Cycle(self, expr):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if str(expr) == '()':
+            return r"\left( \right)"
+        expr_perm = Permutation(expr).cyclic_form
+        term_tex = ''
+        for i in expr_perm:
+            term_tex += str(i).replace(',', r"\;")
+        term_tex = term_tex.replace('[', r"\left( ")
+        term_tex = term_tex.replace(']', r"\right)")
+        return term_tex
+
+    _print_Permutation = _print_Cycle
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
