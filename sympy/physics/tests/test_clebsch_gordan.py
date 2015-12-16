@@ -113,6 +113,9 @@ def test_wigner():
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
     assert wigner_6j(5, 5, 5, 5, 5, 5) == Rational(1, 52)
     assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), -S(12219)/965770)
+    # regression test for #8747
+    half = Rational(1, 2)
+    assert wigner_9j(0, 0, 0, 0, half, half, 0, half, half) == half
 
 
 def test_gaunt():
