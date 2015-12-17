@@ -722,3 +722,11 @@ def test_Complement():
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
            'SymmetricDifference([2, 3], [3, 4])'
+
+def test_Vector():
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    i, j, k = C.base_vectors()
+    a, b, c = symbols('a b c')
+    v1 = a*i + b*j + c*k
+    assert str(v1) == "a*C.i + b*C.j + c*C.k"

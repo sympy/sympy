@@ -664,6 +664,9 @@ class StrPrinter(Printer):
     def _print_Dimension(self, expr):
         return str(expr)
 
+    def _print_Vector(self, expr):
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
+
     def _print_Wild(self, expr):
         return expr.name + '_'
 

@@ -1434,3 +1434,14 @@ def test_issue_7117():
 
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
+
+def test_Vector():
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    A = CoordSysCartesian('A')
+    i, j, k = A.base_vectors()
+    a, b, c, d, omega = symbols('a, b, c, d, omega')
+    v = (a ** 2 + b / c) * A.i + sqrt(d) * A.j + cos(omega) * A.k
+    assert v._latex() == (r'(a^{2} + \frac{b}{c})\mathbf{\hat{a}_i} + '
+                          r'\sqrt{d}\mathbf{\hat{a}_j} + '
+                          r'\operatorname{cos}\left(\omega\right)'
+                          r'\mathbf{\hat{a}_k}')

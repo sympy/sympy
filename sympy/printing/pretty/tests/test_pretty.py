@@ -18,6 +18,7 @@ from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
+from sympy.vector.coordsysrect import CoordSysCartesian
 
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.trace import Tr
@@ -5176,3 +5177,15 @@ u("""\
      0                              0                   \
 """)
     assert upretty(e) == ucode_str
+
+def test_Vector():
+    #To be completed
+    C = CoordSysCartesian('C')
+    i, j, k = C.base_vectors()
+    a, b, c = symbols('a b c')
+    v = a ** 2 * C.i + b * C.j + c * sin(a) * C.k
+    expected = """\
+ 2
+a  n_x + b n_y + c*sin(a) n_z\
+"""
+    assert pretty(v) == expected

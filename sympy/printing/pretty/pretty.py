@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.core.containers import Tuple
-from sympy.core.function import _coeff_isneg
+from sympy.core.function import _coeff_isneg, UndefinedFunction
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -1981,6 +1981,15 @@ class PrettyPrinter(Printer):
         pform = self._print(p.args[0])
         pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
         pform = prettyForm(*pform.right(')'))
+        return pform
+
+    def _print_Vector(self, expr):
+        # XXX works only for applied functions
+        func_name = expr.func.__name__
+        pform = self._print_Symbol(Symbol(func_name))
+        #yet to be completed
+		#if not isinstance(expr.func, UndefinedFunction):
+        #    return prettyForm(sstr(expr))
         return pform
 
 
