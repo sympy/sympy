@@ -644,17 +644,20 @@ def solve(f, *symbols, **flags):
     =====
 
     solve() with check=True (default) will run through the symbol tags to
-    elimate unwanted solutions. As in the tutorial when solving for the
-    radius of a sphere in terms of volume, one knows that both radius and
-    volume must be positive numbers.
+    elimate unwanted solutions.  If no assumptions are included all possible
+    solutions will be returned.
 
-        >>> from sympy import symbols, solve, S, Eq, pi
-        >>> r, v = symbols('r v')
-        >>> R, V = symbols('R V', positive=True)
-        >>> solve(Eq(v, S(4)/3 * pi * r**3), r)
-        [6**(1/3)*v**(1/3)/(2*pi**(1/3)), -6**(1/3)*v**(1/3)/(4*pi**(1/3)) - 2**(1/3)*3**(5/6)*I*v**(1/3)/(4*pi**(1/3)), -6**(1/3)*v**(1/3)/(4*pi**(1/3)) + 2**(1/3)*3**(5/6)*I*v**(1/3)/(4*pi**(1/3))]
-        >>> solve(Eq(V, S(4)/3 * pi * R**3), R)
-        [6**(1/3)*V**(1/3)/(2*pi**(1/3))]
+        >>> from sympy import Symbol, solve
+        >>> x = Symbol("x")
+        >>> solve(x**2 - 1)
+        [-1, 1]
+
+    By using the positive tag only one solution will be returned:
+
+        >>> pos = Symbol("pos", positive=True)
+        >>> solve(pos**2 - 1)
+        [1]
+
 
     Assumptions aren't checked when `solve()` input involves
     relationals or bools.
