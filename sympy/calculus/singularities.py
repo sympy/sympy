@@ -32,7 +32,7 @@ def singularities(expr, sym):
                                   " non rational functions are not yet"
                                   " implemented")
     else:
-        return tuple(sorted(solveset(simplify(1/expr), sym)))
+        return solveset(simplify(1/expr), sym)
 
 ###########################################################################
 ###################### DIFFERENTIAL CALCULUS METHODS ######################
