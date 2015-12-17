@@ -2685,12 +2685,13 @@ class MatrixBase(object):
 
         return self.adjugate() / d
 
-    def rref(self, iszerofunc=_iszero, simplify=False):
+    def rref(self, iszerofunc=_iszero, simplify=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
-        To simplify elements before finding nonzero pivots set simplify=True
-        (to use the default SymPy simplify function) or pass a custom
-        simplify function.
+        By default, simplifies elements before finding nonzero pivots,
+        using the default SymPy simplify function. You may also pass a
+        custom simplifyfunction, or set simplify=False if you know
+        simplification is unnecessary.
 
         Examples
         ========
