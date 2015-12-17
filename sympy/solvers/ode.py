@@ -6577,7 +6577,7 @@ def _linear_2eq_order1_type2(x, y, t, r, eq):
     """
     r['k1'] = -r['k1']; r['k2'] = -r['k2']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
-        x0, y0 = symbols('x0, y0')
+        x0, y0 = symbols('x0, y0', cls=Dummy)
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
     elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
