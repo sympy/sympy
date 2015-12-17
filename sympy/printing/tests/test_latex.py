@@ -1445,3 +1445,4 @@ def test_Vector():
                           r'\sqrt{d}\mathbf{\hat{a}_j} + '
                           r'\operatorname{cos}\left(\omega\right)'
                           r'\mathbf{\hat{a}_k}')
+
