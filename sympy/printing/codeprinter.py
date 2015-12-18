@@ -492,6 +492,7 @@ class CodePrinter(StrPrinter):
     _print_Infinity = _print_not_supported
     _print_Integral = _print_not_supported
     _print_Interval = _print_not_supported
+    _print_AccumulationBounds = _print_not_supported
     _print_Limit = _print_not_supported
     _print_list = _print_not_supported
     _print_Matrix = _print_not_supported
