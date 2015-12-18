@@ -571,14 +571,12 @@ def shortest_repeated_subsequence(S, ignore=(Marker,)):
     >>> print(shortest_repeated_subsequence('abc'))
     None
 
-    >>> from itertools import chain
-    >>> from sympy.utilities.iterables import flatten
-    >>> s1, s2, s3 = 'abc', 'babc', 'abca'
+    >>> strings = 'abc', 'babc', 'abca'
     >>> marker = '$'
-    >>> S = ''.join(chain(*flatten(zip([s1, s2, s3], '$$$'))))[:-1]
+    >>> S = marker.join(strings)
     >>> S
     'abc$babc$abca'
-    >>> shortest_repeated_subsequence(S, ignore=['$'])
+    >>> shortest_repeated_subsequence(S, ignore=[marker])
     'abc'
     """
     from sympy import oo
