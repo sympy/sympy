@@ -314,5 +314,10 @@ def test_issue_8974():
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
 
 
+def test_issue_10198():
+    assert reduce_inequalities(-1 + 1/abs( 1/x - 1 ) < 0) == And( -oo < x, x < 0 ) or And( 0 < x, x < 1/2 )
+    assert reduce_inequalities( abs( 1/sqrt( x ) ) - 1,x) == Eq(x, -1)
+
+
 def test_issue_10047():
     assert solve(sin(x) < 2) == And(-oo < x, x < oo)

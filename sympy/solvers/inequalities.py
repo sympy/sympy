@@ -289,10 +289,10 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
-    if gen.is_real is False:
+    """if gen.is_real is False:
          raise TypeError(filldedent('''
             can't solve inequalities with absolute
-            values containing non-real variables'''))
+            values containing non-real variables'''))"""
 
     def _bottom_up_scan(expr):
         exprs = []
@@ -315,10 +315,6 @@ def reduce_abs_inequality(expr, rel, gen):
                     exprs = args
         elif expr.is_Pow:
             n = expr.exp
-
-            if not n.is_Integer or n < 0:
-                raise ValueError(
-                    "only non-negative integer powers are allowed")
 
             _exprs = _bottom_up_scan(expr.base)
 
@@ -479,8 +475,6 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
 
 def _solve_inequality(ie, s):
-    """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. """
     expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
