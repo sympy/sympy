@@ -1,6 +1,6 @@
-========
+==================
 Lie Algebra Module
-========
+==================
 
 .. automodule:: sympy.liealgebras
 
@@ -40,4 +40,3 @@ Lie Algebra Module
 .. autofunction:: sympy.liealgebras.dynkin_diagram.DynkinDiagram
 
 .. autofunction:: sympy.liealgebras.cartan_matrix.CartanMatrix
-
