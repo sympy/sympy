@@ -142,12 +142,8 @@ class VectorLatexPrinter(LatexPrinter):
         base = self._print_Function(expr)
         base_split = base.split('_', 1)
         base = base_split[0]
-        if dots == 1:
-            base = r"\dot{%s}" % base
-        elif dots == 2:
-            base = r"\ddot{%s}" % base
-        elif dots == 3:
-            base = r"\dddot{%s}" % base
+        x='\\'+"d"*dots+'ot{%s}' % base
+        
         if len(base_split) is not 1:
             base += '_' + base_split[1]
         return base
