@@ -46,6 +46,10 @@ def has_module(module):
 # test runners used by several language-backend combinations
 #
 
+def runtest_issue_10274(language, backend):
+    expr = (a - b + c)**(13)
+    f = autowrap(expr, language, backend, helpers=('helper', a - b + c, (a, b, c)))
+    assert f(1, 1, 1) == 1
 
 def runtest_autowrap_twice(language, backend):
     f = autowrap((((a + b)/c)**5).expand(), language, backend)
@@ -157,6 +161,9 @@ def test_ufuncify_C_Cython():
     has_module('Cython')
     runtest_ufuncify('C', 'cython')
 
+def test_issue_10274_C_cython():
+    has_module('Cython')
+    runtest_issue_10274('C', 'cython')
 
 # Numpy
 

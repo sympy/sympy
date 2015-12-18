@@ -273,7 +273,7 @@ class CythonCodeWrapper(CodeWrapper):
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
-        return getattr(mod, name)
+        return getattr(mod, name + '_c')
 
     def dump_pyx(self, routines, f, prefix):
         """Write a Cython file with python wrappers
