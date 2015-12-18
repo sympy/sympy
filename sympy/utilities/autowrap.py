@@ -499,7 +499,7 @@ def autowrap(
     else:
         language = _infer_language(backend)
 
-    helpers = helpers if helpers else ()
+    helpers = [helpers] if helpers else ()
     flags = flags if flags else ()
 
     code_generator = get_code_generator(language, "autowrap")
