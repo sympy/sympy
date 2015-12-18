@@ -74,18 +74,12 @@ def rootof(f, x, index=None, radicals=True, expand=True):
 class RootOf(Expr):
     """Represents a root of a univariate polynomial.
 
-.. note:: Calls deprecated in SymPy 0.7.7.
-          There is no support for root indexing.
-          Use ``rootof`` instead.
+    Base class for roots of different kinds of polynomials.
+    Only complex roots are currently supported.
     """
 
     __slots__ = ['poly']
 
-    @deprecated(
-        feature="Calling RootOf",
-        deprecated_since_version="0.7.7",
-        useinstead="rootof",
-        issue=9541)
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``CRootOf`` object for ``k``-th root of ``f``."""
         return rootof(f, x, index=index, radicals=radicals, expand=expand)
