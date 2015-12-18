@@ -241,7 +241,8 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             except PolynomialError:
                 raise PolynomialError(filldedent('''
                     only polynomials and
-                    rational functions are supported in this context'''))
+                    rational functions are supported in this context,
+                    not %s''' % expr))
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -289,11 +290,6 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
-    if gen.is_real is False:
-         raise TypeError(filldedent('''
-            can't solve inequalities with absolute
-            values containing non-real variables'''))
-
     def _bottom_up_scan(expr):
         exprs = []
 
@@ -316,10 +312,6 @@ def reduce_abs_inequality(expr, rel, gen):
         elif expr.is_Pow:
             n = expr.exp
 
-            if not n.is_Integer or n < 0:
-                raise ValueError(
-                    "only non-negative integer powers are allowed")
-
             _exprs = _bottom_up_scan(expr.base)
 
             for expr, conds in _exprs:
@@ -337,16 +329,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     exprs = _bottom_up_scan(expr)
 
-    mapping = {'<': '>', '<=': '>='}
-    inequalities = []
-
-    for expr, conds in exprs:
-        if rel not in mapping.keys():
-            expr = Relational( expr, 0, rel)
-        else:
-            expr = Relational(-expr, 0, mapping[rel])
-
-        inequalities.append([expr] + conds)
+    inequalities = [[(e, rel)] + c for e, c in exprs]
 
     return reduce_rational_inequalities(inequalities, gen)
 
@@ -395,109 +378,117 @@ def solve_univariate_inequality(expr, gen, relational=True):
     (-oo, -2] U [2, oo)
 
     """
-
-    from sympy.solvers.solvers import solve, denoms
-
-    # This keeps the function independent of the assumptions about `gen`.
-    # `solveset` makes sure this function is called only when the domain is
-    # real.
-    d = Dummy(real=True)
-    expr = expr.subs(gen, d)
-    _gen = gen
-    gen = d
-
-    if expr is S.true:
-        rv = S.Reals
-    elif expr is S.false:
-        rv = S.EmptySet
-    else:
-        e = expr.lhs - expr.rhs
-        parts = n, d = e.as_numer_denom()
-        if all(i.is_polynomial(gen) for i in parts):
-            solns = solve(n, gen, check=False)
-            singularities = solve(d, gen, check=False)
+    try:
+        soln = solve_linear_inequality(expr, gen)
+        if relational:
+            return soln
+        v = soln.rhs
+        op = soln.rel_op
+        if op == '>':
+            rv = Interval.open(v, S.Infinity)
+        elif op == '>=':
+            rv = Interval.Ropen(v, S.Infinity)
+        elif op == '<':
+            rv = Interval.open(-S.Infinity, v)
+        elif op == '<=':
+            rv = Interval.Lopen(-S.Infinity, v)
+        elif op == '==':
+            rv = FiniteSet(v)
+        elif op == '!=':
+            rv = S.Reals - FiniteSet(v)
+        return rv
+    except NotImplementedError:
+        if not gen.is_real or not getattr(expr, 'is_Relational', False):
+            rv = reduce_inequalities(expr, gen).as_set()
+            rv = rv.intersect(S.Reals)
         else:
+            from sympy.solvers.solvers import solve, denoms
+            e = expr.lhs - expr.rhs
             solns = solve(e, gen, check=False)
             singularities = []
             for d in denoms(e):
                 singularities.extend(solve(d, gen))
 
-        include_x = expr.func(0, 0)
+            include_x = expr.func(0, 0)
 
-        def valid(x):
-            v = e.subs(gen, x)
+            def valid(x):
+                # /!\ uses global variables e, expr and gen
+                v = e.subs(gen, x)
+                try:
+                    r = expr.func(v, 0)
+                except TypeError:
+                    r = S.false
+                if r in (S.true, S.false):
+                    return r
+                if v.is_real is False:
+                    return S.false
+                else:
+                    v = v.n(2)
+                    if v.is_comparable:
+                        return expr.func(v, 0)
+                    return S.false
+
+            start = S.NegativeInfinity
+            sol_sets = [S.EmptySet]
             try:
-                r = expr.func(v, 0)
-            except TypeError:
-                r = S.false
-            if r in (S.true, S.false):
-                return r
-            if v.is_real is False:
-                return S.false
-            else:
-                v = v.n(2)
-                if v.is_comparable:
-                    return expr.func(v, 0)
-                return S.false
+                reals = _nsort(set(solns + singularities), separated=True)[0]
+            except NotImplementedError:
+                raise NotImplementedError('sorting of these roots is not supported')
+            for x in reals:
+                end = x
 
-        start = S.NegativeInfinity
-        sol_sets = [S.EmptySet]
-        try:
-            reals = _nsort(set(solns + singularities), separated=True)[0]
-        except NotImplementedError:
-            raise NotImplementedError('sorting of these roots is not supported')
-        for x in reals:
-            end = x
+                if end in [S.NegativeInfinity, S.Infinity]:
+                    if valid(S(0)):
+                        sol_sets.append(Interval(start, S.Infinity, True, True))
+                        break
 
-            if end in [S.NegativeInfinity, S.Infinity]:
-                if valid(S(0)):
-                    sol_sets.append(Interval(start, S.Infinity, True, True))
-                    break
+                if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
+                    sol_sets.append(Interval(start, end, True, True))
 
-            if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
+                if x in singularities:
+                    singularities.remove(x)
+                elif include_x:
+                    sol_sets.append(FiniteSet(x))
+
+                start = end
+
+            end = S.Infinity
+
+            # in case start == -oo then there were no solutions so we just
+            # check a point between -oo and oo (e.g. 0) else pick a point
+            # past the last solution (which is start after the end of the
+            # for-loop above
+            if valid(start + 1 if start is not S.NegativeInfinity else 0):
                 sol_sets.append(Interval(start, end, True, True))
 
-            if x in singularities:
-                singularities.remove(x)
-            elif include_x:
-                sol_sets.append(FiniteSet(x))
+            rv = Union(*sol_sets)
 
-            start = end
-
-        end = S.Infinity
-
-        # in case start == -oo then there were no solutions so we just
-        # check a point between -oo and oo (e.g. 0) else pick a point
-        # past the last solution (which is start after the end of the
-        # for-loop above
-        if valid(start + 1 if start is not S.NegativeInfinity else 0):
-            sol_sets.append(Interval(start, end, True, True))
-
-        rv = Union(*sol_sets).subs(gen, _gen)
-
-    return rv if not relational else rv.as_relational(_gen)
+    return rv if not relational else rv.as_relational(gen)
 
 
-def _solve_inequality(ie, s):
-    """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. """
-    expr = ie.lhs - ie.rhs
-    try:
-        p = Poly(expr, s)
-        if p.degree() != 1:
-            raise NotImplementedError
-    except (PolynomialError, NotImplementedError):
+def solve_linear_inequality(ie, s):
+    """Return an inequality with `s` on the left if `ie` is linear
+    in `s` and the coefficient of `s` is known, else
+    raise NotImplementedError. True or False expressions are returned
+    unchanged."""
+    if getattr(ie, 'is_Relational', False):
+        expr = ie.lhs - ie.rhs
         try:
-            return reduce_rational_inequalities([[ie]], s)
+            p = Poly(expr, s)
+            if p.degree() == 1:
+                a, b = p.all_coeffs()
+                if a.is_positive or ie.rel_op in ('!=', '=='):
+                    return ie.func(s, -b/a)
+                elif a.is_negative:
+                    return ie.reversed.func(s, -b/a)
         except PolynomialError:
-            return solve_univariate_inequality(ie, s)
-    a, b = p.all_coeffs()
-    if a.is_positive or ie.rel_op in ('!=', '=='):
-        return ie.func(s, -b/a)
-    elif a.is_negative:
-        return ie.reversed.func(s, -b/a)
-    else:
-        raise NotImplementedError
+            pass
+    if any(ie is i for i in (S.true, S.false)):
+        return ie
+    raise NotImplementedError(filldedent('''
+            expected an inequality that was linear in %s, not %s''' %
+                (s, ie)))
+_solve_inequality = solve_linear_inequality
 
 
 def _reduce_inequalities(inequalities, symbols):
@@ -521,7 +512,7 @@ def _reduce_inequalities(inequalities, symbols):
             common = expr.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(solve_univariate_inequality(Relational(expr, 0, rel), gen))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
@@ -537,7 +528,7 @@ def _reduce_inequalities(inequalities, symbols):
             if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(solve_univariate_inequality(Relational(expr, 0, rel), gen))
 
     poly_reduced = []
     abs_reduced = []

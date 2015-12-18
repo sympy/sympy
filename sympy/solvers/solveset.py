@@ -24,9 +24,9 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
+                         RootOf, NotAlgebraic)
 from sympy.solvers.solvers import checksol, denoms
-from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.solvers.inequalities import reduce_inequalities
 from sympy.utilities import filldedent
 
 import warnings
@@ -490,6 +490,8 @@ def solveset_real(f, symbol):
         for (expr, in_set) in expr_set_pairs:
             solns = solveset_real(expr, symbol).intersect(in_set)
             result = result + solns
+    elif f.is_Relational:
+        return solveset(f, symbol, domain=S.Reals)
     else:
         lhs, rhs_s = invert_real(f, 0, symbol)
         if lhs == symbol:
@@ -678,6 +680,7 @@ def _has_rational_power(expr, symbol):
 def _solve_radical(f, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
     from sympy.solvers.solvers import unrad
+    from sympy import minpoly
     eq, cov = unrad(f)
     if not cov:
         result = solveset_solver(eq, symbol) - \
@@ -694,27 +697,62 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
+    unverified = []
+    verified = []
+    for s in result:
+        v = f.subs(symbol, s)
+        c = v.is_zero
+        if c is False:
+            continue
+        if c:
+            verified.append(s)
+            continue
+
+        c = checksol(f, symbol, v, numerical=False)
+        if c is False:
+            continue
+        if c:
+            verified.append(s)
+            continue
+
+        # minpoly will be used in equals after other simplification
+        # so rather than redo what's been done, try minpoly now;
+        # we might also try sqrtdenest(v).as_numer_denom()[0].expand() == 0 first
+        try:
+            c = minpoly(v).is_Symbol
+            if c:  # XX if c is False is that proof that v is not zero or is it a minpoly insufficiency?
+                verified.append(s)
+                continue
+        except NotAlgebraic:
+            pass
+
+        c = v.equals(0)
+        if c is False:
+            continue
+        elif c:
+            verified.append(s)
+            continue
+
+        unverified.append(s)
+
+    if not unverified:
+        return FiniteSet(*verified)
+    raise NotImplementedError(filldedent('''
+        Verified %s but could not verify the following solutions
+        to %s: %s''' % (verified, f, unverified)))
 
 
 def _solve_abs(f, symbol):
     """ Helper function to solve equation involving absolute value function """
-    p, q, r = Wild('p'), Wild('q'), Wild('r')
-    pattern_match = f.match(p*Abs(q) + r) or {}
-    if not pattern_match.get(p, S.Zero).is_zero:
-        f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
-        q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
-                                                 relational=False)
-        q_neg_cond = solve_univariate_inequality(f_q < 0, symbol,
-                                                 relational=False)
+    from sympy.solvers.inequalities import reduce_abs_inequality
+    abs_rad = f.find(lambda u:
+        u.has(symbol) and (
+        u.is_Function or u.is_Pow and not u.exp.is_Integer))
 
-        sols_q_pos = solveset_real(f_p*f_q + f_r,
-                                           symbol).intersect(q_pos_cond)
-        sols_q_neg = solveset_real(f_p*(-f_q) + f_r,
-                                           symbol).intersect(q_neg_cond)
-        return Union(sols_q_pos, sols_q_neg)
-    else:
-        return ConditionSet(symbol, Eq(f, 0), S.Complexes)
+    if abs_rad and all(isinstance(i, Abs) for i in abs_rad):
+        return reduce_abs_inequality(f, '==', symbol).as_set()
+
+    return ConditionSet(symbol, Eq(f, 0), S.Complexes)
 
 
 def solveset_complex(f, symbol):
@@ -956,8 +994,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 not supported. Try the real domain by
                 setting domain=S.Reals'''))
         try:
-            result = solve_univariate_inequality(
-            f, symbol, relational=False).intersection(domain)
+            result = reduce_inequalities(
+            f, symbol).as_set().intersection(domain)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
