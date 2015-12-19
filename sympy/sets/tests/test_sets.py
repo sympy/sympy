@@ -49,7 +49,7 @@ def test_interval_symbolic_end_points():
     assert Union(Interval(0, a), Interval(0, 3)).sup == Max(a, 3)
     assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
-    assert Interval(0, a).contains(1) == LessThan(1, a)
+    assert Interval(0, a).contains(1) == GreaterThan(a, 1)
 
 
 def test_union():
@@ -456,9 +456,9 @@ def test_contains():
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
-        Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
+        Or(And(1 <= x, x <= 2), And(3 <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, y >= 1, y >= 2)
+        And(S(1) <= y, S(2) <= y, y <= 3, y <= x)
 
 
 def test_interval_symbolic():

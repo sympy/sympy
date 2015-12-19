@@ -583,8 +583,9 @@ def test_expint():
 
 def test_messy():
     from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
-                       acoth, E1, besselj, acosh, asin, And, re,
-                       fourier_transform, sqrt)
+                       acoth, E1, besselj, acosh, asin, And, Or, re,
+                       fourier_transform, sqrt, periodic_argument,
+                       polar_lift, Eq)
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)
@@ -598,9 +599,17 @@ def test_messy():
         (0, And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1))
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
-    assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
-        (Piecewise((0, 4*abs(pi**2*s**2) > 1),
-                   (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
+    assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == (
+        Piecewise(
+            (0, 4*pi**2*abs(s**2) > 1),
+            (2*sqrt(-4*pi**2*s**2 + 1), True)),
+        And(
+            Or(
+                abs(periodic_argument(exp_polar(-I*pi)*polar_lift(s)**2, oo)) < pi,
+                Eq(pi, abs(periodic_argument(exp_polar(-I*pi)*polar_lift(s)**2, oo)))),
+            Or(
+                abs(periodic_argument(exp_polar(I*pi)*polar_lift(s)**2, oo)) < pi,
+                Eq(pi, abs(periodic_argument(exp_polar(I*pi)*polar_lift(s)**2, oo))))))
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
     #                       - folding could be better
 

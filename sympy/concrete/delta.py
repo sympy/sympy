@@ -266,7 +266,7 @@ def deltasummation(f, limit, no_piecewise=False):
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
     1
     >>> deltasummation(KroneckerDelta(i, k), (k, 0, oo))
-    Piecewise((1, 0 <= i), (0, True))
+    Piecewise((1, i >= 0), (0, True))
     >>> deltasummation(KroneckerDelta(i, k), (k, 1, 3))
     Piecewise((1, And(1 <= i, i <= 3)), (0, True))
     >>> deltasummation(k*KroneckerDelta(i, j)*KroneckerDelta(j, k), (k, -oo, oo))

@@ -2248,7 +2248,7 @@ def Triangular(name, a, b, c):
     <     -a + b
     |
     |   2*b - 2*z
-    |----------------   for And(z <= b, c < z)
+    |----------------   for And(b >= z, z > c)
     |(-a + b)*(b - c)
     |
     \        0                otherwise

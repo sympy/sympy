@@ -320,21 +320,119 @@ class And(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        newargs = []
-        rel = []
+        from sympy.core.relational import Relational
+        newargs = set()
+        rel = set()
         for x in reversed(list(args)):
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
+            if isinstance(x, Number):
+                if x.is_zero is None:
+                    pass
+                else:
+                    x = sympify(not x.is_zero)
+            elif x.is_Relational:
+                x = x.canonical
+                rel.add(x)
                 continue
-            if x.is_Relational:
-                c = x.canonical
-                if c in rel:
+            if x is S.false:
+                return [x]
+            elif x is S.true:
+                continue
+            newargs.add(x)
+        # replace a < b, a <= b with a < b
+        # a <= b, a >= b with Eq(a, b), etc...
+        actions = {
+            ('!=', '>='): '>', ('!=', '>'): '>', ('>', '>='): '>', ('!=', '<='):
+            '<', ('<', '=='): False, ('<=', '>='): '==', ('!=', '<'): '<',
+            ('<=', '>'): False, ('<', '>'): False, ('==', '>'): False, ('<',
+            '<='): '<', ('<=', '=='): '==', ('!=', '=='): False, ('==', '>='):
+            '==', ('<', '>='): False}
+        rhs = {}
+        for j, R in enumerate(rel):
+            l, r = R.args
+            if l not in rhs:
+                rhs[l] = {}
+            if r not in rhs[l]:
+                rhs[l][r] = set()
+            rhs[l][r].add(R.rel_op)
+        for l in rhs:
+            for r in rhs[l]:
+                if len(rhs[l][r]) == 1:
                     continue
-                nc = (~c).canonical
-                if any(r == nc for r in rel):
-                    return [S.false]
-                rel.append(c)
-            newargs.append(x)
+                ops = list(rhs[l][r])
+                while len(ops) > 1:
+                    ops = list(sorted(ops))
+                    for i, o in enumerate(ops):
+                        for j in range(i + 1, len(ops)):
+                            p = ops[j]
+                            do = actions.get((o, p), None)
+                            if do is None:
+                                continue
+                            if do is False:
+                                return [S.false]
+                            R = Relational(l, r, do)
+                            rel.remove(Relational(l, r, o))
+                            rel.remove(Relational(l, r, p))
+                            ops.pop(j)
+                            ops.pop(i)
+                            rel.add(R)
+                            ops.append(do)
+                            break
+                        else:
+                            continue
+                        break
+
+        # make two inequalities like x < 2 & x > 1 look like 1 < x < 2
+        if len(rel) == 2:
+            rel = list(rel)
+            was = rel[:]  # copy
+            if len([i for i in rel if i.rel_op.strip('=!')]) == 2:
+                # there are 2 signs involving < and/or >
+                a, b = rel
+                free = a.free_symbols & b.free_symbols
+                if len(free) != 1:
+                    free = (set([i for i in a.args
+                        if len(i.free_symbols) == 1]) &
+                        set([i for i in b.args if
+                        len(i.free_symbols) == 1]))
+                if len(free) == 1:
+                    x = free.pop()
+                    try:
+                        from sympy.solvers.inequalities import _solve_inequality as f
+                        solved_rel = [f(i, x) if i.lhs != x else i for i in rel]
+                        if not all(getattr(i, 'lhs', None) for i in solved_rel):
+                            # XX if _solve_inequality finds multiple solutions,
+                            # the result will not be a relational any more
+                            raise NotImplementedError
+                        rel = solved_rel
+                        a, b = [i.rhs for i in rel]
+                        literal = True
+                        asmall = (a < b)
+                        if asmall is not S.true and asmall is not S.false:
+                            literal = False
+                            asmall = list(ordered((a, b))) == [a, b]
+                        if not asmall:
+                            rel = rel[::-1]
+                            was = was[::-1]
+                        rel[0] = rel[0].reversed
+                        if literal:
+                            # -> small op1 x, x op2 big
+                            if all('<' in i.rel_op for i in rel):
+                                # -> small < x, x < big
+                                pass
+                            elif all('>' in i.rel_op for i in rel):
+                                # -> small > x, x > big
+                                rel = [S.false]*2
+                            elif '<' in rel[0].rel_op:
+                                # -> small < x, x > big
+                                rel[0] = S.true
+                            else:
+                                # -> small > x, x < big
+                                rel[1] = S.true
+                                rel[0] = rel[0].reversed
+                    except (TypeError, NotImplementedError):
+                        pass
+
+        newargs.update(rel)
         return LatticeOp._new_args_filter(newargs, And)
 
     def as_set(self):
@@ -391,21 +489,73 @@ class Or(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        newargs = []
-        rel = []
+        from sympy.core.relational import Relational
+        newargs = set()
+        rel = set()
         for x in args:
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
+            if isinstance(x, Number):
+                if x.is_zero is None:
+                    pass
+                else:
+                    x = sympify(not x.is_zero)
+            elif x.is_Relational:
+                x = x.canonical
+                rel.add(x)
                 continue
-            if x.is_Relational:
-                c = x.canonical
-                if c in rel:
+            if x is S.true:
+                return [x]
+            elif x is S.false:
+                continue
+            newargs.add(x)
+        actions = {
+            ('!=', '>='): True, ('!=', '>'): '!=', ('!=', '<='): True, ('<',
+            '=='): '<=', ('<=', '>='): True, ('!=', '<'): '!=', ('<=', '>'):
+            True, ('>', '>='): '>=', ('==', '>'): '>=', ('<', '<='): '<=',
+            ('<=', '=='): '<=', ('!=', '=='): True, ('==', '>='): '>=', ('<',
+            '>='): True}
+        assert all(tuple(sorted(k)) == k for k in actions)
+        rhs = {}
+        for j, R in enumerate(rel):
+            l, r = R.args
+            if l not in rhs:
+                rhs[l] = {}
+            if r not in rhs[l]:
+                rhs[l][r] = set()
+            op = R.rel_op
+            if op in rhs[l][r]:
+                # duplicate
+                newargs[idx[(l, r, op)]] = S.false
+            else:
+                rhs[l][r].add(op)
+        for l in rhs:
+            for r in rhs[l]:
+                if len(rhs[l][r]) == 1:
                     continue
-                nc = (~c).canonical
-                if any(r == nc for r in rel):
-                    return [S.true]
-                rel.append(c)
-            newargs.append(x)
+                ops = list(rhs[l][r])
+                while len(ops) > 1 and not (
+                        len(ops) == 2 and '<' in ops and '>' in ops):
+                    ops = list(sorted(ops))
+                    for i, o in enumerate(ops):
+                        for j in range(i + 1, len(ops)):
+                            p = ops[j]
+                            do = actions.get((o, p), None)
+                            if do is None:
+                                continue
+                            if do is True:
+                                return [S.true]
+                            R = Relational(l, r, do)
+                            rel.remove(Relational(l, r, o))
+                            rel.remove(Relational(l, r, p))
+                            ops.pop(j)
+                            ops.pop(i)
+                            rel.add(R)
+                            ops.append(do)
+                            break
+                        else:
+                            continue
+                        break
+
+        newargs.update(rel)
         return LatticeOp._new_args_filter(newargs, Or)
 
     def as_set(self):
@@ -417,7 +567,7 @@ class Or(LatticeOp, BooleanFunction):
 
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
-        >>> Or(x>2, x<-2).as_set()
+        >>> Or(x > 2, x < -2).as_set()
         (-oo, -2) U (2, oo)
         """
         from sympy.sets.sets import Union
@@ -773,7 +923,7 @@ class Implies(BooleanFunction):
         try:
             newargs = []
             for x in args:
-                if isinstance(x, Number) or x in (0, 1):
+                if isinstance(x, Number):
                     newargs.append(True if x else False)
                 else:
                     newargs.append(x)

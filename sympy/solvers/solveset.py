@@ -469,7 +469,11 @@ def solveset_real(f, symbol):
 
     result = EmptySet()
 
-    if f.expand().is_zero:
+    if f is S.true:
+        return S.Reals
+    elif f is S.false:
+        return EmptySet()
+    elif f.expand().is_zero:
         return S.Reals
     elif not f.has(symbol):
         return EmptySet()
