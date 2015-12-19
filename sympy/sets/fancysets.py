@@ -236,10 +236,10 @@ class ImageSet(Set):
         from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
-                         L.variables).args[0])
+            solns = linsolve([expr - val for val, expr in zip(other, L.expr)],
+                             L.variables).args
         else:
-            solns = list(solveset(L.expr - other, L.variables[0]))
+            solns = solveset(L.expr - other, L.variables[0])
 
         for soln in solns:
             try:
