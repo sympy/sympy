@@ -565,7 +565,7 @@ class Basic(with_metaclass(ManagedProperties)):
     @property
     def is_comparable(self):
         """Return True if self can be computed to a real number
-        with precision, else False.
+        (or already is a real number) with precision, else False.
 
         Examples
         ========
@@ -582,14 +582,15 @@ class Basic(with_metaclass(ManagedProperties)):
         is_number = self.is_number
         if is_number is False:
             return False
-        if is_real and is_number:
-            return True
-        n, i = [p.evalf(2) for p in self.as_real_imag()]
+        n, i = [p.evalf(2) if not p.is_Number else p
+            for p in self.as_real_imag()]
         if not i.is_Number or not n.is_Number:
             return False
         if i:
             # if _prec = 1 we can't decide and if not,
-            # the answer is False so return False
+            # the answer is False because numbers with
+            # imaginary parts can't be compared
+            # so return False
             return False
         else:
             return n._prec != 1

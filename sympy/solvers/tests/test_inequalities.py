@@ -2,7 +2,7 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root)
+                   Function, Poly, PurePoly, pi, root, log, exp)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -316,3 +316,7 @@ def test_issue_8974():
 
 def test_issue_10047():
     assert solve(sin(x) < 2) == And(-oo < x, x < oo)
+
+
+def test_issue_10268():
+    assert solve(log(x) < 1000) == And(-oo < x, x < exp(1000))
