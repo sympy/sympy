@@ -12,7 +12,7 @@ from sympy.polys.rootoftools import RootOf
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, XFAIL
 
 
 inf = oo.evalf()
@@ -270,11 +270,6 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
 
-    # XXX should be limited in domain, e.g. between 0 and 2*pi
-    assert isolve(sin(x) < S.Half, x) == \
-        Or(And(-oo < x, x < pi/6), And(5*pi/6 < x, x < oo))
-    assert isolve(sin(x) > S.Half, x) == And(pi/6 < x, x < 5*pi/6)
-
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
         And(RootOf(x**7 - x - 2, 0) < x, x < oo)
@@ -288,6 +283,11 @@ def test_solve_univariate_inequality():
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
 
 
+def test_solve_univariate_inequality_errors():
+    raises(NotImplementedError, lambda: isolve(sin(x) < S.Half, x))
+    raises(NotImplementedError, lambda: isolve(sin(x) > S.Half, x))
+
+
 def test_issue_9954():
     assert isolve(x**2 >= 0, x, relational=False) == S.Reals
     assert isolve(x**2 >= 0, x, relational=True) == S.Reals.as_relational(x)
@@ -296,9 +296,8 @@ def test_issue_9954():
 
 
 def test_slow_general_univariate():
-    r = RootOf(x**5 - x**2 + 1, 0)
-    assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
-        Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
+    assert str(solve(sqrt(x) + 1/root(x, 3) - 2 > 0
+        ).as_set().n(5)) == '(0, 0.37284) U (1.0, +inf)'
 
 
 def test_issue_8545():

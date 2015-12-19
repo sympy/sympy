@@ -1284,3 +1284,16 @@ def linsolve(system, *symbols):
     # Return solutions
     solution = FiniteSet(tuple(solution))
     return solution
+
+
+def solve(f_x, x, **kwargs):
+    """
+    Emulates `sympy.solvers.solvers.solve` using `solveset`.
+    """
+    solns = solveset(f_x, x, domain=S.Reals)
+    if type(solns) is FiniteSet:
+        return list(solns)
+    elif solns is S.EmptySet:
+        return []
+    else:
+        raise NotImplementedError
