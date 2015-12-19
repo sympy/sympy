@@ -10,7 +10,7 @@ from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.abc import x, y, z
+from sympy.abc import x, y, z, m, n
 
 
 def test_interval_arguments():
