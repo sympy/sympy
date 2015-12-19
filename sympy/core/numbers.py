@@ -1160,7 +1160,6 @@ class Rational(Number):
                     neg_pow, digits, expt = decimal.Decimal(p).as_tuple()
                     p = [1, -1][neg_pow]*int("".join(str(x) for x in digits))
                     if expt > 0:
-                        # TODO: this branch needs a test
                         return Rational(p*Pow(10, expt), 1)
                     return Rational(p, Pow(10, -expt))
                 except decimal.InvalidOperation:
@@ -2464,6 +2463,8 @@ class Infinity(with_metaclass(Singleton, Number)):
         NegativeInfinity
 
         """
+        from sympy.functions import re
+
         if expt.is_positive:
             return S.Infinity
         if expt.is_negative:
@@ -2472,8 +2473,15 @@ class Infinity(with_metaclass(Singleton, Number)):
             return S.NaN
         if expt is S.ComplexInfinity:
             return S.NaN
+        if expt.is_real is False and expt.is_number:
+            expt_real = re(expt)
+            if expt_real.is_positive:
+                return S.ComplexInfinity
+            if expt_real.is_negative:
+                return S.Zero
+            if expt_real.is_zero:
+                return S.NaN
 
-        if expt.is_number:
             return self**expt.evalf()
 
     def _as_mpf_val(self, prec):
@@ -2673,7 +2681,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         NaN
 
         """
-        if isinstance(expt, Number):
+        if expt.is_number:
             if expt is S.NaN or \
                 expt is S.Infinity or \
                     expt is S.NegativeInfinity:

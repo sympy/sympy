@@ -207,23 +207,15 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*sin(oo)).n() == S.Zero
-    assert (0/sin(oo)).n() == S.Zero
     assert (0*E**(oo)).n() == S.NaN
     assert (0/E**(oo)).n() == S.Zero
 
-    assert (0+sin(oo)).n() == S.NaN
-    assert (0-sin(oo)).n() == S.NaN
     assert (0+E**(oo)).n() == S.Infinity
     assert (0-E**(oo)).n() == S.NegativeInfinity
 
-    assert (5*sin(oo)).n() == S.NaN
-    assert (5/sin(oo)).n() == S.NaN
     assert (5*E**(oo)).n() == S.Infinity
     assert (5/E**(oo)).n() == S.Zero
 
-    assert (5+sin(oo)).n() == S.NaN
-    assert (5-sin(oo)).n() == S.NaN
     assert (5+E**(oo)).n() == S.Infinity
     assert (5-E**(oo)).n() == S.NegativeInfinity
 

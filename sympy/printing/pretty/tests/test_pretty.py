@@ -6,13 +6,16 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps,
+    Complement, FiniteSet, Interval, Intersection, Union)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
+
+from sympy.printing.codeprinter import Assignment
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -328,6 +331,14 @@ def test_upretty_modifiers():
     assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃′')
     assert upretty( Symbol('x_dot') ) == u('x_dot')
     assert upretty( Symbol('x__dot') ) == u('x__dot')
+
+
+def test_pretty_Cycle():
+    from sympy.combinatorics.permutations import Cycle
+    assert pretty(Cycle(1, 2)) == '(1 2)'
+    assert pretty(Cycle(2)) == '(2)'
+    assert pretty(Cycle(1, 3)(4, 5)) == '(1 3)(4 5)'
+    assert pretty(Cycle()) == '()'
 
 
 def test_pretty_basic():
@@ -1049,6 +1060,18 @@ y + 1     \
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+def test_Assignment():
+    expr = Assignment(x, y)
+    ascii_str = \
+"""\
+x := y\
+"""
+    ucode_str = \
+u("""\
+x := y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_issue_7117():
     # See also issue #5031 (hence the evaluate=False in these).
@@ -5176,3 +5199,13 @@ u("""\
      0                              0                   \
 """)
     assert upretty(e) == ucode_str
+
+
+def test_issue_9877():
+    ucode_str1 = u('(2, 3) ∪ ([1, 2] \ {x})')
+    a, b, c = Interval(2, 3, True, True), Interval(1, 2), FiniteSet(x)
+    assert upretty(Union(a, Complement(b, c))) == ucode_str1
+
+    ucode_str2 = u('{x} ∩ {y} ∩ ({z} \ [1, 2])')
+    d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
+    assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2

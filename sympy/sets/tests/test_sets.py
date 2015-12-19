@@ -222,6 +222,7 @@ def test_intersect():
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
         Union(Interval(0, 1), Interval(2, 2))
 
+    assert FiniteSet(1, 2)._intersect((1, 2, 3)) == FiniteSet(1, 2)
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
     assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
         FiniteSet('ham')
@@ -453,6 +454,12 @@ def test_contains():
 
     assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
     assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+
+    # non-bool results
+    assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
+        Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
+    assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
+        And(y <= 3, y <= x, y >= 1, y >= 2)
 
 
 def test_interval_symbolic():
@@ -913,7 +920,7 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(m, n, x), FiniteSet(m, z), r) == \
         Intersection(r, FiniteSet(m, z), FiniteSet(n, x))
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, x), r) == \
-        Intersection(r, FiniteSet(x), FiniteSet(3, m, n), evaluate=False)
+        Intersection(r, FiniteSet(3, m, n), evaluate=False)
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, 2, 3), r) == \
         Union(FiniteSet(3), Intersection(r, FiniteSet(m, n)))
     assert Intersection(r, FiniteSet(mat, 2, n), FiniteSet(0, mat, n)) == \
@@ -922,3 +929,15 @@ def test_issue_Symbol_inter():
         Intersection(r, FiniteSet(sin(x), cos(x)))
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
+
+
+def test_issue_10113():
+    f = x**2/(x**2 - 4)
+    assert imageset(x, f, S.Reals) == Union(Interval(-oo, 0), Interval(1, oo, True, True))
+    assert imageset(x, f, Interval(-2, 2)) == Interval(-oo, 0)
+    assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(S(9)/5, oo))
+
+
+def test_issue_10248():
+    assert list(Intersection(S.Reals, FiniteSet(x))) == [
+        And(x < oo, x > -oo)]

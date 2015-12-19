@@ -530,6 +530,10 @@ class RootOf(Expr):
             reals_count = len(_reals_cache[self.poly])
             _complexes_cache[self.poly][self.index - reals_count] = interval
 
+    def _eval_subs(self, old, new):
+        # don't allow subs to change anything
+        return self
+
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
         with workprec(prec):

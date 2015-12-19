@@ -17,7 +17,7 @@ from sympy.polys.rootoftools import RootOf
 
 from sympy.sets import (FiniteSet, ConditionSet)
 
-from sympy.utilities.pytest import XFAIL, raises, skip
+from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -225,6 +225,7 @@ def test_is_function_class_equation():
 
 
 def test_garbage_input():
+    raises(ValueError, lambda: solveset_real(x, 1))
     raises(ValueError, lambda: solveset_real([x], x))
     raises(ValueError, lambda: solveset_real(x, pi))
     raises(ValueError, lambda: solveset_real(x, x**2))
@@ -421,6 +422,7 @@ def test_solve_sqrt_fail():
     assert solveset_real(eq, x) == FiniteSet(S(1)/3)
 
 
+@slow
 def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
@@ -439,7 +441,10 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 + (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2)*Abs(q))/Abs(q), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 +
+        (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) -
+        1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2
+        )*Abs(q))/Abs(q), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -554,6 +559,18 @@ def test_solve_abs():
         FiniteSet(-1, Rational(1, 3))
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
+
+    # issue 9565. Note: solveset_real does not solve this as it is
+    # solveset's job to handle Relationals
+    assert solveset(Abs((x - 1)/(x - 5)) <= S(1)/3, domain=S.Reals
+        ) == Interval(-1, 2)
+
+    # issue #10069
+    assert solveset_real(abs(1/(x - 1)) - 1 > 0, x) == \
+        ConditionSet(x, Eq((1 - Abs(x - 1))/Abs(x - 1) > 0, 0),
+            S.Reals)
+    assert solveset(abs(1/(x - 1)) - 1 > 0, x, domain=S.Reals
+        ) == Union(Interval.open(0, 1), Interval.open(1, 2))
 
 
 @XFAIL
@@ -727,6 +744,7 @@ def test_solve_complex_unsolvable():
     solution = solveset_complex(cos(x) - S.Half, x)
     assert solution == unsolved_object
 
+
 @XFAIL
 def test_solve_trig_simplified():
     from sympy.abc import n
@@ -836,6 +854,12 @@ def test_solve_lambert():
 def test_solveset():
     x = Symbol('x')
     raises(ValueError, lambda: solveset(x + y))
+    raises(ValueError, lambda: solveset(x, 1))
+
+    assert solveset(0, domain=S.Reals) == S.Reals
+    assert solveset(1) == S.EmptySet
+    assert solveset(True, domain=S.Reals) == S.Reals  # issue 10197
+    assert solveset(False, domain=S.Reals) == S.EmptySet
 
     assert solveset(exp(x) - 1, domain=S.Reals) == FiniteSet(0)
     assert solveset(exp(x) - 1, x, S.Reals) == FiniteSet(0)
@@ -981,6 +1005,11 @@ def test_linsolve():
         ])
 
     assert linsolve(Augmatrix, A, B) == FiniteSet((0, I/(J1*J2)))
+
+    # Issue #10121 - Assignment of free variables
+    a, b, c, d, e = symbols('a, b, c, d, e')
+    Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
+    assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
 
 
 def test_issue_9556():

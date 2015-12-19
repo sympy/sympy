@@ -211,6 +211,11 @@ class CCodePrinter(CodePrinter):
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
+    def _print_ITE(self, expr):
+        from sympy.functions import Piecewise
+        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
+        return self._print(_piecewise)
+
     def _print_MatrixElement(self, expr):
         return "{0}[{1}]".format(expr.parent, expr.j +
                 expr.i*expr.parent.shape[1])

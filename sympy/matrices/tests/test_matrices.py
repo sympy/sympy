@@ -942,6 +942,13 @@ def test_subs():
     for cls in classes:
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).subs(1, 2)
 
+def test_xreplace():
+    assert Matrix([[1, x], [x, 4]]).xreplace({x: 5}) == \
+        Matrix([[1, 5], [5, 4]])
+    assert Matrix([[x, 2], [x + y, 4]]).xreplace({x: -1, y: -2}) == \
+        Matrix([[-1, 2], [-3, 4]])
+    for cls in classes:
+        assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
     f, n = symbols('f, n')
@@ -1620,6 +1627,19 @@ def test_jordan_form_complex_issue_9274():
     P, J = A.jordan_form()
     assert J == Jmust1 or J == Jmust2
     assert simplify(P*J*P.inv()) == A
+
+def test_issue_10220():
+    # two non-orthogonal Jordan blocks with eigenvalue 1
+    M = Matrix([[1, 0, 0, 1],
+                [0, 1, 1, 0],
+                [0, 0, 1, 1],
+                [0, 0, 0, 1]])
+    P, C = M.jordan_cells()
+    assert P == Matrix([[0, 1, 0, 1],
+                        [1, 0, 0, 0],
+                        [0, 1, 0, 0],
+                        [0, 0, 1, 0]])
+    assert len(C) == 2
 
 
 def test_Matrix_berkowitz_charpoly():

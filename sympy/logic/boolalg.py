@@ -514,7 +514,7 @@ class Not(BooleanFunction):
         (-oo, 0]
         """
         if len(self.free_symbols) == 1:
-            return self.args[0].as_set().complement
+            return self.args[0].as_set().complement(S.Reals)
         else:
             raise NotImplementedError("Sorry, Not.as_set has not yet been"
                                       " implemented for mutivariate"

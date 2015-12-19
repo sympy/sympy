@@ -15,7 +15,8 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps)
+    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
+    AccumBounds)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -28,6 +29,7 @@ from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
+from sympy.combinatorics.permutations import Cycle, Permutation
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -126,6 +128,18 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_cycle():
+    assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Cycle(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Cycle()) == r"\left( \right)"
+
+
+def test_latex_permutation():
+    assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Permutation()) == r"\left( \right)"
 
 
 def test_latex_Float():
@@ -561,6 +575,13 @@ def test_latex_intervals():
     assert latex(Interval(0, a, True, False)) == r"\left(0, a\right]"
     assert latex(Interval(0, a, False, True)) == r"\left[0, a\right)"
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
+
+
+def test_latex_AccumuBounds():
+    a = Symbol('a', real=True)
+    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
+    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
 
 
 def test_latex_emptyset():

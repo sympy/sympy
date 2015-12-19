@@ -262,7 +262,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
                     else:
                         base, exp = decompose_power_rat(factor)
 
-                    elements[base] = exp
+                    elements[base] = elements.setdefault(base, 0) + exp
                     gens.add(base)
 
             terms.append((coeff, elements))

@@ -289,6 +289,12 @@ def test_deriv1():
     assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
             Tuple(x), Tuple(3*sin(x)))
 
+    # See issue 8510
+    assert f(x, x + z).diff(x) == Subs(Derivative(f(y, x + z), y), Tuple(y), Tuple(x)) \
+            + Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x + z))
+    assert f(x, x**2).diff(x) == Subs(Derivative(f(y, x**2), y), Tuple(y), Tuple(x)) \
+            + 2*x*Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x**2))
+
 
 def test_deriv2():
     assert (x**3).diff(x) == 3*x**2
