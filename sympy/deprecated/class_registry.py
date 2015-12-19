@@ -33,7 +33,7 @@ class ClassRegistry(Registry):
         issue=7124,
         deprecated_since_version='0.7.7')
     def __getattr__(self, name):
-        return any(lambda cls: cls.__name__ == name, all_classes)
+        return any(cls.__name__ == name for cls in all_classes)
 
 
 C = ClassRegistry()

@@ -13,7 +13,7 @@ from __future__ import division, print_function
 from sympy.core import Dummy, S, nan
 from sympy.functions.elementary.trigonometric import acos
 from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset, linsolve
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence, range
 
@@ -453,7 +453,7 @@ class LinearEntity3D(GeometryEntity):
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
-        d = solve(c, t)
+        d = list(solveset(c, t))
         e = a.subs(t, d[0])
         return Line3D(p, e)
 
@@ -506,7 +506,7 @@ class LinearEntity3D(GeometryEntity):
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
-        d = solve(c, t)
+        d = list(solveset(c, t))
         e = a.subs(t, d[0])
         return Segment3D(p, e)
 
@@ -705,12 +705,12 @@ class LinearEntity3D(GeometryEntity):
                 a = self.arbitrary_point(t1)
                 b = o.arbitrary_point(t2)
                 dx = a.x - b.x
-                c = solve([dx, a.y - b.y], t)
-                d = solve([dx, a.z - b.z], t)
-                if len(c) == 1 and len(d) == 1:
+                c = linsolve([dx, a.y - b.y], t).args[0]
+                d = linsolve([dx, a.z - b.z], t).args[0]
+                if len(c.free_symbols) == 1 and len(d.free_symbols) == 1:
                     return []
-                e = a.subs(t1, c[t1])
-                if  e in self and e in o:
+                e = a.subs(t1, c[0])
+                if e in self and e in o:
                     return [e]
                 else:
                     return []
@@ -841,12 +841,7 @@ class Line3D(LinearEntity3D):
         else:
             p1 = Point3D(p1)
         if pt is not None and len(direction_ratio) == 0:
-            try:
-                pt = Point3D(pt)
-            except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was the direction_ratio of the desired line, enter it '
-                'with keyword "direction_ratio".')
+            pt = Point3D(pt)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -1047,12 +1042,7 @@ class Ray3D(LinearEntity3D):
         else:
             p1 = Point3D(p1)
         if pt is not None and len(direction_ratio) == 0:
-            try:
-                pt = Point3D(pt)
-            except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was the direction_ratio of the desired line, enter it '
-                'with keyword "direction_ratio".')
+            pt = Point3D(pt)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])

@@ -913,7 +913,7 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     >>> base1, gens1 = get_symmetric_group_sgs(1)
     >>> base2, gens2 = get_symmetric_group_sgs(2)
     >>> bsgs_direct_product(base1, gens1, base2, gens2)
-    ([1], [Permutation(4)(1, 2)])
+    ([1], [(4)(1 2)])
     """
     s = 2 if signed else 0
     n1 = gens1[0].size - s
@@ -946,7 +946,7 @@ def get_symmetric_group_sgs(n, antisym=False):
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> Permutation.print_cyclic = True
     >>> get_symmetric_group_sgs(3)
-    ([0, 1], [Permutation(4)(0, 1), Permutation(4)(1, 2)])
+    ([0, 1], [(4)(0 1), (4)(1 2)])
     """
     if n == 1:
         return [], [_af_new(list(range(3)))]
@@ -1022,7 +1022,7 @@ def get_minimal_bsgs(base, gens):
     >>> Permutation.print_cyclic = True
     >>> riemann_bsgs1 = ([2, 0], ([Permutation(5)(0, 1)(4, 5), Permutation(5)(0, 2)(1, 3)]))
     >>> get_minimal_bsgs(*riemann_bsgs1)
-    ([0, 2], [Permutation(0, 1)(4, 5), Permutation(5)(0, 2)(1, 3), Permutation(2, 3)(4, 5)])
+    ([0, 2], [(0 1)(4 5), (5)(0 2)(1 3), (2 3)(4 5)])
     """
     G = PermutationGroup(gens)
     base, gens = G.schreier_sims_incremental()
@@ -1056,12 +1056,12 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
 
     >>> base, gens = get_symmetric_group_sgs(3)
     >>> tensor_gens(base, gens, [[], []])
-    (8, [0, 1, 3, 4], [Permutation(7)(0, 1), Permutation(7)(1, 2), Permutation(7)(3, 4), Permutation(7)(4, 5), Permutation(7)(0, 3)(1, 4)(2, 5)])
+    (8, [0, 1, 3, 4], [(7)(0 1), (7)(1 2), (7)(3 4), (7)(4 5), (7)(0 3)(1 4)(2 5)])
 
     two symmetric tensors with 3 indices with free indices in slot 1 and 0
 
     >>> tensor_gens(base, gens, [[1], [0]])
-    (8, [0, 4], [Permutation(7)(0, 2), Permutation(7)(4, 5)])
+    (8, [0, 4], [(7)(0 2), (7)(4 5)])
 
     four symmetric tensors with 3 indices, two of which with free indices
 
@@ -1170,9 +1170,9 @@ def gens_products(*v):
     >>> Permutation.print_cyclic = True
     >>> base, gens = get_symmetric_group_sgs(2)
     >>> gens_products((base, gens, [[], []], 0))
-    (6, [0, 2], [Permutation(5)(0, 1), Permutation(5)(2, 3), Permutation(5)(0, 2)(1, 3)])
+    (6, [0, 2], [(5)(0 1), (5)(2 3), (5)(0 2)(1 3)])
     >>> gens_products((base, gens, [[1], []], 0))
-    (6, [2], [Permutation(5)(2, 3)])
+    (6, [2], [(5)(2 3)])
     """
     res_size, res_base, res_gens = tensor_gens(*v[0])
     for i in range(1, len(v)):

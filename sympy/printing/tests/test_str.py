@@ -2,10 +2,11 @@ from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference)
+    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
+    AccumBounds)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -162,6 +163,12 @@ def test_Interval():
     assert str(Interval(0, a, True, True)) == "(0, a)"
 
 
+def test_AccumBounds():
+    a = Symbol('a', real=True)
+    assert str(AccumBounds(0, a)) == "<0, a>"
+    assert str(AccumBounds(0, 1)) == "<0, 1>"
+
+
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
     # issue 2908
@@ -248,15 +255,15 @@ def test_Permutation_Cycle():
 
     for p, s in [
         (Cycle(),
-        'Cycle()'),
+        '()'),
         (Cycle(2),
-        'Cycle(2)'),
+        '(2)'),
         (Cycle(2, 1),
-        'Cycle(1, 2)'),
+        '(1 2)'),
         (Cycle(1, 2)(5)(6, 7)(10),
-        'Cycle(1, 2)(6, 7)(10)'),
+        '(1 2)(6 7)(10)'),
         (Cycle(3, 4)(1, 2)(3, 4),
-        'Cycle(1, 2)(4)'),
+        '(1 2)(4)'),
     ]:
         assert str(p) == s
 
@@ -282,21 +289,21 @@ def test_Permutation_Cycle():
     Permutation.print_cyclic = True
     for p, s in [
         (Permutation([]),
-        'Permutation()'),
+        '()'),
         (Permutation([], size=1),
-        'Permutation(0)'),
+        '(0)'),
         (Permutation([], size=2),
-        'Permutation(1)'),
+        '(1)'),
         (Permutation([], size=10),
-        'Permutation(9)'),
+        '(9)'),
         (Permutation([1, 0, 2]),
-        'Permutation(2)(0, 1)'),
+        '(2)(0 1)'),
         (Permutation([1, 0, 2, 3, 4, 5]),
-        'Permutation(5)(0, 1)'),
+        '(5)(0 1)'),
         (Permutation([1, 0, 2, 3, 4, 5], size=10),
-        'Permutation(9)(0, 1)'),
+        '(9)(0 1)'),
         (Permutation([0, 1, 3, 2, 4, 5], size=10),
-        'Permutation(9)(2, 3)'),
+        '(9)(2 3)'),
     ]:
         assert str(p) == s
 
@@ -357,6 +364,9 @@ def test_PolyElement():
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
+    assert str(x**2) == "x**2"
+    assert str(x**(-2)) == "x**(-2)"
+    assert str(x**QQ(1, 2)) == "x**(1/2)"
 
     assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
@@ -406,7 +416,7 @@ def test_Pow():
     # not the same as x**-1
     assert str(x**-1.0) == 'x**(-1.0)'
     # see issue #2860
-    assert str(S(2)**-1.0) == '2**(-1.0)'
+    assert str(Pow(S(2), -1.0, evaluate=False)) == '2**(-1.0)'
 
 
 def test_sqrt():
@@ -487,7 +497,7 @@ def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
     assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
-
+    assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
 
 def test_CRootOf():
     assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"

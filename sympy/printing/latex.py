@@ -9,6 +9,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
+from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
@@ -279,6 +280,19 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Cycle(self, expr):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if str(expr) == '()':
+            return r"\left( \right)"
+        expr_perm = Permutation(expr).cyclic_form
+        term_tex = ''
+        for i in expr_perm:
+            term_tex += str(i).replace(',', r"\;")
+        term_tex = term_tex.replace('[', r"\left( ")
+        term_tex = term_tex.replace(']', r"\right)")
+        return term_tex
+
+    _print_Permutation = _print_Cycle
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
@@ -1053,6 +1067,12 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_hn1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^{(1)}')
+
+    def _print_hn2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^{(2)}')
+
     def _hprint_airy(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
@@ -1393,7 +1413,7 @@ class LatexPrinter(Printer):
             return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_ZeroMatrix(self, Z):
-        return r"\bold{0}"
+        return r"\mathbb{0}"
 
     def _print_Identity(self, I):
         return r"\mathbb{I}"
@@ -1534,6 +1554,10 @@ class LatexPrinter(Printer):
             return r"\left%s%s, %s\right%s" % \
                    (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_AccumulationBounds(self, i):
+        return r"\langle %s, %s\rangle" % \
+                (self._print(i.min), self._print(i.max))
+
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
 
@@ -1552,13 +1576,16 @@ class LatexPrinter(Printer):
     def _print_Naturals(self, n):
         return r"\mathbb{N}"
 
+    def _print_Naturals0(self, n):
+        return r"\mathbb{N_0}"
+
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
     def _print_Reals(self, i):
         return r"\mathbb{R}"
 
-    def _print_Complex(self, i):
+    def _print_Complexes(self, i):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
@@ -1567,8 +1594,32 @@ class LatexPrinter(Printer):
             ', '.join([self._print(var) for var in s.lamda.variables]),
             self._print(s.base_set))
 
+    def _print_ConditionSet(self, s):
+        vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
+        return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
+            vars_print,
+            vars_print,
+            self._print(s.base_set),
+            self._print(s.condition.as_expr()))
+
+    def _print_ComplexRegion(self, s):
+        vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
+        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+            self._print(s.args[0].expr),
+            vars_print,
+            self._print(s.sets))
+
     def _print_Contains(self, e):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
+
+    def _print_FourierSeries(self, s):
+        return self._print_Add(s.truncate()) + self._print(' + \ldots')
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.truncate())
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.truncate())
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1880,6 +1931,12 @@ def latex(expr, **settings):
 
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
+
+    Not using a print statement for printing, results in double backslashes for
+    latex commands since that's the way Python escapes backslashes in strings.
+
+    >>> latex((2*tau)**Rational(7,2))
+    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
 
     order: Any of the supported monomial orderings (currently "lex", "grlex", or
     "grevlex"), "old", and "none". This parameter does nothing for Mul objects.

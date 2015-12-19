@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
+from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -11,6 +12,7 @@ from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import u, range
+from sympy.core.add import Add
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -92,9 +94,10 @@ class PrettyPrinter(Printer):
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet = _print_Atom
     _print_Naturals = _print_Atom
+    _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
-    _print_Complex = _print_Atom
+    _print_Complexes = _print_Atom
 
     def _print_subfactorial(self, e):
         x = e.args[0]
@@ -290,8 +293,23 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Cycle(self, dc):
-        from sympy.combinatorics.permutations import Permutation
-        return self._print_tuple(Permutation(dc.as_list()).cyclic_form)
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        # for Empty Cycle
+        if dc == Cycle():
+            cyc = stringPict('')
+            return prettyForm(*cyc.parens())
+
+        dc_list = Permutation(dc.list()).cyclic_form
+        # for Identity Cycle
+        if dc_list == []:
+            cyc = self._print(dc.size - 1)
+            return prettyForm(*cyc.parens())
+
+        cyc = stringPict('')
+        for i in dc_list:
+            l = self._print(str(tuple(i)).replace(',', ''))
+            cyc = prettyForm(*cyc.right(l))
+        return cyc
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
@@ -546,6 +564,8 @@ class PrettyPrinter(Printer):
         e, z, z0, dir = l.args
 
         E = self._print(e)
+        if isinstance(e, Add):
+            E = prettyForm(*E.parens('(', ')'))
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
@@ -1468,19 +1488,27 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
+    def _print_AccumuBounds(self, i):
+        left = '<'
+        right = '>'
+
+        return self._print_seq(i.args[:2], left, right)
+
     def _print_Intersection(self, u):
 
         delimiter = ' %s ' % pretty_atom('Intersection')
 
         return self._print_seq(u.args, None, None, delimiter,
-                parenthesize=lambda set: set.is_ProductSet or set.is_Union)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Union or set.is_Complement)
 
     def _print_Union(self, u):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-             parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Intersection or set.is_Complement)
 
     def _print_SymmetricDifference(self, u):
         if not self._use_unicode:
@@ -1510,6 +1538,35 @@ class PrettyPrinter(Printer):
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
+    def _print_ConditionSet(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+            # using _and because and is a keyword and it is bad practice to
+            # overwrite them
+            _and = u("\N{LOGICAL AND}")
+        else:
+            inn = 'in'
+            _and = 'and'
+        variables = self._print_seq(Tuple(ts.sym))
+        cond = self._print(ts.condition.as_expr())
+        bar = self._print("|")
+        base = self._print(ts.base_set)
+
+        return self._print_seq((variables, bar, variables, inn,
+                                base, _and, cond), "{", "}", ' ')
+
+    def _print_ComplexRegion(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+        else:
+            inn = 'in'
+        variables = self._print_seq(ts.args[0].variables)
+        expr = self._print(ts.args[0].expr)
+        bar = self._print("|")
+        prodsets = self._print(ts.sets)
+
+        return self._print_seq((expr, bar, variables, inn, prodsets), "{", "}", ' ')
+
     def _print_Contains(self, e):
         var, set = e.args
         if self._use_unicode:
@@ -1518,6 +1575,16 @@ class PrettyPrinter(Printer):
                                                el, self._print(set)), binding=8)
         else:
             return prettyForm(sstr(e))
+
+    def _print_FourierSeries(self, s):
+        if self._use_unicode:
+            dots = u("\N{HORIZONTAL ELLIPSIS}")
+        else:
+            dots = '...'
+        return self._print_Add(s.truncate()) + self._print(dots)
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.truncate())
 
     def _print_SeqFormula(self, s):
         if self._use_unicode:

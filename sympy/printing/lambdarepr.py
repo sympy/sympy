@@ -41,6 +41,17 @@ class LambdaPrinter(StrPrinter):
         result.append(')'*(2*i - 2))
         return ''.join(result)
 
+    def _print_Sum(self, expr):
+        loops = (
+            'for {i} in range({a}, {b}+1)'.format(
+                i=self._print(i),
+                a=self._print(a),
+                b=self._print(b))
+            for i, a, b in expr.limits)
+        return '(builtins.sum({function} {loops}))'.format(
+            function=self._print(expr.function),
+            loops=' '.join(loops))
+
     def _print_And(self, expr):
         result = ['(']
         for arg in sorted(expr.args, key=default_sort_key):
@@ -68,6 +79,83 @@ class LambdaPrinter(StrPrinter):
 
     def _print_BooleanFalse(self, expr):
         return "False"
+
+    def _print_ITE(self, expr):
+        result = [
+            '((', self._print(expr.args[1]),
+            ') if (', self._print(expr.args[0]),
+            ') else (', self._print(expr.args[2]), '))'
+        ]
+        return ''.join(result)
+
+class NumPyPrinter(LambdaPrinter):
+    """
+    Numpy printer which handles vectorized piecewise functions,
+    logical operators, etc.
+    """
+    _default_settings = {
+        "order": "none",
+        "full_prec": "auto",
+    }
+
+    def _print_seq(self, seq, delimiter=', '):
+        "General sequence printer: converts to tuple"
+        # Print tuples here instead of lists because numba supports
+        #     tuples in nopython mode.
+        return '({},)'.format(delimiter.join(self._print(item) for item in seq))
+
+    def _print_MatMul(self, expr):
+        "Matrix multiplication printer"
+        return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
+
+    def _print_Piecewise(self, expr):
+        "Piecewise function printer"
+        exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
+        conds = '[{0}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
+        # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
+        #     it will behave the same as passing the 'default' kwarg to select()
+        #     *as long as* it is the last element in expr.args.
+        # If this is not the case, it may be triggered prematurely.
+        return 'select({0}, {1}, default=nan)'.format(conds, exprs)
+
+    def _print_Relational(self, expr):
+        "Relational printer for Equality and Unequality"
+        op = {
+            '==' :'equal',
+            '!=' :'not_equal',
+            '<'  :'less',
+            '<=' :'less_equal',
+            '>'  :'greater',
+            '>=' :'greater_equal',
+        }
+        if expr.rel_op in op:
+            lhs = self._print(expr.lhs)
+            rhs = self._print(expr.rhs)
+            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
+                                               lhs=lhs,
+                                               rhs=rhs)
+        return super(NumPyPrinter, self)._print_Relational(expr)
+
+    def _print_And(self, expr):
+        "Logical And printer"
+        # We have to override LambdaPrinter because it uses Python 'and' keyword.
+        # If LambdaPrinter didn't define it, we could use StrPrinter's
+        # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
+        return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Or(self, expr):
+        "Logical Or printer"
+        # We have to override LambdaPrinter because it uses Python 'or' keyword.
+        # If LambdaPrinter didn't define it, we could use StrPrinter's
+        # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
+        return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Not(self, expr):
+        "Logical Not printer"
+        # We have to override LambdaPrinter because it uses Python 'not' keyword.
+        # If LambdaPrinter didn't define it, we would still have to define our
+        #     own because StrPrinter doesn't define it.
+        return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...

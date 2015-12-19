@@ -74,6 +74,7 @@ def _as_pair(atom):
 
 # XXX this prepares forward-chaining rules for alpha-network
 
+
 def transitive_closure(implications):
     """
     Computes the transitive closure of a list of implications
@@ -92,6 +93,7 @@ def transitive_closure(implications):
                         full_implications.add((i, j))
 
     return full_implications
+
 
 def deduce_alpha_implications(implications):
     """deduce all implications
@@ -134,7 +136,8 @@ def deduce_alpha_implications(implications):
 
 
 def apply_beta_to_alpha_route(alpha_implications, beta_rules):
-    """apply additional beta-rules (And conditions) to already-built alpha implication tables
+    """apply additional beta-rules (And conditions) to already-built
+    alpha implication tables
 
        TODO: write about
 
@@ -295,7 +298,7 @@ class Prover(object):
             if isinstance(a, And):
                 rules_beta.append((a, b))
             else:
-                rules_alpha.append((a, b) )
+                rules_alpha.append((a, b))
         return rules_alpha, rules_beta
 
     @property
@@ -375,9 +378,9 @@ class Prover(object):
 class FactRules(object):
     """Rules that describe how to deduce facts in logic space
 
-       When defined, these rules allow implications to quickly be determined for a
-       set of facts. For this precomputed deduction tables are used. see
-       `deduce_all_facts`   (forward-chaining)
+       When defined, these rules allow implications to quickly be determined
+       for a set of facts. For this precomputed deduction tables are used.
+       see `deduce_all_facts`   (forward-chaining)
 
        Also it is possible to gather prerequisites for a fact, which is tried
        to be proven.    (backward-chaining)
@@ -438,7 +441,8 @@ class FactRules(object):
 
         # now:
         # - apply beta rules to alpha chains  (static extension), and
-        # - further associate beta rules to alpha chain (for inference at runtime)
+        # - further associate beta rules to alpha chain (for inference
+        # at runtime)
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         # extract defined fact names

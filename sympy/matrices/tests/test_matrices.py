@@ -1,4 +1,5 @@
 import collections
+import random
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -174,6 +175,20 @@ def test_power():
     assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
     A = Matrix([[0, 4], [-1, 5]])
     assert (A**(S(1)/2))**2 == A
+
+    assert Matrix([[1, 0], [1, 1]])**(S(1)/2) == Matrix([[1, 0], [S.Half, 1]])
+    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
+    from sympy.abc import a, b, n
+    assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
+    assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
+    assert Matrix([[a, 1, 0], [0, a, 1], [0, 0, a]])**n == Matrix([
+        [a**n, a**(n-1)*n, a**(n-2)*(n-1)*n/2],
+        [0, a**n, a**(n-1)*n],
+        [0, 0, a**n]])
+    assert Matrix([[a, 1, 0], [0, a, 0], [0, 0, b]])**n == Matrix([
+        [a**n, a**(n-1)*n, 0],
+        [0, a**n, 0],
+        [0, 0, b**n]])
 
 
 def test_creation():
@@ -482,11 +497,18 @@ def test_expand():
 def test_random():
     M = randMatrix(3, 3)
     M = randMatrix(3, 3, seed=3)
+    assert M == randMatrix(3, 3, seed=3)
+
     M = randMatrix(3, 4, 0, 150)
-    M = randMatrix(3, symmetric=True)
+    M = randMatrix(3, seed=4, symmetric=True)
+    assert M == randMatrix(3, seed=4, symmetric=True)
+
     S = M.copy()
     S.simplify()
     assert S == M  # doesn't fail when elements are Numbers, not int
+
+    rng = random.Random(4)
+    assert M == randMatrix(3, symmetric=True, prng=rng)
 
 
 def test_LUdecomp():
@@ -806,6 +828,11 @@ def test_eigen():
                  Matrix([0, 1, 0]),
                  Matrix([0, 0, 1])])])
 
+    assert M.left_eigenvects() == (
+        [(1, 3, [Matrix([[1, 0, 0]]),
+                 Matrix([[0, 1, 0]]),
+                 Matrix([[0, 0, 1]])])])
+
     M = Matrix([[0, 1, 1],
                 [1, 0, 0],
                 [1, 1, 1]])
@@ -819,6 +846,13 @@ def test_eigen():
             ( 2, 1, [Matrix([R(2, 3), R(1, 3), 1])])
         ])
 
+    assert M.left_eigenvects() == (
+        [
+            (-1, 1, [Matrix([[-2, 1, 1]])]),
+            (0, 1, [Matrix([[-1, -1, 1]])]),
+            (2, 1, [Matrix([[1, 1, 1]])])
+        ])
+
     a = Symbol('a')
     M = Matrix([[a, 0],
                 [0, 1]])
@@ -828,6 +862,7 @@ def test_eigen():
     M = Matrix([[1, -1],
                 [1,  3]])
     assert M.eigenvects() == ([(2, 2, [Matrix(2, 1, [-1, 1])])])
+    assert M.left_eigenvects() == ([(2, 2, [Matrix([[1, 1]])])])
 
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     a = R(15, 2)
@@ -861,6 +896,12 @@ def test_eigen():
         [
             ( 0, 1, [Matrix([[-I*eps/abs(eps)], [1]])]),
             ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)], [1]]) ] ),
+        ])
+
+    assert M.left_eigenvects() == (
+        [
+            (0, 1, [Matrix([[I*eps/Abs(eps), 1]])]),
+            (2*Abs(eps), 1, [Matrix([[-I*eps/Abs(eps), 1]])])
         ])
 
     M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -901,6 +942,13 @@ def test_subs():
     for cls in classes:
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).subs(1, 2)
 
+def test_xreplace():
+    assert Matrix([[1, x], [x, 4]]).xreplace({x: 5}) == \
+        Matrix([[1, 5], [5, 4]])
+    assert Matrix([[x, 2], [x + y, 4]]).xreplace({x: -1, y: -2}) == \
+        Matrix([[-1, 2], [-3, 4]])
+    for cls in classes:
+        assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
     f, n = symbols('f, n')
@@ -1580,6 +1628,19 @@ def test_jordan_form_complex_issue_9274():
     assert J == Jmust1 or J == Jmust2
     assert simplify(P*J*P.inv()) == A
 
+def test_issue_10220():
+    # two non-orthogonal Jordan blocks with eigenvalue 1
+    M = Matrix([[1, 0, 0, 1],
+                [0, 1, 1, 0],
+                [0, 0, 1, 1],
+                [0, 0, 0, 1]])
+    P, C = M.jordan_cells()
+    assert P == Matrix([[0, 1, 0, 1],
+                        [1, 0, 0, 0],
+                        [0, 1, 0, 0],
+                        [0, 0, 1, 0]])
+    assert len(C) == 2
+
 
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
@@ -1677,9 +1738,6 @@ def test_errors():
     raises(ValueError,
         lambda: Matrix([[5, 10, 7], [0, -1, 2], [8, 3, 4]]
         ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x) <= 4))
-    raises(NotImplementedError, lambda: Matrix([[1, 0], [1, 1]])**(S(1)/2))
-    raises(NotImplementedError,
-        lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])**(0.5))
     raises(IndexError, lambda: eye(3)[5, 2])
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
@@ -2572,7 +2630,7 @@ def test_doit():
     assert a[0] != 2*x
     assert a.doit() == Matrix([[2*x]])
 
-def test_issue_9457_9467():
+def test_issue_9457_9467_9876():
     # for row_del(index)
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     M.row_del(1)
@@ -2580,6 +2638,9 @@ def test_issue_9457_9467():
     N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     N.row_del(-2)
     assert N == Matrix([[1, 2, 3], [3, 4, 5]])
+    O = Matrix([[1, 2, 3], [5, 6, 7], [9, 10, 11]])
+    O.row_del(-1)
+    assert O == Matrix([[1, 2, 3], [5, 6, 7]])
     P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: P.row_del(10))
     Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])

@@ -122,7 +122,7 @@ def test_issue_9324():
     assert count(2 * M[0, 0] + M[5, 7]) == 2
     P = MatrixSymbol('P', 3, 3)
     Q = MatrixSymbol('Q', 3, 3)
-    assert count(P + Q) == 9
+    assert count(P + Q) == 3
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True)
     M = MatrixSymbol('M', m + n, m * m)

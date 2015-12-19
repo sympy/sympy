@@ -20,8 +20,7 @@ def combsimp(expr):
     This function takes as input an expression containing factorials,
     binomials, Pochhammer symbol and other "combinatorial" functions,
     and tries to minimize the number of those functions and reduce
-    the size of their arguments. The result is be given in terms of
-    binomials and factorials.
+    the size of their arguments.
 
     The algorithm works by rewriting all combinatorial functions as
     expressions involving rising factorials (Pochhammer symbols) and
@@ -30,11 +29,11 @@ def combsimp(expr):
     the resulting rising factorial to cancel. Rising factorials with
     the second argument being an integer are expanded into polynomial
     forms and finally all other rising factorial are rewritten in terms
-    more familiar functions. If the initial expression contained any
-    combinatorial functions, the result is expressed using binomial
-    coefficients and gamma functions. If the initial expression consisted
-    of gamma functions alone, the result is expressed in terms of gamma
-    functions.
+    of more familiar functions. If the initial expression consisted of
+    gamma functions alone, the result is expressed in terms of gamma
+    functions. If the initial expression consists of gamma function
+    with some other combinatorial, the result is expressed in terms of
+    gamma functions.
 
     If the result is expressed using gamma functions, the following three
     additional steps are performed:
@@ -67,7 +66,9 @@ def combsimp(expr):
 
     # as a rule of thumb, if the expression contained gammas initially, it
     # probably makes sense to retain them
-    as_gamma = not expr.has(factorial, binomial)
+    as_gamma = expr.has(gamma)
+    as_factorial = expr.has(factorial)
+    as_binomial = expr.has(binomial)
 
 
     expr = expr.replace(binomial,
@@ -83,7 +84,7 @@ def combsimp(expr):
             lambda a, b: gamma(a + b)/gamma(a))
     else:
         expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*factorial(b))
+            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
 
     def rule(n, k):
         coeff, rewrite = S.One, False
@@ -464,6 +465,12 @@ def combsimp(expr):
     expr = rule_gamma(was)
     if expr != was:
         expr = factor(expr)
+
+    if not as_gamma:
+        if as_factorial:
+            expr = expr.rewrite(factorial)
+        elif as_binomial:
+            expr = expr.rewrite(binomial)
 
     return expr
 

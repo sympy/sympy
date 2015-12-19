@@ -9,7 +9,9 @@ import re
 import warnings
 import io
 
-from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda
+from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
+                   Eq, log)
+
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -458,6 +460,11 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
+def test_sympy__calculus__util__AccumulationBounds():
+    from sympy.calculus.util import AccumulationBounds
+    assert _test_args(AccumulationBounds(0, 1))
+
+
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
@@ -535,20 +542,20 @@ def test_sympy__sets__fancysets__Reals():
     assert _test_args(Reals())
 
 
-def test_sympy__sets__fancysets__Complex():
-    from sympy.sets.fancysets import Complex
-    assert _test_args(Complex())
+def test_sympy__sets__fancysets__Complexes():
+    from sympy.sets.fancysets import Complexes
+    assert _test_args(Complexes())
 
 
-def test_sympy__sets__fancysets__ComplexPlane():
-    from sympy.sets.fancysets import ComplexPlane
+def test_sympy__sets__fancysets__ComplexRegion():
+    from sympy.sets.fancysets import ComplexRegion
     from sympy import S
     from sympy.sets import Interval
     a = Interval(0, 1)
     b = Interval(2, 3)
     theta = Interval(0, 2*S.Pi)
-    assert _test_args(ComplexPlane(a*b))
-    assert _test_args(ComplexPlane(a*theta, polar=True))
+    assert _test_args(ComplexRegion(a*b))
+    assert _test_args(ComplexRegion(a*theta, polar=True))
 
 
 def test_sympy__sets__fancysets__ImageSet():
@@ -561,6 +568,13 @@ def test_sympy__sets__fancysets__ImageSet():
 def test_sympy__sets__fancysets__Range():
     from sympy.sets.fancysets import Range
     assert _test_args(Range(1, 5, 1))
+
+
+def test_sympy__sets__conditionset__ConditionSet():
+    from sympy.sets.conditionset import ConditionSet
+    from sympy import S, Symbol
+    x = Symbol('x')
+    assert _test_args(ConditionSet(x, Eq(x**2, 1), S.Reals))
 
 
 def test_sympy__sets__contains__Contains():
@@ -865,6 +879,9 @@ def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
 
+def test_sympy__stats__crv_types__GompertzDistribution():
+    from sympy.stats.crv_types import GompertzDistribution
+    assert _test_args(GompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__KumaraswamyDistribution():
     from sympy.stats.crv_types import KumaraswamyDistribution
@@ -917,6 +934,9 @@ def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
 
+def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
+    from sympy.stats.crv_types import ShiftedGompertzDistribution
+    assert _test_args(ShiftedGompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
@@ -1342,6 +1362,11 @@ def test_sympy__functions__special__bessel__SphericalBesselBase():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__functions__special__bessel__SphericalHankelBase():
+    pass
+
+
 def test_sympy__functions__special__bessel__besseli():
     from sympy.functions.special.bessel import besseli
     assert _test_args(besseli(x, 1))
@@ -1380,6 +1405,16 @@ def test_sympy__functions__special__bessel__jn():
 def test_sympy__functions__special__bessel__yn():
     from sympy.functions.special.bessel import yn
     assert _test_args(yn(0, x))
+
+
+def test_sympy__functions__special__bessel__hn1():
+    from sympy.functions.special.bessel import hn1
+    assert _test_args(hn1(0, x))
+
+
+def test_sympy__functions__special__bessel__hn2():
+    from sympy.functions.special.bessel import hn2
+    assert _test_args(hn2(0, x))
 
 
 def test_sympy__functions__special__bessel__AiryBase():
@@ -1559,6 +1594,30 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
 def test_sympy__functions__special__beta_functions__beta():
     from sympy.functions.special.beta_functions import beta
     assert _test_args(beta(x, x))
+
+
+def test_sympy__functions__special__mathieu_functions__MathieuBase():
+    pass
+
+
+def test_sympy__functions__special__mathieu_functions__mathieus():
+    from sympy.functions.special.mathieu_functions import mathieus
+    assert _test_args(mathieus(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieuc():
+    from sympy.functions.special.mathieu_functions import mathieuc
+    assert _test_args(mathieuc(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieusprime():
+    from sympy.functions.special.mathieu_functions import mathieusprime
+    assert _test_args(mathieusprime(1, 1, 1))
+
+
+def test_sympy__functions__special__mathieu_functions__mathieucprime():
+    from sympy.functions.special.mathieu_functions import mathieucprime
+    assert _test_args(mathieucprime(1, 1, 1))
 
 
 @SKIP("abstract class")
@@ -2747,7 +2806,6 @@ def test_sympy__physics__quantum__spin__JzOp():
 
 def test_sympy__physics__quantum__spin__Rotation():
     from sympy.physics.quantum.spin import Rotation
-    from sympy import pi
     assert _test_args(Rotation(pi, 0, pi/2))
 
 
@@ -2809,7 +2867,7 @@ def test_sympy__physics__quantum__state__TimeDepState():
 def test_sympy__physics__quantum__state__Wavefunction():
     from sympy.physics.quantum.state import Wavefunction
     from sympy.functions import sin
-    from sympy import Piecewise, pi
+    from sympy import Piecewise
     n = 1
     L = 1
     g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
@@ -3117,6 +3175,21 @@ def test_sympy__series__sequences__SeqMul():
     assert _test_args(SeqMul(s1, s2))
 
 
+@SKIP('Abstract Class')
+def test_sympy__series__series_class__SeriesBase():
+    pass
+
+
+def test_sympy__series__fourier__FourierSeries():
+    from sympy.series.fourier import fourier_series
+    assert _test_args(fourier_series(x, (x, -pi, pi)))
+
+
+def test_sympy__series__formal__FormalPowerSeries():
+    from sympy.series.formal import fps
+    assert _test_args(fps(log(1 + x), x))
+
+
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
@@ -3125,6 +3198,18 @@ def test_sympy__simplify__hyperexpand__Hyper_Function():
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
     assert _test_args(G_Function([2], [1], [], []))
+
+
+def test_sympy__tensor__array__dense_ndim_array__ImmutableDenseNDimArray():
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    densarr = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(densarr)
+
+
+def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
+    from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
+    sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(sparr)
 
 
 def test_sympy__tensor__indexed__Idx():
@@ -3669,3 +3754,7 @@ def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
     assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+
+def test_sympy__physics__wigner__Wigner3j():
+    from sympy.physics.wigner import Wigner3j
+    assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))

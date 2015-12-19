@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral,
@@ -7,13 +6,16 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps,
+    Complement, FiniteSet, Interval, Intersection, Union)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
+
+from sympy.printing.codeprinter import Assignment
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -331,6 +333,14 @@ def test_upretty_modifiers():
     assert upretty( Symbol('x__dot') ) == u('x__dot')
 
 
+def test_pretty_Cycle():
+    from sympy.combinatorics.permutations import Cycle
+    assert pretty(Cycle(1, 2)) == '(1 2)'
+    assert pretty(Cycle(2)) == '(2)'
+    assert pretty(Cycle(1, 3)(4, 5)) == '(1 3)(4 5)'
+    assert pretty(Cycle()) == '()'
+
+
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
     assert pretty( -Rational(13)/22 ) == \
@@ -397,7 +407,7 @@ x    \
     assert upretty(expr) == ucode_str
 
     # see issue #2860
-    expr = S(2)**-1.0
+    expr = Pow(S(2), -1.0, evaluate=False)
     ascii_str = \
 """\
  -1.0\n\
@@ -1050,6 +1060,18 @@ y + 1     \
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+def test_Assignment():
+    expr = Assignment(x, y)
+    ascii_str = \
+"""\
+x := y\
+"""
+    ucode_str = \
+u("""\
+x := y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_issue_7117():
     # See also issue #5031 (hence the evaluate=False in these).
@@ -3101,6 +3123,23 @@ def test_pretty_sets():
     assert upretty(Range(-2, -oo, -1)) == ucode_str
 
 
+def test_pretty_ConditionSet():
+    from sympy import ConditionSet
+    ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
+    ucode_str = u('{x | x ∊ ℝ ∧ sin(x) = 0}')
+    assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
+    assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
+
+
+def test_pretty_ComplexRegion():
+    from sympy import ComplexRegion
+    ucode_str = u('{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}')
+    assert upretty(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == ucode_str
+
+    ucode_str = u('{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}')
+    assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
+
+
 def test_ProductSet_paranthesis():
     from sympy import Interval, Union, FiniteSet
     ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')
@@ -3189,6 +3228,50 @@ def test_pretty_sequences():
     assert upretty(SeqMul(s5, s6)) == ucode_str
 
 
+def test_pretty_FourierSeries():
+    f = fourier_series(x, (x, -pi, pi))
+
+    ascii_str = \
+"""\
+                      2*sin(3*x)      \n\
+2*sin(x) - sin(2*x) + ---------- + ...\n\
+                          3           \
+"""
+
+    ucode_str = \
+u("""\
+                      2⋅sin(3⋅x)    \n\
+2⋅sin(x) - sin(2⋅x) + ────────── + …\n\
+                          3         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
+
+
+def test_pretty_FormalPowerSeries():
+    f = fps(log(1 + x))
+
+    ascii_str = \
+"""\
+     2    3    4    5        \n\
+    x    x    x    x     / 6\\\n\
+x - -- + -- - -- + -- + O\\x /\n\
+    2    3    4    5         \
+"""
+
+    ucode_str = \
+u("""\
+     2    3    4    5        \n\
+    x    x    x    x     ⎛ 6⎞\n\
+x - ── + ── - ── + ── + O⎝x ⎠\n\
+    2    3    4    5         \
+""")
+
+    assert pretty(f) == ascii_str
+    assert upretty(f) == ucode_str
+
+
 def test_pretty_limits():
     expr = Limit(x, x, oo)
     ascii_str = \
@@ -3268,6 +3351,19 @@ x─→0⁻  x   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Limit(x + sin(x), x, 0)
+    ascii_str = \
+"""\
+ lim (x + sin(x))\n\
+x->0+            \
+"""
+    ucode_str = \
+u("""\
+ lim (x + sin(x))\n\
+x─→0⁺            \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_ComplexRootOf():
     expr = rootof(x**5 + 11*x - 2, 0)
@@ -4979,6 +5075,8 @@ def test_issue_7180():
 def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ Naturals0()'
+    assert upretty(S.Reals - S.Naturals0) == u('ℝ \ ℕ₀')
 
 
 def test_pretty_SymmetricDifference():
@@ -5101,3 +5199,13 @@ u("""\
      0                              0                   \
 """)
     assert upretty(e) == ucode_str
+
+
+def test_issue_9877():
+    ucode_str1 = u('(2, 3) ∪ ([1, 2] \ {x})')
+    a, b, c = Interval(2, 3, True, True), Interval(1, 2), FiniteSet(x)
+    assert upretty(Union(a, Complement(b, c))) == ucode_str1
+
+    ucode_str2 = u('{x} ∩ {y} ∩ ({z} \ [1, 2])')
+    d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
+    assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2

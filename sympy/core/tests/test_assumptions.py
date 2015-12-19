@@ -1,4 +1,4 @@
-from sympy import I, sqrt, log, exp, sin, asin, factorial
+from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
@@ -334,6 +334,8 @@ def test_symbol_zero():
     assert x.is_negative is False
     assert x.is_nonnegative
     assert x.is_zero is True
+    # TODO Change to x.is_nonzero is None
+    # See https://github.com/sympy/sympy/pull/9583
     assert x.is_nonzero is False
     assert x.is_finite is True
 
@@ -449,7 +451,7 @@ def test_symbol_falsenonnegative():
     assert x.is_negative is None
     assert x.is_nonnegative is False
     assert x.is_zero is False
-    assert x.is_nonzero is True
+    assert x.is_nonzero is None
 
 
 @XFAIL
@@ -965,3 +967,7 @@ def test_issue_9165():
     assert 0/z == S.NaN
     assert 0*(1/z) == S.NaN
     assert 0*f == S.NaN
+
+def test_issue_10024():
+    x = Dummy('x')
+    assert Mod(x, 2*pi).is_zero is None

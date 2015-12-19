@@ -1,7 +1,8 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
+    Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
+    true, false, And, Or, Not, ITE)
 from sympy.printing.lambdarepr import LambdaPrinter
 import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -298,11 +299,71 @@ def test_numpy_matrix():
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    #Lambdify array first, to ensure return to matrix as default
-    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.array}, 'numpy'])
+    #Lambdify array first, to ensure return to array as default
+    f = lambdify((x, y, z), A, ['numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     #Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)
+
+def test_numpy_transpose():
+    if not numpy:
+        skip("numpy not installed.")
+    A = Matrix([[1, x], [0, 1]])
+    f = lambdify((x), A.T, modules="numpy")
+    numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
+
+def test_numpy_inverse():
+    if not numpy:
+        skip("numpy not installed.")
+    A = Matrix([[1, x], [0, 1]])
+    f = lambdify((x), A**-1, modules="numpy")
+    numpy.testing.assert_array_equal(f(2), numpy.array([[1, -2], [0,  1]]))
+
+def test_numpy_old_matrix():
+    if not numpy:
+        skip("numpy not installed.")
+    A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
+    sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
+    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
+    numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
+    assert isinstance(f(1, 2, 3), numpy.matrix)
+
+def test_numpy_piecewise():
+    if not numpy:
+        skip("numpy not installed.")
+    pieces = Piecewise((x, x < 3), (x**2, x > 5), (0, True))
+    f = lambdify(x, pieces, modules="numpy")
+    numpy.testing.assert_array_equal(f(numpy.arange(10)),
+                                     numpy.array([0, 1, 2, 0, 0, 0, 36, 49, 64, 81]))
+    # If we evaluate somewhere all conditions are False, we should get back NaN
+    nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)))
+    numpy.testing.assert_array_equal(nodef_func(numpy.array([-1, 0, 1])),
+                                     numpy.array([1, numpy.nan, 1]))
+
+def test_numpy_logical_ops():
+    if not numpy:
+        skip("numpy not installed.")
+    and_func = lambdify((x, y), And(x, y), modules="numpy")
+    or_func = lambdify((x, y), Or(x, y), modules="numpy")
+    not_func = lambdify((x), Not(x), modules="numpy")
+    arr1 = numpy.array([True, True])
+    arr2 = numpy.array([False, True])
+    numpy.testing.assert_array_equal(and_func(arr1, arr2), numpy.array([False, True]))
+    numpy.testing.assert_array_equal(or_func(arr1, arr2), numpy.array([True, True]))
+    numpy.testing.assert_array_equal(not_func(arr2), numpy.array([True, False]))
+
+def test_numpy_matmul():
+    if not numpy:
+        skip("numpy not installed.")
+    xmat = Matrix([[x, y], [z, 1+z]])
+    ymat = Matrix([[x**2], [Abs(x)]])
+    mat_func = lambdify((x, y, z), xmat*ymat, modules="numpy")
+    numpy.testing.assert_array_equal(mat_func(0.5, 3, 4), numpy.array([[1.625], [3.5]]))
+    numpy.testing.assert_array_equal(mat_func(-0.5, 3, 4), numpy.array([[1.375], [3.5]]))
+    # Multiple matrices chained together in multiplication
+    f = lambdify((x, y, z), xmat*xmat*xmat, modules="numpy")
+    numpy.testing.assert_array_equal(f(0.5, 3, 4), numpy.array([[72.125, 119.25],
+                                                                [159, 251]]))
 
 def test_numpy_numexpr():
     if not numpy:
@@ -516,3 +577,7 @@ def test_issue_2790():
     assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
+
+def test_ITE():
+    assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
+    assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3

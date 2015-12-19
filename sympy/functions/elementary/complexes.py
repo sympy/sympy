@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
+from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.elementary.trigonometric import atan2
 
@@ -87,7 +88,7 @@ class re(Function):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        Returns the real number with a zero complex part.
+        Returns the real number with a zero imaginary part.
         """
         return (self, S.Zero)
 
@@ -257,7 +258,7 @@ class sign(Function):
     is_complex = True
 
     def doit(self):
-        if self.args[0].is_nonzero:
+        if self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
         return self
 
@@ -309,7 +310,7 @@ class sign(Function):
                 return -S.ImaginaryUnit
 
     def _eval_Abs(self):
-        if self.args[0].is_nonzero:
+        if fuzzy_not(self.args[0].is_zero):
             return S.One
 
     def _eval_conjugate(self):
@@ -344,8 +345,7 @@ class sign(Function):
 
     def _eval_power(self, other):
         if (
-            self.args[0].is_real and
-            self.args[0].is_nonzero and
+            fuzzy_not(self.args[0].is_zero) and
             other.is_integer and
             other.is_even
         ):
@@ -427,9 +427,33 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_refine(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return S.Zero
+        if arg.is_nonnegative:
+            return arg
+        if arg.is_nonpositive:
+            return -arg
+        if arg.is_Add:
+            expr_list = []
+            for _arg in Add.make_args(arg):
+                if _arg.is_negative or _arg.is_negative is None:
+                    return None
+                if _arg.is_zero:
+                    expr_list.append(S.Zero)
+                elif _arg.is_nonnegative:
+                    expr_list.append(_arg)
+                elif _arg.is_nonpositive:
+                    expr_list.append(-_arg)
+            if expr_list:
+                return Add(*expr_list)
+            return arg
+
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
+        from sympy import Atom
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -441,7 +465,7 @@ class Abs(Function):
         if arg.is_Mul:
             known = []
             unk = []
-            for t in arg.args:
+            for t in Mul.make_args(arg):
                 tnew = cls(t)
                 if tnew.func is cls:
                     unk.append(tnew.args[0])
@@ -468,12 +492,13 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_zero:  # it may be an Expr that is zero
-            return S.Zero
-        if arg.is_nonnegative:
-            return arg
-        if arg.is_nonpositive:
-            return -arg
+        if arg.is_number or isinstance(arg, (cls, Atom)):
+            if arg.is_zero:
+                return S.Zero
+            if arg.is_nonnegative:
+                return arg
+            if arg.is_nonpositive:
+                return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
@@ -495,10 +520,15 @@ class Abs(Function):
             return self.args[0].is_integer
 
     def _eval_is_nonzero(self):
-        return self._args[0].is_nonzero
+        return fuzzy_not(self._args[0].is_zero)
+
+    def _eval_is_zero(self):
+        return self._args[0].is_zero
 
     def _eval_is_positive(self):
-        return self.is_nonzero
+        is_z = self.is_zero
+        if is_z is not None:
+            return not is_z
 
     def _eval_is_rational(self):
         if self.args[0].is_real:

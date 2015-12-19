@@ -354,7 +354,7 @@ def test_args():
 
 
 def test_Cycle():
-    assert str(Cycle()) == 'Cycle()'
+    assert str(Cycle()) == '()'
     assert Cycle(Cycle(1,2)) == Cycle(1, 2)
     assert Cycle(1,2).copy() == Cycle(1,2)
     assert list(Cycle(1, 3, 2)) == [0, 3, 1, 2]
@@ -366,8 +366,8 @@ def test_Cycle():
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Permutation(Cycle(1, 2), size=4) == \
         Permutation([0, 2, 1, 3])
-    assert str(Cycle(1, 2)(4, 5)) == 'Cycle(1, 2)(4, 5)'
-    assert str(Cycle(1, 2)) == 'Cycle(1, 2)'
+    assert str(Cycle(1, 2)(4, 5)) == '(1 2)(4 5)'
+    assert str(Cycle(1, 2)) == '(1 2)'
     assert Cycle(Permutation(list(range(3)))) == Cycle()
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]

@@ -269,6 +269,39 @@ class Point(GeometryEntity):
         p = Point(p)
         return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
 
+    def taxicab_distance(self, p):
+        """The Taxicab Distance from self to point p.
+
+        Returns the sum of the horizontal and vertical distances to point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        taxicab_distance : The sum of the horizontal
+        and vertical distances to point p.
+
+        See Also
+        ========
+
+        sympy.geometry.Point.distance
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> p1.taxicab_distance(p2)
+        7
+
+        """
+        p = Point(p)
+        return sum(abs(a - b) for a, b in zip(self.args, p.args))
+
     def midpoint(self, p):
         """The midpoint between self and point p.
 
@@ -743,8 +776,6 @@ class Point3D(Point):
     Raises
     ======
 
-    NotImplementedError
-        When trying to create a point other than 2 or 3 dimensions.
     TypeError
         When trying to add or subtract points with different dimensions.
         When `intersection` is called with object other than a Point.

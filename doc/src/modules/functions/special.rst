@@ -126,6 +126,18 @@ Elliptic integrals
 .. autoclass:: elliptic_e
 .. autoclass:: elliptic_pi
 
+Mathieu Functions
+-----------------
+.. module:: sympy.functions.special.mathieu_functions
+
+.. autoclass:: sympy.functions.special.mathieu_functions.MathieuBase
+   :members:
+
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieus
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieuc
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieusprime
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieucprime
+
 Orthogonal Polynomials
 ----------------------
 

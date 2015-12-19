@@ -15,7 +15,9 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul)
+    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
+    AccumBounds)
+
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -27,6 +29,7 @@ from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
+from sympy.combinatorics.permutations import Cycle, Permutation
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -125,6 +128,19 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_cycle():
+    assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Cycle(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Cycle()) == r"\left( \right)"
+
+
+def test_latex_permutation():
+    assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Permutation()) == r"\left( \right)"
+
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
@@ -351,6 +367,7 @@ def test_latex_functions():
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
+
 def test_hyper_printing():
     from sympy import pi
     from sympy.abc import x, z
@@ -370,7 +387,7 @@ def test_hyper_printing():
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,
-            besselk, hankel1, hankel2, jn, yn)
+            besselk, hankel1, hankel2, jn, yn, hn1, hn2)
     from sympy.abc import z
     assert latex(besselj(n, z**2)**k) == r'J^{k}_{n}\left(z^{2}\right)'
     assert latex(bessely(n, z)) == r'Y_{n}\left(z\right)'
@@ -381,6 +398,8 @@ def test_latex_bessel():
     assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
+    assert latex(hn1(n, z)) == r'h^{(1)}_{n}\left(z\right)'
+    assert latex(hn2(n, z)) == r'h^{(2)}_{n}\left(z\right)'
 
 
 def test_latex_fresnel():
@@ -538,6 +557,16 @@ def test_latex_sequences():
     assert latex(SeqMul(s5, s6)) == latex_str
 
 
+def test_latex_FourierSeries():
+    latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2}{3} \sin{\left (3 x \right )} + \ldots'
+    assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
+
+
+def test_latex_FormalPowerSeries():
+    latex_str = r'x - \frac{x^{2}}{2} + \frac{x^{3}}{3} - \frac{x^{4}}{4} + \frac{x^{5}}{5} + \mathcal{O}\left(x^{6}\right)'
+    assert latex(fps(log(1 + x))) == latex_str
+
+
 def test_latex_intervals():
     a = Symbol('a', real=True)
     assert latex(Interval(0, 0)) == r"\left\{0\right\}"
@@ -546,6 +575,13 @@ def test_latex_intervals():
     assert latex(Interval(0, a, True, False)) == r"\left(0, a\right]"
     assert latex(Interval(0, a, False, True)) == r"\left[0, a\right)"
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
+
+
+def test_latex_AccumuBounds():
+    a = Symbol('a', real=True)
+    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
+    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
 
 
 def test_latex_emptyset():
@@ -568,8 +604,8 @@ def test_latex_Complement():
     assert latex(Complement(S.Reals, S.Naturals)) == r"\mathbb{R} \setminus \mathbb{N}"
 
 
-def test_latex_Complex():
-    assert latex(S.Complex) == r"\mathbb{C}"
+def test_latex_Complexes():
+    assert latex(S.Complexes) == r"\mathbb{C}"
 
 
 def test_latex_productset():
@@ -583,6 +619,13 @@ def test_latex_productset():
 
 def test_latex_Naturals():
     assert latex(S.Naturals) == r"\mathbb{N}"
+
+
+def test_latex_Naturals0():
+    assert latex(S.Naturals0) == r"\mathbb{N_0}"
+
+
+def test_latex_Integers():
     assert latex(S.Integers) == r"\mathbb{Z}"
 
 
@@ -590,6 +633,19 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+
+
+def test_latex_ConditionSet():
+    x = Symbol('x')
+    assert latex(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
+        r"\left\{x\; |\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+
+
+def test_latex_ComplexRegion():
+    assert latex(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
+        r"\left\{x + y i\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
+    assert latex(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
+        r"\left\{r \left(i \sin{\left (\theta \right )} + \cos{\left (\theta \right )}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
 
 
 def test_latex_Contains():
@@ -1139,6 +1195,11 @@ def test_Hadamard():
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
+
+
+def test_ZeroMatrix():
+    from sympy import ZeroMatrix
+    assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
 
 
 def test_boolean_args_order():
