@@ -1,6 +1,6 @@
 from sympy.strategies.rl import (rm_id, glom, flatten, unpack, sort, distribute,
         subs, rebuild)
-from sympy import Basic
+from sympy import Basic, Q, symbols
 
 def test_rm_id():
     rmzeros = rm_id(lambda x: x == 0)
@@ -57,3 +57,8 @@ def test_rebuild():
     from sympy import Add
     expr = Basic.__new__(Add, 1, 2)
     assert rebuild(expr) == 3
+
+def test_rebuild_func():
+    x = symbols('x')
+    # rebuild uses expr.func
+    assert rebuild(Q.positive(x)) == Q.positive(x)
