@@ -1,79 +1,211 @@
+## ------------- How the API is formed of `FreeGroupElm`? ------------------ ##
+# FreeGroup( [wfilt, ]rank[, name] ) one example could be
+
+
+# I don't know what the `wfilt` argument is all about ???????
+
+# First API form is:  FreeGroup( rank )  here `rank` is any +ve integer
+
+# FreeGroup( rank ) for any positive integer `rank`, returns a `FreeGroup`
+# on `rank` generators.
+
+# For example:
+# gap> FreeGroup(3)
+# <free group on the generators [ f1, f2, f3 ]>
+# In Python i think similar functionality could be added
+# >>> FreeGroup(3)
+# <free group on the generators [ f1, f2, f3 ]>
+
+
+# Second form of API is:   `FreeGroup(rank, "name")` here `rank` is any +ve integer and the string `name` is
+# used for printing seems like only. Like `name1`, `name2` ... `name_rank` so `rank` number of generators.
+# If the optional argument `name` is given then the generators
+# are printed as `name1`, `name2` ... so on. So that's a concatenation of
+# the string `name` provided by user and an integer from `1` to `range`.
+# The default for `name` is the string `f`.
+
+# For example:
+# gap> FreeGroup(3, "apple");
+# <free group on the generators [ apple1, apple2, apple3 ]>
+
+# In this seems like "apple" string serves no other purpose other than representing it's name in the `__str__`
+# form as we do it in Python.
+
+
+# Third form of API is:   `FreeGroup("string1", "string2", "string3", ...)   here we just specify the
+# name of string for each of generators.
+
+# Fourth form of API is:   `FreeGroup(infinity, name, init)`
+
+# So i think this has implication that the `FreeGroupElm` class can have the API of
+# def __new__(cls, )
+
+
 class FreeGroup(Basic):
-    r"""
-    Called  with  a  positive  integer rank, FreeGroup
-    returns a free group on rank generators. If optional
-    argument name is given then the  generators are printed
-    as name1, name2 etc., that is, each name is the
-    concatenation of the string name and an integer from 1
-    to range. The default for name is the string "f".
-    """
-    is_group = True
+    def __new__(cls, *args, **kwargs):
 
-    def __new__(cls, rank, **kwargs):
+        obj = Basic.__new__(cls, *args, **kwargs)
 
-        # rank can be Infinite
-        if not (isinstance(rank, int) or rank is S.Infinity):
+        # (1) or (2) the First API form with `rank` and may be
+        # provided with a `string`
+        if isinstance(args[0], int) and args[0] >= 0:
+            # (1) form of the API used here
+            if len(args) == 1:
+                obj._str = None
+            # (2) form of the API used here
+            elif len(args) == 2:
+                obj._str = list([args[1]])
+            # otherwise raise ValueError
+            else:
+                raise ValueError("Invalid arguments")
+            obj._rank = args[0]
+            obj._as_str = False
+
+        # (3) API
+        elif all([isinstance(i, str) for i in args]):
+            obj._str = list(args)
+            obj._rank = len(args)
+            obj._as_str = True
+        else:
             raise ValueError("Invalid arguments")
 
-        obj = Basic.__new__(cls, rank, **kwargs)
-
-        if rank == 0:
-            obj._is_abelian = True
-            obj._order = 1
-            obj._generators = []
-        else:
-            obj._is_abelian = False
-            obj._order = S.Infinity
-
-        obj._center = [GroupIdentity()]
-        obj._rank = rank
+        # (4) API form with `rank` being `Infinity
+        # TODO
 
         return obj
 
-#    def __init__(self, *args):
-#        if isinstance(args[0], int):
-#            self.gens_assign(*args)
+    def __getitem__(self, i):
+        if i >= self.rank:
+            raise IndexError("No such generator exists")
+        elif self._str is None:
+            return FreeGroupElm(self, i, 1, "f")
+        elif len(self._str) == 1:
+            return FreeGroupElm(self, i, 1, self._str[0])
+        else:
+            return FreeGroupElm(self, i, 1, self._str[i])
 
+    def __str__(self):
+        str_form = "<free group on the generators "
+        gens = self.generators
+        str_form += str(gens) + ">"
+        return str_form
+
+    __repr__ = __str__
+
+    @property
+    def as_str(self):
+        return self._as_str
+
+    def order(self):
+        if self.rank == 0:
+            return 1
+        else:
+            return S.Infinity
+
+    @property
+    def elements(self):
+        if self.rank == 0:
+            # A universal Identity element is returned
+            return IdentityElm
+        else:
+            raise ValueError("Groups contains infinitely many "
+                            ", hence can't be represented")
+
+    @property
+    def generators(self):
+        if self.rank == 0:
+            return list()
+        else:
+            return list([self[i] for i in range(self.rank)])
+
+    @property
     def rank(self):
+        """
+        In group theory, the rank of a group G, denoted rank(G),
+        can refer to the smallest cardinality of a generating set
+        for G, that is
+
+        \operatorname{rank}(G)=\min\{ |X|: X\subseteq G, \langle X\rangle =G\}.
+
+        """
         return self._rank
 
     @property
     def is_abelian(self):
-        return self._is_abelian
+        if self.rank == 0:
+            return True
+        return False
+
+# Now about the API of `FreeGroupElm` it is going to take in the
+# The important things for elements of the same FreeGroup include
+# things like the number.
+# gap> f:=FreeGroup(4);;
+# gap> f.1 < f.2;
+# true
+#
+# gap> f.2 < f.3
+# true
+
+# quite strange are the properties
+
+# def __new__(cls, group, number)
+
+class FreeGroupElm(Basic):
+    """
+    Represents an element of FreeGroup. Other than
+    the Identity element, all have Infinite order.
+
+    """
+    is_Identity = None
+
+    def __new__(cls, free_group, index, pow_val, str_form="f"):
+        # here `index` represents the max value of `generator` in
+        # `FreeGroupElm` for example `f0**8*f2**5` has the
+        # `index` value of `2`. since `f2` is there
+        # while `pow_val` represents the `pow_val` of `index`
+        # element in `FreeGroupElm`. in the above expression
+        # `pow_val` is 5, since `f2**5` is there in `FreeGroupElm`
+        obj = Basic.__new__(cls, free_group, index, pow_val, str_form)
+        obj._group = free_group
+        obj._index = index
+        obj._pow_val = pow_val
+        obj._str_form = str_form
+        return obj
+
+    @property
+    def group(self):
+        return self._group
+
+    @property
+    def str_form(self):
+        return self._str_form
+
+    @property
+    def pow_val(self):
+        return self._pow_val
+
+    @property
+    def group_index(self):
+        return self._index
+
+    def __str__(self):
+        if self.pow_val != 1:
+            return self.str_form + str(self.group_index) + "**" + str(self.pow_val)
+        return self.str_form + str(self.group_index)
+
+    __repr__ = __str__
+
+    def __pow__(self, other):
+        return FreeGroupElm(self.group, self.group_index, other, self.str_form)
+
+    def __mul__(self, other):
+        pass
 
     def order(self):
-        return self._order
-
-    @property
-    def generators(self):
-        if self.rank() is S.Infinity:
-            return ListWithInfiniteGenerators()
-        return list(symbols('f0:%s' %n, cls=Dummy))
-
-    def elements(self):
-        if self.rank() == 0:
-            return set(IdElm)
-        raise ValueError("Group contains infinite elements, hence can't be "
-                         "represented")
-
-    @property
-    def identity(self):
-        return GroupElm()
-
-    def __repr__(self):
-        str_form = '<free group on the generators [ '
-        for i in range(len(self)):
-            str_form += 'f%s, ' %i
-        str_form = str_form[:-2]
-        str_form += ' ]>'
-        return str_form
-
-    def __len__(self):
-        if isinstance(self.args[0], int):
-            return self.args[0]
-
-    def __getitem__(self, i):
-        return self._generators[i]
+        if self.is_Identity:
+            return 1
+        else:
+            return S.Infinity
 
 
 class Group(Basic):
@@ -215,6 +347,7 @@ def One(group):
     Returns the Identity Element of Group `group`.
     """
     pass
+
 
 class InfiniteGenerators(Basic):
     """
