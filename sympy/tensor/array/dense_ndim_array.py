@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 import functools
 
+import itertools
+
 from sympy.core.sympify import _sympify
 
 from sympy import Matrix, flatten, Basic, Tuple
@@ -30,8 +32,25 @@ class DenseNDimArray(NDimArray):
         3
 
         """
-        index = self._parse_index(index)
-        return self._array[index]
+        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+
+            def slice_expand(s, dim):
+                if not isinstance(s, slice):
+                        return (s,)
+                start, stop, step = s.indices(dim)
+                return [start + i*step for i in range((stop-start)//step)]
+
+            sl_factors = [slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
+            eindices = itertools.product(*sl_factors)
+            array = [self._array[self._parse_index(i)] for i in eindices]
+            nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
+            return type(self)(array, nshape)
+        else:
+            if isinstance(index, slice):
+                return self._array[index]
+            else:
+                index = self._parse_index(index)
+                return self._array[index]
 
     @classmethod
     def zeros(cls, *shape):
@@ -94,6 +113,9 @@ class DenseNDimArray(NDimArray):
 
 
 class ImmutableDenseNDimArray(DenseNDimArray, Basic):
+    """
+
+    """
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)

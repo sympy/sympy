@@ -11,11 +11,13 @@ def test_ndim_array_initiation():
     arr_with_one_element = ImmutableDenseNDimArray([23])
     assert len(arr_with_one_element) == 1
     assert arr_with_one_element[0] == 23
+    assert arr_with_one_element[:] == [23]
     assert arr_with_one_element.rank() == 1
 
     arr_with_symbol_element = ImmutableDenseNDimArray([Symbol('x')])
     assert len(arr_with_symbol_element) == 1
     assert arr_with_symbol_element[0] == Symbol('x')
+    assert arr_with_symbol_element[:] == [Symbol('x')]
     assert arr_with_symbol_element.rank() == 1
 
     number5 = 5
@@ -245,3 +247,13 @@ def test_rebuild_immutable_arrays():
 
     assert sparr == sparr.func(*sparr.args)
     assert densarr == densarr.func(*densarr.args)
+
+
+def test_slices():
+    md = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
+
+    assert md[:] == md._array
+    assert md[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
+    assert md[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
+    assert md[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
+    assert md[:, :, :] == md
