@@ -284,7 +284,7 @@ class Gens(with_metaclass(OptionType, Option)):
             gens = (gens,)
         elif len(gens) == 1 and hasattr(gens[0], '__iter__'):
             gens = gens[0]
-
+        gens = sympify(gens)
         if gens == (None,):
             gens = ()
         elif has_dups(gens):
