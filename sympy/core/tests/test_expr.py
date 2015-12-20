@@ -7,6 +7,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
     exp_polar, expand, diff, O, Heaviside, Si, Max)
+from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -751,6 +752,15 @@ def test_has_basics():
     assert (2*p).has(Wild)
 
     assert not x.has()
+
+
+def test_eval_derivative():
+    class Test_Der(Expr):
+        _diff_wrt = True
+
+    t = Test_Der()
+    assert t.diff(t) == 1
+    assert t.diff() == 0
 
 
 def test_has_multiple():

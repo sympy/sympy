@@ -60,6 +60,11 @@ class Expr(Basic, EvalfMixin):
         """
         return False
 
+    def _eval_derivative(self, s):
+        if self == s:
+            return S.One
+        return S.Zero
+
     @cacheit
     def sort_key(self, order=None):
 
