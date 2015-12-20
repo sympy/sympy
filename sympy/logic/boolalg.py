@@ -323,21 +323,87 @@ class And(LatticeOp, BooleanFunction):
         from sympy.core.relational import Relational
         newargs = set()
         rel = set()
-        for x in reversed(list(args)):
-            if isinstance(x, Number):
-                if x.is_zero is None:
-                    pass
-                else:
-                    x = sympify(not x.is_zero)
-            elif x.is_Relational:
+        args = list(args)
+        while args:
+            x = args.pop()
+            if x.is_Relational:
                 x = x.canonical
                 rel.add(x)
+            elif isinstance(x, cls):
+                args.extend(x.args)
+            else:
+                if isinstance(x, Number):
+                    if x.is_zero is None:
+                        pass
+                    else:
+                        x = sympify(not x.is_zero)
+                if x is S.false:
+                    return [x]
+                elif x is S.true:
+                    continue
+                newargs.add(x)
+        lro = {}  # lhs: {rhs: set(ops)}
+        for j, R in enumerate(rel):
+            l, r = R.args
+            op = R.rel_op
+            if l not in lro:
+                lro[l] = {}
+            if r not in lro[l]:
+                lro[l][r] = set()
+            lro[l][r].add(op)
+        # keep max of >,>=
+        from sympy import Max, Min
+        bigger = {}
+        for l in lro:
+            big = [r for r in lro[l] if any('>' in o for o in lro[l][r])]
+            if not big:
                 continue
-            if x is S.false:
-                return [x]
-            elif x is S.true:
+            m = Max(*big)
+            m = set(m.args if m.func is Max else [m])
+            bigger[l] = m
+            small = set(big) - m
+            if small:
+                remove = []
+                for r in small:
+                    newo = []
+                    for o in lro[l][r]:
+                        if '>' in o:
+                            rel.remove(Relational(l, r, o, evaluate=False))
+                        else:
+                            newo.append(o)
+                    if not newo:
+                        remove.append(r)
+                    else:
+                        lro[l][r] = newo
+                for r in remove:
+                    del lro[l][r]
+        # keep min of <,<=
+        for l in lro:
+            small = [r for r in lro[l] if any('<' in o for o in lro[l][r])]
+            if not small:
                 continue
-            newargs.add(x)
+            m = Min(*small)
+            m = set(m.args if m.func is Min else [m])
+            for i in m:
+                for b in bigger.get(l, []):
+                    if (b > i) is S.true:
+                        return [S.false]
+            big = set(small) - m
+            if big:
+                remove = []
+                for r in big:
+                    newo = []
+                    for o in lro[l][r]:
+                        if '<' in o:
+                            rel.remove(Relational(l, r, o, evaluate=False))
+                        else:
+                            newo.append(o)
+                    if not newo:
+                        remove.append(r)
+                    else:
+                        lro[l][r] = newo
+                for r in remove:
+                    del lro[l][r]
         # replace a < b, a <= b with a < b
         # a <= b, a >= b with Eq(a, b), etc...
         actions = {
@@ -346,19 +412,11 @@ class And(LatticeOp, BooleanFunction):
             ('<=', '>'): False, ('<', '>'): False, ('==', '>'): False, ('<',
             '<='): '<', ('<=', '=='): '==', ('!=', '=='): False, ('==', '>='):
             '==', ('<', '>='): False}
-        rhs = {}
-        for j, R in enumerate(rel):
-            l, r = R.args
-            if l not in rhs:
-                rhs[l] = {}
-            if r not in rhs[l]:
-                rhs[l][r] = set()
-            rhs[l][r].add(R.rel_op)
-        for l in rhs:
-            for r in rhs[l]:
-                if len(rhs[l][r]) == 1:
+        for l in lro:
+            for r in lro[l]:
+                if len(lro[l][r]) == 1:
                     continue
-                ops = list(rhs[l][r])
+                ops = list(lro[l][r])
                 while len(ops) > 1:
                     ops = list(sorted(ops))
                     for i, o in enumerate(ops):
@@ -421,7 +479,7 @@ class And(LatticeOp, BooleanFunction):
                                 pass
                             elif all('>' in i.rel_op for i in rel):
                                 # -> small > x, x > big
-                                rel = [S.false]*2
+                                pass  # already handled
                             elif '<' in rel[0].rel_op:
                                 # -> small < x, x > big
                                 rel[0] = S.true
@@ -492,21 +550,95 @@ class Or(LatticeOp, BooleanFunction):
         from sympy.core.relational import Relational
         newargs = set()
         rel = set()
-        for x in args:
-            if isinstance(x, Number):
-                if x.is_zero is None:
-                    pass
-                else:
-                    x = sympify(not x.is_zero)
-            elif x.is_Relational:
+        args = list(args)
+        while args:
+            x = args.pop()
+            if x.is_Relational:
                 x = x.canonical
                 rel.add(x)
+            elif isinstance(x, cls):
+                args.extend(x.args)
+            else:
+                if isinstance(x, Number):
+                    if x.is_zero is None:
+                        pass
+                    else:
+                        x = sympify(not x.is_zero)
+                if x is S.true:
+                    return [x]
+                elif x is S.false:
+                    continue
+                newargs.add(x)
+        lro = {}  # lhs: {rhs: set(ops)}
+        for j, R in enumerate(rel):
+            l, r = R.args
+            if l not in lro:
+                lro[l] = {}
+            if r not in lro[l]:
+                lro[l][r] = set()
+            op = R.rel_op
+            if op in lro[l][r]:
+                # duplicate
+                newargs[idx[(l, r, op)]] = S.false
+            else:
+                lro[l][r].add(op)
+        # keep min of >,>=
+        from sympy import Max, Min
+        smaller = {}
+        for l in lro:
+            big = [r for r in lro[l] if any('>' in o for o in lro[l][r])]
+            if not big:
                 continue
-            if x is S.true:
-                return [x]
-            elif x is S.false:
+            m = Min(*big)
+            m = set(m.args if m.func is Min else [m])
+            smaller[l] = m
+            small = set(big) - m
+            if small:
+                remove = []
+                for r in small:
+                    newo = []
+                    for o in lro[l][r]:
+                        if '>' in o:
+                            rel.remove(Relational(l, r, o, evaluate=False))
+                        else:
+                            newo.append(o)
+                    if not newo:
+                        remove.append(r)
+                    else:
+                        lro[l][r] = newo
+                for r in remove:
+                    del lro[l][r]
+        # keep max of <,<=
+        for l in lro:
+            small = [r for r in lro[l] if any('<' in o for o in lro[l][r])]
+            if not small:
                 continue
-            newargs.add(x)
+            m = Max(*small)
+            m = set(m.args if m.func is Max else [m])
+            for i in m:
+                for s in smaller.get(l, []):
+                    if (s < i) is S.true:
+                        return [S.true]
+            big = set(small) - m
+            if big:
+                remove = []
+                for l in lro:
+                    for r in small:
+                        if r not in big:
+                            continue
+                        newo = []
+                        for o in lro[l][r]:
+                            if '<' in o:
+                                rel.remove(Relational(l, r, o, evaluate=False))
+                            else:
+                                newo.append(o)
+                        if not newo:
+                            remove.append(r)
+                        else:
+                            lro[l][r] = newo
+                    for r in remove:
+                        del lro[l][r]
+        # replace a < b, a <= b with a <= b, etc...
         actions = {
             ('!=', '>='): True, ('!=', '>'): '!=', ('!=', '<='): True, ('<',
             '=='): '<=', ('<=', '>='): True, ('!=', '<'): '!=', ('<=', '>'):
@@ -514,24 +646,11 @@ class Or(LatticeOp, BooleanFunction):
             ('<=', '=='): '<=', ('!=', '=='): True, ('==', '>='): '>=', ('<',
             '>='): True}
         assert all(tuple(sorted(k)) == k for k in actions)
-        rhs = {}
-        for j, R in enumerate(rel):
-            l, r = R.args
-            if l not in rhs:
-                rhs[l] = {}
-            if r not in rhs[l]:
-                rhs[l][r] = set()
-            op = R.rel_op
-            if op in rhs[l][r]:
-                # duplicate
-                newargs[idx[(l, r, op)]] = S.false
-            else:
-                rhs[l][r].add(op)
-        for l in rhs:
-            for r in rhs[l]:
-                if len(rhs[l][r]) == 1:
+        for l in lro:
+            for r in lro[l]:
+                if len(lro[l][r]) == 1:
                     continue
-                ops = list(rhs[l][r])
+                ops = list(lro[l][r])
                 while len(ops) > 1 and not (
                         len(ops) == 2 and '<' in ops and '>' in ops):
                     ops = list(sorted(ops))

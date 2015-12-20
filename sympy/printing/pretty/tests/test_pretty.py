@@ -4680,7 +4680,7 @@ def test_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert upretty(pspace(Tuple(A, B)).domain) == \
-        u('Domain: 0 ≤ a ∧ 0 ≤ b ∧ a < ∞ ∧ b < ∞')
+        u('Domain: a ≥ 0 ∧ b ≥ 0 ∧ a < ∞ ∧ b < ∞')
 
 
 def test_PrettyPoly():

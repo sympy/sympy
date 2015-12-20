@@ -786,3 +786,15 @@ def test_issue_5473():
     assert And(z > x, x < y) == (x < 2)
     assert And(z < x, x < y) == False
     assert And(z < x, x > y) == (x > 3)
+
+    assert And(And(S(1) < x, x < y), And(x < 2, x < z)) == \
+        And(x > 1, x < y, x < z, x < 2)
+    assert And(x < 11, x <= 12, x > 1, x >= 2, Ne(x, 4)) == And(x < 11, x >= 2, Ne(x, 4))
+    assert And(x <= 11, x <= 12, x > 1, x > 2) == And(x <= 11, x > 2)
+    assert Or(Or(x < 1, x > 3), Or(x <= 0, x > 4), Ne(x, 4)) == Or(x < 1, x > 3, Ne(x, 4))
+    assert Or(Or(x <= 1, x >= 3), Or(x < 0, x > 4)) == Or(x <= 1, x >= 3)
+    assert And(x < 0, x > 1, x > 3) is S.false
+    assert Or(x > 1, x < 3) is S.true
+    p = symbols('p', positive=True)
+    assert And(x > -p, x > 2) == (x > 2)
+    assert Or(x > -p, x < 2) is S.true

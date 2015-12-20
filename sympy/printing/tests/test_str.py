@@ -658,7 +658,7 @@ def test_RandomDomain():
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a < oo, a >= 0, b < oo, b >= 0)"
 
 
 def test_FiniteSet():

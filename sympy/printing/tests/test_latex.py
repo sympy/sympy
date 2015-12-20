@@ -1032,7 +1032,7 @@ def test_latex_RandomDomain():
     B = Exponential('b', 1)
     assert latex(
         pspace(Tuple(A, B)).domain) == \
-        r"Domain: 0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
+        r"Domain: a \geq 0 \wedge b \geq 0 \wedge a < \infty \wedge b < \infty"
 
 
 def test_PrettyPoly():
