@@ -41,7 +41,7 @@ class Expr(Basic, EvalfMixin):
         the differentiation.
 
         Note, see the docstring of Derivative for how this should work
-        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        mathematically. In particular, note that expr.subs(yourclass, Symbol)
         should be well-defined on a structural level, or this will lead to
         inconsistent results.
 
