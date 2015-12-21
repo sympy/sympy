@@ -497,11 +497,11 @@ Let us compare the speeds::
 
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.utilities.lambdify import lambdify
-    >>> fn_numpy = lambdify(x, expr, 'numpy')
+    >>> fn_numpy = lambdify(x, expr, 'numpy')   # doctest: +SKIP
     >>> fn_fortran = ufuncify([x], expr, backend='f2py')    # doctest: +SKIP
-    >>> from numpy import linspace
-    >>> xx=linspace(0,1,5)
-    >>> fn_numpy(xx)
+    >>> from numpy import linspace  # doctest: +SKIP
+    >>> xx=linspace(0,1,5)  # doctest: +SKIP
+    >>> fn_numpy(xx)    # doctest: +SKIP
     [ 0.          1.21306132  0.98101184  0.44626032  0.        ]
     >>> fn_fortran(xx)  # doctest: +SKIP
     [ 0.          1.21306132  0.98101184  0.44626032  0.        ]
