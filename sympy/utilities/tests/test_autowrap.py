@@ -226,10 +226,3 @@ PyMODINIT_FUNC initwrapper_module_0(void)
 }
 #endif"""
     assert source == expected
-
-def test_issue_10274():
-    x, y = symbols("x, y")
-    expr = x+y
-    func = autowrap(expr, backend='dummy', helpers=('helper', x + y, (x, y)))
-    assert func() == str(x + y)
-    assert func.args == "x, y"
