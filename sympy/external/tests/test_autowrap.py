@@ -101,12 +101,16 @@ def runtest_ufuncify(language, backend):
 
 def runtest_issue_10274(language, backend):
     import tempfile
+    import os
     expr = (a - b + c)**(13)
     tmp = tempfile.mkdtemp()
     f = autowrap(expr, language, backend, tempdir=tmp, helpers=('helper', a - b + c, (a, b, c)))
-    fil = open(tmp+'/'+ 'wrapped_code_9.c','r')
     assert f(1, 1, 1) == 1
-    assert fil.read() == ("/******************************************************************************\n"
+
+    for file in os.listdir(tmp):
+        if file.startswith("wrapped_code_") and file.endswith(".c"):
+            fil = open(tmp + '/' + file)
+            assert fil.read() == ("/******************************************************************************\n"
                          " *                    Code generated with sympy 0.7.7.dev                     *\n"
                          " *                                                                            *\n"
                          " *              See http://www.sympy.org/ for more information.               *\n"
