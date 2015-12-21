@@ -150,6 +150,8 @@ class VectorLatexPrinter(LatexPrinter):
             base = r"\dddot{%s}" % base
         elif dots == 4:
             base = r"\ddddot{%s}" % base
+        else:
+            return super(VectorLatexPrinter, self)._print_Derivative(der_expr)
         if len(base_split) is not 1:
             base += '_' + base_split[1]
         return base
