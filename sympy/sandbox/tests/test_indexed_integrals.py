@@ -1,4 +1,4 @@
-from sympy.tensor.indexed_integrals import _IndexedIntegral
+from sympy.sandbox.indexed_integrals import _IndexedIntegral
 from sympy import IndexedBase, Idx, symbols, sin, cos
 
 

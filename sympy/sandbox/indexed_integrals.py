@@ -1,4 +1,4 @@
-from sympy.tensor import Idx, IndexedBase, Indexed
+from sympy.tensor import Indexed
 from sympy import Integral, Dummy, sympify, Tuple
 
 
@@ -15,7 +15,7 @@ class _IndexedIntegral(Integral):
     Examples
     ========
 
-    >>> from sympy.tensor.indexed_integrals import _IndexedIntegral
+    >>> from sympy.sandbox.indexed_integrals import _IndexedIntegral
     >>> from sympy import IndexedBase, symbols
     >>> A = IndexedBase('A')
     >>> i, j = symbols('i j', integer=True)
