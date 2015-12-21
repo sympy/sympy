@@ -6,11 +6,11 @@ code from Sympy expressions. Furthermore, there are submodules provided
 that help use other numeric systems as backend for construction and 
 manipulation of mathematical expressions to speed up the process.
 
-Unconventionally, we will start with a summary, and inspect the building 
+We will start with a brief introduction, and inspect the building 
 blocks of the code generation and then the code generation itself.
 
-Summary
--------
+Introduction
+------------
 
 There are three levels::
 
@@ -71,14 +71,14 @@ Examples::
     >>> from sympy import ccode, symbols, Rational
     >>> Z, k, e, r = symbols('Z k e r')
     >>> expr = (Rational(-1, 2)*Z*k*(e**2)/r)
-    >>> expr
+    >>> expr # doctest: +SKIP
         2   
     -Z⋅e ⋅k 
     ────────
       2⋅r   
-    >>> ccode(expr)
+    >>> ccode(expr) # doctest: +SKIP
     -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to = "E")
+    >>> ccode(expr, assign_to = "E") # doctest: +SKIP
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
 ``Piecewise`` expressions are converted into conditionals. If an
@@ -112,7 +112,7 @@ looped over::
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-    >>> jscode(e.rhs, assign_to=e.lhs, contract=False)
+    >>> jscode(e.rhs, assign_to=e.lhs, contract=False) # doctest: +SKIP
     Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
 
     >>> Res = IndexedBase('Res', shape=(len_y,))
@@ -127,9 +127,82 @@ looped over::
           Res[j] = Res[j] + t[j]*y[j];
        }
     }
-    >>> print(jscode(e.rhs, assign_to=e.lhs, contract=False))
+    >>> print(jscode(e.rhs, assign_to=e.lhs, contract=False)) # doctest: +SKIP
     Res[j] = t[j]*y[j];
 
+Custom printing can be defined for certain types by passing a dictionary of
+"type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
+dictionary value can be a list of tuples i.e., [(argument_test,
+cfunction_string)].  This can be used to call a custom Octave function::
+
+    >>> from sympy import Function, octave_code, Function, Matrix, symbols
+    >>> f = Function('f')
+    >>> g = Function('g')
+    >>> x = symbols('x')
+    >>> custom_functions = {
+    ...   "f": "existing_octave_fcn",
+    ...   "g": [(lambda x: x.is_Matrix, "my_mat_fcn"),
+    ...         (lambda x: not x.is_Matrix, "my_fcn")]
+    ... }
+    >>> mat = Matrix([[1, x]])
+    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)  # doctest: +SKIP
+    'existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])'
+
+
+An example of mathematica code printer::
+
+    >>> from sympy import mathematica_code as mc
+    >>> from sympy import summation, symbols
+    >>> from sympy import sin, Function, pprint, summation
+    >>> x = Function('x')
+    >>> n, T, t = symbols('n T t')
+    >>> e = x(n*T)*sin((t-n*T)/T)
+    >>> e = e/((-T*n + t)/T)
+    >>> e   # doctest: +SKIP
+    T*x(T*n)*sin((-T*n + t)/T)/(-T*n + t)
+    >>> pprint(e)   # doctest: +SKIP
+                ⎛-T⋅n + t⎞
+    T⋅x(T⋅n)⋅sin⎜────────⎟
+                ⎝   T    ⎠
+    ──────────────────────
+           -T⋅n + t     
+
+    >>> expr = summation(e, (n, -1, 1))
+    >>> pprint(mc(expr))    # doctest: +SKIP
+    T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
+    t/T]/t
+
+
+
+We can go through a common expression in different languages we 
+support and see how it works::
+
+    >>> from sympy import jscode, ccode, fcode, octave_code, mathematica_code as mc
+    >>> from sympy import cos, symbols
+    >>> from sympy import pprint
+    >>> k_i, gamma_i, gamma_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
+    >>> beta = symbols("beta")
+    >>> e = k_i* gamma_i*gamma_s/(r_is**3)
+    >>> expr = e*2*I_z*S_z*(3*(cos(beta))**2 - 1)/2
+    >>> from sympy import init_printing
+    >>> init_printing()
+    >>> pprint(expr)    # doctest: +SKIP
+                     ⎛     2       ⎞
+    I_z⋅S_z⋅γᵢ⋅γₛ⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
+    ────────────────────────────────
+                     3              
+                  rᵢₛ               
+    >>> pprint(jscode(expr, assign_to="H_is"))  # doctest: +SKIP
+    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.po
+    w(r_is, 3);
+    >>> pprint(ccode(expr, assign_to="H_is"))   # doctest: +SKIP
+    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*pow(cos(beta), 2) - 1)/pow(r_is, 3);
+    >>> pprint(fcode(expr, assign_to="H_is"))   # doctest: +SKIP
+          H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*cos(beta)**2 - 1)/r_is**3
+    >>> pprint(octave_code(expr, assign_to="H_is")) # doctest: +SKIP
+    H_is = I_z.*S_z.*gamma_i.*gamma_s.*k_i.*(3*cos(beta).^2 - 1)./r_is.^3;
+    >>> pprint(mc(expr))    # doctest: +SKIP
+    I_z*S_z*gamma_i*gamma_s*k_i*(3*Cos[beta]^2 - 1)/r_is^3
 
 Codegen (sympy.utilities.codegen)
 ---------------------------------
@@ -296,8 +369,8 @@ SymPy object. For example::
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
-    >>> binary_func = autowrap(expr)
-    >>> binary_func(1, 4, 2)
+    >>> binary_func = autowrap(expr)    # doctest: +SKIP
+    >>> binary_func(1, 4, 2)    # doctest: +SKIP
     -1.0
 
 The various flags available with autowrap() help to modify the services 
@@ -315,7 +388,7 @@ directory, and leave the files intact when finished. For instance::
     >>> m = symbols('m', integer=True)
     >>> i = Idx('i', m)
     >>> a,omega = symbols('a, omega')
-    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp')
+    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp')  # doctest: +SKIP
 
 Checking the Fortran source code in the directory specified reveals this::
 
@@ -338,7 +411,7 @@ Checking the Fortran source code in the directory specified reveals this::
 
 Using the argument 'args' along with it changes argument sequence::
 
-    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp',args=[y,x,m,omega])
+    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp',args=[y,x,m,omega])   # doctest: +SKIP
 
 yields::
 
@@ -381,13 +454,13 @@ and methods. An illustration::
     >>> from sympy.physics.hydrogen import R_nl
     >>> a,r = symbols('a,r')
     >>> psi_nl = R_nl(1,0,a,r)
-    >>> f = binary_function('f', psi_nl)
-    >>> f(a,r).evalf(3, subs={a: 1, r: 2})
+    >>> f = binary_function('f', psi_nl)    # doctest: +SKIP
+    >>> f(a,r).evalf(3, subs={a: 1, r: 2})  # doctest: +SKIP
     0.766
 
 
 While NumPy operations are very efficient for vectorized data but they sometimes incur 
-unnecessary costs when chained together.  
+unnecessary costs when `chained together <http://docs.sympy.org/dev/modules/numeric-computation.html#ufuncify>`_  .
 Fortunately, SymPy is able to generate efficient low-level C or Fortran code. 
 It can then depend on projects like Cython or f2py to compile and reconnect that 
 code back up to Python. Fortunately this process is well automated and a SymPy user 
@@ -425,17 +498,17 @@ Let us compare the speeds::
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.utilities.lambdify import lambdify
     >>> fn_numpy = lambdify(x, expr, 'numpy')
-    >>> fn_fortran = ufuncify([x], expr, backend='f2py')
+    >>> fn_fortran = ufuncify([x], expr, backend='f2py')    # doctest: +SKIP
     >>> from numpy import linspace
     >>> xx=linspace(0,1,5)
     >>> fn_numpy(xx)
     [ 0.          1.21306132  0.98101184  0.44626032  0.        ]
-    >>> fn_fortran(xx)
+    >>> fn_fortran(xx)  # doctest: +SKIP
     [ 0.          1.21306132  0.98101184  0.44626032  0.        ]
     >>> import timeit
-    >>> timeit.timeit('fn_numpy(xx)', 'from __main__ import fn_numpy, xx', number=10000)
+    >>> timeit.timeit('fn_numpy(xx)', 'from __main__ import fn_numpy, xx', number=10000)    # doctest: +SKIP
     0.18891601900395472
-    >>> timeit.timeit('fn_fortran(xx)', 'from __main__ import fn_fortran, xx', number=10000)
+    >>> timeit.timeit('fn_fortran(xx)', 'from __main__ import fn_fortran, xx', number=10000)    # doctest: +SKIP
     0.004707066000264604
 
 

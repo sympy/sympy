@@ -17,4 +17,4 @@
    solvers.rst
    matrices.rst
    manipulation.rst
-   codegen_explainatory.rst
+   codegen.rst
