@@ -409,7 +409,7 @@ def test_probability():
     i = integrate(x*betadist, (x, 0, oo), meijerg=True, conds='separate')
     assert (combsimp(i[0]), i[1]) == (alpha/(beta - 1), 1 < beta)
     j = integrate(x**2*betadist, (x, 0, oo), meijerg=True, conds='separate')
-    assert j[1] == (1 < beta - 1)
+    assert j[1] == (beta > 2)
     assert combsimp(j[0] - i[0]**2) == (alpha + beta - 1)*alpha \
         /(beta - 2)/(beta - 1)**2
 

@@ -822,10 +822,9 @@ def test_issue_2787():
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
     assert res == Piecewise(
-        (n*p, And(Or(Ne(p/(p - 1), 1), n - 1 > 0), p/Abs(p - 1) <= 1)),
+        (n*p, And(Or(Ne(p/(p - 1), 1), n > 1), p/Abs(p - 1) <= 1)),
         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
         True))
-
 
 def test_issue_4668():
     assert summation(1/n, (n, 2, oo)) == oo

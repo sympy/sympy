@@ -320,15 +320,26 @@ class And(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        from sympy.core.relational import Relational
+        from sympy.sets.sets import _oo_free_relational
+        from sympy.solvers.inequalities import _solve_inequality
         newargs = set()
         rel = set()
+        did_rel = False
         args = list(args)
         while args:
             x = args.pop()
             if x.is_Relational:
-                x = x.canonical
-                rel.add(x)
+                free = x.free_symbols
+                if len(free) == 1:
+                    try:
+                        x = _solve_inequality(x, free.pop(), linear=True)
+                    except NotImplementedError:
+                        pass
+                if x.is_Relational:
+                    x = x.canonical
+                    rel.add(x)
+                else:
+                    args.append(x)
             elif isinstance(x, cls):
                 args.extend(x.args)
             else:
@@ -342,102 +353,27 @@ class And(LatticeOp, BooleanFunction):
                 elif x is S.true:
                     continue
                 newargs.add(x)
-        lro = {}  # lhs: {rhs: set(ops)}
-        for j, R in enumerate(rel):
-            l, r = R.args
-            op = R.rel_op
-            if l not in lro:
-                lro[l] = {}
-            if r not in lro[l]:
-                lro[l][r] = set()
-            lro[l][r].add(op)
-        # keep max of >,>=
-        from sympy import Max, Min
-        bigger = {}
-        for l in lro:
-            big = [r for r in lro[l] if any('>' in o for o in lro[l][r])]
-            if not big:
-                continue
-            m = Max(*big)
-            m = set(m.args if m.func is Max else [m])
-            bigger[l] = m
-            small = set(big) - m
-            if small:
-                remove = []
-                for r in small:
-                    newo = []
-                    for o in lro[l][r]:
-                        if '>' in o:
-                            rel.remove(Relational(l, r, o, evaluate=False))
-                        else:
-                            newo.append(o)
-                    if not newo:
-                        remove.append(r)
-                    else:
-                        lro[l][r] = newo
-                for r in remove:
-                    del lro[l][r]
-        # keep min of <,<=
-        for l in lro:
-            small = [r for r in lro[l] if any('<' in o for o in lro[l][r])]
-            if not small:
-                continue
-            m = Min(*small)
-            m = set(m.args if m.func is Min else [m])
-            for i in m:
-                for b in bigger.get(l, []):
-                    if (b > i) is S.true:
-                        return [S.false]
-            big = set(small) - m
-            if big:
-                remove = []
-                for r in big:
-                    newo = []
-                    for o in lro[l][r]:
-                        if '<' in o:
-                            rel.remove(Relational(l, r, o, evaluate=False))
-                        else:
-                            newo.append(o)
-                    if not newo:
-                        remove.append(r)
-                    else:
-                        lro[l][r] = newo
-                for r in remove:
-                    del lro[l][r]
-        # replace a < b, a <= b with a < b
-        # a <= b, a >= b with Eq(a, b), etc...
-        actions = {
-            ('!=', '>='): '>', ('!=', '>'): '>', ('>', '>='): '>', ('!=', '<='):
-            '<', ('<', '=='): False, ('<=', '>='): '==', ('!=', '<'): '<',
-            ('<=', '>'): False, ('<', '>'): False, ('==', '>'): False, ('<',
-            '<='): '<', ('<=', '=='): '==', ('!=', '=='): False, ('==', '>='):
-            '==', ('<', '>='): False}
-        for l in lro:
-            for r in lro[l]:
-                if len(lro[l][r]) == 1:
-                    continue
-                ops = list(lro[l][r])
-                while len(ops) > 1:
-                    ops = list(sorted(ops))
-                    for i, o in enumerate(ops):
-                        for j in range(i + 1, len(ops)):
-                            p = ops[j]
-                            do = actions.get((o, p), None)
-                            if do is None:
-                                continue
-                            if do is False:
-                                return [S.false]
-                            R = Relational(l, r, do)
-                            rel.remove(Relational(l, r, o))
-                            rel.remove(Relational(l, r, p))
-                            ops.pop(j)
-                            ops.pop(i)
-                            rel.add(R)
-                            ops.append(do)
-                            break
-                        else:
-                            continue
-                        break
+            if not args and not did_rel and rel:
+                from sympy.utilities.iterables import sift
+                lhs = sift(rel, lambda x: x.lhs)
+                for l in lhs:
+                    if not l.is_Symbol:
+                        continue
+                    c = sift(lhs[l], lambda x: x.rhs.is_comparable and
+                        x.rhs not in (S.Infinity, S.NegativeInfinity))
+                    cargs = []
+                    for i in c[True]:
+                        rel.remove(i)
+                        cargs.append(i)
+                    if len(cargs) == 1:
+                        rel.add(cargs.pop())
+                        continue
+                    c = S.Reals
+                    for i in cargs:
+                        c = c.intersection(i.as_set())
+                    args.extend(_oo_free_relational(c, l))
+                    did_rel = True
+                    del cargs
 
         # make two inequalities like x < 2 & x > 1 look like 1 < x < 2
         if len(rel) == 2:
@@ -455,13 +391,10 @@ class And(LatticeOp, BooleanFunction):
                 if len(free) == 1:
                     x = free.pop()
                     try:
-                        from sympy.solvers.inequalities import _solve_inequality as f
-                        solved_rel = [f(i, x) if i.lhs != x else i for i in rel]
-                        if not all(getattr(i, 'lhs', None) for i in solved_rel):
-                            # XX if _solve_inequality finds multiple solutions,
-                            # the result will not be a relational any more
-                            raise NotImplementedError
-                        rel = solved_rel
+                        from sympy.solvers.inequalities import (
+                            _solve_inequality)
+                        rel = [_solve_inequality(i, x, linear=True)
+                            for i in rel]
                         a, b = [i.rhs for i in rel]
                         literal = True
                         asmall = (a < b)
@@ -476,13 +409,13 @@ class And(LatticeOp, BooleanFunction):
                             # -> small op1 x, x op2 big
                             if all('<' in i.rel_op for i in rel):
                                 # -> small < x, x < big
-                                pass
+                                pass  # nothing to do
                             elif all('>' in i.rel_op for i in rel):
                                 # -> small > x, x > big
                                 pass  # already handled
                             elif '<' in rel[0].rel_op:
                                 # -> small < x, x > big
-                                rel[0] = S.true
+                                pass  # already handled
                             else:
                                 # -> small > x, x < big
                                 rel[1] = S.true
@@ -547,15 +480,27 @@ class Or(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        from sympy.core.relational import Relational
+        from sympy.sets.sets import _oo_free_relational
+        from sympy.solvers.inequalities import _solve_inequality
         newargs = set()
         rel = set()
         args = list(args)
+        cargs = []
+        did_rel = False
         while args:
             x = args.pop()
             if x.is_Relational:
-                x = x.canonical
-                rel.add(x)
+                free = x.free_symbols
+                if len(free) == 1:
+                    try:
+                        x = _solve_inequality(x, free.pop(), linear=True)
+                    except NotImplementedError:
+                        pass
+                if x.is_Relational:
+                    x = x.canonical
+                    rel.add(x)
+                else:
+                    args.append(x)
             elif isinstance(x, cls):
                 args.extend(x.args)
             else:
@@ -569,110 +514,53 @@ class Or(LatticeOp, BooleanFunction):
                 elif x is S.false:
                     continue
                 newargs.add(x)
-        lro = {}  # lhs: {rhs: set(ops)}
-        for j, R in enumerate(rel):
-            l, r = R.args
-            if l not in lro:
-                lro[l] = {}
-            if r not in lro[l]:
-                lro[l][r] = set()
-            op = R.rel_op
-            if op in lro[l][r]:
-                # duplicate
-                newargs[idx[(l, r, op)]] = S.false
-            else:
-                lro[l][r].add(op)
-        # keep min of >,>=
-        from sympy import Max, Min
-        smaller = {}
-        for l in lro:
-            big = [r for r in lro[l] if any('>' in o for o in lro[l][r])]
-            if not big:
-                continue
-            m = Min(*big)
-            m = set(m.args if m.func is Min else [m])
-            smaller[l] = m
-            small = set(big) - m
-            if small:
-                remove = []
-                for r in small:
-                    newo = []
-                    for o in lro[l][r]:
-                        if '>' in o:
-                            rel.remove(Relational(l, r, o, evaluate=False))
+            if not args and not did_rel and rel:
+                from sympy.utilities.iterables import sift
+                from sympy.core.relational import Ne
+                lhs = sift(rel, lambda x: x.lhs)
+                for l in lhs:
+                    if not l.is_Symbol:
+                        continue
+                    c = sift(lhs[l], lambda x: x.rhs.is_comparable and
+                        x.rhs not in (S.Infinity, S.NegativeInfinity))
+                    cargs = []
+                    ne = []
+                    for i in c[True]:
+                        rel.remove(i)
+                        if isinstance(i, Ne):
+                            ne.append(i)
                         else:
-                            newo.append(o)
-                    if not newo:
-                        remove.append(r)
+                            cargs.append(i)
+                    if len(cargs) == 1:
+                        rargs = [cargs.pop()]
                     else:
-                        lro[l][r] = newo
-                for r in remove:
-                    del lro[l][r]
-        # keep max of <,<=
-        for l in lro:
-            small = [r for r in lro[l] if any('<' in o for o in lro[l][r])]
-            if not small:
-                continue
-            m = Max(*small)
-            m = set(m.args if m.func is Max else [m])
-            for i in m:
-                for s in smaller.get(l, []):
-                    if (s < i) is S.true:
-                        return [S.true]
-            big = set(small) - m
-            if big:
-                remove = []
-                for l in lro:
-                    for r in small:
-                        if r not in big:
-                            continue
-                        newo = []
-                        for o in lro[l][r]:
-                            if '<' in o:
-                                rel.remove(Relational(l, r, o, evaluate=False))
-                            else:
-                                newo.append(o)
-                        if not newo:
-                            remove.append(r)
-                        else:
-                            lro[l][r] = newo
-                    for r in remove:
-                        del lro[l][r]
-        # replace a < b, a <= b with a <= b, etc...
-        actions = {
-            ('!=', '>='): True, ('!=', '>'): '!=', ('!=', '<='): True, ('<',
-            '=='): '<=', ('<=', '>='): True, ('!=', '<'): '!=', ('<=', '>'):
-            True, ('>', '>='): '>=', ('==', '>'): '>=', ('<', '<='): '<=',
-            ('<=', '=='): '<=', ('!=', '=='): True, ('==', '>='): '>=', ('<',
-            '>='): True}
-        assert all(tuple(sorted(k)) == k for k in actions)
-        for l in lro:
-            for r in lro[l]:
-                if len(lro[l][r]) == 1:
-                    continue
-                ops = list(lro[l][r])
-                while len(ops) > 1 and not (
-                        len(ops) == 2 and '<' in ops and '>' in ops):
-                    ops = list(sorted(ops))
-                    for i, o in enumerate(ops):
-                        for j in range(i + 1, len(ops)):
-                            p = ops[j]
-                            do = actions.get((o, p), None)
-                            if do is None:
-                                continue
-                            if do is True:
+                        c = S.EmptySet
+                        for i in cargs:
+                            c = c.union(i.as_set())
+                        rargs = list(_oo_free_relational(c, l))
+                        if len(rargs) == 1 and rargs[0] is S.true:
+                            if l.is_real is None:
+                                rargs = [And(S.NegativeInfinity <= l, l <= S.Infinity)]
+                            elif l.is_real is False:
+                                rargs = [S.false]
+                    if not ne:
+                        args.extend(rargs)
+                    else:
+                        cne = [~i for i in ne]
+                        for r in rargs:
+                            # if x != y and x == y are encountered the result is
+                            # true since one of them must always be true
+                            if r in cne:
                                 return [S.true]
-                            R = Relational(l, r, do)
-                            rel.remove(Relational(l, r, o))
-                            rel.remove(Relational(l, r, p))
-                            ops.pop(j)
-                            ops.pop(i)
-                            rel.add(R)
-                            ops.append(do)
-                            break
-                        else:
-                            continue
-                        break
+                            # if the rhs of Ne makes a Relational false then
+                            # that relational is already handled by the more
+                            # general Ne so ignore it.
+                            if all(r.subs(l, i.rhs) for i in ne
+                                    if i.rhs.is_real):
+                                args.append(r)
+                        args.extend(ne)
+                    did_rel = True
+                    del cargs
 
         newargs.update(rel)
         return LatticeOp._new_args_filter(newargs, Or)

@@ -488,7 +488,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
     return rv if not relational else rv.as_relational(_gen)
 
 
-def _solve_inequality(ie, s):
+def _solve_inequality(ie, s, linear=False):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
     expr = ie.lhs - ie.rhs
@@ -497,6 +497,8 @@ def _solve_inequality(ie, s):
         if p.degree() != 1:
             raise NotImplementedError
     except (PolynomialError, NotImplementedError):
+        if linear:
+            raise NotImplementedError
         try:
             return reduce_rational_inequalities([[ie]], s)
         except PolynomialError:

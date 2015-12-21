@@ -523,7 +523,7 @@ def test_issue_8368_7173():
     assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
     assert LT(sinh(x + 3), x, s) == (
         (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
-    assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, Ne(s/2, 1))
+    assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, True)
 
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
