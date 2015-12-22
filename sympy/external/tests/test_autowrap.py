@@ -117,7 +117,7 @@ def runtest_issue_10274(language, backend):
                          " *                                                                            *\n"
                          " *                      This file is part of 'autowrap'                       *\n"
                          " ******************************************************************************/\n"
-                         '#include "wrapped_code_9.h"\n'
+                         "#include " + '"' + file[:-1]+ 'h"' + "\n"
                          "#include <math.h>\n"
                          "\n"
                          "double helper(double a, double b, double c) {\n"
