@@ -411,23 +411,30 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
+        from sympy.core.exprtools import factor_terms
         def hit(v, t, f):
             if not v.is_Relational:
                 return t if v else f
-        if x == y:
-            return True
-        r = hit(x >= y, Max, Min)
-        if r is not None:
-            return r
-        r = hit(y <= x, Max, Min)
-        if r is not None:
-            return r
-        r = hit(x <= y, Min, Max)
-        if r is not None:
-            return r
-        r = hit(y >= x, Min, Max)
-        if r is not None:
-            return r
+        for i in range(2):
+            if x == y:
+                return True
+            r = hit(x >= y, Max, Min)
+            if r is not None:
+                return r
+            r = hit(y <= x, Max, Min)
+            if r is not None:
+                return r
+            r = hit(x <= y, Min, Max)
+            if r is not None:
+                return r
+            r = hit(y >= x, Min, Max)
+            if r is not None:
+                return r
+            # simplification can be expensive, so be conservative
+            # in what is attempted
+            x = factor_terms(x - y)
+            y = S.Zero
+
         return False
 
     def _eval_derivative(self, s):
