@@ -252,7 +252,8 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         return n, m
 
 def mod_inverse(a, m):
-    """Given two number a  and m.This function computes the number
+    """
+    Given two number a  and m.This function computes the number
     c such that   (a*c)%m==1.Meaning that if a is multiplied by c 
     then the remainder obtained on division with m is 1.  
     The value of m need not be a prime.This function  returns  
@@ -271,16 +272,21 @@ def mod_inverse(a, m):
     Because 3*4=12   and 12 = 1 mod(11)
     
     Similarly
-    >>> modular_inverse(5,11)
+    >>> mod_inverse(5,11)
     9
-    >>> modular_inverse(21124921,521512)
+    >>> mod_inverse(21124921,521512)
     7713
 
     Exceptions case Examples
-    >>> modular_inverse(2,4)   
-    Exception ('modular inverse does not exist')
-    >>>modular_inverse(12,14) 
-    Exception ('modular inverse does not exist')
+    >>> mod_inverse(2,4)   
+    Traceback (most recent call last):
+    ...
+    Exception: modular inverse does not exist
+    
+    >>> mod_inverse(12,14) 
+    Traceback (most recent call last):
+    ...
+    Exception: modular inverse does not exist
 
     Sources
     ========
