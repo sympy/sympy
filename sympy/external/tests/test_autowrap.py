@@ -1,3 +1,6 @@
+import sympy
+import tempfile
+import os
 from sympy import symbols, Eq
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
@@ -100,8 +103,6 @@ def runtest_ufuncify(language, backend):
 
 
 def runtest_issue_10274(language, backend):
-    import tempfile
-    import os
     expr = (a - b + c)**(13)
     tmp = tempfile.mkdtemp()
     f = autowrap(expr, language, backend, tempdir=tmp, helpers=('helper', a - b + c, (a, b, c)))
@@ -111,7 +112,7 @@ def runtest_issue_10274(language, backend):
         if file.startswith("wrapped_code_") and file.endswith(".c"):
             fil = open(tmp + '/' + file)
             assert fil.read() == ("/******************************************************************************\n"
-                         " *                    Code generated with sympy 0.7.7.dev                     *\n"
+                         " *                    Code generated with sympy "+ sympy.__version__+"                     *\n"
                          " *                                                                            *\n"
                          " *              See http://www.sympy.org/ for more information.               *\n"
                          " *                                                                            *\n"
