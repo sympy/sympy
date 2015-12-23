@@ -254,20 +254,20 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 def mod_inverse(a, m):
     """
     Given two number a  and m.This function computes the number
-    c such that   (a*c)%m==1.Meaning that if a is multiplied by c 
-    then the remainder obtained on division with m is 1.  
-    The value of m need not be a prime.This function  returns  
-    the value of c  if some c exists.Otherwies it raises an 
+    c such that   (a*c)%m==1.Meaning that if a is multiplied by c
+    then the remainder obtained on division with m is 1.
+    The value of m need not be a prime.This function  returns
+    the value of c  if some c exists.Otherwies it raises an
     Exception stating that modular inverse does not exist.
-
+    
     Examples
     ========
     >>> from sympy.ntheory.modular import mod_inverse
     >>> mod_inverse(3,11)
     4
     
-    Suppose we wish to find modular multiplicative inverse x of 
-    3 modulo 11.This is the same as finding x such that 3*x = 1 (mod 11) 
+    Suppose we wish to find modular multiplicative inverse x of
+    3 modulo 11.This is the same as finding x such that 3*x = 1 (mod 11)
     we find one value of x that satisfies this congruence is 4.
     Because 3*4=12   and 12 = 1 mod(11)
     
@@ -276,18 +276,18 @@ def mod_inverse(a, m):
     9
     >>> mod_inverse(21124921,521512)
     7713
-
+    
     Exceptions case Examples
-    >>> mod_inverse(2,4)   
+    >>> mod_inverse(2,4)
     Traceback (most recent call last):
     ...
     Exception: modular inverse does not exist
     
-    >>> mod_inverse(12,14) 
+    >>> mod_inverse(12,14)
     Traceback (most recent call last):
     ...
     Exception: modular inverse does not exist
-
+    
     Sources
     ========
     https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
