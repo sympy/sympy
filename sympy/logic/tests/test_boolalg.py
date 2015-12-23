@@ -482,6 +482,12 @@ def test_ITE():
     assert ITE(Or(A, False), And(B, True), False) is false
 
 
+def test_ITE_diff():
+    # analogous to Piecewise.diff
+    x = symbols('x')
+    assert ITE(x > 0, x**2, x).diff(x) == ITE(x > 0, 2*x, 1)
+
+
 def test_is_literal():
     assert is_literal(True) is True
     assert is_literal(False) is True
