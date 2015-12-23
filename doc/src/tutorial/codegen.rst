@@ -1,6 +1,6 @@
-==========================
-Code Generation from Sympy
-==========================
+===============
+Code Generation
+===============
 Several submodules in Sympy are provided to generate directly compilable 
 code from Sympy expressions. Furthermore, there are submodules provided 
 that help use other numeric systems as backend for construction and 
@@ -58,7 +58,7 @@ An example that shows the use of ``Assignment``::
     >>> from sympy.printing.codeprinter import Assignment
     >>> x, y, z = symbols('x y z')
     >>> mat = Matrix([x, y, z]).T
-    >>> known_mat = MatrixSymbol('K',1,3)
+    >>> known_mat = MatrixSymbol('K', 1, 3)
     >>> Assignment(known_mat, mat)  # doctest: +SKIP
     Assignment(K, Matrix([[x, y, z]]))
     >>> Assignment(known_mat, mat).lhs
@@ -78,7 +78,7 @@ Examples::
       2⋅r   
     >>> ccode(expr) # doctest: +SKIP
     -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to = "E") # doctest: +SKIP
+    >>> ccode(expr, assign_to="E") # doctest: +SKIP
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
 ``Piecewise`` expressions are converted into conditionals. If an
@@ -182,7 +182,7 @@ support and see how it works::
     >>> from sympy import pprint
     >>> k_i, gamma_i, gamma_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
     >>> beta = symbols("beta")
-    >>> e = k_i* gamma_i*gamma_s/(r_is**3)
+    >>> e = k_i*gamma_i*gamma_s/(r_is**3)
     >>> expr = e*2*I_z*S_z*(3*(cos(beta))**2 - 1)/2
     >>> from sympy import init_printing
     >>> init_printing()
@@ -225,7 +225,7 @@ For instance::
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy import symbols
     >>> length, breadth, height = symbols('length, breadth, height')
-    >>> [(c_name, c_code), (h_name, c_header)] = codegen(('volume', length*breadth*height),"C","test",header=False,empty=False)
+    >>> [(c_name, c_code), (h_name, c_header)] = codegen(('volume', length*breadth*height), "C", "test", header=False, empty=False)
     >>> print(c_name)
     test.c
     >>> print(c_code)
@@ -265,7 +265,7 @@ given prefix.
 
 Here is an example::
 
-    >>> [(f_name, f_code), header] = codegen(("volume",length*breadth*height), "F95",header=True, empty=False, argument_sequence=(breadth, length), global_vars=(height,))
+    >>> [(f_name, f_code), header] = codegen(("volume", length*breadth*height), "F95", header=True, empty=False, argument_sequence=(breadth, length), global_vars=(height,))
     >>> print(f_code)
     !******************************************************************************
     !*                    Code generated with sympy 0.7.7.dev                     *
@@ -301,8 +301,8 @@ For example::
     >>> from sympy import symbols, init_printing
     >>> init_printing()
     >>> x, y = symbols('x y')
-    >>> expr = R_nl(3,y,x,6)
-    >>> r = make_routine('my_routine',expr)
+    >>> expr = R_nl(3, y, x, 6)
+    >>> r = make_routine('my_routine', expr)
     >>> [arg.result_var for arg in r.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
     >>> [arg.expr for arg in r.results]
@@ -409,9 +409,9 @@ Checking the Fortran source code in the directory specified reveals this::
 
     end subroutine
 
-Using the argument 'args' along with it changes argument sequence::
+Using the argument ``args`` along with it changes argument sequence::
 
-    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp',args=[y,x,m,omega])   # doctest: +SKIP
+    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp', args=[y, x, m, omega])   # doctest: +SKIP
 
 yields::
 
@@ -452,10 +452,10 @@ and methods. An illustration::
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy import symbols
     >>> from sympy.physics.hydrogen import R_nl
-    >>> a,r = symbols('a,r')
-    >>> psi_nl = R_nl(1,0,a,r)
+    >>> a, r = symbols('a, r')
+    >>> psi_nl = R_nl(1, 0, a, r)
     >>> f = binary_function('f', psi_nl)    # doctest: +SKIP
-    >>> f(a,r).evalf(3, subs={a: 1, r: 2})  # doctest: +SKIP
+    >>> f(a, r).evalf(3, subs={a: 1, r: 2})  # doctest: +SKIP
     0.766
 
 
@@ -478,7 +478,7 @@ Let us see an example::
     >>> init_printing()
     >>> from sympy.physics.hydrogen import R_nl
     >>> x = symbols('x')
-    >>> expr = R_nl(3,1,x,6)
+    >>> expr = R_nl(3, 1, x, 6)
     >>> expr
                     -2⋅x
     8⋅x⋅(-4⋅x + 4)⋅ℯ    
@@ -500,7 +500,7 @@ Let us compare the speeds::
     >>> fn_numpy = lambdify(x, expr, 'numpy')   # doctest: +SKIP
     >>> fn_fortran = ufuncify([x], expr, backend='f2py')    # doctest: +SKIP
     >>> from numpy import linspace  # doctest: +SKIP
-    >>> xx=linspace(0,1,5)  # doctest: +SKIP
+    >>> xx = linspace(0, 1, 5)  # doctest: +SKIP
     >>> fn_numpy(xx)    # doctest: +SKIP
     [ 0.          1.21306132  0.98101184  0.44626032  0.        ]
     >>> fn_fortran(xx)  # doctest: +SKIP
