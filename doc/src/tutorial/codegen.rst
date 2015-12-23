@@ -70,7 +70,7 @@ Examples::
 
     >>> from sympy import ccode, symbols, Rational
     >>> Z, k, e, r = symbols('Z k e r')
-    >>> expr = (Rational(-1, 2)*Z*k*(e**2)/r)
+    >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
     >>> expr # doctest: +SKIP
         2   
     -Z⋅e ⋅k 
@@ -111,7 +111,7 @@ looped over::
     >>> t = IndexedBase('t', shape=(len_y,))
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
-    >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> e = Eq(Dy[i], (y[i+1]-y[i]) / (t[i+1]-t[i]))
     >>> jscode(e.rhs, assign_to=e.lhs, contract=False) # doctest: +SKIP
     Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
 
@@ -156,8 +156,8 @@ An example of mathematica code printer::
     >>> from sympy import sin, Function, pprint, summation
     >>> x = Function('x')
     >>> n, T, t = symbols('n T t')
-    >>> e = x(n*T)*sin((t-n*T)/T)
-    >>> e = e/((-T*n + t)/T)
+    >>> e = x(n*T) * sin((t - n*T) / T)
+    >>> e = e / ((-T*n + t) / T)
     >>> e   # doctest: +SKIP
     T*x(T*n)*sin((-T*n + t)/T)/(-T*n + t)
     >>> pprint(e)   # doctest: +SKIP
@@ -182,8 +182,8 @@ support and see how it works::
     >>> from sympy import pprint
     >>> k_i, gamma_i, gamma_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
     >>> beta = symbols("beta")
-    >>> e = k_i*gamma_i*gamma_s/(r_is**3)
-    >>> expr = e*2*I_z*S_z*(3*(cos(beta))**2 - 1)/2
+    >>> e = k_i * gamma_i * gamma_s / (r_is**3)
+    >>> expr = e * 2 * I_z * S_z * (3 * (cos(beta))**2 - 1) / 2
     >>> from sympy import init_printing
     >>> init_printing()
     >>> pprint(expr)    # doctest: +SKIP
