@@ -1887,3 +1887,9 @@ def test_issue_8247_8354():
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
     assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
+
+def test_issue_10303():
+    from sympy import expand
+    a = (2**pi*(1 + 2**pi))
+    d = (a - expand(a))
+    assert d.is_comparable == False
