@@ -281,12 +281,12 @@ def mod_inverse(a, m):
     >>> mod_inverse(2,4)
     Traceback (most recent call last):
     ...
-    Exception: modular inverse does not exist
+    ValueError: modular inverse does not exist
 
     >>> mod_inverse(12,14)
     Traceback (most recent call last):
     ...
-    Exception: modular inverse does not exist
+    ValueError: modular inverse does not exist
 
     Sources
     ========
@@ -295,6 +295,6 @@ def mod_inverse(a, m):
     """
     x, y, g = igcdex(a, m)
     if g != 1:
-        raise Exception('modular inverse does not exist')
+        raise ValueError('modular inverse does not exist')
     else:
         return x % m
