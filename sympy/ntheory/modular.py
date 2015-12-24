@@ -293,6 +293,7 @@ def mod_inverse(a, m):
     https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
     https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
     """
+    a, m = as_int(a), as_int(m)
     x, y, g = igcdex(a, m)
     if g != 1:
         raise ValueError('modular inverse does not exist')
