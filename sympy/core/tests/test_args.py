@@ -193,6 +193,12 @@ def test_sympy__combinatorics__partitions__IntegerPartition():
     assert _test_args(IntegerPartition([1]))
 
 
+def test_sympy__combinatorics__groups__FreeGroup():
+    from sympy.combinatorics.groups import FreeGroup
+    assert _test_args(FreeGroup(3))
+    assert _test_args(FreeGroup(3, "swap"))
+
+
 def test_sympy__concrete__products__Product():
     from sympy.concrete.products import Product
     assert _test_args(Product(x, (x, 0, 10)))
