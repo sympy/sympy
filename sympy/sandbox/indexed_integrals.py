@@ -2,7 +2,7 @@ from sympy.tensor import Indexed
 from sympy import Integral, Dummy, sympify, Tuple
 
 
-class _IndexedIntegral(Integral):
+class IndexedIntegral(Integral):
     """
     Experimental class to test integration by indexed variables.
 
@@ -15,11 +15,11 @@ class _IndexedIntegral(Integral):
     Examples
     ========
 
-    >>> from sympy.sandbox.indexed_integrals import _IndexedIntegral
+    >>> from sympy.sandbox.indexed_integrals import IndexedIntegral
     >>> from sympy import IndexedBase, symbols
     >>> A = IndexedBase('A')
     >>> i, j = symbols('i j', integer=True)
-    >>> ii = _IndexedIntegral(A[i], A[i])
+    >>> ii = IndexedIntegral(A[i], A[i])
     >>> ii
     Integral(_A[i], _A[i])
     >>> ii.doit()
@@ -28,7 +28,7 @@ class _IndexedIntegral(Integral):
     If the indices are different, indexed objects are considered to be
     different variables:
 
-    >>> i2 = _IndexedIntegral(A[j], A[i])
+    >>> i2 = IndexedIntegral(A[j], A[i])
     >>> i2
     Integral(A[j], _A[i])
     >>> i2.doit()
@@ -36,7 +36,7 @@ class _IndexedIntegral(Integral):
     """
 
     def __new__(cls, function, *limits, **assumptions):
-        repl, limits = _IndexedIntegral._indexed_process_limits(limits)
+        repl, limits = IndexedIntegral._indexed_process_limits(limits)
         function = sympify(function)
         function = function.xreplace(repl)
         obj = Integral.__new__(cls, function, *limits, **assumptions)
@@ -45,7 +45,7 @@ class _IndexedIntegral(Integral):
         return obj
 
     def doit(self):
-        res = super(_IndexedIntegral, self).doit()
+        res = super(IndexedIntegral, self).doit()
         return res.xreplace(self._indexed_reverse_repl)
 
     @staticmethod
