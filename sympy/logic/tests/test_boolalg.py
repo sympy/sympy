@@ -1,12 +1,19 @@
-from sympy import (symbols, Dummy, simplify, Equality, S, Interval,
-                   oo, EmptySet, Q)
+from sympy.assumptions.ask import Q
+from sympy.core.numbers import oo
+from sympy.core.relational import Equality
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
-    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
-    SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
-    distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
-    simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table
-)
+    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
+    POSform, SOPform, Xor, conjuncts, disjuncts,
+    distribute_or_over_and, distribute_and_over_or,
+    eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
+    to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
+    BooleanAtom, is_literal, term_to_integer, integer_to_term,
+    truth_table)
+
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
@@ -173,6 +180,7 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1, 0) is false
     assert Equivalent(A < 1, A >= 1, 1) is false
     assert Equivalent(A < 1, S(1) > A) == Equivalent(1, 1) == Equivalent(0, 0)
+    assert Equivalent(Equality(A, B), Equality(B, A)) is true
 
 
 def test_equals():
@@ -474,6 +482,12 @@ def test_ITE():
     assert ITE(Or(A, False), And(B, True), False) is false
 
 
+def test_ITE_diff():
+    # analogous to Piecewise.diff
+    x = symbols('x')
+    assert ITE(x > 0, x**2, x).diff(x) == ITE(x > 0, 2*x, 1)
+
+
 def test_is_literal():
     assert is_literal(True) is True
     assert is_literal(False) is True
@@ -645,6 +659,9 @@ def test_bool_as_set():
     assert And(x <= 2, x >= -2).as_set() == Interval(-2, 2)
     assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
     assert Not(x > 2).as_set() == Interval(-oo, 2)
+    # issue 10240
+    assert Not(And(x > 2, x < 3)).as_set() == \
+        Union(Interval(-oo,2),Interval(3,oo))
     assert true.as_set() == S.UniversalSet
     assert false.as_set() == EmptySet()
 

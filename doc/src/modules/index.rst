@@ -27,6 +27,7 @@ access any SymPy module, or use this contens:
    galgebra/index.rst
    geometry/index.rst
    integrals/integrals.rst
+   liealgebras/index.rst
    logic.rst
    matrices/index.rst
    polys/index.rst

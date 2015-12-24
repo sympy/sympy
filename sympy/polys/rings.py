@@ -508,6 +508,19 @@ class PolyRing(DefaultPrinting, IPolys):
         else:
             return self.clone(symbols=symbols, domain=self.drop(*gens))
 
+    def compose(self, other):
+        """Add the generators of ``other`` to ``self``"""
+        if self != other:
+            syms = set(self.symbols).union(set(other.symbols))
+            return self.clone(symbols=list(syms))
+        else:
+            return self
+
+    def add_gens(self, symbols):
+        """Add the elements of ``symbols`` as generators to ``self``"""
+        syms = set(self.symbols).union(set(symbols))
+        return self.clone(symbols=list(syms))
+
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
@@ -773,7 +786,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     continue
                 symbol = printer.parenthesize(symbols[i], prec_atom-1)
                 if exp != 1:
-                    if exp != int(exp):
+                    if exp != int(exp) or exp < 0:
                         sexp = printer.parenthesize(exp, prec_atom)
                     else:
                         sexp = exp
@@ -1130,6 +1143,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             else:
                 p[ring.monomial_pow(monom, n)] = coeff**n
             return p
+
+        # For ring series, we need negative and rational exponent support only
+        # with monomials.
+        n = int(n)
+        if n < 0:
+            raise ValueError("Negative exponent")
+
         elif n == 1:
             return self.copy()
         elif n == 2:

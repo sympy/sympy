@@ -614,7 +614,6 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
     ])
 

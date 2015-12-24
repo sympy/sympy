@@ -18,7 +18,7 @@ class AskPrimeHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_prime
 
     @staticmethod
@@ -82,7 +82,7 @@ class AskPrimeHandler(CommonHandler):
 class AskCompositeHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_composite
 
     @staticmethod
@@ -108,7 +108,7 @@ class AskCompositeHandler(CommonHandler):
 class AskEvenHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_even
 
     @staticmethod
@@ -236,7 +236,7 @@ class AskOddHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_odd
 
     @staticmethod

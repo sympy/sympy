@@ -89,6 +89,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
+        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -134,6 +135,10 @@ class Add(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, AccumBounds):
+                coeff = o.__add__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -932,6 +937,10 @@ class Add(Expr, AssocOp):
     def _sorted_args(self):
         from sympy.core.compatibility import default_sort_key
         return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
+
+    def _eval_difference_delta(self, n, step):
+        from sympy.series.limitseq import difference_delta as dd
+        return self.func(*[dd(a, n, step) for a in self.args])
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

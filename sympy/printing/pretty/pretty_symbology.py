@@ -431,6 +431,7 @@ _xsym = {
     '<=':  ('<=', U('LESS-THAN OR EQUAL TO')),
     '>=':  ('>=', U('GREATER-THAN OR EQUAL TO')),
     '!=':  ('!=', U('NOT EQUAL TO')),
+    ':=':  (':=', ':='),
     '*':   ('*', U('DOT OPERATOR')),
     '-->': ('-->', U('EM DASH') + U('EM DASH') +
             U('BLACK RIGHT-POINTING TRIANGLE') if U('EM DASH')
@@ -468,6 +469,9 @@ atoms_table = {
     'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet':                U('EMPTY SET'),
     'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Naturals0':               (U('DOUBLE-STRUCK CAPITAL N') and
+                                (U('DOUBLE-STRUCK CAPITAL N') +
+                                 U('SUBSCRIPT ZERO'))),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
     'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),

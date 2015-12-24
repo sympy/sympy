@@ -75,8 +75,8 @@ def test_B2():
     d, e = FiniteSet(i), FiniteSet(j, k, l)
 
     assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
-            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, e))))
-    # {j} U Intersection({m}, {j, k} U Intersection({i}, {j, k, l}))
+            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, FiniteSet(l)))))
+    # {j} U Intersection({m}, {j, k} U Intersection({i}, {l}))
 
 
 
@@ -891,9 +891,9 @@ def test_M7():
 
 @XFAIL  # There are an infinite number of solutions.
 def test_M8():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     z = symbols('z', complex=True)
-    assert solveset(exp(2*x) + 2*exp(x) + 1 - z, x) == \
+    assert solveset(exp(2*x) + 2*exp(x) + 1 - z, x, S.Reals) == \
         FiniteSet(log(1 + z - 2*sqrt(z))/2, log(1 + z + 2*sqrt(z))/2)
     # This one could be simplified better (the 1/2 could be pulled into the log
     # as a sqrt, and the function inside the log can be factored as a square,
@@ -905,7 +905,7 @@ def test_M8():
 
 @XFAIL
 def test_M9():
-    x = symbols('x', complex=True)
+    x = symbols('x')
     raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 
@@ -1024,8 +1024,8 @@ def test_M28():
 
 
 def test_M29():
-    x = symbols('x', real=True)
-    assert solveset(abs(x - 1) - 2) == FiniteSet(-1, 3)
+    x = symbols('x')
+    assert solveset(abs(x - 1) - 2, domain=S.Reals) == FiniteSet(-1, 3)
 
 
 @XFAIL
@@ -1198,55 +1198,54 @@ def test_N8():
 
 
 def test_N9():
-    x = Symbol('x', real=True)
-    assert solveset(abs(x - 1) > 2) == Union(Interval(-oo, -1, False, True),
+    x = Symbol('x')
+    assert solveset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
                                              Interval(3, oo, True))
 
 
 def test_N10():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
     p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solveset(expand(p) < 0) == Union(Interval(-oo, 1, True, True),
+    assert solveset(expand(p) < 0, domain=S.Reals) == Union(Interval(-oo, 1, True, True),
                                             Interval(2, 3, True, True),
                                             Interval(4, 5, True, True))
 
 
 def test_N11():
-    x = Symbol('x', real=True)
-    assert solveset(6/(x - 3) <= 3) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
+    x = Symbol('x')
+    assert solveset(6/(x - 3) <= 3, domain=S.Reals) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
 
 
 @XFAIL
 def test_N12():
-    x = Symbol('x', real=True)
-    assert solveset(sqrt(x) < 2) == Interval(0, 4, False, True)
+    x = Symbol('x')
+    assert solveset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
 
 
-@XFAIL
 def test_N13():
-    x = Symbol('x', real=True)
-    assert solveset(sin(x) < 2) == S.Reals
+    x = Symbol('x')
+    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
 @XFAIL
 def test_N14():
     # raises NotImplementedError: can't reduce [sin(x) < 1]
-    x = Symbol('x', real=True)
-    assert solveset(sin(x) < 1) == Union(Interval(-oo, pi/2, True, True),
+    x = Symbol('x')
+    assert solveset(sin(x) < 1, domain=S.Reals) == Union(Interval(-oo, pi/2, True, True),
                                          Interval(pi/2, oo, True, True))
 
 
 @XFAIL
 def test_N15():
-    r, t = symbols('r t', real=True)
+    r, t = symbols('r t')
     # raises NotImplementedError: only univariate inequalities are supported
-    solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r)
+    solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r, S.Reals)
 
 
 @XFAIL
 def test_N16():
-    r, t = symbols('r t', real=True)
-    solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r)
+    r, t = symbols('r t')
+    solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r, S.Reals)
 
 
 @XFAIL
@@ -1798,7 +1797,7 @@ def test_R1():
 
 @XFAIL
 def test_R2():
-    m, b = symbols('m b', real=True)
+    m, b = symbols('m b')
     i, n = symbols('i n', integer=True, positive=True)
     xn = MatrixSymbol('xn', n, 1)
     yn = MatrixSymbol('yn', n, 1)
@@ -1806,7 +1805,7 @@ def test_R2():
     f1 = diff(f, m)
     f2 = diff(f, b)
     # raises TypeError: solveset() takes at most 2 arguments (3 given)
-    solveset((f1, f2), m, b)
+    solveset((f1, f2), m, b, domain=S.Reals)
 
 
 @XFAIL

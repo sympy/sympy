@@ -438,7 +438,6 @@ def test_integrate_DiracDelta():
     # This is here to check that deltaintegrate is being called, but also
     # to test definite integrals. More tests are in test_deltafunctions.py
     assert integrate(DiracDelta(x) * f(x), (x, -oo, oo)) == f(0)
-    assert integrate(DiracDelta(x) * f(x), (x, 0, oo)) == f(0)/2
     assert integrate(DiracDelta(x)**2, (x, -oo, oo)) == DiracDelta(0)
     # issue 4522
     assert integrate(integrate((4 - 4*x + x*y - 4*y) * \

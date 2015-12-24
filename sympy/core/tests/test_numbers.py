@@ -12,6 +12,7 @@ from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
+t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
@@ -739,6 +740,10 @@ def test_Infinity_inequations():
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
+    assert (-oo < -Float('inf')) ==  False
+    assert (oo > Float('inf')) == False
+    assert -oo >= -Float('inf')
+    assert oo <= Float('inf')
 
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)
@@ -1495,3 +1500,17 @@ def test_comp():
 
 def test_issue_9491():
     assert oo**zoo == nan
+
+
+def test_issue_10063():
+    assert 2**Float(3) == Float(8)
+
+
+def test_issue_10020():
+    assert oo**I is S.NaN
+    assert oo**(1 + I) is S.ComplexInfinity
+    assert oo**(-1 + I) is S.Zero
+    assert (-oo)**I is S.NaN
+    assert (-oo)**(-1 + I) is S.Zero
+    assert oo**t == Pow(oo, t, evaluate=False)
+    assert (-oo)**t == Pow(-oo, t, evaluate=False)

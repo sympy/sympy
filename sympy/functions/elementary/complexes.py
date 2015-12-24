@@ -427,9 +427,33 @@ class Abs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_refine(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return S.Zero
+        if arg.is_nonnegative:
+            return arg
+        if arg.is_nonpositive:
+            return -arg
+        if arg.is_Add:
+            expr_list = []
+            for _arg in Add.make_args(arg):
+                if _arg.is_negative or _arg.is_negative is None:
+                    return None
+                if _arg.is_zero:
+                    expr_list.append(S.Zero)
+                elif _arg.is_nonnegative:
+                    expr_list.append(_arg)
+                elif _arg.is_nonpositive:
+                    expr_list.append(-_arg)
+            if expr_list:
+                return Add(*expr_list)
+            return arg
+
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
+        from sympy import Atom
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -441,7 +465,7 @@ class Abs(Function):
         if arg.is_Mul:
             known = []
             unk = []
-            for t in arg.args:
+            for t in Mul.make_args(arg):
                 tnew = cls(t)
                 if tnew.func is cls:
                     unk.append(tnew.args[0])
@@ -468,12 +492,13 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_zero:  # it may be an Expr that is zero
-            return S.Zero
-        if arg.is_nonnegative:
-            return arg
-        if arg.is_nonpositive:
-            return -arg
+        if arg.is_number or isinstance(arg, (cls, Atom)):
+            if arg.is_zero:
+                return S.Zero
+            if arg.is_nonnegative:
+                return arg
+            if arg.is_nonpositive:
+                return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:

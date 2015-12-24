@@ -16,3 +16,5 @@ Contents
     series.rst
     sequences.rst
     fourier.rst
+    formal.rst
+    limitseq.rst

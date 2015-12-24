@@ -80,7 +80,7 @@ class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"
 
-    Singleton definitions involving (0, 1, -1, oo, -oo):
+    Singleton definitions involving (0, 1, -1, oo, -oo, I, -I):
 
     +--------------+---------+-----------------------------------------------+
     | expr         | value   | reason                                        |
@@ -124,6 +124,18 @@ class Pow(Expr):
     | (-oo)**oo    | nan     |                                               |
     | (-oo)**-oo   |         |                                               |
     +--------------+---------+-----------------------------------------------+
+    | oo**I        | nan     | oo**e could probably be best thought of as    |
+    | (-oo)**I     |         | the limit of x**e for real x as x tends to    |
+    |              |         | oo. If e is I, then the limit does not exist  |
+    |              |         | and nan is used to indicate that.             |
+    +--------------+---------+-----------------------------------------------+
+    | oo**(1+I)    | zoo     | If the real part of e is positive, then the   |
+    | (-oo)**(1+I) |         | limit of abs(x**e) is oo. So the limit value  |
+    |              |         | is zoo.                                       |
+    +--------------+---------+-----------------------------------------------+
+    | oo**(-1+I)   | 0       | If the real part of e is negative, then the   |
+    | -oo**(-1+I)  |         | limit is 0.                                   |
+    +--------------+---------+-----------------------------------------------+
 
     Because symbolic computations are more flexible that floating point
     calculations and we prefer to never return an incorrect answer,
@@ -162,7 +174,9 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif e.is_integer and _coeff_isneg(b):
+            # Only perform autosimplification if exponent or base is a Symbol or number
+            elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
+                e.is_integer and _coeff_isneg(b):
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
@@ -206,8 +220,16 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
+    def _eval_refine(self):
+        b, e = self.as_base_exp()
+        if e.is_integer and _coeff_isneg(b):
+            if e.is_even:
+                return Pow(-b, e)
+            elif e.is_odd:
+                return -Pow(-b, e)
+
     def _eval_power(self, other):
-        from sympy import Abs, arg, exp, floor, im, log, re, sign
+        from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
@@ -251,9 +273,9 @@ class Pow(Expr):
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
                     if b.is_real:
-                        b = abs(b)
+                        b = refine(abs(b))
                     if b.is_imaginary:
-                        b = abs(im(b))*S.ImaginaryUnit
+                        b = refine(abs(im(b)))*S.ImaginaryUnit
 
                 if (abs(e) < 1) == True or (e == 1) == True:
                     s = 1  # floor = 0
@@ -1433,6 +1455,13 @@ class Pow(Expr):
             return None
 
         return e.equals(0)
+
+    def _eval_difference_delta(self, n, step):
+        b, e = self.args
+        if e.has(n) and not b.has(n):
+            new_e = e.subs(n, n + step)
+            return (b**(new_e - e) - 1) * self
+
 
 from .add import Add
 from .numbers import Integer

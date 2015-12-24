@@ -705,6 +705,9 @@ def test_PolyElement___pow__():
 
     assert f**0 == 1
     assert f**1 == f
+    raises(ValueError, lambda: f**(-1))
+
+    assert x**(-1) == x**(-1)
 
     assert f**2 == f._pow_generic(2) == f._pow_multinomial(2) == 4*x**2 + 12*x + 9
     assert f**3 == f._pow_generic(3) == f._pow_multinomial(3) == 8*x**3 + 36*x**2 + 54*x + 27
