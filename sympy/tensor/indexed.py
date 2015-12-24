@@ -108,7 +108,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Expr, Tuple, Symbol, sympify, S
+from sympy.core import Expr, AtomicExpr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
 
 
@@ -272,7 +272,7 @@ class Indexed(Expr):
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
-class IndexedBase(Expr, NotIterable):
+class IndexedBase(AtomicExpr, NotIterable):
     """Represent the base or stem of an indexed object
 
     The IndexedBase class represent an array that contains elements. The main purpose
@@ -359,7 +359,10 @@ class IndexedBase(Expr, NotIterable):
             return self._args
 
     def _hashable_content(self):
-        return Expr._hashable_content(self) + (self._shape,)
+        if self._shape:
+            return Expr._hashable_content(self) + (self._shape,)
+        else:
+            return Expr._hashable_content(self)
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):
