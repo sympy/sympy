@@ -643,7 +643,23 @@ def solve(f, *symbols, **flags):
     Notes
     =====
 
-    assumptions aren't checked when `solve()` input involves
+    solve() with check=True (default) will run through the symbol tags to
+    elimate unwanted solutions.  If no assumptions are included all possible
+    solutions will be returned.
+
+        >>> from sympy import Symbol, solve
+        >>> x = Symbol("x")
+        >>> solve(x**2 - 1)
+        [-1, 1]
+
+    By using the positive tag only one solution will be returned:
+
+        >>> pos = Symbol("pos", positive=True)
+        >>> solve(pos**2 - 1)
+        [1]
+
+
+    Assumptions aren't checked when `solve()` input involves
     relationals or bools.
 
     When the solutions are checked, those that make any denominator zero
