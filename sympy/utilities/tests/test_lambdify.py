@@ -18,7 +18,7 @@ MutableDenseMatrix = Matrix
 numpy = import_module('numpy')
 numexpr = import_module('numexpr')
 
-w, x, y, z = symbols('w,x,y,z')
+w, x, y, z = symbols('w, x, y, z')
 
 #================== Test different arguments =======================
 
@@ -142,7 +142,17 @@ def test_mpmath_transl():
 
 def test_numpy_transl():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
+
+    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
+    for sym, nump in NUMPY_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert nump in numpy.__dict__
+
+
+def test_numpy_transl():
+    if not numpy:
+        skip("numpy is not installed.")
 
     from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
     for sym, nump in NUMPY_TRANSLATIONS.items():
@@ -152,15 +162,16 @@ def test_numpy_transl():
 
 def test_numpy_translation_abs():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
 
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
 
+
 def test_numexpr_printer():
     if not numexpr:
-        skip("numexpr not installed.")
+        skip("numexpr is not installed.")
 
     # if translation/printing is done incorrectly then evaluating
     # a lambdified numexpr expression will throw an exception
@@ -181,9 +192,10 @@ def test_numexpr_printer():
         f = lambdify(args, ssym(*args), modules='numexpr')
         assert f(*(1, )*nargs) is not None
 
+
 def test_issue_9334():
     if not numexpr:
-        skip("numexpr not installed.")
+        skip("numexpr is not installed.")
     if not numpy:
         skip("numpy not installed.")
     expr = sympy.S('b*a - sqrt(a**2)')
@@ -294,9 +306,10 @@ def test_matrix():
     assert lambdify(v, J, modules='sympy')(1, 2) == sol
     assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
+
 def test_numpy_matrix():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     #Lambdify array first, to ensure return to array as default
@@ -305,32 +318,36 @@ def test_numpy_matrix():
     #Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)
 
+
 def test_numpy_transpose():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     A = Matrix([[1, x], [0, 1]])
     f = lambdify((x), A.T, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
 
+
 def test_numpy_inverse():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     A = Matrix([[1, x], [0, 1]])
     f = lambdify((x), A**-1, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, -2], [0,  1]]))
 
+
 def test_numpy_old_matrix():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+
 def test_numpy_piecewise():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     pieces = Piecewise((x, x < 3), (x**2, x > 5), (0, True))
     f = lambdify(x, pieces, modules="numpy")
     numpy.testing.assert_array_equal(f(numpy.arange(10)),
@@ -342,7 +359,7 @@ def test_numpy_piecewise():
 
 def test_numpy_logical_ops():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     and_func = lambdify((x, y), And(x, y), modules="numpy")
     or_func = lambdify((x, y), Or(x, y), modules="numpy")
     not_func = lambdify((x), Not(x), modules="numpy")
@@ -352,9 +369,10 @@ def test_numpy_logical_ops():
     numpy.testing.assert_array_equal(or_func(arr1, arr2), numpy.array([True, True]))
     numpy.testing.assert_array_equal(not_func(arr2), numpy.array([True, False]))
 
+
 def test_numpy_matmul():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     xmat = Matrix([[x, y], [z, 1+z]])
     ymat = Matrix([[x**2], [Abs(x)]])
     mat_func = lambdify((x, y, z), xmat*ymat, modules="numpy")
@@ -367,9 +385,9 @@ def test_numpy_matmul():
 
 def test_numpy_numexpr():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     if not numexpr:
-        skip("numexpr not installed.")
+        skip("numexpr is not installed.")
     a, b, c = numpy.random.randn(3, 128, 128)
     # ensure that numpy and numexpr return same value for complicated expression
     expr = sin(x) + cos(y) + tan(z)**2 + Abs(z-y)*acos(sin(y*z)) + \
@@ -378,20 +396,22 @@ def test_numpy_numexpr():
     nefunc = lambdify((x, y, z), expr, modules='numexpr')
     assert numpy.allclose(npfunc(a, b, c), nefunc(a, b, c))
 
+
 def test_numexpr_userfunctions():
     if not numpy:
-        skip("numpy not installed.")
+        skip("numpy is not installed.")
     if not numexpr:
-        skip("numexpr not installed.")
+        skip("numexpr is not installed.")
     a, b = numpy.random.randn(2, 10)
     uf = type('uf', (Function, ),
               {'eval' : classmethod(lambda x, y : y**2+1)})
     func = lambdify(x, 1-uf(x), modules='numexpr')
     assert numpy.allclose(func(a), -(a**2))
 
-    uf = implemented_function(Function('uf'), lambda x, y : 2*x*y+1)
+    uf = implemented_function(Function('uf'), lambda x, y: 2*x*y+1)
     func = lambdify((x, y), uf(x, y), modules='numexpr')
     assert numpy.allclose(func(a, b), 2*a*b+1)
+
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
@@ -497,16 +517,16 @@ def test_dummification():
     t = symbols('t')
     F = Function('F')
     G = Function('G')
-    #"\alpha" is not a valid python variable name
-    #lambdify should sub in a dummy for it, and return
-    #without a syntax error
+    # "\alpha" is not a valid python variable name
+    # lambdify should sub in a dummy for it, and return
+    # without a syntax error
     alpha = symbols(r'\alpha')
     some_expr = 2 * F(t)**2 / G(t)
     lam = lambdify((F(t), G(t)), some_expr)
     assert lam(3, 9) == 2
     lam = lambdify(sin(t), 2 * sin(t)**2)
     assert lam(F(t)) == 2 * F(t)**2
-    #Test that \alpha was properly dummified
+    # Test that \alpha was properly dummified
     lam = lambdify((alpha, t), 2*alpha + t)
     assert lam(2, 1) == 5
     raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
@@ -553,8 +573,8 @@ def test_special_printers():
         def _print_Rational(self, expr):
             return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
 
-    def intervalrepr(expr):
-        return IntervalPrinter().doprint(expr)
+        def intervalrepr(expr):
+            return IntervalPrinter().doprint(expr)
 
     expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
 
