@@ -28,7 +28,8 @@ if not np:
 import mpmath
 from sympy.utilities.autowrap import ufuncify
 from sympy.utilities.lambdify import implemented_function
-from sympy import symbols, legendre, Plot, pprint
+from sympy import symbols, legendre, pprint
+from sympy.plotting import plot
 
 
 def main():
@@ -46,7 +47,7 @@ def main():
     print("Compiling legendre ufuncs and checking results:")
 
     # Let's also plot the ufunc's we generate
-    plot1 = Plot(visible=False)
+    #plot1 = Plot(visible=False)
     for n in range(6):
 
         # Setup the SymPy expression to ufuncify
@@ -72,8 +73,12 @@ def main():
 
         # We can also attach the autowrapped legendre polynomial to a sympy
         # function and plot values as they are calculated by the binary function
-        g = implemented_function('g', binary_poly)
-        plot1[n] = g(x), [200]
+        #g = implemented_function('g', binary_poly)
+        if n==0:
+            plot1=plot(expr, x, show=False)
+        else:
+            plot1.extend(plot(expr, x, show=False))
+
 
     print("Here's a plot with values calculated by the wrapped binary functions")
     plot1.show()
