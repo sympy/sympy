@@ -3522,11 +3522,19 @@ class Tensor(TensExpr):
 
     @property
     def free(self):
-        return self._index_structure.free
+        return self._index_structure.free[:]
+
+    @property
+    def free_in_args(self):
+        return [(ind, pos, 0) for ind, pos in self.free]
 
     @property
     def dum(self):
-        return self._index_structure.dum
+        return self._index_structure.dum[:]
+
+    @property
+    def dum_in_args(self):
+        return [(p1, p2, 0, 0) for p1, p2 in self.dum]
 
     @property
     def rank(self):
@@ -4023,6 +4031,17 @@ class TensMul(TensExpr):
         dummy_pos = set(itertools.chain(*self.dum))
         return set(idx for i, idx in enumerate(self._index_structure.get_indices()) if i in dummy_pos)
 
+    def _get_position_offset_for_indices(self):
+        arg_offset = [None for i in range(self.ext_rank)]
+        counter = 0
+        for i, arg in enumerate(self.args):
+            if not isinstance(arg, TensExpr):
+                continue
+            for j in range(arg.ext_rank):
+                arg_offset[j + counter] = counter
+            counter += arg.ext_rank
+        return arg_offset
+
     @property
     def free_args(self):
         return sorted([x[0] for x in self.free])
@@ -4036,12 +4055,24 @@ class TensMul(TensExpr):
         return self._index_structure.free[:]
 
     @property
+    def free_in_args(self):
+        arg_offset = self._get_position_offset_for_indices()
+        argpos = self._get_indices_to_args_pos()
+        return [(ind, pos-arg_offset[pos], argpos[pos]) for (ind, pos) in self.free]
+
+    @property
     def coeff(self):
         return self._coeff
 
     @property
     def dum(self):
         return self._index_structure.dum[:]
+
+    @property
+    def dum_in_args(self):
+        arg_offset = self._get_position_offset_for_indices()
+        argpos = self._get_indices_to_args_pos()
+        return [(p1-arg_offset[p1], p2-arg_offset[p2], argpos[p1], argpos[p2]) for p1, p2 in self.dum]
 
     @property
     def rank(self):
@@ -4619,6 +4650,7 @@ def riemann_cyclic(t2):
     else:
         return canon_bp(t3)
 
+
 def get_lines(ex, index_type):
     """
     returns ``(lines, traces, rest)`` for an index type,
@@ -4667,9 +4699,11 @@ def get_lines(ex, index_type):
             i += 1
         return a
 
-    components = ex.components
+    arguments = ex.args
     dt = {}
-    for c in components:
+    for c in ex.args:
+        if not isinstance(c, TensExpr):
+            continue
         if c in dt:
             continue
         index_types = c.index_types
@@ -4681,19 +4715,20 @@ def get_lines(ex, index_type):
             raise ValueError('at most two indices of type %s allowed' % index_type)
         if len(a) == 2:
             dt[c] = a
-    dum = ex.dum
+    #dum = ex.dum
     lines = []
     traces = []
     traces1 = []
+    #indices_to_args_pos = ex._get_indices_to_args_pos()
     # TODO: add a dum_to_components_map ?
-    for p0, p1, c0, c1 in dum:
-        if components[c0] not in dt:
+    for p0, p1, c0, c1 in ex.dum_in_args:
+        if arguments[c0] not in dt:
             continue
         if c0 == c1:
             traces.append([c0])
             continue
-        ta0 = dt[components[c0]]
-        ta1 = dt[components[c1]]
+        ta0 = dt[arguments[c0]]
+        ta1 = dt[arguments[c1]]
         if p0 not in ta0:
             continue
         if ta0.index(p0) == ta1.index(p1):
@@ -4704,7 +4739,7 @@ def get_lines(ex, index_type):
             raise NotImplementedError
         # if p0 == ta0[1] then G in pos c0 is mult on the right by G in c1
         # if p0 == ta0[0] then G in pos c1 is mult on the right by G in c0
-        ta0 = dt[components[c0]]
+        ta0 = dt[arguments[c0]]
         b0, b1 = (c0, c1) if p0 == ta0[1]  else (c1, c0)
         lines1 = lines[:]
         for line in lines:
@@ -4731,7 +4766,7 @@ def get_lines(ex, index_type):
     for line in traces:
         for y in line:
             rest.append(y)
-    rest = [x for x in range(len(components)) if x not in rest]
+    rest = [x for x in range(len(arguments)) if x not in rest]
 
     return lines, traces, rest
 

@@ -3024,15 +3024,6 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A')[0, 1])
 
 
-@XFAIL
-def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
-    # This test fails, this class can be reconstructed from the *args
-    # of an instance using `TensorHead(*args)`
-    from sympy.physics.hep.gamma_matrices import GammaMatrixHead, Lorentz
-    from sympy.tensor.tensor import tensor_indices
-    i = tensor_indices('i', Lorentz)
-    assert _test_args(GammaMatrixHead())
-
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
     assert _test_args(TensorIndexType('Lorentz', metric=False))

@@ -37,7 +37,7 @@ DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
 LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
 
 
-GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex, DiracSpinorIndex, DiracSpinorIndex], [[1], [1], [1]], matrix_behavior=True)
+GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex, DiracSpinorIndex, DiracSpinorIndex], [[1], [1], [1]], comm=None, matrix_behavior=True)
 
 
 def extract_type_tens(expression, component):
@@ -133,7 +133,7 @@ def simplify_gpgp(ex, sort=True):
                 elim.add(a[i + 1][1])
                 if not ta:
                     ta = ex.split()
-                    mu = TensorIndex('mu', GammaMatrix.LorentzIndex)
+                    mu = TensorIndex('mu', LorentzIndex)
                 ind1 = ta[ai[0]].get_indices()[1]
                 ind2 = ta[ai[0] + 1].get_indices()[2]
                 hit = True
@@ -294,7 +294,7 @@ def _trace_single_line(t):
         if numG == 0:
             spinor_free = [_[0] for _ in t.free if _[0].tensortype is DiracSpinorIndex]
             tcoeff = t.coeff
-            if spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
+            if len(spinor_free) == 2 and spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
                 # t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
                 # TODO: add procedure to close matrix indices.
                 t = t.replace(lambda x: x.component == DiracSpinorIndex.delta, lambda x: DiracSpinorIndex.dim)
@@ -307,6 +307,16 @@ def _trace_single_line(t):
         if numG % 2 == 1:
             return TensMul.from_data(S.Zero, [], [], [])
         elif numG > 4:
+            # find the open matrix indices and connect them:
+            mat_ind = [ilp for ilp in t.get_free_indices() if ilp._tensor_index_type == DiracSpinorIndex and ilp.is_matrix_index]
+            if (len(mat_ind) == 2):
+                mat_ind.sort(key=lambda x: not x.is_up)
+                dirac_replacement = TensorIndex('drepl', DiracSpinorIndex, is_up=True, is_matrix_index=False)
+                t = t.substitute_indices((mat_ind[0], dirac_replacement), (mat_ind[1], -dirac_replacement))
+            elif len(mat_ind) == 0:
+                pass
+            else:
+                raise ValueError("...")
             #t = t.substitute_indices((-DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_index), (DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_index))
             a = t.split()
             ind1, lind1, rind1 = a[i].args[-1]
@@ -470,15 +480,15 @@ def _kahane_simplify(expression):
             free.append((g, pos[0]))
 
     spinor_free = []
-    for (indx, pos) in expression._iterate_free_indices:
-        if len(pos) != 3:
+    for (indx, pos, argn) in expression.free_in_args:
+        if not isinstance(expression.args[argn], Tensor):
             # probably not a Tensor instance contains `indx`:s
             continue
-        if pos[2] == 0:
+        if pos == 0:
             # it's a Lorentz index, skip:
             continue
         # (index, index of component, position of component):
-        spinor_free.append((indx, pos[2], pos[0]))
+        spinor_free.append((indx, pos, argn))
 
     if len(spinor_free) == 2:
         spinor_free.sort(key=lambda x: x[2])
@@ -761,17 +771,16 @@ def _kahane_simplify(expression):
     if t1:
         spinor_free1 = [_ for _ in t1.free if _[1] % 3 != 0]
         if spinor_free1:
-            if spinor_free:
-                pass
-                # t = t.substitute_indices((DiracSpinorIndex.auto_left, spinor_free[0][0]), (-DiracSpinorIndex.auto_right, spinor_free[-1][0]))
+            if spinor_free and [i for i in spinor_free if not i[0].is_matrix_index] != []:
+                mat_ind1, mat_ind2 = [i for i in t1.get_free_indices() if i.is_matrix_index and i.tensor_index_type == DiracSpinorIndex]
+                t = t.substitute_indices((mat_ind1, spinor_free[0][0]), (mat_ind2, spinor_free[-1][0]))
             else:
                 # FIXME trace
                 t = t*DiracSpinorIndex.delta(DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
-                t = GammaMatrix.simplify_lines(t)
+                t = simplify_lines(t)
         else:
             if spinor_free:
-                pass
-                # t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
+                t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
             else:
                 t = t*4
     else:
