@@ -288,6 +288,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         >>> f(array([1, 2, 3]), array([2, 3, 5]))
         [-2.18503986 -0.29100619 -0.8559934 ]
 
+        Use of scipy module:
+
+        >>> import scipy
+        >>> import numpy
+        >>> a = numpy.arange(10)
+        >>> a
+        [0 1 2 3 4 5 6 7 8 9]
+        >>> expr=sin(x)
+        >>> f= lambdify(x,expr,scipy)
+        >>> f(a)
+        [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
+                    -0.2794155   0.6569866   0.98935825  0.41211849]  
+
     (3) Use a dictionary defining custom functions:
 
         >>> def my_cool_function(x): return 'sin(%s) is cool' % x
