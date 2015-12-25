@@ -230,6 +230,7 @@ format, which can be rendered with Graphviz.
 
 Examples ::
 
+
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
     >>> print(dotprint(5*x**3 + sin(x)))
