@@ -257,8 +257,8 @@ def mod_inverse(a, m):
     c such that   (a*c)%m==1.Meaning that if a is multiplied by c
     then the remainder obtained on division with m is 1.
     The value of m need not be a prime.This function  returns
-    the value of c  if some c exists.Otherwies it raises an
-    Exception stating that modular inverse does not exist.
+    the value of c  if some c exists.Otherwise it raises an
+    exception stating that modular inverse does not exist.
 
     Examples
     ========
@@ -266,10 +266,10 @@ def mod_inverse(a, m):
     >>> mod_inverse(3,11)
     4
 
-    Suppose we wish to find modular multiplicative inverse x of
+    Suppose we wish to find  multiplicative inverse x of
     3 modulo 11.This is the same as finding x such that 3*x = 1 (mod 11)
-    we find one value of x that satisfies this congruence is 4.
-    Because 3*4=12   and 12 = 1 mod(11)
+    one value of x that satisfies this congruence is 4.
+    Because 3 * 4 = 12   and 12 = 1 mod(11)
 
     Similarly
     >>> mod_inverse(5,11)
