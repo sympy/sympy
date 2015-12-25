@@ -383,6 +383,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         else:
             modules.insert(1, "numpy")
 
+        # Attempt to import scipy
+        try:
+            _import("scipy")
+        except ImportError:
+            pass
+        else:
+            modules.insert(1, "scipy")
+
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -412,6 +420,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     if _module_present('numpy', namespaces) and printer is None:
         # XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumPyPrinter as printer
+
+    if _module_present('scipy', namespaces) and printer is None:
+        # XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import SciPyPrinter as printer
 
     if _module_present('numexpr', namespaces) and printer is None:
         # XXX: This has to be done here because of circular imports
