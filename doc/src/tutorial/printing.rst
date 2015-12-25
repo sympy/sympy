@@ -128,9 +128,26 @@ section.  To get it, use ``srepr()`` [#srepr-fn]_.
 
     >>> srepr(Integral(sqrt(1/x), x))
     "Integral(Pow(Pow(Symbol('x'), Integer(-1)), Rational(1, 2)), Tuple(Symbol('x')))"
+    
+also can be used for other modules such as Function module.
+
+    >>> from sympy import Function
+    >>> f = sympy.Function("f")
+    >>> print(sympy.srepr(f(x).func))
+    Function('f')
+
+
+* The srepr() function prints a low level representation of the expression.
+* To walk the whole expression tree,Sympy have another function preorder_traversal() ;prints in preorder fashion.+    
+
+Example::
+
+   >>> list(preorder_traversal(expr))
+   [2e−xlog(−x+1),2,e−x,−x,−1,x,log(−x+1),−x+1,1,−x,−1,x]
 
 The srepr form is mostly useful for understanding how an expression is built
 internally.
+
 
 
 ASCII Pretty Printer
