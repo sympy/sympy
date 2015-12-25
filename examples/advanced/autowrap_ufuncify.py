@@ -24,9 +24,11 @@ from sympy.external import import_module
 np = import_module('numpy')
 if not np:
     sys.exit("Cannot import numpy. Exiting.")
+plt = import_module('matplotlib.pyplot')
+if not plt:
+    sys.exit("Cannot import matplotlib.pyplot. Exiting.")
 
 import mpmath
-import matplotlib.pyplot as plt
 from sympy.utilities.autowrap import ufuncify
 from sympy.utilities.lambdify import implemented_function
 from sympy import symbols, legendre, pprint
@@ -72,11 +74,11 @@ def main():
 
         # We can also attach the autowrapped legendre polynomial to a sympy
         # function and plot values as they are calculated by the binary function
-        plot1 = plt.plot(grid, polyvector, hold=True)
+        plot1 = plt.pyplot.plot(grid, polyvector, hold=True)
 
 
     print("Here's a plot with values calculated by the wrapped binary functions")
-    plt.show()
+    plt.pyplot.show()
 
 if __name__ == '__main__':
     main()
