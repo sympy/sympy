@@ -308,7 +308,7 @@ This class implements Python printing. Usage::
     e = 5*x**3 + sin(x)
 
 Srepr
------------
+-----
 
 .. module:: sympy.printing.repr
 
