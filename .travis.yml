@@ -138,7 +138,7 @@ before_install:
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       pip install "numpy==1.7.1";
-      pip install "scipy==0.12.0";
+      pip install "scipy==0.12.0"; # Is it necessary to have double quote?
       pip install --no-deps https://github.com/Theano/Theano/archive/rel-0.6.zip;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then

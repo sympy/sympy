@@ -9,6 +9,14 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
+# for new test cases of scipy
+from sympy.functions.special.bessel import *
+from sympy.functions.special.hyper import * 
+from sympy.functions.special.hyper import *
+from sympy.functions.special.gamma_functions import *
+from sympy.functions.special.gamma_functions import *
+from sympy import Symbol, factorial, S
+
 import math
 import sympy
 
@@ -16,6 +24,7 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+scipy = import_module('scipy')
 numexpr = import_module('numexpr')
 
 w, x, y, z = symbols('w, x, y, z')
@@ -150,14 +159,14 @@ def test_numpy_transl():
         assert nump in numpy.__dict__
 
 
-def test_numpy_transl():
-    if not numpy:
-        skip("numpy is not installed.")
+def test_scipy_transl():
+    if not scipy:
+        skip("scipy is not installed.")
 
-    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
-    for sym, nump in NUMPY_TRANSLATIONS.items():
+    from sympy.utilities.lambdify import SCIPY_TRANSLATIONS
+    for sym, scip in SCIPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert nump in numpy.__dict__
+        assert scip in scipy.__dict__
 
 
 def test_numpy_translation_abs():
@@ -167,6 +176,24 @@ def test_numpy_translation_abs():
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
+
+
+def test_scipy_translation_abs():
+    if not scipy:
+        skip("scipy is not installed.")
+
+    f = lambdify(x, Abs(x), "scipy")
+    assert f(-1) == 1
+    assert f(1) == 1
+
+
+# def test_numpy_translation_():
+#     if not numpy:
+#         skip("numpy is not installed.")
+
+#     f = lambdify(x, Abs(x), "numpy")
+#     assert f(-1) == 1
+#     assert f(1) == 1
 
 
 def test_numexpr_printer():
@@ -601,3 +628,71 @@ def test_issue_2790():
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
+
+
+def test_scipy_translation_bessel():
+    if not scipy:
+        skip("scipy not installed.")
+
+    f = lambdify((x, y), besselj(x,y), "scipy")
+    assert f(1, 2) == 0.5767248077568734
+    assert f(3, 4) == 0.43017147387562199
+
+
+def test_scipy_bessely():
+    if not scipy:
+         skip("scipy not installed.")
+ 
+    f = lambdify((x, y), bessely(x,y), "scipy")
+    assert f(1, 2) == -0.10703243154093754
+    assert f(3, 4) == -0.18202211595348544
+ 
+
+def test_scipy_besseli():
+    if not scipy:
+        skip("scipy not installed.")
+ 
+    f = lambdify((x, y), besseli(x, y), "scipy")
+    assert f(1, 2) == 1.5906368546373291
+    assert f(3, 4) == 3.3372757784203437
+
+ 
+def test_scipy_besselk():
+    if not scipy:
+        skip("scipy not installed.")
+ 
+    f = lambdify((x, y), besselk(x, y), "scipy")
+    assert f(1, 2) == 0.13986588181652243
+    assert f(3, 4) == 0.029884924416755554
+
+def test_scipy_loggamma():
+    if not scipy:
+        skip("scipy not installed.")
+
+    f = lambdify(x, loggamma(x), "scipy")
+    assert f(10) == 12.801827480081469
+    assert f(13) == 19.987214495661885
+
+
+def test_scipy_digamma():
+    if not scipy:
+        skip("scipy not installed.")
+
+    f = lambdify(x, digamma(x), "scipy")
+    assert f(10) == 2.2517525890667209
+    assert f(13) == 2.5259950133091453
+
+
+def test_scipy_factorial():
+  scipy = import_module("scipy")
+  if not scipy:
+      skip("scipy not installed")
+  f = lambdify(x, factorial(x), "scipy")
+  n = Symbol('n', integer=True)
+  assert f(0) == 1
+  assert f(1) == 1
+  assert f(-2) == oo
+  assert f(5) == 120
+  assert f(n) == factorial(n)
+  assert f(2*n) == factorial(2*n)
+
