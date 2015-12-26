@@ -226,7 +226,7 @@ Dot
 
 The ``dotprint()`` function in ``sympy.printing.dot`` prints output to dot
 format, which can be rendered with Graphviz.  
-`[source]<http://docs.sympy.org/0.7.5/_modules/sympy/printing/dot.html#dotprint>`
+` source <http://docs.sympy.org/0.7.5/_modules/sympy/printing/dot.html#dotprint>`_.
 
 Examples ::
 
@@ -267,8 +267,4 @@ Examples ::
 
 .. rubric:: Footnotes
 
-.. [#srepr-fn] SymPy does not use the Python builtin ``repr()`` function for
-   repr printing, because in Python ``str(list)`` calls ``repr()`` on the
-   elements of the list, and some SymPy functions return lists (such as
-   ``solve()``).  Since ``srepr()`` is so verbose, it is unlikely that anyone
-   would want it called by default on the output of ``solve()``.
+.. [#srepr-fn] SymPy does not use the Python builtin ``repr()`` function for repr printing, because in Python ``str(list)`` calls ``repr()`` on the elements of the list, and some SymPy functions return lists (such as ``solve()``).  Since ``srepr()`` is so verbose, it is unlikely that anyone would want it called by default on the output of ``solve()``.
