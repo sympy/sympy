@@ -231,7 +231,6 @@ format, which can be rendered with Graphviz. `source <http://docs.sympy.org/0.7.
     >>> from sympy.abc import x
     >>> print(dotprint(5*x**3 + sin(x)))
     digraph{
-    
     # Graph style
     "ordering"="out"
     "rankdir"="TD"
