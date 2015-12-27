@@ -482,3 +482,4 @@ dotprint
 --------
 
 .. autofunction:: sympy.printing.dot.dotprint
+`Examples in tutorial page <http://docs.sympy.org/latest/tutorial/printing.html#dot>`_.
