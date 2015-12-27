@@ -55,7 +55,6 @@ from mpmath.libmp.libintmath import giant_steps
 import math
 
 
-
 def _invert_monoms(p1):
     """
     Compute ``x**n * p1(1/x)`` for a univariate polynomial ``p1`` in ``x``.
@@ -1032,14 +1031,12 @@ def rs_log(p, x, prec):
                     x = x.set_ring(R)
                     c = c_new.set_ring(R)
                     const = R(log(c_expr))
-                    
-            else:
-                try:
-                    const = R(log(c_new))
-                except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                        "this domain.")
-
+                else:
+                    try:
+                        const = R(log(c_new))
+                    except ValueError:
+                        raise DomainError("The given series can't be expanded in "
+                            "this domain.")
         dlog = p.diff(x)
         dlog = rs_mul(dlog, rs_series_inversion(p, x, prec), x, prec - 1)
         return rs_integrate(dlog, x) + const
