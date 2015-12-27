@@ -225,8 +225,7 @@ Dot
 ---
 
 The ``dotprint()`` function in ``sympy.printing.dot`` prints output to dot
-format, which can be rendered with Graphviz.
-` source <http://docs.sympy.org/0.7.5/_modules/sympy/printing/dot.html#dotprint>`_.
+format, which can be rendered with Graphviz. `source <http://docs.sympy.org/0.7.5/_modules/sympy/printing/dot.html#dotprint>`_.
 
 Examples ::
 
