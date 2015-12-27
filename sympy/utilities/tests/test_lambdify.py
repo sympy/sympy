@@ -10,11 +10,11 @@ from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 # for new test cases of scipy
-from sympy.functions.special.bessel import *
-from sympy.functions.special.hyper import * 
-from sympy.functions.special.hyper import *
-from sympy.functions.special.gamma_functions import *
-from sympy.functions.special.gamma_functions import *
+from sympy.functions.special.bessel import besselj, bessely, besseli, besselk, hankel1, hankel2
+# from sympy.functions.special.hyper import hyper
+
+from sympy.functions.special.gamma_functions import digamma, gamma, polygamma, loggamma
+
 from sympy import Symbol, factorial, S
 
 import math
