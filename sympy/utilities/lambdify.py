@@ -131,8 +131,8 @@ SCIPY_TRANSLATIONS = {
 }
 
 NUMEXPR_TRANSLATIONS = {
-    # Found need of mapping for numexpr ,
-    # since supported functions: https://github.com/pydata/numexpr#supported-functions 
+# Found need of mapping for numexpr ,
+# since supported functions: https://github.com/pydata/numexpr#supported-functions 
     "Abs": "abs",
     "acos": "arccos",
     "acosh": "arccosh",
