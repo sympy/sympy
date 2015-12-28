@@ -360,10 +360,10 @@ def closest_points(*args):
         raise NotImplementedError('At-least 2 points must be inserted')
 
     for i in range(0, len(points)):
-        if isinstance(points[i][0], (int, long, float)) == False or isinstance(points[i][1], (int, long, float)) == False or len(points[i]) != 2:
+        if isinstance(points[i][0], (int, float)) == False or isinstance(points[i][1], (int, float)) == False or len(points[i]) != 2:
             raise NotImplementedError('The input must be a set of 2-d points in the form of real numbers')
 
-    points.sort(key=lambda x: x[0])
+    points.sort()
 
     box = deque()
     box.append(points[0])
