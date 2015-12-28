@@ -4770,15 +4770,18 @@ def get_lines(ex, index_type):
 
     return lines, traces, rest
 
+
 def get_free_indices(t):
     if not isinstance(t, TensExpr):
         return ()
     return t.get_free_indices()
 
+
 def get_indices(t):
     if not isinstance(t, TensExpr):
         return ()
     return t.get_indices()
+
 
 def get_index_structure(t):
     if isinstance(t, TensExpr):

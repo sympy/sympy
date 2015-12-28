@@ -181,7 +181,8 @@ def simplify_lines(ex):
 
     """
     lines, traces, rest = get_lines(ex, DiracSpinorIndex)
-    a = ex.split()
+    # a = ex.split()
+    a = ex.args
     trest = tensor_mul(*[x for i, x in enumerate(a) if i in rest])
     tlines = []
     for line in lines:
@@ -487,6 +488,9 @@ def _kahane_simplify(expression):
         if pos == 0:
             # it's a Lorentz index, skip:
             continue
+        if indx.is_matrix_index:
+            # it's a matrix index, skip:
+            continue
         # (index, index of component, position of component):
         spinor_free.append((indx, pos, argn))
 
@@ -777,7 +781,12 @@ def _kahane_simplify(expression):
             else:
                 # FIXME trace
                 t = t*DiracSpinorIndex.delta(DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
-                t = simplify_lines(t)
+                t = t.contract_metric(DiracSpinorIndex.metric)
+                simplify_lines(t.args[0])
+                if isinstance(t, TensAdd):
+                    t = TensAdd(*[simplify_lines(_) for _ in t.args])
+                elif isinstance(t, TensMul):
+                    t = simplify_lines(t)
         else:
             if spinor_free:
                 t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
