@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import Symbol, sqrt, Derivative
 from sympy.geometry import Point, Polygon, Segment, convex_hull, intersection, centroid
-from sympy.geometry.util import idiff
+from sympy.geometry.util import idiff, closest_points
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
 
@@ -39,3 +39,14 @@ def test_util_centroid():
     assert centroid(p, q) == Point(1, -sqrt(2) + 2)
     assert centroid(Point(0, 0), Point(2, 0)) == Point(2, 0)/2
     assert centroid(Point(0, 0), Point(0, 0), Point(2, 0)) == Point(2, 0)/3
+
+
+def test_closest_points():
+    points = [(1, 1), (2, 2), (11, 11)]
+    assert closest_points(*points) == ((1, 1), (2, 2))
+    points = [(38, 40), (83, 89), (74, 46), (76, 73), (75, 13), (98, 87), (5, 73), (75, 18), (30, 7)]
+    assert closest_points(*points) == ((75, 18), (75, 13))
+    points = [(88, 71), (20, 69), (79, 91), (79, 81), (7, 80), (43, 76), (53, 95), (34, 3), (81, 26)]
+    assert closest_points(*points) == ((79, 81), (79, 91))
+    points = [(34, 54), (92, 10), (99, 2), (29, 4), (4, 51), (2, 40), (18, 60), (30, 69), (10, 32)]
+    assert closest_points(*points) == ((99, 2), (92, 10))
