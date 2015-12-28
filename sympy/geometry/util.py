@@ -4,6 +4,7 @@ Contains
 ========
 intersection
 convex_hull
+closest_points
 are_coplanar
 are_similar
 
@@ -308,6 +309,84 @@ def convex_hull(*args):
     if len(convexHull) == 2:
         return Segment(convexHull[0], convexHull[1])
     return Polygon(*convexHull)
+
+
+def closest_points(*args):
+    """The closest pair of points among a given set of points in 2-d plane.
+
+    Parameters
+    ==========
+
+    a collection of Points on 2-d plane
+
+    Returns
+    =======
+
+    a pair of closest points
+
+    Notes
+    =====
+
+    This can only be performed on a set of non-symbolic points.
+
+    References
+    ==========
+
+    [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+
+    [2] Sweep line algorithm
+    https://en.wikipedia.org/wiki/Sweep_line_algorithm
+
+    Examples
+    ========
+
+    >>> from sympy.geometry.util import closest_point
+    >>> points = [(5, 2), (7, 6), (3, 9), (9, 4), (8, 5)]
+    >>> closest_point(*points)
+    ((8, 5), (7, 6))
+
+    >>> from sympy.geometry.util import closest_point
+    >>> points = [(80, 89), (11, 85), (32, 51), (59, 59), (39, 80), (62, 73)]
+    >>> closest_point(*points)
+    ((62, 73), (59, 59))
+
+    """
+    from collections import deque
+    from math import sqrt
+    import numbers
+
+    points = list(args)
+    if len(points) < 2:
+        raise NotImplementedError('At-least 2 points must be inserted')
+
+    for i in range(0, len(points)):
+        if isinstance(points[i][0], (int, long, float)) == False or isinstance(points[i][1], (int, long, float)) == False or len(points[i]) != 2:
+            raise NotImplementedError('The input must be a set of 2-d points in the form of real numbers')
+
+    points.sort(key=lambda x: x[0])
+
+    box = deque()
+    box.append(points[0])
+
+    best_dist = sqrt(pow(points[1][1]-box[0][1], 2)+pow(points[1][0]-box[0][0], 2))
+    left = 0
+    i = 1
+    best_pair = (points[0], points[1])
+
+    while(i < len(points)):
+        j = 0
+        while left < i and points[i][0]-points[left][0] > best_dist:
+            box.remove(points[left])
+            left = left+1
+
+        for j in range(len(box)):
+            if best_dist != min(best_dist, sqrt(pow(points[i][1]-box[j][1], 2)+pow(points[i][0]-box[j][0], 2))):
+                best_pair = (points[i], box[j])
+                best_dist = min(best_dist, sqrt(pow(points[i][1]-box[j][1], 2)+pow(points[i][0]-box[j][0], 2)))
+        box.append(points[i])
+        i = i+1
+
+    return best_pair
 
 
 def are_coplanar(*e):
