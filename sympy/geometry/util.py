@@ -342,12 +342,12 @@ def closest_points(*args):
 
     >>> from sympy.geometry.util import closest_point
     >>> points = [(5, 2), (7, 6), (3, 9), (9, 4), (8, 5)]
-    >>> closest_point(*points)
+    >>> closest_points(*points)
     ((8, 5), (7, 6))
 
     >>> from sympy.geometry.util import closest_point
     >>> points = [(80, 89), (11, 85), (32, 51), (59, 59), (39, 80), (62, 73)]
-    >>> closest_point(*points)
+    >>> closest_points(*points)
     ((62, 73), (59, 59))
 
     """
