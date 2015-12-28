@@ -332,7 +332,7 @@ Usage::
     "Integral(Pow(Pow(Symbol('x'), Integer(-1)), Rational(1, 2)), Tuple(Symbol('x')))"
     >>> expr = exp(-x)*log(1-x)*2
     >>> srepr(expr)
-    "Mul(Integer(2), exp(Mul(Integer(−1),Symbol(′x′))), log(Add(Mul(Integer(−1), Symbol(′x′)), Integer(1)))"
+    "Mul(Integer(2), exp(Mul(Integer(−1), Symbol(′x′))), log(Add(Mul(Integer(−1), Symbol(′x′)), Integer(1)))"
 
 also can be used for other modules such as Function module.
 
@@ -347,8 +347,8 @@ also can be used for other modules such as Function module.
 
 Example::
 
-    >>> list(preorder_traversal(expr))
-    [2*exp(−x)*log(−x + 1), 2, exp(-x), −x, −1, x, log(−x + 1), −x + 1, 1, −x, −1, x]
+    >>> print(list(preorder_traversal(expr)))
+    [2*exp(-x)*log(-x + 1), 2, exp(-x), -x, -1, x, log(-x + 1), -x + 1, 1, -x, -1, x]
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
