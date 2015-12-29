@@ -1521,6 +1521,8 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf():
 @XFAIL
 @slow
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
         C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) +
