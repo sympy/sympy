@@ -97,7 +97,7 @@ def sqrt(arg):
 
     >>> from sympy import RootOf
 
-    >>> [ RootOf(x**2-3,i) for i in (0,1) ]
+    >>> [RootOf(x**2 - 3, i) for i in (0, 1)]
     [-sqrt(3), sqrt(3)]
 
     See Also
