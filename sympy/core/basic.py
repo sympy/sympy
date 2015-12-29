@@ -575,6 +575,19 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
+
+        A False result does not mean that `self` cannot be rewritten
+        into a form that would be comparable. For example, the
+        difference computed below is zero but without simplification
+        it does not evaluate to a zero with precision:
+
+        >>> e = 2**pi*(1 + 2**pi)
+        >>> dif = e - e.expand()
+        >>> dif.is_comparable
+        False
+        >>> dif.n(2)._prec
+        1
+
         """
         is_real = self.is_real
         if is_real is False:
