@@ -19,7 +19,6 @@ Contents:
    install.rst
    tutorial/index.rst
    gotchas.rst
-   guide.rst
    modules/index.rst
    python-comparisons.rst
    wiki.rst

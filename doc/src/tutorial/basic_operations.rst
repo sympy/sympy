@@ -11,6 +11,45 @@ in the :ref:`advanced expression manipulation <tutorial-manipulation>` section.
     >>> from sympy import *
     >>> x, y, z = symbols("x y z")
 
+Expressions can be compared using a regular python syntax::
+
+    >>> from sympy.abc import x, y
+    >>> x + y == y + x
+    True
+
+    >>> x + y == y - x
+    False
+
+Sometimes, you need to have a unique symbol, for example as a temporary one in
+some calculation, which is going to be substituted for something else at the
+end anyway. This is achieved using ``Dummy("x")``. So, to sum it
+up::
+
+    >>> from sympy import Symbol, Dummy
+    >>> Symbol("x") == Symbol("x")
+    True
+
+    >>> Dummy("x") == Dummy("x")
+    False
+
+For computation, all expressions need to be in a canonical form, this is done
+during the creation of the particular instance and only inexpensive operations
+are performed, necessary to put the expression in the canonical form.
+Whenever you construct an expression, for example ``Add(x, x)``, the
+``Add.__new__()`` is called and it determines what to return. In this case::
+
+    >>> from sympy import Add
+    >>> from sympy.abc import x
+    >>> e = Add(x, x)
+    >>> e
+    2*x
+
+    >>> type(e)
+    <class 'sympy.core.mul.Mul'>
+
+``e`` is actually an instance of ``Mul(2, x)``, because ``Add.__new__()``
+returned ``Mul``.
+
 Substitution
 ============
 
@@ -196,5 +235,240 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     >>> f = lambdify(x, expr, {"sin":mysin})
     >>> f(0.1)
     0.1
+
+
+Functions
+=========
+
+How to create a new function with one variable::
+
+    class sign(Function):
+
+        nargs = 1
+
+        @classmethod
+        def eval(cls, arg):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            if isinstance(arg, Basic.Zero):
+                return S.Zero
+            if arg.is_positive:
+                return S.One
+            if arg.is_negative:
+                return S.NegativeOne
+            if isinstance(arg, Basic.Mul):
+                coeff, terms = arg.as_coeff_mul()
+                if not isinstance(coeff, Basic.One):
+                    return cls(coeff) * cls(Basic.Mul(*terms))
+
+        is_finite = True
+
+        def _eval_conjugate(self):
+            return self
+
+        def _eval_is_zero(self):
+            return isinstance(self[0], Basic.Zero)
+
+and that's it. The ``_eval_*`` functions are called when something is needed.
+The ``eval`` is called when the class is about to be instantiated and it
+should return either some simplified instance of some other class or if the
+class should be unmodified, return ``None`` (see ``core/function.py`` in
+``Function.__new__`` for implementation details). See also tests in
+`sympy/functions/elementary/tests/test_interface.py
+<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py>`_ that test this interface. You can use them to create your own new functions.
+
+The applied function ``sign(x)`` is constructed using
+::
+
+    sign(x)
+
+both inside and outside of SymPy. Unapplied functions ``sign`` is just the class
+itself::
+
+    sign
+
+both inside and outside of SymPy. This is the current structure of classes in
+SymPy::
+
+    class BasicType(type):
+        pass
+    class MetaBasicMeths(BasicType):
+        ...
+    class BasicMeths(AssumeMeths):
+        __metaclass__ = MetaBasicMeths
+        ...
+    class Basic(BasicMeths):
+        ...
+    class FunctionClass(MetaBasicMeths):
+        ...
+    class Function(Basic, RelMeths, ArithMeths):
+        __metaclass__ = FunctionClass
+        ...
+
+The exact names of the classes and the names of the methods and how they work
+can be changed in the future.
+
+This is how to create a function with two variables::
+
+    class chebyshevt_root(Function):
+        nargs = 2
+
+        @classmethod
+        def eval(cls, n, k):
+            if not 0 <= k < n:
+                raise ValueError("must have 0 <= k < n")
+            return cos(S.Pi*(2*k + 1)/(2*n))
+
+
+.. note:: the first argument of a @classmethod should be ``cls`` (i.e. not
+          ``self``).
+
+Here it's how to define a derivative of the function::
+
+    >>> from sympy import Function, sympify, cos
+    >>> class my_function(Function):
+    ...     nargs = 1
+    ...
+    ...     def fdiff(self, argindex = 1):
+    ...         return cos(self.args[0])
+    ...
+    ...     @classmethod
+    ...     def eval(cls, arg):
+    ...         arg = sympify(arg)
+    ...         if arg == 0:
+    ...             return sympify(0)
+
+So guess what this ``my_function`` is going to be? Well, it's derivative is
+``cos`` and the function value at 0 is 0, but let's pretend we don't know::
+
+    >>> from sympy import pprint
+    >>> pprint(my_function(x).series(x, 0, 10))
+         3     5     7       9
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
+        6    120   5040   362880
+
+Looks familiar indeed::
+
+    >>> from sympy import sin
+    >>> pprint(sin(x).series(x, 0, 10))
+         3     5     7       9
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
+        6    120   5040   362880
+
+Let's try a more complicated example. Let's define the derivative in terms of
+the function itself::
+
+    >>> class what_am_i(Function):
+    ...     nargs = 1
+    ...
+    ...     def fdiff(self, argindex = 1):
+    ...         return 1 - what_am_i(self.args[0])**2
+    ...
+    ...     @classmethod
+    ...     def eval(cls, arg):
+    ...         arg = sympify(arg)
+    ...         if arg == 0:
+    ...             return sympify(0)
+
+So what is ``what_am_i``?  Let's try it::
+
+    >>> pprint(what_am_i(x).series(x, 0, 10))
+         3      5       7       9
+        x    2*x    17*x    62*x     / 10\
+    x - -- + ---- - ----- + ----- + O\x  /
+        3     15     315     2835
+
+Well, it's ``tanh``::
+
+    >>> from sympy import tanh
+    >>> pprint(tanh(x).series(x, 0, 10))
+         3      5       7       9
+        x    2*x    17*x    62*x     / 10\
+    x - -- + ---- - ----- + ----- + O\x  /
+        3     15     315     2835
+
+The new functions we just defined are regular SymPy objects, you
+can use them all over SymPy, e.g.::
+
+    >>> from sympy import limit
+    >>> limit(what_am_i(x)/x, x, 0)
+    1
+
+
+Common tasks
+------------
+
+Please use the same way as is shown below all across SymPy.
+
+**accessing parameters**::
+
+    >>> from sympy import sign, sin
+    >>> from sympy.abc import x, y, z
+
+    >>> e = sign(x**2)
+    >>> e.args
+    (x**2,)
+
+    >>> e.args[0]
+    x**2
+
+    Number arguments (in Adds and Muls) will always be the first argument;
+    other arguments might be in arbitrary order:
+    >>> (1 + x + y*z).args[0]
+    1
+    >>> (1 + x + y*z).args[1] in (x, y*z)
+    True
+
+    >>> (y*z).args
+    (y, z)
+
+    >>> sin(y*z).args
+    (y*z,)
+
+Never use internal methods or variables, prefixed with "``_``" (example: don't
+use ``_args``, use ``.args`` instead).
+
+**testing the structure of a SymPy expression**
+
+Applied functions::
+
+    >>> from sympy import sign, exp, Function
+    >>> e = sign(x**2)
+
+    >>> isinstance(e, sign)
+    True
+
+    >>> isinstance(e, exp)
+    False
+
+    >>> isinstance(e, Function)
+    True
+
+So ``e`` is a ``sign(z)`` function, but not ``exp(z)`` function.
+
+Unapplied functions::
+
+    >>> from sympy import sign, exp, FunctionClass
+    >>> e = sign
+
+    >>> f = exp
+
+    >>> g = Add
+
+    >>> isinstance(e, FunctionClass)
+    True
+
+    >>> isinstance(f, FunctionClass)
+    True
+
+    >>> isinstance(g, FunctionClass)
+    False
+
+    >>> g is Add
+    True
+
+So ``e`` and ``f`` are functions, ``g`` is not a function.
 
 .. TODO: Write an advanced numerics section
