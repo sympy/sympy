@@ -606,8 +606,8 @@ def test_special_printers():
 
     expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
 
-    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr())
-    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
+    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
+    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
     func2 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
 
     mpi = type(mpmath.mpi(1, 2))
