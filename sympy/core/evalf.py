@@ -109,20 +109,28 @@ def fastlog(x):
     return x[2] + x[3]
 
 
-def pure_complex(v):
+def pure_complex(v, or_real=False):
     """Return a and b if v matches a + I*b where b is not zero and
-    a and b are Numbers, else None.
+    a and b are Numbers, else None. If `or_real` is True then 0 will
+    be returned for `b` if `v` is a real number.
 
     >>> from sympy.core.evalf import pure_complex
-    >>> from sympy import Tuple, I
-    >>> a, b = Tuple(2, 3)
+    >>> from sympy import sqrt, I, S
+    >>> a, b, surd = S(2), S(3), sqrt(2)
     >>> pure_complex(a)
+    >>> pure_complex(a, or_real=True)
+    (2, 0)
+    >>> pure_complex(surd)
     >>> pure_complex(a + b*I)
     (2, 3)
     >>> pure_complex(I)
     (0, 1)
     """
     h, t = v.as_coeff_Add()
+    if not t:
+        if or_real:
+            return h, t
+        return
     c, i = t.as_coeff_Mul()
     if i is S.ImaginaryUnit:
         return h, c
