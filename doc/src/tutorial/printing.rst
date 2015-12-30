@@ -143,7 +143,7 @@ also can be used for other modules such as Function module.
 Example::
 
     >>> print(list(preorder_traversal(expr)))
-    [2*exp(-x)*log(-x + 1), 2, exp(-x), -x, -1, x, log(-x + 1), -x + 1, 1, -x, -1, x]
+    [2*exp(-x)*log(-x+1), 2, exp(-x), -x, -1, x, log(-x+1), -x+1, 1, -x, -1, x]
 
 
 * srepr() gives the repr form, which is what repr() would normally give but for SymPy we don’t actually use srepr() for __repr__ because it’s is so verbose, it is unlikely that anyone would want it called by default. Another reason is that lists call repr on their elements, like print([a, b, c]) calls repr(a), repr(b), repr(c). So if we used srepr for `` __repr__`` any list with SymPy objects would include the srepr form, even if we used str() or print().
