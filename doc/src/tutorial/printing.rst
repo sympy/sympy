@@ -230,13 +230,19 @@ format, which can be rendered with Graphviz. `source <http://docs.sympy.org/0.7.
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
     >>> print(dotprint(5*x**3 + sin(x)))
+
+.. graphviz::
+
     digraph{
+
     # Graph style
     "ordering"="out"
     "rankdir"="TD"
+
     #########
     # Nodes #
     #########
+
     "Add(Mul(Integer(5), Pow(Symbol(x), Integer(3))), sin(Symbol(x)))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)" ["color"="black", "label"="Mul", "shape"="ellipse"];
     "Integer(5)_(0, 0)" ["color"="black", "label"="5", "shape"="ellipse"];
@@ -245,10 +251,11 @@ format, which can be rendered with Graphviz. `source <http://docs.sympy.org/0.7.
     "Integer(3)_(0, 1, 1)" ["color"="black", "label"="3", "shape"="ellipse"];
     "sin(Symbol(x))_(1,)" ["color"="black", "label"="sin", "shape"="ellipse"];
     "Symbol(x)_(1, 0)" ["color"="black", "label"="x", "shape"="ellipse"];
+
     #########
     # Edges #
-    #########
-    
+    ######### 
+
     "Add(Mul(Integer(5), Pow(Symbol(x), Integer(3))), sin(Symbol(x)))_()" -> "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)";
     "Add(Mul(Integer(5), Pow(Symbol(x), Integer(3))), sin(Symbol(x)))_()" -> "sin(Symbol(x))_(1,)";
     "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)" -> "Integer(5)_(0, 0)";
