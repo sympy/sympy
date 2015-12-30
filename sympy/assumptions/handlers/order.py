@@ -31,7 +31,7 @@ class AskNegativeHandler(CommonHandler):
         if expr.is_negative is None:
             for assump in conjuncts(assumptions):
                 if assump.func == Q.negative:
-                    if ask(Q.negative(expr-assump.args[0])):
+                    if (expr-assump.args[0]).is_negative:
                         return True
                     else:
                         return None
@@ -234,7 +234,7 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_positive is None:
             for assump in conjuncts(assumptions):
                 if assump.func == Q.positive:
-                    if ask(Q.positive(expr-assump.args[0])):
+                    if (expr-assump.args[0]).is_positive:
                         return True
                     else:
                         return None
