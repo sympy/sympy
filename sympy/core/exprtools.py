@@ -1108,6 +1108,12 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     >>> factor_terms(x*A + x*A + x*y*A)
     x*(y*A + 2*A)
 
+    >>> eq = sqrt(2) + sqrt(10)
+    >>> factor_terms(eq)
+    sqrt(2) + sqrt(10)
+    >>> factor_terms(eq, radical=True)
+    sqrt(2)*(1 + sqrt(5))
+
     When ``clear`` is False, a rational will only be factored out of an
     Add expression if all terms of the Add have coefficients that are
     fractions:
@@ -1125,8 +1131,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     >>> factor_terms(x*y/2 + y, clear=False) == _
     True
 
-    If a -1 is all that can be factored out, to *not* factor it out, the
-    flag ``sign`` must be False:
+    If a negative one is all that can be factored out, to *not* factor
+    it out, the flag ``sign`` must be False:
 
     >>> factor_terms(-x - y)
     -(x + y)
