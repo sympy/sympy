@@ -320,7 +320,7 @@ Usage::
     '5*x**3 + sin(x)'
     >>> expr = exp(-x)*log(1-x)*2
     >>> repr(expr)
-    '2∗exp(−x)∗log(−x+1)'
+    '2∗exp(−x)∗log(−x + 1)'
 
 To get low level textual representation we use function srepr.
 
@@ -348,7 +348,7 @@ also can be used for other modules such as Function module.
 Example::
 
     >>> print(list(preorder_traversal(expr)))
-    '[2*exp(-x)*log(-x+1), 2, exp(-x), -x, -1, x, log(-x+1), -x+1, 1, -x, -1, x]'
+    [2*exp(-x)*log(-x + 1), 2, exp(-x), -x, -1, x, log(-x + 1), -x + 1, 1, -x, -1, x]
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
