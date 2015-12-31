@@ -57,16 +57,17 @@ assignments (using the ``sympy.printing.codeprinter.Assignment`` object).This se
 as building blocks for the code printers and hence the ``codegen`` module.
 An example that shows the use of ``Assignment``::
 
-    >>> from sympy import symbols, MatrixSymbol, Matrix
+    >>> from sympy import symbols, MatrixSymbol, Matrix, pprint, init_printing
     >>> from sympy.printing.codeprinter import Assignment
+    >>> init_printing()
     >>> x, y, z = symbols('x y z')
     >>> mat = Matrix([x, y, z]).T
     >>> known_mat = MatrixSymbol('K', 1, 3)
-    >>> Assignment(known_mat, mat)
+    >>> pprint(Assignment(known_mat, mat))
     K := [x  y  z]
-    >>> Assignment(known_mat, mat).lhs
+    >>> pprint(Assignment(known_mat, mat).lhs)
     K
-    >>> Assignment(known_mat, mat).rhs
+    >>> pprint(Assignment(known_mat, mat).rhs)
     [x  y  z]
 
 Examples::
@@ -74,14 +75,14 @@ Examples::
     >>> from sympy import ccode, symbols, Rational
     >>> Z, k, e, r = symbols('Z k e r')
     >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
-    >>> expr
+    >>> pprint(expr)
         2   
     -Z⋅e ⋅k 
     ────────
       2⋅r   
-    >>> ccode(expr)
+    >>> pprint(ccode(expr))
     -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to="E")
+    >>> pprint(ccode(expr, assign_to="E"))
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
 ``Piecewise`` expressions are converted into conditionals. If an
@@ -115,7 +116,7 @@ looped over::
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1] - y[i]) / (t[i+1] - t[i]))
-    >>> jscode(e.rhs, assign_to=e.lhs, contract=False)
+    >>> pprint(jscode(e.rhs, assign_to=e.lhs, contract=False))
     Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
 
     >>> Res = IndexedBase('Res', shape=(len_y,))
@@ -148,7 +149,7 @@ cfunction_string)].  This can be used to call a custom Octave function::
     ...         (lambda x: not x.is_Matrix, "my_fcn")]
     ... }
     >>> mat = Matrix([[1, x]])
-    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
+    >>> pprint(octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions))
     existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])
 
 
