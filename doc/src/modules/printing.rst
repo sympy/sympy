@@ -348,7 +348,7 @@ also can be used for other modules such as Function module.
 Example::
 
     >>> print(list(preorder_traversal(expr)))
-    [2*exp(-x)*log(-x+1), 2, exp(-x), -x, -1, x, log(-x+1), -x+1, 1, -x, -1, x]
+    '[2*exp(-x)*log(-x+1), 2, exp(-x), -x, -1, x, log(-x+1), -x+1, 1, -x, -1, x]'
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
