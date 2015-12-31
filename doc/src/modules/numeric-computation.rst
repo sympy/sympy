@@ -72,6 +72,8 @@ If you have array-based data this can confer a considerable speedup, on the
 order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
+.. _ufuncify_method:
+
 uFuncify
 --------
 

@@ -30,7 +30,7 @@ The code printers translate the SymPy objects into actual code,
 like abs(x) -> fabs(x) (for C).
 
 The code printers don't print optimal code in many cases. 
-An example of this is powers in C. x**2 prints as pow(x, 2) instead of x*x. 
+An example of this is powers in C. ``x**2`` prints as ``pow(x, 2)`` instead of ``x*x``. 
 Other optimizations (like mathematical simplifications) should happen 
 before the code printers.
 
@@ -42,11 +42,14 @@ We will iterate through the levels, bottom up.
 Code printers (sympy.printing)
 ------------------------------
 This is where the meat of code generation is, the translation of SymPy
-expressions to specific code.Supported languages are C (``ccode``), Fortran 95 (``fcode``), 
-Javascript (``jscode``), Mathematica (``mathematica_code``), Octave/Matlab (``octave_code``), 
+expressions to specific code.Supported languages are C (:py:func:`sympy.printing.ccode.ccode`), 
+Fortran 95 (:py:func:`sympy.printing.fcode.fcode`), 
+Javascript (:py:func:`sympy.printing.jscode.jscode`) , 
+Mathematica (:py:func:`sympy.printing.mathematica.mathematica_code`), 
+Octave/Matlab (:py:func:`sympy.printing.octave.octave_code`), 
 Python (print_python, which is actually more like a lightweight version 
-of codegen for Python, and ``lambdarepr``, which supports many libraries 
-(like NumPy), and theano (``theano_code``).The code printers 
+of codegen for Python, and :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries 
+(like NumPy), and theano (:py:func:`sympy.printing.theanocode.theano_function).The code printers 
 are special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with 
@@ -59,26 +62,26 @@ An example that shows the use of ``Assignment``::
     >>> x, y, z = symbols('x y z')
     >>> mat = Matrix([x, y, z]).T
     >>> known_mat = MatrixSymbol('K', 1, 3)
-    >>> Assignment(known_mat, mat)  # doctest: +SKIP
-    Assignment(K, Matrix([[x, y, z]]))
+    >>> Assignment(known_mat, mat)
+    K := [x  y  z]
     >>> Assignment(known_mat, mat).lhs
     K
-    >>> Assignment(known_mat, mat).rhs  # doctest: +SKIP
-    Matrix([[x, y, z]])
+    >>> Assignment(known_mat, mat).rhs
+    [x  y  z]
 
 Examples::
 
     >>> from sympy import ccode, symbols, Rational
     >>> Z, k, e, r = symbols('Z k e r')
     >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
-    >>> expr # doctest: +SKIP
+    >>> expr
         2   
     -Z⋅e ⋅k 
     ────────
       2⋅r   
-    >>> ccode(expr) # doctest: +SKIP
+    >>> ccode(expr)
     -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to="E") # doctest: +SKIP
+    >>> ccode(expr, assign_to="E")
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
 ``Piecewise`` expressions are converted into conditionals. If an
@@ -112,7 +115,7 @@ looped over::
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1] - y[i]) / (t[i+1] - t[i]))
-    >>> jscode(e.rhs, assign_to=e.lhs, contract=False) # doctest: +SKIP
+    >>> jscode(e.rhs, assign_to=e.lhs, contract=False)
     Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
 
     >>> Res = IndexedBase('Res', shape=(len_y,))
@@ -127,7 +130,7 @@ looped over::
           Res[j] = Res[j] + t[j]*y[j];
        }
     }
-    >>> print(jscode(e.rhs, assign_to=e.lhs, contract=False)) # doctest: +SKIP
+    >>> print(jscode(e.rhs, assign_to=e.lhs, contract=False))
     Res[j] = t[j]*y[j];
 
 Custom printing can be defined for certain types by passing a dictionary of
@@ -145,8 +148,8 @@ cfunction_string)].  This can be used to call a custom Octave function::
     ...         (lambda x: not x.is_Matrix, "my_fcn")]
     ... }
     >>> mat = Matrix([[1, x]])
-    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)  # doctest: +SKIP
-    'existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])'
+    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
+    existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])
 
 
 An example of mathematica code printer::
@@ -158,9 +161,7 @@ An example of mathematica code printer::
     >>> n, T, t = symbols('n T t')
     >>> e = x(n*T) * sin((t - n*T) / T)
     >>> e = e / ((-T*n + t) / T)
-    >>> e   # doctest: +SKIP
-    T*x(T*n)*sin((-T*n + t)/T)/(-T*n + t)
-    >>> pprint(e)   # doctest: +SKIP
+    >>> pprint(e)
                 ⎛-T⋅n + t⎞
     T⋅x(T⋅n)⋅sin⎜────────⎟
                 ⎝   T    ⎠
@@ -168,7 +169,7 @@ An example of mathematica code printer::
            -T⋅n + t     
 
     >>> expr = summation(e, (n, -1, 1))
-    >>> pprint(mc(expr))    # doctest: +SKIP
+    >>> pprint(mc(expr))
     T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
     t/T]/t
 
@@ -186,22 +187,22 @@ support and see how it works::
     >>> expr = e * 2 * I_z * S_z * (3 * (cos(beta))**2 - 1) / 2
     >>> from sympy import init_printing
     >>> init_printing()
-    >>> pprint(expr)    # doctest: +SKIP
+    >>> pprint(expr)
                      ⎛     2       ⎞
     I_z⋅S_z⋅γᵢ⋅γₛ⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
     ────────────────────────────────
                      3              
                   rᵢₛ               
-    >>> pprint(jscode(expr, assign_to="H_is"))  # doctest: +SKIP
+    >>> pprint(jscode(expr, assign_to="H_is"))
     H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.po
     w(r_is, 3);
-    >>> pprint(ccode(expr, assign_to="H_is"))   # doctest: +SKIP
+    >>> pprint(ccode(expr, assign_to="H_is"))
     H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*pow(cos(beta), 2) - 1)/pow(r_is, 3);
-    >>> pprint(fcode(expr, assign_to="H_is"))   # doctest: +SKIP
+    >>> pprint(fcode(expr, assign_to="H_is"))
           H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*cos(beta)**2 - 1)/r_is**3
-    >>> pprint(octave_code(expr, assign_to="H_is")) # doctest: +SKIP
+    >>> pprint(octave_code(expr, assign_to="H_is"))
     H_is = I_z.*S_z.*gamma_i.*gamma_s.*k_i.*(3*cos(beta).^2 - 1)./r_is.^3;
-    >>> pprint(mc(expr))    # doctest: +SKIP
+    >>> pprint(mc(expr))
     I_z*S_z*gamma_i*gamma_s*k_i*(3*Cos[beta]^2 - 1)/r_is^3
 
 Codegen (sympy.utilities.codegen)
@@ -312,7 +313,7 @@ For example::
     ⎢            ╲╱    (y + 3)!                                            ⎥
     ⎢──────────────────────────────────────────────────────────────────────⎥
     ⎣                                  3                                   ⎦
-    >>> [arg.name for arg in r.arguments]   # doctest: +SKIP
+    >>> [arg.name for arg in r.arguments]
     [x, y]
 
 Another more complicated example with a mixture of specified and
@@ -323,8 +324,8 @@ automatically-assigned names.  Also has Matrix output::
     >>> r = make_routine('fcn', [x*y, Eq(f, 1), Eq(g, x + g), Matrix([[x, 2]])])
     >>> [arg.result_var for arg in r.results]   # doctest: +SKIP
     [result_5397460570204848505]
-    >>> [arg.expr for arg in r.results] # doctest: +SKIP
-    [x*y]
+    >>> [arg.expr for arg in r.results]
+    [x⋅y]
     >>> [arg.name for arg in r.arguments]   # doctest: +SKIP
     [x, y, f, g, out_8598435338387848786]
 
@@ -337,15 +338,13 @@ We can examine the various arguments more closely::
 
     >>> [a.name for a in r.arguments if isinstance(a, OutputArgument)]  # doctest: +SKIP
     [f, out_8598435338387848786]
-    >>> [a.expr for a in r.arguments if isinstance(a, OutputArgument)]  # doctest: +SKIP
-    [1, Matrix([[x, 2]])]
+    >>> [a.expr for a in r.arguments if isinstance(a, OutputArgument)]
+    [1, [x  2]]
 
     >>> [a.name for a in r.arguments if isinstance(a, InOutArgument)]
     [g]
     >>> [a.expr for a in r.arguments if isinstance(a, InOutArgument)]
     [g + x]
-
-
 
 Autowrap
 --------
@@ -460,7 +459,7 @@ and methods. An illustration::
 
 
 While NumPy operations are very efficient for vectorized data but they sometimes incur 
-unnecessary costs when `chained together <http://docs.sympy.org/dev/modules/numeric-computation.html#ufuncify>`_  .
+unnecessary costs when chained together. See :ref:`ufuncify_method` for more.
 Fortunately, SymPy is able to generate efficient low-level C or Fortran code. 
 It can then depend on projects like Cython or f2py to compile and reconnect that 
 code back up to Python. Fortunately this process is well automated and a SymPy user 
@@ -487,7 +486,7 @@ Let us see an example::
 
 
 The lambdify function translates SymPy expressions into Python functions, 
-leveraging a variety of numerical libraries.By default lambdify relies 
+leveraging a variety of numerical libraries. By default lambdify relies 
 on implementations in the ``math`` standard library. Naturally, Raw Python 
 is faster than Sympy. However it also supports ``mpmath`` and most notably, 
 ``numpy``. Using the numpy library gives the generated function access to 
