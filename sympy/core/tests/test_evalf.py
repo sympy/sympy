@@ -475,7 +475,10 @@ def test_issue_9326():
     assert e.evalf(subs = {d1: 1, d2: 2}) == 3
 
 def test_issue_10323_ceiling():
-    assert ceiling(2**100+.0000000001) - 1 == 2**100
+    assert ceiling(Rational(2**100)+Rational(2**-100)) == 2**100+1
+    assert floor(Rational(2**100)+Rational(2**-100)) == 2**100
+    assert ceiling(Rational(2**100)-Rational(2**-100)) == 2**100
+    assert floor(Rational(2**100)-Rational(2**-100)) == 2**100-1
 
 def test_issue_10323_sqrt():
     def asserts(x,rf,rc):
