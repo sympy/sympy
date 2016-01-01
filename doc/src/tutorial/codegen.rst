@@ -2,29 +2,32 @@
 Code Generation
 ===============
 
-Several submodules in Sympy are provided to generate directly compilable code
-from Sympy expressions. Furthermore, there are submodules provided that help
-use other numeric systems as backend for construction and manipulation of
-mathematical expressions to speed up the process.
+Several submodules in SymPy allow one to generate directly compilable and
+executable code in a variety of different programming languages from Sympy
+expressions. In addition, there are functions that generate Python importable
+objects that can evaluate SymPy expressions very efficiently.
 
-We will start with a brief introduction, and inspect the building blocks of the
-code generation and then the code generation itself.
+We will start with a brief introduction to the components that make up the code
+generation capabilities of SymPy.
 
 Introduction
 ------------
 
-There are three levels::
+There are four main levels of abstractions::
 
-    autowrap
-       |
-    codegen
-       |
-    code printers
+   expression
+      |
+   code printers
+      |
+   code generators
+      |
+   autowrap
 
-Autowrap uses codegen, and codegen uses the code printers. Autowrap does
-everything: it lets you go from SymPy expression to numerical function in the
-same Python process in one step. codegen is actual code generation, i.e., to
-compile and use later, or to include in some larger project.
+py:func:`sympy.utilities.autowrap` uses codegen, and codegen uses the code
+printers. py:func:`sympy.utilities.autowrap` does everything: it lets you go
+from SymPy expression to numerical function in the same Python process in one
+step. codegen is actual code generation, i.e., to compile and use later, or to
+include in some larger project.
 
 The code printers translate the SymPy objects into actual code, like ``abs(x)
 -> fabs(x)`` (for C).
@@ -34,10 +37,10 @@ powers in C. ``x**2`` prints as ``pow(x, 2)`` instead of ``x*x``.  Other
 optimizations (like mathematical simplifications) should happen before the code
 printers.
 
-:py:func:`sympy.cse` is not applied anywhere in this chain. It ideally happens
-at the codegen level, or somewhere above it.
+Currently, :py:func:`sympy.cse` is not applied automatically anywhere in this
+chain. It ideally happens at the codegen level, or somewhere above it.
 
-We will iterate through the levels, bottom up.
+We will iterate through the levels below.
 
 The following three lines will be used to setup each example::
 
@@ -147,7 +150,7 @@ cfunction_string)]``. This can be used to call a custom Octave function::
     >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
     existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])
 
-An example of mathematica code printer::
+An example of Mathematica code printer::
 
     >>> x_ = Function('x')
     >>> expr = x_(n*T) * sin((t - n*T) / T)
@@ -411,7 +414,7 @@ mute the command line backends. This can be helpful for debugging.
 
 The argument ``language`` and ``backend`` are used to change defaults:
 ``Fortran`` and ``f2py`` to ``C`` and ``Cython``. The argument helpers is used
-to define auxillary expressions needed for the main expression. If the main
+to define auxiliary expressions needed for the main expression. If the main
 expression needs to call a specialized function it should be put in the
 ``helpers`` iterable. Autowrap will then make sure that the compiled main
 expression can link to the helper routine. Items should be tuples with
@@ -421,7 +424,7 @@ supply an argument sequence to helper routines.
 Another method available at the ``autowrap`` level is ``binary_function``. It
 returns a sympy function. The advantage is that we can have very fast functions
 as compared to SymPy speeds. This is because we will be using compiled
-functions with Sympy attriutes and methods. An illustration::
+functions with Sympy attributes and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy.physics.hydrogen import R_nl
