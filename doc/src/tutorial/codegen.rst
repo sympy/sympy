@@ -1,13 +1,14 @@
 ===============
 Code Generation
 ===============
-Several submodules in Sympy are provided to generate directly compilable 
-code from Sympy expressions. Furthermore, there are submodules provided 
-that help use other numeric systems as backend for construction and 
-manipulation of mathematical expressions to speed up the process.
 
-We will start with a brief introduction, and inspect the building 
-blocks of the code generation and then the code generation itself.
+Several submodules in Sympy are provided to generate directly compilable code
+from Sympy expressions. Furthermore, there are submodules provided that help
+use other numeric systems as backend for construction and manipulation of
+mathematical expressions to speed up the process.
+
+We will start with a brief introduction, and inspect the building blocks of the
+code generation and then the code generation itself.
 
 Introduction
 ------------
@@ -20,22 +21,21 @@ There are three levels::
        |
     code printers
 
-Autowrap uses codegen, and codegen uses the code printers. Autowrap does 
-everything: it lets you go from SymPy expression to numerical 
-function in the same Python process in one step. codegen is actual 
-code generation, i.e., to compile and use later, or to include in some larger 
-project.
+Autowrap uses codegen, and codegen uses the code printers. Autowrap does
+everything: it lets you go from SymPy expression to numerical function in the
+same Python process in one step. codegen is actual code generation, i.e., to
+compile and use later, or to include in some larger project.
 
-The code printers translate the SymPy objects into actual code, 
-like abs(x) -> fabs(x) (for C).
+The code printers translate the SymPy objects into actual code, like ``abs(x)
+-> fabs(x)`` (for C).
 
-The code printers don't print optimal code in many cases. 
-An example of this is powers in C. ``x**2`` prints as ``pow(x, 2)`` instead of ``x*x``. 
-Other optimizations (like mathematical simplifications) should happen 
-before the code printers.
+The code printers don't print optimal code in many cases. An example of this is
+powers in C. ``x**2`` prints as ``pow(x, 2)`` instead of ``x*x``.  Other
+optimizations (like mathematical simplifications) should happen before the code
+printers.
 
-cse is not applied anywhere in this chain. It ideally happens at the 
-codegen level, or somewhere above it.
+:py:func:`sympy.cse` is not applied anywhere in this chain. It ideally happens
+at the codegen level, or somewhere above it.
 
 We will iterate through the levels, bottom up.
 
@@ -49,21 +49,24 @@ The following three lines will be used to setup each example::
 
 Code printers (sympy.printing)
 ------------------------------
-This is where the meat of code generation is, the translation of SymPy
-expressions to specific code.Supported languages are C (:py:func:`sympy.printing.ccode.ccode`), 
-Fortran 95 (:py:func:`sympy.printing.fcode.fcode`), 
-Javascript (:py:func:`sympy.printing.jscode.jscode`) , 
-Mathematica (:py:func:`sympy.printing.mathematica.mathematica_code`), 
-Octave/Matlab (:py:func:`sympy.printing.octave.octave_code`), 
-Python (print_python, which is actually more like a lightweight version 
-of codegen for Python, and :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries 
-(like NumPy), and theano (:py:func:`sympy.printing.theanocode.theano_function`).The code printers 
-are special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
-An important distinction is that the code printer has to deal with 
-assignments (using the ``sympy.printing.codeprinter.Assignment`` object).This serves
-as building blocks for the code printers and hence the ``codegen`` module.
-An example that shows the use of ``Assignment``::
+This is where the meat of code generation is; the translation of SymPy
+expressions to specific languages. Supported languages are C
+(:py:func:`sympy.printing.ccode.ccode`), Fortran 95
+(:py:func:`sympy.printing.fcode.fcode`), Javascript
+(:py:func:`sympy.printing.jscode.jscode`) , Mathematica
+(:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
+(:py:func:`sympy.printing.octave.octave_code`), Python (print_python, which is
+actually more like a lightweight version of codegen for Python, and
+:py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
+(like NumPy), and theano
+(:py:func:`sympy.printing.theanocode.theano_function`). The code printers are
+special cases of the other prints in SymPy (str printer, pretty printer, etc.).
+
+An important distinction is that the code printer has to deal with assignments
+(using the ``sympy.printing.codeprinter.Assignment`` object).This serves as
+building blocks for the code printers and hence the ``codegen`` module.  An
+example that shows the use of ``Assignment``::
 
     >>> from sympy.printing.codeprinter import Assignment
     >>> mat = Matrix([x, y, z]).T
@@ -75,7 +78,7 @@ An example that shows the use of ``Assignment``::
     >>> Assignment(known_mat, mat).rhs
     [x  y  z]
 
-Examples::
+Here is a simple example of printing a C version of a SymPy expression::
 
     >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
     >>> expr
@@ -88,12 +91,11 @@ Examples::
     >>> ccode(expr, assign_to="E")
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
-``Piecewise`` expressions are converted into conditionals. If an
-``assign_to`` variable is provided an if statement is created, otherwise
-the ternary operator is used. Note that if the ``Piecewise`` lacks a
-default term, represented by ``(expr, True)`` then an error will be thrown.
-This is to prevent generating an expression that may not evaluate to
-anything. A use case for ``Piecewise``::
+``Piecewise`` expressions are converted into conditionals. If an ``assign_to``
+variable is provided an if statement is created, otherwise the ternary operator
+is used. Note that if the ``Piecewise`` lacks a default term, represented by
+``(expr, True)`` then an error will be thrown.  This is to prevent generating
+an expression that may not evaluate to anything. A use case for ``Piecewise``::
 
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(fcode(expr, tau))
@@ -103,9 +105,8 @@ anything. A use case for ``Piecewise``::
              tau = x
           end if
 
-The various printers also tend to support ``Indexed`` objects well.
-
-With ``contract=True`` these expressions will be turned into loops, whereas
+The various printers also tend to support ``Indexed`` objects well. With
+``contract=True`` these expressions will be turned into loops, whereas
 ``contract=False`` will just print the assignment expression that should be
 looped over::
 
@@ -133,9 +134,9 @@ looped over::
     Res[j] = t[j]*y[j];
 
 Custom printing can be defined for certain types by passing a dictionary of
-"type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
-dictionary value can be a list of tuples i.e., [(argument_test,
-cfunction_string)].  This can be used to call a custom Octave function::
+"type" : "function" to the ``user_functions`` kwarg. Alternatively, the
+dictionary value can be a list of tuples i.e., ``[(argument_test,
+cfunction_string)]``. This can be used to call a custom Octave function::
 
     >>> custom_functions = {
     ...   "f": "existing_octave_fcn",
@@ -145,7 +146,6 @@ cfunction_string)].  This can be used to call a custom Octave function::
     >>> mat = Matrix([[1, x]])
     >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
     existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])
-
 
 An example of mathematica code printer::
 
@@ -164,10 +164,8 @@ An example of mathematica code printer::
     T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
     t/T]/t
 
-
-
-We can go through a common expression in different languages we 
-support and see how it works::
+We can go through a common expression in different languages we support and see
+how it works::
 
     >>> k_i, g_i, g_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
     >>> expr = k_i * g_i * g_s / (r_is**3)
@@ -191,16 +189,17 @@ support and see how it works::
 
 Codegen (sympy.utilities.codegen)
 ---------------------------------
-This module deals with creating compilable code from SymPy expressions. 
-This is lower level than autowrap, as it doesn't actually attempt to 
-compile the code, but higher level than the printers, as it generates 
-compilable files (including header files), rather than just code snippets.
+
+This module deals with creating compilable code from SymPy expressions. This is
+lower level than autowrap, as it doesn't actually attempt to compile the code,
+but higher level than the printers, as it generates compilable files (including
+header files), rather than just code snippets.
 
 The user friendly functions, here, are ``codegen`` and ``make_routine``.
-``codegen`` takes a list of ``(variable, expression)`` pairs and a language 
-(C, F95, and Octave/Matlab are supported). It returns, as strings, a code 
-file and a header file (for relevant languages). The variables are created 
-as functions that return the value of the expression as output.
+``codegen`` takes a list of ``(variable, expression)`` pairs and a language (C,
+F95, and Octave/Matlab are supported). It returns, as strings, a code file and
+a header file (for relevant languages). The variables are created as functions
+that return the value of the expression as output.
 
 .. note:: The ``codegen`` callable is not in the sympy namespace automatically,
    to use it you must first import ``codegen`` from ``sympy.utilities.codegen``
@@ -209,7 +208,9 @@ For instance::
 
     >>> from sympy.utilities.codegen import codegen
     >>> length, breadth, height = symbols('length, breadth, height')
-    >>> [(c_name, c_code), (h_name, c_header)] = codegen(('volume', length*breadth*height), "C", "test", header=False, empty=False)
+    >>> [(c_name, c_code), (h_name, c_header)] = \
+    ... codegen(('volume', length*breadth*height), "C", "test",
+    ...         header=False, empty=False)
     >>> print(c_name)
     test.c
     >>> print(c_code)
@@ -228,28 +229,30 @@ For instance::
     double volume(double breadth, double height, double length);
     #endif
 
-Various flags to ``codegen`` let you modify things. The project name for preprocessor 
-instructions can be varied using ``project``. Variables listed as global variables in 
-arg ``global_vars`` will not show up as function arguments.
+Various flags to ``codegen`` let you modify things. The project name for
+preprocessor instructions can be varied using ``project``. Variables listed as
+global variables in arg ``global_vars`` will not show up as function arguments.
 
-``language`` is a case-insensitive string that indicates the source code language. 
-Currently, 'C', 'F95' and 'Octave' are supported. 
-'Octave' generates code compatible with both Octave and Matlab.
+``language`` is a case-insensitive string that indicates the source code
+language. Currently, ``C``, ``F95`` and ``Octave`` are supported. ``Octave``
+generates code compatible with both Octave and Matlab.
 
-``header`` when True, a header is written on top of each source file. ``empty`` 
-when True, empty lines are used to structure the code. With ``argument_sequence``
-a sequence of arguments for the routine can be defined in a preferred order.  
+``header`` when True, a header is written on top of each source file. ``empty``
+when True, empty lines are used to structure the code. With
+``argument_sequence`` a sequence of arguments for the routine can be defined in
+a preferred order.
 
-``prefix`` defines a prefix for the names of the files that contain the source code. 
-If omitted, the name of the first name_expr tuple is used.
+``prefix`` defines a prefix for the names of the files that contain the source
+code.  If omitted, the name of the first name_expr tuple is used.
+
 ``to_files`` when True, the code will be written to one or more files with the
 given prefix.
-          
-
 
 Here is an example::
 
-    >>> [(f_name, f_code), header] = codegen(("volume", length*breadth*height), "F95", header=True, empty=False, argument_sequence=(breadth, length), global_vars=(height,))
+    >>> [(f_name, f_code), header] = codegen(("volume", length*breadth*height),
+    ...     "F95", header=True, empty=False, argument_sequence=(breadth, length),
+    ...     global_vars=(height,))
     >>> print(f_code)
     !******************************************************************************
     !*                    Code generated with sympy 0.7.7.dev                     *
@@ -265,17 +268,16 @@ Here is an example::
     volume = breadth*height*length
     end function
 
+The method ``make_routine`` creates a ``Routine`` object, which represents an
+evaluation routine for a set of expressions. This is only good for internal use
+by the CodeGen objects, as an intermediate representation from SymPy expression
+to generated code.  It is not recommended to make a ``Routine`` object
+yourself. You should instead use ``make_routine`` method. ``make_routine`` in
+turn calls the ``routine`` method of the CodeGen object depending upon the
+language of choice. This creates the internal objects representing assignments
+and so on, and creates the ``Routine`` class with them.
 
-
-The method ``make_routine`` creates a ``Routine`` object, which represents an evaluation
-routine for a set of expressions. This is only good for internal use by the CodeGen 
-objects, as an intermediate representation from SymPy expression to generated code. 
-It is not recommended to make a ``Routine`` object yourself. You should instead use 
-``make_routine`` method. ``make_routine`` in turn calls the ``routine`` method of 
-the CodeGen object depending upon the language of choice. This creates the internal 
-objects representing assignments and so on, and creates the ``Routine`` class with them.
-
-The various codegen objects such as ``Routine`` and ``Variable`` aren't SymPy 
+The various codegen objects such as ``Routine`` and ``Variable`` aren't SymPy
 objects (they don't subclass from Basic).
 
 For example::
@@ -311,7 +313,7 @@ We can examine the various arguments more closely::
 
     >>> from sympy.utilities.codegen import (InputArgument, OutputArgument,
     ...                                      InOutArgument)
-    >>> [a.name for a in routine.arguments if isinstance(a, InputArgument)]   
+    >>> [a.name for a in routine.arguments if isinstance(a, InputArgument)]
     [x, y]
 
     >>> [a.name for a in routine.arguments if isinstance(a, OutputArgument)]  # doctest: +SKIP
@@ -326,22 +328,21 @@ We can examine the various arguments more closely::
 
 Autowrap
 --------
-Autowrap automatically generates code, writes it to disk, compiles it, 
-and imports it into the current session. Main functions of this module are 
+
+Autowrap automatically generates code, writes it to disk, compiles it, and
+imports it into the current session. Main functions of this module are
 ``autowrap``, ``binary_function``, and ``ufuncify``.
 
-It also automatically converts expressions containing ``Indexed`` objects 
-into summations. The classes IndexedBase, Indexed and Idx represent a matrix 
-element M[i, j]. See :ref:`tensor_module` for more on this.
-``autowrap`` creates a wrapper using f2py or Cython and creates a numerical 
-function.
+It also automatically converts expressions containing ``Indexed`` objects into
+summations. The classes IndexedBase, Indexed and Idx represent a matrix element
+M[i, j]. See :ref:`tensor_module` for more on this.  ``autowrap`` creates a
+wrapper using f2py or Cython and creates a numerical function.
 
 .. note:: The ``autowrap`` callable is not in the sympy namespace automatically,
    to use it you must first import ``autowrap`` from ``sympy.utilities.autowrap``
 
-
-The callable returned from autowrap() is a binary python function, not a 
-SymPy object. For example::
+The callable returned from autowrap() is a binary Python function, not a SymPy
+object. For example::
 
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
@@ -349,10 +350,10 @@ SymPy object. For example::
     >>> binary_func(1, 4, 2)    # doctest: +SKIP
     -1.0
 
-The various flags available with autowrap() help to modify the services 
-provided by the method. 
-The argument ‘tempdir’ tells autowrap to compile the code in a specific 
-directory, and leave the files intact when finished. For instance::
+The various flags available with autowrap() help to modify the services
+provided by the method. The argument ``tempdir`` tells autowrap to compile the
+code in a specific directory, and leave the files intact when finished. For
+instance::
 
     >>> from sympy.utilities.autowrap import autowrap
     >>> from sympy.physics.qho_1d import psi_n
@@ -383,7 +384,8 @@ Checking the Fortran source code in the directory specified reveals this::
 
 Using the argument ``args`` along with it changes argument sequence::
 
-    >>> qho = autowrap(Eq(y_[i], psi_n(0, x_[i], m, omega)), tempdir='/tmp', args=[y, x, m, omega])   # doctest: +SKIP
+    >>> eq = Eq(y_[i], psi_n(0, x_[i], m, omega))
+    >>> qho = autowrap(eq, tempdir='/tmp', args=[y, x, m, omega])  # doctest: +SKIP
 
 yields::
 
@@ -404,22 +406,22 @@ yields::
 
     end subroutine
 
-The argument ``verbose`` is boolean, optional and if True, autowrap 
-will not mute the command line backends. This can be helpful for debugging.
+The argument ``verbose`` is boolean, optional and if True, autowrap will not
+mute the command line backends. This can be helpful for debugging.
 
-The argument ``language`` and ``backend`` are used to change defaults: 'Fortran'
-and 'f2py' to 'C' and 'Cython'.
-The argument helpers is used to define auxillary expressions needed for the main 
-expression. If the main expression needs to call a specialized function it should 
-be put in the ``helpers`` iterable. Autowrap will then make sure that the
-compiled main expression can link to the helper routine. Items should
-be tuples with (<function_name>, <sympy_expression>, <arguments>). It is mandatory 
-to supply an argument sequence to helper routines.
+The argument ``language`` and ``backend`` are used to change defaults:
+``Fortran`` and ``f2py`` to ``C`` and ``Cython``. The argument helpers is used
+to define auxillary expressions needed for the main expression. If the main
+expression needs to call a specialized function it should be put in the
+``helpers`` iterable. Autowrap will then make sure that the compiled main
+expression can link to the helper routine. Items should be tuples with
+``(<function_name>, <sympy_expression>, <arguments>)``. It is mandatory to
+supply an argument sequence to helper routines.
 
-Another method available at the ``autowrap`` level is ``binary_function``. It returns 
-a sympy function. The advantage is that we can have very fast functions as compared
-to SymPy speeds. This is because we will be using compiled functions with Sympy attriutes 
-and methods. An illustration::
+Another method available at the ``autowrap`` level is ``binary_function``. It
+returns a sympy function. The advantage is that we can have very fast functions
+as compared to SymPy speeds. This is because we will be using compiled
+functions with Sympy attriutes and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy.physics.hydrogen import R_nl
@@ -428,19 +430,19 @@ and methods. An illustration::
     >>> f(a, r).evalf(3, subs={a: 1, r: 2})  # doctest: +SKIP
     0.766
 
-
-While NumPy operations are very efficient for vectorized data but they sometimes incur 
-unnecessary costs when chained together. See :ref:`ufuncify_method` for more.
-Fortunately, SymPy is able to generate efficient low-level C or Fortran code. 
-It can then depend on projects like Cython or f2py to compile and reconnect that 
-code back up to Python. Fortunately this process is well automated and a SymPy user 
-wishing to make use of this code generation should call the ufuncify function.
-``ufuncify`` is the third method available with Autowrap module. 
-It basically implies 'Universal functions' and follows an ideology set by Numpy.
-The main point of ufuncify as compared to autowrap is that it allows arrays as arguments 
-and can operate in an element-by-element fashion. The core operation done element-wise is 
-in accordance to Numpy's array broadcasting rules.
-See `this <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
+While NumPy operations are very efficient for vectorized data but they
+sometimes incur unnecessary costs when chained together. See
+:ref:`ufuncify_method` for more. Fortunately, SymPy is able to generate
+efficient low-level C or Fortran code. It can then depend on projects like
+Cython or f2py to compile and reconnect that code back up to Python.
+Fortunately this process is well automated and a SymPy user wishing to make use
+of this code generation should call the ufuncify function.  ``ufuncify`` is the
+third method available with Autowrap module. It basically implies 'Universal
+functions' and follows an ideology set by Numpy. The main point of ufuncify as
+compared to autowrap is that it allows arrays as arguments and can operate in
+an element-by-element fashion. The core operation done element-wise is in
+accordance to Numpy's array broadcasting rules. See `this
+<http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
 
 Let us see an example::
 
@@ -448,16 +450,15 @@ Let us see an example::
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
                     -2⋅x
-    8⋅x⋅(-4⋅x + 4)⋅ℯ    
+    8⋅x⋅(-4⋅x + 4)⋅ℯ
     ────────────────────
-             3          
+             3
 
-
-The lambdify function translates SymPy expressions into Python functions, 
-leveraging a variety of numerical libraries. By default lambdify relies 
-on implementations in the ``math`` standard library. Naturally, Raw Python 
-is faster than Sympy. However it also supports ``mpmath`` and most notably, 
-``numpy``. Using the numpy library gives the generated function access to 
+The lambdify function translates SymPy expressions into Python functions,
+leveraging a variety of numerical libraries. By default lambdify relies on
+implementations in the ``math`` standard library. Naturally, Raw Python is
+faster than Sympy. However it also supports ``mpmath`` and most notably,
+``numpy``. Using the numpy library gives the generated function access to
 powerful vectorized ufuncs that are backed by compiled C code.
 
 Let us compare the speeds::
@@ -478,6 +479,5 @@ Let us compare the speeds::
     >>> timeit.timeit('fn_fortran(xx)', 'from __main__ import fn_fortran, xx', number=10000)    # doctest: +SKIP
     0.004707066000264604
 
-
-The options available with ufuncify are more or less the same as those 
+The options available with ufuncify are more or less the same as those
 available with ``autowrap``.
