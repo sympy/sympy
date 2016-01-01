@@ -39,6 +39,14 @@ codegen level, or somewhere above it.
 
 We will iterate through the levels, bottom up.
 
+The following three lines will be used to setup each example::
+
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True)
+    >>> from sympy.abc import a, e, k, n, r, t, x, y, z, T, Z
+    >>> from sympy.abc import beta, omega, tau
+    >>> f, g = symbols('f, g', cls=Function)
+
 Code printers (sympy.printing)
 ------------------------------
 This is where the meat of code generation is, the translation of SymPy
@@ -57,32 +65,27 @@ assignments (using the ``sympy.printing.codeprinter.Assignment`` object).This se
 as building blocks for the code printers and hence the ``codegen`` module.
 An example that shows the use of ``Assignment``::
 
-    >>> from sympy import symbols, MatrixSymbol, Matrix, pprint, init_printing
     >>> from sympy.printing.codeprinter import Assignment
-    >>> init_printing()
-    >>> x, y, z = symbols('x y z')
     >>> mat = Matrix([x, y, z]).T
     >>> known_mat = MatrixSymbol('K', 1, 3)
-    >>> pprint(Assignment(known_mat, mat))
+    >>> Assignment(known_mat, mat)
     K := [x  y  z]
-    >>> pprint(Assignment(known_mat, mat).lhs)
+    >>> Assignment(known_mat, mat).lhs
     K
-    >>> pprint(Assignment(known_mat, mat).rhs)
+    >>> Assignment(known_mat, mat).rhs
     [x  y  z]
 
 Examples::
 
-    >>> from sympy import ccode, symbols, Rational
-    >>> Z, k, e, r = symbols('Z k e r')
     >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
-    >>> pprint(expr)
-        2   
-    -Z⋅e ⋅k 
+    >>> expr
+        2
+    -Z⋅e ⋅k
     ────────
-      2⋅r   
-    >>> pprint(ccode(expr))
+      2⋅r
+    >>> ccode(expr)
     -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> pprint(ccode(expr, assign_to="E"))
+    >>> ccode(expr, assign_to="E")
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
 ``Piecewise`` expressions are converted into conditionals. If an
@@ -92,8 +95,6 @@ default term, represented by ``(expr, True)`` then an error will be thrown.
 This is to prevent generating an expression that may not evaluate to
 anything. A use case for ``Piecewise``::
 
-    >>> from sympy import symbols, fcode, Piecewise
-    >>> x, tau = symbols('x, tau')
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(fcode(expr, tau))
           if (x > 0) then
@@ -108,21 +109,18 @@ With ``contract=True`` these expressions will be turned into loops, whereas
 ``contract=False`` will just print the assignment expression that should be
 looped over::
 
-    >>> from sympy import Eq, IndexedBase, Idx
-    >>> from sympy import jscode
     >>> len_y = 5
-    >>> y = IndexedBase('y', shape=(len_y,))
-    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> y_ = IndexedBase('y', shape=(len_y,))
+    >>> t_ = IndexedBase('t', shape=(len_y,))
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
-    >>> e = Eq(Dy[i], (y[i+1] - y[i]) / (t[i+1] - t[i]))
-    >>> pprint(jscode(e.rhs, assign_to=e.lhs, contract=False))
+    >>> eq = Eq(Dy[i], (y_[i+1] - y_[i]) / (t_[i+1] - t_[i]))
+    >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
     Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
-
     >>> Res = IndexedBase('Res', shape=(len_y,))
     >>> j = Idx('j', len_y)
-    >>> e = Eq(Res[j], y[j]*t[j])
-    >>> print(jscode(e.rhs, assign_to=e.lhs, contract=True))
+    >>> eq = Eq(Res[j], y_[j]*t_[j])
+    >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=True))
     for (var j=0; j<5; j++){
        Res[j] = 0;
     }
@@ -131,7 +129,7 @@ looped over::
           Res[j] = Res[j] + t[j]*y[j];
        }
     }
-    >>> print(jscode(e.rhs, assign_to=e.lhs, contract=False))
+    >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
     Res[j] = t[j]*y[j];
 
 Custom printing can be defined for certain types by passing a dictionary of
@@ -139,38 +137,30 @@ Custom printing can be defined for certain types by passing a dictionary of
 dictionary value can be a list of tuples i.e., [(argument_test,
 cfunction_string)].  This can be used to call a custom Octave function::
 
-    >>> from sympy import Function, octave_code, Function, Matrix, symbols
-    >>> f = Function('f')
-    >>> g = Function('g')
-    >>> x = symbols('x')
     >>> custom_functions = {
     ...   "f": "existing_octave_fcn",
     ...   "g": [(lambda x: x.is_Matrix, "my_mat_fcn"),
     ...         (lambda x: not x.is_Matrix, "my_fcn")]
     ... }
     >>> mat = Matrix([[1, x]])
-    >>> pprint(octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions))
+    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
     existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])
 
 
 An example of mathematica code printer::
 
-    >>> from sympy import mathematica_code as mc
-    >>> from sympy import summation, symbols
-    >>> from sympy import sin, Function, pprint, summation
-    >>> x = Function('x')
-    >>> n, T, t = symbols('n T t')
-    >>> e = x(n*T) * sin((t - n*T) / T)
-    >>> e = e / ((-T*n + t) / T)
-    >>> pprint(e)
+    >>> x_ = Function('x')
+    >>> expr = x_(n*T) * sin((t - n*T) / T)
+    >>> expr = expr / ((-T*n + t) / T)
+    >>> expr
                 ⎛-T⋅n + t⎞
     T⋅x(T⋅n)⋅sin⎜────────⎟
                 ⎝   T    ⎠
     ──────────────────────
-           -T⋅n + t     
+           -T⋅n + t
 
-    >>> expr = summation(e, (n, -1, 1))
-    >>> pprint(mc(expr))
+    >>> expr = summation(expr, (n, -1, 1))
+    >>> mathematica_code(expr)
     T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
     t/T]/t
 
@@ -179,31 +169,24 @@ An example of mathematica code printer::
 We can go through a common expression in different languages we 
 support and see how it works::
 
-    >>> from sympy import jscode, ccode, fcode, octave_code, mathematica_code as mc
-    >>> from sympy import cos, symbols
-    >>> from sympy import pprint
-    >>> k_i, gamma_i, gamma_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
-    >>> beta = symbols("beta")
-    >>> e = k_i * gamma_i * gamma_s / (r_is**3)
-    >>> expr = e * 2 * I_z * S_z * (3 * (cos(beta))**2 - 1) / 2
-    >>> from sympy import init_printing
-    >>> init_printing()
-    >>> pprint(expr)
-                      ⎛     2       ⎞
-    I_z⋅S_z⋅γᵢ⋅γ_s⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
-    ─────────────────────────────────
-                      3              
-                  r_is             
-    >>> pprint(jscode(expr, assign_to="H_is"))
-    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.po
-    w(r_is, 3);
-    >>> pprint(ccode(expr, assign_to="H_is"))
+    >>> k_i, g_i, g_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
+    >>> expr = k_i * g_i * g_s / (r_is**3)
+    >>> expr = expr * 2 * I_z * S_z * (3 * (cos(beta))**2 - 1) / 2
+    >>> expr
+                     ⎛     2       ⎞
+    I_z⋅S_z⋅γᵢ⋅γₛ⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
+    ────────────────────────────────
+                     3
+                  rᵢₛ
+    >>> print(jscode(expr, assign_to="H_is"))
+    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.pow(r_is, 3);
+    >>> print(ccode(expr, assign_to="H_is"))
     H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*pow(cos(beta), 2) - 1)/pow(r_is, 3);
-    >>> pprint(fcode(expr, assign_to="H_is"))
-          H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*cos(beta)**2 - 1)/r_is**3
-    >>> pprint(octave_code(expr, assign_to="H_is"))
+    >>> print(fcode(expr, assign_to="H_is"))
+    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*cos(beta)**2 - 1)/r_is**3
+    >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I_z.*S_z.*gamma_i.*gamma_s.*k_i.*(3*cos(beta).^2 - 1)./r_is.^3;
-    >>> pprint(mc(expr))
+    >>> print(mathematica_code(expr))
     I_z*S_z*gamma_i*gamma_s*k_i*(3*Cos[beta]^2 - 1)/r_is^3
 
 Codegen (sympy.utilities.codegen)
@@ -225,7 +208,6 @@ as functions that return the value of the expression as output.
 For instance::
 
     >>> from sympy.utilities.codegen import codegen
-    >>> from sympy import symbols
     >>> length, breadth, height = symbols('length, breadth, height')
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(('volume', length*breadth*height), "C", "test", header=False, empty=False)
     >>> print(c_name)
@@ -300,52 +282,47 @@ For example::
 
     >>> from sympy.utilities.codegen import make_routine
     >>> from sympy.physics.hydrogen import R_nl
-    >>> from sympy import symbols, init_printing
-    >>> init_printing()
-    >>> x, y = symbols('x y')
     >>> expr = R_nl(3, y, x, 6)
-    >>> r = make_routine('my_routine', expr)
-    >>> [arg.result_var for arg in r.results]   # doctest: +SKIP
+    >>> routine = make_routine('my_routine', expr)
+    >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
-    >>> [arg.expr for arg in r.results]
+    >>> [arg.expr for arg in routine.results]
     ⎡                ___________                                           ⎤
     ⎢          y    ╱ (-y + 2)!   -2⋅x                                     ⎥
     ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ───────── ⋅ℯ    ⋅assoc_laguerre(-y + 2, 2⋅y + 1, 4⋅x)⎥
     ⎢            ╲╱    (y + 3)!                                            ⎥
     ⎢──────────────────────────────────────────────────────────────────────⎥
     ⎣                                  3                                   ⎦
-    >>> [arg.name for arg in r.arguments]
+    >>> [arg.name for arg in routine.arguments]
     [x, y]
 
 Another more complicated example with a mixture of specified and
 automatically-assigned names.  Also has Matrix output::
 
-    >>> from sympy import Matrix
-    >>> from sympy.abc import x, y, f, g
-    >>> r = make_routine('fcn', [x*y, Eq(f, 1), Eq(g, x + g), Matrix([[x, 2]])])
-    >>> [arg.result_var for arg in r.results]   # doctest: +SKIP
+    >>> routine = make_routine('fcn', [x*y, Eq(a, 1), Eq(r, x + r), Matrix([[x, 2]])])
+    >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result_5397460570204848505]
-    >>> [arg.expr for arg in r.results]
+    >>> [arg.expr for arg in routine.results]
     [x⋅y]
-    >>> [arg.name for arg in r.arguments]   # doctest: +SKIP
-    [x, y, f, g, out_8598435338387848786]
+    >>> [arg.name for arg in routine.arguments]   # doctest: +SKIP
+    [x, y, a, r, out_8598435338387848786]
 
 We can examine the various arguments more closely::
 
     >>> from sympy.utilities.codegen import (InputArgument, OutputArgument,
     ...                                      InOutArgument)
-    >>> [a.name for a in r.arguments if isinstance(a, InputArgument)]   
+    >>> [a.name for a in routine.arguments if isinstance(a, InputArgument)]   
     [x, y]
 
-    >>> [a.name for a in r.arguments if isinstance(a, OutputArgument)]  # doctest: +SKIP
-    [f, out_8598435338387848786]
-    >>> [a.expr for a in r.arguments if isinstance(a, OutputArgument)]
+    >>> [a.name for a in routine.arguments if isinstance(a, OutputArgument)]  # doctest: +SKIP
+    [a, out_8598435338387848786]
+    >>> [a.expr for a in routine.arguments if isinstance(a, OutputArgument)]
     [1, [x  2]]
 
-    >>> [a.name for a in r.arguments if isinstance(a, InOutArgument)]
-    [g]
-    >>> [a.expr for a in r.arguments if isinstance(a, InOutArgument)]
-    [g + x]
+    >>> [a.name for a in routine.arguments if isinstance(a, InOutArgument)]
+    [r]
+    >>> [a.expr for a in routine.arguments if isinstance(a, InOutArgument)]
+    [r + x]
 
 Autowrap
 --------
@@ -366,7 +343,6 @@ function.
 The callable returned from autowrap() is a binary python function, not a 
 SymPy object. For example::
 
-    >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
     >>> binary_func = autowrap(expr)    # doctest: +SKIP
@@ -380,15 +356,11 @@ directory, and leave the files intact when finished. For instance::
 
     >>> from sympy.utilities.autowrap import autowrap
     >>> from sympy.physics.qho_1d import psi_n
-    >>> from sympy import IndexedBase, Idx
-    >>> from sympy import Eq
-    >>> from sympy import symbols
-    >>> x = IndexedBase('x')
-    >>> y = IndexedBase('y')
+    >>> x_ = IndexedBase('x')
+    >>> y_ = IndexedBase('y')
     >>> m = symbols('m', integer=True)
     >>> i = Idx('i', m)
-    >>> a,omega = symbols('a, omega')
-    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp')  # doctest: +SKIP
+    >>> qho = autowrap(Eq(y_[i], psi_n(0, x_[i], m, omega)), tempdir='/tmp')  # doctest: +SKIP
 
 Checking the Fortran source code in the directory specified reveals this::
 
@@ -411,7 +383,7 @@ Checking the Fortran source code in the directory specified reveals this::
 
 Using the argument ``args`` along with it changes argument sequence::
 
-    >>> qho = autowrap(Eq(y[i], psi_n(0, x[i], m, omega)), tempdir='/tmp', args=[y, x, m, omega])   # doctest: +SKIP
+    >>> qho = autowrap(Eq(y_[i], psi_n(0, x_[i], m, omega)), tempdir='/tmp', args=[y, x, m, omega])   # doctest: +SKIP
 
 yields::
 
@@ -450,9 +422,7 @@ to SymPy speeds. This is because we will be using compiled functions with Sympy 
 and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
-    >>> from sympy import symbols
     >>> from sympy.physics.hydrogen import R_nl
-    >>> a, r = symbols('a, r')
     >>> psi_nl = R_nl(1, 0, a, r)
     >>> f = binary_function('f', psi_nl)    # doctest: +SKIP
     >>> f(a, r).evalf(3, subs={a: 1, r: 2})  # doctest: +SKIP
@@ -474,10 +444,7 @@ See `this <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
 
 Let us see an example::
 
-    >>> from sympy import init_printing, symbols
-    >>> init_printing()
     >>> from sympy.physics.hydrogen import R_nl
-    >>> x = symbols('x')
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
                     -2⋅x
