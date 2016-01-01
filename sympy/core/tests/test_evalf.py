@@ -473,3 +473,22 @@ def test_issue_9326():
     d2 = Dummy('d')
     e = d1 + d2
     assert e.evalf(subs = {d1: 1, d2: 2}) == 3
+
+def test_issue_10323_ceiling():
+    assert ceiling(Rational(2**100)+Rational(2**-100)) == 2**100+1
+    assert floor(Rational(2**100)+Rational(2**-100)) == 2**100
+    assert ceiling(Rational(2**100)-Rational(2**-100)) == 2**100
+    assert floor(Rational(2**100)-Rational(2**-100)) == 2**100-1
+
+def test_issue_10323_sqrt():
+    def asserts(x,rf,rc):
+        assert (rf == rc) == (rf**2) == x
+        assert (rc-1)**2 < x and rc**2 >= x
+        assert (rf+1)**2 > x and rf**2 <= x
+    for b in range(2,15):
+        for ee in range(1,10):
+            x = b**(2**ee)
+            asserts(x, floor(sqrt(x)), ceiling(sqrt(x)))
+            for oe in range(-10,10):
+                x = b**(2**ee)+(2**abs(oe))*copysign(oe,1)
+                asserts(x, floor(sqrt(x)), ceiling(sqrt(x)))
