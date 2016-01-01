@@ -256,21 +256,37 @@ def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Vigenère cipher examples ########################
 ######################################################################
 
-def keystring(phrase, repeats=True):
+def check_and_format(phrase, repeats=True, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Returns a keystring formatted in a way as needed by Vigenère encryption.
+    Returns a string formatted in a way as needed by Vigenère encryption.
+
+    Parameters
+    ==========
+
+    phrase:     string to be formatted
+    repeats:    boolean to allow or restrict repetition of characters
+                in the formatted phrase
+    symbols:    alphabet of characters allowed in phrase
+                (a ValueError is returned if phrase includes
+                a character that is not defined in symbols)
 
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import keystring
-    >>> keystring('with repetitions')
+    >>> from sympy.crypto.crypto import check_and_format
+    >>> check_and_format('with repetitions')
     'WITHREPETITIONS'
-    >>> keystring('without repetitions', False)
+    >>> check_and_format('without repetitions', False)
     'WITHOUREPNS'
 
     """
-    rv = ''.join(''.join([x for x in phrase.split() if x.isalnum()]).upper())
+    for x in phrase:
+        if x == " " or x == "\n":
+            continue
+        if x not in symbols.lower() + symbols.upper():
+            errormsg = "Character {} of string {} is not defined in symbols {}.".format(x, phrase, symbols)
+            raise ValueError(errormsg)
+    rv = ''.join(''.join(phrase.split()).upper())
     if repeats:
         return rv
     return ''.join(uniq(rv))
@@ -398,10 +414,10 @@ def encipher_vigenere(pt, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWX
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
-    key0 = keystring(key, repeats)
+    key0 = check_and_format(key, repeats, symbols)
     K = [A.index(x) for x in key0]
     k = len(K)
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
+    pt0 = check_and_format(pt, True, symbols)
     P = [A.index(x) for x in pt0]
     n = len(P)
     #m = n//k
@@ -436,10 +452,10 @@ def decipher_vigenere(ct, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWX
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
-    key0 = keystring(key, repeats)
+    key0 = check_and_format(key, repeats, symbols)
     K = [A.index(x) for x in key0]
     k = len(K)
-    ct0 = [x.capitalize() for x in ct if x.isalnum()]
+    ct0 = check_and_format(ct, True, symbols)
     C = [A.index(x) for x in ct0]
     n = len(C)
     #m = n//k
