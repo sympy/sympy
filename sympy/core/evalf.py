@@ -291,7 +291,7 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     Note: this function either gives the exact result or signals failure.
     """
-    import sympy
+    from sympy.functions.elementary.complexes import re, im
     # The expression is likely less than 2^30 or so
     assumed_size = 30
     ire, iim, ire_acc, iim_acc = evalf(expr, assumed_size, options)
@@ -318,10 +318,31 @@ def get_integer_part(expr, no, options, return_ints=False):
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close).
     def calc_part(expr, nexpr):
-        from sympy import Add
+        from sympy.core.add import Add
         nint = int(to_int(nexpr, rnd))
         n, c, p, b = nexpr
-        if (c != 1 and p != 0) or p < 0:
+        is_int = (p == 0)
+        if not is_int:
+            # if there are subs and they all contain integer re/im parts
+            # then we can (hopefully) safely substitute them into the
+            # expression
+            s = options.get('subs', False)
+            if s:
+                doit = True
+                from sympy.core.compatibility import as_int
+                for v in s.values():
+                    try:
+                        as_int(v)
+                    except ValueError:
+                        try:
+                            [as_int(i) for i in v.as_real_imag()]
+                            continue
+                        except (ValueError, AttributeError):
+                            doit = False
+                            break
+                if doit:
+                    expr = expr.subs(s)
+
             expr = Add(expr, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(expr, 10, options)
             try:
@@ -334,16 +355,16 @@ def get_integer_part(expr, no, options, return_ints=False):
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
 
-    re, im, re_acc, im_acc = None, None, None, None
+    re_, im_, re_acc, im_acc = None, None, None, None
 
     if ire:
-        re, re_acc = calc_part(sympy.re(expr, evaluate=False), ire)
+        re_, re_acc = calc_part(re(expr, evaluate=False), ire)
     if iim:
-        im, im_acc = calc_part(sympy.im(expr, evaluate=False), iim)
+        im_, im_acc = calc_part(im(expr, evaluate=False), iim)
 
     if return_ints:
-        return int(to_int(re or fzero)), int(to_int(im or fzero))
-    return re, im, re_acc, im_acc
+        return int(to_int(re_ or fzero)), int(to_int(im_ or fzero))
+    return re_, im_, re_acc, im_acc
 
 
 def evalf_ceiling(expr, prec, options):
