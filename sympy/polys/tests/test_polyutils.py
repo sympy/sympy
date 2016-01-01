@@ -49,6 +49,14 @@ def test__nsort():
     b, c, a = exp(-1000), exp(-999), exp(-1001)
     assert _nsort((b, c, a)) == [a, b, c]
 
+    u = 2**pi*(1 + 2**pi)
+    d = u - u.expand()
+    I = S.ImaginaryUnit
+    assert _nsort([d]) == [d]
+    raises(NotImplementedError, lambda: _nsort((d + I, d)))
+    f = symbols('f', finite=True, real=True)
+    assert _nsort((f, f - 1)) == [f - 1, f]
+
 
 def test__sort_gens():
     assert _sort_gens([]) == ()
