@@ -49,7 +49,7 @@ Mathematica (:py:func:`sympy.printing.mathematica.mathematica_code`),
 Octave/Matlab (:py:func:`sympy.printing.octave.octave_code`), 
 Python (print_python, which is actually more like a lightweight version 
 of codegen for Python, and :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries 
-(like NumPy), and theano (:py:func:`sympy.printing.theanocode.theano_function).The code printers 
+(like NumPy), and theano (:py:func:`sympy.printing.theanocode.theano_function`).The code printers 
 are special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with 
@@ -189,11 +189,11 @@ support and see how it works::
     >>> from sympy import init_printing
     >>> init_printing()
     >>> pprint(expr)
-                     ⎛     2       ⎞
-    I_z⋅S_z⋅γᵢ⋅γₛ⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
-    ────────────────────────────────
-                     3              
-                  rᵢₛ               
+                      ⎛     2       ⎞
+    I_z⋅S_z⋅γᵢ⋅γ_s⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
+    ─────────────────────────────────
+                      3              
+                  r_is             
     >>> pprint(jscode(expr, assign_to="H_is"))
     H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.po
     w(r_is, 3);
