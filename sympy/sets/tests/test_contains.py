@@ -15,3 +15,9 @@ def test_issue_6194():
     assert Contains(x, FiniteSet(0)) != S.false
     assert Contains(x, Interval(1, 1)) != S.false
     assert Contains(x, S.Integers) != S.false
+
+def test_issue_10326():
+    assert Contains(S.Infinity, Interval(S.NegativeInfinity, S.Infinity)) == False
+    assert Contains(S.NegativeInfinity, Interval(S.NegativeInfinity, S.Infinity)) == False
+
+
