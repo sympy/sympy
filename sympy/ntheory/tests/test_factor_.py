@@ -282,6 +282,10 @@ def test_totient():
 
     n = Symbol("n", integer=True, positive=True)
     assert totient(n).is_integer
+    from sympy import oo
+    raises(ValueError, lambda: totient(-oo))
+    raises(ValueError, lambda: totient(12.31))
+    assert totient(oo)==oo
 
 
 def test_divisor_sigma():
