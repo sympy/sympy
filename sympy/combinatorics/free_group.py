@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int
 from sympy.core import S
-#from sympy.mpmath import isint
+from sympy.mpmath import isint
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
 
@@ -62,7 +62,7 @@ class FreeGroup(Basic):
 
         obj = Basic.__new__(cls, *args, **kwargs)
 
-        if isinstance(args[0], int) and args[0] >= 0:
+        if isint(args[0]) and args[0] >= 0:
 
             # (1) form of the API used here
             if len(args) == 1:
@@ -211,7 +211,7 @@ class FreeGroup(Basic):
         True
 
         """
-        if self.rank == 0:
+        if self.rank == 0 or self.rank == 1:
             return True
         else:
             return False
@@ -244,7 +244,7 @@ class FreeGroup(Basic):
         Examples
         ========
         """
-        return F.is_group and all([self.contains(gen) for gen in F.generators]):
+        return F.is_group and all([self.contains(gen) for gen in F.generators])
 
     def assign_variables(self):
         """
