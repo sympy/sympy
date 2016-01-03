@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int
 from sympy.core import S
+#from sympy.mpmath import isint
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
 
@@ -16,14 +17,14 @@ class FreeGroup(Basic):
     """
     Called with a positive integer `rank`, ``FreeGroup`` returns a free group
     on `rank` generators. If the optional argument `name` is given then the
-    generators are printed as `name1`, `name2` etc., that is, each name is the
-    concatenation of the string `name` and an integer from `0` to `range`. The
-    default for `name` is the string "f".
+    generators are printed as `name0`, `name1` etc., that is, each name is the
+    concatenation of the string `name` and an integer from `0` to `range-1`.
+    The default for `name` is the string "f".
 
     ``FreeGroup( rank )``     ..........................................  (1)
 
     Called in the second form, ``FreeGroup`` returns a free group on as many
-    generators as arguments, printed as `name1`, `name2` etc.
+    generators as arguments, printed as `name0`, `name1` etc.
 
     ``FreeGroup( rank, "name" )`` ......................................  (2)
 
@@ -69,6 +70,9 @@ class FreeGroup(Basic):
 
             # (2) form of the API used here
             elif len(args) == 2:
+                if not isinstance(args[1], str):
+                    raise ValueError("second argument should be of type `str`, "
+                            "not of type %s" % type(args[1]))
                 obj._str = args[1]
 
             else:
@@ -157,10 +161,7 @@ class FreeGroup(Basic):
         True
 
         """
-        if self is other:
-            return True
-        else:
-            return False
+        return self is other
 
     @property
     def as_str(self):
@@ -243,10 +244,7 @@ class FreeGroup(Basic):
         Examples
         ========
         """
-        if F.is_group and set(F.generators).issubset(set(self.generators)):
-            return True
-        else:
-            return False
+        return F.is_group and all([self.contains(gen) for gen in F.generators]):
 
     def assign_variables(self):
         """
@@ -266,7 +264,7 @@ class FreeGroup(Basic):
 class FreeGroupElm(Basic):
     """
     ``FreeGroupElm`` is actually not usable as public import, since it is
-    always assosciated with a ``FreeGroup``. It is always called only by the
+    always associated with a ``FreeGroup``. It is always called only by the
     ``FreeGroup`` class. Called with a ``FreeGroup`` as the first argument and
     the second argument called the `array_form` for the ``FreeGroupElm``, and
     the third argument is a string representation for the element.
@@ -323,7 +321,7 @@ class FreeGroupElm(Basic):
     def array_form(self):
         """
         SymPy provides two different internal kinds of representation
-        of assosciative words. The first one is called the `array_form`
+        of associative words. The first one is called the `array_form`
         which is a list containing `tuples` as its elements, where the
         size of each tuple is two. At the first position the tuple
         contains the `generator-index`, while at the second position
@@ -759,7 +757,7 @@ class FreeGroupElm(Basic):
         """
         if from_i < 0 or to_j >= len(self):
             raise ValueError("`from_i`, `to_j` must be positive and less than "
-                    "the length of assosciative word")
+                    "the length of associative word")
         if to_j <= from_i:
             return FreeGroupElm(self.group, [])
         else:
