@@ -23,8 +23,8 @@ There are four main levels of abstractions::
       |
    autowrap
 
-py:func:`sympy.utilities.autowrap` uses codegen, and codegen uses the code
-printers. py:func:`sympy.utilities.autowrap` does everything: it lets you go
+:mod:`sympy.utilities.autowrap` uses codegen, and codegen uses the code
+printers. :mod:`sympy.utilities.autowrap` does everything: it lets you go
 from SymPy expression to numerical function in the same Python process in one
 step. codegen is actual code generation, i.e., to compile and use later, or to
 include in some larger project.
@@ -37,7 +37,7 @@ powers in C. ``x**2`` prints as ``pow(x, 2)`` instead of ``x*x``.  Other
 optimizations (like mathematical simplifications) should happen before the code
 printers.
 
-Currently, :py:func:`sympy.cse` is not applied automatically anywhere in this
+Currently, :py:func:`sympy.simplify.cse_main.cse` is not applied automatically anywhere in this
 chain. It ideally happens at the codegen level, or somewhere above it.
 
 We will iterate through the levels below.
@@ -114,27 +114,28 @@ The various printers also tend to support ``Indexed`` objects well. With
 looped over::
 
     >>> len_y = 5
-    >>> y_ = IndexedBase('y', shape=(len_y,))
-    >>> t_ = IndexedBase('t', shape=(len_y,))
+    >>> mat_1 = IndexedBase('mat_1', shape=(len_y,))
+    >>> mat_2 = IndexedBase('mat_2', shape=(len_y,))
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
-    >>> eq = Eq(Dy[i], (y_[i+1] - y_[i]) / (t_[i+1] - t_[i]))
+    >>> eq = Eq(Dy[i], (mat_1[i+1] - mat_1[i]) / (mat_2[i+1] - mat_2[i]))
     >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
-    Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);
+    Dy[i] = (mat_1[i + 1] - mat_1[i])/(mat_2[i + 1] - mat_2[i]);
     >>> Res = IndexedBase('Res', shape=(len_y,))
     >>> j = Idx('j', len_y)
-    >>> eq = Eq(Res[j], y_[j]*t_[j])
+    >>> eq = Eq(Res[j], mat_1[j]*mat_2[j])
     >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=True))
     for (var j=0; j<5; j++){
        Res[j] = 0;
     }
     for (var j=0; j<5; j++){
        for (var j=0; j<5; j++){
-          Res[j] = Res[j] + t[j]*y[j];
+          Res[j] = Res[j] + mat_1[j]*mat_2[j];
        }
     }
     >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
-    Res[j] = t[j]*y[j];
+    Res[j] = mat_1[j]*mat_2[j];
+
 
 Custom printing can be defined for certain types by passing a dictionary of
 "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
