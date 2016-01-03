@@ -753,7 +753,7 @@ def rs_diff(p, x):
     for expv in p:
         if expv[n]:
             e = monomial_ldiv(expv, mn)
-            p1[e] = p[expv]*expv[n]
+            p1[e] = R.domain(p[expv]*expv[n])
     return p1
 
 def rs_integrate(p, x):
@@ -784,7 +784,7 @@ def rs_integrate(p, x):
 
     for expv in p:
         e = monomial_mul(expv, mn)
-        p1[e] = p[expv]/(expv[n] + 1)
+        p1[e] = R.domain(p[expv]/(expv[n] + 1))
     return p1
 
 def rs_fun(p, f, *args):
@@ -1187,9 +1187,10 @@ def rs_atan(p, x, prec):
         return rs_puiseux(rs_atan, p, x, prec)
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
+        #zm = R.zero_monom
+        #c = p[zm]
         if R.domain is EX:
             c_expr = c.as_expr()
             const = atan(c_expr)
@@ -1198,8 +1199,11 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
-                    "this domain.")
+                R = R.add_gens([atan(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(atan(c_expr))
         else:
             try:
                 const = R(atan(c))
@@ -1210,11 +1214,13 @@ def rs_atan(p, x, prec):
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
     # Finally we integrate to get back atan
-    dp = p.diff(x)
+    dp = rs_diff(p, x)
     p1 = rs_square(p, x, prec) + R(1)
     p1 = rs_series_inversion(p1, x, prec - 1)
     p1 = rs_mul(dp, p1, x, prec - 1)
-    return rs_integrate(p1, x) + const
+    p1 = rs_integrate(p1, x) + const
+    #return rs_integrate(p1, x) + const
+    return p1
 
 def rs_asin(p, x, prec):
     """
