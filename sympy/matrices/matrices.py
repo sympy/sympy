@@ -3549,6 +3549,28 @@ class MatrixBase(object):
         del self._eigenvects
 
     def jordan_cell(self, eigenval, n):
+        """
+        Generate Jordan Blocks if eigenvalue and dimension is provided.
+
+        https://en.wikipedia.org/wiki/Jordan_matrix
+
+        Examples
+        ========
+        >>> from sympy.matrices import jordan_cell
+        >>> from sympy.abc import x
+        >>> jordan_cell(1, 3)
+        Matrix([
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 1]])
+        >>> jordan_cell(x, 4)
+        Matrix([
+        [x, 1, 0, 0],
+        [0, x, 1, 0],
+        [0, 0, x, 1],
+        [0, 0, 0, x]])
+
+        """
         n = int(n)
         from sympy.matrices import MutableMatrix
         out = MutableMatrix.zeros(n)
