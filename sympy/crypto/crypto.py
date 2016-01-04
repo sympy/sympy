@@ -1557,7 +1557,7 @@ def encipher_elgamal(m, puk):
 
     """
     if m > puk[0]:
-        ValueError('Message {} should be less than prime {}'.format(m, puk[0]))
+        raise ValueError('Message {} should be less than prime {}'.format(m, puk[0]))
     r = randrange(2, puk[0])
     return pow(puk[1], r, puk[0]), m * pow(puk[2], r, puk[0]) % puk[0]
 
@@ -1708,6 +1708,6 @@ def dh_shared_key(puk, b):
     """
     p, _, x = puk
     if 1 >= b or b >= p:
-        ValueError('Value of b should be greater 1 and less than prime {}'\
+        raise ValueError('Value of b should be greater 1 and less than prime {}'\
                 .format(p))
     return pow(x, b, p)

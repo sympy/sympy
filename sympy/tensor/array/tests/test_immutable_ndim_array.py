@@ -257,3 +257,31 @@ def test_slices():
     assert md[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert md[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
     assert md[:, :, :] == md
+
+    sd = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
+    assert sd == ImmutableSparseNDimArray(md)
+
+    assert sd[:] == md._array
+    assert sd[:] == list(sd)
+    assert sd[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
+    assert sd[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
+    assert sd[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
+    assert sd[:, :, :] == sd
+
+
+def test_diff_and_applyfunc():
+    from sympy.abc import x, y, z
+    md = ImmutableDenseNDimArray([[x, y], [x*z, x*y*z]])
+    assert md.diff(x) == ImmutableDenseNDimArray([[1, 0], [z, y*z]])
+
+    sd = ImmutableSparseNDimArray(md)
+    assert sd == ImmutableSparseNDimArray([x, y, x*z, x*y*z], (2, 2))
+    assert sd.diff(x) == ImmutableSparseNDimArray([[1, 0], [z, y*z]])
+
+    mdn = md.applyfunc(lambda x: x*3)
+    assert mdn == ImmutableDenseNDimArray([[3*x, 3*y], [3*x*z, 3*x*y*z]])
+    assert md != mdn
+
+    sdn = sd.applyfunc(lambda x: x/2)
+    assert sdn == ImmutableSparseNDimArray([[x/2, y/2], [x*z/2, x*y*z/2]])
+    assert sd != sdn
