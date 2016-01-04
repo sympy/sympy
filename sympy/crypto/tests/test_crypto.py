@@ -255,6 +255,7 @@ def test_elgamal():
     ek = elgamal_public_key(dk)
     m = 12345
     assert m == decipher_elgamal(encipher_elgamal(m, ek), dk)
+    raises(ValueError, lambda: encipher_elgamal(2000, (1031, 14, 212)))
 
 def test_dh_private_key():
     p, g, _ = dh_private_key(digit = 100)
@@ -275,3 +276,4 @@ def test_dh_shared_key():
     b = randrange(2, p)
     sk = dh_shared_key((p, _, ga), b)
     assert sk == pow(ga, b, p)
+    raises(ValueError, lambda: dh_shared_key((1031, 14, 565), 2000))
