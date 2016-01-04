@@ -171,25 +171,25 @@ An example of Mathematica code printer::
 We can go through a common expression in different languages we support and see
 how it works::
 
-    >>> k_i, g_i, g_s, r_is, I_z, S_z = symbols("k_i, gamma_i, gamma_s, r_is, I_z, S_z")
-    >>> expr = k_i * g_i * g_s / (r_is**3)
-    >>> expr = expr * 2 * I_z * S_z * (3 * (cos(beta))**2 - 1) / 2
+    >>> k, g1, g2, r, I, S = symbols("k, gamma_1, gamma_2, r, I, S")
+    >>> expr = k * g1 * g2 / (r**3)
+    >>> expr = expr * 2 * I * S * (3 * (cos(beta))**2 - 1) / 2
     >>> expr
-                     ⎛     2       ⎞
-    I_z⋅S_z⋅γᵢ⋅γₛ⋅kᵢ⋅⎝3⋅cos (β) - 1⎠
-    ────────────────────────────────
-                     3
-                  rᵢₛ
+                ⎛     2       ⎞
+    I⋅S⋅γ₁⋅γ₂⋅k⋅⎝3⋅cos (β) - 1⎠
+    ───────────────────────────
+                  3            
+                 r             
     >>> print(jscode(expr, assign_to="H_is"))
-    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.pow(r_is, 3);
+    H_is = I*S*gamma_1*gamma_2*k*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.pow(r, 3);
     >>> print(ccode(expr, assign_to="H_is"))
-    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*pow(cos(beta), 2) - 1)/pow(r_is, 3);
+    H_is = I*S*gamma_1*gamma_2*k*(3*pow(cos(beta), 2) - 1)/pow(r, 3);
     >>> print(fcode(expr, assign_to="H_is"))
-    H_is = I_z*S_z*gamma_i*gamma_s*k_i*(3*cos(beta)**2 - 1)/r_is**3
+          H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
     >>> print(octave_code(expr, assign_to="H_is"))
-    H_is = I_z.*S_z.*gamma_i.*gamma_s.*k_i.*(3*cos(beta).^2 - 1)./r_is.^3;
+    H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
     >>> print(mathematica_code(expr))
-    I_z*S_z*gamma_i*gamma_s*k_i*(3*Cos[beta]^2 - 1)/r_is^3
+    I*S*gamma_1*gamma_2*k*(3*Cos[beta]^2 - 1)/r^3
 
 Codegen (sympy.utilities.codegen)
 ---------------------------------
