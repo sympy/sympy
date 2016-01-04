@@ -7,6 +7,7 @@ Classical ciphers and LFSRs
 from __future__ import print_function
 
 from random import randrange
+from string import whitespace, uppercase, maketrans, printable
 
 from sympy import nextprime
 from sympy.core import Rational, S, Symbol
@@ -17,6 +18,77 @@ from sympy.ntheory import isprime, totient, primitive_root
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly, invert
 from sympy.utilities.iterables import flatten, uniq
+
+
+def AZ(s=None):
+    if not s:
+        return uppercase
+    t = type(s) is str
+    if t:
+        s = [s]
+    rv = [check_and_join(i.upper().split(), uppercase, filter=True)
+        for i in s]
+    if t:
+        return rv[0]
+    return rv
+
+bifid5 = AZ().replace('J', '')
+bifid6 = AZ() + '0123456789'
+bifid10 = printable
+
+def padded_key(key, alp, warn=False):
+    """Return a string of the characters of ``alp`` with those of ``key``
+    appearing first, omitting characters in ``key`` that are not in ``alp``
+    unless ``warn`` is True (default=False).
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import AZ, padded_key
+    >>> padded_key('rsa'.upper(), AZ())
+    'RSABCDEFGHIJKLMNOPQTUVWXYZ'
+    """
+    if warn:
+        extra = set(key) - set(alp)
+        if extra:
+            raise ValueError('invalid characters: %s' % ''.join(sorted(extra)))
+    key0 = ''.join([i for i in uniq(key) if i in alp])
+    return key0 + ''.join([i for i in alp if i not in key0])
+
+
+def check_and_join(phrase, symbols=None, filter=None):
+    """
+    Joins characters of `phrase` and if symbols are provided, raises
+    an error if any character in the phrase is not in the symbols.
+
+    Parameters
+    ==========
+
+    phrase:     string or list of strings to be returned as a string
+    symbols:    iterable of characters allowed in phrase; if None,
+                no checking is performed
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import check_and_join
+    >>> check_and_join('a phrase')
+    'a phrase'
+    >>> check_and_join('a phrase'.upper().split())
+    'APHRASE'
+    >>> check_and_join('a phrase!'.upper().split(), 'ARE', filter=True)
+    'ARAE'
+
+    """
+    rv = ''.join(''.join(phrase))
+    if symbols is not None:
+        symbols = check_and_join(symbols)
+        missing = ''.join(list(sorted(set(rv) - set(symbols))))
+        if missing:
+            if not filter:
+                raise ValueError('characters missing from symbols: "%s"' % missing)
+            rv = rv.translate(None, missing)
+    return rv
 
 
 def alphabet_of_cipher(symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
@@ -68,9 +140,6 @@ def alphabet_of_cipher(symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     return list(symbols)
 
 
-######## shift cipher examples ############
-
-
 def cycle_list(k, n):
     """
     Returns the cyclic shift of the list range(n) by k.
@@ -94,6 +163,39 @@ def cycle_list(k, n):
     return L[k:] + L[:k]
 
 
+def encipher_repeating(pt, key, symbols):
+    """
+    >>> from sympy.crypto.crypto import encipher_repeating as encode, AZ, uppercase
+    >>> msg = 'attack at dawn'
+    >>> key = 'lemon'
+    >>> encode(*AZ((msg, key, uppercase)))
+    'LXFOPVEFRNHR'
+    """
+    alp = dict([(c, i) for i, c in enumerate(symbols)])
+    kee = [alp[c] for c in key]
+    A = len(symbols)
+    k = len(kee)
+    rv = []
+    for i, m in enumerate(pt):
+        rv.append(symbols[(alp[m] + kee[i % k]) % A])
+    return ''.join(rv)
+
+
+def encipher_translate(pt, old, new):
+    """
+    >>> from sympy.crypto.crypto import encipher_translate as encode, AZ
+    >>> msg = 'attack at dawn'
+    >>> old = 'AT'
+    >>> new = 'UB'
+    >>> encode(*AZ((msg, old, new)))
+    'UBBUCKUBDUWN'
+    """
+    return pt.translate(maketrans(old, new))
+
+
+######## shift cipher examples ############
+
+
 def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Performs shift cipher encryption on plaintext pt, and returns the ciphertext.
@@ -112,7 +214,7 @@ def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
         INPUT:
 
-            ``k``: an integer from 0 to 25 (the secret key)
+            ``key``: an integer from 0 to 25 (the secret key)
 
             ``m``: string of upper-case letters (the plaintext message)
 
@@ -142,12 +244,9 @@ def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'FNMZUXADZSZQLX'
 
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
-    n = len(A)
-    L = cycle_list(key, n)
-    C = [A[(A.index(pt[i]) + key) % n] for i in range(len(pt))]
-    return "".join(C)
+    key = len(symbols) - key % len(symbols)
+    key = symbols[key:] + symbols[:key]
+    return encipher_translate(pt, key, symbols)
 
 
 ######## affine cipher examples ############
@@ -208,10 +307,10 @@ def encipher_affine(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     n = len(A)
-    k1 = key[0] # multiplicative coeff "a"
-    k2 = key[1] # additive coeff "b"
-    L = cycle_list(k2, n)
-    C = [A[(k1*A.index(pt[i]) + k2) % n] for i in range(len(pt))]
+    map = dict(zip(A, range(n)))
+    a, b = key
+    L = cycle_list(b, n)
+    C = [A[(a*map[c] + b) % n] for c in pt]
     return "".join(C)
 
 
@@ -225,74 +324,34 @@ def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     Assumes the ``pt`` has only letters taken from ``symbols``.
     Assumes ``key`` is a permutation of the symbols. This function permutes the
     letters of the plaintext using the permutation given in ``key``.
-    The decription uses the inverse permutation.
+    The description uses the inverse permutation.
     Note that if the permutation in key is order 2 (eg, a transposition) then
     the encryption permutation and the decryption permutation are the same.
 
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import alphabet_of_cipher, encipher_substitution
-    >>> symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    >>> A = alphabet_of_cipher(symbols)
+    >>> from sympy.crypto.crypto import encipher_substitution, AZ
     >>> key = "BACDEFGHIJKLMNOPQRSTUVWXYZ"
     >>> pt = "go navy! beat army!"
-    >>> encipher_substitution(pt, key)
+    >>> encipher_substitution(AZ(pt), key)
     'GONBVYAEBTBRMY'
     >>> ct = 'GONBVYAEBTBRMY'
     >>> encipher_substitution(ct, key)
     'GONAVYBEATARMY'
 
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
-    n = len(A)
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    ct = [key[A.index(x)] for x in pt0]
-    return "".join(ct)
+    symbols = check_and_join(symbols)
+    key = check_and_join(key, symbols)
+    pt = check_and_join(pt, symbols)
+    return pt.translate(maketrans(symbols, key))
 
 
 ######################################################################
 #################### Vigenère cipher examples ########################
 ######################################################################
 
-def check_and_format(phrase, repeats=True, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    """
-    Returns a string formatted in a way as needed by Vigenère encryption.
-
-    Parameters
-    ==========
-
-    phrase:     string to be formatted
-    repeats:    boolean to allow or restrict repetition of characters
-                in the formatted phrase
-    symbols:    alphabet of characters allowed in phrase
-                (a ValueError is returned if phrase includes
-                a character that is not defined in symbols)
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import check_and_format
-    >>> check_and_format('with repetitions')
-    'WITHREPETITIONS'
-    >>> check_and_format('without repetitions', False)
-    'WITHOUREPNS'
-
-    """
-    for x in phrase:
-        if x == " " or x == "\n":
-            continue
-        if x not in symbols.lower() + symbols.upper():
-            errormsg = "Character {} of string {} is not defined in symbols {}.".format(x, phrase, symbols)
-            raise ValueError(errormsg)
-    rv = ''.join(''.join(phrase.split()).upper())
-    if repeats:
-        return rv
-    return ''.join(uniq(rv))
-
-
-def encipher_vigenere(pt, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Performs the Vigenère cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -333,9 +392,6 @@ def encipher_vigenere(pt, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWX
 
             ``m``: string of upper-case letters (the plaintext message)
 
-            ``repeats``: True if repetition of characters in key is allowed.
-                         Otherwise false.
-
         OUTPUT:
 
             ``c``: string of upper-case letters (the ciphertext message)
@@ -366,9 +422,9 @@ def encipher_vigenere(pt, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWX
 
         INPUT:
 
-          ``key``: a string of upper-case letters (the secret key)
+          ``key``: a string of letters (the secret key)
 
-          ``m``: string of upper-case letters (the plaintext message)
+          ``m``: string of letters (the plaintext message)
 
         OUTPUT:
 
@@ -394,68 +450,39 @@ def encipher_vigenere(pt, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWX
     Examples
     ========
 
-    Allowing character repetitions in key (default):
-
-    >>> from sympy.crypto.crypto import encipher_vigenere
+    >>> from sympy.crypto.crypto import encipher_vigenere, AZ
     >>> key = "encrypt"
     >>> pt = "meet me on monday"
     >>> encipher_vigenere(pt, key)
     'QRGKKTHRZQEBPR'
 
-    Not allowing character repetitions in key:
-
-    >>> from sympy.crypto.crypto import encipher_vigenere
-    >>> key = "eeencryptt"
-    >>> pt = "meet me on monday"
-    >>> encipher_vigenere(pt, key, False)
-    'QRGKKTHRZQEBPR'
-
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
-    N = len(A)   # normally, 26
-    key0 = check_and_format(key, repeats, symbols)
-    K = [A.index(x) for x in key0]
-    k = len(K)
-    pt0 = check_and_format(pt, True, symbols)
-    P = [A.index(x) for x in pt0]
-    n = len(P)
-    #m = n//k
-    C = [(K[i % k] + P[i]) % N for i in range(n)]
-    return "".join([str(A[x]) for x in C])
+    symbols = check_and_join(AZ(symbols))
+    key = check_and_join(AZ(key), symbols)
+    pt = check_and_join(AZ(pt), symbols)
+    return encipher_repeating(pt, key, symbols)
 
 
-def decipher_vigenere(ct, key, repeats = True, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Decode using the Vigenère cipher.
 
     Examples
     ========
 
-    Allowing character repetitions in key (default):
-
-    >>> from sympy.crypto.crypto import decipher_vigenere
+    >>> from sympy.crypto.crypto import decipher_vigenere, AZ
     >>> key = "encrypt"
     >>> ct = "QRGK kt HRZQE BPR"
-    >>> decipher_vigenere(ct, key)
+    >>> decipher_vigenere(*AZ((ct, key)))
     'MEETMEONMONDAY'
-
-    Not allowing character repetitions in key:
-
-    >>> from sympy.crypto.crypto import decipher_vigenere
-    >>> key = "eeencryptt"
-    >>> ct = "QRGK kt HRZQE BPR"
-    >>> decipher_vigenere(ct, key, False)
-    'MEETMEONMONDAY'
-
     """
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
-    key0 = check_and_format(key, repeats, symbols)
+    key0 = check_and_join(key, symbols)
     K = [A.index(x) for x in key0]
     k = len(K)
-    ct0 = check_and_format(ct, True, symbols)
+    ct0 = check_and_join(ct, symbols)
     C = [A.index(x) for x in ct0]
     n = len(C)
     #m = n//k
@@ -592,11 +619,175 @@ def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Bifid cipher  ########################
 
 
+def encipher_bifid(pt, key, alp=None, filter=True):
+    r"""
+    Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
+
+    This is the version of the Bifid cipher that uses an `n \times n` Polybius square.
+
+        INPUT:
+
+            ``pt``: plaintext string
+
+            ``key``: short string for key made of characters from `alp`
+
+            ``alp``: `n \times n` characters defining the alphabet (default is string.printable)
+
+            ``filter``: when True (default) characters in ``pt`` that are not in ``alp`` are omitted
+
+        OUTPUT:
+
+            ciphertext (using Bifid5 cipher without spaces)
+
+    See Also
+    ========
+    decipher_bifid, encipher_bifid5, encipher_bifid6
+
+    """
+    A = alp or bifid10
+    n = len(A)**.5
+    if n != int(n):
+        raise ValueError('Length of alphabet (%s) is not a square number.' % len(A))
+    N = int(n)
+    pt0 = check_and_join(pt, A, filter=filter)
+    long_key = check_and_join(''.join(uniq(key)), A, filter=filter) or A
+    if len(long_key) < N**2:
+      long_key = list(long_key) + [x for x in A if x not in long_key]
+    # the fractionalization
+    row_col = dict([(ch, divmod(i, N)) for i, ch in enumerate(long_key)])
+    r, c = zip(*[row_col[x] for x in pt0])
+    rc = r + c
+    ch = dict([(i, ch) for ch, i in row_col.items()])
+    ct = "".join((ch[i] for i in zip(rc[::2], rc[1::2])))
+    return ct
+
+
+def decipher_bifid(ct, key, alp=None, filter=True):
+    r"""
+    Performs the Bifid cipher decryption on ciphertext ``ct``, and returns the plaintext.
+
+    This is the version of the Bifid cipher that uses the `n \times n` Polybius square.
+
+        INPUT:
+
+            ``ct``: ciphertext string
+
+            ``key``: short string for key made of characters from ``alp``
+
+            ``alp``: `n \times n` characters defining the alphabet (default=string.printable, a `10 \times 10` matrix)
+
+            ``filter``: when True (default) characters in ``pt`` that are not in ``alp`` are omitted, otherwise an error is raised
+
+        OUTPUT:
+
+            deciphered text
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_bifid, decipher_bifid, AZ
+
+    Do an encryption using the bifid5 alphabet:
+
+    >>> alp = AZ().replace('J', '')
+    >>> ct = AZ("meet me on monday!")
+    >>> key = AZ("gold bug")
+    >>> encipher_bifid(ct, key, alp)
+    'IEILHHFSTSFQYE'
+
+    When entering the text or ciphertext, spaces are ignored so it can be
+    formatted as desired. Re-entering the ciphertext from the preceding,
+    putting 4 characters per line and padding with an extra J, does not
+    cause problems for the deciphering:
+
+    >>> decipher_bifid('''
+    ... IEILH
+    ... HFSTS
+    ... FQYEJ''', key, alp)
+    'MEETMEONMONDAY'
+
+    When no alphabet is given, all 100 printable characters will be used:
+
+    >>> encipher_bifid('hello world!', '')
+    'bmtwmg-bIo*w'
+    >>> decipher_bifid(_, '')
+    'hello world!'
+
+    If the key is changed, a different encryption is obtained:
+
+    >>> key = 'gold bug'
+    >>> encipher_bifid('hello world!', 'gold_bug')
+    'hg2sfuei7t}w'
+
+    And if the key used to decrypt the message is not exact, the
+    original text will not be perfectly obtained:
+
+    >>> decipher_bifid(_, 'gold pug')
+    'heldo~wor6d!'
+
+    """
+    A = alp or bifid10
+    n = len(A)**.5
+    if n != int(n):
+        raise ValueError('Length of alphabet (%s) is not a square number.' % len(A))
+    N = int(n)
+    ct0 = check_and_join(ct, A, filter=filter)
+    long_key = check_and_join(uniq(key), A, filter=filter) or A
+    if len(long_key) < N**2:
+        long_key = list(long_key) + [x for x in A if x not in long_key]
+    # the reverse fractionalization
+    row_col = dict([(ch, divmod(i, N)) for i, ch in enumerate(long_key)])
+    rc = [i for c in ct0 for i in row_col[c]]
+    n = len(ct0)
+    rc = zip(*(rc[:n], rc[n:]))
+    ch = dict([(i, ch) for ch, i in row_col.items()])
+    pt = "".join((ch[i] for i in rc))
+    return pt
+
+
+def bifid_square(key):
+    """Return characters of ``key`` arranged in a square.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import bifid_square, AZ, padded_key, bifid5
+    >>> bifid_square(AZ().replace('J', ''))
+    Matrix([
+    [A, B, C, D, E],
+    [F, G, H, I, K],
+    [L, M, N, O, P],
+    [Q, R, S, T, U],
+    [V, W, X, Y, Z]])
+
+    >>> bifid_square(padded_key('GOLD BUG', bifid5))
+    Matrix([
+    [G, O, L, D, B],
+    [U, A, C, E, F],
+    [H, I, K, M, N],
+    [P, Q, R, S, T],
+    [V, W, X, Y, Z]])
+
+    See Also
+    ========
+    padded_key
+    """
+    A = ''.join(uniq(key.upper()))
+    n = len(A)**.5
+    if n != int(n):
+        raise ValueError('Length of alphabet (%s) is not a square number.' % len(A))
+    n = int(n)
+    f = lambda i, j: Symbol(A[n*i + j])
+    M = Matrix(n, n, f)
+    return M
+
+
 def encipher_bifid5(pt, key):
     r"""
     Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     This is the version of the Bifid cipher that uses the `5 \times 5` Polybius square.
+    The letter "J" is replaced with "I" unless a ``key`` of length 25 is used.
 
     Notes
     =====
@@ -605,7 +796,7 @@ def encipher_bifid5(pt, key):
     It is a *fractional substitution* cipher, where letters are
     replaced by pairs of symbols from a smaller alphabet. The
     cipher uses a `5 \times 5` square filled with some ordering of the alphabet,
-    except that "i"s and "j"s are identified (this is a so-called
+    except that "I" is used for "J" (this is a so-called
     Polybius square; there is a `6 \times 6` analog if you add back in "j" and also
     append onto the usual 26 letter alphabet, the digits 0, 1, ..., 9).
     According to Helen Gaines' book *Cryptanalysis*, this type of cipher
@@ -615,22 +806,27 @@ def encipher_bifid5(pt, key):
 
         INPUT:
 
-            ``pt``: plaintext string (no "j"s)
+            ``pt``: plaintext string; characters not in ``key`` are ignored
 
-            ``key``: short string for key (no repetitions, no "j"s)
+            ``key``: short string for key; duplicated characters are
+            ignored and if the length is less then 25 characters, it
+            will be padded with other letters from the alphabet omitting
+            "J". Non-alphabetic characters are ignored.
 
         OUTPUT:
 
-            ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
+            ciphertext (all caps, no spaces)
 
         STEPS:
             1. Create the `5 \times 5` Polybius square ``S`` associated to the ``k`` as
                follows:
 
                 a) starting top left, moving left-to-right, top-to-bottom,
-                   place the letters of the key into a 5x5 matrix,
+                   place the letters of the key into a `5 \times 5` matrix,
                 b) when finished, add the letters of the alphabet
-                   not in the key until the 5x5 square is filled
+                   not in the key until the `5 \times 5` square is filled. A
+                   ``key`` 25 characters will (of course) completely
+                   fill the square.
 
             2. Create a list ``P`` of pairs of numbers which are the coordinates
                in the Polybius square of the letters in ``pt``.
@@ -647,75 +843,68 @@ def encipher_bifid5(pt, key):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import encipher_bifid5
-    >>> pt = "meet me on monday"
-    >>> key = "encrypt"
-    >>> encipher_bifid5(pt, key)
-    'LNLLQNPPNPGADK'
-    >>> pt = "meet me on friday"
-    >>> encipher_bifid5(pt, key)
-    'LNLLFGPPNPGRSK'
+    >>> from sympy.crypto.crypto import encipher_bifid5 as f, decipher_bifid5 as F
+
+    "J" will be omitted unless it is replaced with "I"
+
+    >>> key = 'a'
+    >>> F(f('JOSE', key), key)
+    'OSE'
+    >>> F(f('JOSE'.replace("J", "I"), key), key)
+    'IOSE'
+
+    See Also
+    ========
+    decipher_bifid5, encipher_bifid
 
     """
-    A = alphabet_of_cipher()
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if (not(x in key0) and x != "J")]
-    n = len(pt0)
-    # the fractionalization
-    pairs = [[long_key.index(x)//5, long_key.index(x) % 5] for x in pt0]
-    tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
-    ct = "".join([long_key[5*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
-    return ct
+    pt0 = AZ(pt)
+    A = key0 = AZ(''.join(uniq(key)))
+    if len(key0) < 25:
+      A = bifid5
+      key0 = list(key0) + [x for x in A if x not in key0]
+    return encipher_bifid(pt0, '', key0, filter=True)
 
 
 def decipher_bifid5(ct, key):
     r"""
     Performs the Bifid cipher decryption on ciphertext ``ct``, and returns the plaintext.
 
-    This is the version of the Bifid cipher that uses the `5 \times 5` Polybius square.
+    This is the version of the Bifid cipher that uses the `5 \times 5` Polybius square; the
+    letter "J" is ignored unless a ``key`` of length 25 is used.
 
     INPUT:
 
-        ``ct``: ciphertext string (digits okay)
+        ``ct``: ciphertext string
 
-        ``key``: short string for key (no repetitions, digits okay)
+        ``key``: short string for key; duplicated characters are
+        ignored and if the length is less then 25 characters, it
+        will be padded with other letters from the alphabet omitting
+        "J". Non-alphabetic characters are ignored.
 
     OUTPUT:
 
-        plaintext from Bifid5 cipher (all caps, no spaces, no "J"s)
+        plaintext from Bifid5 cipher (all caps, no spaces)
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import encipher_bifid5, decipher_bifid5
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday"
-    >>> encipher_bifid5(pt, key)
-    'LNLLQNPPNPGADK'
-    >>> ct = 'LNLLQNPPNPGADK'
-    >>> decipher_bifid5(ct, key)
+    >>> key = "gold bug"
+    >>> encipher_bifid5('meet me on friday', key)
+    'IEILEHFSTSFXEE'
+    >>> encipher_bifid5('meet me on monday', key)
+    'IEILHHFSTSFQYE'
+    >>> decipher_bifid5(_, key)
     'MEETMEONMONDAY'
 
     """
-    A = alphabet_of_cipher()
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    ct0 = [x.capitalize() for x in ct if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if (not(x in key0) and x != "J")]
-    n = len(ct0)
-    # the fractionalization
-    pairs = flatten([[long_key.index(x)//5, long_key.index(x) % 5] for x in ct0 if x != "J"])
-    tmp_plain = flatten([[pairs[i], pairs[n + i]] for i in range(n)])
-    pt = "".join([long_key[5*tmp_plain[2*i] + tmp_plain[2*i + 1]] for i in range(n)])
-    return pt
+    ct0 = AZ(ct)
+    A = key0 = AZ(''.join(uniq(key)))
+    if len(key0) < 25:
+        A = bifid5
+        key0 = list(key0) + [x for x in A if x not in key0]
+    return decipher_bifid(ct0, '', key0, filter=True)
 
 
 def bifid5_square(key):
@@ -737,16 +926,7 @@ def bifid5_square(key):
     [V, W, X, Y, Z]])
 
     """
-    A = alphabet_of_cipher()
-    # first make sure the letters are capitalized
-    # and key has no spaces or duplicates
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if (not(x in key0) and x != "J")]
-    f = lambda i, j: Symbol(long_key[5*i + j])
-    M = Matrix(5, 5, f)
-    return M
+    return bifid_square(padded_key(key.upper(), bifid5))
 
 
 def encipher_bifid6(pt, key):
@@ -754,44 +934,31 @@ def encipher_bifid6(pt, key):
     Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     This is the version of the Bifid cipher that uses the `6 \times 6` Polybius square.
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
+    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9" but any alphabet of 36
+    single letter characters can be used.
 
     INPUT:
 
         ``pt``: plaintext string (digits okay)
 
-        ``key``: short string for key (no repetitions, digits okay)
+        ``key``: short string for key (digits okay)
 
     OUTPUT:
 
         ciphertext from Bifid cipher (all caps, no spaces)
 
-    Examples
+    See Also
     ========
-
-    >>> from sympy.crypto.crypto import encipher_bifid6
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday at 8am"
-    >>> encipher_bifid6(pt, key)
-    'HNHOKNTA5MEPEGNQZYG'
-    >>> encipher_bifid6(pt, key)
-    'HNHOKNTA5MEPEGNQZYG'
+    decipher_bifid6, encipher_bifid
 
     """
-    A = alphabet_of_cipher() + [str(a) for a in range(10)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if not(x in key0)]
-    n = len(pt0)
-    # the fractionalization
-    pairs = [[long_key.index(x)//6, long_key.index(x) % 6] for x in pt0]
-    tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
-    ct = "".join([long_key[6*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
-    return ct
+    pt0 = pt.upper()
+    A = key0 = ''.join(uniq(key.upper()))
+    if len(A) < 36:
+        A = bifid6
+        key0 = check_and_join(key0, A, filter=True)
+        key0 = list(key0) + [x for x in A if x not in key0]
+    return encipher_bifid(pt0, '', key0, filter=True)
 
 
 def decipher_bifid6(ct, key):
@@ -799,13 +966,14 @@ def decipher_bifid6(ct, key):
     Performs the Bifid cipher decryption on ciphertext ``ct``, and returns the plaintext.
 
     This is the version of the Bifid cipher that uses the `6 \times 6` Polybius square.
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
+    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9" but any alphabet of 36
+    single letter characters can be used.
 
     INPUT:
 
         ``ct``: ciphertext string (digits okay)
 
-        ``key``: short string for key (no repetitions, digits okay)
+        ``key``: short string for key (digits okay)
 
     OUTPUT:
 
@@ -815,29 +983,20 @@ def decipher_bifid6(ct, key):
     ========
 
     >>> from sympy.crypto.crypto import encipher_bifid6, decipher_bifid6
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday at 8am"
-    >>> encipher_bifid6(pt, key)
-    'HNHOKNTA5MEPEGNQZYG'
-    >>> ct = "HNHOKNTA5MEPEGNQZYG"
-    >>> decipher_bifid6(ct, key)
+    >>> key = "gold bug"
+    >>> encipher_bifid6('meet me on monday at 8am', key)
+    'KFKLJJHF5MMMKTFRGPL'
+    >>> decipher_bifid6(_, key)
     'MEETMEONMONDAYAT8AM'
 
     """
-    A = alphabet_of_cipher() + [str(a) for a in range(10)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    ct0 = [x.capitalize() for x in ct if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if not(x in key0)]
-    n = len(ct0)
-    # the fractionalization
-    pairs = flatten([[long_key.index(x)//6, long_key.index(x) % 6] for x in ct0])
-    tmp_plain = flatten([[pairs[i], pairs[n + i]] for i in range(n)])
-    pt = "".join([long_key[6*tmp_plain[2*i] + tmp_plain[2*i + 1]] for i in range(n)])
-    return pt
+    ct0 = ct.upper()
+    A = key0 = ''.join(uniq(key.upper()))
+    if len(A) < 36:
+        A = bifid6
+        key0 = check_and_join(key0, A, filter=True)
+        key0 = list(key0) + [x for x in A if x not in key0]
+    return decipher_bifid(ct0, '', key0, filter=True)
 
 
 def bifid6_square(key):
@@ -851,116 +1010,24 @@ def bifid6_square(key):
     ========
 
     >>> from sympy.crypto.crypto import bifid6_square
-    >>> key = "encrypt"
+    >>> key = "gold bug"
     >>> bifid6_square(key)
     Matrix([
-    [E, N, C, R, Y, P],
-    [T, A, B, D, F, G],
-    [H, I, J, K, L, M],
-    [O, Q, S, U, V, W],
-    [X, Z, 0, 1, 2, 3],
+    [G, O, L, D, B, U],
+    [A, C, E, F, H, I],
+    [J, K, M, N, P, Q],
+    [R, S, T, V, W, X],
+    [Y, Z, 0, 1, 2, 3],
     [4, 5, 6, 7, 8, 9]])
-
     """
-    A = alphabet_of_cipher() + [str(a) for a in range(10)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if not(x in key0)]
-    f = lambda i, j: Symbol(long_key[6*i + j])
-    M = Matrix(6, 6, f)
-    return M
-
-
-def encipher_bifid7(pt, key):
-    r"""
-    Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
-
-    This is the version of the Bifid cipher that uses the `7 \times 7` Polybius square.
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "22".
-    (Also, assumes you have some way of distinguishing "22"
-    from "2", "2" juxtaposed together for deciphering...)
-
-    INPUT:
-
-        ``pt``: plaintext string (digits okay)
-
-        ``key``: short string for key (no repetitions, digits okay)
-
-    OUTPUT:
-
-        ciphertext from Bifid7 cipher (all caps, no spaces)
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import encipher_bifid7
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday at 8am"
-    >>> encipher_bifid7(pt, key)
-    'JEJJLNAA3ME19YF3J222R'
-
-    """
-    A = alphabet_of_cipher() + [str(a) for a in range(23)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if not(x in key0)]
-    n = len(pt0)
-    # the fractionalization
-    pairs = [[long_key.index(x)//7, long_key.index(x) % 7] for x in pt0]
-    tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
-    ct = "".join([long_key[7*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
-    return ct
-
-
-def bifid7_square(key):
-    r"""
-    7x7 Polybius square.
-
-    Produce the Polybius square for the `7 \times 7` Bifid cipher.
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "22".
-    (Also, assumes you have some way of distinguishing "22"
-    from "2", "2" juxtaposed together for deciphering...)
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import bifid7_square
-    >>> bifid7_square("gold bug")
-    Matrix([
-    [ G,  O,  L,  D,  B,  U,  A],
-    [ C,  E,  F,  H,  I,  J,  K],
-    [ M,  N,  P,  Q,  R,  S,  T],
-    [ V,  W,  X,  Y,  Z,  0,  1],
-    [ 2,  3,  4,  5,  6,  7,  8],
-    [ 9, 10, 11, 12, 13, 14, 15],
-    [16, 17, 18, 19, 20, 21, 22]])
-
-    """
-    A = alphabet_of_cipher() + [str(a) for a in range(23)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    # create long key
-    long_key = key0 + [x for x in A if (not(x in key0))]
-    f = lambda i, j: Symbol(long_key[7*i + j])
-    M = Matrix(7, 7, f)
-    return M
-
+    return bifid_square(padded_key(key.upper(), bifid6))
 
 #################### RSA  #############################
 
 
 def rsa_public_key(p, q, e):
     r"""
-    The RSA *public key* is the pair `(n,e)`, where `n`
+    The RSA *public key* is the pair `(n, e)`, where `n`
     is a product of two primes and `e` is relatively
     prime (coprime) to the Euler totient `\phi(n)`.
 
@@ -1148,11 +1215,40 @@ def decipher_kid_rsa(ct, prk):
 
 #################### Morse Code ######################################
 
+morse_char = {
+    ".-": "A", "-...": "B",
+    "-.-.": "C", "-..": "D",
+    ".": "E", "..-.": "F",
+    "--.": "G", "....": "H",
+    "..": "I", ".---": "J",
+    "-.-": "K", ".-..": "L",
+    "--": "M", "-.": "N",
+    "---": "O", ".--.": "P",
+    "--.-": "Q", ".-.": "R",
+    "...": "S", "-": "T",
+    "..-": "U", "...-": "V",
+    ".--": "W", "-..-": "X",
+    "-.--": "Y", "--..": "Z",
+    "-----": "0", "----": "1",
+    "..---": "2", "...--": "3",
+    "....-": "4", ".....": "5",
+    "-....": "6", "--...": "7",
+    "---..": "8", "----.": "9",
+    ".-.-.-": ".", "--..--": ",",
+    "---...": ":", "-.-.-.": ";",
+    "..--..": "?", "-...-": "-",
+    "..--.-": "_", "-.--.": "(",
+    "-.--.-": ")", ".----.": "'",
+    "-...-": "=", ".-.-.": "+",
+    "-..-.": "/", ".--.-.": "@",
+    "...-..-": "$", "-.-.--": "!"}
+char_morse = dict([(v, k) for k, v in morse_char.items()])
 
-def encode_morse(pt):
+
+def encode_morse(pt, sep='|', mapping=None):
     """
-    Encodes a plaintext into popular Morse Code with letters separated by "|"
-    and words by "||".
+    Encodes a plaintext into popular Morse Code with letters
+    separated by `sep` and words by a double `sep`.
 
     References
     ==========
@@ -1169,58 +1265,38 @@ def encode_morse(pt):
 
     """
 
-    morse_encoding_map = {"A": ".-", "B": "-...",
-                     "C": "-.-.", "D": "-..",
-                     "E": ".", "F": "..-.",
-                     "G": "--.", "H": "....",
-                     "I": "..", "J": ".---",
-                     "K": "-.-", "L": ".-..",
-                     "M": "--", "N": "-.",
-                     "O": "---", "P": ".--.",
-                     "Q": "--.-", "R": ".-.",
-                     "S": "...", "T": "-",
-                     "U": "..-", "V": "...-",
-                     "W": ".--", "X": "-..-",
-                     "Y": "-.--", "Z": "--..",
-                     "0": "-----", "1": ".----",
-                     "2": "..---", "3": "...--",
-                     "4": "....-", "5": ".....",
-                     "6": "-....", "7": "--...",
-                     "8": "---..", "9": "----.",
-                     ".": ".-.-.-", ",": "--..--",
-                     ":": "---...", ";": "-.-.-.",
-                     "?": "..--..", "-": "-...-",
-                     "_": "..--.-", "(": "-.--.",
-                     ")": "-.--.-", "'": ".----.",
-                     "=": "-...-", "+": ".-.-.",
-                     "/": "-..-.", "@": ".--.-.",
-                     "$": "...-..-", "!": "-.-.--" }
+    mapping = mapping or char_morse
+    assert sep not in mapping
+    word_sep = 2*sep
+    mapping[" "] = word_sep
+    suffix = pt and pt[-1] in whitespace
 
-    unusable_chars = "\"#%&*<>[\]^`{|}~"
+    # normalize whitespace
+    pt = (' ' if word_sep else '').join(pt.split())
+    # omit unmapped chars
+    chars = set(''.join(pt.split()))
+    ok = set(mapping.keys())
+    pt = pt.translate(None, ''.join(chars - ok))
+
     morsestring = []
-
-    for i in unusable_chars:
-        pt = pt.replace(i, "")
-    pt = pt.upper()
-
-    words = pt.split(" ")
+    words = pt.split()
     for word in words:
-        letters = list(word)
         morseword = []
-        for letter in letters:
-            morseletter = morse_encoding_map[letter]
+        for letter in word:
+            morseletter = mapping[letter]
             morseword.append(morseletter)
 
-        word = "|".join(morseword)
+        word = sep.join(morseword)
         morsestring.append(word)
 
-    return "||".join(morsestring)
+    return word_sep.join(morsestring) + (word_sep if suffix else '')
 
 
-def decode_morse(mc):
+def decode_morse(mc, sep='|', mapping=None):
     """
-    Decodes a Morse Code with letters separated by "|"
-    and words by "||" into plaintext.
+    Decodes a Morse Code with letters separated by `sep`
+    (default is '|') and words by `word_sep` (default is '||)
+    into plaintext.
 
     References
     ==========
@@ -1237,49 +1313,14 @@ def decode_morse(mc):
 
     """
 
-    morse_decoding_map = {".-": "A", "-...": "B",
-                          "-.-.": "C", "-..": "D",
-                          ".": "E", "..-.": "F",
-                          "--.": "G", "....": "H",
-                          "..": "I", ".---": "J",
-                          "-.-": "K", ".-..": "L",
-                          "--": "M", "-.": "N",
-                          "---": "O", ".--.": "P",
-                          "--.-": "Q", ".-.": "R",
-                          "...": "S", "-": "T",
-                          "..-": "U", "...-": "V",
-                          ".--": "W", "-..-": "X",
-                          "-.--": "Y", "--..": "Z",
-                          "-----": "0", "----": "1",
-                          "..---": "2", "...--": "3",
-                          "....-": "4", ".....": "5",
-                          "-....": "6", "--...": "7",
-                          "---..": "8", "----.": "9",
-                          ".-.-.-": ".", "--..--": ",",
-                          "---...": ":", "-.-.-.": ";",
-                          "..--..": "?", "-...-": "-",
-                          "..--.-": "_", "-.--.": "(",
-                          "-.--.-": ")", ".----.": "'",
-                          "-...-": "=", ".-.-.": "+",
-                          "-..-.": "/", ".--.-.": "@",
-                          "...-..-": "$", "-.-.--": "!"}
-
+    mapping = mapping or morse_char
+    word_sep = 2*sep
     characterstring = []
-
-    if mc[-1] == "|" and mc[-2] == "|":
-        mc = mc[:-2]
-    words = mc.split("||")
+    words = mc.strip(word_sep).split(word_sep)
     for word in words:
-        letters = word.split("|")
-        characterword = []
-        for letter in letters:
-            try:
-                characterletter = morse_decoding_map[letter]
-            except KeyError:
-                return "Invalid Morse Code"
-            characterword.append(characterletter)
-
-        word = "".join(characterword)
+        letters = word.split(sep)
+        chars = [mapping[c] for c in letters]
+        word = "".join(chars)
         characterstring.append(word)
     return " ".join(characterstring)
 
@@ -1701,6 +1742,7 @@ def dh_private_key(digit = 10):
     a = randrange(2, p)
     return p, g, a
 
+
 def dh_public_key(prk):
     """
     Return two number tuple as public key.
@@ -1731,6 +1773,7 @@ def dh_public_key(prk):
     """
     p, g, a = prk
     return p, g, pow(g, a, p)
+
 
 def dh_shared_key(puk, b):
     """
