@@ -9,6 +9,7 @@ from mpmath import mpi
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.assumptions import ask
 
 from sympy.abc import x, y, z, m, n
 
@@ -941,3 +942,14 @@ def test_issue_10113():
 def test_issue_10248():
     assert list(Intersection(S.Reals, FiniteSet(x))) == [
         And(x < oo, x > -oo)]
+
+
+def test_set_in_interval():
+    x = Symbol('x', real=True)
+    assert x in Interval(x, x+4)
+    assert Interval(1, 2) not in Interval(0, 5)
+    assert FiniteSet(1, 2) not in Interval(0, 5)
+    assert EmptySet() not in Interval(0, 5)
+    assert Union(Interval(0, 1), Interval(1, 2)) not in Interval(0, 5)
+    assert Intersection(Interval(0, 1), Interval(1, 2)) not in Interval(0, 5)
+    assert Interval(1, 2) in FiniteSet(Interval(0,5), Interval(1,2))

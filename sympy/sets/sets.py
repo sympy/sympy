@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
 from itertools import product
-
+from sympy.assumptions import Q, ask
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
@@ -14,7 +15,6 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.sets.contains import Contains
-
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import subsets
@@ -964,6 +964,9 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
+        if not isinstance(other, Expr):
+            return false
+
         if other.is_real is False:
             return false
 
