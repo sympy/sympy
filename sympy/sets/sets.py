@@ -964,8 +964,9 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        if other.is_real is False:
+        if other.is_real is False or other is S.NegativeInfinity or other is S.Infinity:
             return false
+
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
             if not other.is_real is None:
