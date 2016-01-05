@@ -206,7 +206,7 @@ class Set(Basic):
             return Union(o - self for o in other.args)
 
         elif isinstance(other, Complement):
-            return Complement(other.args[0], Union(other.args[1], self))
+            return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
         elif isinstance(other, EmptySet):
             return S.EmptySet
