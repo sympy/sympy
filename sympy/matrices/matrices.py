@@ -1548,6 +1548,40 @@ class MatrixBase(object):
         # computing the Jacobian is now easy:
         return self._new(m, n, lambda j, i: self[j].diff(X[i]))
 
+    def jacobian_det(self,X):
+        """Calculates determinant of jacobian matrix. Matrix can be non-square
+
+        Parameters
+        ========
+
+        self : vector of expressions representing functions f_i(x_1, ..., x_n).
+        X : set of x_i's in order, it can be a list or a Matrix
+
+        Both self and X can be a row or a column matrix in any order
+        (i.e., jacobian_det() should always work).
+
+        Returns det of jacobian matrix if it's square, else square root
+        of determinant multiplie matrix and transposed matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, sin, cos
+        >>> from sympy.abc import a, b, r
+        >>> X = Matrix([a*b,a,b])
+        >>> X.jacobian_det([a,b])
+        sqrt(a**2 + b**2 + 1)
+        >>> X = Matrix([r*cos(a),r*sin(a)])
+        >>> X.jacobian_det([a,r])
+        -r*sin(a)**2 - r*cos(a)**2
+        """
+
+        mat = self.jacobian(X)
+        if mat.cols == mat.rows:
+            return mat.det()
+        else:
+            return sqrt((mat.T*mat).det())
+
     def QRdecomposition(self):
         """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
 
