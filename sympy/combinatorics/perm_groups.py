@@ -2819,7 +2819,7 @@ class PermutationGroup(Basic):
         orbit
 
         """
-        return PermGroup(_stabilizer(self._degree, self._generators, alpha))
+        return PermGroup(_stabilizer(self.degree, self.generators, alpha))
 
     @property
     def strong_gens(self):

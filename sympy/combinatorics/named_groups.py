@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range
+from sympy.core.basic import Basic
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.permutations import Permutation
+from sympy import factorial
 
 _af_new = Permutation._af_new
 
@@ -231,7 +233,7 @@ def DihedralGroup(n):
     return G
 
 
-def SymmetricGroup(n):
+class SymmetricGroup(Basic):
     """
     Generates the symmetric group on ``n`` elements as a permutation group.
 
@@ -267,32 +269,112 @@ def SymmetricGroup(n):
     [1] http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
 
     """
-    if n == 1:
-        G = PermutationGroup([Permutation([0])])
-    elif n == 2:
-        G = PermutationGroup([Permutation([1, 0])])
+    is_group = True
+
+    def __new__(cls, degree):
+        obj = Basic.__new__(cls, degree)
+
+        if degree < 3:
+            obj._is_abelian = True
+            obj._is_nilpotent = True
+        else:
+            obj._is_abelian = False
+            obj._is_nilpotent = False
+
+        if degree < 5:
+            obj._is_solvable = True
+        else:
+            obj._is_solvable = False
+
+        obj._is_transitive = True
+        obj._is_sym = True
+        obj._degree = degree
+
+        return obj
+
+    def __getitem__(self, i):
+        return self.generators[i]
+
+    def __contains__(self, i):
+        if not isinstance(i, Permutation):
+            raise TypeError("A SymmetricGroup contains only Permutations as "
+                            "elements, not elements of type %s" % type(i))
+        return self.contains(i)
+
+    def __len__(self):
+        return len(self.generators)
+
+    def __mul__(self, other):
+        pass
+
+    def center(self):
+        if self.degree == 1 or self.degree == 2:
+            return self
+        else:
+            return SymmetricGroup(1)
+
+    @property
+    def generators(self):
+        degree = self.degree
+        if degree == 1:
+            return [Permutation([0])]
+        elif degree == 2:
+            return [Permutation([1, 0])]
+        else:
+            a = list(range(1, degree))
+            a.append(0)
+            gen1 = _af_new(a)
+            a = list(range(degree))
+            a[0], a[1] = a[1], a[0]
+            gen2 = _af_new(a)
+            return [gen1, gen2]
+
+    @property
+    def degree(self):
+        return self._degree
+
+    def is_subgroup(self, other):
+        if isinstance(other, SymmetricGroup):
+            return self.degree <= other.degree
+
+    def contains(self, g):
+        if not isinstance(g, Permutation):
+            return False
+        return g.size <= self.degree
+
+    @property
+    def is_abelian(self):
+        return self._is_abelian
+
+    @property
+    def is_trivial(self):
+        return self == SymmetricGroup(1)
+
+    def order(self):
+        return factorial(self.degree)
+
+    def orbit(self, alpha):
+        return set(list(range(self.degree)))
+
+    def stabilizer(self, alpha):
+        if alpha >= self.degree or alpha < 0:
+            raise ValueError("Such element is not there in the finite set on "
+                    "which SymmetricGroup is defined")
+        return PermutationGroup(_stabilizer(self.degree, alpha))
+
+
+def _stabilizer(degree, alpha):
+    gens = []
+    max_val = degree - 1
+    if max_val == alpha:
+        chose_val = degree - 2
+        gens.append(Permutation(max_val))
     else:
-        a = list(range(1, n))
-        a.append(0)
-        gen1 = _af_new(a)
-        a = list(range(n))
-        a[0], a[1] = a[1], a[0]
-        gen2 = _af_new(a)
-        G = PermutationGroup([gen1, gen2])
-    if n < 3:
-        G._is_abelian = True
-        G._is_nilpotent = True
-    else:
-        G._is_abelian = False
-        G._is_nilpotent = False
-    if n < 5:
-        G._is_solvable = True
-    else:
-        G._is_solvable = False
-    G._degree = n
-    G._is_transitive = True
-    G._is_sym = True
-    return G
+        chose_val = degree - 1
+    for i in range(degree):
+        if i != alpha and i != chose_val:
+            gens.append(Permutation(i, chose_val))
+    return gens
 
 
 def RubikGroup(n):
