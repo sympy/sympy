@@ -94,7 +94,8 @@ class AppliedPredicate(Boolean):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (2, (self.func.name, self.arg.sort_key())), S.One.sort_key(), S.One
+        return self.class_key(), (2, (self.func.name, self.arg.sort_key())), \
+               S.One.sort_key(), S.One
 
     def __eq__(self, other):
         if type(other) is AppliedPredicate:
