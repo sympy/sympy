@@ -1549,7 +1549,9 @@ class MatrixBase(object):
         return self._new(m, n, lambda j, i: self[j].diff(X[i]))
 
     def jacobian_det(self,X):
-        """Calculates determinant of jacobian matrix. Matrix can be non-square
+        """Calculates determinant of jacobian matrix. Matrix can be non-square.
+        Returns determinant of jacobian matrix if it's square, else square root
+        of determinant of product matrix and transposed matrix
 
         Parameters
         ========
@@ -1559,9 +1561,6 @@ class MatrixBase(object):
 
         Both self and X can be a row or a column matrix in any order
         (i.e., jacobian_det() should always work).
-
-        Returns det of jacobian matrix if it's square, else square root
-        of determinant multiplie matrix and transposed matrix
 
         Examples
         ========
@@ -1574,13 +1573,21 @@ class MatrixBase(object):
         >>> X = Matrix([r*cos(a),r*sin(a)])
         >>> X.jacobian_det([a,r])
         -r*sin(a)**2 - r*cos(a)**2
+
+        See Also
+        ========
+
+        jacobian
+        determinant
         """
 
         mat = self.jacobian(X)
         if mat.cols == mat.rows:
             return mat.det()
+        elif mat.cols > mat.rows:
+            return sqrt((mat*mat.T).det())
         else:
-            return sqrt((mat.T*mat).det())
+            return sqrt((mat*mat.T).det())
 
     def QRdecomposition(self):
         """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
