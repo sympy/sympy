@@ -28,11 +28,11 @@ def approximants(l, X=Symbol('x'), simplify=False):
     >>> from sympy.series import approximants
     >>> from sympy import lucas, fibonacci, symbols, binomial
     >>> g = [lucas(k) for k in range(16)]
-    >>> [x for x in approximants(g)]
+    >>> [e for e in approximants(g)]
     [2, -4/(x - 2), (5*x - 2)/(3*x - 1), (x - 2)/(x**2 + x - 1)]
 
     >>> h = [fibonacci(k) for k in range(16)]
-    >>> [x for x in approximants(h)]
+    >>> [e for e in approximants(h)]
     [x, -x/(x - 1), (x**2 - x)/(2*x - 1), -x/(x**2 + x - 1)]
 
     >>> x, t = symbols("x,t")
