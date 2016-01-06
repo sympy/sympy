@@ -38,13 +38,13 @@ def approximants(l, X=Symbol('x'), simplify=False):
     >>> x, t = symbols("x,t")
     >>> p=[sum(binomial(k,i)*x**i for i in range(k+1)) for k in range(16)]
     >>> y = approximants(p, t)
-    >>> for k in range(3): print(y.next())
+    >>> for k in range(3): print(next(y))
     1
     (x + 1)/((-x - 1)*(t*(x + 1) + (x + 1)/(-x - 1)))
     nan
 
     >>> y = approximants(p, t, simplify=True)
-    >>> for k in range(3): print(y.next())
+    >>> for k in range(3): print(next(y))
     1
     -1/(t*(x + 1) - 1)
     nan
