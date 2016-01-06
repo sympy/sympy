@@ -327,7 +327,7 @@ class factorial2(CombinatorialFunction):
         from sympy import sin, cos, gamma, pi
         # TODO: extend this to complex numbers?
 
-        if not arg.is_real:
+        if not arg.is_real and arg.is_complex:
             return (2 ** ((1 + 2 * arg - cos(pi * arg)) / 4) * (pi ** ((cos(pi * arg) - 1) / 4)) * gamma (1 + arg / 2)).evalf(10)
 
         if arg.is_Number:
