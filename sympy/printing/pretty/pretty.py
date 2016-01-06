@@ -751,6 +751,13 @@ class PrettyPrinter(Printer):
 
         return prettyForm.__mul__(*args)
 
+    def _print_DotProduct(self, expr):
+        args = list(expr.args)
+
+        for i, a in enumerate(args):
+            args[i] = self._print(a)
+        return prettyForm.__mul__(*args)
+
     def _print_MatPow(self, expr):
         pform = self._print(expr.base)
         from sympy.matrices import MatrixSymbol
