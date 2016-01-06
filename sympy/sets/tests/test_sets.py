@@ -948,3 +948,12 @@ def test_issue_9447():
             S.UniversalSet, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
     assert Complement(S.Naturals, a) == Complement(
             S.Naturals, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
+
+
+def test_issue_10337():
+    assert (FiniteSet(2) == 3) is False
+    assert (FiniteSet(2) != 3) is True
+    raises(TypeError, lambda: FiniteSet(2) < 3)
+    raises(TypeError, lambda: FiniteSet(2) <= 3)
+    raises(TypeError, lambda: FiniteSet(2) > 3)
+    raises(TypeError, lambda: FiniteSet(2) >= 3)
