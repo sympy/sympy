@@ -1,6 +1,6 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product)
+                   oo, zoo, simplify, expand_func, Product, I)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.utilities.pytest import XFAIL
@@ -179,6 +179,8 @@ def test_factorial2():
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
+    # http://www.maplesoft.com/support/help/maple/view.aspx?path=factorial
+    assert str(factorial2(1 + 2*I).as_real_imag()) == '(3.636406167e-14, 4.100313151e-14)'
     assert factorial2(n).func == factorial2
 
     # The following is exhaustive
@@ -242,7 +244,6 @@ def test_factorial2():
     assert factorial2(tfe).is_odd is None
     assert factorial2(tfo).is_even is False
     assert factorial2(tfo).is_odd is None
-
 
 
 def test_binomial():

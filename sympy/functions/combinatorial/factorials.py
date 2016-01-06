@@ -324,7 +324,12 @@ class factorial2(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import sin, cos, gamma, pi
         # TODO: extend this to complex numbers?
+
+        if not arg.is_real:
+            return (2 ** ((1 + 2 * arg - cos(pi * arg)) / 4) * (pi ** ((cos(pi * arg) - 1) / 4)) * gamma (1 + arg / 2)).evalf(10)
+
         if arg.is_Number:
             if arg.is_infinite:
                 return
