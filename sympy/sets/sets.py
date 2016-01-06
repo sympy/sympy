@@ -1350,7 +1350,6 @@ class Union(Set, EvalfMixin):
     def is_real(self):
         return all(set.is_real for set in self.args)
 
-
 class Intersection(Set):
     """
     Represents an intersection of sets as a :class:`Set`.
@@ -1462,6 +1461,43 @@ class Intersection(Set):
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
+	if len(s) == 1 and len(new_args) == 1 and isinstance(new_args[0], Interval):
+	    ineq = s.__iter__().next()
+            q = ineq.primitive()[0]
+            ineq = ineq / q
+            st = Mul(new_args[0].start) / Mul(q)
+            en = Mul(new_args[0].end) / Mul(q)
+            q = ineq.as_coeff_Add()[0]
+            ineq -= q
+	    st -= q
+	    en -= q
+            q = ineq.primitive()[0]
+	    ineq /= Mul(q)
+	    st /= Mul(q)
+	    en /= Mul(q)
+            q = ineq.free_symbols.__iter__()
+	    tmp = []
+            while True:
+                try:
+                    tmp.append((q.next(), 1))
+	        except StopIteration:
+		    break
+            tmp1 = []
+            for i in ineq.args:
+                if(i.subs(tmp) < 0):
+                    tmp1.append(i * -1)
+                else:
+                    tmp1.append(i)
+            tmp2 = [i for i in (-1 * ineq).args]
+	    if set(tmp1) == set(tmp2) or (len(tmp2) == 0 and ineq.subs(tmp) < 0):
+                st *= -1
+                en *= -1
+                ineq *= -1
+            if st > en:
+                st, en = en, st
+            if(len(tmp) > 0):
+                other_sets = Interval(Mul(st), Mul(en))
+                return Intersection(FiniteSet(ineq), other_sets, evaluate = False)
         res = []
         unk = []
         for x in s:
