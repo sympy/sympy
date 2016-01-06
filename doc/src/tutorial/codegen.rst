@@ -67,7 +67,7 @@ actually more like a lightweight version of codegen for Python, and
 special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
-(using the ``sympy.printing.codeprinter.Assignment`` object).This serves as
+(using the :class:`sympy.printing.codeprinter.Assignment` object).This serves as
 building blocks for the code printers and hence the ``codegen`` module.  An
 example that shows the use of ``Assignment``::
 

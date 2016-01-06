@@ -258,8 +258,6 @@ Theano Code printing
 
 .. module:: sympy.printing.theanocode
 
-.. autodata:: sympy.printing.theanocode.mapping
-
 .. autoclass:: sympy.printing.theanocode.TheanoPrinter
    :members:
 
@@ -438,6 +436,8 @@ CodePrinter
 This class is a base class for other classes that implement code-printing
 functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.Assignment
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
 
