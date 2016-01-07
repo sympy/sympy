@@ -2,6 +2,10 @@
 
 from __future__ import print_function, division
 
+from sympy.external import import_module
+
+np = import_module('numpy')
+
 from inspect import getmro
 
 from .core import all_classes as sympy_classes
@@ -265,6 +269,17 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         return a._sympy_()
     except AttributeError:
         pass
+
+    if isinstance(a, np.ndarray):
+        #converter[np.ndarray] = lambda x: Matrix(x)
+        #I want to do something like this and then type cast the result
+        #to a matrix this way
+        #return converter[cls]([sympify...and...so...on])
+        try:
+            return ([sympify(x, locals=locals, convert_xor=convert_xor,
+                rational=rational) for x in a])
+        except TypeError:
+            pass
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
