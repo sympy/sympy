@@ -1119,7 +1119,7 @@ class Line(LinearEntity):
             return y - p1.y
 
         a, b, c = self.coefficients
-        return simplify(a*x + b*y + c)
+        return a*x + b*y + c
 
     def contains(self, o):
         """
