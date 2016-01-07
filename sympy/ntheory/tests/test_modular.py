@@ -1,4 +1,4 @@
-from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence, mod_inverse
 from sympy.utilities.pytest import raises
 
 
@@ -32,3 +32,13 @@ def test_modular():
     assert solve_congruence(*list(zip((1, 1, 2), (3, 2, 4)))) is None
     raises(
         ValueError, lambda: solve_congruence(*list(zip([3, 4, 2], [12.1, 35, 17]))))
+
+def test_mod_inverse():
+    assert mod_inverse(3,11) == 4
+    assert mod_inverse(5,11) == 9
+    assert mod_inverse(21124921,521512) == 7713
+    assert mod_inverse(124215421,5125) == 2981
+    assert mod_inverse(214,12515) == 1579
+    assert mod_inverse(5823991,3299) == 1442
+    assert mod_inverse(123,44) == 39
+    assert mod_inverse(2,5) == 3
