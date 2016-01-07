@@ -272,6 +272,10 @@ class SymmetricGroup(Basic):
     is_group = True
 
     def __new__(cls, degree):
+        if degree <= 0 or not isinstance(degree, int):
+            raise ValueError("Degree of a SymmetricGroup should be a "
+                    "positive integer")
+
         obj = Basic.__new__(cls, degree)
 
         if degree < 3:
@@ -360,21 +364,27 @@ class SymmetricGroup(Basic):
         if alpha >= self.degree or alpha < 0:
             raise ValueError("Such element is not there in the finite set on "
                     "which SymmetricGroup is defined")
-        return PermutationGroup(_stabilizer(self.degree, alpha))
+        gens = _stabilizer(self.degree, alpha)
+        if gens == self.generators:
+            return SymmetricGroup(self.degree)
+        return PermutationGroup(gens)
 
 
 def _stabilizer(degree, alpha):
-    gens = []
-    max_val = degree - 1
-    if max_val == alpha:
-        chose_val = degree - 2
-        gens.append(Permutation(max_val))
+    if degree == 1 or degree == 2:
+        return [Permutation(degree - 1)]
+    gen2_self = Permutation(degree - 1)(0, 1)
+    a = list(range(degree))
+    a.remove(alpha)
+    gen1 = Permutation(*a)
+    if alpha^gen2_self == alpha:
+        gen2 = gen2_self
     else:
-        chose_val = degree - 1
-    for i in range(degree):
-        if i != alpha and i != chose_val:
-            gens.append(Permutation(i, chose_val))
-    return gens
+        if alpha == 0:
+            gen2 = Permutation(degree - 1)(2, 1)
+        elif alpha == 1:
+            gen2 = Permutation(degree - 1)(2, 0)
+    return [gen1, gen2]
 
 
 def RubikGroup(n):
@@ -388,3 +398,7 @@ def RubikGroup(n):
     if n <= 1:
         raise ValueError("Invalid cube . n has to be greater than 1")
     return PermutationGroup(rubik(n))
+
+
+# setting an alias for SymmetricGroup
+Sym = SymmetricGroup
