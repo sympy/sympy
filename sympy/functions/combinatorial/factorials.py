@@ -327,9 +327,6 @@ class factorial2(CombinatorialFunction):
         from sympy import sin, cos, gamma, pi
         # TODO: extend this to complex numbers?
 
-        if not arg.is_real and arg.is_complex:
-            return (2 ** ((1 + 2 * arg - cos(pi * arg)) / 4) * (pi ** ((cos(pi * arg) - 1) / 4)) * gamma (1 + arg / 2)).evalf(10)
-
         if arg.is_Number:
             if arg.is_infinite:
                 return
@@ -392,6 +389,10 @@ class factorial2(CombinatorialFunction):
                 return True
             if n.is_odd:
                 return ((n + 1) / 2).is_even
+
+    def _eval_rewrite_as_gamma(self, n):
+        from sympy import gamma, cos, pi
+        return 2 ** ((1 + 2 * n - cos(pi * n)) / 4) * (pi ** ((cos(pi * n) - 1) / 4)) * gamma (1 + n / 2)
 
 
 ###############################################################################
