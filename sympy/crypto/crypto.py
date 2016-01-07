@@ -215,14 +215,14 @@ def encipher_shift(pt, key, symbols=None):
 ######## affine cipher examples ############
 
 
-def encipher_affine(pt, key, symbols=None):
+def encipher_affine(pt, key, symbols=None, _inverse=False):
     r"""
     Performs the affine cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     Encryption is based on the map `x \rightarrow ax+b` (mod `N`). where ``N`` is the
     number of characters in the alphabet. Decryption is based on
     the map `x \rightarrow cx+d` (mod `N`), where `c = a^{-1}` (mod `N`) and
-    `d = -a^{-1}c` (mod `N`). (In particular, for the map to be invertible,
+    `d = -a^{-1}b` (mod `N`). (In particular, for the map to be invertible,
     we need `\mathrm{gcd}(a, N) = 1` and an error will be raised if this is
     not true.)
 
@@ -237,49 +237,71 @@ def encipher_affine(pt, key, symbols=None):
 
         INPUT:
 
-            ``a, b``: a pair integers, where ``gcd(a, 26) = 1`` (the secret key)
+            ``pt``: string of characters that appear in ``symbols``
 
-            ``m``: string of characters that appear in ``symbols``
+            ``a, b``: a pair integers, where ``gcd(a, N) = 1`` (the secret key)
 
-            ``symbols``: valid characters for the plain text (default = uppercase letters)
+            ``symbols``: string of characters (default = uppercase letters). When no symbols
+            are given, ``pt`` is converted to upper case letters and all other charactes are
+            ignored.
 
         OUTPUT:
 
             ``c``: string of characters (the ciphertext message)
 
         STEPS:
-            0. Identify the alphabet "A", ..., "Z" with the integers 0, ..., 25.
-            1. Compute from the string ``m`` a list ``L1`` of corresponding
+            0. Identify the alphabet "A", ..., "Z" with the integers 0, 1, ....
+            1. Compute from the string ``pt`` a list ``L1`` of corresponding
                integers.
             2. Compute from the list ``L1`` a new list ``L2``, given by replacing
                ``x`` by ``a*x + b (mod 26)``, for each element ``x`` in ``L1``.
             3. Compute from the list ``L2`` a string ``c`` of corresponding
                letters.
 
-    Examples
+    See Also
     ========
-
-    >>> from sympy.crypto.crypto import encipher_affine
-    >>> pt = "GONAVYBEATARMY"
-    >>> id = (1, 0)
-    >>> encipher_affine(pt, id)
-    'GONAVYBEATARMY'
-    >>> rot1 = (1, 1)
-    >>> pt = "GONAVYBEATARMY"
-    >>> encipher_affine(pt, rot1)
-    'HPOBWZCFBUBSNZ'
-    >>> encipher_affine(pt, (3, 1))
-    'TROBMVENBGBALV'
-    >>> encipher_affine(_, (9, 17))
-    'GONAVYBEATARMY'
+    decipher_affine
 
     """
-    A = check_and_join(AZ(symbols))
+    if not symbols:
+        A = AZ(symbols)
+        pt0 = AZ(pt)
+    else:
+        A = check_and_join(symbols)
+        pt0 = check_and_join(pt, A, filter=True)
     N = len(A)
     a, b = key
     assert gcd(a, N) == 1
+    if _inverse:
+        from sympy.ntheory.modular import mod_inverse
+        c = mod_inverse(a, N)
+        d = -b*c
+        a, b = c, d
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
-    return encipher_translate(pt, A, B)
+    return encipher_translate(pt0, A, B)
+
+
+def decipher_affine(ct, key, symbols=None):
+    r"""
+    Return the deciphered text that was made from the mapping,
+    `x \rightarrow ax+b` (mod `N`), where ``N`` is the
+    number of characters in the alphabet. Deciphering is done by
+    reciphering with a new key: `x \rightarrow cx+d` (mod `N`),
+    where `c = a^{-1}` (mod `N`) and `d = -a^{-1}b` (mod `N`).
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_affine, decipher_affine
+    >>> pt = "GO NAVY BEAT ARMY"
+    >>> key = (3, 1)
+    >>> encipher_affine(pt, key)
+    'TROBMVENBGBALV'
+    >>> decipher_affine(_, key)
+    'GONAVYBEATARMY'
+
+    """
+    return encipher_affine(ct, key, symbols, _inverse=True)
 
 
 #################### substitution cipher ###########################
