@@ -2,6 +2,22 @@
 
 """
 Classical ciphers and LFSRs
+
+In a *substitution cipher* "units" (not necessarily single characters)
+of plaintext are replaced with ciphertext according to a regular system.
+
+A *transposition cipher* is a method of encryption by which
+the positions held by "units" of plaintext are replaced by a
+permutation of the plaintext. That is, the order of the units is
+changed using a bijective function on the position of the characters
+to perform the encryption.
+
+A *monoalphabetic cipher* uses fixed substitution over the entire
+message, whereas a *polyalphabetic cipher* uses a number of substitutions
+at different times in the message.
+
+TODO: move to docs? add info about the function contained here and
+how they fit into this description?
 """
 
 from __future__ import print_function
@@ -90,21 +106,6 @@ def check_and_join(phrase, symbols=None, filter=None):
             rv = rv.translate(None, missing)
     return rv
 
-
-"""
-    First, some basic definitions.
-
-
-    A *transposition cipher* is a method of encryption by which
-    the positions held by "units" of plaintext are replaced by a
-    permutation of the plaintext. That is, the order of the units is
-    changed using a bijective function on the characters' positions
-    to perform the encryption.
-
-    A *monoalphabetic cipher* uses fixed substitution over the entire
-    message, whereas a *polyalphabetic cipher* uses a number of substitutions
-    at different times in the message.
-"""
 
 def cycle_list(k, n):
     """
