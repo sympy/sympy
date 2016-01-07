@@ -1449,6 +1449,7 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
+        from sympy import oo
 
         new_args = []
         fs_args = []
@@ -1461,43 +1462,47 @@ class Intersection(Set):
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
-	if len(s) == 1 and len(new_args) == 1 and isinstance(new_args[0], Interval):
-	    ineq = s.__iter__().next()
+        if len(args) == 2 and len(s) == 1 and len(new_args) == 1 and isinstance(new_args[0], Interval):
+            ineq = s.__iter__().next()
             q = ineq.primitive()[0]
             ineq = ineq / q
             st = Mul(new_args[0].start) / Mul(q)
             en = Mul(new_args[0].end) / Mul(q)
             q = ineq.as_coeff_Add()[0]
             ineq -= q
-	    st -= q
-	    en -= q
+            st -= q
+            en -= q
             q = ineq.primitive()[0]
-	    ineq /= Mul(q)
-	    st /= Mul(q)
-	    en /= Mul(q)
+            ineq /= Mul(q)
+            st /= Mul(q)
+            en /= Mul(q)
             q = ineq.free_symbols.__iter__()
-	    tmp = []
+            tmp = []
             while True:
                 try:
                     tmp.append((q.next(), 1))
-	        except StopIteration:
-		    break
+                except StopIteration:
+                    break
             tmp1 = []
-            for i in ineq.args:
-                if(i.subs(tmp) < 0):
-                    tmp1.append(i * -1)
-                else:
-                    tmp1.append(i)
-            tmp2 = [i for i in (-1 * ineq).args]
-	    if set(tmp1) == set(tmp2) or (len(tmp2) == 0 and ineq.subs(tmp) < 0):
-                st *= -1
-                en *= -1
-                ineq *= -1
-            if st > en:
-                st, en = en, st
-            if(len(tmp) > 0):
-                other_sets = Interval(Mul(st), Mul(en))
-                return Intersection(FiniteSet(ineq), other_sets, evaluate = False)
+            try:
+                for i in ineq.args:
+                    if(i.subs(tmp) < 0):
+                        tmp1.append(i * -1)
+                    else:
+                        tmp1.append(i)
+                tmp2 = [i for i in (-1 * ineq).args]
+                if set(tmp1) == set(tmp2) or (len(tmp2) == 0 and ineq.subs(tmp) < 0):
+                    st *= -1
+                    en *= -1
+                    ineq *= -1
+                if st > en:
+                    st, en = en, st
+                if(st != -oo and en != oo and len(tmp) > 0):
+                    other_sets = Intersection(Interval(Mul(st), Mul(en)))
+                    s = FiniteSet(ineq)
+                    new_args = [other_sets]
+            except (ValueError, TypeError):
+                    pass
         res = []
         unk = []
         for x in s:
