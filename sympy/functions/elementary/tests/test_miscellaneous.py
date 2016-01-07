@@ -173,17 +173,17 @@ def test_Max():
     raises(ValueError, lambda: Max(I))
     raises(ValueError, lambda: Max(I, x))
     raises(ValueError, lambda: Max(S.ComplexInfinity, 1))
-    # interesting:
-    # Max(n, -oo, n_,  p, 2) == Max(p, 2)
-    # True
-    # Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
-    # False
+    assert Max(n, -oo, n_,  p, 2) == Max(p, 2)
+    assert Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
 
     assert Max(1, x).diff(x) == Heaviside(x - 1)
     assert Max(x, 1).diff(x) == Heaviside(x - 1)
     assert Max(x**2, 1 + x, 1).diff(x) == \
         2*x*Heaviside(x**2 - Max(1, x + 1)) \
         + Heaviside(x - Max(1, x**2) + 1)
+
+    ab = abs(r)
+    assert Max(ab, sqrt(2)*ab) == sqrt(2)*ab
 
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Max(a, b) should be real
@@ -214,6 +214,7 @@ def test_Max():
     assert m.is_positive is None
     assert m.is_nonnegative is True
     assert m.is_negative is False
+
 
 
 def test_issue_8413():

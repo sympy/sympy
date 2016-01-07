@@ -206,7 +206,7 @@ class Set(Basic):
             return Union(o - self for o in other.args)
 
         elif isinstance(other, Complement):
-            return Complement(other.args[0], Union(other.args[1], self))
+            return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
         elif isinstance(other, EmptySet):
             return S.EmptySet
@@ -964,8 +964,9 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        if other.is_real is False:
+        if other.is_real is False or other is S.NegativeInfinity or other is S.Infinity:
             return false
+
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
             if not other.is_real is None:
