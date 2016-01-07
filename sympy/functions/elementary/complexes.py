@@ -453,7 +453,9 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy import Atom
+        from sympy.core.basic import Atom
+        from sympy.core.function import expand_mul
+
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -492,28 +494,33 @@ class Abs(Function):
                 return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_number or isinstance(arg, (cls, Atom)):
-            if arg.is_zero:
-                return S.Zero
-            if arg.is_nonnegative:
-                return arg
-            if arg.is_nonpositive:
-                return -arg
+        if isinstance(arg, AppliedUndef):
+            return
+        if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
+            if any(a.is_infinite for a in arg.as_real_imag()):
+                return S.Infinity
+        if arg.is_zero:
+            return S.Zero
+        if arg.is_nonnegative:
+            return arg
+        if arg.is_nonpositive:
+            return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
                 return arg2
-        if arg.is_Add:
-            if arg.has(S.Infinity, S.NegativeInfinity):
-                if any(a.is_infinite for a in arg.as_real_imag()):
-                    return S.Infinity
-            if arg.is_real is None and arg.is_imaginary is None:
-                if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
-                    from sympy import expand_mul
-                    return sqrt(expand_mul(arg*arg.conjugate()))
-        if arg.is_real is False and arg.is_imaginary is False:
-            from sympy import expand_mul
-            return sqrt(expand_mul(arg*arg.conjugate()))
+        # reject result if all new conjugates are just wrappers around
+        # an expression that was already in the arg
+        conj = arg.conjugate()
+        new_conj = conj.atoms(conjugate) - arg.atoms(conjugate)
+        if new_conj and all(arg.has(i.args[0]) for i in new_conj):
+            return
+        if arg != conj and arg != -conj:
+            ignore = arg.atoms(Abs)
+            abs_free_arg = arg.xreplace(dict([(i, Dummy(real=True)) for i in ignore]))
+            unk = [a for a in abs_free_arg.free_symbols if a.is_real is None]
+            if not unk or not all(conj.has(conjugate(u)) for u in unk):
+                return sqrt(expand_mul(arg*conj))
 
     def _eval_is_integer(self):
         if self.args[0].is_real:
@@ -622,9 +629,11 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
+        if arg_.atoms(AppliedUndef):
+            return
         x, y = re(arg_), im(arg_)
         rv = atan2(y, x)
-        if rv.is_number and not rv.atoms(AppliedUndef):
+        if rv.is_number:
             return rv
         if arg_ != arg:
             return cls(arg_, evaluate=False)

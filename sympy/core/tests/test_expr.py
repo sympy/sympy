@@ -1610,6 +1610,8 @@ def test_round():
     assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     raises(TypeError, lambda: x.round())
+    f = Function('f')
+    raises(TypeError, lambda: f(1).round())
 
     # exact magnitude of 10
     assert str(S(1).round()) == '1.'
