@@ -94,10 +94,6 @@ def check_and_join(phrase, symbols=None, filter=None):
 """
     First, some basic definitions.
 
-    A *substitution cipher* is a method of encryption by which
-    "units" (not necessarily characters) of plaintext are replaced with
-    ciphertext according to a regular system. The "units" may be
-    characters (ie, words of length `1`), words of length `2`, and so forth.
 
     A *transposition cipher* is a method of encryption by which
     the positions held by "units" of plaintext are replaced by a
@@ -133,13 +129,14 @@ def encipher_repeating(pt, key, symbols):
     >>> encode(*AZ((msg, key, uppercase)))
     'LXFOPVEFRNHR'
     """
-    map = dict([(c, i) for i, c in enumerate(symbols)])
+    A = symbols
+    map = dict([(c, i) for i, c in enumerate(A)])
     key0 = [map[c] for c in key]
     N = len(map)
     k = len(key0)
     rv = []
     for i, m in enumerate(pt):
-        rv.append(symbols[(map[m] + key0[i % k]) % N])
+        rv.append(A[(map[m] + key0[i % k]) % N])
     return ''.join(rv)
 
 
@@ -307,16 +304,10 @@ def decipher_affine(ct, key, symbols=None):
 #################### substitution cipher ###########################
 
 
-def encipher_substitution(pt, key, symbols=None):
+def encipher_substitution(pt, key, symbols=None, reverse=False):
     """
-    Performs the substitution cipher encryption on plaintext ``pt``, and returns the ciphertext.
-
-    Assumes the ``pt`` has only letters taken from ``symbols``.
-    Assumes ``key`` is a permutation of the symbols. This function permutes the
-    letters of the plaintext using the permutation given in ``key``.
-    The description uses the inverse permutation.
-    Note that if the permutation in key is order 2 (eg, a transposition) then
-    the encryption permutation and the decryption permutation are the same.
+    Returns the ciphertext obtained by replacing each character that
+    appears in ``symbols`` with the corresponding character in ``key``.
 
     Notes
     =====
@@ -326,24 +317,40 @@ def encipher_substitution(pt, key, symbols=None):
     practice, once a few symbols are recognized the mappings for other
     characters can be guessed quickly.
 
+    Although single characters are replaced with single characters in this
+    routine, the substitution cipher, in general, is a method whereby
+    "units" (not necessarily single characters) of plaintext are replaced with
+    ciphertext according to a regular system.
+
+
     Examples
     ========
 
     >>> from sympy.crypto.crypto import encipher_substitution, AZ
-    >>> key = "BACDEFGHIJKLMNOPQRSTUVWXYZ"
+    >>> key = 'GOHKDTQRBVNFALEZPSYJMIUWXC'
+    >>> sym = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    >>> assert set(key) == set(sym)
     >>> pt = "go navy! beat army!"
-    >>> encipher_substitution(AZ(pt), key)
-    'GONBVYAEBTBRMY'
-    >>> ct = 'GONBVYAEBTBRMY'
-    >>> encipher_substitution(ct, key)
+    >>> ct = encipher_substitution(AZ(pt), key, sym); ct
+    'QELGIXODGJGSAX'
+
+    If the permutation in key is order 2 (i.e., a transposition) then
+    the encryption permutation and the decryption permutation are the
+    same. In this case, they are not so the key and symbols must be
+    reversed. This can be done manually or by setting ``reverse``=True.
+
+    >>> encipher_substitution(ct, sym, key)
+    'GONAVYBEATARMY'
+    >>> encipher_substitution(ct, key, reverse=True)
     'GONAVYBEATARMY'
 
     """
     A = check_and_join(AZ(symbols))
     key = check_and_join(key, A)
     pt = check_and_join(pt, A)
+    if reverse:
+        key, A = A, key
     return pt.translate(maketrans(A, key))
-
 
 ######################################################################
 #################### Vigenère cipher examples ########################
