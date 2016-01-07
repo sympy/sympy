@@ -1012,33 +1012,32 @@ def rs_log(p, x, prec):
         return R.zero
     c = _get_constant_term(p, x)
     if c:
-        c_new = c
         const = 0
         """zm = R.zero_monom
         c = p[zm]"""
         if c == 1:
             pass
         else:
-            c_expr = c_new.as_expr()
+            c_expr = c.as_expr()
             if R.domain is EX:
                 const = log(c_expr)
-            elif isinstance(c_new, PolyElement):
+            elif isinstance(c, PolyElement):
                 try:
                     const = R(log(c_expr))
                 except ValueError:
                     R = R.add_gens([log(c_expr)])
                     p = p.set_ring(R)
                     x = x.set_ring(R)
-                    c = c_new.set_ring(R)
+                    c = c.set_ring(R)
                     const = R(log(c_expr))
-                else:
-                    try:
-                        const = R(log(c_new))
-                    except ValueError:
-                        raise DomainError("The given series can't be expanded in "
-                            "this domain.")
+            else:
+                try:
+                    const = R(log(c))
+                except ValueError:
+                    raise DomainError("The given series can't be expanded in "
+                        "this domain.")
         dlog = p.diff(x)
-        dlog = rs_mul(dlog, rs_series_inversion(p, x, prec), x, prec - 1)
+        dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
         return rs_integrate(dlog, x) + const
     else:
         raise NotImplementedError

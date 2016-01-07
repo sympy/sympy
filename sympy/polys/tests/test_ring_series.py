@@ -5,7 +5,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
+    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series, _get_constant_term)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
@@ -154,19 +154,46 @@ def test_log():
     p = 1 + x
     p1 = rs_log(p, x, 4)/x**2
     assert p1 == 1/3*x - 1/2 + x**(-1)
+
     p = 1 + x +2*x**2/3
     p1 = rs_log(p, x, 9)
     assert p1 == -17*x**8/648 + 13*x**7/189 - 11*x**6/162 - x**5/45 + \
-      7*x**4/36 - x**3/3 + x**2/6 + x
-    p2 = rs_series_inversion(p, x, 9)
-    p3 = rs_log(p2, x, 9)
-    assert p3 == -p1
+                   7*x**4/36 - x**3/3 + x**2/6 + x
+
+    p = x + 2
+    c = _get_constant_term(p,x)
+    c_ex = c.as_expr()
+    R = R.add_gens([log(c_ex)])
+    p1 = rs_log(x+2,x,4)
+    p2 = p1 - R(log(c_ex))
+    x = symbols('x')
+    assert p2.as_expr() == x**3/24 - x**2/8 + x/2
+
+    R, x = ring('x',QQ)
+    p = 2 + x + 2*x**2/3
+    c = _get_constant_term(p,x)
+    c_ex = c.as_expr()
+    R = R.add_gens([log(c_ex)])
+    p1 = rs_log(p, x, 9)
+    p2 = p1 - R(log(c_ex))
+    x = symbols('x')
+    assert p2.as_expr() == 463*x**8/165888 - x**7/24192 - 115*x**6/10368 + \
+                            29*x**5/1440 + 7*x**4/576 - x**3/8 + 5*x**2/24 + x/2
 
     R, x, y = ring('x, y', QQ)
     p = 1 + x + 2*y*x**2
     p1 = rs_log(p, x, 6)
     assert p1 == (4*x**5*y**2 - 2*x**5*y - 2*x**4*y**2 + x**5/5 + 2*x**4*y -
                   x**4/4 - 2*x**3*y + x**3/3 + 2*x**2*y - x**2/2 + x)
+
+    p = 2 + x*y**2
+    c = _get_constant_term(p,x)
+    c_ex = c.as_expr()
+    R = R.add_gens([log(c_ex)])
+    p1 = rs_log(p, x, 6)
+    p2 = p1 - R(log(c_ex))
+    x,y = symbols('x y')
+    assert p2.as_expr() == x**5*y**10/160 - x**4*y**8/64 + x**3*y**6/24 - x**2*y**4/8 + x*y**2/2
 
     # Constant term in series
     a = symbols('a')
