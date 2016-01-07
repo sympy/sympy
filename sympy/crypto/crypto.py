@@ -788,7 +788,7 @@ def bifid_square(key):
     ========
     padded_key
     """
-    A = ''.join(uniq(key.upper()))
+    A = ''.join(uniq(''.join(key)))
     n = len(A)**.5
     if n != int(n):
         raise ValueError('Length of alphabet (%s) is not a square number.' % len(A))
