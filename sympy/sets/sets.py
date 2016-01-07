@@ -1463,7 +1463,10 @@ class Intersection(Set):
         s = fs_args[0]
         fs_args = fs_args[1:]
         if len(args) == 2 and len(s) == 1 and len(new_args) == 1 and isinstance(new_args[0], Interval):
-            ineq = s.__iter__().next()
+            try:
+                ineq = s.__iter__().__next__()
+            except AttributeError:
+                ineq = s.__iter__().next()
             q = ineq.primitive()[0]
             ineq = ineq / q
             st = Mul(new_args[0].start) / Mul(q)
@@ -1476,13 +1479,7 @@ class Intersection(Set):
             ineq /= Mul(q)
             st /= Mul(q)
             en /= Mul(q)
-            q = ineq.free_symbols.__iter__()
-            tmp = []
-            while True:
-                try:
-                    tmp.append((q.next(), 1))
-                except StopIteration:
-                    break
+            tmp = [(i, 1) for i in ineq.free_symbols]
             tmp1 = []
             try:
                 for i in ineq.args:

@@ -965,4 +965,3 @@ def test_issue_10285():
     assert FiniteSet(-2*x - 2*y + 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-2, -1))
     assert FiniteSet(-2*x - 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-3, -2))
     assert FiniteSet(-2*x + 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(-x + y).intersect(Interval(2, 3))
-
