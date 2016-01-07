@@ -36,9 +36,9 @@ bifid5 = AZ().replace('J', '')
 bifid6 = AZ() + '0123456789'
 bifid10 = printable
 
-def padded_key(key, alp, warn=False):
-    """Return a string of the characters of ``alp`` with those of ``key``
-    appearing first, omitting characters in ``key`` that are not in ``alp``
+def padded_key(key, symbols, warn=False):
+    """Return a string of the characters of ``symbols`` with those of ``key``
+    appearing first, omitting characters in ``key`` that are not in ``symbols``
     unless ``warn`` is True (default=False).
 
     Examples
@@ -49,11 +49,11 @@ def padded_key(key, alp, warn=False):
     'RSABCDEFGHIJKLMNOPQTUVWXYZ'
     """
     if warn:
-        extra = set(key) - set(alp)
+        extra = set(key) - set(symbols)
         if extra:
             raise ValueError('invalid characters: %s' % ''.join(sorted(extra)))
-    key0 = ''.join([i for i in uniq(key) if i in alp])
-    return key0 + ''.join([i for i in alp if i not in key0])
+    key0 = ''.join([i for i in uniq(key) if i in symbols])
+    return key0 + ''.join([i for i in symbols if i not in key0])
 
 
 def check_and_join(phrase, symbols=None, filter=None):
@@ -91,13 +91,7 @@ def check_and_join(phrase, symbols=None, filter=None):
     return rv
 
 
-def alphabet_of_cipher(symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    """
-    Returns the list of characters in the string input defining the alphabet.
-
-    Notes
-    =====
-
+"""
     First, some basic definitions.
 
     A *substitution cipher* is a method of encryption by which
@@ -114,31 +108,7 @@ def alphabet_of_cipher(symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A *monoalphabetic cipher* uses fixed substitution over the entire
     message, whereas a *polyalphabetic cipher* uses a number of substitutions
     at different times in the message.
-
-    Each of these ciphers require an alphabet for the messages to be
-    constructed from.
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import alphabet_of_cipher
-    >>> alphabet_of_cipher()
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    >>> L = [str(i) for i in range(10)] + ['a', 'b', 'c']; L
-    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c']
-    >>> A = "".join(L); A
-    '0123456789abc'
-    >>> alphabet_of_cipher(A)
-    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c']
-    >>> alphabet_of_cipher()
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-
-    """
-    symbols = "".join(symbols)
-    return list(symbols)
-
+"""
 
 def cycle_list(k, n):
     """
@@ -147,20 +117,12 @@ def cycle_list(k, n):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import cycle_list, alphabet_of_cipher
-    >>> L = cycle_list(3,26); L
-    [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-    17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2]
-    >>> A = alphabet_of_cipher(); A
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    >>> [A[i] for i in L]
-    ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'A', 'B', 'C']
+    >>> from sympy.crypto.crypto import cycle_list
+    >>> cycle_list(3, 10)
+    [3, 4, 5, 6, 7, 8, 9, 0, 1, 2]
 
     """
-    L = list(range(n))
-    return L[k:] + L[:k]
+    return list(range(k, n)) + list(range(k))
 
 
 def encipher_repeating(pt, key, symbols):
@@ -171,13 +133,13 @@ def encipher_repeating(pt, key, symbols):
     >>> encode(*AZ((msg, key, uppercase)))
     'LXFOPVEFRNHR'
     """
-    alp = dict([(c, i) for i, c in enumerate(symbols)])
-    kee = [alp[c] for c in key]
-    A = len(symbols)
-    k = len(kee)
+    map = dict([(c, i) for i, c in enumerate(symbols)])
+    key0 = [map[c] for c in key]
+    N = len(map)
+    k = len(key0)
     rv = []
     for i, m in enumerate(pt):
-        rv.append(symbols[(alp[m] + kee[i % k]) % A])
+        rv.append(symbols[(map[m] + key0[i % k]) % N])
     return ''.join(rv)
 
 
@@ -196,7 +158,7 @@ def encipher_translate(pt, old, new):
 ######## shift cipher examples ############
 
 
-def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_shift(pt, key, symbols=None):
     """
     Performs shift cipher encryption on plaintext pt, and returns the ciphertext.
 
@@ -244,22 +206,25 @@ def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'FNMZUXADZSZQLX'
 
     """
-    key = len(symbols) - key % len(symbols)
-    key = symbols[key:] + symbols[:key]
-    return encipher_translate(pt, key, symbols)
+    A = symbols or AZ()
+    shift = len(A) - key % len(A)
+    key = A[shift:] + A[:shift]
+    return encipher_translate(pt, key, A)
 
 
 ######## affine cipher examples ############
 
 
-def encipher_affine(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_affine(pt, key, symbols=None, check=True):
     r"""
     Performs the affine cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
-    Encryption is based on the map `x \rightarrow ax+b` (mod `26`). Decryption is based on
-    the map `x \rightarrow cx+d` (mod `26`), where `c = a^{-1}` (mod `26`) and
-    `d = -a^{-1}c` (mod `26`). (In particular, for the map to be invertible,
-    we need `\mathrm{gcd}(a, 26) = 1.`)
+    Encryption is based on the map `x \rightarrow ax+b` (mod `N`). where ``N`` is the
+    number of characters in the alphabet. Decryption is based on
+    the map `x \rightarrow cx+d` (mod `N`), where `c = a^{-1}` (mod `N`) and
+    `d = -a^{-1}c` (mod `N`). (In particular, for the map to be invertible,
+    we need `\mathrm{gcd}(a, N) = 1.` If ``check`` is not set to False, an error will be
+    raised if this condition does not apply.)
 
     Notes
     =====
@@ -272,11 +237,13 @@ def encipher_affine(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
             ``a, b``: a pair integers, where ``gcd(a, 26) = 1`` (the secret key)
 
-            ``m``: string of upper-case letters (the plaintext message)
+            ``m``: string of characters that appear in ``symbols``
+
+            ``symbols``: valid characters for the plain text (default = uppercase letters)
 
         OUTPUT:
 
-            ``c``: string of upper-case letters (the ciphertext message)
+            ``c``: string of characters (the ciphertext message)
 
         STEPS:
             0. Identify the alphabet "A", ..., "Z" with the integers 0, ..., 25.
@@ -292,32 +259,33 @@ def encipher_affine(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     >>> from sympy.crypto.crypto import encipher_affine
     >>> pt = "GONAVYBEATARMY"
-    >>> encipher_affine(pt, (1, 1))
-    'HPOBWZCFBUBSNZ'
-    >>> encipher_affine(pt, (1, 0))
+    >>> id = (1, 0)
+    >>> encipher_affine(pt, id)
     'GONAVYBEATARMY'
+    >>> rot1 = (1, 1)
     >>> pt = "GONAVYBEATARMY"
+    >>> encipher_affine(pt, rot1)
+    'HPOBWZCFBUBSNZ'
     >>> encipher_affine(pt, (3, 1))
     'TROBMVENBGBALV'
-    >>> ct = "TROBMVENBGBALV"
-    >>> encipher_affine(ct, (9, 17))
+    >>> encipher_affine(_, (9, 17))
     'GONAVYBEATARMY'
 
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
-    n = len(A)
-    map = dict(zip(A, range(n)))
+    A = check_and_join(AZ(symbols))
+    N = len(A)
     a, b = key
-    L = cycle_list(b, n)
-    C = [A[(a*map[c] + b) % n] for c in pt]
-    return "".join(C)
+    if check:
+        assert N == len(set(A))
+        assert gcd(a, N) == 1
+    B = ''.join([A[(a*i + b) % N] for i in range(N)])
+    return encipher_translate(pt, A, B)
 
 
 #################### substitution cipher ###########################
 
 
-def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_substitution(pt, key, symbols=None):
     """
     Performs the substitution cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -341,17 +309,17 @@ def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'GONAVYBEATARMY'
 
     """
-    symbols = check_and_join(symbols)
-    key = check_and_join(key, symbols)
-    pt = check_and_join(pt, symbols)
-    return pt.translate(maketrans(symbols, key))
+    A = check_and_join(AZ(symbols))
+    key = check_and_join(key, A)
+    pt = check_and_join(pt, A)
+    return pt.translate(maketrans(A, key))
 
 
 ######################################################################
 #################### Vigenère cipher examples ########################
 ######################################################################
 
-def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_vigenere(pt, key, symbols=None):
     """
     Performs the Vigenère cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -457,13 +425,13 @@ def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'QRGKKTHRZQEBPR'
 
     """
-    symbols = check_and_join(AZ(symbols))
-    key = check_and_join(AZ(key), symbols)
-    pt = check_and_join(AZ(pt), symbols)
-    return encipher_repeating(pt, key, symbols)
+    A = check_and_join(AZ(symbols))
+    key = check_and_join(AZ(key), A)
+    pt = check_and_join(AZ(pt), A)
+    return encipher_repeating(pt, key, A)
 
 
-def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def decipher_vigenere(ct, key, symbols=None):
     """
     Decode using the Vigenère cipher.
 
@@ -476,13 +444,12 @@ def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     >>> decipher_vigenere(*AZ((ct, key)))
     'MEETMEONMONDAY'
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
+    A = check_and_join(AZ(symbols))
     N = len(A)   # normally, 26
-    key0 = check_and_join(key, symbols)
+    key0 = check_and_join(key, A)
     K = [A.index(x) for x in key0]
     k = len(K)
-    ct0 = check_and_join(ct, symbols)
+    ct0 = check_and_join(ct, A)
     C = [A.index(x) for x in ct0]
     n = len(C)
     #m = n//k
@@ -493,7 +460,7 @@ def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Hill cipher  ########################
 
 
-def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_hill(pt, key, symbols=None):
     r"""
     Performs the Hill cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -565,8 +532,7 @@ def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'TBBYTKBEKKRLMYU'
 
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
+    A = check_and_join(AZ(symbols))
     N = len(A)   # normally, 26
     k = key.cols
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
@@ -581,7 +547,7 @@ def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     return "".join([A[i % N] for i in C])
 
 
-def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def decipher_hill(ct, key, symbols=None):
     """
     Deciphering is the same as enciphering but using the inverse of the key matrix.
 
@@ -599,8 +565,7 @@ def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'MEETMEONTUESDAYA'
 
     """
-    symbols = "".join(symbols)
-    A = alphabet_of_cipher(symbols)
+    A = check_and_join(AZ(symbols))
     N = len(A)   # normally, 26
     k = key.cols
     ct0 = [x.capitalize() for x in ct if x.isalnum()]
@@ -619,7 +584,7 @@ def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Bifid cipher  ########################
 
 
-def encipher_bifid(pt, key, alp=None, filter=True):
+def encipher_bifid(pt, key, symbols=None, filter=True):
     r"""
     Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -629,11 +594,11 @@ def encipher_bifid(pt, key, alp=None, filter=True):
 
             ``pt``: plaintext string
 
-            ``key``: short string for key made of characters from `alp`
+            ``key``: short string for key made of characters from `symbols`
 
-            ``alp``: `n \times n` characters defining the alphabet (default is string.printable)
+            ``symbols``: `n \times n` characters defining the alphabet (default is string.printable)
 
-            ``filter``: when True (default) characters in ``pt`` that are not in ``alp`` are omitted
+            ``filter``: when True (default) characters in ``pt`` that are not in ``symbols`` are omitted
 
         OUTPUT:
 
@@ -644,7 +609,7 @@ def encipher_bifid(pt, key, alp=None, filter=True):
     decipher_bifid, encipher_bifid5, encipher_bifid6
 
     """
-    A = alp or bifid10
+    A = check_and_join(symbols) if symbols else bifid10
     n = len(A)**.5
     if n != int(n):
         raise ValueError('Length of alphabet (%s) is not a square number.' % len(A))
@@ -662,7 +627,7 @@ def encipher_bifid(pt, key, alp=None, filter=True):
     return ct
 
 
-def decipher_bifid(ct, key, alp=None, filter=True):
+def decipher_bifid(ct, key, symbols=None, filter=True):
     r"""
     Performs the Bifid cipher decryption on ciphertext ``ct``, and returns the plaintext.
 
@@ -672,11 +637,11 @@ def decipher_bifid(ct, key, alp=None, filter=True):
 
             ``ct``: ciphertext string
 
-            ``key``: short string for key made of characters from ``alp``
+            ``key``: short string for key made of characters from ``symbols``
 
-            ``alp``: `n \times n` characters defining the alphabet (default=string.printable, a `10 \times 10` matrix)
+            ``symbols``: `n \times n` characters defining the alphabet (default=string.printable, a `10 \times 10` matrix)
 
-            ``filter``: when True (default) characters in ``pt`` that are not in ``alp`` are omitted, otherwise an error is raised
+            ``filter``: when True (default) characters in ``pt`` that are not in ``symbols`` are omitted, otherwise an error is raised
 
         OUTPUT:
 
@@ -726,7 +691,7 @@ def decipher_bifid(ct, key, alp=None, filter=True):
     'heldo~wor6d!'
 
     """
-    A = alp or bifid10
+    A = check_and_join(symbols) if symbols else bifid10
     n = len(A)**.5
     if n != int(n):
         raise ValueError('Length of alphabet (%s) is not a square number.' % len(A))

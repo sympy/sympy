@@ -1,10 +1,10 @@
 from sympy.core import symbols
 from sympy.core.compatibility import range
-from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
+from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
       check_and_join, encipher_vigenere, decipher_vigenere,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
-      bifid5_square, bifid6_square,
+      bifid5_square, bifid6_square, bifid5, bifid6, bifid10,
       decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
       decipher_kid_rsa, kid_rsa_private_key, kid_rsa_public_key,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
@@ -18,10 +18,6 @@ from sympy.polys.domains import FF
 
 from sympy.utilities.pytest import raises
 from random import randrange
-
-def test_alphabet_of_cipher():
-    assert alphabet_of_cipher()[0] == "A"
-    assert alphabet_of_cipher(symbols="1z") == ["1", "z"]
 
 
 def test_cycle_list():
@@ -106,8 +102,7 @@ def test_encipher_bifid5():
 
 
 def test_bifid5_square():
-    A = alphabet_of_cipher()
-    A.remove("J")
+    A = bifid5
     f = lambda i, j: symbols(A[5*i + j])
     M = Matrix(5, 5, f)
     assert bifid5_square("") == M
@@ -135,7 +130,7 @@ def test_decipher_bifid6():
 
 
 def test_bifid6_square():
-    A = alphabet_of_cipher() + [str(a) for a in range(10)]
+    A = bifid6
     f = lambda i, j: symbols(A[6*i + j])
     M = Matrix(6, 6, f)
     assert bifid6_square("") == M

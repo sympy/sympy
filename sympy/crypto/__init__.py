@@ -1,4 +1,4 @@
-from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
+from sympy.crypto.crypto import (cycle_list,
         encipher_shift, encipher_affine, encipher_substitution,
         check_and_join, encipher_vigenere, decipher_vigenere, bifid5_square,
         bifid6_square, encipher_hill, decipher_hill,
