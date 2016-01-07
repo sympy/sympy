@@ -7,7 +7,7 @@ Classical ciphers and LFSRs
 from __future__ import print_function
 
 from random import randrange
-from string import whitespace, uppercase, maketrans, printable
+from string import whitespace, ascii_uppercase as uppercase, maketrans, printable
 
 from sympy import nextprime
 from sympy.core import Rational, S, Symbol
