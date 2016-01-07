@@ -168,7 +168,7 @@ def encipher_shift(pt, key, symbols=None):
     The shift cipher is also called the Caesar cipher, after
     Julius Caesar, who, according to Suetonius, used it with a
     shift of three to protect messages of military significance.
-    Caesar's nephew Augustus reportedtly used a similar cipher, but
+    Caesar's nephew Augustus reportedly used a similar cipher, but
     with a right shift of 1.
 
 
@@ -215,7 +215,7 @@ def encipher_shift(pt, key, symbols=None):
 ######## affine cipher examples ############
 
 
-def encipher_affine(pt, key, symbols=None, check=True):
+def encipher_affine(pt, key, symbols=None):
     r"""
     Performs the affine cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -223,13 +223,15 @@ def encipher_affine(pt, key, symbols=None, check=True):
     number of characters in the alphabet. Decryption is based on
     the map `x \rightarrow cx+d` (mod `N`), where `c = a^{-1}` (mod `N`) and
     `d = -a^{-1}c` (mod `N`). (In particular, for the map to be invertible,
-    we need `\mathrm{gcd}(a, N) = 1.` If ``check`` is not set to False, an error will be
-    raised if this condition does not apply.)
+    we need `\mathrm{gcd}(a, N) = 1` and an error will be raised if this is
+    not true.)
 
     Notes
     =====
 
-    This is a straightforward generalization of the shift cipher.
+    This is a straightforward generalization of the shift cipher with the
+    added complexity of requiring 2 characters to be deciphered in order
+    to recover the key.
 
     ALGORITHM:
 
@@ -275,9 +277,7 @@ def encipher_affine(pt, key, symbols=None, check=True):
     A = check_and_join(AZ(symbols))
     N = len(A)
     a, b = key
-    if check:
-        assert N == len(set(A))
-        assert gcd(a, N) == 1
+    assert gcd(a, N) == 1
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
     return encipher_translate(pt, A, B)
 
@@ -295,6 +295,14 @@ def encipher_substitution(pt, key, symbols=None):
     The description uses the inverse permutation.
     Note that if the permutation in key is order 2 (eg, a transposition) then
     the encryption permutation and the decryption permutation are the same.
+
+    Notes
+    =====
+
+    This is a more general than the affine cipher in that the key can only
+    be recovered by determining the mapping for each symbol. Though in
+    practice, once a few symbols are recognized the mappings for other
+    characters can be guessed quickly.
 
     Examples
     ========
@@ -445,22 +453,21 @@ def decipher_vigenere(ct, key, symbols=None):
     'MEETMEONMONDAY'
     """
     A = check_and_join(AZ(symbols))
+    map = dict([(c, i) for i, c in enumerate(A)])
     N = len(A)   # normally, 26
     key0 = check_and_join(key, A)
-    K = [A.index(x) for x in key0]
-    k = len(K)
     ct0 = check_and_join(ct, A)
-    C = [A.index(x) for x in ct0]
-    n = len(C)
-    #m = n//k
-    P = [(-K[i % k] + C[i]) % N for i in range(n)]
-    return "".join([str(A[x]) for x in P])
+    K = [map[c] for c in key0]
+    n = len(K)
+    C = [map[c] for c in ct0]
+    P = [A[(-K[i % n] + c) % N] for i, c in enumerate(C)]
+    return "".join(P)
 
 
 #################### Hill cipher  ########################
 
 
-def encipher_hill(pt, key, symbols=None):
+def encipher_hill(pt, key, symbols=None, pad=None):
     r"""
     Performs the Hill cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -488,7 +495,8 @@ def encipher_hill(pt, key, symbols=None):
             ``key``: a `k x k` invertible matrix `K`, all of whose entries are in `Z_{26}`
 
             ``m``: string of `n` upper-case letters (the plaintext message)
-            (Note: Sage assumes that `n` is a multiple of `k`.)
+
+            ``pad``: character (default "Q") to use to make length of text be a mutiple of ``m``
 
         OUTPUT:
 
@@ -514,37 +522,25 @@ def encipher_hill(pt, key, symbols=None):
     .. [2] Lester S. Hill, Cryptography in an Algebraic Alphabet, The American
        Mathematical Monthly Vol.36, June-July 1929, pp.306-312.
 
-    Examples
+    See Also
     ========
-
-    >>> from sympy.crypto.crypto import encipher_hill
-    >>> from sympy import Matrix
-    >>> pt = "meet me on monday"
-    >>> key = Matrix([[1, 2], [3, 5]])
-    >>> encipher_hill(pt, key)
-    'UEQDUEODOCTCWQ'
-    >>> pt = "meet me on tuesday"
-    >>> encipher_hill(pt, key)
-    'UEQDUEODHBOYDJYU'
-    >>> pt = "GONAVYBEATARMY"
-    >>> key = Matrix([[1, 0, 1], [0, 1, 1], [2, 2, 3]])
-    >>> encipher_hill(pt, key)
-    'TBBYTKBEKKRLMYU'
+    decipher_hill
 
     """
     A = check_and_join(AZ(symbols))
-    N = len(A)   # normally, 26
+    map = dict([(c, i) for i, c in enumerate(A)])
+    pt0 = check_and_join(pt.upper(), A, filter=True)
+    P = [map[c] for c in pt0]
+    N = len(A)
     k = key.cols
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    P = [A.index(x) for x in pt0]
     n = len(P)
-    m = n//k
-    if n > m*k:
-        P = P + [0]*(n - m*k)
-        m = m + 1
-    C = [list(key*Matrix(k, 1, [P[i] for i in range(k*j, k*(j + 1))])) for j in range(m)]
-    C = flatten(C)
-    return "".join([A[i % N] for i in C])
+    m, r = divmod(n, k)
+    if r:
+        P = P + [map.get(AZ(pad or 'Q'), 0)]*(k - r)
+        m += 1
+    C = [A[c % N] for j in range(m) for c in
+        list(key*Matrix(k, 1, [P[i] for i in range(k*j, k*(j + 1))]))]
+    return "".join(C)
 
 
 def decipher_hill(ct, key, symbols=None):
@@ -554,31 +550,57 @@ def decipher_hill(ct, key, symbols=None):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import decipher_hill
+    >>> from sympy.crypto.crypto import encipher_hill, decipher_hill, AZ
     >>> from sympy import Matrix
-    >>> ct = "UEQDUEODOCTCWQ"
+
     >>> key = Matrix([[1, 2], [3, 5]])
-    >>> decipher_hill(ct, key)
+    >>> encipher_hill("meet me on monday", key)
+    'UEQDUEODOCTCWQ'
+    >>> decipher_hill(_, key)
     'MEETMEONMONDAY'
-    >>> ct = "UEQDUEODHBOYDJYU"
-    >>> decipher_hill(ct, key)
-    'MEETMEONTUESDAYA'
+
+    When the length of the plain text (stripped of invalid characters)
+    is not a multiple of the key dimension extra characters will
+    appear at the end of the enciphered and deciphered text. In order to
+    decipher the text, those characters must be included in the text to
+    be deciphered. In the following, the key has a dimension of 4 but the
+    text is 2 short of being a multiple of 4 so two characters will be added.
+
+    >>> key = Matrix([[1, 1, 1, 2], [0, 1, 1, 0], [2, 2, 3, 4], [1, 1, 0, 1]])
+    >>> pt = "ST"
+    >>> encipher_hill(pt, key)
+    'HJEB'
+    >>> decipher_hill(_, key)
+    'STQQ'
+    >>> encipher_hill(pt, key, pad="Z")
+    'ISPK'
+    >>> decipher_hill(_, key)
+    'STZZ'
+
+    If the last two characters of the cipher text were ignored in either case,
+    the wrong plain text would be recovered:
+
+    >>> decipher_hill("HD", key)
+    'ORMV'
+    >>> decipher_hill("IS", key)
+    'UIKY'
 
     """
     A = check_and_join(AZ(symbols))
-    N = len(A)   # normally, 26
+    map = dict([(c, i) for i, c in enumerate(A)])
+    ct0 = AZ(ct)
+    C = [map[c] for c in ct0]
+    N = len(A)
     k = key.cols
-    ct0 = [x.capitalize() for x in ct if x.isalnum()]
-    C = [A.index(x) for x in ct0]
     n = len(C)
-    m = n//k
-    if n > m*k:
-        C = C + [0]*(n - m*k)
-        m = m + 1
+    m, r = divmod(n, k)
+    if r:
+        C = C + [0]*(k - r)
+        m += 1
     key_inv = key.inv_mod(N)
-    P = [list(key_inv*Matrix(k, 1, [C[i] for i in range(k*j, k*(j + 1))])) for j in range(m)]
-    P = flatten(P)
-    return "".join([A[i % N] for i in P])
+    P = [A[p % N] for j in range(m) for p in
+        list(key_inv*Matrix(k, 1, [C[i] for i in range(k*j, k*(j + 1))]))]
+    return "".join(P)
 
 
 #################### Bifid cipher  ########################
