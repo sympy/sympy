@@ -10,10 +10,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
-# for new test cases of scipy
 from sympy.functions.special.bessel import besselj, bessely, besseli, besselk, hankel1, hankel2
-# from sympy.functions.special.hyper import hyper
-
 from sympy.functions.special.gamma_functions import digamma, gamma, polygamma, loggamma
 
 from sympy import Symbol, factorial, S
@@ -186,15 +183,6 @@ def test_scipy_translation_abs():
     f = lambdify(x, Abs(x), "scipy")
     assert f(-1) == 1
     assert f(1) == 1
-
-
-# def test_numpy_translation_():
-#     if not numpy:
-#         skip("numpy is not installed.")
-
-#     f = lambdify(x, Abs(x), "numpy")
-#     assert f(-1) == 1
-#     assert f(1) == 1
 
 
 def test_numexpr_printer():
@@ -634,10 +622,12 @@ def test_ITE():
 def test_scipy_translation_bessel():
     if not scipy:
         skip("scipy not installed.")
+    if not numpy:
+        skip("numpy not installed.")
 
     f = lambdify((x, y), besselj(x,y), "scipy")
-    assert f(1, 2) == 0.5767248077568734
-    assert f(3, 4) == 0.43017147387562199
+    assert (numpy.allclose(f(1, 2), [0.5767248077568734, 0.43017147387562199],
+     rtol=1e-05, atol=1e-08))
 
 
 def test_scipy_bessely():

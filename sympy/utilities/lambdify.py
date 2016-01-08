@@ -113,12 +113,6 @@ SCIPY_TRANSLATIONS = {
     "Mod": "mod",
     "oo": "inf",
     "re": "real",
-    "SparseMatrix": "array",
-    "ImmutableSparseMatrix": "array",
-    "Matrix": "array",
-    "MutableDenseMatrix": "array",
-    "ImmutableMatrix": "array",
-    "ImmutableDenseMatrix": "array",
     "elliptic_k": "ellipk",
     "elliptic_f": "ellipeinc",
     "besselj": "jn",
@@ -130,21 +124,7 @@ SCIPY_TRANSLATIONS = {
     "hyper": "hyp1f1",
 }
 
-NUMEXPR_TRANSLATIONS = {
-# Found need of mapping for numexpr,since supported functions: https://github.com/pydata/numexpr#supported-functions 
-    "Abs": "abs",
-    "acos": "arccos",
-    "acosh": "arccosh",
-    "arg": "angle",
-    "asin": "arcsin",
-    "asinh": "arcsinh",
-    "atan": "arctan",
-    "atan2": "arctan2",
-    "atanh": "arctanh",
-    "ln": "log",
-    "re": "real",
-    "im": "imag",
-}
+NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
@@ -157,7 +137,8 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-    "numexpr": (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS, ("import_module('numexpr')", ))
+    "numexpr": (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS, (
+        "import_module('numexpr')", ))
 }
 
 
@@ -166,12 +147,13 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "scipy".
+    "mpmath", "numpy", "scipy", "sympy".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[module]
+        namespace, namespace_default, translations,
+         import_commands = MODULES[module]
     except KeyError:
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
@@ -208,8 +190,8 @@ def _import(module, reload="False"):
 
 
 @doctest_depends_on(modules=('numpy'))
-@doctest_depends_on(modules=('scipy'))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+ dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -218,7 +200,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy" ,"scipy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy" 
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -293,9 +275,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         >>> a = numpy.arange(10)
         >>> a
         [0 1 2 3 4 5 6 7 8 9]
-        >>> expr=sin(x)
-        >>> f= lambdify(x,expr,scipy)
-        >>> f(a)
+        >>> f = implemented_function(Function('f'), lambda x: sin(x))
+        >>> func = lambdify(x, f(x), modules='scipy')
+        >>> func(a)
         [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
                     -0.2794155   0.6569866   0.98935825  0.41211849]  
 
@@ -373,7 +355,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
-        # Attempt to import numpy
+        #Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:
@@ -416,14 +398,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         namespace.update(buf)
 
     if hasattr(expr, "atoms"):
-        #   Try if you can extract symbols from the expression.
-        # Move on if expr.atoms in not implemented.
+        #Try if you can extract symbols from the expression.
+        #Move on if expr.atoms in not implemented.
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
 
-    if _module_present('numpy', namespaces) and printer is None:
-        # XXX: This has to be done here because of circular imports
+    if _module_present('numpy',namespaces) and printer is None:
+        #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumPyPrinter as printer
 
     if _module_present('scipy', namespaces) and printer is None:
@@ -445,7 +427,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
             names.append(var.name)
         else:
             # It's an iterable. Try to get name by inspection of calling frame.
-            name_list = [var_name for var_name, var_val in callers_local_vars if var_val is var]
+            name_list = [var_name for var_name, var_val in callers_local_vars 
+            if var_val is var]
             if len(name_list) == 1:
                 names.append(name_list[0])
             else:
@@ -460,7 +443,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         namespace.update({flat: flatten})
 
     # Provide lambda expression with builtins, and compatible implementation of range
-    namespace.update({'builtins': builtins, 'range': range})
+    namespace.update({'builtins':builtins, 'range':range})
 
     func = eval(lstr, namespace)
     # Apply the docstring
@@ -533,7 +516,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             else:
                 lambdarepr = lambda expr: printer.doprint(expr)
     else:
-        # XXX: This has to be done here because of circular imports
+        #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
@@ -545,7 +528,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            # Sub in dummy variables for functions or symbols
+            #Sub in dummy variables for functions or symbols
             if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
                 dummies_dict.update({args: dummies})
