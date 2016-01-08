@@ -16,7 +16,8 @@ from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
+
 from random import randrange
 
 
@@ -41,8 +42,8 @@ def test_encipher_affine():
 
 
 def test_encipher_substitution():
-    assert encipher_substitution("ABC", "BAC", symbols="ABC") == "BAC"
-    assert encipher_substitution("123", "1243", symbols="1234") == "124"
+    assert encipher_substitution("ABC", "BAC", "ABC") == "BAC"
+    assert encipher_substitution("123", "1243", "1234") == "124"
 
 
 def test_check_and_join():
@@ -77,8 +78,10 @@ def test_encipher_hill():
     A = Matrix(2, 2, [1, 2, 3, 5])
     assert encipher_hill("ABCD", A, symbols="ABCD") == "CBAB"
     assert encipher_hill("AB", A, symbols="ABCD") == "CB"
-    # n does not need to be a multiple of k
-    assert encipher_hill("ABA", A) == "CFAA"
+    # message length, n, does not need to be a multiple of k;
+    # it is padded
+    assert encipher_hill("ABA", A) == "CFGC"
+    assert encipher_hill("ABA", A, pad="Z") == "CFYV"
 
 
 def test_decipher_hill():
@@ -238,12 +241,15 @@ def test_lfsr_connection_polynomial():
     s = lfsr_sequence([F(1), F(1)], [F(0), F(1)], 5)
     assert lfsr_connection_polynomial(s) == x**2 + x + 1
 
+
 def test_elgamal_private_key():
     a, b, _ = elgamal_private_key(digit=100)
     assert isprime(a)
     assert is_primitive_root(b, a)
     assert len(bin(a)) >= 102
 
+
+@slow
 def test_elgamal():
     dk = elgamal_private_key(20)
     ek = elgamal_public_key(dk)
@@ -251,11 +257,13 @@ def test_elgamal():
     assert m == decipher_elgamal(encipher_elgamal(m, ek), dk)
     raises(ValueError, lambda: encipher_elgamal(2000, (1031, 14, 212)))
 
+
 def test_dh_private_key():
     p, g, _ = dh_private_key(digit = 100)
     assert isprime(p)
     assert is_primitive_root(g, p)
     assert len(bin(p)) >= 102
+
 
 def test_dh_public_key():
     p1, g1, a = dh_private_key(digit = 100)
@@ -263,6 +271,7 @@ def test_dh_public_key():
     assert p1 == p2
     assert g1 == g2
     assert ga == pow(g1, a, p1)
+
 
 def test_dh_shared_key():
     prk = dh_private_key(digit = 100)
