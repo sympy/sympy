@@ -270,6 +270,7 @@ class SymmetricGroup(Basic):
 
     """
     is_group = True
+    is_SymmetricGroup = True
 
     def __new__(cls, degree):
         if degree <= 0 or not isinstance(degree, int):
@@ -293,6 +294,14 @@ class SymmetricGroup(Basic):
         obj._is_transitive = True
         obj._is_sym = True
         obj._degree = degree
+
+        obj._r = len(obj.generators)
+
+        # these attributes are assigned after running schreier_sims
+        obj._base = list(range(degree - 1))
+        obj._strong_gens = []
+        obj._basic_orbits = []
+        obj._transversals = []
 
         return obj
 
@@ -337,10 +346,6 @@ class SymmetricGroup(Basic):
     def degree(self):
         return self._degree
 
-    def is_subgroup(self, other):
-        if isinstance(other, SymmetricGroup):
-            return self.degree <= other.degree
-
     def contains(self, g):
         if not isinstance(g, Permutation):
             return False
@@ -369,6 +374,83 @@ class SymmetricGroup(Basic):
             return SymmetricGroup(self.degree)
         return PermutationGroup(gens)
 
+    def derived_series(self):
+        res = [self]
+        current = self
+        next = self.derived_subgroup()
+        while not current.is_subgroup(next):
+            res.append(next)
+            current = next
+            next = next.derived_subgroup()
+        return res
+
+    def derived_subgroup(self):
+        """Compute the derived subgroup.
+
+        For a ``SymmetricGroup`` the derived subgroup is just an
+        ``AlternatingGroup`` of same degree.
+        """
+        return AlternatingGroup(self.degree)
+
+    def is_subgroup(self, other):
+        if isinstance(other, (SymmetricGroup, PermutationGroup)):
+            return other.degree <= self.degree
+        else:
+            return False
+
+    def is_transitive(self):
+        return self.is_transitive
+
+    @property
+    def is_trivial(self):
+        return self == SymmetricGroup(1)
+
+    def orbit(self, alpha):
+        return set(list(range(self.degree)))
+
+    def orbits(self):
+        return [self.orbit()]
+
+    def orbit_rep(self, alpha, beta):
+        return Permutation(list(range(self.degree)))
+
+    def generate(self, method="coset", af=False):
+        if method == "coset":
+            return self.generate_schreier_sims(af)
+        elif method == "dimino":
+            return self.generate_dimino(af)
+        else:
+            raise NotImplementedError('No generation defined for %s' % method)
+
+    def generate_schreier_sims(self, af=False):
+        n = self.degree
+        u = self.basic_transversals
+        pass
+
+    def schreier_sims(self):
+        if self._transversals:
+            return
+        base, strong_gens = self.schreier_sims_incremental()
+        pass
+
+    def schreier_vector(self, alpha):
+        v = [0]*self.degree
+        if alpha == 1:
+            v[0] = 1
+        v[alpha] = -1
+        return v
+
+    @property
+    def transitivity_degree(self):
+        return self.degree
+
+    def schreier_sims_incremental(self, base=None, gens=None):
+        pass
+
+    @property
+    def base(self):
+        return self._base
+
 
 def _stabilizer(degree, alpha):
     if degree == 1 or degree == 2:
@@ -377,13 +459,12 @@ def _stabilizer(degree, alpha):
     a = list(range(degree))
     a.remove(alpha)
     gen1 = Permutation(*a)
-    if alpha^gen2_self == alpha:
-        gen2 = gen2_self
+    if alpha == 0:
+        gen2 = Permutation(degree - 1)(2, 1)
+    elif alpha == 1:
+        gen2 = Permutation(degree - 1)(2, 0)
     else:
-        if alpha == 0:
-            gen2 = Permutation(degree - 1)(2, 1)
-        elif alpha == 1:
-            gen2 = Permutation(degree - 1)(2, 0)
+        gen2 = gen2_self
     return [gen1, gen2]
 
 
