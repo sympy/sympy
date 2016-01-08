@@ -37,6 +37,23 @@ from sympy.utilities.iterables import flatten, uniq
 
 
 def AZ(s=None):
+    """Return the letters of ``s`` in uppercase. In case more than
+    one string is passed, each of them will be processed an a list
+    of upper case strings will be returned.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.crypto.crypto import AZ
+    >>> AZ('Hello, world!')
+    'HELLOWORLD'
+    >>> AZ('Hello, world!'.split())
+    ['HELLO', 'WORLD']
+
+    See Also
+    ========
+    check_and_join
+    """
     if not s:
         return uppercase
     t = type(s) is str
@@ -52,24 +69,33 @@ bifid5 = AZ().replace('J', '')
 bifid6 = AZ() + '0123456789'
 bifid10 = printable
 
-def padded_key(key, symbols, warn=False):
+
+def padded_key(key, symbols, filter=True):
     """Return a string of the characters of ``symbols`` with those of ``key``
     appearing first, omitting characters in ``key`` that are not in ``symbols``
-    unless ``warn`` is True (default=False).
+    A ValueError is raised if a) there are duplicate characters in ``symbols``
+    or b) there are characters in ``key`` that are  not in ``symbols``.
 
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import AZ, padded_key
-    >>> padded_key('rsa'.upper(), AZ())
-    'RSABCDEFGHIJKLMNOPQTUVWXYZ'
+    >>> from sympy.crypto.crypto import padded_key
+    >>> padded_key('PUPPY', 'OPQRSTUVWXY')
+    'PUYOQRSTVWX'
+    >>> padded_key('RSA', 'ARTIST')
+    Traceback (most recent call last):
+    ...
+    ValueError: duplicate characters in symbols: T
     """
-    if warn:
-        extra = set(key) - set(symbols)
-        if extra:
-            raise ValueError('invalid characters: %s' % ''.join(sorted(extra)))
-    key0 = ''.join([i for i in uniq(key) if i in symbols])
-    return key0 + ''.join([i for i in symbols if i not in key0])
+    syms = list(uniq(symbols))
+    if len(syms) != len(symbols):
+        extra = ''.join(sorted(set([i for i in symbols if symbols.count(i) > 1])))
+        raise ValueError('duplicate characters in symbols: %s' % extra)
+    extra = set(key) - set(syms)
+    if extra:
+        raise ValueError('characters in key but not symbols: %s' % ''.join(sorted(extra)))
+    key0 = ''.join(list(uniq(key)))
+    return key0 + ''.join([i for i in syms if i not in key0])
 
 
 def check_and_join(phrase, symbols=None, filter=None):
@@ -777,7 +803,7 @@ def bifid_square(key):
     [Q, R, S, T, U],
     [V, W, X, Y, Z]])
 
-    >>> bifid_square(padded_key('GOLD BUG', bifid5))
+    >>> bifid_square(padded_key(AZ('GOLD BUG'), bifid5))
     Matrix([
     [G, O, L, D, B],
     [U, A, C, E, F],
@@ -943,7 +969,7 @@ def bifid5_square(key):
     [V, W, X, Y, Z]])
 
     """
-    return bifid_square(padded_key(key.upper(), bifid5))
+    return bifid_square(padded_key(AZ(key), bifid5))
 
 
 def encipher_bifid6(pt, key):
@@ -1037,7 +1063,7 @@ def bifid6_square(key):
     [Y, Z, 0, 1, 2, 3],
     [4, 5, 6, 7, 8, 9]])
     """
-    return bifid_square(padded_key(key.upper(), bifid6))
+    return bifid_square(padded_key(''.join(key.upper().split()), bifid6))
 
 #################### RSA  #############################
 
