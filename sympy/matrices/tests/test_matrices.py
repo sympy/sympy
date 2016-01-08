@@ -2668,3 +2668,10 @@ def test_issue_9422():
     assert x*M1 != M1*x
     assert a*M1 == M1*a
     assert y*x*M == Matrix([[y*x, 0], [0, y*x]])
+
+def test_jacobian_det():
+    y = Matrix([b*sin(a), b*sin(a), b])
+    x = Matrix([a, b])
+    assert y.jacobian_det(x) == sqrt(2)*sqrt(b**2*cos(a)**2)
+    y = Matrix([a*b])
+    assert y.jacobian_det(x) == sqrt(a**2 + b**2)

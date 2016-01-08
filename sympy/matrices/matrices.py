@@ -1554,7 +1554,7 @@ class MatrixBase(object):
         of determinant of product matrix and transposed matrix
 
         Parameters
-        ========
+        ==========
 
         self : vector of expressions representing functions f_i(x_1, ..., x_n).
         X : set of x_i's in order, it can be a list or a Matrix
@@ -1587,7 +1587,7 @@ class MatrixBase(object):
         elif mat.cols > mat.rows:
             return sqrt((mat*mat.T).det())
         else:
-            return sqrt((mat*mat.T).det())
+            return sqrt((mat.T*mat).det())
 
     def QRdecomposition(self):
         """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
