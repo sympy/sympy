@@ -4658,6 +4658,9 @@ def get_lines(ex, index_type):
     ``traces`` is the list of list of traced matrix lines,
     ``rest`` is the rest of the elements ot the tensor.
     """
+    #if not isinstance(ex, TensExpr):
+    #    return [], [], [ex]
+
     def _join_lines(a):
         i = 0
         while i < len(a):
@@ -4732,7 +4735,7 @@ def get_lines(ex, index_type):
         if p0 not in ta0:
             continue
         if ta0.index(p0) == ta1.index(p1):
-            # case gamma(i,s0,-s1)in c0, gamma(j,-s0,s2) in c1;
+            # case gamma(i,s0,-s1) in c0, gamma(j,-s0,s2) in c1;
             # to deal with this case one could add to the position
             # a flag for transposition;
             # one could write [(c0, False), (c1, True)]

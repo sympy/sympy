@@ -26,6 +26,7 @@
 
 """
 from sympy import S, Mul
+from sympy.functions.elementary.exponential import exp
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensAdd, tensor_mul, get_lines, Tensor, tensorhead
 from sympy.core.compatibility import range
@@ -298,10 +299,14 @@ def _trace_single_line(t):
             if len(spinor_free) == 2 and spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
                 # t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
                 # TODO: add procedure to close matrix indices.
-                t = t.replace(lambda x: x.component == DiracSpinorIndex.delta, lambda x: DiracSpinorIndex.dim)
+                from sympy.tensor.tensor import tensor_indices
+                mi1, mi2 = tensor_indices('mi1:3', DiracSpinorIndex)
+                t = t.substitute_indices((spinor_free[0], mi1), (spinor_free[1], mi2))
+                t = t*DiracSpinorIndex.delta(-mi2, -mi1)
+                #t = t.replace(lambda x: x.component == DiracSpinorIndex.delta, lambda x: DiracSpinorIndex.dim)
                 # t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
                 # TensMul(t, DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0]))
-                # t = t.contract_metric(sg)
+                t = t.contract_metric(sg)
                 return t/tcoeff if tcoeff else t
             else:
                 return t/tcoeff if tcoeff else t
@@ -475,24 +480,8 @@ def _kahane_simplify(expression):
     for gamma in gammas:
         assert gamma.component == GammaMatrix
 
-    free = []
-    for g, pos in expression._iterate_free_indices:
-        if pos[2] == 0:
-            free.append((g, pos[0]))
-
-    spinor_free = []
-    for (indx, pos, argn) in expression.free_in_args:
-        if not isinstance(expression.args[argn], Tensor):
-            # probably not a Tensor instance contains `indx`:s
-            continue
-        if pos == 0:
-            # it's a Lorentz index, skip:
-            continue
-        if indx.is_matrix_index:
-            # it's a matrix index, skip:
-            continue
-        # (index, index of component, position of component):
-        spinor_free.append((indx, pos, argn))
+    free = [_ for _ in expression.free_in_args if _[1] == 0]
+    spinor_free = [_ for _ in expression.free_in_args if _[1] != 0]
 
     if len(spinor_free) == 2:
         spinor_free.sort(key=lambda x: x[2])
@@ -518,20 +507,19 @@ def _kahane_simplify(expression):
     # a workaround which ignores possible initial free indices, and re-adds
     # them later.
     first_dum_pos = None
-    for g, pos in expression._iterate_dummy_indices:
-        if pos[2] == 0:
-            first_dum_pos = pos[0]
-            break
-
-    # dum_zip = list(zip(*dum))
-    # first_dum_pos = min(min(dum_zip[0]), min(dum_zip[1]))
+    for p1, p2, a1, a2 in expression.dum_in_args:
+        if p1 != 0 or p2 != 0:
+            # only Lorentz indices, skip Dirac indices:
+            continue
+        first_dum_pos = min(p1, p2)
+        break
 
     total_number = len(free) + len(dum)*2
     number_of_contractions = len(dum)
 
     free_pos = [None]*total_number
     for i in free:
-        free_pos[i[1]] = i[0]
+        free_pos[i[2]] = i[0]
 
     # `index_is_free` is a list of booleans, to identify index position
     # and whether that index is free or dummy.
@@ -773,28 +761,33 @@ def _kahane_simplify(expression):
     elif isinstance(t, TensMul):
         t1 = t
     if t1:
-        spinor_free1 = [_ for _ in t1.free if _[1] % 3 != 0]
+        spinor_free1 = [_ for _ in t1.free_in_args if _[1] % 3 != 0]  # if not _[0].is_matrix_index]
         if spinor_free1:
-            if spinor_free and [i for i in spinor_free if not i[0].is_matrix_index] != []:
-                mat_ind1, mat_ind2 = [i for i in t1.get_free_indices() if i.is_matrix_index and i.tensor_index_type == DiracSpinorIndex]
-                t = t.substitute_indices((mat_ind1, spinor_free[0][0]), (mat_ind2, spinor_free[-1][0]))
+            # TODO: create method _get_trailing_matrix_indices_for_type ?
+            mat_ind1, mat_ind2 = [i for i in t1.get_free_indices() if i.is_matrix_index and i.tensor_index_type == DiracSpinorIndex]
+            new_mat_ind1 = TensorIndex(mat_ind1.name, mat_ind1.tensor_index_type, mat_ind1.is_up)
+            new_mat_ind2 = TensorIndex(mat_ind2.name, mat_ind2.tensor_index_type, mat_ind2.is_up)
+            if spinor_free: # and [i for i in spinor_free if not i[0].is_matrix_index] != []:
+                # if `spinor_free` is not an empty list, it means that the Dirac index line does not start and end with
+                # matrix indices. Replacing the original indices at the start and end:
+                t = t.substitute_indices((mat_ind1, spinor_free[0][0]), (mat_ind2, spinor_free[1][0]))
             else:
+                # if `spinor_free` is an empty list, trailing matrix indices should be connected to each other:
+
                 # FIXME trace
-                t = t*DiracSpinorIndex.delta(DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
-                t = t.contract_metric(DiracSpinorIndex.metric)
-                simplify_lines(t.args[0])
-                if isinstance(t, TensAdd):
-                    t = TensAdd(*[simplify_lines(_) for _ in t.args])
-                elif isinstance(t, TensMul):
-                    t = simplify_lines(t)
+                t = t.substitute_indices((mat_ind1, new_mat_ind1), (mat_ind2, new_mat_ind2))
+                t = t*DiracSpinorIndex.delta(-new_mat_ind1, -new_mat_ind2)
+                t = simplify_lines(t)
         else:
             if spinor_free:
                 t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
             else:
                 t = t*4
     else:
+        # if there are no spinor indices in the resulting expression, add a Dirac delta.
         if spinor_free:
             t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
         else:
+            # if there were no free spinor indices in the initial expression, the Dirac delta is contracted (i.e. is 4):
             t = t*4
     return t
