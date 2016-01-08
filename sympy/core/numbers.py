@@ -1403,8 +1403,8 @@ class Rational(Number):
     def __int__(self):
         p, q = self.p, self.q
         if p < 0:
-            return -(-p//q)
-        return p//q
+            return -int(-p//q)
+        return int(p//q)
 
     __long__ = __int__
 
