@@ -949,6 +949,22 @@ def test_issue_9447():
     assert Complement(S.Naturals, a) == Complement(
             S.Naturals, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
 
+def test_issue_10285():
+    from sympy import Mul
+    x = Symbol('x')
+    y = Symbol('y')
+    assert FiniteSet(2*x + 1).intersect(Interval(3, 5)) == FiniteSet(x).intersect(Interval(1, 2))
+    assert FiniteSet(x*y + 1).intersect(Interval(3, 5)) == FiniteSet(x*y).intersect(Interval(2, 4))
+    assert FiniteSet(2*x + 2*y).intersect(Interval(2, 4)) == FiniteSet(x + y).intersect(Interval(1, 2))
+    assert FiniteSet(2*x + 1).intersect(Interval(2, 4)) == FiniteSet(x).intersect(Interval(Mul(1) / 2, Mul(3) / 2))
+    assert FiniteSet((2*x + 1) / 3).intersect(Interval(2, 4)) == FiniteSet(x).intersect(Interval(Mul(5) /2, Mul(11) /2))
+    assert FiniteSet(x).intersect(Interval(2, 3)) == FiniteSet(x).intersect(Interval(2, 3))
+    assert FiniteSet(2*x/3 + 3*y/2).intersect(Interval(2, 4)) == FiniteSet(4*x + 9*y).intersect(Interval(12, 24))
+    assert FiniteSet(-2*x - 1).intersect(Interval(3, 5)) == FiniteSet(x).intersect(Interval(-3, -2))
+    assert FiniteSet(-2*x/3 - 3*y/2).intersect(Interval(2, 4)) == FiniteSet(4*x + 9*y).intersect(Interval(-24, -12))
+    assert FiniteSet(-2*x - 2*y + 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-2, -1))
+    assert FiniteSet(-2*x - 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-3, -2))
+    assert FiniteSet(-2*x + 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(-x + y).intersect(Interval(2, 3))
 
 def test_issue_10337():
     assert (FiniteSet(2) == 3) is False
