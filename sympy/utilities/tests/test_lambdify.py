@@ -585,4 +585,4 @@ def test_ITE():
 
 def test_issue_9474():
     k = symbols('k', complex=True)
-    assert lambdify([k], abs(k**2))(10.01+0.1j) == 100.2101
+    assert lambdify([k], abs(k**2))(10.01+0.1j) == 100.210100000000
