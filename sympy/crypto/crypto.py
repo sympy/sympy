@@ -28,13 +28,13 @@ from string import whitespace, ascii_uppercase as uppercase, printable
 from sympy import nextprime
 from sympy.core import Rational, S, Symbol
 from sympy.core.numbers import igcdex
-from sympy.core.compatibility import range, maketrans
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, totient, primitive_root
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.ntheory.modular import mod_inverse
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import flatten, uniq
 
 
@@ -140,7 +140,7 @@ def check_and_join(phrase, symbols=None, filter=None):
             if not filter:
                 raise ValueError(
                     'characters missing from symbols: "%s"' % missing)
-            rv = rv.translate(None, missing)
+            rv = translate(rv, None, missing)
     return rv
 
 
@@ -236,7 +236,7 @@ def encipher_shift(msg, key, symbols=None):
     msg, _, A = _prep(msg, '', symbols)
     shift = len(A) - key % len(A)
     key = A[shift:] + A[:shift]
-    return msg.translate(maketrans(key, A))
+    return translate(msg, key, A)
 
 
 def decipher_shift(msg, key, symbols=None):
@@ -307,7 +307,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
         d = -b*c
         a, b = c, d
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
-    return msg.translate(maketrans(A, B))
+    return translate(msg, A, B)
 
 
 def decipher_affine(msg, key, symbols=None):
@@ -336,10 +336,12 @@ def decipher_affine(msg, key, symbols=None):
 #################### substitution cipher ###########################
 
 
-def encipher_substitution(msg, old, new):
+def encipher_substitution(msg, old, new=None):
     """
     Returns the ciphertext obtained by replacing each character that
     appears in ``old`` with the corresponding character in ``new``.
+    If ``old`` is a mapping, then new is ignored and the replacements
+    defined by ``old`` are used.
 
     Notes
     =====
@@ -348,12 +350,6 @@ def encipher_substitution(msg, old, new):
     only be recovered by determining the mapping for each symbol.
     Though in practice, once a few symbols are recognized the mappings
     for other characters can be quickly guessed.
-
-    Although single characters are replaced with single characters in
-    this routine, the substitution cipher, in general, is a method
-    whereby "units" (not necessarily single characters) of plaintext
-    are replaced with ciphertext according to a regular system.
-
 
     Examples
     ========
@@ -381,8 +377,16 @@ def encipher_substitution(msg, old, new):
     'ANYV'
     >>> encipher(_)
     'NAVY'
+
+    The substitution cipher, in general, is a method
+    whereby "units" (not necessarily single characters) of plaintext
+    are replaced with ciphertext according to a regular system.
+
+    >>> ords = dict(zip('abc', ['\\%i' % ord(i) for i in 'abc']))
+    >>> print(encipher_substitution('abc', ords))
+    \97\98\99
     """
-    return msg.translate(maketrans(old, new))
+    return translate(msg, old, new)
 
 
 ######################################################################
@@ -1389,7 +1393,7 @@ def encode_morse(msg, sep='|', mapping=None):
     # omit unmapped chars
     chars = set(''.join(msg.split()))
     ok = set(mapping.keys())
-    msg = msg.translate(None, ''.join(chars - ok))
+    msg = translate(msg, None, ''.join(chars - ok))
 
     morsestring = []
     words = msg.split()
