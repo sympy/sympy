@@ -12,6 +12,7 @@ from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range, builtins
 from sympy.utilities.decorator import doctest_depends_on
 
+
 # These are the namespaces the lambda functions will use.
 MATH = {}
 MPMATH = {}
@@ -31,7 +32,6 @@ NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs": "fabs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
@@ -297,6 +297,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     """
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
+    
 
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
@@ -305,7 +306,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["sympy", "math", "mpmath"]
+        modules = ["math", "mpmath", "sympy"]
 
         #Attempt to import numpy
         try:
