@@ -297,7 +297,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     """
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
-    
 
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
