@@ -23,13 +23,12 @@ how they fit into this description?
 from __future__ import print_function
 
 from random import randrange
-from string import (whitespace, ascii_uppercase as uppercase,
-    maketrans, printable)
+from string import whitespace, ascii_uppercase as uppercase, printable
 
 from sympy import nextprime
 from sympy.core import Rational, S, Symbol
 from sympy.core.numbers import igcdex
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, maketrans
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, totient, primitive_root
 from sympy.polys.domains import FF
