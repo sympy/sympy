@@ -1,6 +1,7 @@
 from sympy import (
     symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
-    S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root)
+    S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
+    Rational)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -281,3 +282,14 @@ def test_issue_from_PR1599():
     assert (powsimp(root(n1, 3)*root(n2, 3)*root(n3, 3)*root(n4, 3)) ==
         -(-1)**(S(1)/3)*
         (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
+
+
+def test_issue_10195():
+    l = Symbol('l', even=True, nonzero=True)
+    n = Symbol('n', odd=True)
+    e_x = (-1)**(n/2 - Rational(1, 2)) - (-1)**(3*n/2 - Rational(1, 2))
+    assert powsimp((-1)**(l/2)) == I**l
+    assert powsimp((-1)**(n/2)) == I**n
+    assert powsimp((-1)**(3*n/2)) == -I**n
+    assert powsimp(e_x) == (-1)**(n/2 - Rational(1, 2)) + (-1)**(3*n/2 +
+            Rational(1,2))
