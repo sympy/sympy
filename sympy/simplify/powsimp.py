@@ -242,7 +242,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 else:
                     c, m = e.as_coeff_Mul(rational=True)
                     if c is not S.One:
-                        if m.is_even or m.is_odd:
+                        if m.is_integer:
                             return (b, Integer(c.q)), m*Integer(c.p)
                         return (b**m, Integer(c.q)), Integer(c.p)
                     else:

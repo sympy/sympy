@@ -285,6 +285,7 @@ def test_issue_from_PR1599():
 
 
 def test_issue_10195():
+    a = Symbol('a', integer=True)
     l = Symbol('l', even=True, nonzero=True)
     n = Symbol('n', odd=True)
     e_x = (-1)**(n/2 - Rational(1, 2)) - (-1)**(3*n/2 - Rational(1, 2))
@@ -293,3 +294,4 @@ def test_issue_10195():
     assert powsimp((-1)**(3*n/2)) == -I**n
     assert powsimp(e_x) == (-1)**(n/2 - Rational(1, 2)) + (-1)**(3*n/2 +
             Rational(1,2))
+    assert powsimp((-1)**(3*a/2)) == (-I)**a
