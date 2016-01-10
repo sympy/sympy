@@ -363,20 +363,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         else:
             modules.insert(1, "numpy")
 
-        try:
-            _import("numexpr")
-        except ImportError:
-            pass
-        else:
-            modules.insert(2, "numexpr")
-
         # Attempt to import scipy
         try:
             _import("scipy")
         except ImportError:
             pass
         else:
-            modules.insert(2, "scipy")
+            modules.insert(0, "scipy")
 
     # Get the needed namespaces.
     namespaces = []
