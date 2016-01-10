@@ -1785,9 +1785,10 @@ def encipher_elgamal(i, key):
 
     """
     p, r, e = key
-    if i > p:
+    if i < 0 or i >= p:
         raise ValueError(
-            'Message {} should be less than prime {}'.format(i, p))
+            'Message (%s) should be in range(%s)' % (i, p))
+    randrange = _randrange(seed)
     a = randrange(2, p)
     return pow(r, a, p), i * pow(e, a, p) % p
 

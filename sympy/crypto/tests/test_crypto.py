@@ -249,13 +249,13 @@ def test_elgamal_private_key():
     assert len(bin(a)) >= 102
 
 
-@slow
 def test_elgamal():
-    dk = elgamal_private_key(20)
+    dk = elgamal_private_key(5)
     ek = elgamal_public_key(dk)
-    m = 12345
-    assert m == decipher_elgamal(encipher_elgamal(m, ek), dk)
-    raises(ValueError, lambda: encipher_elgamal(2000, (1031, 14, 212)))
+    P = ek[0]
+    assert P - 1 == decipher_elgamal(encipher_elgamal(P - 1, ek), dk)
+    raises(ValueError, lambda: encipher_elgamal(P, dk))
+    raises(ValueError, lambda: encipher_elgamal(-1, dk))
 
 
 def test_dh_private_key():
