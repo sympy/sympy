@@ -11,7 +11,8 @@ from sympy.crypto.crypto import (cycle_list,
       lfsr_connection_polynomial, lfsr_autocorrelation, lfsr_sequence,
       encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
-      dh_shared_key, uniq)
+      dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
+      decipher_bifid, bifid_square, padded_key, uniq)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -31,6 +32,7 @@ def test_encipher_shift():
     assert encipher_shift("ABC", 0) == "ABC"
     assert encipher_shift("ABC", 1) == "BCD"
     assert encipher_shift("ABC", -1) == "ZAB"
+    assert decipher_shift("ZAB", -1) == "ABC"
 
 
 def test_encipher_affine():
@@ -39,6 +41,8 @@ def test_encipher_affine():
     assert encipher_affine("ABC", (-1, 0)) == "AZY"
     assert encipher_affine("ABC", (-1, 1), symbols="ABCD") == "BAD"
     assert encipher_affine("123", (-1, 1), symbols="1234") == "214"
+    assert encipher_affine("ABC", (3, 16)) == "QTW"
+    assert decipher_affine("QTW", (3, 16)) == "ABC"
 
 
 def test_encipher_substitution():
@@ -51,6 +55,7 @@ def test_check_and_join():
     assert check_and_join(uniq("aaabc")) == "abc"
     assert check_and_join("ab c".split()) == "abc"
     assert check_and_join("abc", "a", filter=True) == "a"
+    raises(ValueError, lambda: check_and_join('ab', 'a'))
 
 
 def test_encipher_vigenere():
@@ -280,3 +285,21 @@ def test_dh_shared_key():
     sk = dh_shared_key((p, _, ga), b)
     assert sk == pow(ga, b, p)
     raises(ValueError, lambda: dh_shared_key((1031, 14, 565), 2000))
+
+
+def test_padded_key():
+    assert padded_key('b', 'ab') == 'ba'
+    raises(ValueError, lambda: padded_key('ab', 'ace'))
+    raises(ValueError, lambda: padded_key('ab', 'abba'))
+
+
+def test_bifid():
+    raises(ValueError, lambda: encipher_bifid('abc', 'b', 'abcde'))
+    assert encipher_bifid('abc', 'b', 'abcd') == 'bdb'
+    raises(ValueError, lambda: decipher_bifid('bdb', 'b', 'abcde'))
+    assert encipher_bifid('bdb', 'b', 'abcd') == 'abc'
+    raises(ValueError, lambda: bifid_square('abcde'))
+    assert bifid5_square("B") == \
+        bifid5_square('BACDEFGHIKLMNOPQRSTUVWXYZ')
+    assert bifid6_square('B0') == \
+        bifid6_square('B0ACDEFGHIJKLMNOPQRSTUVWXYZ123456789')
