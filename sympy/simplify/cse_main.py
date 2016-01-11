@@ -212,73 +212,6 @@ def opt_cse(exprs, order='canonical'):
 
     ## Process Adds and commutative Muls
 
-    def _match_common_args(Func, funcs):
-        if order != 'none':
-            funcs = list(ordered(funcs))
-        else:
-            funcs = sorted(funcs, key=lambda x: len(x.args))
-
-        func_args = [set(e.args) for e in funcs]
-        for i in range(len(func_args)):
-            for j in range(i + 1, len(func_args)):
-                com_args = func_args[i].intersection(func_args[j])
-                if len(com_args) > 1:
-                    com_func = Func(*com_args)
-
-                    # for all sets, replace the common symbols by the function
-                    # over them, to allow recursive matches
-
-                    diff_i = func_args[i].difference(com_args)
-                    func_args[i] = diff_i | set([com_func])
-                    if diff_i:
-                        opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
-                                                  evaluate=False)
-
-                    diff_j = func_args[j].difference(com_args)
-                    func_args[j] = diff_j | set([com_func])
-                    opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
-                                              evaluate=False)
-
-                    for k in range(j + 1, len(func_args)):
-                        if not com_args.difference(func_args[k]):
-                            diff_k = func_args[k].difference(com_args)
-                            func_args[k] = diff_k | set([com_func])
-                            opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
-                                                      evaluate=False)
-
-
-    def _match_common_args_nc(Func, funcs):
-        from sympy.utilities.iterables import flatten
-        from itertools import takewhile
-        opt_subs = {}
-        func_args = [e.args for e in funcs]
-        # ([a, b, c], [1, 2, 3]) -> [a, b, c, Marker, 1, 2, 3]
-        combined_func_args = flatten(zip(func_args, [Marker]*len(func_args)))[:-1]
-        while True:
-            repl = shortest_repeated_subsequence(combined_func_args)
-            if not repl:
-                break
-            # [1, 2, 3] -> [Func(1, 2), 3]
-            _replace_subsequence(combined_func_args, repl, Func(*repl, evaluate=False))
-
-        # [a, b, Marker, (a, b), c] -> {Func(a, b): Func(a, b), Func(a, b, c):
-        #                               Func(Func(a, b), c)}
-        combined_func_args_iter = iter(combined_func_args)
-        for func in funcs:
-            res = list(takewhile(lambda x: x != Marker, combined_func_args_iter))
-            opt_subs[func] = Func(*res, evaluate=False)
-
-        return opt_subs
-
-    def _replace_subsequence(l, a, b):
-        """
-        Replace subsequence a with b in-place in l.
-        """
-        for i in range(len(l)):
-            if l[i:i+len(a)] == a:
-                l[i:i+len(a)] = [b]
-
-
     # split muls into commutative
     comutative_muls = set()
     for m in muls:
@@ -294,8 +227,70 @@ def opt_cse(exprs, order='canonical'):
             if len(c) > 1:
                 comutative_muls.add(c_mul)
 
-    _match_common_args(Add, adds)
-    _match_common_args(Mul, comutative_muls)
+    opt_subs.update(match_common_args(Add, adds, order=order))
+    opt_subs.update(match_common_args(Mul, comutative_muls, order=order))
+
+    return opt_subs
+
+
+def match_common_args(Func, funcs, order='canonical'):
+    opt_subs = {}
+
+    if order != 'none':
+        funcs = list(ordered(funcs))
+    else:
+        funcs = sorted(funcs, key=lambda x: len(x.args))
+
+    func_args = [set(e.args) for e in funcs]
+    for i in range(len(func_args)):
+        for j in range(i + 1, len(func_args)):
+            com_args = func_args[i].intersection(func_args[j])
+            if len(com_args) > 1:
+                com_func = Func(*com_args)
+
+                # for all sets, replace the common symbols by the function
+                # over them, to allow recursive matches
+
+                diff_i = func_args[i].difference(com_args)
+                func_args[i] = diff_i | set([com_func])
+                if diff_i:
+                    opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
+                                              evaluate=False)
+
+                diff_j = func_args[j].difference(com_args)
+                func_args[j] = diff_j | set([com_func])
+                opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
+                                          evaluate=False)
+
+                for k in range(j + 1, len(func_args)):
+                    if not com_args.difference(func_args[k]):
+                        diff_k = func_args[k].difference(com_args)
+                        func_args[k] = diff_k | set([com_func])
+                        opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
+                                                  evaluate=False)
+
+    return opt_subs
+
+def match_common_args_nc(Func, funcs):
+    from sympy.utilities.iterables import flatten
+    from itertools import takewhile
+    opt_subs = {}
+    func_args = [e.args for e in funcs]
+    # ([a, b, c], [1, 2, 3]) -> [a, b, c, Marker, 1, 2, 3]
+    combined_func_args = flatten(zip(func_args, [Marker]*len(func_args)))[:-1]
+    while True:
+        repl = shortest_repeated_subsequence(combined_func_args)
+        if not repl:
+            break
+        # [1, 2, 3] -> [Func(1, 2), 3]
+        replace_subsequence(combined_func_args, repl, Func(*repl, evaluate=False))
+
+    # [a, b, Marker, (a, b), c] -> {Func(a, b): Func(a, b), Func(a, b, c):
+    #                               Func(Func(a, b), c)}
+    combined_func_args_iter = iter(combined_func_args)
+    for func in funcs:
+        res = list(takewhile(lambda x: x != Marker, combined_func_args_iter))
+        opt_subs[func] = Func(*res, evaluate=False)
 
     return opt_subs
 
@@ -571,6 +566,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     return postprocess(replacements, reduced_exprs)
 
 
+# ====== Some iterable helpers for some of the algorithms above =====
+
 class Marker:
     pass
 
@@ -665,3 +662,18 @@ def shortest_repeated_subsequence(S, ignore=(Marker,)):
     if shortest == oo:
         return None
     return S[x_shortest - shortest: x_shortest]
+
+
+def replace_subsequence(l, a, b):
+    """
+    Replace subsequence a with b in-place in l.
+
+    >>> from sympy.simplify.cse_main import replace_subsequence
+    >>> l = [1, 2, 1, 2, 3]
+    >>> replace_subsequence(l, [1, 2], 4)
+    >>> l
+    [4, 4, 3]
+    """
+    for i in range(len(l)):
+        if l[i:i+len(a)] == a:
+            l[i:i+len(a)] = [b]
