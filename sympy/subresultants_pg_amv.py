@@ -7,7 +7,7 @@ Created on Mon Dec 28 13:25:02 2015
 
 from __future__ import print_function, division
 
-from sympy import *
+# from sympy import *
 
 def sylvester(f, g, x, method = 1):
     '''
@@ -616,8 +616,6 @@ def euclid_amv(f, g, x):
         f, g = g, f
     if d0 > 0 and d1 == 0:
         return [f, g]
-#    if d0 == 1:
-#        return [f, g]
 
     # initialize
     a0 = f
@@ -1086,8 +1084,6 @@ def subresultants_amv(f, g, x):
         f, g = g, f
     if d0 > 0 and d1 == 0:
         return [f, g]
-#    if d0 == 1:
-#        return [f, g]
 
     # initialize
     a0 = f
@@ -1762,5 +1758,3 @@ def subresultants_vv_2(p, q, x):
         row1 = Matrix([row1])
 
     return sr_list
-
-
