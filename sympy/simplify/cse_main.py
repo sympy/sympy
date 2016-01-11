@@ -246,6 +246,39 @@ def opt_cse(exprs, order='canonical'):
                             opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
                                                       evaluate=False)
 
+
+    def _match_common_args_nc(Func, funcs):
+        from sympy.utilities.iterables import flatten
+        from itertools import takewhile
+        opt_subs = {}
+        func_args = [e.args for e in funcs]
+        # ([a, b, c], [1, 2, 3]) -> [a, b, c, Marker, 1, 2, 3]
+        combined_func_args = flatten(zip(func_args, [Marker]*len(func_args)))[:-1]
+        while True:
+            repl = shortest_repeated_subsequence(combined_func_args)
+            if not repl:
+                break
+            # [1, 2, 3] -> [Func(1, 2), 3]
+            _replace_subsequence(combined_func_args, repl, Func(*repl, evaluate=False))
+
+        # [a, b, Marker, (a, b), c] -> {Func(a, b): Func(a, b), Func(a, b, c):
+        #                               Func(Func(a, b), c)}
+        combined_func_args_iter = iter(combined_func_args)
+        for func in funcs:
+            res = list(takewhile(lambda x: x != Marker, combined_func_args_iter))
+            opt_subs[func] = Func(*res, evaluate=False)
+
+        return opt_subs
+
+    def _replace_subsequence(l, a, b):
+        """
+        Replace subsequence a with b in-place in l.
+        """
+        for i in range(len(l)):
+            if l[i:i+len(a)] == a:
+                l[i:i+len(a)] = [b]
+
+
     # split muls into commutative
     comutative_muls = set()
     for m in muls:
