@@ -41,26 +41,26 @@ def sylvester(f, g, x, method = 1):
     m, n = degree( Poly(f, x), x), degree( Poly(g, x), x)
 
     # Special cases:
-    # A:: case m = n = -oo (i.e. both polys are 0)
-    if m == n and n == -oo:
+    # A:: case m = n < 0 (i.e. both polys are 0)
+    if m == n and n < 0:
         return Matrix([])
 
     # B:: case m = n = 0  (i.e. both polys are constants)
     if m == n and n == 0:
         return Matrix([])
 
-    # C:: m == 0 and n == -oo or m == -oo and n == 0
-    # (i.e. one polys is constant and the other is 0)
-    if m == 0 and n == -oo:
+    # C:: m == 0 and n < 0 or m < 0 and n == 0
+    # (i.e. one poly is constant and the other is 0)
+    if m == 0 and n < 0:
         return Matrix([])
-    elif m == -oo and n == 0:
+    elif m < 0 and n == 0:
         return Matrix([])
 
-    # D:: m >= 1 and n == -oo or m == -oo and n >=1
+    # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n == -oo:
+    if m >= 1 and n < 0:
         return Matrix([0])
-    elif m == -oo and n >= 1:
+    elif m < 0 and n >= 1:
         return Matrix([0])
 
     fp = Poly(f, x).all_coeffs()
@@ -167,7 +167,7 @@ def sturm_pg(p, q, x, method=0):
     d0 =  degree(p, x)
     d1 =  degree(q, x)
     if d0 == 0 and d1 == 0:
-        return []
+        return [p, q]
     if d1 > d0:
         d0, d1 = d1, d0
         p, q = q, p
@@ -279,7 +279,7 @@ def sturm_q(p, q, x):
     d0 =  degree(p, x)
     d1 =  degree(q, x)
     if d0 == 0 and d1 == 0:
-        return []
+        return [p, q]
     if d1 > d0:
         d0, d1 = d1, d0
         p, q = q, p
@@ -380,7 +380,7 @@ def sturm_amv(p, q, x, method=0):
     # the coefficients in prs are subresultants and hence are smaller
     # than the corresponding subresultants by the factor
     # |LC(prs[0])**( deg(prs[0]) - deg(prs[1]))|; Theorem 2, 2nd reference.
-    lcf = Abs( LC(prs[0])**( degree(prs[0]) - degree(prs[1]) ) )
+    lcf = Abs( LC(prs[0])**( degree(prs[0], x) - degree(prs[1], x) ) )
 
     # the signs of the first two polys in the sequence stay the same
     sturm_seq = [prs[0], prs[1]]
@@ -531,7 +531,7 @@ def euclid_q(p, q, x):
     d0 =  degree(p, x)
     d1 =  degree(q, x)
     if d0 == 0 and d1 == 0:
-        return []
+        return [p, q]
     if d1 > d0:
         d0, d1 = d1, d0
         p, q = q, p
@@ -610,20 +610,20 @@ def euclid_amv(f, g, x):
     d0 =  degree(f, x)
     d1 =  degree(g, x)
     if d0 == 0 and d1 == 0:
-        return []
-    if d0 > 0 and d1 == 0:
         return [f, g]
     if d1 > d0:
         d0, d1 = d1, d0
         f, g = g, f
-    if d0 == 1:
+    if d0 > 0 and d1 == 0:
         return [f, g]
+#    if d0 == 1:
+#        return [f, g]
 
     # initialize
     a0 = f
     a1 = g
     euclid_seq = [a0, a1]
-    deg_dif_p1, c = degree(a0) - degree(a1) + 1, -1
+    deg_dif_p1, c = degree(a0, x) - degree(a1, x) + 1, -1
 
     # compute the first polynomial of the prs
     i = 1
@@ -685,7 +685,7 @@ def modified_subresultants_pg(p,q,x):
     d0 =  degree(p,x)
     d1 =  degree(q,x)
     if d0 == 0 and d1 == 0:
-        return []
+        return [p, q]
     if d1 > d0:
         d0, d1 = d1, d0
         p, q = q, p
@@ -831,7 +831,7 @@ def subresultants_pg(p,q,x):
     Computes the subresultant prs of p and q in Z[x] or Q[x], from
     the modified subresultant prs of p and q.
 
-    The coefficients of the polynomials in these two ßsequences differ only
+    The coefficients of the polynomials in these two sequences differ only
     in sign and the factor Abs(LC(p)**( deg(p)- deg(q))) as stated in
     Theorem 2 of the reference.
 
@@ -854,18 +854,18 @@ def subresultants_pg(p,q,x):
 
     # defensive
     if lst == [] or len(lst) == 2:
-        return let
+        return lst
 
     # the coefficients in lst are modified subresultants and, hence, are
     # greater than those of the corresponding subresultants by the factor
     # |LC(lst[0])**( deg(lst[0]) - deg(lst[1]))|; see Theorem 2 in reference.
-    lcf = Abs( LC(lst[0])**( degree(lst[0]) - degree(lst[1]) ) )
+    lcf = Abs( LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) ) )
 
     # Initialize the subresultant prs list
     subr_seq = [lst[0], lst[1]]
 
     # compute the degree sequences m_i and j_i of Theorem 2 in reference.
-    deg_seq = [degree(Poly(poly, x)) for poly in lst]
+    deg_seq = [degree(Poly(poly, x), x) for poly in lst]
     deg = deg_seq[0]
     deg_seq_s = deg_seq[1:-1]
     m_seq = [m-1 for m in deg_seq_s]
@@ -924,12 +924,12 @@ def subresultants_amv_q(p,q,x):
     d0 =  degree(p, x)
     d1 =  degree(q, x)
     if d0 == 0 and d1 == 0:
-        return []
-    if d0 > 0 and d1 == 0:
         return [p, q]
     if d1 > d0:
         d0, d1 = d1, d0
         p, q = q, p
+    if d0 > 0 and d1 == 0:
+        return [p, q]
 
     # initialize
     i, s = 0, 0                              # counters for remainders & odd elements
@@ -1080,20 +1080,20 @@ def subresultants_amv(f, g, x):
     d0 =  degree(f, x)
     d1 =  degree(g, x)
     if d0 == 0 and d1 == 0:
-        return []
-    if d0 > 0 and d1 == 0:
         return [f, g]
     if d1 > d0:
         d0, d1 = d1, d0
         f, g = g, f
-    if d0 == 1:
+    if d0 > 0 and d1 == 0:
         return [f, g]
+#    if d0 == 1:
+#        return [f, g]
 
     # initialize
     a0 = f
     a1 = g
     subres_l = [a0, a1]
-    deg_dif_p1, c = degree(a0) - degree(a1) + 1, -1
+    deg_dif_p1, c = degree(a0, x) - degree(a1, x) + 1, -1
 
     # initialize AMV variables
     sigma1 =  LC(a1, x)                      # leading coeff of a1
@@ -1220,13 +1220,13 @@ def modified_subresultants_amv(p,q,x):
     # the coefficients in lst are subresultants and, hence, smaller than those
     # of the corresponding modified subresultants by the factor
     # Abs(LC(lst[0])**( deg(lst[0]) - deg(lst[1]))); see Theorem 2.
-    lcf = Abs( LC(lst[0])**( degree(lst[0]) - degree(lst[1]) ) )
+    lcf = Abs( LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) ) )
 
     # Initialize the modified subresultant prs list
     subr_seq = [lst[0], lst[1]]
 
     # compute the degree sequences m_i and j_i of Theorem 2
-    deg_seq = [degree(Poly(poly, x)) for poly in lst]
+    deg_seq = [degree(Poly(poly, x), x) for poly in lst]
     deg = deg_seq[0]
     deg_seq_s = deg_seq[1:-1]
     m_seq = [m-1 for m in deg_seq_s]
@@ -1330,11 +1330,11 @@ def subresultants_rem(p, q, x):
     n = deg_f = degree(f, x)
     m = deg_g = degree(g, x)
     if n == 0 and m == 0:
-        return []
-    if n > 0 and m == 0:
         return [f, g]
     if n < m:
         n, m, deg_f, deg_g, f, g = m, n, deg_g, deg_f, g, f
+    if n > 0 and m == 0:
+        return [f, g]
 
     # initialize
     s1 = sylvester(f, g, x, 1)
@@ -1344,7 +1344,7 @@ def subresultants_rem(p, q, x):
     while deg_g > 0:
         r = rem(p, q, x)
         d = degree(r, x)
-        if d == -oo:
+        if d < 0:
             return sr_list
 
         # make coefficients subresultants evaluating ONE determinant
@@ -1509,10 +1509,10 @@ def final_touches(s2, r, deg_g):
     # missing rows until last term is in last column
     mr = s2.cols - (i + deg_g + 1)
 
-    # insert them
+    # insert them by replacing the existing entries in the row
     i = 0
-    while mr != 0:
-        s2 = s2.row_insert(r + i, rotate_r(R, i+1))
+    while mr != 0 and r + i < s2.rows :
+        s2[r + i, : ] = rotate_r(R, i + 1)
         i += 1
         mr -= 1
 
@@ -1570,11 +1570,11 @@ def subresultants_vv(p, q, x, method = 0):
     n = deg_f = degree(f, x)
     m = deg_g = degree(g, x)
     if n == 0 and m == 0:
-        return []
-    if n > 0 and m == 0:
         return [f, g]
     if n < m:
         n, m, deg_f, deg_g, f, g = m, n, deg_g, deg_f, g, f
+    if n > 0 and m == 0:
+        return [f, g]
 
     # initialize
     s1 = sylvester(f, g, x, 1)
@@ -1600,13 +1600,14 @@ def subresultants_vv(p, q, x, method = 0):
     # modify first rows of s2 matrix depending on poly degrees
     if deg_f - deg_g > 1:
         r = 1
+        # replacing the existing entries in the rows of s2,
         # insert row0 (deg_f - deg_g - 1) times, rotated each time
         for i in range(deg_f - deg_g - 1):
-            s2 = s2.row_insert(i + 1, rotate_r(row0, i + 1) )
+            s2[r + i, : ] = rotate_r(row0, i + 1)
             r = r + 1
         # insert row1 (deg_f - deg_g) times, rotated each time
         for i in range(deg_f - deg_g):
-            s2 = s2.row_insert(r + i, rotate_r(row1, r + i) )
+            s2[r + i, : ] = rotate_r(row1, r + i)
         r = r + deg_f - deg_g
 
     if deg_f - deg_g == 0:
@@ -1706,11 +1707,11 @@ def subresultants_vv_2(p, q, x):
     n = deg_f = degree(f, x)
     m = deg_g = degree(g, x)
     if n == 0 and m == 0:
-        return []
-    if n > 0 and m == 0:
         return [f, g]
     if n < m:
         n, m, deg_f, deg_g, f, g = m, n, deg_g, deg_f, g, f
+    if n > 0 and m == 0:
+        return [f, g]
 
     # initialize
     s1 = sylvester(f, g, x, 1)
