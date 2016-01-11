@@ -173,6 +173,10 @@ def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
     >>> guess_generating_function_rational(l)
     (3*x + 5)/(-x**2 - x + 1)
 
+    See also
+    ========
+    See function sympy.series.approximants and mpmath.pade
+
     """
     #   a) compute the denominator as q
     q = find_simple_recurrence_vector(v, maxcoeff=maxcoeff)
