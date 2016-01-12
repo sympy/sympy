@@ -406,6 +406,11 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             if isinstance(orig_expr, MatrixExpr):
                 sym = MatrixSymbol(sym.name, orig_expr.rows,
                     orig_expr.cols)
+            elif orig_expr.is_commutative == False:
+                # Ideally we would match all assumptions, but there doesn't
+                # seem to be a simple way to do that, and commutative is the
+                # most important one to keep.
+                sym = sym.func(sym.name, commutative=False)
 
             subs[orig_expr] = sym
             replacements.append((sym, new_expr))
