@@ -74,8 +74,6 @@ def __sympifyit(func, arg, retval=None):
                 # with sympy objects. Otherwise, it must be converted.
                 if not hasattr(b, '_op_priority'):
                     b = sympify(b, strict=True)
-                if b.is_zero:
-                    b=0
                 return func(a, b)
             except SympifyError:
                 return retval

@@ -170,7 +170,7 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
-            if e is S.Zero:
+            if e.is_zero:
                 return S.One
             elif e is S.One:
                 return b

@@ -478,4 +478,4 @@ def test_issue_8167_():
     assert E**a == 1
     assert exp(1/a)**a == 1
     assert limit(exp(1/x)**x, x, 0) == exp(1)
-    assert limit((E**a)**x, x, oo) ==1
+    assert limit((E**a)**x, x, oo) == 1
