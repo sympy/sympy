@@ -1,7 +1,7 @@
 from itertools import product as cartes
 
 from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
+    limit, exp, E, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac)
@@ -471,3 +471,11 @@ def test_limit_seq():
             S(3) / 4)
     assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x, oo) == 4)
+
+def test_issue_8167_():
+    a = Symbol('a', zero=True)
+    assert limit((E**a)**x, x, oo) == 1
+    assert E**a == 1
+    assert exp(1/a)**a == 1
+    assert limit(exp(1/x)**x, x, 0) == exp(1)
+    assert limit((E**a)**x, x, oo) ==1
