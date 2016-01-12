@@ -679,6 +679,6 @@ def replace_subsequence(l, a, b):
     >>> l
     [4, 4, 3]
     """
-    for i in range(len(l)):
+    for i in range(len(l) - len(a) + 1):
         if l[i:i+len(a)] == a:
             l[i:i+len(a)] = [b]
