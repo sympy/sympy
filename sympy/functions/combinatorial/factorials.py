@@ -391,8 +391,8 @@ class factorial2(CombinatorialFunction):
                 return ((n + 1) / 2).is_even
 
     def _eval_rewrite_as_gamma(self, n):
-        from sympy import gamma, cos, pi
-        return 2 ** ((1 + 2 * n - cos(pi * n)) / 4) * (pi ** ((cos(pi * n) - 1) / 4)) * gamma (1 + n / 2)
+        from sympy import gamma, Piecewise, Eq, Mod, sqrt, pi
+        return 2 ** (n / 2) * gamma(n / 2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2 / pi), Eq(Mod(n, 2), 1)))
 
 
 ###############################################################################

@@ -1,6 +1,6 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product, I, cos)
+                   oo, zoo, simplify, expand_func, Product, I, Piecewise, Mod, Eq, sqrt)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.utilities.pytest import XFAIL
@@ -172,13 +172,6 @@ def test_factorial_rewrite():
     assert str(factorial(k).rewrite(Product)) == 'Product(_i, (_i, 1, k))'
 
 
-def test_factorial2_rewrite():
-    n = Symbol('n', complex=True)
-    func = factorial2(n).rewrite(gamma)
-    assert func == 2 ** ((1 + 2 * n - cos(pi * n)) / 4) * (pi ** ((cos(pi * n) - 1) / 4)) * gamma (1 + n / 2)
-    assert str(func.subs(n, 1 + 2*I).evalf(10).as_real_imag()) == '(3.636406167e-14, 4.100313151e-14)'
-
-
 def test_factorial2():
     n = Symbol('n', integer=True)
 
@@ -186,8 +179,6 @@ def test_factorial2():
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
-    #assert str(factorial2(1 + 2*I).as_real_imag()) == '(3.636406167e-14, 4.100313151e-14)'
-    assert factorial2(n).func == factorial2
 
     # The following is exhaustive
     tt = Symbol('tt', integer=True, nonnegative=True)
@@ -250,6 +241,15 @@ def test_factorial2():
     assert factorial2(tfe).is_odd is None
     assert factorial2(tfo).is_even is False
     assert factorial2(tfo).is_odd is None
+
+
+def test_factorial2_rewrite():
+    n = Symbol('n', integer=True)
+    assert factorial2(n).rewrite(gamma) == \
+        2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
+    assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
+    assert factorial2(2*n + 1).rewrite(gamma) == \
+        sqrt(2)*2**(n + 1/2)*gamma(n + 3/2)/sqrt(pi)
 
 
 def test_binomial():
