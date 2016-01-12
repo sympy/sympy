@@ -1598,7 +1598,7 @@ def subresultants_vv(p, q, x, method = 0):
         # insert row0 (deg_f - deg_g - 1) times, rotated each time
         for i in range(deg_f - deg_g - 1):
             s2[r + i, : ] = rotate_r(row0, i + 1)
-            r = r + 1
+        r = r + 1
         # insert row1 (deg_f - deg_g) times, rotated each time
         for i in range(deg_f - deg_g):
             s2[r + i, : ] = rotate_r(row1, r + i)
