@@ -591,7 +591,7 @@ def shortest_repeated_subsequence(S, ignore=(Marker,)):
     The input sequence should support iteration, indexing, and slicing.
 
     To use concurrently with multiple sequences, concatenate them separated by
-    markers (custom markers can be pass in through the 'ignore' parameter').
+    markers (custom markers can be passed in through the 'ignore' parameter').
 
     Examples
     ========

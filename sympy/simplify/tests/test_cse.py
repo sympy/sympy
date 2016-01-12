@@ -4,6 +4,9 @@ from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
                    IndexedBase, Idx, Piecewise, O)
 from sympy.simplify.cse_opts import sub_pre, sub_post
+from sympy.simplify.cse_main import (replace_subsequence,
+    shortest_repeated_subsequence, Marker, match_common_args,
+    match_common_args_nc)
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
@@ -407,3 +410,84 @@ def test_issue_8891():
         ans = ([(x0, x + y)], [x0, cls([[x0, 0], [0, 0]])])
         assert res == ans
         assert isinstance(res[1][-1], cls)
+
+def test_replace_subsequence():
+    l = [1, 2, 3, 2, 3, 4]
+    replace_subsequence(l, [2, 3], 5)
+    assert l == [1, 5, 5, 4]
+
+    l = [1, 2, 1, 2, 3]
+    replace_subsequence(l, [1, 2, 3], 4)
+    assert l == [1, 2, 4]
+
+    l = [1, 2, 1, 2, 1, 2]
+    replace_subsequence(l, [1, 2], 3)
+    assert l == [3, 3, 3]
+
+
+def test_shortest_repeated_subsequence():
+    a, b, c = 'aabacde', 'aabade', 'abcde'
+    abc = '$'.join([a, b, c])
+    assert shortest_repeated_subsequence(abc, ignore='$') in ['ab', 'de']
+
+    aa = '$'.join([a, a])
+    assert shortest_repeated_subsequence(aa, ignore='$') == a
+
+    ab = '$'.join([a, b])
+    assert shortest_repeated_subsequence(ab, ignore='$') == 'de'
+
+    assert shortest_repeated_subsequence('xxx') == 'xx'
+    assert shortest_repeated_subsequence('xxxx') == 'xx'
+    assert shortest_repeated_subsequence('xxxxx') == 'xx'
+
+    def _cse_str(S):
+        """
+        A mock version of the cse algorithm using strings
+
+        """
+        S = '$'.join(S)
+        n = 0
+        repls = {}
+        while True:
+            rep = shortest_repeated_subsequence(S, ignore='$')
+            if not rep:
+                break
+            repls[str(n)] = rep
+            S = S.replace(rep, str(n))
+            n += 1
+
+        return repls, S.split('$')
+
+    def _replace_cse(strs, replacement_dict):
+        """
+        Undo _cse_str.
+        """
+        for i in sorted(replacement_dict, reverse=True):
+            strs = [x.replace(i, replacement_dict[i]) for x in strs]
+        return strs
+
+    repl, strs = _cse_str([a, b, c])
+    assert (repl, strs) == ({'0': 'de', '1': 'c0', '2': 'ab', '3': 'a2a'}, ['31', '30', '21'])
+    assert _replace_cse(strs, repl) == [a, b, c]
+
+    S = ['sandollar', 'sandlot', 'handler', 'grand', 'pantry']
+    repl, strs = _cse_str(S)
+    assert (repl, strs) == ({'0': 'an', '1': '0d', '2': '1l'}, ['s1ollar',
+        's2ot', 'h2er', 'gr1', 'p0try'])
+    assert _replace_cse(strs, repl) == S
+
+    repl, strs = _cse_str(['xxx'])
+    assert (repl, strs) == ({'0': 'xx'}, ['0x'])
+    assert _replace_cse(strs, repl) == ['xxx']
+
+    repl, strs = _cse_str(['xxxx'])
+    assert (repl, strs) == ({'0': 'xx'}, ['00'])
+    assert _replace_cse(strs, repl) == ['xxxx']
+
+    repl, strs = _cse_str(['xxxxx'])
+    assert (repl, strs) == ({'0': 'xx'}, ['00x'])
+    assert _replace_cse(strs, repl) == ['xxxxx']
+
+    repl, strs = _cse_str(['xxxxxx'])
+    assert (repl, strs) == ({'0': 'xx', '1': '00'}, ['10'])
+    assert _replace_cse(strs, repl) == ['xxxxxx']
