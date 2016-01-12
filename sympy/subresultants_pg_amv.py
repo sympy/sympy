@@ -1598,7 +1598,7 @@ def subresultants_vv(p, q, x, method = 0):
         # insert row0 (deg_f - deg_g - 1) times, rotated each time
         for i in range(deg_f - deg_g - 1):
             s2[r + i, : ] = rotate_r(row0, i + 1)
-        r = r + 1
+        r = r + deg_f - deg_g - 1
         # insert row1 (deg_f - deg_g) times, rotated each time
         for i in range(deg_f - deg_g):
             s2[r + i, : ] = rotate_r(row1, r + i)
@@ -1629,13 +1629,13 @@ def subresultants_vv(p, q, x, method = 0):
         poly = simplify((poly / temp2) * sign_value)
 
         # update s2 by inserting first row of M as needed
-        for i in range(deg_g - d):
-            s2[r + i, :] = rotate_r(M[0, :], r + i)
-        r = r + deg_g - d
         row0 = M[0, :]
+        for i in range(deg_g - d):
+            s2[r + i, :] = rotate_r(row0, r + i)
+        r = r + deg_g - d
 
         # update s2 by inserting last row of M as needed
-        row1 = rotate_l(M[M.rows - 1, :], deg_f - d)
+        row1 = rotate_l(M[M.rows - 1, :], deg_f - d)  # last row rotated
         row1 = (row1 / temp2) * sign_value
         for i in range(deg_g - d):
             s2[r + i, :] = rotate_r(row1, r + i)
