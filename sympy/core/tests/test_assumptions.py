@@ -1000,3 +1000,6 @@ def test_issue_10302():
     assert (a + I).is_imaginary
     assert (a + x + I).is_imaginary is None
     assert (a + r*I + I).is_imaginary is None
+
+def test_complex_reciprocal_imaginary():
+    assert (1 / (4 + 3*I)).is_imaginary is False
