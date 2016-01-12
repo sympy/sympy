@@ -7,8 +7,6 @@ Created on Mon Dec 28 13:25:02 2015
 
 from __future__ import print_function, division
 
-# from sympy import *
-
 def sylvester(f, g, x, method = 1):
     '''
       f, g polys in x, m = deg(f) >= deg(g) = n.
@@ -1621,10 +1619,7 @@ def subresultants_vv(p, q, x, method = 0):
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
         if d == None:
-            if method != 0:
-                s2 = final_touches(s2, r, deg_g)
-                pprint(s2)
-            return sr_list
+            break
         exp_deg = deg_g - 1
 
         # evaluate one determinant & make coefficients subresultants
@@ -1652,7 +1647,12 @@ def subresultants_vv(p, q, x, method = 0):
         # append poly with subresultant coeffs
         sr_list.append(poly)
 
-    if method != 0:
+    # final touches to print the s2 matrix
+    if method != 0 and s2.rows > 2:
+        s2 = final_touches(s2, r, deg_g)
+        pprint(s2)
+    elif method != 0 and s2.rows == 2:
+        s2[1, :] = rotate_r(s2.row(1), 1)
         pprint(s2)
 
     return sr_list
