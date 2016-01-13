@@ -3550,7 +3550,8 @@ class MatrixBase(object):
 
     def jordan_cell(self, eigenval, n):
         """
-        Generate Jordan Blocks if eigenvalue and dimension is provided.
+        Helper function to import jordan_cell from
+        sympy.matrices.dense.py
 
         https://en.wikipedia.org/wiki/Jordan_matrix
 
