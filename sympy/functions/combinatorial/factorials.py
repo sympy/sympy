@@ -1,10 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, Dummy
+from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, pi
+from sympy.core.relational import Eq
+
 from sympy.ntheory import sieve
+
 from math import sqrt as _sqrt
 
 from sympy.core.compatibility import reduce, range
@@ -391,8 +394,8 @@ class factorial2(CombinatorialFunction):
                 return ((n + 1) / 2).is_even
 
     def _eval_rewrite_as_gamma(self, n):
-        from sympy import gamma, Piecewise, Eq, Mod, sqrt, pi
-        return 2 ** (n / 2) * gamma(n / 2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2 / pi), Eq(Mod(n, 2), 1)))
+        from sympy import gamma, Piecewise, sqrt
+        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2/pi), Eq(Mod(n, 2), 1)))
 
 
 ###############################################################################
