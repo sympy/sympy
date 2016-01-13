@@ -230,7 +230,6 @@ format, which can be rendered with Graphviz. `source <http://docs.sympy.org/0.7.
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
     >>> print(dotprint(5*x**3 + sin(x)))
-
 .. graphviz::
 
     digraph{
