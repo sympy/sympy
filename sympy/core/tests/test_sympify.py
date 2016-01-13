@@ -492,3 +492,16 @@ def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
+
+def test_numpy_sympify():
+    from sympy.external import import_module
+    np = import_module('numpy')
+    if np is None:
+        return
+    
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    a1 = np.array([1, 2, 3])
+    a2 = np.array([i for i in range(24)])
+    a2.resize(2, 4, 3)
+    assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
+    assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
