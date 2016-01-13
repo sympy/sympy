@@ -277,11 +277,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             from sympy.utilities.iterables import flatten
             try:
                 shape = a.shape
-                if len(a.shape) == 1:
-                    shape = (1,) + shape
                 a = flatten(a)
-                return ImmutableDenseNDimArray([sympify(x, locals=locals,
-                    convert_xor=convert_xor, rational=rational) for x in a], shape)
+                return ImmutableDenseNDimArray(a, shape)
             except TypeError:
                 pass
     else:
