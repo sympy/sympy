@@ -7,6 +7,8 @@ Created on Mon Dec 28 13:25:02 2015
 
 from __future__ import print_function, division
 
+from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly, pprint, QQ, rem, S, sign, simplify, summation, var, zeros)
+
 def sylvester(f, g, x, method = 1):
     '''
       f, g polys in x, m = deg(f) >= deg(g) = n.
@@ -1635,13 +1637,13 @@ def subresultants_vv(p, q, x, method = 0):
         r = r + deg_g - d
 
         # update s2 by inserting last row of M as needed
-        row1 = rotate_l(M[M.rows - 1, :], deg_f - d)  # last row rotated
+        row1 = rotate_l(M[M.rows - 1, :], deg_f - d)
         row1 = (row1 / temp2) * sign_value
         for i in range(deg_g - d):
             s2[r + i, :] = rotate_r(row1, r + i)
-
-        # update row and degrees
         r = r + deg_g - d
+
+        # update degrees
         deg_f, deg_g = deg_g, d
 
         # append poly with subresultant coeffs
