@@ -270,16 +270,22 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
-    if isinstance(a, np.ndarray):
-        #converter[np.ndarray] = lambda x: Matrix(x)
-        #I want to do something like this and then type cast the result
-        #to a matrix this way
-        #return converter[cls]([sympify...and...so...on])
-        try:
-            return ([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a])
-        except TypeError:
-            pass
+    if np is not None:
+        if isinstance(a, np.ndarray):
+            #Delayed import to avoid circular imports
+            from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+            from sympy.utilities.iterables import flatten
+            try:
+                shape = a.shape
+                if len(a.shape) == 1:
+                    shape = (1,) + shape
+                a = flatten(a)
+                return ImmutableDenseNDimArray([sympify(x, locals=locals,
+                    convert_xor=convert_xor, rational=rational) for x in a], shape)
+            except TypeError:
+                pass
+    else:
+        pass
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
