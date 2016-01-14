@@ -656,7 +656,7 @@ def shortest_repeated_subsequence(S, ignore=(Marker,)):
 
     seen = {}
     for row in reversed(m):
-        seen = {i-1:seen[i]-1 for i in seen if seen[i]}
+        seen = dict([(i-1, seen[i]-1) for i in seen if seen[i]])
         for x in range(len(row)):
             if row[x] >= 2 and x not in seen:
                 if row[x] < shortest:

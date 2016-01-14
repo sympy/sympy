@@ -498,7 +498,7 @@ def test_match_common_args():
         evaluate=False))
 
     opt_subs = match_common_args(Mul, [x*y*z, x*y*w])
-    assert opt_subs.keys() == set([x*y*z, x*y*w])
+    assert set(opt_subs.keys()) == set([x*y*z, x*y*w])
 
     # The evaluate=False Muls could be in any order. cse uses a custom
     # substitution routine that handles this.
