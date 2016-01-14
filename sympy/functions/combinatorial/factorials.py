@@ -258,7 +258,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_Number:
+        if arg.is_Integer:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
             elif arg is S.NaN:
