@@ -212,23 +212,32 @@ def opt_cse(exprs, order='canonical'):
 
     ## Process Adds and commutative Muls
 
-    # split muls into commutative
+    # split muls into commutative/noncommutative
     comutative_muls = set()
+    noncommutative_muls = set()
+    noncommutative_matmuls = set()
     for m in muls:
         c, nc = m.args_cnc(cset=True)
-        if c:
-            c_mul = m.func(*c)
-            if nc:
-                if c_mul == 1:
-                    new_obj = m.func(*nc)
-                else:
-                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
-                opt_subs[m] = new_obj
-            if len(c) > 1:
-                comutative_muls.add(c_mul)
+        c_mul = m.func(*c)
+        nc_mul = m.func(*nc)
+        if nc:
+            if c_mul == 1:
+                new_obj = nc_mul
+            else:
+                new_obj = m.func(c_mul, nc_mul, evaluate=False)
+            if isinstance(nc_mul, Mul):
+                noncommutative_muls.add(nc_mul)
+            elif isinstance(nc_mul, MatMul):
+                noncommutative_matmuls.add(nc_mul)
+            opt_subs[m] = new_obj
+        if len(c) > 1:
+            comutative_muls.add(c_mul)
 
     opt_subs.update(match_common_args(Add, adds, order=order))
     opt_subs.update(match_common_args(Mul, comutative_muls, order=order))
+
+    opt_subs.update(match_common_args_nc(Mul, noncommutative_muls))
+    opt_subs.update(match_common_args_nc(MatMul, noncommutative_matmuls))
 
     return opt_subs
 

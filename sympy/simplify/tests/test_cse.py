@@ -164,25 +164,57 @@ def test_non_commutative_cse():
     assert exprs[0] != 0
 
 # cse on noncommutative Mul. When this works the test below it should be removed.
-@XFAIL
 def test_noncommutative_mul_cse():
-    A, B, C = symbols('A B C', commutative=False)
+    A, B, C, D, E, x0, x1, x2, x3 = symbols('A B C D E x0 x1 x2 x3', commutative=False)
     l = [A*B*C, A*B]
     repls, exprs = cse(l)
     assert (repls, exprs) == ([(x0, A*B)], [x0*C, x0])
     assert repls[0][0].is_commutative == False
 
-# Test if CSE of non-commutative Mul terms is disabled
-def test_bypass_non_commutatives():
-    A, B, C = symbols('A B C', commutative=False)
+    l = [B*C, A*B*C]
+    assert cse(l) == ([(x0, B*C)], [x0, A*x0])
+
     l = [A*B*C, A*C]
     assert cse(l) == ([], l)
-    l = [A*B*C, A*B]
-    assert cse(l) == ([], l)
-    l = [B*C, A*B*C]
-    assert cse(l) == ([], l)
 
+    # Almost the same expression as in the test_match_common_args_nc test
+    # below, except avoiding duplicate terms, since those aren't supported yet
+    # (#10228).
+    a = A*E*B*A*C*D*E
+    b = A*E*B*A*D*E
+    c = E*B*C*D*E
 
+    repls, exprs = cse([a, b, c])
+    assert repls == [(x0, E*B), (x1, A*x0*A), (x2, D*E), (x3, C*x2)]
+    assert exprs == [x1*x3, x1*x2, x0*x3]
+    assert Tuple(*exprs).subs(reversed(repls)) == Tuple(a, b, c)
+
+@XFAIL
+def test_noncommutative_mul_powers_cse():
+    # Issue #10228
+    A, B, C, x0 = symbols('A B C x0', commutative=False)
+    l = [A*A*B, A*B]
+    assert cse(l) == ([(x0, A*B)], [A*x0, x0])
+
+def test_cse_matmul():
+    n = symbols('n', integer=True)
+    M = MatrixSymbol('M', n, n)
+    N = MatrixSymbol('N', n, n)
+    x = MatrixSymbol('x', n, 1)
+
+    x0 = MatrixSymbol('x0', n, n)
+
+    l = [N*M, N*M*x]
+    repls, exprs = cse(l)
+    assert (repls, exprs) == ([(x0, N*M)], [x0, x0*x])
+    assert repls[0][0].shape == (n, n)
+
+    x0 = MatrixSymbol('x0', n, 1)
+
+    l = [M*x, N*M*x]
+    repls, exprs = cse(l)
+    assert (repls, exprs) == ([(x0, M*x)], [x0, N*x0])
+    assert repls[0][0].shape == (n, 1)
 
 @XFAIL
 def test_powers():
