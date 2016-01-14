@@ -555,6 +555,5 @@ def test_match_common_args_nc():
 
     assert opt_subs == {
         expr1: MatMul(MatMul(N, M, evaluate=False), x, evaluate=False),
-        # The extra MatMul here is not intentional, but shouldn't hurt either.
-        expr2: MatMul(MatMul(N, M, evaluate=False), evaluate=False),
+        expr2: MatMul(N, M, evaluate=False),
     }

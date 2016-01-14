@@ -290,7 +290,12 @@ def match_common_args_nc(Func, funcs):
     combined_func_args_iter = iter(combined_func_args)
     for func in funcs:
         res = list(takewhile(lambda x: x != Marker, combined_func_args_iter))
-        opt_subs[func] = Func(*res, evaluate=False)
+        if len(res) == 1:
+            # Avoid MatMul(MatMul(x, y, evaluate=False), evaluate=False),
+            # which doesn't denest.
+            opt_subs[func] = res[0]
+        else:
+            opt_subs[func] = Func(*res, evaluate=False)
 
     return opt_subs
 
