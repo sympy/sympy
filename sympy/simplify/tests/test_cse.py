@@ -2,7 +2,7 @@ import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
-                   IndexedBase, Idx, Piecewise, O)
+                   IndexedBase, Idx, Piecewise, O, Mul)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.cse_main import (replace_subsequence,
     shortest_repeated_subsequence, Marker, match_common_args,
@@ -491,3 +491,18 @@ def test_shortest_repeated_subsequence():
     repl, strs = _cse_str(['xxxxxx'])
     assert (repl, strs) == ({'0': 'xx', '1': '00'}, ['10'])
     assert _replace_cse(strs, repl) == ['xxxxxx']
+
+def test_match_common_args():
+    # Test that evaluate=False actually works
+    assert Mul(x, Mul(y, z, evaluate=False), evaluate=False).args == (x, Mul(y, z,
+        evaluate=False))
+
+    opt_subs = match_common_args(Mul, [x*y*z, x*y*w])
+    assert opt_subs.keys() == set([x*y*z, x*y*w])
+
+    # The evaluate=False Muls could be in any order. cse uses a custom
+    # substitution routine that handles this.
+    assert set(opt_subs[x*y*z].args) in [set([Mul(x, y, evaluate=False), z]),
+        set([Mul(y, x, evaluate=False), z])]
+    assert set(opt_subs[x*y*w].args) in [set([Mul(x, y, evaluate=False), w]),
+        set([Mul(y, x, evaluate=False), w])]
