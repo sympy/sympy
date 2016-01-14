@@ -12,7 +12,7 @@ from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
     MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
-from sympy.matrices.expressions import MatrixSymbol
+from sympy.matrices.expressions import MatrixSymbol, MatMul
 
 from sympy.core.compatibility import range
 
@@ -506,3 +506,56 @@ def test_match_common_args():
         set([Mul(y, x, evaluate=False), z])]
     assert set(opt_subs[x*y*w].args) in [set([Mul(x, y, evaluate=False), w]),
         set([Mul(y, x, evaluate=False), w])]
+
+def test_match_common_args_nc():
+    A, B, C, D, E = symbols('A B C D E', commutative=False)
+
+    # We have to use evaluate=False to prevent A*A from becoming A**2. This is
+    # handled in cse as a pre-transformation.
+    m = lambda *x: Mul(*x, evaluate=False)
+
+    # Test that evaluate=False actually works
+    assert m(A, m(B, C)).args == (A, m(B, C))
+
+    a = m(A, A, B, A, C, D, E)
+    b = m(A, A, B, A, D, E)
+    c = m(A, B, C, D, E)
+
+    opt_subs = match_common_args_nc(Mul, [a, b, c])
+
+    # This is the same example from test_shortest_repeated_subsequence()
+    # above.
+
+    # ({'0': 'de', '1': 'c0', '2': 'ab', '3': 'a2a'}, ['31', '30', '21'])
+
+    assert opt_subs == {
+        a: m(m(A, m(A, B), A), m(C, m(D, E))),
+        b: m(m(A, m(A, B), A), m(D, E)),
+        c: m(m(A, B), m(C, m(D, E))),
+    }
+
+    X = Symbol("X", commutative=False)
+
+    expr = m(X, X, X, X, X)
+    opt_subs = match_common_args_nc(Mul, [expr])
+
+    assert opt_subs == {expr: m(m(X, X), m(X, X), X)}
+
+    n = symbols('n', integer=True)
+    M = MatrixSymbol('M', n, n)
+    N = MatrixSymbol('N', n, n)
+    x = MatrixSymbol('x', n, 1)
+
+    # Make sure evaluate=False works with MatMul
+    assert MatMul(M, MatMul(N, x, evaluate=False), evaluate=False).args ==\
+        (M, MatMul(N, x, evaluate=False))
+
+    expr1 = N*M*x
+    expr2 = N*M
+    opt_subs = match_common_args_nc(MatMul, [expr1, expr2])
+
+    assert opt_subs == {
+        expr1: MatMul(MatMul(N, M, evaluate=False), x, evaluate=False),
+        # The extra MatMul here is not intentional, but shouldn't hurt either.
+        expr2: MatMul(MatMul(N, M, evaluate=False), evaluate=False),
+    }
