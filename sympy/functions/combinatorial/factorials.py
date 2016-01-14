@@ -255,7 +255,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_Integer:
+        if arg.is_Number:
             if arg.is_Integer and arg.is_nonnegative:
                 return cls._eval(arg)
             elif arg is S.NaN:
@@ -325,7 +325,7 @@ class factorial2(CombinatorialFunction):
     @classmethod
     def eval(cls, arg):
         # TODO: extend this to complex numbers?
-        if arg.is_Number:
+        if arg.is_integer:
             if arg.is_infinite:
                 return
 
