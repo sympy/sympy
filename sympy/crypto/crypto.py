@@ -1,23 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Classical ciphers and LFSRs
-
-In a *substitution cipher* "units" (not necessarily single characters)
-of plaintext are replaced with ciphertext according to a regular system.
-
-A *transposition cipher* is a method of encryption by which
-the positions held by "units" of plaintext are replaced by a
-permutation of the plaintext. That is, the order of the units is
-changed using a bijective function on the position of the characters
-to perform the encryption.
-
-A *monoalphabetic cipher* uses fixed substitution over the entire
-message, whereas a *polyalphabetic cipher* uses a number of
-substitutions at different times in the message.
-
-TODO: move to docs? add info about the function contained here and
-how they fit into this description?
+This file contains some classical ciphers and rotines
+implementing a linear-feedback shift register (LFSR)
+and the Diffie-Hellman key exchange are also provided.
 """
 
 from __future__ import print_function
@@ -498,7 +484,7 @@ def encipher_vigenere(msg, key, symbols=None):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import encipher_vigenere, AZ
+    >>> from sympy.crypto.crypto import encipher_vigenere
     >>> key = "encrypt"
     >>> msg = "meet me on monday"
     >>> encipher_vigenere(msg, key)
@@ -524,10 +510,10 @@ def decipher_vigenere(msg, key, symbols=None):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import decipher_vigenere, AZ
+    >>> from sympy.crypto.crypto import decipher_vigenere
     >>> key = "encrypt"
     >>> ct = "QRGK kt HRZQE BPR"
-    >>> decipher_vigenere(*AZ((ct, key)))
+    >>> decipher_vigenere(ct, key)
     'MEETMEONMONDAY'
     """
     msg, key, A = _prep(msg, key, symbols)
@@ -557,24 +543,26 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     matrices.
 
     First, each letter is first encoded as a number starting with 0.
-    Suppose your message m consists of `n` capital letters, with no
+    Suppose your message `msg` consists of `n` capital letters, with no
     spaces. This may be regarded an `n`-tuple M of elements of
-    `Z_{26}`. A key in the Hill cipher is a `k x k` matrix `K`, all
-    of whose entries are in `Z_{26}`, such that the matrix `K` is
-    invertible (ie, that the linear transformation
-    `K: Z_{26}^k \rightarrow Z_{26}^k` is one-to-one).
+    `Z_{26}` (if the letters are those of the English alphabet). A key
+    in the Hill cipher is a `k x k` matrix `K`, all of whose entries
+    are in `Z_{26}`, such that the matrix `K` is invertible (i.e., the
+    linear transformation `K: Z_{N}^k \rightarrow Z_{N}^k`
+    is one-to-one).
 
     ALGORITHM:
 
         INPUT:
 
-            ``key``: a `k x k` invertible matrix `K`, all of whose
-            entries are in `Z_{26}`
+            ``msg``: plaintext message of `n` upper-case letters
 
-            ``m``: plaintest message of `n` upper-case letters
+            ``key``: a `k x k` invertible matrix `K`, all of whose
+            entries are in `Z_{26}` (or whatever number of symbols
+            are being used).
 
             ``pad``: character (default "Q") to use to make length
-            of text be a mutiple of ``m``
+            of text be a multiple of ``k``
 
         OUTPUT:
 
@@ -582,11 +570,11 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
-            1. Compute from the string ``m`` a list ``L`` of
+            1. Compute from the string ``msg`` a list ``L`` of
                corresponding integers. Let ``n = len(L)``.
             2. Break the list ``L`` up into ``t = ceiling(n/k)``
                sublists ``L_1``, ..., ``L_t`` of size ``k`` (with
-               the last list "padded" by 0's to ensure its size is
+               the last list "padded" to ensure its size is
                ``k``).
             3. Compute new list ``C_1``, ..., ``C_t`` given by
                ``C[i] = K*L_i`` (arithmetic is done mod N), for each
@@ -634,7 +622,7 @@ def decipher_hill(msg, key, symbols=None):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import encipher_hill, decipher_hill, AZ
+    >>> from sympy.crypto.crypto import encipher_hill, decipher_hill
     >>> from sympy import Matrix
 
     >>> key = Matrix([[1, 2], [3, 5]])
@@ -643,7 +631,7 @@ def decipher_hill(msg, key, symbols=None):
     >>> decipher_hill(_, key)
     'MEETMEONMONDAY'
 
-    When the length of the plain text (stripped of invalid characters)
+    When the length of the plaintext (stripped of invalid characters)
     is not a multiple of the key dimension, extra characters will
     appear at the end of the enciphered and deciphered text. In order to
     decipher the text, those characters must be included in the text to
@@ -663,8 +651,8 @@ def decipher_hill(msg, key, symbols=None):
     >>> decipher_hill(_, key)
     'STZZ'
 
-    If the last two characters of the cipher text were ignored in
-    either case, the wrong plain text would be recovered:
+    If the last two characters of the ciphertext were ignored in
+    either case, the wrong plaintext would be recovered:
 
     >>> decipher_hill("HD", key)
     'ORMV'
@@ -911,8 +899,8 @@ def encipher_bifid5(msg, key):
             ciphertext (all caps, no spaces)
 
         STEPS:
-            1. Create the `5 \times 5` Polybius square ``S`` associated
-            to ``key`` as follows:
+            0. Create the `5 \times 5` Polybius square ``S`` associated
+               to ``key`` as follows:
 
                 a) moving from left-to-right, top-to-bottom,
                    place the letters of the key into a `5 \times 5`
@@ -921,18 +909,18 @@ def encipher_bifid5(msg, key):
                    letters of the alphabet not in the key until the
                    `5 \times 5` square is filled.
 
-            2. Create a list ``P`` of pairs of numbers which are the
+            1. Create a list ``P`` of pairs of numbers which are the
                coordinates in the Polybius square of the letters in
                ``msg``.
-            3. Let ``L1`` be the list of all first coordinates of ``P``
-              (length of ``L1 = n``), let ``L2`` be the list of all
-              second coordinates of ``P`` (so the length of ``L2``
-              is also ``n``).
-            4. Let ``L`` be the concatenation of ``L1`` and ``L2``
-              (length ``L = 2*n``), except that consecutive numbers
-              are paired ``(L[2*i], L[2*i + 1])``. You can regard
-              ``L`` as a list of pairs of length ``n``.
-            5. Let ``C`` be the list of all letters which are of the
+            2. Let ``L1`` be the list of all first coordinates of ``P``
+               (length of ``L1 = n``), let ``L2`` be the list of all
+               second coordinates of ``P`` (so the length of ``L2``
+               is also ``n``).
+            3. Let ``L`` be the concatenation of ``L1`` and ``L2``
+               (length ``L = 2*n``), except that consecutive numbers
+               are paired ``(L[2*i], L[2*i + 1])``. You can regard
+               ``L`` as a list of pairs of length ``n``.
+            4. Let ``C`` be the list of all letters which are of the
                form ``S[i, j]``, for all ``(i, j)`` in ``L``. As a
                string, this is the ciphertext of ``msg``.
 
@@ -1511,7 +1499,7 @@ def lfsr_sequence(key, fill, n):
     ==========
 
     .. [G] Solomon Golomb, Shift register sequences, Aegean Park Press,
-    Laguna Hills, Ca, 1967
+       Laguna Hills, Ca, 1967
 
     Examples
     ========
@@ -1546,7 +1534,7 @@ def lfsr_sequence(key, fill, n):
 
 def lfsr_autocorrelation(L, P, k):
     """
-    This function computes the lsfr autocorrelation function.
+    This function computes the LFSR autocorrelation function.
 
     INPUT:
 
@@ -1590,7 +1578,7 @@ def lfsr_autocorrelation(L, P, k):
 
 def lfsr_connection_polynomial(s):
     """
-    This function computes the lsfr connection polynomial.
+    This function computes the LFSR connection polynomial.
 
     INPUT:
 
@@ -1761,7 +1749,7 @@ def encipher_elgamal(i, key, seed=None):
     """
     Encrypt message with public key
 
-    ``i`` is plain text message expressed as an integer.
+    ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
     a message, a random number ``a`` in ``range(2, p)``
     is generated and the encryped message is returned as
@@ -1863,12 +1851,12 @@ def dh_private_key(digit=10, seed=None):
     *   Alice and Bob agree on a base that consist of a prime ``p``
         and a primitive root of ``p`` called ``g``
     *   Alice choses a number ``a`` and Bob choses a number ``b`` where
-        ``a`` and ``b`` are random numbers in range(2, p). These are
+        ``a`` and ``b`` are random numbers in range `[2, p)`. These are
         their private keys.
     *   Alice then publicly sends Bob `g^{a} \pmod p` while Bob sends
         Alice `g^{b} \pmod p`
     *   They both raise the received value to their secretly chosen
-        number (a or b) and now have both as their shared key
+        number (``a`` or ``b``) and now have both as their shared key
         `g^{ab} \pmod p`
 
     Parameters
