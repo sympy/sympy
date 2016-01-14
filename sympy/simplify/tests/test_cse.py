@@ -5,13 +5,12 @@ from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    IndexedBase, Idx, Piecewise, O, Mul)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.cse_main import (replace_subsequence,
-    shortest_repeated_subsequence, Marker, match_common_args,
-    match_common_args_nc)
+    shortest_repeated_subsequence, match_common_args, match_common_args_nc)
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
-    MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import MatrixSymbol, MatMul
 
 from sympy.core.compatibility import range
