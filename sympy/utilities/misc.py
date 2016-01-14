@@ -214,3 +214,8 @@ def find_executable(executable, path=None):
                     return f
     else:
         return None
+
+
+def func_name(x):
+    '''return function name of `x` (if defined) else the `type(x)`.'''
+    return getattr(getattr(x, 'func', x), '__name__', type(x))

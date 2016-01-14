@@ -112,6 +112,10 @@ class NDimArray(object):
         if shape is None and iterable is None:
             shape = ()
             iterable = ()
+        # Construction from another `NDimArray`:
+        elif shape is None and isinstance(iterable, NDimArray):
+            shape = iterable.shape
+            iterable = list(iterable)
         # Construct N-dim array from an iterable (numpy arrays included):
         elif shape is None and isinstance(iterable, collections.Iterable):
             iterable, shape = cls._scan_iterable_shape(iterable)
@@ -185,6 +189,37 @@ class NDimArray(object):
 
         """
         return self._rank
+
+    def diff(self, *args):
+        """
+        Calculate the derivative of each element in the array.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> from sympy.abc import x, y
+        >>> M = ImmutableDenseNDimArray([[x, y], [1, x*y]])
+        >>> M.diff(x)
+        [[1, 0], [0, y]]
+
+        """
+        return type(self)(map(lambda x: x.diff(*args), self), self.shape)
+
+    def applyfunc(self, f):
+        """Apply a function to each element of the N-dim array.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> m = ImmutableDenseNDimArray([i*2+j for i in range(2) for j in range(2)], (2, 2))
+        >>> m
+        [[0, 1], [2, 3]]
+        >>> m.applyfunc(lambda i: 2*i)
+        [[0, 2], [4, 6]]
+        """
+        return type(self)(map(f, self), self.shape)
 
     def __str__(self):
         """Returns string, allows to use standard functions print() and str().

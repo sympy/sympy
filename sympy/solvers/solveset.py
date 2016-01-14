@@ -12,8 +12,8 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
+from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.core.symbol import Symbol
-from sympy.simplify.simplify import fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acsc, asec, arg,
                              Piecewise, piecewise_fold)
@@ -1210,7 +1210,7 @@ def linsolve(system, *symbols):
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {(-b*(f - c*d/a)/(a*(e - b*d/a)) + c/a, (f - c*d/a)/(e - b*d/a))}
+    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
@@ -1275,11 +1275,10 @@ def linsolve(system, *symbols):
         for s in sol:
             for k, v in enumerate(params):
                 s = s.xreplace({v: symbols[free_syms[k]]})
-            solution.append(s)
-
+            solution.append(simplify(s))
     else:
         for s in sol:
-            solution.append(s)
+            solution.append(simplify(s))
 
     # Return solutions
     solution = FiniteSet(tuple(solution))

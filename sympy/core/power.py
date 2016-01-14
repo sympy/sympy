@@ -485,7 +485,12 @@ class Pow(Expr):
 
         if self.base.is_real is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
-            return (2*i).is_odd
+            isodd = (2*i).is_odd
+            if isodd is not None:
+                return isodd
+
+        if self.exp.is_negative:
+            return (1/self).is_imaginary
 
     def _eval_is_odd(self):
         if self.exp.is_integer:

@@ -4325,7 +4325,7 @@ class MatrixBase(object):
         row, col = aug[:, :-1].shape
 
         # solve by reduced row echelon form
-        A, pivots = aug.rref()
+        A, pivots = aug.rref(simplify=True)
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)

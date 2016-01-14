@@ -168,6 +168,10 @@ def test_reduce_rational_inequalities_real_relational():
         relational=False) == \
         Union(Interval.Lopen(-oo, -2), Interval.Lopen(0, 4))
 
+    # issue sympy/sympy#10237
+    assert reduce_rational_inequalities(
+        [[x < oo, x >= 0, -oo < x]], x, relational=False) == Interval(0, oo)
+
 
 def test_reduce_abs_inequalities():
     e = abs(x - 5) < 3
