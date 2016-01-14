@@ -7,7 +7,8 @@ Created on Mon Dec 28 13:25:02 2015
 
 from __future__ import print_function, division
 
-from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly, pprint, QQ, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly)
+from sympy import (pprint, QQ, rem, S, sign, simplify, summation, var, zeros)
 
 def sylvester(f, g, x, method = 1):
     '''
@@ -130,7 +131,7 @@ def sturm_pg(p, q, x, method=0):
        smaller than the coefficients of the corresponding ``modified''
        subresultants by the factor Abs(LC(p)**( deg(p)- deg(q))).
 
-    If the Sturm sequence is complete and method=0 then the coefficients
+    If the Sturm sequence is complete, method=0 and LC( p ) > 0, the coefficients
     of the polynomials in the sequence are ``modified'' subresultants.
     That is, they are  determinants of appropriately selected submatrices of
     sylvester2, Sylvester's matrix of 1853. In this case the Sturm sequence
@@ -332,10 +333,10 @@ def sturm_amv(p, q, x, method=0):
     B. If method == 1, the remainder coefficients of the sequence are (in
        absolute value) subresultants, which for non-monic polynomials are
        smaller than the coefficients of the corresponding ``modified''
-       subresultants by the factor Abs(LC(p)**( deg(p)- deg(q))).
+       subresultants by the factor Abs( LC(p)**( deg(p)- deg(q)) ).
 
-    If the Sturm sequence is complete and method=0 then the coefficients
-    of the polynomials in the sequence are ``modified'' subresultants.
+    If the Sturm sequence is complete, method=0 and LC( p ) > 0, then the
+    coefficients of the polynomials in the sequence are ``modified'' subresultants.
     That is, they are  determinants of appropriately selected submatrices of
     sylvester2, Sylvester's matrix of 1853. In this case the Sturm sequence
     coincides with the ``modified'' subresultant prs, of the polynomials
@@ -353,7 +354,7 @@ def sturm_amv(p, q, x, method=0):
     (see Lemma 1 in the 1st reference or Theorem 3 in the 2nd reference)
     and (b) if method=0, assuming deg(p) > deg(q), we multiply the remainder
     coefficients of the Euclidean sequence times the factor
-    Abs(LC(p)**( deg(p)- deg(q))) to make them modified subresultants.
+    Abs( LC(p)**( deg(p)- deg(q)) ) to make them modified subresultants.
     See also the function sturm_pg(p, q, x).
 
     References:
@@ -379,7 +380,7 @@ def sturm_amv(p, q, x, method=0):
 
     # the coefficients in prs are subresultants and hence are smaller
     # than the corresponding subresultants by the factor
-    # |LC(prs[0])**( deg(prs[0]) - deg(prs[1]))|; Theorem 2, 2nd reference.
+    # Abs( LC(prs[0])**( deg(prs[0]) - deg(prs[1])) ); Theorem 2, 2nd reference.
     lcf = Abs( LC(prs[0])**( degree(prs[0], x) - degree(prs[1], x) ) )
 
     # the signs of the first two polys in the sequence stay the same
@@ -661,8 +662,8 @@ def modified_subresultants_pg(p,q,x):
     the coefficients of the remainders computed this way become ``modified''
     subresultants with the help of the Pell-Gordon Theorem of 1917.
 
-    If the ``modified'' subresultant prs is complete, then it coincides with the
-    (generalized) Sturm sequence of the polynomials p, q.
+    If the ``modified'' subresultant prs is complete, and LC( p ) > 0, it coincides
+    with the (generalized) Sturm sequence of the polynomials p, q.
 
     References:
     ===========
@@ -820,6 +821,14 @@ def modified_subresultants_pg(p,q,x):
     if subres_l[m - 1] == nan or subres_l[m - 1] == 0:
         subres_l.pop(m - 1)
 
+    # LC( p ) < 0
+    m = len(subres_l)   # list may be shorter now due to deg(gcd ) > 0
+    if LC( p ) < 0:
+        aux_seq = [subres_l[0], subres_l[1]]
+        for i in range(2, m):
+            aux_seq.append(simplify(subres_l[i] * (-1) ))
+        subres_l = aux_seq
+
     return  subres_l
 
 def subresultants_pg(p,q,x):
@@ -830,7 +839,7 @@ def subresultants_pg(p,q,x):
     the modified subresultant prs of p and q.
 
     The coefficients of the polynomials in these two sequences differ only
-    in sign and the factor Abs(LC(p)**( deg(p)- deg(q))) as stated in
+    in sign and the factor LC(p)**( deg(p)- deg(q)) as stated in
     Theorem 2 of the reference.
 
     The coefficients of the polynomials in the output sequence are
@@ -856,8 +865,8 @@ def subresultants_pg(p,q,x):
 
     # the coefficients in lst are modified subresultants and, hence, are
     # greater than those of the corresponding subresultants by the factor
-    # |LC(lst[0])**( deg(lst[0]) - deg(lst[1]))|; see Theorem 2 in reference.
-    lcf = Abs( LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) ) )
+    # LC(lst[0])**( deg(lst[0]) - deg(lst[1])); see Theorem 2 in reference.
+    lcf = LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) )
 
     # Initialize the subresultant prs list
     subr_seq = [lst[0], lst[1]]
@@ -1189,15 +1198,15 @@ def modified_subresultants_amv(p,q,x):
     Computes the modified subresultant prs of p and q in Z[x] or Q[x],
     from the subresultant prs of p and q.
     The coefficients of the polynomials in the two sequences differ only
-    in sign and the factor Abs(LC(p)**( deg(p)- deg(q))) as stated in
+    in sign and the factor LC(p)**( deg(p)- deg(q)) as stated in
     Theorem 2 of the reference.
 
     The coefficients of the polynomials in the output sequence are
     modified subresultants. That is, they are  determinants of appropriately
     selected submatrices of sylvester2, Sylvester's matrix of 1853.
 
-    If the modified subresultant prs is complete, then it coincides with the
-    (generalized) Sturm's sequence of the polynomials p, q.
+    If the modified subresultant prs is complete, and LC( p ) > 0, it coincides
+    with the (generalized) Sturm's sequence of the polynomials p, q.
 
     References:
     ===========
@@ -1215,8 +1224,8 @@ def modified_subresultants_amv(p,q,x):
 
     # the coefficients in lst are subresultants and, hence, smaller than those
     # of the corresponding modified subresultants by the factor
-    # Abs(LC(lst[0])**( deg(lst[0]) - deg(lst[1]))); see Theorem 2.
-    lcf = Abs( LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) ) )
+    # LC(lst[0])**( deg(lst[0]) - deg(lst[1])); see Theorem 2.
+    lcf = LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) )
 
     # Initialize the modified subresultant prs list
     subr_seq = [lst[0], lst[1]]
