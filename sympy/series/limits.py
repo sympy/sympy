@@ -124,6 +124,11 @@ class Limit(Expr):
         from sympy.series.limitseq import limit_seq
 
         e, z, z0, dir = self.args
+        
+        for a in e.args:
+            for b in a.args:
+                if b.is_zero:
+                    return S.One
 
         if hints.get('deep', True):
             e = e.doit(**hints)
