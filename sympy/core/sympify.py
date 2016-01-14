@@ -281,8 +281,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 return ImmutableDenseNDimArray(a, shape)
             except TypeError:
                 pass
-    else:
-        pass
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
