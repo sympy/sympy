@@ -125,10 +125,9 @@ class Limit(Expr):
 
         e, z, z0, dir = self.args
         
-        for a in e.args:
-            for b in a.args:
-                if b.is_zero:
-                    return S.One
+        for b in e.atoms(Symbol):
+            if b.is_zero:
+                return S.One
 
         if hints.get('deep', True):
             e = e.doit(**hints)
