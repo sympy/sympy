@@ -329,7 +329,7 @@ class factorial2(CombinatorialFunction):
     def eval(cls, arg):
         # TODO: extend this to complex numbers?
 
-        if arg.is_Number:
+        if arg.is_integer:
             if arg.is_infinite:
                 return
 
@@ -346,6 +346,8 @@ class factorial2(CombinatorialFunction):
                 raise ValueError("argument must be nonnegative or odd")
 
             return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+        else:
+            raise ValueError("argument must be an integer")
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
