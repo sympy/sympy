@@ -6,7 +6,8 @@ from sympy.utilities import public
 from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
-from sympy import sympify, floor, sqrt, lcm, denom, Integer, Rational
+from sympy import (sympify, floor, sqrt, lcm, denom, Integer, Rational,
+                   exp, integrate)
 
 @public
 def find_simple_recurrence_vector(l):
@@ -219,6 +220,15 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     case of a single type may seem to work most of the time as in: types='ogf'
     this (convenient) syntax may leed to unexpected extra results in some cases.
 
+    Discarding a type when calling the function does not mean that the type will
+    not be present in the returned dictionary; it only means that no extra
+    computation will be performed for that type but the function may still add
+    it whenever it can be easily computed from another type.
+
+    Two generating functions (lgdogf and lgdegf) are not even computed if the
+    initial term of the sequence is 0; it may be useful in that case to try
+    again after having removed the leading zeros.
+
     Examples
     ========
 
@@ -317,7 +327,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 break
 
     # Logarithmic derivative of ordinary generating Function (lgdogf)
-    if 'lgdogf' in types:
+    if 'lgdogf' in types and v[0] != 0:
         # Transform sequence by computing f'(x)/f(x)
         # because log(f(x)) = integrate( f'(x)/f(x) )
         a, w = sympify(v[0]), []
@@ -331,10 +341,12 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             g = guess_generating_function_rational(t, X=X)
             if g:
                 result['lgdogf'] = g**Rational(1, d+1)
+                if 'ogf' not in result:
+                    result['ogf'] = exp(integrate(result['lgdogf'], X))
                 break
 
     # Logarithmic derivative of exponential generating Function (lgdegf)
-    if 'lgdegf' in types:
+    if 'lgdegf' in types and v[0] != 0:
         # Transform sequence / step 1 (division by factorial)
         z, f = [], Integer(1)
         for i, k in enumerate(v):
@@ -353,6 +365,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             g = guess_generating_function_rational(t, X=X)
             if g:
                 result['lgdegf'] = g**Rational(1, d+1)
+                if 'egf' not in result:
+                    result['egf'] = exp(integrate(result['lgdegf'], X))
                 break
 
     return result
