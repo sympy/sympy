@@ -5,8 +5,8 @@ from sympy.concrete.guess import (
             guess_generating_function_rational,
             guess_generating_function
         )
-from sympy import Function, Symbol, sympify, Rational
-from sympy import fibonacci, factorial
+from sympy import (Function, Symbol, sympify, Rational,
+                   fibonacci, factorial, exp)
 
 def test_find_simple_recurrence_vector():
     assert find_simple_recurrence_vector(
@@ -53,4 +53,6 @@ def test_guess_generating_function():
        "[3/2, 11/2, 0, -121/2, -363/2, 121, 4719/2, 11495/2, -8712, -178717/2]")
        )['ogf'] == (x + Rational(3, 2))/(11*x**2 - 3*x + 1)
     assert guess_generating_function([factorial(k) for k in range(12)],
-              types=['egf'])['egf'] == 1/(-x + 1)
+       types=['egf'])['egf'] == 1/(-x + 1)
+    assert guess_generating_function([k+1 for k in range(12)],
+       types=['egf']) == {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}

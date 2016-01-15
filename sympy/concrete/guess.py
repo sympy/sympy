@@ -249,6 +249,9 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
     {'egf': 1/(-x + 1)}
 
+    >>> ggf([k+1 for k in range(12)], types=['egf'])
+    {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
+
     N-th root of a rational function can also be detected (below is an example
     coming from the sequence A108626 from http://oeis.org ).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
@@ -327,7 +330,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 break
 
     # Logarithmic derivative of ordinary generating Function (lgdogf)
-    if 'lgdogf' in types and v[0] != 0:
+    if v[0] != 0 and ('lgdogf' in types
+                       or ('ogf' in types and 'ogf' not in result)):
         # Transform sequence by computing f'(x)/f(x)
         # because log(f(x)) = integrate( f'(x)/f(x) )
         a, w = sympify(v[0]), []
@@ -346,7 +350,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 break
 
     # Logarithmic derivative of exponential generating Function (lgdegf)
-    if 'lgdegf' in types and v[0] != 0:
+    if v[0] != 0 and ('lgdegf' in types
+                       or ('egf' in types and 'egf' not in result)):
         # Transform sequence / step 1 (division by factorial)
         z, f = [], Integer(1)
         for i, k in enumerate(v):
