@@ -125,7 +125,7 @@ class Limit(Expr):
 
         e, z, z0, dir = self.args
         
-        if type(e) is exp:
+        if isinstance(e,exp):
             for b in e.atoms(Symbol):
                 if b.is_zero:
                     return S.One
