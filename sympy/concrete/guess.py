@@ -6,7 +6,7 @@ from sympy.utilities import public
 from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
-from sympy import sympify, floor, sqrt, Rational
+from sympy import sympify, floor, sqrt, Integer, Rational
 from mpmath import pslq, sqrt, mp
 
 @public
@@ -190,39 +190,82 @@ def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
 
 
 @public
-def guess_generating_function(v, X=Symbol('x'), maxcoeff=1024, maxsqrtn=2):
+def guess_generating_function(v, X=Symbol('x'), type=['all'],
+                              maxcoeff=1024, maxsqrtn=2):
     """
     Tries to "guess" a generating function for a sequence of rational numbers v.
     Only a few patterns are implemented yet.
+
+    The function returns a dictionary where keys are the name of a given type of
+    generating function (the most basic type being 'ogf').
 
     Examples
     ========
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> from sympy import fibonacci
-    >>> ggf([fibonacci(k) for k in range(5, 15)])
-    (3*x + 5)/(-x**2 - x + 1)
+    >>> ggf([fibonacci(k) for k in range(5, 15)], type=['ogf'])
+    {'ogf': (3*x + 5)/(-x**2 - x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
     >>> ggf(l)
-    (x + 3/2)/(11*x**2 - 3*x + 1)
+    {'ogf': (x + 3/2)/(11*x**2 - 3*x + 1)}
+
+    Other types of generating function may also be guessed; a list of required
+    types may be provided as an option (default is ['all']); below is an example
+    for the exponential generating function:
+
+    >>> from sympy import simplify, factorial
+    >>> g = ggf([factorial(k) for k in range(12)], type=['ogf', 'egf'])
+    >>> simplify(g['egf'])
+    -1/(x - 1)
 
     N-th root of a rational function can also be detected (below is an example
     coming from the sequence A108626 from http://oeis.org ).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
     >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])
-    sqrt(1/(x**4 + 2*x**2 - 4*x + 1))
+    {'ogf': sqrt(1/(x**4 + 2*x**2 - 4*x + 1))}
 
     References
     ==========
     "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
 
     """
-    # Perform some convolutions of the sequence with itself
-    t = [1 if k==0 else 0 for k in range(len(v))]
-    for d in range(max(1, maxsqrtn)):
-      t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
-      g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
-      if g: return g**Rational(1, d+1)
+    # List of all types of all g.f. known by the algorithm
+    if 'all' in type:
+        type = ['ogf', 'egf']
+
+    result = {}
+
+    # Ordinary Generating Function (ogf)
+    if 'ogf' in type:
+        # Perform some convolutions of the sequence with itself
+        t = [1 if k==0 else 0 for k in range(len(v))]
+        for d in range(max(1, maxsqrtn)):
+            t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
+            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            if g:
+                result['ogf'] = g**Rational(1, d+1)
+                break
+
+    # Exponential Generating Function (egf)
+    if 'egf' in type:
+        # Transform sequence (division by factorial)
+        w, f = [], Integer(1)
+        for i, k in enumerate(v):
+            f *= i if i else 1
+            w.append(k/f)
+        # Perform some convolutions of the sequence with itself
+        t = [1 if k==0 else 0 for k in range(len(w))]
+        for d in range(max(1, maxsqrtn)):
+            t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
+            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            if g:
+                result['egf'] = g**Rational(1, d+1)
+                break
+
+    # TODO: add more types of generating functions
+
+    return result
