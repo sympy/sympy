@@ -6,11 +6,10 @@ from sympy.utilities import public
 from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
-from sympy import sympify, floor, sqrt, Integer, Rational
-from mpmath import pslq, sqrt, mp
+from sympy import sympify, floor, sqrt, lcm, denom, Integer, Rational
 
 @public
-def find_simple_recurrence_vector(v, maxcoeff=1024):
+def find_simple_recurrence_vector(l, maxcoeff=1024):
     """
     This function is used internally by other functions from the
     sympy.concrete.guess module. While most users may want to rather use the
@@ -44,24 +43,37 @@ def find_simple_recurrence_vector(v, maxcoeff=1024):
     user-friendly.
 
     """
-    l = len(v)>>1
-
-    previous = mp.prec # save current precision
-    mp.prec = 128
-    b = [sum(sqrt((l>>1)**2 + k)*v[-1-k-i] for k in range(l))
-          for i in range(l)]
-    p = pslq(b,
-             maxcoeff = maxcoeff,
-             maxsteps = 128 + 4*l)
-    mp.prec = previous # restore current precision
-    if p == None: return [0]
-
-    first, last = 0, l-1
-    while p[first]==0: first += 1
-    while p[last]==0:
-        last -= 1
-        if first == last: return [0] # TODO: probably never occuring
-    return p[first:last+1]
+    q1 = [0]
+    q2 = [Integer(1)]
+    z = len(l) >> 1
+    while len(q2) <= z:
+        b = 0
+        while l[b]==0:
+            b += 1
+            if b == len(l):
+                c = 1
+                for x in q2:
+                    c = lcm(c, denom(x))
+                if q2[0]*c < 0: c = -c
+                for k in range(len(q2)):
+                    q2[k] = int(q2[k]*c)
+                return q2
+        m = [Integer(1)/l[b]]
+        for k in range(b+1, len(l)):
+            s = 0
+            for j in range(b, k):
+                s -= l[j+1] * m[b-j-1]
+            m.append(s/l[b])
+        l = m
+        a, l[0] = l[0], 0
+        q = [0] * max(len(q2), b+len(q1))
+        for k in range(len(q2)):
+            q[k] = a*q2[k]
+        for k in range(b, b+len(q1)):
+            q[k] += q1[k-b]
+        while q[-1]==0: q.pop() # because trailing zeros can occur
+        q1, q2 = q2, q
+    return [0]
 
 @public
 def find_simple_recurrence(v, A=Function('a'), N=Symbol('n'), maxcoeff=1024):
@@ -190,36 +202,39 @@ def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
 
 
 @public
-def guess_generating_function(v, X=Symbol('x'), type=['all'],
+def guess_generating_function(v, X=Symbol('x'), types=['all'],
                               maxcoeff=1024, maxsqrtn=2):
     """
     Tries to "guess" a generating function for a sequence of rational numbers v.
     Only a few patterns are implemented yet.
 
     The function returns a dictionary where keys are the name of a given type of
-    generating function (the most basic type being 'ogf').
+    generating function (the most basic type being 'ogf'). Currently implemented
+    types are: 'ogf' (ordinary g.f.), 'egf' (exponential g.f.), 'lgf'
+    (logarithmic g.f.), 'hlgf' (hyperbolic logarithmic g.f.).
+
+    In order to spare time, the user can select only some types of generating
+    functions (default being ['all']).
 
     Examples
     ========
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
-    >>> from sympy import fibonacci
-    >>> ggf([fibonacci(k) for k in range(5, 15)], type=['ogf'])
-    {'ogf': (3*x + 5)/(-x**2 - x + 1)}
+    >>> ggf([k+1 for k in range(12)])
+    {'hlgf': 1/(-x + 1), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
     >>> ggf(l)
     {'ogf': (x + 3/2)/(11*x**2 - 3*x + 1)}
 
-    Other types of generating function may also be guessed; a list of required
-    types may be provided as an option (default is ['all']); below is an example
-    for the exponential generating function:
+    >>> from sympy import fibonacci
+    >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
+    {'ogf': (3*x + 5)/(-x**2 - x + 1)}
 
     >>> from sympy import simplify, factorial
-    >>> g = ggf([factorial(k) for k in range(12)], type=['ogf', 'egf'])
-    >>> simplify(g['egf'])
-    -1/(x - 1)
+    >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
+    {'egf': 1/(-x + 1)}
 
     N-th root of a rational function can also be detected (below is an example
     coming from the sequence A108626 from http://oeis.org ).
@@ -234,13 +249,13 @@ def guess_generating_function(v, X=Symbol('x'), type=['all'],
 
     """
     # List of all types of all g.f. known by the algorithm
-    if 'all' in type:
-        type = ['ogf', 'egf']
+    if 'all' in types:
+        types = ['ogf', 'egf', 'lgf', 'hlgf']
 
     result = {}
 
     # Ordinary Generating Function (ogf)
-    if 'ogf' in type:
+    if 'ogf' in types:
         # Perform some convolutions of the sequence with itself
         t = [1 if k==0 else 0 for k in range(len(v))]
         for d in range(max(1, maxsqrtn)):
@@ -251,7 +266,7 @@ def guess_generating_function(v, X=Symbol('x'), type=['all'],
                 break
 
     # Exponential Generating Function (egf)
-    if 'egf' in type:
+    if 'egf' in types:
         # Transform sequence (division by factorial)
         w, f = [], Integer(1)
         for i, k in enumerate(v):
@@ -264,6 +279,37 @@ def guess_generating_function(v, X=Symbol('x'), type=['all'],
             g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
             if g:
                 result['egf'] = g**Rational(1, d+1)
+                break
+
+    # Logarithmic Generating Function (lgf)
+    if 'lgf' in types:
+        # Transform sequence (multiplication by (-1)^(n+1) / n)
+        w, f = [], Integer(-1)
+        for i, k in enumerate(v):
+            f = -f
+            w.append(f*k/Integer(i+1))
+        # Perform some convolutions of the sequence with itself
+        t = [1 if k==0 else 0 for k in range(len(w))]
+        for d in range(max(1, maxsqrtn)):
+            t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
+            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            if g:
+                result['lgf'] = g**Rational(1, d+1)
+                break
+
+    # Hyperbolic logarithmic Generating Function (hlgf)
+    if 'hlgf' in types:
+        # Transform sequence (division by n+1)
+        w = []
+        for i, k in enumerate(v):
+            w.append(k/Integer(i+1))
+        # Perform some convolutions of the sequence with itself
+        t = [1 if k==0 else 0 for k in range(len(w))]
+        for d in range(max(1, maxsqrtn)):
+            t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
+            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            if g:
+                result['hlgf'] = g**Rational(1, d+1)
                 break
 
     # TODO: add more types of generating functions
