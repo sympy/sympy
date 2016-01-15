@@ -211,7 +211,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     generating function (the most basic type being 'ogf'). Currently implemented
     types are: 'ogf' (ordinary g.f.), 'egf' (exponential g.f.), 'lgf'
     (logarithmic g.f.), 'hlgf' (hyperbolic logarithmic g.f.), 'lgdogf'
-    (logarithmic derivative of generating function).
+    (logarithmic derivative of generating function), 'lgdegf' (logarithmic
+    derivative of exponential generating function).
 
     In order to spare time, the user can select only some types of generating
     functions (default being ['all']). While forgetting to use a list in the
@@ -242,8 +243,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     coming from the sequence A108626 from http://oeis.org ).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
-    >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])
-    {'ogf': sqrt(1/(x**4 + 2*x**2 - 4*x + 1))}
+    >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])['ogf']
+    sqrt(1/(x**4 + 2*x**2 - 4*x + 1))
 
     References
     ==========
@@ -253,7 +254,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     """
     # List of all types of all g.f. known by the algorithm
     if 'all' in types:
-        types = ['ogf', 'egf', 'lgf', 'hlgf', 'lgdogf']
+        types = ['ogf', 'egf', 'lgf', 'hlgf', 'lgdogf', 'lgdegf']
 
     result = {}
 
@@ -315,7 +316,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 result['hlgf'] = g**Rational(1, d+1)
                 break
 
-    # Logarithmic derivatif of Generating Function (ldogf)
+    # Logarithmic derivative of ordinary generating Function (lgdogf)
     if 'lgdogf' in types:
         # Transform sequence by computing f'(x)/f(x)
         # because log(f(x)) = integrate( f'(x)/f(x) )
@@ -332,6 +333,26 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 result['lgdogf'] = g**Rational(1, d+1)
                 break
 
-    # TODO: add more types of generating functions
+    # Logarithmic derivative of exponential generating Function (lgdegf)
+    if 'lgdegf' in types:
+        # Transform sequence / step 1 (division by factorial)
+        z, f = [], Integer(1)
+        for i, k in enumerate(v):
+            f *= i if i else 1
+            z.append(k/f)
+        # Transform sequence / step 2 by computing f'(x)/f(x)
+        # because log(f(x)) = integrate( f'(x)/f(x) )
+        a, w = z[0], []
+        for n in range(len(z)-1):
+            w.append(
+               (z[n+1]*(n+1) - sum( w[-i-1]*z[i+1] for i in range(n) ))/a)
+        # Perform some convolutions of the sequence with itself
+        t = [1 if k==0 else 0 for k in range(len(w))]
+        for d in range(max(1, maxsqrtn)):
+            t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
+            g = guess_generating_function_rational(t, X=X)
+            if g:
+                result['lgdegf'] = g**Rational(1, d+1)
+                break
 
     return result
