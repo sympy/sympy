@@ -7,7 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-
+from sympy.functions import exp
 
 def limit(e, z, z0, dir="+"):
     """
@@ -125,9 +125,10 @@ class Limit(Expr):
 
         e, z, z0, dir = self.args
         
-        for b in e.atoms(Symbol):
-            if b.is_zero:
-                return S.One
+        if type(e) is exp:
+            for b in e.atoms(Symbol):
+                if b.is_zero:
+                    return S.One
 
         if hints.get('deep', True):
             e = e.doit(**hints)
