@@ -3,7 +3,7 @@ from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
+    Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps,
@@ -3365,17 +3365,17 @@ x─→0⁺            \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-def test_pretty_RootOf():
-    expr = RootOf(x**5 + 11*x - 2, 0)
+def test_pretty_ComplexRootOf():
+    expr = rootof(x**5 + 11*x - 2, 0)
     ascii_str = \
 """\
-      / 5              \\\n\
-RootOf\\x  + 11*x - 2, 0/\
+       / 5              \\\n\
+CRootOf\\x  + 11*x - 2, 0/\
 """
     ucode_str = \
 u("""\
-      ⎛ 5              ⎞\n\
-RootOf⎝x  + 11⋅x - 2, 0⎠\
+       ⎛ 5              ⎞\n\
+CRootOf⎝x  + 11⋅x - 2, 0⎠\
 """)
 
     assert pretty(expr) == ascii_str

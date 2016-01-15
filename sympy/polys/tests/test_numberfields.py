@@ -25,7 +25,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import rootof
 from sympy.polys.polytools import degree
 
 from sympy.abc import x, y, z
@@ -209,7 +209,7 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
     assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
-    ex = RootOf(x**3 +x*4 + 1, 0)
+    ex = rootof(x**3 +x*4 + 1, 0)
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 4*x + 1
     mp = minimal_polynomial(ex + 1, x)

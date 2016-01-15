@@ -2,7 +2,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise,
+    Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
     Matrix)
 from mpmath import mpi
 
@@ -449,10 +449,10 @@ def test_contains():
     assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
     assert S.EmptySet.contains(1) is S.false
-    assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
+    assert FiniteSet(rootof(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
 
-    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
-    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+    assert rootof(x**5 + x**3 + 1, 0) in S.Reals
+    assert not rootof(x**5 + x**3 + 1, 1) in S.Reals
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \

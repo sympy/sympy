@@ -93,17 +93,17 @@ def sqrt(arg):
     >>> powdenest(sqrt(x**2), force=True)
     x
 
-    To get both branches of the square root you can use the RootOf function:
+    To get both branches of the square root you can use the rootof function:
 
-    >>> from sympy import RootOf
+    >>> from sympy import rootof
 
-    >>> [RootOf(x**2 - 3, i) for i in (0, 1)]
+    >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
 
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root, real_root
+    sympy.polys.rootoftools.rootof, root, real_root
 
     References
     ==========
@@ -153,7 +153,7 @@ def cbrt(arg):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root, real_root
+    sympy.polys.rootoftools.rootof, root, real_root
 
     References
     ==========
@@ -193,19 +193,19 @@ def root(arg, n, k=0):
     >>> root(-2, 3, 2)
     -(-1)**(2/3)*2**(1/3)
 
-    To get all n n-th roots you can use the RootOf function.
+    To get all n n-th roots you can use the rootof function.
     The following examples show the roots of unity for n
     equal 2, 3 and 4:
 
-    >>> from sympy import RootOf, I
+    >>> from sympy import rootof, I
 
-    >>> [ RootOf(x**2 - 1, i) for i in range(2) ]
+    >>> [rootof(x**2 - 1, i) for i in range(2)]
     [-1, 1]
 
-    >>> [ RootOf(x**3 - 1,i) for i in range(3) ]
+    >>> [rootof(x**3 - 1,i) for i in range(3)]
     [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
 
-    >>> [ RootOf(x**4 - 1,i) for i in range(4) ]
+    >>> [rootof(x**4 - 1,i) for i in range(4)]
     [-1, 1, -I, I]
 
     SymPy, like other symbolic algebra systems, returns the
@@ -235,7 +235,7 @@ def root(arg, n, k=0):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf
+    sympy.polys.rootoftools.rootof
     sympy.core.power.integer_nthroot
     sqrt, real_root
 
@@ -286,7 +286,7 @@ def real_root(arg, n=None):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf
+    sympy.polys.rootoftools.rootof
     sympy.core.power.integer_nthroot
     root, sqrt
     """
