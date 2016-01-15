@@ -210,7 +210,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     The function returns a dictionary where keys are the name of a given type of
     generating function (the most basic type being 'ogf'). Currently implemented
     types are: 'ogf' (ordinary g.f.), 'egf' (exponential g.f.), 'lgf'
-    (logarithmic g.f.), 'hlgf' (hyperbolic logarithmic g.f.).
+    (logarithmic g.f.), 'hlgf' (hyperbolic logarithmic g.f.), 'lgdogf'
+    (logarithmic derivative of generating function).
 
     In order to spare time, the user can select only some types of generating
     functions (default being ['all']). While forgetting to use a list in the
@@ -221,7 +222,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     ========
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
-    >>> ggf([k+1 for k in range(12)])
+    >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
     {'hlgf': 1/(-x + 1), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
@@ -252,7 +253,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     """
     # List of all types of all g.f. known by the algorithm
     if 'all' in types:
-        types = ['ogf', 'egf', 'lgf', 'hlgf']
+        types = ['ogf', 'egf', 'lgf', 'hlgf', 'lgdogf']
 
     result = {}
 
@@ -312,6 +313,23 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             g = guess_generating_function_rational(t, X=X)
             if g:
                 result['hlgf'] = g**Rational(1, d+1)
+                break
+
+    # Logarithmic derivatif of Generating Function (ldogf)
+    if 'lgdogf' in types:
+        # Transform sequence by computing f'(x)/f(x)
+        # because log(f(x)) = integrate( f'(x)/f(x) )
+        a, w = sympify(v[0]), []
+        for n in range(len(v)-1):
+            w.append(
+               (v[n+1]*(n+1) - sum( w[-i-1]*v[i+1] for i in range(n) ))/a)
+        # Perform some convolutions of the sequence with itself
+        t = [1 if k==0 else 0 for k in range(len(w))]
+        for d in range(max(1, maxsqrtn)):
+            t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
+            g = guess_generating_function_rational(t, X=X)
+            if g:
+                result['lgdogf'] = g**Rational(1, d+1)
                 break
 
     # TODO: add more types of generating functions
