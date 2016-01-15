@@ -942,6 +942,13 @@ def test_subs():
     for cls in classes:
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).subs(1, 2)
 
+def test_xreplace():
+    assert Matrix([[1, x], [x, 4]]).xreplace({x: 5}) == \
+        Matrix([[1, 5], [5, 4]])
+    assert Matrix([[x, 2], [x + y, 4]]).xreplace({x: -1, y: -2}) == \
+        Matrix([[-1, 2], [-3, 4]])
+    for cls in classes:
+        assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
     f, n = symbols('f, n')
@@ -1932,20 +1939,14 @@ def test_matrix_norm():
         # Check Triangle Inequality for all Pairs of Matrices
         for X in L:
             for Y in L:
-                assert simplify(X.norm(order) + Y.norm(order) >=
-                                (X + Y).norm(order))
+                dif = (X.norm(order) + Y.norm(order) -
+                    (X + Y).norm(order))
+                assert (dif >= 0)
         # Scalar multiplication linearity
         for M in [A, B, C, D]:
-            if order in [2, -2]:
-                # Abs is causing tests to fail when Abs(alpha) is inside a Max
-                # or Min. The tests produce mathematically true statements that
-                # are too complex to be simplified well.
-                continue
-            try:
-                assert ((alpha*M).norm(order) ==
-                        abs(alpha) * M.norm(order))
-            except NotImplementedError:
-                pass  # Some Norms fail on symbolic matrices due to Max issue
+            dif = simplify((alpha*M).norm(order) -
+                    abs(alpha) * M.norm(order))
+            assert dif == 0
 
     # Test Properties of Vector Norms
     # http://en.wikipedia.org/wiki/Vector_norm
@@ -1964,18 +1965,17 @@ def test_matrix_norm():
             assert Matrix([0, 0, 0]).norm(order) == S(0)
         # Triangle inequality on all pairs
         if order >= 1:  # Triangle InEq holds only for these norms
-            for v in L:
-                for w in L:
-                    assert simplify(v.norm(order) + w.norm(order) >=
-                                    (v + w).norm(order))
+            for X in L:
+                for Y in L:
+                    dif = (X.norm(order) + Y.norm(order) -
+                        (X + Y).norm(order))
+                    assert simplify(dif >= 0) is S.true
         # Linear to scalar multiplication
         if order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity]:
-            for vec in L:
-                try:
-                    assert simplify((alpha*v).norm(order) -
-                        (abs(alpha) * v.norm(order))) == 0
-                except NotImplementedError:
-                    pass  # Some Norms fail on symbolics due to Max issue
+            for X in L:
+                dif = simplify((alpha*X).norm(order) -
+                    (abs(alpha) * X.norm(order)))
+                assert dif == 0
 
 
 def test_singular_values():

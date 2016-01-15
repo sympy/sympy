@@ -14,6 +14,7 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.sets.contains import Contains
+from sympy.utilities.misc import func_name
 
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
@@ -206,7 +207,7 @@ class Set(Basic):
             return Union(o - self for o in other.args)
 
         elif isinstance(other, Complement):
-            return Complement(other.args[0], Union(other.args[1], self))
+            return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
         elif isinstance(other, EmptySet):
             return S.EmptySet
@@ -964,8 +965,9 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        if other.is_real is False:
+        if other.is_real is False or other is S.NegativeInfinity or other is S.Infinity:
             return false
+
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
             if not other.is_real is None:
@@ -1962,15 +1964,23 @@ class FiniteSet(Set, EvalfMixin):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
 
     def __ge__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return other.is_subset(self)
 
     def __gt__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_superset(other)
 
     def __le__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_subset(other)
 
     def __lt__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
 
 

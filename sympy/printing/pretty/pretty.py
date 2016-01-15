@@ -1488,6 +1488,12 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
+    def _print_AccumuBounds(self, i):
+        left = '<'
+        right = '>'
+
+        return self._print_seq(i.args[:2], left, right)
+
     def _print_Intersection(self, u):
 
         delimiter = ' %s ' % pretty_atom('Intersection')
@@ -1695,10 +1701,10 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
-    def _print_RootOf(self, expr):
+    def _print_ComplexRootOf(self, expr):
         args = [self._print_Add(expr.expr, order='lex'), expr.index]
         pform = prettyForm(*self._print_seq(args).parens())
-        pform = prettyForm(*pform.left('RootOf'))
+        pform = prettyForm(*pform.left('CRootOf'))
         return pform
 
     def _print_RootSum(self, expr):

@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from .basic import Basic
 from .compatibility import cmp_to_key, reduce, is_sequence, range
-from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
+from .logic import _fuzzy_group, fuzzy_or, fuzzy_not, fuzzy_and
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
@@ -89,6 +89,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
+        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -134,6 +135,10 @@ class Add(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, AccumBounds):
+                coeff = o.__add__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -462,14 +467,55 @@ class Add(Expr, AssocOp):
         a.is_commutative for a in self.args)
 
     def _eval_is_imaginary(self):
-        rv = _fuzzy_group(a.is_imaginary for a in self.args)
-        if rv is False:
-            return rv
-        iargs = [a*S.ImaginaryUnit for a in self.args]
-        r = _fuzzy_group(a.is_real for a in iargs)
-        if r:
-            s = self.func(*iargs, evaluate=False)
-            return fuzzy_not(s.is_zero)
+        nz = []
+        im_I = []
+        for a in self.args:
+            if a.is_real:
+                if a.is_zero:
+                    pass
+                elif a.is_zero is False:
+                    nz.append(a)
+                else:
+                    return
+            elif a.is_imaginary:
+                im_I.append(a*S.ImaginaryUnit)
+            elif (S.ImaginaryUnit*a).is_real:
+                im_I.append(a*S.ImaginaryUnit)
+            else:
+                return
+        if self.func(*nz).is_zero:
+            return fuzzy_not(self.func(*im_I).is_zero)
+        elif self.func(*nz).is_zero is False:
+            return False
+
+    def _eval_is_zero(self):
+        nz = []
+        z = 0
+        im_or_z = False
+        im = False
+        for a in self.args:
+            if a.is_real:
+                if a.is_zero:
+                    z += 1
+                elif a.is_zero is False:
+                    nz.append(a)
+                else:
+                    return
+            elif a.is_imaginary:
+                im = True
+            elif (S.ImaginaryUnit*a).is_real:
+                im_or_z = True
+            else:
+                return
+        if z == len(self.args):
+            return True
+        if self.func(*nz).is_zero:
+            if not im_or_z and not im:
+                return True
+            if im and not im_or_z:
+                return False
+        if self.func(*nz).is_zero is False:
+            return False
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even is True)]

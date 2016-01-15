@@ -1027,6 +1027,10 @@ def test_int():
     assert int(pi) == 3
     assert int(E) == 2
     assert int(GoldenRatio) == 1
+    # issue 10368
+    a = S(32442016954)/78058255275
+    assert type(int(a)) is type(int(-a)) is int
+
 
 def test_long():
     a = Rational(5)

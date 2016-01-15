@@ -601,7 +601,7 @@ def test_issue_4711():
 
 def test_nfloat():
     from sympy.core.basic import _aresame
-    from sympy.polys.rootoftools import RootOf
+    from sympy.polys.rootoftools import rootof
 
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
@@ -628,7 +628,7 @@ def test_nfloat():
         9.99999999800000e-11
 
     # issue 7122
-    eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
+    eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
 

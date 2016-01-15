@@ -1169,6 +1169,23 @@ class MatrixBase(object):
         """
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
+    def xreplace(self, rule):  # should mirror core.basic.xreplace
+        """Return a new matrix with xreplace applied to each entry.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> SparseMatrix(1, 1, [x])
+        Matrix([[x]])
+        >>> _.xreplace({x: y})
+        Matrix([[y]])
+        >>> Matrix(_).xreplace({y: x})
+        Matrix([[x]])
+        """
+        return self.applyfunc(lambda x: x.xreplace(rule))
+
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
@@ -4308,7 +4325,7 @@ class MatrixBase(object):
         row, col = aug[:, :-1].shape
 
         # solve by reduced row echelon form
-        A, pivots = aug.rref()
+        A, pivots = aug.rref(simplify=True)
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)

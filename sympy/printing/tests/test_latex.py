@@ -5,7 +5,7 @@ from sympy import (
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
-    RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
+    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
@@ -15,7 +15,8 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps)
+    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
+    AccumBounds)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -576,6 +577,13 @@ def test_latex_intervals():
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
 
 
+def test_latex_AccumuBounds():
+    a = Symbol('a', real=True)
+    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
+    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
+
+
 def test_latex_emptyset():
     assert latex(S.EmptySet) == r"\emptyset"
 
@@ -941,9 +949,9 @@ def test_latex_Poly():
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
 
-def test_latex_RootOf():
-    assert latex(RootOf(x**5 + x + 3, 0)) == \
-        r"\operatorname{RootOf} {\left(x^{5} + x + 3, 0\right)}"
+def test_latex_ComplexRootOf():
+    assert latex(rootof(x**5 + x + 3, 0)) == \
+        r"\operatorname{CRootOf} {\left(x^{5} + x + 3, 0\right)}"
 
 
 def test_latex_RootSum():

@@ -1554,6 +1554,10 @@ class LatexPrinter(Printer):
             return r"\left%s%s, %s\right%s" % \
                    (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_AccumulationBounds(self, i):
+        return r"\langle %s, %s\rangle" % \
+                (self._print(i.min), self._print(i.max))
+
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
 
@@ -1664,8 +1668,10 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_RootOf(self, root):
+    def _print_ComplexRootOf(self, root):
         cls = root.__class__.__name__
+        if cls == "ComplexRootOf":
+            cls = "CRootOf"
         expr = self._print(root.expr)
         index = root.index
         if cls in accepted_latex_functions:

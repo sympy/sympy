@@ -643,7 +643,23 @@ def solve(f, *symbols, **flags):
     Notes
     =====
 
-    assumptions aren't checked when `solve()` input involves
+    solve() with check=True (default) will run through the symbol tags to
+    elimate unwanted solutions.  If no assumptions are included all possible
+    solutions will be returned.
+
+        >>> from sympy import Symbol, solve
+        >>> x = Symbol("x")
+        >>> solve(x**2 - 1)
+        [-1, 1]
+
+    By using the positive tag only one solution will be returned:
+
+        >>> pos = Symbol("pos", positive=True)
+        >>> solve(pos**2 - 1)
+        [1]
+
+
+    Assumptions aren't checked when `solve()` input involves
     relationals or bools.
 
     When the solutions are checked, those that make any denominator zero
@@ -678,7 +694,7 @@ def solve(f, *symbols, **flags):
     ----------------------------------------
 
     When solving polynomial expressions, one might not want explicit solutions
-    (which can be quite long). If the expression is univariate, RootOf
+    (which can be quite long). If the expression is univariate, CRootOf
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
@@ -688,7 +704,9 @@ def solve(f, *symbols, **flags):
         sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)), -(3*sqrt(69)/2 +
         27/2)**(1/3)/3 - 1/(3*sqrt(69)/2 + 27/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
-        [RootOf(x**3 - x + 1, 0), RootOf(x**3 - x + 1, 1), RootOf(x**3 - x + 1, 2)]
+        [CRootOf(x**3 - x + 1, 0),
+         CRootOf(x**3 - x + 1, 1),
+         CRootOf(x**3 - x + 1, 2)]
 
         If the expression is multivariate, no solution might be returned:
 
@@ -725,8 +743,8 @@ def solve(f, *symbols, **flags):
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
         >>> solve(eq)  # this gives 2 solutions but misses a 3rd
-        [RootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
-        RootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
+        [CRootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
+        CRootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]

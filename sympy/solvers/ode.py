@@ -252,7 +252,8 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, lcm
+from sympy.polys import (Poly, RootOf, CRootOf, rootof, terms_gcd,
+                         PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -2060,7 +2061,7 @@ def odesimp(eq, func, order, constants, hint):
     eq = constantsimp(eq, constants)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
-    # When RootOf is implemented in solve(), we will want to return a RootOf
+    # When CRootOf is implemented in solve(), we will want to return a CRootOf
     # everytime instead of an Equality.
 
     # Get the f(x) on the left if possible.
@@ -2464,8 +2465,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     if sol.has(Integral):
         return oo
 
-    # Next, try to solve for func.  This code will change slightly when RootOf
-    # is implemented in solve().  Probably a RootOf solution should fall
+    # Next, try to solve for func.  This code will change slightly when CRootOf
+    # is implemented in solve().  Probably a CRootOf solution should fall
     # somewhere between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
@@ -3901,7 +3902,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     are returned, based on expansions with Eulers formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
     to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be returned
+    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be returned
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -3965,7 +3966,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
 
     # A generator of constants
     constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
@@ -4537,7 +4538,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     constants) as `e^{a x} \left(C_1 \cos(b x) + C_2 \sin(b x)\right)`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be return
+    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be return
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -4546,11 +4547,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
-    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) +
-    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) +
-    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4)))
+    Eq(f(x), C1*exp(x*CRootOf(_x**5 + 10*_x - 2, 0)) +
+    C2*exp(x*CRootOf(_x**5 + 10*_x - 2, 1)) +
+    C3*exp(x*CRootOf(_x**5 + 10*_x - 2, 2)) +
+    C4*exp(x*CRootOf(_x**5 + 10*_x - 2, 3)) +
+    C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 4)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.
@@ -4605,7 +4606,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
             chareq += r[i]*symbol**i
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
     chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
 
     # A generator of constants
@@ -6372,12 +6373,12 @@ def lie_heuristic_linear(match, comp=False):
 
 
 def sysode_linear_2eq_order1(match_):
-    C1, C2, C3, C4 = symbols('C1:5')
     x = match_['func'][0].func
     y = match_['func'][1].func
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
@@ -6405,24 +6406,24 @@ def sysode_linear_2eq_order1(match_):
                                   " (and constant inhomogeneity)")
 
     if match_['type_of_equation'] == 'type1':
-        sol = _linear_2eq_order1_type1(x, y, t, r)
+        sol = _linear_2eq_order1_type1(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type2':
-        gsol = _linear_2eq_order1_type1(x, y, t, r)
-        psol = _linear_2eq_order1_type2(x, y, t, r)
+        gsol = _linear_2eq_order1_type1(x, y, t, r, eq)
+        psol = _linear_2eq_order1_type2(x, y, t, r, eq)
         sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
     if match_['type_of_equation'] == 'type3':
-        sol = _linear_2eq_order1_type3(x, y, t, r)
+        sol = _linear_2eq_order1_type3(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type4':
-        sol = _linear_2eq_order1_type4(x, y, t, r)
+        sol = _linear_2eq_order1_type4(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type5':
-        sol = _linear_2eq_order1_type5(x, y, t, r)
+        sol = _linear_2eq_order1_type5(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type6':
-        sol = _linear_2eq_order1_type6(x, y, t, r)
+        sol = _linear_2eq_order1_type6(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type7':
-        sol = _linear_2eq_order1_type7(x, y, t, r)
+        sol = _linear_2eq_order1_type7(x, y, t, r, eq)
     return sol
 
-def _linear_2eq_order1_type1(x, y, t, r):
+def _linear_2eq_order1_type1(x, y, t, r, eq):
     r"""
     It is classified under system of two linear homogeneous first-order constant-coefficient
     ordinary differential equations.
@@ -6501,9 +6502,9 @@ def _linear_2eq_order1_type1(x, y, t, r):
     # just be re-written in terms of eigenvectors...
 
     l = Dummy('l')
-    C1, C2, C3, C4 = symbols('C1:5')
-    l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
-    l2 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
+    l1 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
+    l2 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D > 0:
@@ -6544,7 +6545,7 @@ def _linear_2eq_order1_type1(x, y, t, r):
             gsol2 = k**2*r['b']*C1*t+(r['b']*k**2*t+1)*C2
     return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
 
-def _linear_2eq_order1_type2(x, y, t, r):
+def _linear_2eq_order1_type2(x, y, t, r, eq):
     r"""
     The equations of this type are
 
@@ -6593,7 +6594,7 @@ def _linear_2eq_order1_type2(x, y, t, r):
         psol = [sol1, sol2]
     return psol
 
-def _linear_2eq_order1_type3(x, y, t, r):
+def _linear_2eq_order1_type3(x, y, t, r, eq):
     r"""
     The equations of this type of ode are
 
@@ -6610,14 +6611,14 @@ def _linear_2eq_order1_type3(x, y, t, r):
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     F = Integral(r['a'], t)
     G = Integral(r['b'], t)
     sol1 = exp(F)*(C1*exp(G) + C2*exp(-G))
     sol2 = exp(F)*(C1*exp(G) - C2*exp(-G))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order1_type4(x, y, t, r):
+def _linear_2eq_order1_type4(x, y, t, r, eq):
     r"""
     The equations of this type of ode are .
 
@@ -6634,7 +6635,7 @@ def _linear_2eq_order1_type4(x, y, t, r):
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     if r['b'] == -r['c']:
         F = exp(Integral(r['a'], t))
         G = Integral(r['b'], t)
@@ -6647,7 +6648,7 @@ def _linear_2eq_order1_type4(x, y, t, r):
         sol2 = F*(C1*cos(G) + C2*sin(G))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order1_type5(x, y, t, r):
+def _linear_2eq_order1_type5(x, y, t, r, eq):
     r"""
     The equations of this type of ode are .
 
@@ -6664,7 +6665,7 @@ def _linear_2eq_order1_type5(x, y, t, r):
     .. math:: u'(T) = v , v'(T) = au + bv
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', function=True)
     T = Symbol('T')
     if not cancel(r['c']/r['b']).has(t):
@@ -6682,7 +6683,7 @@ def _linear_2eq_order1_type5(x, y, t, r):
         sol2 = exp(Integral(r['c'], t))*sol[0].rhs.subs(T, Integral(r['d'],t))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order1_type6(x, y, t, r):
+def _linear_2eq_order1_type6(x, y, t, r, eq):
     r"""
     The equations of this type of ode are .
 
@@ -6703,7 +6704,7 @@ def _linear_2eq_order1_type6(x, y, t, r):
     `x`, we can obtain `y` by substituting the value of `x` in second equation.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     p = 0
     q = 0
     p1 = cancel(r['c']/cancel(r['c']/r['d']).as_numer_denom()[0])
@@ -6734,7 +6735,7 @@ def _linear_2eq_order1_type6(x, y, t, r):
         sol1 = s*sol2 + C1*exp(-s*Integral(r['d'] - r['b']/s, t))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order1_type7(x, y, t, r):
+def _linear_2eq_order1_type7(x, y, t, r, eq):
     r"""
     The equations of this type of ode are .
 
@@ -6769,7 +6770,7 @@ def _linear_2eq_order1_type7(x, y, t, r):
     .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     e1 = r['a']*r['b']*r['c'] - r['b']**2*r['c'] + r['a']*diff(r['b'],t) - diff(r['a'],t)*r['b']
     e2 = r['a']*r['c']*r['d'] - r['b']*r['c']**2 + diff(r['c'],t)*r['d'] - r['c']*diff(r['d'],t)
     m1 = r['a']*r['b'] + r['b']*r['d'] + diff(r['b'],t)
@@ -6796,12 +6797,12 @@ def _linear_2eq_order1_type7(x, y, t, r):
 
 
 def sysode_linear_2eq_order2(match_):
-    C1, C2, C3, C4 = symbols('C1:5')
     x = match_['func'][0].func
     y = match_['func'][1].func
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
@@ -6823,32 +6824,32 @@ def sysode_linear_2eq_order2(match_):
     r['e1'] = -const[0]
     r['e2'] = -const[1]
     if match_['type_of_equation'] == 'type1':
-        sol = _linear_2eq_order2_type1(x, y, t, r)
+        sol = _linear_2eq_order2_type1(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type2':
-        gsol = _linear_2eq_order2_type1(x, y, t, r)
-        psol = _linear_2eq_order2_type2(x, y, t, r)
+        gsol = _linear_2eq_order2_type1(x, y, t, r, eq)
+        psol = _linear_2eq_order2_type2(x, y, t, r, eq)
         sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
     elif match_['type_of_equation'] == 'type3':
-        sol = _linear_2eq_order2_type3(x, y, t, r)
+        sol = _linear_2eq_order2_type3(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type4':
-        sol = _linear_2eq_order2_type4(x, y, t, r)
+        sol = _linear_2eq_order2_type4(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type5':
-        sol = _linear_2eq_order2_type5(x, y, t, r)
+        sol = _linear_2eq_order2_type5(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type6':
-        sol = _linear_2eq_order2_type6(x, y, t, r)
+        sol = _linear_2eq_order2_type6(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type7':
-        sol = _linear_2eq_order2_type7(x, y, t, r)
+        sol = _linear_2eq_order2_type7(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type8':
-        sol = _linear_2eq_order2_type8(x, y, t, r)
+        sol = _linear_2eq_order2_type8(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type9':
-        sol = _linear_2eq_order2_type9(x, y, t, r)
+        sol = _linear_2eq_order2_type9(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type10':
-        sol = _linear_2eq_order2_type10(x, y, t, r)
+        sol = _linear_2eq_order2_type10(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type11':
-        sol = _linear_2eq_order2_type11(x, y, t, r)
+        sol = _linear_2eq_order2_type11(x, y, t, r, eq)
     return sol
 
-def _linear_2eq_order2_type1(x, y, t, r):
+def _linear_2eq_order2_type1(x, y, t, r, eq):
     r"""
     System of two constant-coefficient second-order linear homogeneous differential equations
 
@@ -6917,12 +6918,12 @@ def _linear_2eq_order2_type1(x, y, t, r):
     r['c'] = r['c2']
     r['d'] = r['d2']
     l = Symbol('l')
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     chara_eq = l**4 - (r['a']+r['d'])*l**2 + r['a']*r['d'] - r['b']*r['c']
-    l1 = RootOf(chara_eq, 0)
-    l2 = RootOf(chara_eq, 1)
-    l3 = RootOf(chara_eq, 2)
-    l4 = RootOf(chara_eq, 3)
+    l1 = rootof(chara_eq, 0)
+    l2 = rootof(chara_eq, 1)
+    l3 = rootof(chara_eq, 2)
+    l4 = rootof(chara_eq, 3)
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D != 0:
@@ -6957,7 +6958,7 @@ def _linear_2eq_order2_type1(x, y, t, r):
             gsol2 = k*gsol1 + 6*C1*t + 2*C2
     return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
 
-def _linear_2eq_order2_type2(x, y, t, r):
+def _linear_2eq_order2_type2(x, y, t, r, eq):
     r"""
     The equations in this type are
 
@@ -7009,7 +7010,7 @@ def _linear_2eq_order2_type2(x, y, t, r):
             psol = [psol1, psol2]
     return psol
 
-def _linear_2eq_order2_type3(x, y, t, r):
+def _linear_2eq_order2_type3(x, y, t, r, eq):
     r"""
     These type of equation is used for describing the horizontal motion of a pendulum
     taking into account the Earth rotation.
@@ -7024,7 +7025,7 @@ def _linear_2eq_order2_type3(x, y, t, r):
     .. math:: \alpha = \frac{1}{2} a + \frac{1}{2} \sqrt{a^2 + 4b}, \beta = \frac{1}{2} a - \frac{1}{2} \sqrt{a^2 + 4b}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     if r['b1']**2 - 4*r['c1'] > 0:
         r['a'] = r['b1'] ; r['b'] = -r['c1']
         alpha = r['a']/2 + sqrt(r['a']**2 + 4*r['b'])/2
@@ -7033,7 +7034,7 @@ def _linear_2eq_order2_type3(x, y, t, r):
         sol2 = -C1*sin(alpha*t) + C2*cos(alpha*t) - C3*sin(beta*t) + C4*cos(beta*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type4(x, y, t, r):
+def _linear_2eq_order2_type4(x, y, t, r, eq):
     r"""
     These equations are found in the theory of oscillations
 
@@ -7079,7 +7080,7 @@ def _linear_2eq_order2_type4(x, y, t, r):
     .. math:: y = C_1 (\lambda_1^{2} + a_1 \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + a_1 \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + a_1 \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + a_1 \lambda_4 + c_1) e^{\lambda_4 t}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     Ra, Ca, Rb, Cb = symbols('Ra, Ca, Rb, Cb')
     a1 = r['a1'] ; a2 = r['a2']
@@ -7112,7 +7113,7 @@ def _linear_2eq_order2_type4(x, y, t, r):
     C3*(k3**2+a1_*k3+c1)*exp(k3*t) + C4*(k4**2+a1_*k4+c1)*exp(k4*t) + (Rb+I*Cb)*exp(I*w*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type5(x, y, t, r):
+def _linear_2eq_order2_type5(x, y, t, r, eq):
     r"""
     The equation which come under this catagory are
 
@@ -7150,7 +7151,7 @@ def _linear_2eq_order2_type5(x, y, t, r):
     where `C_3` and `C_4` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     r['a'] = -r['d1'] ; r['b'] = -r['c2']
     mul = sqrt(abs(r['a']*r['b']))
     if r['a']*r['b'] > 0:
@@ -7163,7 +7164,7 @@ def _linear_2eq_order2_type5(x, y, t, r):
     sol2 = C4*t + t*Integral(v/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type6(x, y, t, r):
+def _linear_2eq_order2_type6(x, y, t, r, eq):
     r"""
     The equations are
 
@@ -7186,7 +7187,7 @@ def _linear_2eq_order2_type6(x, y, t, r):
     of `z_1` and `z_2` by solving the differential equation and substuting the result.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     z = Function('z')
     num, denum = cancel((r['c1']*x(t) + r['d1']*y(t))/(r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
@@ -7196,14 +7197,14 @@ def _linear_2eq_order2_type6(x, y, t, r):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
+    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
     z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
     sol2 = (z1 - z2)/(k1 - k2)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type7(x, y, t, r):
+def _linear_2eq_order2_type7(x, y, t, r, eq):
     r"""
     The equations are given as
 
@@ -7232,7 +7233,7 @@ def _linear_2eq_order2_type7(x, y, t, r):
     where `C_1,...,C_4` are arbitrary constants and `F(t) = \int f(t) \,dt`
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     num, denum = cancel((r['a1']*x(t) + r['b1']*y(t))/(r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
     f = r['a1']/num.coeff(x(t))
@@ -7241,7 +7242,7 @@ def _linear_2eq_order2_type7(x, y, t, r):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
+    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     F = Integral(f, t)
     z1 = C1*Integral(exp(k1*F), t) + C2
     z2 = C3*Integral(exp(k2*F), t) + C4
@@ -7249,7 +7250,7 @@ def _linear_2eq_order2_type7(x, y, t, r):
     sol2 = (z1 - z2)/(k1 - k2)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type8(x, y, t, r):
+def _linear_2eq_order2_type8(x, y, t, r, eq):
     r"""
     The equation of this catagory are
 
@@ -7287,7 +7288,7 @@ def _linear_2eq_order2_type8(x, y, t, r):
     where `C_3` and `C_4` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     num, denum = cancel(r['d1']/r['c2']).as_numer_denom()
     f = -r['d1']/num
     a = num
@@ -7304,7 +7305,7 @@ def _linear_2eq_order2_type8(x, y, t, r):
     sol2 = C4*t + t*Integral(v/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type9(x, y, t, r):
+def _linear_2eq_order2_type9(x, y, t, r, eq):
     r"""
     .. math:: t^2 x'' + a_1 t x' + b_1 t y' + c_1 x + d_1 y = 0
 
@@ -7345,7 +7346,7 @@ def _linear_2eq_order2_type9(x, y, t, r):
     .. math:: y = C_1 (\lambda_1^{2} + (a_1 - 1) \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + (a_1 - 1) \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + (a_1 - 1) \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + (a_1 - 1) \lambda_4 + c_1) e^{\lambda_4 t}
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     a1 = -r['a1']*t; a2 = -r['a2']*t
     b1 = -r['b1']*t; b2 = -r['b2']*t
@@ -7362,7 +7363,7 @@ def _linear_2eq_order2_type9(x, y, t, r):
 
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type10(x, y, t, r):
+def _linear_2eq_order2_type10(x, y, t, r, eq):
     r"""
     The equation of this catagory are
 
@@ -7384,7 +7385,7 @@ def _linear_2eq_order2_type10(x, y, t, r):
     constant-coefficient second-order linear homogeneous differential equations.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', function=True)
     T = Symbol('T')
     p = Wild('p', exclude=[t, t**2])
@@ -7404,7 +7405,7 @@ def _linear_2eq_order2_type10(x, y, t, r):
     sol2 = (msol2.rhs*sqrt(abs(eqz))).subs(t, Integral(1/eqz, t))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type11(x, y, t, r):
+def _linear_2eq_order2_type11(x, y, t, r, eq):
     r"""
     The equations which comes under this type are
 
@@ -7427,7 +7428,7 @@ def _linear_2eq_order2_type11(x, y, t, r):
     where `C_3` and `C_4` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', function=True)
     f = -r['c1'] ; g = -r['d1']
     h = -r['c2'] ; p = -r['d2']
@@ -7437,13 +7438,13 @@ def _linear_2eq_order2_type11(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def sysode_linear_3eq_order1(match_):
-    C1, C2, C3, C4 = symbols('C1:5')
     x = match_['func'][0].func
     y = match_['func'][1].func
     z = match_['func'][2].func
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(3):
@@ -7477,18 +7478,18 @@ def sysode_linear_3eq_order1(match_):
                                   " (and constant inhomogeneity)")
 
     if match_['type_of_equation'] == 'type1':
-        sol = _linear_3eq_order1_type1(x, y, z, t, r)
+        sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':
-        sol = _linear_3eq_order1_type2(x, y, z, t, r)
+        sol = _linear_3eq_order1_type2(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type3':
-        sol = _linear_3eq_order1_type3(x, y, z, t, r)
+        sol = _linear_3eq_order1_type3(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type4':
-        sol = _linear_3eq_order1_type4(x, y, z, t, r)
+        sol = _linear_3eq_order1_type4(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type6':
         sol = _linear_neq_order1_type1(match_)
     return sol
 
-def _linear_3eq_order1_type1(x, y, z, t, r):
+def _linear_3eq_order1_type1(x, y, z, t, r, eq):
     r"""
     .. math:: x' = ax
 
@@ -7510,7 +7511,7 @@ def _linear_3eq_order1_type1(x, y, z, t, r):
     where `C_1, C_2` and `C_3` are arbitrary constants.
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     a = -r['a1']; b = -r['a2']; c = -r['b2']
     d = -r['a3']; k = -r['b3']; p = -r['c3']
     sol1 = C1*exp(a*t)
@@ -7518,7 +7519,7 @@ def _linear_3eq_order1_type1(x, y, z, t, r):
     sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _linear_3eq_order1_type2(x, y, z, t, r):
+def _linear_3eq_order1_type2(x, y, z, t, r, eq):
     r"""
     The equations of this type are
 
@@ -7552,7 +7553,7 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
     .. math:: a C_1 + b C_2 + c C_3 = 0
 
     """
-    C0, C1, C2, C3 = symbols('C0:4')
+    C0, C1, C2, C3 = get_numbered_constants(eq, num=4, start=0)
     a = -r['c2']; b = -r['a3']; c = -r['b1']
     k = sqrt(a**2 + b**2 + c**2)
     C3 = (-a*C1 - b*C2)/c
@@ -7561,7 +7562,7 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
     sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _linear_3eq_order1_type3(x, y, z, t, r):
+def _linear_3eq_order1_type3(x, y, z, t, r, eq):
     r"""
     Equations of this system of ODEs
 
@@ -7591,7 +7592,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     .. math:: a^2 C_1 + b^2 C_2 + c^2 C_3 = 0
 
     """
-    C0, C1, C2, C3 = symbols('C0:4')
+    C0, C1, C2, C3 = get_numbered_constants(eq, num=4, start=0)
     c = sqrt(r['b1']*r['c2'])
     b = sqrt(r['b1']*r['a3'])
     a = sqrt(r['c2']*r['a3'])
@@ -7602,7 +7603,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _linear_3eq_order1_type4(x, y, z, t, r):
+def _linear_3eq_order1_type4(x, y, z, t, r, eq):
     r"""
     Equations:
 
@@ -7814,7 +7815,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     where `C_1` and `C_2` are arbitrary constants.
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2 = get_numbered_constants(eq, num=2)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
     u, v, phi = symbols('u, v, phi', function=True)
@@ -7859,7 +7860,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     where `C_1` and `C_2` are arbitrary constants.
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2 = get_numbered_constants(eq, num=2)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
     u, v, phi = symbols('u, v, phi', function=True)
@@ -7897,7 +7898,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     .. math:: \int \frac{1}{F(x,y(x,C_1))} \,dx = t + C_1
 
     """
-    C1, C2, C3, C4 = symbols('C1:5')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', function=True)
     f = Wild('f')
     g = Wild('g')
@@ -7933,7 +7934,7 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     arrives at a firs-order equation for determining `y` (resp., `x` ).
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2 = get_numbered_constants(eq, num=2)
     u, v = symbols('u, v')
     f = Wild('f')
     g = Wild('g')
@@ -7980,7 +7981,7 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
     `(i)` and `(ii)`.
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2 = get_numbered_constants(eq, num=2)
     f = Wild('f')
     g = Wild('g')
     def check_type(x, y):
@@ -8049,7 +8050,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2 = get_numbered_constants(eq, num=2)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8111,7 +8112,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
-    C1, C2 = symbols('C1:3')
+    C1, C2 = get_numbered_constants(eq, num=2)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8177,7 +8178,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
 
     """
-    C1 = symbols('C1')
+    C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8236,7 +8237,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
 
     """
-    C1 = symbols('C1')
+    C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8286,7 +8287,7 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
 
     """
-    C1 = symbols('C1')
+    C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
