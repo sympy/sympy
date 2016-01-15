@@ -9,7 +9,7 @@ from sympy.core.numbers import Zero
 from sympy import sympify, floor, sqrt, lcm, denom, Integer, Rational
 
 @public
-def find_simple_recurrence_vector(l, maxcoeff=1024):
+def find_simple_recurrence_vector(l):
     """
     This function is used internally by other functions from the
     sympy.concrete.guess module. While most users may want to rather use the
@@ -76,7 +76,7 @@ def find_simple_recurrence_vector(l, maxcoeff=1024):
     return [0]
 
 @public
-def find_simple_recurrence(v, A=Function('a'), N=Symbol('n'), maxcoeff=1024):
+def find_simple_recurrence(v, A=Function('a'), N=Symbol('n')):
     """
     Detects and returns a recurrence relation from a sequence of several integer
     (or rational) terms. The name of the function in the returned expression is
@@ -98,7 +98,7 @@ def find_simple_recurrence(v, A=Function('a'), N=Symbol('n'), maxcoeff=1024):
     -8*f(i) + 3*f(i + 1) - 5*f(i + 2) + f(i + 3)
 
     """
-    p = find_simple_recurrence_vector(v, maxcoeff=maxcoeff)
+    p = find_simple_recurrence_vector(v)
     n = len(p)
     if n <= 1: return Zero()
 
@@ -171,7 +171,7 @@ def rationalize(x, maxcoeff=10000):
 
 
 @public
-def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
+def guess_generating_function_rational(v, X=Symbol('x')):
     """
     Tries to "guess" a rational generating function for a sequence of rational
     numbers v.
@@ -191,7 +191,7 @@ def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
 
     """
     #   a) compute the denominator as q
-    q = find_simple_recurrence_vector(v, maxcoeff=maxcoeff)
+    q = find_simple_recurrence_vector(v)
     n = len(q)
     if n <= 1: return None
     #   b) compute the numerator as p
@@ -202,8 +202,7 @@ def guess_generating_function_rational(v, X=Symbol('x'), maxcoeff=1024):
 
 
 @public
-def guess_generating_function(v, X=Symbol('x'), types=['all'],
-                              maxcoeff=1024, maxsqrtn=2):
+def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     """
     Tries to "guess" a generating function for a sequence of rational numbers v.
     Only a few patterns are implemented yet.
@@ -214,7 +213,9 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'],
     (logarithmic g.f.), 'hlgf' (hyperbolic logarithmic g.f.).
 
     In order to spare time, the user can select only some types of generating
-    functions (default being ['all']).
+    functions (default being ['all']). While forgetting to use a list in the
+    case of a single type may seem to work most of the time as in: types='ogf'
+    this (convenient) syntax may leed to unexpected extra results in some cases.
 
     Examples
     ========
@@ -246,6 +247,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'],
     References
     ==========
     "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
+    https://oeis.org/wiki/Generating_functions
 
     """
     # List of all types of all g.f. known by the algorithm
@@ -260,7 +262,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'],
         t = [1 if k==0 else 0 for k in range(len(v))]
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
-            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            g = guess_generating_function_rational(t, X=X)
             if g:
                 result['ogf'] = g**Rational(1, d+1)
                 break
@@ -276,7 +278,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'],
         t = [1 if k==0 else 0 for k in range(len(w))]
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
-            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            g = guess_generating_function_rational(t, X=X)
             if g:
                 result['egf'] = g**Rational(1, d+1)
                 break
@@ -292,7 +294,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'],
         t = [1 if k==0 else 0 for k in range(len(w))]
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
-            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            g = guess_generating_function_rational(t, X=X)
             if g:
                 result['lgf'] = g**Rational(1, d+1)
                 break
@@ -307,7 +309,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'],
         t = [1 if k==0 else 0 for k in range(len(w))]
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
-            g = guess_generating_function_rational(t, X=X, maxcoeff=maxcoeff)
+            g = guess_generating_function_rational(t, X=X)
             if g:
                 result['hlgf'] = g**Rational(1, d+1)
                 break
