@@ -445,9 +445,10 @@ def solve_univariate_inequality(expr, gen, relational=True):
         start = S.NegativeInfinity
         sol_sets = [S.EmptySet]
         try:
-            reals = _nsort(set(solns + singularities), separated=True)[0]
+            reals = list(set(solns + singularities))
+            reals = _nsort(reals, separated=True)[0]
         except NotImplementedError:
-            raise NotImplementedError('sorting of these roots is not supported')
+            raise NotImplementedError('sorting of these roots is not supported: %s' % reals)
         for x in reals:
             end = x
 
@@ -489,27 +490,43 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
 
 def _solve_inequality(ie, s, linear=False):
-    """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. """
-    expr = ie.lhs - ie.rhs
-    try:
-        p = Poly(expr, s)
-        if p.degree() != 1:
-            raise NotImplementedError
-    except (PolynomialError, NotImplementedError):
-        if linear:
-            raise NotImplementedError
+    """Return the inequality with symbol `s` isolated on the lhs.
+    If `linear` is True then treat the expression as a*f(x) + b
+    and solve for f(x). Only factors of `a` whose sign is known
+    will be isolated from f(x)."""
+    from sympy.core.exprtools import factor_terms
+    from sympy.core.mul import Mul
+    if s.is_Symbol and ie.lhs == s and s not in ie.rhs.free_symbols:
+        return ie
+    expr = (ie.lhs - ie.rhs).expand()
+    # separate into a*spart + b
+    b, a = expr.as_independent(s, as_Add=True)
+    a, spart = factor_terms(a).as_independent(s, as_Add=False)
+    if spart == s or linear:
+        if ie.rel_op in ('!=', '==') and a.is_zero is False:
+            return ie.func(spart, -b/a)
+        afac = []
+        other = []
+        sign = 1
+        for a in Mul.make_args(a):
+            if a.is_positive:
+                afac.append(a)
+            elif a.is_negative:
+                afac.append(a)
+                sign = -sign
+            else:
+                other.append(a)
+        spart *= Mul(*other)
+        a = Mul(*afac)
+        if sign == 1:
+            return ie.func(spart, -b/a)
+        else:
+            return ie.reversed.func(spart, -b/a)
+    elif not linear:
         try:
             return reduce_rational_inequalities([[ie]], s)
         except PolynomialError:
             return solve_univariate_inequality(ie, s)
-    a, b = p.all_coeffs()
-    if a.is_positive or ie.rel_op in ('!=', '=='):
-        return ie.func(s, -b/a)
-    elif a.is_negative:
-        return ie.reversed.func(s, -b/a)
-    else:
-        raise NotImplementedError
 
 
 def _reduce_inequalities(inequalities, symbols):
