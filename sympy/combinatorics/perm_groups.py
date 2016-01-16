@@ -1592,17 +1592,18 @@ class PermutationGroup(Basic):
         """
         d_self = self.degree
         d_gr = gr.degree
+        new_self = self.copy()
         if not strict and d_self != d_gr:
             if d_self < d_gr:
-                self = PermGroup(self.generators + [Permutation(d_gr - 1)])
+                new_self = PermGroup(new_self.generators + [Permutation(d_gr - 1)])
             else:
                 gr = PermGroup(gr.generators + [Permutation(d_self - 1)])
-        gens2 = [p._array_form for p in self.generators]
+        gens2 = [p._array_form for p in new_self.generators]
         gens1 = [p._array_form for p in gr.generators]
         for g1 in gens1:
             for g2 in gens2:
                 p = _af_rmuln(g1, g2, _af_invert(g1))
-                if not self.coset_factor(p, True):
+                if not new_self.coset_factor(p, True):
                     return False
         return True
 
