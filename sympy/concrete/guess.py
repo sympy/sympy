@@ -253,7 +253,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
 
     N-th root of a rational function can also be detected (below is an example
-    coming from the sequence A108626 from http://oeis.org ).
+    coming from the sequence A108626 from http://oeis.org).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
     >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])['ogf']
@@ -337,7 +337,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
         a, w = sympify(v[0]), []
         for n in range(len(v)-1):
             w.append(
-               (v[n+1]*(n+1) - sum( w[-i-1]*v[i+1] for i in range(n) ))/a)
+               (v[n+1]*(n+1) - sum(w[-i-1]*v[i+1] for i in range(n)))/a)
         # Perform some convolutions of the sequence with itself
         t = [1 if k==0 else 0 for k in range(len(w))]
         for d in range(max(1, maxsqrtn)):
@@ -362,7 +362,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
         a, w = z[0], []
         for n in range(len(z)-1):
             w.append(
-               (z[n+1]*(n+1) - sum( w[-i-1]*z[i+1] for i in range(n) ))/a)
+               (z[n+1]*(n+1) - sum(w[-i-1]*z[i+1] for i in range(n)))/a)
         # Perform some convolutions of the sequence with itself
         t = [1 if k==0 else 0 for k in range(len(w))]
         for d in range(max(1, maxsqrtn)):
