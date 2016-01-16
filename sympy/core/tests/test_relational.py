@@ -661,3 +661,8 @@ def test_issue_10304():
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_10401():
+    assert Ne(x/(x + 1), 1) is S.true
+    assert Ne(x/(x - 1), 1) is S.true

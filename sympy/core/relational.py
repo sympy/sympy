@@ -304,12 +304,10 @@ class Equality(Relational):
             if lhs == rhs:
                 return S.true
 
-            # If appropriate, check if the difference evaluates.  Detect
-            # incompatibility such as lhs real and rhs not real.
-            if lhs.is_complex and rhs.is_complex:
-                r = (lhs - rhs).is_zero
-                if r is not None:
-                    return _sympify(r)
+            # If appropriate, check if the difference evaluates.
+            r = (lhs - rhs).as_numer_denom()[0].is_zero
+            if r is not None:
+                return _sympify(r)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
