@@ -2,12 +2,12 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify)
+                   AlgebraicNumber, simplify, sin)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
-    mpf_norm, comp)
+    mpf_norm, comp, mod_inverse)
 from mpmath import mpf
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
@@ -1518,3 +1518,30 @@ def test_issue_10020():
     assert (-oo)**(-1 + I) is S.Zero
     assert oo**t == Pow(oo, t, evaluate=False)
     assert (-oo)**t == Pow(-oo, t, evaluate=False)
+
+
+def test_invert_numbers():
+    assert S(2).invert(5) == 3
+    assert S(2).invert(S(5)/2) == S.Half
+    assert S(2).invert(5.) == 3
+    assert S(2).invert(S(5)) == 3
+    assert S(2.).invert(5) == 3
+    assert S(sqrt(2)).invert(5) == 1/sqrt(2)
+    assert S(sqrt(2)).invert(sqrt(3)) == 1/sqrt(2)
+
+
+def test_mod_inverse():
+    assert mod_inverse(3, 11) == 4
+    assert mod_inverse(5, 11) == 9
+    assert mod_inverse(21124921, 521512) == 7713
+    assert mod_inverse(124215421, 5125) == 2981
+    assert mod_inverse(214, 12515) == 1579
+    assert mod_inverse(5823991, 3299) == 1442
+    assert mod_inverse(123, 44) == 39
+    assert mod_inverse(2, 5) == 3
+    assert mod_inverse(-2, 5) == -3
+    x = Symbol('x')
+    assert S(2).invert(x) == S.Half
+    raises(TypeError, lambda: mod_inverse(2, x))
+    raises(ValueError, lambda: mod_inverse(2, S.Half))
+    raises(ValueError, lambda: mod_inverse(2, cos(1)**2 + sin(1)**2))
