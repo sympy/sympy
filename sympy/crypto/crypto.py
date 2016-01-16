@@ -383,6 +383,15 @@ def encipher_vigenere(msg, key, symbols=None):
     Performs the Vigenère cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
 
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_vigenere, AZ
+    >>> key = "encrypt"
+    >>> msg = "meet me on monday"
+    >>> encipher_vigenere(msg, key)
+    'QRGKKTHRZQEBPR'
+
     Notes
     =====
 
@@ -417,13 +426,16 @@ def encipher_vigenere(msg, key, symbols=None):
 
         INPUT:
 
-            ``key``: a string of upper-case letters (the secret key)
+            ``msg``: string of characters that appear in ``symbols`` (the plaintext)
 
-            ``m``: string of upper-case letters (the plaintext message)
+            ``key``: a string of characters that appear in ``symbols`` (the secret key)
+
+            ``symbols``: a string of letters defining the alphabet
+
 
         OUTPUT:
 
-            ``c``: string of upper-case letters (the ciphertext message)
+            ``c``: string of characters (the ciphertext message)
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -432,8 +444,7 @@ def encipher_vigenere(msg, key, symbols=None):
             2. Compute from the string ``m`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
             3. Break ``L2`` up sequencially into sublists of size
-               ``n1``, and one sublist at the end of size smaller or
-               equal to ``n1``.
+               ``n1``; the last sublist may be smaller than ``n1``
             4. For each of these sublists ``L`` of ``L2``, compute a
                new list ``C`` given by ``C[i] = L[i] + L1[i] (mod N)``
                to the ``i``-th element in the sublist, for each ``i``.
@@ -446,7 +457,9 @@ def encipher_vigenere(msg, key, symbols=None):
     frequency analysis can be applied to every `n`-th letter of
     the ciphertext to determine the plaintext. This method is
     called *Kasiski examination* (although it was first discovered
-    by Babbage).
+    by Babbage). If they key is as long as the message and is
+    comprised of randomly selected characters -- a one-time pad -- the
+    message is theoretically unbreakable.
 
     The cipher Vigenère actually discovered is an "auto-key" cipher
     described as follows.
@@ -467,28 +480,42 @@ def encipher_vigenere(msg, key, symbols=None):
             0. Number the letters of the alphabet from 0, ..., N
             1. Compute from the string ``m`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
-            2. Let ``n1`` be the length of the key. Concatenate the
-               string ``key`` with the first ``n2 - n1`` characters of
-               the plaintext message. Compute from this string of
-               length ``n2`` a list ``L1`` of corresponding integers.
+            2. Let ``n1`` be the length of the key. Append to the
+               string ``key`` the first ``n2 - n1`` characters of
+               the plaintext message. Compute from this string (also of
+               length ``n2``) a list ``L1`` of integers corresponding
+               to the letter numbers in the first step.
             3. Compute a new list ``C`` given by
                ``C[i] = L1[i] + L2[i] (mod N)``.
-            4. Compute from the new list a string ``c`` of
-               corresponding letters.
+            4. Compute from the new list a string ``c`` of letters
+               corresponding to the new integers.
+
+    To decipher the auto-key ciphertext, the key is used to decipher
+    the first ``n1`` characters and then those characters become the
+    key to  decipher the next ``n1`` characters, etc...:
+
+    >>> from sympy.crypto.crypto import decipher_vigenere
+    >>> m = AZ('go navy, beat army! yes you can'); m
+    'GONAVYBEATARMYYESYOUCAN'
+    >>> key = AZ('gold bug'); n1 = len(key); n2 = len(m)
+    >>> auto_key = key + m[:n2 - n1]; auto_key
+    'GOLDBUGGONAVYBEATARMYYE'
+    >>> ct = encipher_vigenere(m, auto_key); ct
+    'MCYDWSHKOGAMKZCELYFGAYR'
+    >>> n1 = len(key)
+    >>> pt = []
+    >>> while ct:
+    ...     part, ct = ct[:n1], ct[n1:]
+    ...     pt.append(decipher_vigenere(part, key))
+    ...     key = pt[-1]
+    ...
+    >>> ''.join(pt) == m
+    True
 
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import encipher_vigenere
-    >>> key = "encrypt"
-    >>> msg = "meet me on monday"
-    >>> encipher_vigenere(msg, key)
-    'QRGKKTHRZQEBPR'
 
     """
     msg, key, A = _prep(msg, key, symbols)
@@ -693,8 +720,9 @@ def encipher_bifid(msg, key, symbols=None):
 
             ``msg``: plaintext string
 
-            ``key``: short string for key made of characters from
-            ``symbols``
+            ``key``: short string for key; duplicate characters are
+            ignored and then it is padded with the characters in
+            ``symbols`` that were not in the short key
 
             ``symbols``: `n \times n` characters defining the alphabet
             (default is string.printable)
@@ -741,8 +769,9 @@ def decipher_bifid(msg, key, symbols=None):
 
             ``msg``: ciphertext string
 
-            ``key``: short string for key made of characters from
-            ``symbols``
+            ``key``: short string for key; duplicate characters are
+            ignored and then it is padded with the characters in
+            ``symbols`` that were not in the short key
 
             ``symbols``: `n \times n` characters defining the alphabet
             (default=string.printable, a `10 \times 10` matrix)
