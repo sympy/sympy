@@ -273,6 +273,10 @@ def test_is_normal():
     assert G1.is_subgroup(G6)
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
+    s4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(3)(0, 1))
+    s6 = PermutationGroup(Permutation(0, 1, 2, 3, 5), Permutation(5)(0, 1))
+    assert s6.is_normal(s4, strict=False)
+    assert not s4.is_normal(s6, strict=False)
 
 
 def test_eq():

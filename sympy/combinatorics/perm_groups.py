@@ -1568,7 +1568,7 @@ class PermutationGroup(Basic):
         else:
             return self._is_nilpotent
 
-    def is_normal(self, gr):
+    def is_normal(self, gr, strict=True):
         """Test if G=self is a normal subgroup of gr.
 
         G is normal in gr if
@@ -1590,6 +1590,13 @@ class PermutationGroup(Basic):
         True
 
         """
+        d_self = self.degree
+        d_gr = gr.degree
+        if not strict and d_self != d_gr:
+            if d_self < d_gr:
+                self = PermGroup(self.generators + [Permutation(d_gr - 1)])
+            else:
+                gr = PermGroup(gr.generators + [Permutation(d_self - 1)])
         gens2 = [p._array_form for p in self.generators]
         gens1 = [p._array_form for p in gr.generators]
         for g1 in gens1:
